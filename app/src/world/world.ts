@@ -131,8 +131,10 @@ export function createWorld(mode: ViewMode): World {
     if (e.kind === 'vehicle' && e.vehicle) return { ...v, drive: { speed: e.vehicle.spec.maxSpeed, jumpPower: 0 } };
     if (e.kind !== 'character') return v;
     const tool = e.handHolding !== null ? byId.get(e.handHolding) : undefined;
+    const carried = e.holding !== null && mode !== '2d-top' ? byId.get(e.holding) : undefined;
     return {
       ...v,
+      ...(carried ? { carriedHeight: carried.size.y + 0.05 } : {}),
       ...(tool && tool.shape !== undefined ? { tool: { shape: tool.shape, color: tool.color } } : {}),
       ...(e.swingTime >= 0 ? { swing: Math.min(1, e.swingTime / SWING_SECONDS) } : {}),
       ...(e.intent ? { drive: { speed: finiteOr(e.intent.speed, 0), jumpPower: finiteOr(e.intent.jumpPower, 0) } } : {}),
@@ -152,7 +154,7 @@ export function createWorld(mode: ViewMode): World {
     let bestGap = Infinity;
     let bestFwd = Infinity;
     for (const e of list) {
-      if (e === c || !e.visible) continue;
+      if (e === c || !e.visible || e.seatedIn !== null) continue;
       if (e.id === c.holding || e.id === c.handHolding) continue;
       const dx = e.pos.x - c.pos.x;
       const dz = e.pos.z - c.pos.z;

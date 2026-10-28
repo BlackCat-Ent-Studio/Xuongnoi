@@ -67,7 +67,7 @@ export class HealthBarLayer {
 
   private update(bar: Bar, e: EntityView, fraction: number): void {
     const f = Math.min(1, Math.max(0, fraction));
-    bar.group.position.set(e.position.x, e.position.y + e.size.y / 2 + LIFT, e.position.z);
+    bar.group.position.set(e.position.x, e.position.y + e.size.y / 2 + (e.carriedHeight ?? 0) + LIFT, e.position.z);
     bar.fill.visible = f > MIN_FILL;
     if (bar.shown === f) return;
     bar.shown = f;

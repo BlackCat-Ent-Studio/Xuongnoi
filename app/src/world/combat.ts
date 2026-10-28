@@ -119,6 +119,7 @@ export function createCombat(deps: CombatDeps): Combat {
 
   function strike(victim: Entity, damage: number, dirX: number, dirZ: number): boolean {
     const k = victim.combat;
+    if (victim.kind !== 'character' || victim.seatedIn !== null) return false; // vehicles are never targets; a seated driver is shielded
     if (!k || k.dead || k.invuln > 0 || !victim.visible) return false;
     const dmg = Math.max(0, finiteOr(damage, 0));
     k.hp = Math.max(0, k.hp - dmg);
@@ -161,7 +162,7 @@ export function createCombat(deps: CombatDeps): Combat {
       }
       for (const victim of list) {
         if (victim.kind !== 'character' || victim.id === item.thrownBy || !victim.combat) continue;
-        if (!victim.visible || victim.combat.dead || !deps.touches(item, victim)) continue;
+        if (!victim.visible || victim.seatedIn !== null || victim.combat.dead || !deps.touches(item, victim)) continue;
         if (strike(victim, itemDamage(item), item.vel.x, item.vel.z)) {
           item.vel.x *= -0.2;
           item.vel.z *= -0.2;

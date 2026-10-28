@@ -255,6 +255,27 @@
           "x": 560,
           "y": 780
         }
+      },
+      {
+        "id": "opened-1",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 1
+        },
+        "pos": {
+          "x": 820,
+          "y": 560
+        }
+      },
+      {
+        "id": "not-1",
+        "kind": "not",
+        "params": {},
+        "pos": {
+          "x": 1080,
+          "y": 560
+        }
       }
     ],
     "wires": [
@@ -410,6 +431,39 @@
         "to": {
           "node": "hint-1",
           "port": "anchor"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "and-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "opened-1",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "opened-1",
+          "port": "reached"
+        },
+        "to": {
+          "node": "not-1",
+          "port": "in"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "not-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "hint-1",
+          "port": "show"
         }
       }
     ]

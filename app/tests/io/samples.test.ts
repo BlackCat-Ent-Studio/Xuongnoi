@@ -117,6 +117,8 @@ describe('key-door sample', () => {
     step(keys());
     step(keys());
     expect(world.entities().find((e) => e.ownerNodeId === 'door-1')!.visible).toBe(false);
+    for (let i = 0; i < 3; i++) step(keys());
+    expect(world.hudItems().find((h) => h.key === 'hint-1')!.hidden).toBe(true); // hint goes away once the door is open
     hold(200, 'ArrowRight');
     expect(world.ended?.result).toBe('win');
   });

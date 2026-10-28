@@ -262,6 +262,8 @@ export interface EntityView {
   inHand?: boolean;
   /** Characters only; the tool currently in hand. */
   tool?: { shape: ItemShape; color: string };
+  /** Characters only; height of the item carried above the head (side and 3D views), absent when nothing rides there. */
+  carriedHeight?: number;
   /** Characters only; 0..1 progress of a swing in progress, absent otherwise. */
   swing?: number;
   /** Characters only; run speed and jump power from the latest intent (absent before the first one). Lets a bot plan its jumps. */
