@@ -62,6 +62,8 @@ export function makeWorld(): FakeWorld {
     isInHand: () => false,
     useTool: () => null,
     wasUsedOn: () => false,
+    solidAt: () => false,
+    cameraYaw: () => 0,
   };
   return w;
 }

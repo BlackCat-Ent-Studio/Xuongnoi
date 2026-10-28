@@ -37,6 +37,16 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
         { value: 'dino', label: 'Khủng long nhỏ' },
       ],
     },
+    {
+      id: 'role',
+      label: 'Vai trò',
+      kind: 'select',
+      default: 'player',
+      options: [
+        { value: 'player', label: 'Người chơi (camera theo dõi)' },
+        { value: 'bot', label: 'Bot (do khối Bộ não điều khiển)' },
+      ],
+    },
   ],
   create(ctx, params) {
     const id = ctx.world.spawn({
@@ -46,6 +56,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       size: { x: 1, y: 1, z: 1 },
       color: strParam(params, 'color', '#3b82f6'),
       look: strParam(params, 'look', 'human'),
+      role: strParam(params, 'role', 'player') === 'bot' ? 'bot' : 'player',
       solid: true,
     });
     return { id };

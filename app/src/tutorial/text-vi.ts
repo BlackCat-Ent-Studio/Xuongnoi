@@ -429,4 +429,79 @@ export const LESSON_TEXT = {
       text: 'Bạn đã biết cầm dụng cụ trên tay, vung nó, và dùng khối Và để chỉ đúng dụng cụ mới có tác dụng. Thử đổi sang búa hay xô nước nhé.',
     },
   },
+  l6: {
+    title: '6. Tạo bot',
+    summary: 'Làm một lính gác tự đi tuần, chạm vào là thua.',
+    boardName: 'Bài 6 - Tạo bot',
+    intro: {
+      title: 'Bot là gì?',
+      text: 'Bảng này có sẵn nhân vật của bạn và sàn nhà. Ta sẽ thêm một "bot": nhân vật tự đi lại mà không cần ai bấm phím.',
+      explain: 'Bot cũng là khối Nhân vật. Chỉ khác là hướng đi của nó đến từ các khối "Bộ não" thay vì từ phím bấm.',
+    },
+    bot: {
+      title: 'Thêm nhân vật thứ hai',
+      text: 'Kéo thêm một khối "Nhân vật" nữa vào bảng.',
+    },
+    role: {
+      title: 'Cho nó làm bot',
+      text: 'Chọn nhân vật mới thêm. Ở Thuộc tính, đổi "Vai trò" thành "Bot".',
+      explain: 'Màn hình chỉ bám theo nhân vật "Người chơi". Bot tự chạy nên camera không bám theo nó.',
+    },
+    patrol: {
+      title: 'Thêm bộ não đi tuần',
+      text: 'Kéo khối "Đi tuần" (nhóm Bộ não) vào bảng.',
+      explain: 'Khối này cho bot đi qua đi lại giữa điểm A và điểm B, dừng nghỉ một chút ở mỗi đầu.',
+    },
+    wireSelf: {
+      title: 'Nói bộ não điều khiển ai',
+      text: 'Nối cổng "Nhân vật" của bot (khối Nhân vật mới) sang cổng "Bot" của khối Đi tuần.',
+      explain: 'Bộ não cần biết bot đang đứng ở đâu thì mới dẫn đường được.',
+    },
+    wireMove: {
+      title: 'Nối hướng đi',
+      text: 'Nối cổng "Đi ngang" của khối Đi tuần sang cổng "Đi ngang" của bot.',
+      explain: 'Giống cần điều khiển: số dương là đi sang phải, số âm là đi sang trái. Chỉ khác là khối Đi tuần tự đưa ra con số.',
+    },
+    playPatrol: {
+      title: 'Xem bot đi tuần',
+      text: 'Bấm "Chơi". Bot sẽ tự đi qua đi lại trên sàn.',
+    },
+    edit: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Sửa" để làm tiếp.',
+    },
+    touch: {
+      title: 'Chạm bot là thua',
+      text: 'Kéo khối "Cảm biến chạm" vào bảng.',
+    },
+    wireA: {
+      title: 'Vật A là bạn',
+      text: 'Nối cổng "Nhân vật" của nhân vật bạn điều khiển (khối có sẵn) sang cổng "Vật A" của cảm biến.',
+    },
+    wireB: {
+      title: 'Vật B là bot',
+      text: 'Nối cổng "Nhân vật" của bot sang cổng "Vật B" của cảm biến.',
+    },
+    end: {
+      title: 'Thêm khối kết thúc',
+      text: 'Kéo khối "Thắng/Thua" vào bảng.',
+    },
+    wireLose: {
+      title: 'Chạm là thua',
+      text: 'Nối cổng "Đang chạm" của cảm biến sang cổng "Thua" của khối Thắng/Thua.',
+    },
+    play: {
+      title: 'Để bot bắt thử',
+      text: 'Bấm "Chơi". Đi sang phải về phía bot cho nó chạm vào bạn.',
+    },
+    caught: {
+      title: 'Bị bắt rồi!',
+      text: 'Khi bot chạm vào bạn thì game báo thua. Vậy là lính gác của bạn đã làm việc.',
+      explain: 'Muốn bot đuổi theo bạn, dùng khối "Đuổi theo / Tránh xa". Muốn bot đi lấy đồ, dùng "Đi tới" cùng "Chuỗi việc".',
+    },
+    done: {
+      title: 'Bạn tạo được bot rồi!',
+      text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng cảm biến chạm để thua khi bị bắt. Hãy thử hai game mẫu "Lính gác" và "Bot dọn dẹp" để xem các bộ não khác nhé.',
+    },
+  },
 } as const;

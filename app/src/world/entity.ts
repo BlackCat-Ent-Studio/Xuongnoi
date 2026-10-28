@@ -1,4 +1,12 @@
-import type { EntityKind, EntityView, HoldStyle, ItemShape, Vec3, CharacterIntent } from '../engine/types';
+import type {
+  CharacterIntent,
+  CharacterRole,
+  EntityKind,
+  EntityView,
+  HoldStyle,
+  ItemShape,
+  Vec3,
+} from '../engine/types';
 
 /** Internal mutable entity record; EntityView is the public snapshot. */
 export interface Entity {
@@ -10,6 +18,7 @@ export interface Entity {
   vel: Vec3;
   color: string;
   look?: string;
+  role?: CharacterRole;
   shape?: ItemShape;
   solid: boolean;
   visible: boolean;
@@ -42,6 +51,7 @@ export function toView(e: Entity): EntityView {
     size: { ...e.size },
     color: e.color,
     ...(e.look !== undefined ? { look: e.look } : {}),
+    ...(e.role !== undefined ? { role: e.role } : {}),
     ...(e.shape !== undefined ? { shape: e.shape } : {}),
     ...(e.kind === 'item' && e.holdStyle === 'hand' ? { holdStyle: 'hand' as const } : {}),
     ...(e.kind === 'item' && e.inHand && e.heldBy !== null ? { inHand: true } : {}),

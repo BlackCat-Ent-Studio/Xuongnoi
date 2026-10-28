@@ -1,0 +1,732 @@
+{
+  "format_version": 1,
+  "name": "Bot dọn dẹp",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 0.5,
+            "z": 0
+          },
+          "speed": 5,
+          "color": "#f59e0b",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "seq-1",
+        "kind": "sequence",
+        "params": {
+          "stepCount": 2,
+          "loop": "yes"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "go-pile",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 5,
+            "y": 0.5,
+            "z": 0
+          },
+          "stopDistance": 0.3
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "go-bin",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": -6,
+            "y": 0.5,
+            "z": 0
+          },
+          "stopDistance": 0.3
+        },
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "or-next",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 330
+        }
+      },
+      {
+        "id": "math-x",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "math-y",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 560,
+          "y": 190
+        }
+      },
+      {
+        "id": "carry-1",
+        "kind": "carry",
+        "params": {
+          "mode": "separate",
+          "throwPower": 8
+        },
+        "pos": {
+          "x": 820,
+          "y": 330
+        }
+      },
+      {
+        "id": "bin-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -7.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 1,
+            "z": 3
+          },
+          "color": "#0ea5e9",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 40,
+          "y": 640
+        }
+      },
+      {
+        "id": "crate-1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 4.6,
+            "y": 0.5,
+            "z": -0.3
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 300,
+          "y": 480
+        }
+      },
+      {
+        "id": "crate-2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 5,
+            "y": 0.5,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 300,
+          "y": 620
+        }
+      },
+      {
+        "id": "crate-3",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 5.4,
+            "y": 0.5,
+            "z": -0.2
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 300,
+          "y": 760
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 480
+        }
+      },
+      {
+        "id": "touch-2",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 620
+        }
+      },
+      {
+        "id": "touch-3",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 760
+        }
+      },
+      {
+        "id": "or-a",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 480
+        }
+      },
+      {
+        "id": "or-b",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 620
+        }
+      },
+      {
+        "id": "counter-1",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 3
+        },
+        "pos": {
+          "x": 1080,
+          "y": 480
+        }
+      },
+      {
+        "id": "show-1",
+        "kind": "show-number",
+        "params": {
+          "label": "Thùng đã dọn",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 480
+        }
+      },
+      {
+        "id": "end-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bot đã dọn sạch tất cả thùng!",
+          "loseMessage": "Thua mất rồi!"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 640
+        }
+      },
+      {
+        "id": "wall-n",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -6.5
+          },
+          "size": {
+            "x": 20,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-s",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 6.5
+          },
+          "size": {
+            "x": 20,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 140
+        }
+      },
+      {
+        "id": "wall-w",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -9.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 240
+        }
+      },
+      {
+        "id": "wall-e",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 9.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 340
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "go-pile",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "go-bin",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "seq-1",
+          "port": "step1"
+        },
+        "to": {
+          "node": "go-pile",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "seq-1",
+          "port": "step2"
+        },
+        "to": {
+          "node": "go-bin",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "go-pile",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "or-next",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "go-bin",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "or-next",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "or-next",
+          "port": "out"
+        },
+        "to": {
+          "node": "seq-1",
+          "port": "next"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "go-pile",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "grab"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "go-bin",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "drop"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "go-pile",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "math-x",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "go-bin",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "math-x",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "go-pile",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "math-y",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "go-bin",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "math-y",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "math-x",
+          "port": "out"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "math-y",
+          "port": "out"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "crate-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "bin-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "crate-2",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "bin-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "crate-3",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "bin-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "crate-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "touch-2",
+          "port": "touching"
+        },
+        "to": {
+          "node": "crate-2",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "touch-3",
+          "port": "touching"
+        },
+        "to": {
+          "node": "crate-3",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w26",
+        "from": {
+          "node": "touch-1",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-a",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w27",
+        "from": {
+          "node": "touch-2",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-a",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w28",
+        "from": {
+          "node": "or-a",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-b",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w29",
+        "from": {
+          "node": "touch-3",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-b",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w30",
+        "from": {
+          "node": "or-b",
+          "port": "out"
+        },
+        "to": {
+          "node": "counter-1",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w31",
+        "from": {
+          "node": "counter-1",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-1",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w32",
+        "from": {
+          "node": "counter-1",
+          "port": "reached"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "win"
+        }
+      }
+    ]
+  }
+}

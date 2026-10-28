@@ -4,6 +4,8 @@ import top from '../samples/top-collect.json';
 import hop from '../samples/3d-hop.json';
 import keyDoor from '../samples/key-door.json';
 import pickaxeRock from '../samples/pickaxe-rock.json';
+import guardPatrol from '../samples/guard-patrol.json';
+import cleanerBot from '../samples/cleaner-bot.json';
 import { parseBoard } from './save-format';
 
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
@@ -12,6 +14,8 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: '3d-hop', label: 'Nhảy cóc 3D', json: hop },
   { id: 'key-door', label: 'Chìa khoá và cánh cửa (2D)', json: keyDoor },
   { id: 'pickaxe-rock', label: 'Cuốc đá mở đường (2D)', json: pickaxeRock },
+  { id: 'guard-patrol', label: 'Lính gác (bot tuần tra, nhìn từ trên)', json: guardPatrol },
+  { id: 'cleaner-bot', label: 'Bot dọn dẹp (xem bot tự làm việc)', json: cleanerBot },
 ];
 
 /** Fresh copies on every call, so callers may mutate the boards freely. */

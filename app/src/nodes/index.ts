@@ -3,16 +3,20 @@ import type { NodeCategory, NodeDef } from '../engine/types';
 import { andNode, notNode, orNode } from './bool-gates';
 import { blockNode } from './block';
 import { characterNode } from './character';
+import { chaseNode } from './chase';
 import { compareNode } from './compare';
 import { carryNode } from './carry';
 import { constNode } from './const';
 import { counterNode } from './counter';
+import { goToNode } from './go-to';
 import { handToolNode } from './hand-tool';
 import { interactNode } from './interact';
 import { itemNode } from './item';
 import { keyNode } from './key';
 import { mathNode } from './math';
 import { onStartNode } from './on-start';
+import { patrolNode } from './patrol';
+import { sequenceNode } from './sequence';
 import { showNumberNode } from './show-number';
 import { stickNode } from './stick';
 import { timerNode } from './timer';
@@ -25,6 +29,7 @@ export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   math: 'Tính toán',
   object: 'Vật thể',
   action: 'Hành động',
+  brain: 'Bộ não',
   output: 'Kết quả',
 };
 
@@ -51,6 +56,10 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   carryNode,
   interactNode,
   handToolNode,
+  patrolNode,
+  goToNode,
+  chaseNode,
+  sequenceNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

@@ -1,5 +1,5 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
-import { strParam, vec3Param } from './util';
+import { asBool, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
   box: 'Hộp',
@@ -22,13 +22,19 @@ function holdStyleParam(raw: string): HoldStyle {
   return (HOLD_STYLES as readonly string[]).includes(raw) ? (raw as HoldStyle) : 'head';
 }
 
-export const itemNode: NodeDef<{ id: EntityId }> = {
+interface ItemState {
+  id: EntityId;
+  hide: EdgeState;
+  hidden: boolean;
+}
+
+export const itemNode: NodeDef<ItemState> = {
   kind: 'item',
   label: 'Đồ vật',
   category: 'object',
   description:
     'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm tay.',
-  inputs: [],
+  inputs: [{ id: 'hide', type: 'bool', label: 'Ẩn đi' }],
   outputs: [
     { id: 'self', type: 'object', label: 'Đồ vật' },
     { id: 'held', type: 'bool', label: 'Đang được cầm' },
@@ -80,9 +86,13 @@ export const itemNode: NodeDef<{ id: EntityId }> = {
       carryable: strParam(params, 'carryable', 'yes') !== 'no',
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
     });
-    return { id };
+    return { id, hide: { prev: false }, hidden: false };
   },
-  evaluate(ctx, _i, _params, s) {
+  evaluate(ctx, i, _params, s) {
+    if (risingEdge(s.hide, asBool(i.hide)) && !s.hidden) {
+      s.hidden = true;
+      ctx.world.hide(s.id);
+    }
     return {
       self: s.id,
       held: ctx.world.isHeld(s.id),

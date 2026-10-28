@@ -5,7 +5,7 @@ import { h } from './dom';
 import type { EditorState } from './editor-state';
 import { TEXT_VI } from './text-vi';
 
-const CATEGORY_ORDER: NodeCategory[] = ['input', 'logic', 'math', 'object', 'action', 'output'];
+const CATEGORY_ORDER: NodeCategory[] = ['input', 'logic', 'math', 'object', 'action', 'brain', 'output'];
 const DRAG_THRESHOLD = 5;
 
 export interface PaletteDeps {

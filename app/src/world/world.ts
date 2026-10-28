@@ -182,6 +182,7 @@ export function createWorld(mode: ViewMode): World {
         vel: { x: 0, y: 0, z: 0 },
         color: spec.color,
         look: spec.look,
+        ...(spec.kind === 'character' && spec.role !== undefined ? { role: spec.role } : {}),
         ...(spec.kind === 'item' ? { shape: spec.shape ?? 'box' } : {}),
         solid: spec.kind === 'item' ? false : spec.solid,
         visible: true,
@@ -333,6 +334,22 @@ export function createWorld(mode: ViewMode): World {
     },
     wasUsedOn(id: EntityId): boolean {
       return usedOn.has(id);
+    },
+    solidAt(p: Vec3): boolean {
+      for (const e of list) {
+        if (!e.visible || !e.solid || e.kind !== 'block') continue;
+        if (
+          Math.abs(p.x - e.pos.x) <= e.size.x / 2 &&
+          Math.abs(p.y - e.pos.y) <= e.size.y / 2 &&
+          Math.abs(p.z - e.pos.z) <= e.size.z / 2
+        ) {
+          return true;
+        }
+      }
+      return false;
+    },
+    cameraYaw(): number {
+      return yaw;
     },
     step(dt: number): void {
       if (ended) return;

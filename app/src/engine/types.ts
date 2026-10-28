@@ -31,7 +31,7 @@ export const PORT_DEFAULTS: Record<PortType, PortValue> = {
 
 // ---------- node definitions ----------
 
-export type NodeCategory = 'input' | 'logic' | 'math' | 'object' | 'action' | 'output';
+export type NodeCategory = 'input' | 'logic' | 'math' | 'object' | 'action' | 'brain' | 'output';
 
 export interface PortDef {
   id: string;
@@ -183,6 +183,9 @@ export const ITEM_SHAPES: readonly ItemShape[] = [
 export type HoldStyle = 'head' | 'hand';
 export const HOLD_STYLES: readonly HoldStyle[] = ['head', 'hand'];
 
+/** Who steers a character: the person playing (camera follows it) or a bot driven by brain nodes. */
+export type CharacterRole = 'player' | 'bot';
+
 export interface EntitySpec {
   kind: EntityKind;
   /** Graph node that owns this entity — lets the editor map clicks in the game view back to nodes. */
@@ -195,6 +198,8 @@ export interface EntitySpec {
   color: string;
   /** Character look id (e.g. 'robot'); omitted = the default human. Ignored for blocks. */
   look?: string;
+  /** Characters only: omitted = 'player'. */
+  role?: CharacterRole;
   /** Solid entities block movement; non-solid ones (pickups) only produce contacts. */
   solid: boolean;
   /** Items only: look of the item. Omitted = 'box'. */
@@ -224,6 +229,8 @@ export interface EntityView {
   size: Vec3;
   color: string;
   look?: string;
+  /** Characters only; 'bot' characters are skipped by the follow camera while a player exists. */
+  role?: CharacterRole;
   /** Items only. */
   shape?: ItemShape;
   /** Items only; present as 'hand' for tools. */
@@ -295,6 +302,13 @@ export interface WorldApi {
   useTool(character: EntityId, reach: number): { target: EntityId | null } | null;
   /** True for exactly one tick after something was used on this entity. */
   wasUsedOn(id: EntityId): boolean;
+
+  // ---- read-only probes for brain nodes ----
+
+  /** True when the point lies inside a visible solid block (the ground, a wall...). */
+  solidAt(point: Vec3): boolean;
+  /** Camera yaw last given to the world (3D stick input is relative to it). */
+  cameraYaw(): number;
 }
 
 /** Full world used by the game loop and renderer. */

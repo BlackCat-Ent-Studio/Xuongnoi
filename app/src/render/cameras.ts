@@ -103,6 +103,12 @@ export function entityBounds(entities: readonly EntityView[]): Bounds | null {
   return any ? { min, max } : null;
 }
 
+/** The character the play camera follows: the first visible player, else the first visible character (bots only). */
+export function pickFollowTarget(entities: readonly EntityView[]): EntityView | undefined {
+  const characters = entities.filter((e) => e.kind === 'character' && e.visible);
+  return characters.find((e) => e.role !== 'bot') ?? characters[0];
+}
+
 /** Visible height of an orthographic view that fits a w x h area at the given aspect. */
 export function fitOrthoHeight(w: number, h: number, aspect: number): number {
   return Math.max(SIDE_VIEW_HEIGHT, h + 4, (w + 4) / Math.max(aspect, 0.01));
@@ -227,7 +233,7 @@ export class CameraRig {
     this.syncFollow(follow);
     const bounds = entityBounds(entities);
     if (follow) {
-      const character = entities.find((e) => e.kind === 'character' && e.visible);
+      const character = pickFollowTarget(entities);
       let goal: THREE.Vector3;
       if (character) goal = new THREE.Vector3(character.position.x, character.position.y, character.position.z);
       else if (bounds) goal = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);

@@ -373,6 +373,60 @@ describe('lesson 5: hand tools', () => {
   });
 });
 
+describe('lesson 6: make a bot', () => {
+  it('walks through bot role, patrol brain and the touch-to-lose wiring, and the bot really catches the player', () => {
+    const s = session('make-bot');
+    s.runner.next();
+    expect(s.stepId()).toBe('add-bot');
+    const hero = s.idOf('character');
+    const bot = s.add('character');
+    expect(s.stepId()).toBe('bot-role');
+    s.param(bot, 'role', 'bot');
+    expect(s.stepId()).toBe('add-patrol');
+    const patrol = s.add('patrol');
+    expect(s.stepId()).toBe('wire-bot-self');
+    s.wire(p(bot, 'self'), p(patrol, 'self'));
+    expect(s.stepId()).toBe('wire-bot-move');
+    s.wire(p(patrol, 'moveX'), p(bot, 'moveX'));
+    expect(s.stepId()).toBe('play-patrol');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit');
+    s.play(false);
+    expect(s.stepId()).toBe('add-touch');
+    const touch = s.add('touch');
+    expect(s.stepId()).toBe('wire-touch-a');
+    s.wire(p(hero, 'self'), p(touch, 'a'));
+    expect(s.stepId()).toBe('wire-touch-b');
+    s.wire(p(bot, 'self'), p(touch, 'b'));
+    expect(s.stepId()).toBe('add-end');
+    const end = s.add('win-lose');
+    expect(s.stepId()).toBe('wire-lose');
+    s.wire(p(touch, 'touching'), p(end, 'lose'));
+    expect(s.stepId()).toBe('play-caught');
+    s.play(true);
+    expect(s.stepId()).toBe('caught');
+
+    // Play the learner's board for real: the player walks right and the patrolling bot catches them.
+    const graph = s.state.getGraph();
+    const world = createWorld('2d-side');
+    const rt = createRuntime(graph, world, '2d-side');
+    for (let i = 0; i < 60 * 15 && !world.ended; i++) {
+      rt.tick({ keysDown: new Set(['ArrowRight']) });
+      world.step(TICK_DT);
+    }
+    expect(world.ended?.result).toBe('lose');
+    s.end('lose');
+    expect(s.stepId()).toBe('done');
+  });
+
+  it('the starting board has a player and a floor but no bot yet', () => {
+    const board = findLesson('make-bot')!.createBoard();
+    const characters = board.graph.nodes.filter((n) => n.kind === 'character');
+    expect(characters).toHaveLength(1);
+    expect(characters[0]!.params.role ?? 'player').toBe('player');
+  });
+});
+
 describe('step targets', () => {
   it('resolve to selectors for every step of every lesson on the starting board', () => {
     for (const lesson of LESSONS) {

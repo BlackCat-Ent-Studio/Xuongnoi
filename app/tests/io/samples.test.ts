@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type InputSnapshot } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
+import { pickFollowTarget } from '../../src/render/cameras';
 import { createWorld } from '../../src/world/world';
 import { listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { safeFileName } from '../../src/io/file-io';
@@ -22,9 +23,9 @@ function start(board: Board) {
 describe('samples', () => {
   const samples = listSamples();
 
-  it('lists five samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side']);
+  it('lists seven samples with distinct ids and the expected modes', () => {
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -188,6 +189,84 @@ describe('pickaxe-rock sample', () => {
     expect(rockVisible()).toBe(true);
     hold(100, 'ArrowRight');
     expect(world.ended).toBeNull();
+  });
+});
+
+describe('guard-patrol sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'guard-patrol')!.board;
+  const withPlayerAt = (x: number, z: number) => {
+    const b = board();
+    b.graph.nodes.find((n) => n.id === 'player')!.params.position = { x, y: 0.5, z };
+    return b;
+  };
+  const guardX = (g: ReturnType<typeof start>): number => Number(g.rt.getOutput('guard', 'x'));
+
+  it('the guard walks its beat without noticing a far-away player', () => {
+    const g = start(board());
+    let min = Infinity;
+    let max = -Infinity;
+    for (let i = 0; i < 60 * 14; i++) {
+      g.step(keys());
+      min = Math.min(min, guardX(g));
+      max = Math.max(max, guardX(g));
+    }
+    expect(min).toBeLessThan(-3.5);
+    expect(max).toBeGreaterThan(3.5);
+    expect(g.rt.getOutput('chase-1', 'seeing')).toBe(false);
+    expect(g.world.ended).toBeNull();
+  });
+
+  it('the guard chases and catches a player who stands still in its sight', () => {
+    const g = start(withPlayerAt(-2, 3));
+    for (let i = 0; i < 60 * 20 && !g.world.ended; i++) g.step(keys());
+    expect(g.world.ended?.result).toBe('lose');
+  });
+
+  it('the camera follows the player, not the guard', () => {
+    const g = start(board());
+    g.step(keys());
+    const followed = pickFollowTarget(g.world.entities())!;
+    expect(followed.ownerNodeId).toBe('player');
+    expect(g.world.entities().find((e) => e.ownerNodeId === 'guard')!.role).toBe('bot');
+  });
+
+  it('is won by: fetch the key along the wall, sneak past the guard, open the door, reach the goal', () => {
+    const g = start(board());
+    const hold = (n: number, ...k: string[]): void => {
+      for (let i = 0; i < n && !g.world.ended; i++) g.step(keys(...k));
+    };
+    // Wait until the guard has gone to the far end, then run for the key up the left wall.
+    for (let i = 0; i < 60 * 6 && guardX(g) < 3.5; i++) g.step(keys());
+    hold(125, 'KeyW'); // z 4 -> against the north wall
+    expect(g.world.entities().find((e) => e.ownerNodeId === 'door-1')!.visible).toBe(false);
+    hold(190, 'KeyD'); // along the north wall, through the opened door
+    hold(120, 'KeyS'); // down to the goal
+    expect(g.world.ended?.result).toBe('win');
+  });
+});
+
+describe('cleaner-bot sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'cleaner-bot')!.board;
+
+  it('delivers all three crates unattended and wins', () => {
+    const g = start(board());
+    const counts: number[] = [];
+    for (let i = 0; i < 60 * 90 && !g.world.ended; i++) {
+      g.step(keys());
+      const c = Number(g.rt.getOutput('counter-1', 'value'));
+      if (counts[counts.length - 1] !== c) counts.push(c);
+    }
+    expect(counts).toEqual([0, 1, 2, 3]);
+    expect(g.world.ended?.result).toBe('win');
+    const crates = g.world.entities().filter((e) => e.kind === 'item');
+    expect(crates).toHaveLength(3);
+    expect(crates.every((e) => !e.visible)).toBe(true);
+  });
+
+  it('the camera falls back to the bot when there is no player', () => {
+    const g = start(board());
+    g.step(keys());
+    expect(pickFollowTarget(g.world.entities())?.ownerNodeId).toBe('bot');
   });
 });
 

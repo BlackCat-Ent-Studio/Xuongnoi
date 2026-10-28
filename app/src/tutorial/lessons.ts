@@ -778,7 +778,104 @@ const lesson5: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5];
+// ---------- lesson 6 ----------
+
+const isBot: NodeFilter = (n) => paramOf(n, 'role') === 'bot';
+const isPlayer: NodeFilter = (n) => !isBot(n);
+
+/** The most recently added node of a kind, so the hint never points at the character that was already there. */
+function newestNodeTarget(snap: Snapshot, kind: string, param: string): TargetList {
+  const nodes = nodesOfKind(snap.graph, kind);
+  const node = nodes[nodes.length - 1];
+  return [node ? [paramSel(param), `.wc-node[data-id="${node.id}"]`] : paramSel(param)];
+}
+
+/** The mover standing at the left end of a long floor, nothing else. */
+const BOT_NODES: NodeSpec[] = [
+  { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+  { alias: 'key', kind: 'key', x: 20, y: 190 },
+  { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 } } },
+  { alias: 'floor', kind: 'block', x: 300, y: 370, params: { size: { x: 24, y: 1, z: 1 }, color: '#65a30d' } },
+];
+
+const BOT_SELF: Endpoint = { kind: 'character', port: 'self', where: isBot };
+const BOT_MOVE_X: Endpoint = { kind: 'character', port: 'moveX', where: isBot };
+const PLAYER_SELF: Endpoint = { kind: 'character', port: 'self', where: isPlayer };
+const PATROL_SELF: Endpoint = { kind: 'patrol', port: 'self' };
+const PATROL_MOVE_X: Endpoint = { kind: 'patrol', port: 'moveX' };
+
+const lesson6: Lesson = {
+  id: 'make-bot',
+  title: T.l6.title,
+  summary: T.l6.summary,
+  createBoard: () => buildBoard(T.l6.boardName, BOT_NODES, MOVER_WIRES),
+  steps: [
+    { id: 'intro', title: T.l6.intro.title, text: T.l6.intro.text, explain: T.l6.intro.explain },
+    { ...addStep('add-bot', 'character', 2), title: T.l6.bot.title, text: T.l6.bot.text },
+    {
+      id: 'bot-role',
+      title: T.l6.role.title,
+      text: T.l6.role.text,
+      explain: T.l6.role.explain,
+      target: (s) => newestNodeTarget(s, 'character', 'role'),
+      check: (s) => hasNode(s.graph, 'character', isBot),
+    },
+    {
+      ...addStep('add-patrol', 'patrol'),
+      title: T.l6.patrol.title,
+      text: T.l6.patrol.text,
+      explain: T.l6.patrol.explain,
+    },
+    {
+      ...wireStep('wire-bot-self', BOT_SELF, PATROL_SELF),
+      title: T.l6.wireSelf.title,
+      text: T.l6.wireSelf.text,
+      explain: T.l6.wireSelf.explain,
+    },
+    {
+      ...wireStep('wire-bot-move', PATROL_MOVE_X, BOT_MOVE_X),
+      title: T.l6.wireMove.title,
+      text: T.l6.wireMove.text,
+      explain: T.l6.wireMove.explain,
+    },
+    {
+      id: 'play-patrol',
+      title: T.l6.playPatrol.title,
+      text: T.l6.playPatrol.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit',
+      title: T.l6.edit.title,
+      text: T.l6.edit.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    { ...addStep('add-touch', 'touch'), title: T.l6.touch.title, text: T.l6.touch.text },
+    { ...wireStep('wire-touch-a', PLAYER_SELF, TOUCH_A), title: T.l6.wireA.title, text: T.l6.wireA.text },
+    { ...wireStep('wire-touch-b', BOT_SELF, TOUCH_B), title: T.l6.wireB.title, text: T.l6.wireB.text },
+    { ...addStep('add-end', 'win-lose'), title: T.l6.end.title, text: T.l6.end.text },
+    { ...wireStep('wire-lose', TOUCHING, LOSE_IN), title: T.l6.wireLose.title, text: T.l6.wireLose.text },
+    {
+      id: 'play-caught',
+      title: T.l6.play.title,
+      text: T.l6.play.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'caught',
+      title: T.l6.caught.title,
+      text: T.l6.caught.text,
+      explain: T.l6.caught.explain,
+      check: (s) => s.ended === 'lose',
+    },
+    { id: 'done', title: T.l6.done.title, text: T.l6.done.text },
+  ],
+};
+
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);
