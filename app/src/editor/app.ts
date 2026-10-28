@@ -15,6 +15,7 @@ import { h, isTypingTarget } from './dom';
 import { countUnavailable, createEditorState } from './editor-state';
 import { installEntityDrag } from './entity-drag';
 import { createKeyboardInput } from './keyboard-input';
+import { installLayoutSplitters } from './layout-splitters';
 import { createNewGameDialog } from './new-game-dialog';
 import { createPalette } from './palette';
 import { createPropertiesPanel } from './properties-panel';
@@ -99,9 +100,10 @@ export function mountEditor(root: HTMLElement): void {
 
   const props = createPropertiesPanel(state);
   const right = h('div', 'right-col');
-  right.append(gameBox, props);
   const main = h('div', 'main');
-  main.append(palette, canvas.el, right);
+  const splitters = installLayoutSplitters({ main, right, onChange: () => gameView.resize() });
+  right.append(gameBox, splitters.horizontal, props);
+  main.append(palette, canvas.el, splitters.vertical, right);
   root.replaceChildren(topBar.el, main);
   root.classList.add('app');
 
@@ -109,6 +111,24 @@ export function mountEditor(root: HTMLElement): void {
   installEntityDrag(gameBox, gameView, state);
   const ro = new ResizeObserver(() => gameView.resize());
   ro.observe(gameBox);
+
+  // Sizes depend on laid-out elements, so apply once everything is attached.
+  window.dispatchEvent(new Event('resize'));
+
+  // ---------- maximize game view ----------
+
+  const maxBtn = h('button', 'view-max');
+  maxBtn.type = 'button';
+  function setMaximized(on: boolean): void {
+    root.classList.toggle('maximized', on);
+    maxBtn.textContent = on ? TEXT_VI.restore : TEXT_VI.maximize;
+    maxBtn.title = on ? TEXT_VI.restoreTip : TEXT_VI.maximizeTip;
+    gameView.resize();
+    requestAnimationFrame(() => gameView.resize());
+  }
+  maxBtn.addEventListener('click', () => setMaximized(!root.classList.contains('maximized')));
+  gameBox.append(maxBtn);
+  setMaximized(false);
 
   function loadBoard(board: Board): void {
     tutorial.exit();
@@ -192,7 +212,16 @@ export function mountEditor(root: HTMLElement): void {
   });
 
   window.addEventListener('keydown', (e) => {
-    if (state.isPlaying() || isTypingTarget(e.target)) return;
+    if (isTypingTarget(e.target)) return;
+    if (e.key === 'Escape' && root.classList.contains('maximized')) {
+      setMaximized(false);
+      return;
+    }
+    if (state.isPlaying()) return;
+    if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      setMaximized(!root.classList.contains('maximized'));
+      return;
+    }
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (state.deleteSelection()) e.preventDefault();
     }
