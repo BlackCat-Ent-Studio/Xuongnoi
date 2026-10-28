@@ -87,6 +87,8 @@ export function createGameView(): GameView {
     runtime = null;
     hud?.hideEnd();
     hud?.hideError();
+    // Values from a finished play session must not linger on the edit-mode preview.
+    hud?.clearItems();
   }
 
   function build(graph: Graph, m: ViewMode): boolean {

@@ -85,6 +85,14 @@ describe('entity drag plane', () => {
   it('side keeps z', () => {
     expect(positionOnPlane('2d-side', cur, { x: 4.3, y: 5.1, z: 0 }, off)).toEqual({ x: 4.5, y: 5, z: 3 });
   });
+  it('an unmoved axis keeps an off-grid value', () => {
+    const offGrid = { x: 4.5, y: 1.25, z: 0 };
+    expect(positionOnPlane('2d-side', offGrid, { x: 10, y: 1.25, z: 0 }, { x: 0, y: 0, z: 0 })).toEqual({
+      x: 10,
+      y: 1.25,
+      z: 0,
+    });
+  });
   it('top and 3d keep y', () => {
     expect(positionOnPlane('2d-top', cur, { x: 4.3, y: 2, z: 7.8 }, off)).toEqual({ x: 4.5, y: 2, z: 8 });
     expect(positionOnPlane('3d', cur, { x: 0, y: 2, z: 0.2 }, { x: 1, y: 0, z: 0 })).toEqual({ x: 1, y: 2, z: 0 });

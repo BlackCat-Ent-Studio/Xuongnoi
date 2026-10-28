@@ -3,6 +3,12 @@ import { TEXT_VI } from './text-vi';
 
 const CORNERS: HudCorner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
+/** Whole numbers as-is; fractional values (e.g. a running timer) rounded to one decimal. */
+export function formatHudValue(v: number): string {
+  if (!Number.isFinite(v)) return '0';
+  return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
 function cornerStyle(c: HudCorner): string {
   const v = c.startsWith('top') ? 'top:8px;' : 'bottom:8px;';
   const h = c.endsWith('left') ? 'left:8px;text-align:left;' : 'right:8px;text-align:right;';
@@ -42,7 +48,7 @@ export class Hud {
       const el = this.corners.get(item.corner);
       if (!el) continue;
       const row = document.createElement('div');
-      row.textContent = `${item.label}: ${item.value}`;
+      row.textContent = `${item.label}: ${formatHudValue(item.value)}`;
       el.appendChild(row);
     }
   }

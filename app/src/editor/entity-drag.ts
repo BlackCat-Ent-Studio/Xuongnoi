@@ -7,10 +7,16 @@ import { readPosition, snapHalf, type EditorState } from './editor-state';
  * `point` is the pointer's point on the editing plane, `offset` = position − point at grab time.
  */
 export function positionOnPlane(mode: ViewMode, current: Vec3, point: Vec3, offset: Vec3): Vec3 {
+  // An axis the pointer has not moved along keeps its value, so a drag on one axis
+  // does not snap an off-grid coordinate on the other axis.
+  const axis = (k: 'x' | 'y' | 'z'): number => {
+    const raw = point[k] + offset[k];
+    return Math.abs(raw - current[k]) < 1e-9 ? current[k] : snapHalf(raw);
+  };
   if (mode === '2d-side') {
-    return { x: snapHalf(point.x + offset.x), y: snapHalf(point.y + offset.y), z: current.z };
+    return { x: axis('x'), y: axis('y'), z: current.z };
   }
-  return { x: snapHalf(point.x + offset.x), y: current.y, z: snapHalf(point.z + offset.z) };
+  return { x: axis('x'), y: current.y, z: axis('z') };
 }
 
 /** Lets the user drag entities in the game view (edit mode) to set their `position` param. */
