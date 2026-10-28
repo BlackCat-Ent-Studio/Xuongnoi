@@ -1,19 +1,23 @@
 import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
+import { Humanoid } from './humanoid-model';
 
-interface MeshEntry {
-  mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>;
-  color: string;
-}
+type Entry =
+  | { type: 'block'; mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>; color: string }
+  | { type: 'character'; figure: Humanoid };
 
-/** Mirrors world entities as colored boxes. One shared unit geometry, one material per mesh. */
+/**
+ * Mirrors world entities: blocks as colored boxes, characters as animated blocky humanoids.
+ * One shared unit geometry for blocks, one material per block mesh.
+ */
 export class SceneView {
   readonly scene = new THREE.Scene();
   private readonly group = new THREE.Group();
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
-  private readonly meshes = new Map<string, MeshEntry>();
+  private readonly entries = new Map<string, Entry>();
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
+  private mode: ViewMode = '2d-side';
 
   constructor() {
     this.scene.background = new THREE.Color(0xe6e8ec);
@@ -24,18 +28,33 @@ export class SceneView {
     this.scene.add(this.group);
   }
 
-  /** Create / update / remove meshes so they match the entity list. */
-  sync(entities: readonly EntityView[]): void {
+  /** View mode decides how characters face; changing it drops existing figures' animation state. */
+  setMode(mode: ViewMode): void {
+    if (mode === this.mode) return;
+    this.mode = mode;
+    for (const entry of this.entries.values()) {
+      if (entry.type === 'character') entry.figure.setMode(mode);
+    }
+  }
+
+  /** Create / update / remove objects so they match the entity list. `dt` drives character animation. */
+  sync(entities: readonly EntityView[], dt = 0): void {
     const seen = new Set<string>();
     for (const e of entities) {
       if (!e.visible) continue;
       seen.add(e.id);
-      let entry = this.meshes.get(e.id);
+      let entry = this.entries.get(e.id);
+      if (entry && (entry.type === 'character') !== (e.kind === 'character')) {
+        this.removeEntry(e.id, entry);
+        entry = undefined;
+      }
       if (!entry) {
-        const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
-        entry = { mesh, color: e.color };
-        this.meshes.set(e.id, entry);
-        this.group.add(mesh);
+        entry = this.createEntry(e);
+        this.entries.set(e.id, entry);
+      }
+      if (entry.type === 'character') {
+        entry.figure.update(e, dt);
+        continue;
       }
       const { mesh } = entry;
       mesh.position.set(e.position.x, e.position.y, e.position.z);
@@ -47,12 +66,31 @@ export class SceneView {
       }
       mesh.updateMatrixWorld();
     }
-    for (const [id, entry] of this.meshes) {
-      if (seen.has(id)) continue;
+    for (const [id, entry] of this.entries) {
+      if (!seen.has(id)) this.removeEntry(id, entry);
+    }
+  }
+
+  private createEntry(e: EntityView): Entry {
+    if (e.kind === 'character') {
+      const figure = new Humanoid(e.color, this.mode);
+      this.group.add(figure.object);
+      return { type: 'character', figure };
+    }
+    const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
+    this.group.add(mesh);
+    return { type: 'block', mesh, color: e.color };
+  }
+
+  private removeEntry(id: string, entry: Entry): void {
+    if (entry.type === 'character') {
+      this.group.remove(entry.figure.object);
+      entry.figure.dispose();
+    } else {
       this.group.remove(entry.mesh);
       entry.mesh.material.dispose();
-      this.meshes.delete(id);
     }
+    this.entries.delete(id);
   }
 
   clear(): void {
@@ -81,7 +119,8 @@ export class SceneView {
 
   pick(ndc: THREE.Vector2, camera: THREE.Camera): string | null {
     this.raycaster.setFromCamera(ndc, camera);
-    const hits = this.raycaster.intersectObjects(this.group.children, false);
+    // Recursive: humanoid parts are nested meshes; each carries the owner id in userData.
+    const hits = this.raycaster.intersectObjects(this.group.children, true);
     const owner: unknown = hits[0]?.object.userData.ownerNodeId;
     return typeof owner === 'string' ? owner : null;
   }

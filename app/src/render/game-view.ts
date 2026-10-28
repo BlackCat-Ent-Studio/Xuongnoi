@@ -52,6 +52,7 @@ export function createGameView(): GameView {
   const raycaster = new THREE.Raycaster();
 
   function ensureRig(m: ViewMode): void {
+    sceneView.setMode(m);
     if (rig.mode === m) return;
     rig = new CameraRig(m);
     rig.resize(width, height);
@@ -60,7 +61,7 @@ export function createGameView(): GameView {
   function draw(dt: number, follow: boolean): void {
     if (!renderer) return;
     const entities = world ? world.entities() : [];
-    sceneView.sync(entities);
+    sceneView.sync(entities, dt);
     rig.update(entities, dt, follow);
     renderer.render(sceneView.scene, rig.camera);
   }
@@ -85,6 +86,8 @@ export function createGameView(): GameView {
     cancelLoop();
     playing = false;
     runtime = null;
+    // Fresh figures per session so animation state never carries across restarts.
+    sceneView.clear();
     hud?.hideEnd();
     hud?.hideError();
     // Values from a finished play session must not linger on the edit-mode preview.
