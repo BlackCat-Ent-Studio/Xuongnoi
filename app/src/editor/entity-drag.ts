@@ -49,7 +49,7 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
   container.addEventListener(
     'pointerdown',
     (e) => {
-      if (state.isPlaying() || e.button !== 0) return;
+      if (state.isPlaying() || e.button !== 0 || !(e.target instanceof HTMLCanvasElement)) return;
       const nodeId = gameView.pickEntityOwner(e.clientX, e.clientY);
       if (!nodeId) return;
       const cur = readPosition(state.getGraph(), nodeId);

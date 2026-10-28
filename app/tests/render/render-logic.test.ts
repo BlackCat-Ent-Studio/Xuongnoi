@@ -10,6 +10,12 @@ import {
   orbitOffset,
   smoothValue,
   yawForward,
+  MAX_ZOOM,
+  MIN_ZOOM,
+  panGroundDelta,
+  panOrthoDelta,
+  zoomAfterWheel,
+  zoomCenter,
 } from '../../src/render/cameras';
 import type { EntityView } from '../../src/engine/types';
 
@@ -94,5 +100,60 @@ describe('camera math', () => {
     expect(rig.pitch).toBe(MAX_PITCH);
     rig.rotate(0, -1000000);
     expect(rig.pitch).toBe(MIN_PITCH);
+  });
+});
+
+describe('edit camera math', () => {
+  it('clamps wheel zoom to 0.3x-4x', () => {
+    expect(zoomAfterWheel(1, -100000)).toBe(MAX_ZOOM);
+    expect(zoomAfterWheel(1, 100000)).toBe(MIN_ZOOM);
+    expect(zoomAfterWheel(1, -500)).toBeGreaterThan(1);
+    expect(zoomAfterWheel(1, 500)).toBeLessThan(1);
+  });
+  it('zoom keeps the point under the cursor fixed', () => {
+    const c = { u: 3, v: -2 };
+    const ndc = { x: 0.5, y: -0.25 };
+    const aspect = 1.6;
+    const pointAt = (center: { u: number; v: number }, size: number) => ({
+      u: center.u + (ndc.x * aspect * size) / 2,
+      v: center.v + (ndc.y * size) / 2,
+    });
+    const next = zoomCenter(c, ndc, aspect, 10, 5);
+    const before = pointAt(c, 10);
+    const after = pointAt(next, 5);
+    expect(after.u).toBeCloseTo(before.u);
+    expect(after.v).toBeCloseTo(before.v);
+    expect(zoomCenter(c, { x: 0, y: 0 }, aspect, 10, 5)).toEqual(c);
+  });
+  it('ortho pan moves the content with the pointer', () => {
+    const d = panOrthoDelta(100, 50, 10, 500);
+    expect(d.u).toBeCloseTo(-2);
+    expect(d.v).toBeCloseTo(1);
+  });
+  it('ground pan follows yaw', () => {
+    const a = panGroundDelta(0, 10, 0, 1);
+    expect(a.x).toBeCloseTo(-10);
+    expect(a.z).toBeCloseTo(0);
+    const b = panGroundDelta(0, 0, 10, 1);
+    expect(b.z).toBeCloseTo(-10);
+  });
+  it('default view is 1.5x closer and edit camera persists across updates', () => {
+    const rig = new CameraRig('2d-side');
+    rig.resize(800, 400);
+    const block: EntityView = {
+      id: 'b', ownerNodeId: 'n', kind: 'block', position: { x: 0, y: 0, z: 0 },
+      size: { x: 2, y: 2, z: 1 }, color: '#fff', visible: true,
+    } as EntityView;
+    rig.update([block], 0, false);
+    expect(rig.size).toBeCloseTo(16 / 1.5);
+    rig.pan(80, 0);
+    rig.update([block], 0, false);
+    const x = rig.camera.position.x;
+    expect(x).toBeLessThan(0);
+    rig.update([{ ...block, position: { x: 1, y: 0, z: 0 } }], 0.1, false);
+    expect(rig.camera.position.x).toBe(x);
+    rig.resetView();
+    rig.update([block], 0, false);
+    expect(rig.camera.position.x).toBeCloseTo(0);
   });
 });

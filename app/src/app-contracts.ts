@@ -12,6 +12,8 @@ export interface GameView {
   /** Play mode: build world + runtime, run fixed 60 Hz loop until stop() or the game ends. */
   play(graph: Graph, mode: ViewMode, readInput: () => InputSnapshot): void;
   stop(): void;
+  /** Edit camera returns to the default framing at the next preview (new / opened board). */
+  resetCamera(): void;
   isPlaying(): boolean;
   /** Runtime of the current play session (for wire value inspection), null when not playing. */
   getRuntime(): Runtime | null;

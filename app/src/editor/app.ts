@@ -175,10 +175,13 @@ export function mountEditor(root: HTMLElement): void {
         else stopPlay();
         requestAnimationFrame(() => gameView.resize());
         break;
+      case 'board':
+        gameView.resetCamera();
+        schedulePreview();
+        break;
       case 'graph':
       case 'params':
       case 'mode':
-      case 'board':
         schedulePreview();
         break;
       default:

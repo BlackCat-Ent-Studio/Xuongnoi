@@ -47,7 +47,9 @@ export function createGameView(): GameView {
   let rafId = 0;
   let lastTime = 0;
   let readInputFn: (() => InputSnapshot) | null = null;
-  let drag: { id: number; x: number; y: number } | null = null;
+  let drag: { id: number; x: number; y: number; kind: 'orbit' | 'pan' } | null = null;
+  let resetBtn: HTMLButtonElement | null = null;
+  let resetOnNextPreview = false;
 
   const raycaster = new THREE.Raycaster();
 
@@ -165,27 +167,50 @@ export function createGameView(): GameView {
     );
   }
 
+  function syncChrome(): void {
+    if (resetBtn) resetBtn.style.display = playing ? 'none' : 'block';
+    if (renderer) renderer.domElement.style.cursor = playing && mode !== '3d' ? '' : drag ? 'grabbing' : 'grab';
+  }
+
   function onPointerDown(e: PointerEvent): void {
-    if (mode !== '3d' || e.button !== 0 || !renderer) return;
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    if (!renderer || drag) return;
+    let kind: 'orbit' | 'pan' | null = null;
+    if (playing) {
+      if (mode === '3d' && e.button === 0) kind = 'orbit';
+    } else if (e.button === 2 || (e.button === 0 && mode !== '3d')) {
+      kind = 'pan';
+    } else if (e.button === 0) {
+      kind = 'orbit';
+    }
+    if (!kind) return;
+    e.preventDefault();
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, kind };
     renderer.domElement.setPointerCapture(e.pointerId);
+    syncChrome();
   }
 
   function onPointerMove(e: PointerEvent): void {
     if (!drag || drag.id !== e.pointerId) return;
-    rig.rotate(e.clientX - drag.x, e.clientY - drag.y);
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    if (drag.kind === 'orbit') rig.rotate(dx, dy);
+    else rig.pan(dx, dy);
     drag.x = e.clientX;
     drag.y = e.clientY;
     redrawStatic();
   }
 
   function onPointerUp(e: PointerEvent): void {
-    if (drag && drag.id === e.pointerId) drag = null;
+    if (drag && drag.id === e.pointerId) {
+      drag = null;
+      syncChrome();
+    }
   }
 
   function onWheel(e: WheelEvent): void {
     e.preventDefault();
-    rig.zoom(e.deltaY);
+    const ndc = toNdc(e.clientX, e.clientY);
+    rig.zoom(e.deltaY, ndc ? { x: ndc.x, y: ndc.y } : undefined);
     redrawStatic();
   }
 
@@ -212,6 +237,17 @@ export function createGameView(): GameView {
       canvas.addEventListener('pointerup', onPointerUp);
       canvas.addEventListener('pointercancel', onPointerUp);
       canvas.addEventListener('wheel', onWheel, { passive: false });
+      canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+      resetBtn = document.createElement('button');
+      resetBtn.type = 'button';
+      resetBtn.className = 'cam-reset';
+      resetBtn.textContent = TEXT_VI.resetCamera;
+      resetBtn.addEventListener('click', () => {
+        rig.resetView();
+        redrawStatic();
+      });
+      el.appendChild(resetBtn);
+      syncChrome();
       resizeObserver = new ResizeObserver(() => applySize());
       resizeObserver.observe(el);
       applySize();
@@ -221,6 +257,11 @@ export function createGameView(): GameView {
       resetSession();
       ensureRig(m);
       sceneView.setGrid(m, true);
+      if (resetOnNextPreview) {
+        resetOnNextPreview = false;
+        rig.resetView();
+      }
+      syncChrome();
       if (build(graph, m)) {
         rig.snap();
         draw(0, false);
@@ -240,6 +281,7 @@ export function createGameView(): GameView {
       }
       playing = true;
       rig.snap();
+      syncChrome();
       accumulator.reset();
       hud?.clearItems();
       lastTime = performance.now();
@@ -251,6 +293,10 @@ export function createGameView(): GameView {
       playing = false;
       runtime = null;
       hud?.hideEnd();
+    },
+
+    resetCamera(): void {
+      resetOnNextPreview = true;
     },
 
     isPlaying: () => playing,
