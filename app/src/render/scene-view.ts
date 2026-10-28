@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
+import { HealthBarLayer } from './health-bar';
 import { buildItem, type ItemFigure } from './item-shapes';
 
 type Entry =
@@ -25,6 +26,7 @@ export class SceneView {
   private readonly group = new THREE.Group();
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
   private readonly entries = new Map<string, Entry>();
+  private readonly healthBars = new HealthBarLayer(this.group);
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
   private mode: ViewMode = '2d-side';
@@ -91,6 +93,7 @@ export class SceneView {
     for (const [id, entry] of this.entries) {
       if (!seen.has(id)) this.removeEntry(id, entry);
     }
+    this.healthBars.sync(entities);
   }
 
   private createEntry(e: EntityView): Entry {
@@ -161,6 +164,7 @@ export class SceneView {
 
   dispose(): void {
     this.clear();
+    this.healthBars.dispose();
     this.setGrid('3d', false);
     this.geometry.dispose();
   }

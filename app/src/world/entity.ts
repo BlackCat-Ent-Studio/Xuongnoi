@@ -1,3 +1,4 @@
+import { combatView, type CombatState } from './combat';
 import type {
   CharacterIntent,
   CharacterRole,
@@ -40,6 +41,12 @@ export interface Entity {
   carryable: boolean;
   /** Items: which slot picks it up. */
   holdStyle: HoldStyle;
+  /** Characters: health and hit reaction, once a health node registered it. */
+  combat?: CombatState;
+  /** Items: damage as a tool / when thrown (unset or 0 = by shape). */
+  damage?: number;
+  /** Items: id of the character whose throw is still in flight, else unset / null. */
+  thrownBy?: string | null;
 }
 
 export function toView(e: Entity): EntityView {
@@ -55,6 +62,7 @@ export function toView(e: Entity): EntityView {
     ...(e.shape !== undefined ? { shape: e.shape } : {}),
     ...(e.kind === 'item' && e.holdStyle === 'hand' ? { holdStyle: 'hand' as const } : {}),
     ...(e.kind === 'item' && e.inHand && e.heldBy !== null ? { inHand: true } : {}),
+    ...combatView(e),
     visible: e.visible,
   };
 }

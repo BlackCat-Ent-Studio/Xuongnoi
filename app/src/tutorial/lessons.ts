@@ -13,6 +13,7 @@ import {
   paramOf,
   vecParam,
 } from './graph-checks';
+import { combatLesson } from './lessons-combat';
 import { LESSON_TEXT as T } from './text-vi';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
 
@@ -875,7 +876,7 @@ const lesson6: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6];
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, combatLesson];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

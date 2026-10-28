@@ -1,5 +1,5 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
-import { asBool, risingEdge, strParam, vec3Param, type EdgeState } from './util';
+import { asBool, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
   box: 'Hộp',
@@ -73,6 +73,7 @@ export const itemNode: NodeDef<ItemState> = {
         { value: 'hand', label: 'Cầm trên tay' },
       ],
     },
+    { id: 'damage', label: 'Sát thương (0 = tuỳ loại)', kind: 'number', default: 0, min: 0, max: 100, step: 1 },
   ],
   create(ctx, params) {
     const id = ctx.world.spawn({
@@ -85,6 +86,7 @@ export const itemNode: NodeDef<ItemState> = {
       shape: shapeParam(strParam(params, 'shape', 'box')),
       carryable: strParam(params, 'carryable', 'yes') !== 'no',
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
+      damage: numParam(params, 'damage', 0),
     });
     return { id, hide: { prev: false }, hidden: false };
   },

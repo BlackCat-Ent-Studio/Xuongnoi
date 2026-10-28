@@ -1,4 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
+import { lockMotion } from './combat';
 import type { Entity } from './entity';
 
 export const GRAVITY = -30;
@@ -55,6 +56,7 @@ function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[
 }
 
 function applyIntent(c: Entity, mode: ViewMode, yaw: number): void {
+  if (lockMotion(c)) return;
   const it = c.intent;
   if (!it) {
     c.vel.x = 0;

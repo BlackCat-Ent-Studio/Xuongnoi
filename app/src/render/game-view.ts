@@ -138,6 +138,12 @@ export function createGameView(): GameView {
     draw(dt, true);
     hud?.setItems(world.hudItems());
     const ended = world.ended;
+    // A character that ran out of health finishes tipping over before the end card appears.
+    if (ended && world.entities().some((e) => e.visible && e.fallen !== undefined)) {
+      world.step(dt);
+      rafId = requestAnimationFrame(frame);
+      return;
+    }
     if (ended) {
       hud?.showEnd(ended.result, ended.message);
       for (const cb of endCallbacks) cb(ended.result, ended.message);

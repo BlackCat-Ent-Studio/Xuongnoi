@@ -8,8 +8,10 @@ import { compareNode } from './compare';
 import { carryNode } from './carry';
 import { constNode } from './const';
 import { counterNode } from './counter';
+import { fightNode } from './fight';
 import { goToNode } from './go-to';
 import { handToolNode } from './hand-tool';
+import { healthNode } from './health';
 import { interactNode } from './interact';
 import { itemNode } from './item';
 import { keyNode } from './key';
@@ -60,6 +62,8 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   goToNode,
   chaseNode,
   sequenceNode,
+  healthNode,
+  fightNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

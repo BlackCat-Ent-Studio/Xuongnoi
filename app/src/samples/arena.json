@@ -1,0 +1,493 @@
+{
+  "format_version": 1,
+  "name": "Võ đài",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-jump",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "key-equip",
+        "kind": "key",
+        "params": {
+          "key": "KeyE"
+        },
+        "pos": {
+          "x": 40,
+          "y": 330
+        }
+      },
+      {
+        "id": "key-use",
+        "kind": "key",
+        "params": {
+          "key": "KeyF"
+        },
+        "pos": {
+          "x": 40,
+          "y": 470
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "player-hand",
+        "kind": "hand-tool",
+        "params": {
+          "reach": 1.3
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "player-health",
+        "kind": "health",
+        "params": {
+          "maxHp": 8,
+          "healAmount": 1,
+          "showBar": "yes"
+        },
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 3.5,
+          "jumpPower": 10,
+          "color": "#ef4444",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "bot-fight",
+        "kind": "fight",
+        "params": {
+          "range": 1.2,
+          "attackCooldown": 0.9,
+          "sightRange": 20
+        },
+        "pos": {
+          "x": 560,
+          "y": 330
+        }
+      },
+      {
+        "id": "bot-hand",
+        "kind": "hand-tool",
+        "params": {
+          "reach": 1.3
+        },
+        "pos": {
+          "x": 820,
+          "y": 330
+        }
+      },
+      {
+        "id": "bot-health",
+        "kind": "health",
+        "params": {
+          "maxHp": 6,
+          "healAmount": 1,
+          "showBar": "yes"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 330
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn hạ đối thủ rồi, thắng!",
+          "loseMessage": "Bạn gục mất rồi!"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 180
+        }
+      },
+      {
+        "id": "show-me",
+        "kind": "show-number",
+        "params": {
+          "label": "Máu của bạn",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 40
+        }
+      },
+      {
+        "id": "show-bot",
+        "kind": "show-number",
+        "params": {
+          "label": "Máu đối thủ",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 330
+        }
+      },
+      {
+        "id": "floor-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 24,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 620
+        }
+      },
+      {
+        "id": "wall-left",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -12,
+            "y": 2.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 6,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 760
+        }
+      },
+      {
+        "id": "wall-right",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 12,
+            "y": 2.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 6,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 900
+        }
+      },
+      {
+        "id": "sword-item",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -4,
+            "y": 0.4,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#94a3b8",
+          "shape": "sword",
+          "carryable": "yes",
+          "holdStyle": "hand"
+        },
+        "pos": {
+          "x": 560,
+          "y": 620
+        }
+      },
+      {
+        "id": "hammer-item",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.4,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#a16207",
+          "shape": "hammer",
+          "carryable": "yes",
+          "holdStyle": "hand"
+        },
+        "pos": {
+          "x": 560,
+          "y": 760
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-jump",
+          "port": "held"
+        },
+        "to": {
+          "node": "player",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "player-hand",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "key-equip",
+          "port": "held"
+        },
+        "to": {
+          "node": "player-hand",
+          "port": "toggle"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "key-use",
+          "port": "held"
+        },
+        "to": {
+          "node": "player-hand",
+          "port": "use"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "player-health",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "player-health",
+          "port": "hp"
+        },
+        "to": {
+          "node": "show-me",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "player-health",
+          "port": "dead"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "lose"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "bot-fight",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "bot-fight",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "bot-fight",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "bot-fight",
+          "port": "jump"
+        },
+        "to": {
+          "node": "bot",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "bot-hand",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "bot-fight",
+          "port": "attack"
+        },
+        "to": {
+          "node": "bot-hand",
+          "port": "use"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "bot-health",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "bot-health",
+          "port": "hp"
+        },
+        "to": {
+          "node": "show-bot",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "bot-health",
+          "port": "dead"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      }
+    ]
+  }
+}
