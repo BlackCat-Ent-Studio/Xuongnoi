@@ -109,12 +109,12 @@ describe('plane grid A* (top-down and 3D)', () => {
     expect(res.points).toEqual([{ x: 15, z: 12 }]);
   });
 
-  it('reports no route when the goal is sealed off', () => {
+  it('leads to the closest reachable cell when the goal is sealed off', () => {
     const sealed = mazeBoxes(['###########', '#S..#.....#', '#.#.#.###.#', '#.#.#.#...#', '#.#####.###', '#.......G.#', '###########']);
     // Also close the bottom corridor.
     sealed.push(box(10, 0.5, 11, 2, 1, 2));
     const g = buildPlaneGrid(sealed, BODY, 0)!;
-    expect(findPlanePath(g, cellCenter(1, 1), cellCenter(8, 5))).toBeNull();
+    expect(findPlanePath(g, cellCenter(1, 1), cellCenter(8, 5))?.partial).toBe(true); // unreachable: leads to the closest spot
   });
 
   it('moves a start or goal that sits inside a wall to the nearest free cell', () => {
@@ -125,8 +125,8 @@ describe('plane grid A* (top-down and 3D)', () => {
     expect(fromWall).not.toBeNull();
   });
 
-  it('gives up cleanly when the search cap is hit', () => {
-    expect(findPlanePath(grid, cellCenter(1, 1), cellCenter(8, 5), 5)).toBeNull();
+  it('heads for the best cell so far when the search cap is hit', () => {
+    expect(findPlanePath(grid, cellCenter(1, 1), cellCenter(8, 5), 5)?.partial).toBe(true); // unreachable: leads to the closest spot
   });
 
   it('is deterministic: fresh grids and repeated searches give identical routes', () => {
@@ -201,9 +201,9 @@ describe('side-view platform graph', () => {
     expect(maxJumpRise(10)).toBeGreaterThan(1.4);
     expect(maxJumpRise(10)).toBeLessThan(1.667); // the continuous apex v^2 / 2g
     const level = [slab(-5, 15, 0, 1), slab(5, 8, 2)];
-    expect(sidePath(level, [0, 0], [6.5, 2])).toBeNull();
+    expect(sidePath(level, [0, 0], [6.5, 2])?.partial).toBe(true); // unreachable: leads to the closest spot
     expect(kinds(sidePath(level, [0, 0], [6.5, 2], { speed: 5, jumpPower: 14 }))).toContain('jump');
-    expect(sidePath(level, [0, 0], [6.5, 2], { speed: 5, jumpPower: 5 })).toBeNull();
+    expect(sidePath(level, [0, 0], [6.5, 2], { speed: 5, jumpPower: 5 })?.partial).toBe(true); // unreachable: leads to the closest spot
   });
 
   it('climbs a staircase of ledges one hop at a time', () => {
@@ -216,16 +216,28 @@ describe('side-view platform graph', () => {
   it('jumps across a gap, and the reach comes from speed and jump power', () => {
     const gap = (width: number) => [slab(-6, 4, 0, 1), slab(4 + width, 20, 0, 1)];
     expect(kinds(sidePath(gap(2), [0, 0], [10, 0]))).toContain('jump');
-    expect(sidePath(gap(6), [0, 0], [12, 0])).toBeNull();
+    expect(sidePath(gap(6), [0, 0], [12, 0])?.partial).toBe(true); // unreachable: leads to the closest spot
     expect(kinds(sidePath(gap(6), [0, 0], [12, 0], { speed: 12, jumpPower: 10 }))).toContain('jump');
     // A gap exactly as wide as the body is still a jump: nothing holds the body up halfway across.
     expect(kinds(sidePath(gap(1), [0, 0], [10, 0]))).toContain('jump');
   });
 
+  it('an unreachable goal leads to the spot nearest to it (the brink of the gap) and is marked partial', () => {
+    const gap6 = [slab(-6, 4, 0, 1), slab(10, 20, 0, 1)];
+    const p = sidePath(gap6, [0, 0], [14, 0])!;
+    expect(p.partial).toBe(true);
+    const last = p.steps[p.steps.length - 1]!;
+    expect(last.x).toBeGreaterThan(3);
+    expect(last.x).toBeLessThan(4.5);
+    // Already standing at the closest spot: nothing to walk.
+    const here = sidePath(gap6, [4.25, 0], [14, 0])!;
+    expect(here).toEqual({ steps: [], partial: true });
+  });
+
   it('drops down from a high ledge but cannot climb back up', () => {
     const level = [slab(-5, 20, 0, 1), slab(-3, 1, 5)];
     expect(kinds(sidePath(level, [-2, 5], [10, 0]))).toContain('drop');
-    expect(sidePath(level, [10, 0], [-2, 5])).toBeNull();
+    expect(sidePath(level, [10, 0], [-2, 5])?.partial).toBe(true); // unreachable: leads to the closest spot
   });
 
   it('does not plan a jump through a low ceiling', () => {
@@ -233,7 +245,7 @@ describe('side-view platform graph', () => {
     expect(sidePath(open, [0, 0], [6.5, 1])).not.toBeNull();
     // A slab just above the ledge leaves no room to arc up onto it from the left or to stand on it.
     const ceiling = [...open, slab(3, 9, 2.2)];
-    expect(sidePath(ceiling, [0, 0], [6.5, 1])).toBeNull();
+    expect(sidePath(ceiling, [0, 0], [6.5, 1])?.partial).toBe(true); // unreachable: leads to the closest spot
   });
 
   it('reports an empty route when start and goal share a spot, and null for a missing floor', () => {

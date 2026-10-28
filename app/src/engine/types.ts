@@ -152,7 +152,24 @@ export interface Runtime {
 
 // ---------- world API (implemented in src/world) ----------
 
-export type EntityKind = 'character' | 'block' | 'item';
+export type EntityKind = 'character' | 'block' | 'item' | 'vehicle';
+
+/** Look and size class of a vehicle (built from boxes by the renderer). */
+export type VehicleModel = 'car' | 'bike' | 'truck';
+export const VEHICLE_MODELS: readonly VehicleModel[] = ['car', 'bike', 'truck'];
+
+/** 'direction' = the vehicle turns toward where the stick points; 'throttle' = stick up/down is gas/brake, left/right steers. */
+export type SteerMode = 'direction' | 'throttle';
+
+/** How a vehicle drives; set when it spawns. */
+export interface VehicleSpec {
+  model: VehicleModel;
+  steerMode: SteerMode;
+  /** Units per second at full throttle. */
+  maxSpeed: number;
+  /** Units per second gained per second. */
+  accel: number;
+}
 
 /** Look of an item entity (built from boxes by the renderer). */
 export type ItemShape =
@@ -212,6 +229,8 @@ export interface EntitySpec {
   holdStyle?: HoldStyle;
   /** Items only: damage dealt as a tool or when thrown. 0 / omitted = by shape (sword 3, hammer 2, pickaxe 2, else 1). */
   damage?: number;
+  /** Vehicles only (kind 'vehicle'). */
+  vehicle?: VehicleSpec;
 }
 
 export interface CharacterIntent {
@@ -253,6 +272,10 @@ export interface EntityView {
   hurt?: number;
   /** Characters only; 0..1 progress of tipping over after running out of health, absent while alive. */
   fallen?: number;
+  /** Vehicles only: look, signed forward speed (units/s), how far the wheels have turned and which way the nose points (radians), and who sits in it. */
+  vehicle?: { model: VehicleModel; speed: number; wheelSpin: number; heading: number; driver: EntityId | null };
+  /** Characters only; the vehicle this character is sitting in. */
+  seatedIn?: EntityId;
   visible: boolean;
 }
 
@@ -352,6 +375,15 @@ export interface WorldApi {
   solidRevision(): number;
   /** Camera yaw last given to the world (3D stick input is relative to it). */
   cameraYaw(): number;
+
+  // ---- vehicles ----
+
+  /** Stick values for a vehicle this tick (-1..1); applied on the next physics step. Ignored for non-vehicles. */
+  setVehicleInput(vehicle: EntityId, moveX: number, moveY: number): void;
+  /** Seats the character in the nearest free vehicle within `reach` (gap between their boxes). Null when none is near, it is already seated, or it is dead/hidden. */
+  enterVehicle(character: EntityId, reach: number): EntityId | null;
+  /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */
+  exitVehicle(character: EntityId): EntityId | null;
 }
 
 /** Full world used by the game loop and renderer. */

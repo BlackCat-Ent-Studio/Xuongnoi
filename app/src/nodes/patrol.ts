@@ -10,6 +10,7 @@ import {
   unitToward,
   type SteerMemo,
 } from './steering';
+import { PATHFIND_PARAM, pathfindOn } from './pathfind-param';
 import { asBool, asObject, numParam, strParam, vec3Param } from './util';
 
 interface PatrolState {
@@ -52,6 +53,7 @@ export const patrolNode: NodeDef<PatrolState> = {
         { value: 'yes', label: 'Có' },
       ],
     },
+    PATHFIND_PARAM,
   ],
   create: () => ({ heading: null, waitLeft: 0, memo: {} }),
   evaluate(ctx, i, params, s) {
@@ -91,7 +93,7 @@ export const patrolNode: NodeDef<PatrolState> = {
     }
 
     // A patrol told to turn at ledges walks straight; otherwise it routes around walls and over platforms.
-    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: turnAtEdge }, { avoidFall: turnAtEdge });
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: turnAtEdge || !pathfindOn(params) }, { avoidFall: turnAtEdge });
     return { moveX: steer.moveX, moveY: steer.moveY, atEnd: false };
   },
 };

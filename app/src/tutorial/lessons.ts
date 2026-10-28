@@ -15,6 +15,7 @@ import {
 } from './graph-checks';
 import { combatLesson } from './lessons-combat';
 import { LESSON_TEXT as T } from './text-vi';
+import { createVehicleLesson } from './lessons-vehicles';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
 
 // ---------- target helpers ----------
@@ -1117,7 +1118,9 @@ const lesson7: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson];
+const lessonVehicles = createVehicleLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
+
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

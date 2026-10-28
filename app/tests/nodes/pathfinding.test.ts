@@ -119,9 +119,10 @@ describe('top-down path following', () => {
       box(18.5, 0.5, 0, 1, 1, 16),
     ];
     const r = rig('2d-top', level, v(2, 0.5, 0));
-    // The wall seals the level (it is block #0); a goal behind it has no route.
-    expect(pathStep({ world: r.world, self: r.self(), goal: v(14, 0.5, 0), dt: TICK_DT, memo: r.memo }).waypoint).toEqual(v(14, 0.5, 0));
-    expect((r.memo.nav as { routed: boolean }).routed).toBe(false);
+    // The wall seals the level (it is block #0); a goal behind it has no route, so the bot heads for the closest reachable cell.
+    const first = pathStep({ world: r.world, self: r.self(), goal: v(14, 0.5, 0), dt: TICK_DT, memo: r.memo }).waypoint;
+    expect(first.x).toBeLessThan(8);
+    expect((r.memo.nav as { partial: boolean }).partial).toBe(true);
     const used = r.run(() => v(14, 0.5, 0), 120, {
       onTick: (rr, t) => {
         if (t === 30) rr.world.hide(rr.world.entities().find((e) => e.ownerNodeId === 'b0')!.id);
@@ -134,15 +135,26 @@ describe('top-down path following', () => {
 
 describe('route bookkeeping', () => {
   const openLevel = () => rig('2d-top', [box(8, 0.5, 0, 1, 1, 6), box(8, 0.5, -10, 30, 1, 1), box(8, 0.5, 10, 30, 1, 1)], v(2, 0.5, 6));
-  const nav = (r: Rig) => r.memo.nav as { wps: { pos: Vec3 }[]; age: number; routed: boolean };
+  const nav = (r: Rig) => r.memo.nav as { wps: { pos: Vec3 }[]; age: number; routed: boolean; partial: boolean };
 
-  it('falls back to the raw goal when there is no route', () => {
+  it('heads for the closest reachable cell and then stays put when the goal is walled in', () => {
     // Fully walled-in goal.
     const level = [box(10, 0.5, 0, 6, 1, 1), box(10, 0.5, 6, 6, 1, 1), box(7, 0.5, 3, 1, 1, 5), box(13, 0.5, 3, 1, 1, 5), box(8, 0.5, 14, 30, 1, 1)];
     const r = rig('2d-top', level, v(0, 0.5, 3));
     const goal = v(10, 0.5, 3);
-    expect(nextWaypoint({ world: r.world, self: r.self(), goal, dt: TICK_DT, memo: r.memo })).toBe(goal);
-    expect(nav(r).routed).toBe(false);
+    const wp = nextWaypoint({ world: r.world, self: r.self(), goal, dt: TICK_DT, memo: r.memo });
+    expect(wp).not.toBe(goal);
+    expect(wp.z).toBeGreaterThan(6.5); // outside the south wall, the closest spot to the goal
+    expect(nav(r).routed).toBe(true);
+    expect((r.memo.nav as { partial: boolean }).partial).toBe(true);
+    const used = r.run(() => goal, 600);
+    expect(used).toBe(600); // never arrives
+    expect(Math.abs(r.self().position.x - 10)).toBeLessThan(0.6);
+    expect(r.self().position.z).toBeGreaterThan(6.5);
+    // Settled: no more creeping into the wall.
+    const before = { ...r.self().position };
+    r.run(() => goal, 60);
+    expect(Math.hypot(r.self().position.x - before.x, r.self().position.z - before.z)).toBeLessThan(0.05);
   });
 
   it('replans when the goal moves to another cell, at most every MIN_REPLAN_GAP, and otherwise on the timer', () => {

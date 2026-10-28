@@ -179,13 +179,16 @@ export function planeLineClear(grid: PlaneGrid, a: PlanePoint, b: PlanePoint): b
 }
 
 export interface PlanePath {
-  /** Points to walk through in order; the start is not included. Empty = walk straight to the goal. */
+  /** Points to walk through in order; the start is not included. Empty = walk straight to the goal (or, when `partial`, stay put). */
   points: PlanePoint[];
+  /** True when the goal cannot be reached: the points lead to the reachable cell closest to it. */
+  partial?: boolean;
 }
 
 /**
  * 8-direction A* (no corner cutting) from `from` to `to`, then straightened by line-of-sight.
- * Returns null when the goal cannot be reached (or the search hit `maxExpansions`).
+ * When the goal cannot be reached (or the search hit `maxExpansions`) the path leads to the explored cell closest
+ * to the goal and is marked `partial`. Returns null only when the start or goal cannot be placed on the grid.
  */
 export function findPlanePath(
   grid: PlaneGrid,
@@ -216,6 +219,9 @@ export function findPlanePath(
   stamp[start] = gen;
   heap.push(heuristic(start), start);
   let found = false;
+  let closest = start;
+  let closestH = Infinity;
+  let closestG = Infinity;
   for (let expanded = 0; expanded < maxExpansions; expanded++) {
     const cur = heap.pop();
     if (cur < 0) break;
@@ -226,6 +232,12 @@ export function findPlanePath(
     const cx = cur % w;
     const cz = Math.floor(cur / w);
     const gc = g[cur]!;
+    const hc = heuristic(cur);
+    if (hc < closestH - 1e-9 || (Math.abs(hc - closestH) <= 1e-9 && gc < closestG)) {
+      closest = cur;
+      closestH = hc;
+      closestG = gc;
+    }
     for (let dz = -1; dz <= 1; dz++) {
       for (let dx = -1; dx <= 1; dx++) {
         if (dx === 0 && dz === 0) continue;
@@ -245,10 +257,12 @@ export function findPlanePath(
       }
     }
   }
-  if (!found) return null;
+  // Unreachable goal: head for the closest cell the search got to.
+  const end = found ? goal : closest;
+  if (!found && end === start) return { points: [], partial: true };
 
   const cells: number[] = [];
-  for (let c = goal; c >= 0; c = parent[c]!) cells.push(c);
+  for (let c = end; c >= 0; c = parent[c]!) cells.push(c);
   cells.reverse();
 
   // Cell centers after the start cell (kept when the start had to be moved out of a blocked cell),
@@ -258,7 +272,7 @@ export function findPlanePath(
     const c = cells[i]!;
     pts.push({ x: cellX(grid, c % w), z: cellZ(grid, Math.floor(c / w)) });
   }
-  if (goalFree) pts.push({ x: to.x, z: to.z });
+  if (found && goalFree) pts.push({ x: to.x, z: to.z });
 
   // Greedy string pulling: from each kept point, jump to the farthest point still in clear sight.
   const out: PlanePoint[] = [];
@@ -269,5 +283,5 @@ export function findPlanePath(
     out.push(pts[j]!);
     i = j;
   }
-  return { points: out };
+  return found ? { points: out } : { points: out, partial: true };
 }

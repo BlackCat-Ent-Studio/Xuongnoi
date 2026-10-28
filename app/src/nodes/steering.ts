@@ -156,10 +156,10 @@ export function followPath(req: WaypointRequest, opts: SteerOptions = {}): Steer
 
 // ---------- helpers for brain nodes ----------
 
-/** The live character behind an `object` wire, or undefined (nothing wired, hidden, or not a character). */
+/** The live character (or vehicle, which bots can drive) behind an `object` wire, or undefined (nothing wired, hidden, or not a character). */
 export function liveCharacter(world: WorldApi, id: EntityId | null): EntityView | undefined {
   const e = id !== null ? world.getEntity(id) : undefined;
-  return e && e.visible && e.kind === 'character' ? e : undefined;
+  return e && e.visible && (e.kind === 'character' || e.kind === 'vehicle') ? e : undefined;
 }
 
 /** Position of a wired object if it is still in the world, else null. */

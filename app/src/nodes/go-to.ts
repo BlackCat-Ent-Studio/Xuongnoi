@@ -8,6 +8,7 @@ import {
   visiblePosition,
   type SteerMemo,
 } from './steering';
+import { PATHFIND_PARAM, pathfindOn } from './pathfind-param';
 import { asBool, asObject, numParam, risingEdge, vec3Param, type EdgeState } from './util';
 
 interface GoToState {
@@ -46,6 +47,7 @@ export const goToNode: NodeDef<GoToState> = {
       max: 20,
       step: 0.1,
     },
+    PATHFIND_PARAM,
   ],
   create: () => ({ arrived: { prev: false }, memo: {} }),
   evaluate(ctx, i, params, s) {
@@ -63,7 +65,7 @@ export const goToNode: NodeDef<GoToState> = {
     const arrivedPulse = risingEdge(s.arrived, arrived);
     if (!go || near) return { ...STILL, arrived, arrivedPulse };
 
-    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo });
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: !pathfindOn(params) });
     return { ...steer, arrived, arrivedPulse };
   },
 };

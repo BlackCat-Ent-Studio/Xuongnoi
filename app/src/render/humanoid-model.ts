@@ -37,6 +37,8 @@ export class Humanoid {
   /** Tool currently drawn on the figure (rebuilt when the shape or color changes). */
   private tool: { key: string; figure: ItemFigure; holder: THREE.Group } | null = null;
   private colorHex: string;
+  /** Sitting in a vehicle: the legs and arms rest while the body still turns with the ride. */
+  private seated = false;
   private mode: ViewMode;
   private yaw: number;
   private phase = 0;
@@ -61,6 +63,10 @@ export class Humanoid {
     this.body.add(this.rig.root);
     this.applyYaw();
     this.fitToFloor();
+  }
+
+  setSeated(seated: boolean): void {
+    this.seated = seated;
   }
 
   setMode(mode: ViewMode): void {
@@ -109,8 +115,9 @@ export class Humanoid {
         this.vz = smoothValue(this.vz, dz / dt, dt, 20);
       }
     }
-    const speed = this.mode === '2d-side' ? Math.abs(this.vx) : Math.hypot(this.vx, this.vz);
-    const airborne = Math.abs(this.vy) > AIRBORNE_SPEED_MIN;
+    const moving = this.mode === '2d-side' ? Math.abs(this.vx) : Math.hypot(this.vx, this.vz);
+    const speed = this.seated ? 0 : moving;
+    const airborne = !this.seated && Math.abs(this.vy) > AIRBORNE_SPEED_MIN;
     this.time += dt;
     this.phase += dt * walkPhaseRate(speed);
     this.yaw = smoothAngle(this.yaw, facingTarget(this.mode, this.vx, this.vz, this.yaw), dt);

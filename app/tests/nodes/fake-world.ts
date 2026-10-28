@@ -75,6 +75,9 @@ export function makeWorld(): FakeWorld {
     solidBoxes: () => w.boxes,
     solidRevision: () => w.revision,
     cameraYaw: () => 0,
+    setVehicleInput: () => undefined,
+    enterVehicle: () => null,
+    exitVehicle: () => null,
   };
   return w;
 }

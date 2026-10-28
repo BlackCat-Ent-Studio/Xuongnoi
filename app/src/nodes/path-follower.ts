@@ -72,6 +72,8 @@ interface NavMemo {
   revision: number;
   /** False when the last plan found nothing: the follower then heads straight for the goal. */
   routed: boolean;
+  /** True when the goal is unreachable and the route only leads to the closest reachable spot: the bot stays there. */
+  partial: boolean;
   /** 3D: feet height while last on the ground, so a jump does not re-key the grid. */
   groundFeet: number | null;
 }
@@ -79,13 +81,18 @@ interface NavMemo {
 function navMemo(memo: SteerMemo): NavMemo {
   const existing = memo.nav as NavMemo | undefined;
   if (existing) return existing;
-  const fresh: NavMemo = { wps: [], idx: 0, age: Infinity, goalKey: '', revision: -1, routed: false, groundFeet: null };
+  const fresh: NavMemo = { wps: [], idx: 0, age: Infinity, goalKey: '', revision: -1, routed: false, partial: false, groundFeet: null };
   memo.nav = fresh;
   return fresh;
 }
 
 function rawStep(goal: Vec3): PathStep {
   return { waypoint: goal, jump: false, hop: true, fullSpeed: false };
+}
+
+/** Nothing left to walk toward (the closest reachable spot is reached): stand still. */
+function stayStep(self: EntityView): PathStep {
+  return { waypoint: { ...self.position }, jump: false, hop: false, fullSpeed: false };
 }
 
 function goalKeyFor(world: WorldApi, goal: Vec3): string {
@@ -114,10 +121,11 @@ function planSide(world: WorldApi, self: EntityView, goal: Vec3, nav: NavMemo): 
     srcY: s.srcY + h / 2,
     dir: s.dir,
   }));
-  // Finish at the goal itself, on the level of the last spot.
+  nav.partial = res.partial === true;
+  // Finish at the goal itself, on the level of the last spot (an unreachable goal is not walked to).
   const last = wps[wps.length - 1];
   const endX = last ? last.pos.x : self.position.x;
-  if (!last || Math.abs(goal.x - endX) > 0.05) {
+  if (!nav.partial && (!last || Math.abs(goal.x - endX) > 0.05)) {
     wps.push({
       pos: { x: goal.x, y: last ? last.pos.y : goal.y, z: 0 },
       kind: 'walk',
@@ -141,9 +149,10 @@ function planPlane(world: WorldApi, self: EntityView, goal: Vec3, nav: NavMemo):
   const grid = planeGridFor(world, { halfWidth: Math.max(self.size.x, self.size.z) / 2, height: h }, planFeet);
   if (!grid) return;
   const res = findPlanePath(grid, { x: self.position.x, z: self.position.z }, { x: goal.x, z: goal.z });
-  if (!res || res.points.length === 0) return;
+  if (!res || (res.points.length === 0 && !res.partial)) return;
+  nav.partial = res.partial === true;
   nav.wps = res.points.map((p, i) => ({
-    pos: { x: p.x, y: i === res.points.length - 1 ? goal.y : self.position.y, z: p.z },
+    pos: { x: p.x, y: i === res.points.length - 1 && !nav.partial ? goal.y : self.position.y, z: p.z },
     kind: 'walk' as const,
     srcX: 0,
     srcY: 0,
@@ -156,6 +165,7 @@ function replan(world: WorldApi, self: EntityView, goal: Vec3, nav: NavMemo): vo
   nav.wps = [];
   nav.idx = 0;
   nav.routed = false;
+  nav.partial = false;
   nav.age = 0;
   nav.goalKey = goalKeyFor(world, goal);
   nav.revision = world.solidRevision();
@@ -172,6 +182,7 @@ function followPlane(nav: NavMemo, self: EntityView, goal: Vec3): PathStep {
     nav.idx++;
   }
   const wp = nav.wps[nav.idx];
+  if (!wp && nav.partial) return stayStep(self);
   return { waypoint: wp ? wp.pos : goal, jump: false, hop: !wp, fullSpeed: false };
 }
 
@@ -190,7 +201,7 @@ function followSide(world: WorldApi, nav: NavMemo, self: EntityView, goal: Vec3)
     if (!reached) break;
   }
   const wp = nav.wps[nav.idx];
-  if (!wp) return rawStep(goal);
+  if (!wp) return nav.partial ? stayStep(self) : rawStep(goal);
 
   if (wp.kind === 'walk') {
     // Walk the whole flat run toward its end: steering slows down near a target, so aiming at each column crawls.

@@ -25,6 +25,8 @@ import { stickNode } from './stick';
 import { timerNode } from './timer';
 import { touchNode } from './touch';
 import { winLoseNode } from './win-lose';
+import { enterExitNode } from './enter-exit';
+import { vehicleNode } from './vehicle';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -66,6 +68,8 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   sequenceNode,
   healthNode,
   fightNode,
+  vehicleNode,
+  enterExitNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */
