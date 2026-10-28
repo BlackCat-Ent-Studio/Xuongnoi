@@ -1,7 +1,9 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState, type EditorState } from '../../src/editor/editor-state';
 import { getNodeDef } from '../../src/engine/registry';
-import type { GameResult, PortRef } from '../../src/engine/types';
+import { createRuntime } from '../../src/engine/runtime';
+import { TICK_DT, type GameResult, type PortRef } from '../../src/engine/types';
+import { createWorld } from '../../src/world/world';
 import { registerAllNodes } from '../../src/nodes';
 import { hasWire } from '../../src/tutorial/graph-checks';
 import { LESSONS, findLesson } from '../../src/tutorial/lessons';
@@ -230,6 +232,77 @@ describe('lesson 3: win and lose', () => {
     expect(s.stepId()).toBe('goal');
     s.param(s.idOf('counter'), 'target', 5);
     expect(s.stepId()).toBe('goal');
+  });
+});
+
+describe('lesson 4: carry and use', () => {
+  it('walks through the key, carry, interact and door wiring, and the result is winnable', () => {
+    const s = session('carry-use');
+    s.runner.next();
+    expect(s.stepId()).toBe('add-item');
+    const lock = s.idOf('item');
+    const key = s.add('item');
+    expect(s.stepId()).toBe('item-shape');
+    s.param(key, 'shape', 'key');
+    expect(s.stepId()).toBe('add-carry');
+    const carry = s.add('carry');
+    const hero = s.idOf('character');
+    expect(s.stepId()).toBe('wire-carry');
+    s.wire(p(hero, 'self'), p(carry, 'character'));
+    expect(s.stepId()).toBe('add-key-e');
+    const keyE = s.add('key');
+    expect(s.stepId()).toBe('key-e-code');
+    s.param(keyE, 'key', 'KeyE');
+    expect(s.stepId()).toBe('wire-grab');
+    s.wire(p(keyE, 'pressed'), p(carry, 'grab'));
+    expect(s.stepId()).toBe('play-carry');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit');
+    s.play(false);
+    expect(s.stepId()).toBe('add-interact');
+    const interact = s.add('interact');
+    s.wire(p(hero, 'self'), p(interact, 'character'));
+    expect(s.stepId()).toBe('add-key-f');
+    const keyF = s.add('key');
+    expect(s.stepId()).toBe('key-f-code');
+    s.param(keyF, 'key', 'KeyF');
+    expect(s.stepId()).toBe('wire-press');
+    s.wire(p(keyF, 'pressed'), p(interact, 'press'));
+    expect(s.stepId()).toBe('add-and');
+    const and = s.add('and');
+    expect(s.stepId()).toBe('wire-lock');
+    s.wire(p(lock, 'interacted'), p(and, 'a'));
+    expect(s.stepId()).toBe('wire-holding');
+    s.wire(p(carry, 'holding'), p(and, 'b'));
+    expect(s.stepId()).toBe('wire-open');
+    const door = s.state.getGraph().nodes.find((n) => n.kind === 'block' && (n.params.size as { y: number }).y === 3)!;
+    s.wire(p(and, 'out'), p(door.id, 'hide'));
+    expect(s.stepId()).toBe('play-open');
+    s.play(true);
+    expect(s.stepId()).toBe('win');
+
+    // Play the learner's board for real.
+    const graph = s.state.getGraph();
+    const world = createWorld('2d-side');
+    const rt = createRuntime(graph, world, '2d-side');
+    const step = (...k: string[]): void => {
+      rt.tick({ keysDown: new Set(k) });
+      world.step(TICK_DT);
+    };
+    for (let i = 0; i < 20; i++) step();
+    for (let i = 0; i < 40; i++) step('ArrowRight'); // hero from -4 to about -1.7; key rests at x=0
+    for (let i = 0; i < 12; i++) step('ArrowRight');
+    step('KeyE');
+    step();
+    expect(rt.getOutput(carry, 'holding')).toBe(true);
+    for (let i = 0; i < 80; i++) step('ArrowRight'); // stops against the door
+    step('KeyF');
+    step();
+    step();
+    for (let i = 0; i < 200 && !world.ended; i++) step('ArrowRight');
+    expect(world.ended?.result).toBe('win');
+    s.end('win');
+    expect(s.stepId()).toBe('done');
   });
 });
 

@@ -31,7 +31,7 @@ export const PORT_DEFAULTS: Record<PortType, PortValue> = {
 
 // ---------- node definitions ----------
 
-export type NodeCategory = 'input' | 'logic' | 'math' | 'object' | 'output';
+export type NodeCategory = 'input' | 'logic' | 'math' | 'object' | 'action' | 'output';
 
 export interface PortDef {
   id: string;
@@ -152,7 +152,11 @@ export interface Runtime {
 
 // ---------- world API (implemented in src/world) ----------
 
-export type EntityKind = 'character' | 'block';
+export type EntityKind = 'character' | 'block' | 'item';
+
+/** Look of an item entity (built from boxes by the renderer). */
+export type ItemShape = 'box' | 'key' | 'ball' | 'crate';
+export const ITEM_SHAPES: readonly ItemShape[] = ['box', 'key', 'ball', 'crate'];
 
 export interface EntitySpec {
   kind: EntityKind;
@@ -168,6 +172,10 @@ export interface EntitySpec {
   look?: string;
   /** Solid entities block movement; non-solid ones (pickups) only produce contacts. */
   solid: boolean;
+  /** Items only: look of the item. Omitted = 'box'. */
+  shape?: ItemShape;
+  /** Items only: false = can be touched and used, but never picked up. Omitted = true. */
+  carryable?: boolean;
 }
 
 export interface CharacterIntent {
@@ -189,6 +197,8 @@ export interface EntityView {
   size: Vec3;
   color: string;
   look?: string;
+  /** Items only. */
+  shape?: ItemShape;
   visible: boolean;
 }
 
@@ -219,6 +229,21 @@ export interface WorldApi {
   /** First call wins; later calls ignored. */
   endGame(result: GameResult, message: string): void;
   readonly ended: { result: GameResult; message: string } | null;
+
+  // ---- items: carry / drop / throw / interact (applied immediately, positions settle on the next step) ----
+
+  /** Picks up the nearest free carryable item within `reach` (prefers the facing side). One item per character. */
+  grab(character: EntityId, reach: number): EntityId | null;
+  /** Puts the held item down in front of the character. Returns the item, or null when nothing was held. */
+  drop(character: EntityId): EntityId | null;
+  /** Releases the held item with a forward-and-up velocity. Returns the item, or null when nothing was held. */
+  throwHeld(character: EntityId, power: number): EntityId | null;
+  heldItem(character: EntityId): EntityId | null;
+  isHeld(item: EntityId): boolean;
+  /** Marks the nearest item within `reach` (not the one in hand) as used; its pulse shows on the next tick. */
+  interact(character: EntityId, reach: number): EntityId | null;
+  /** True for exactly one tick after the item was interacted with. */
+  wasInteracted(item: EntityId): boolean;
 }
 
 /** Full world used by the game loop and renderer. */

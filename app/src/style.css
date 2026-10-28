@@ -82,6 +82,7 @@ body.resizing-y { cursor: row-resize; }
 .cat-logic { --cat: #8b5cf6; }
 .cat-math { --cat: #14b8a6; }
 .cat-object { --cat: #f97316; }
+.cat-action { --cat: #65a30d; }
 .cat-output { --cat: #ec4899; }
 .cat-unknown { --cat: #9ca3af; }
 .palette-cat { color: var(--cat); }

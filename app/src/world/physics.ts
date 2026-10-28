@@ -1,4 +1,4 @@
-import type { ViewMode } from '../engine/types';
+import type { Vec3, ViewMode } from '../engine/types';
 import type { Entity } from './entity';
 
 export const GRAVITY = -30;
@@ -77,13 +77,81 @@ function applyIntent(c: Entity, mode: ViewMode, yaw: number): void {
     c.vel.x = (cos * mx - sin * my) * speed;
     c.vel.z = (-sin * mx - cos * my) * speed;
   }
+  // Facing follows the last direction the player pushed, even if a wall then stops the body.
+  const len = Math.hypot(c.vel.x, c.vel.z);
+  if (len > 1e-6) {
+    c.facing.x = c.vel.x / len;
+    c.facing.z = c.vel.z / len;
+  }
   if (mode !== '2d-top' && it.jump && c.onGround) {
     c.vel.y = sanitize(it.jumpPower);
     c.onGround = false;
   }
 }
 
-/** Advance all visible characters by dt against solid visible blocks. */
+/** Moves a body by its velocity in substeps, stopping at solids. Returns true when it ended resting on something. */
+function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): boolean {
+  const maxDist = Math.max(Math.abs(c.vel.x), Math.abs(c.vel.y), Math.abs(c.vel.z)) * dt;
+  const n = Math.max(1, Math.ceil(maxDist / MAX_SUBSTEP_DISTANCE));
+  const sub = dt / n;
+  let grounded = false;
+  for (let i = 0; i < n; i++) {
+    if (moveAxis(c, 'x', c.vel.x * sub, solids)) c.vel.x = 0;
+    if (mode !== '2d-top') {
+      const dy = c.vel.y * sub;
+      if (moveAxis(c, 'y', dy, solids)) {
+        if (dy < 0) grounded = true;
+        c.vel.y = 0;
+      }
+    }
+    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids)) c.vel.z = 0;
+  }
+  return grounded;
+}
+
+/** Sliding items lose horizontal speed at this rate per second (on the ground; gentler on the top-down floor). */
+const ITEM_FRICTION = 10;
+const ITEM_FRICTION_TOP = 3;
+/** Below this horizontal speed a sliding item stops dead. */
+const ITEM_STOP_SPEED = 0.05;
+
+function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): void {
+  if (mode === '2d-top') item.vel.y = 0;
+  else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + GRAVITY * dt);
+  if (mode === '2d-side') {
+    item.pos.z = 0;
+    item.vel.z = 0;
+  }
+  item.onGround = integrate(item, dt, mode, solids);
+  if (item.onGround || mode === '2d-top') {
+    const k = Math.max(0, 1 - (mode === '2d-top' ? ITEM_FRICTION_TOP : ITEM_FRICTION) * dt);
+    item.vel.x *= k;
+    item.vel.z *= k;
+    if (Math.hypot(item.vel.x, item.vel.z) < ITEM_STOP_SPEED) {
+      item.vel.x = 0;
+      item.vel.z = 0;
+    }
+  }
+}
+
+/** Where a carried item rides: above the head, or in front of the character in the top-down view. */
+export function holdPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3 {
+  if (mode === '2d-top') {
+    const reach = holder.size.x / 2 + item.size.x / 2 + 0.1;
+    return {
+      x: holder.pos.x + holder.facing.x * reach,
+      y: holder.pos.y,
+      z: holder.pos.z + holder.facing.z * reach,
+    };
+  }
+  return {
+    x: holder.pos.x,
+    y: holder.pos.y + holder.size.y / 2 + item.size.y / 2 + 0.05,
+    z: holder.pos.z,
+  };
+}
+
+/** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
 export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number): void {
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
@@ -98,21 +166,26 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     }
     if (mode === '2d-side') c.pos.z = 0;
 
-    const maxDist = Math.max(Math.abs(c.vel.x), Math.abs(c.vel.y), Math.abs(c.vel.z)) * dt;
-    const n = Math.max(1, Math.ceil(maxDist / MAX_SUBSTEP_DISTANCE));
-    const sub = dt / n;
-    let grounded = false;
-    for (let i = 0; i < n; i++) {
-      if (moveAxis(c, 'x', c.vel.x * sub, solids)) c.vel.x = 0;
-      if (mode !== '2d-top') {
-        const dy = c.vel.y * sub;
-        if (moveAxis(c, 'y', dy, solids)) {
-          if (dy < 0) grounded = true;
-          c.vel.y = 0;
-        }
-      }
-      if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids)) c.vel.z = 0;
-    }
-    c.onGround = grounded;
+    c.onGround = integrate(c, dt, mode, solids);
   }
+
+  const byId = new Map(entities.map((e) => [e.id, e]));
+  for (const item of entities) {
+    if (item.kind !== 'item' || !item.visible) continue;
+    const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
+    if (holder) {
+      Object.assign(item.pos, holdPosition(holder, item, mode));
+      item.vel.x = 0;
+      item.vel.y = 0;
+      item.vel.z = 0;
+      item.onGround = false;
+    } else {
+      stepFreeItem(item, dt, mode, solids);
+    }
+  }
+}
+
+/** True when the box overlaps a solid block (used to keep dropped items out of walls). */
+export function overlapsSolid(box: Entity, solids: readonly Entity[]): boolean {
+  return solids.some((s) => overlapsAll(box, s));
 }

@@ -49,6 +49,13 @@ export function makeWorld(): FakeWorld {
     isTouching: (a, b) => w.touching.has(`${a}|${b}`),
     setHud: (item) => void w.huds.push(item),
     endGame: (result, message) => void w.endCalls.push({ result, message }),
+    grab: () => null,
+    drop: () => null,
+    throwHeld: () => null,
+    heldItem: () => null,
+    isHeld: () => false,
+    interact: () => null,
+    wasInteracted: () => false,
   };
   return w;
 }

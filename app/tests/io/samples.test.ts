@@ -22,9 +22,9 @@ function start(board: Board) {
 describe('samples', () => {
   const samples = listSamples();
 
-  it('lists three samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d']);
+  it('lists four samples with distinct ids and the expected modes', () => {
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -87,6 +87,44 @@ describe('samples', () => {
     const { world, step } = start(samples[2]!.board);
     for (let i = 0; i < 400 && !world.ended; i++) step(keys('KeyW'));
     expect(world.ended?.result).toBe('lose');
+  });
+});
+
+describe('key-door sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'key-door')!.board;
+
+  it('is not won without opening the door', () => {
+    const { world, step } = start(board());
+    for (let i = 0; i < 600 && !world.ended; i++) step(keys('ArrowRight'));
+    expect(world.ended).toBeNull();
+  });
+
+  it('is won by: walk to the key, pick it up, carry it to the lock, use it, walk to the goal', () => {
+    const { world, rt, step } = start(board());
+    const hold = (n: number, ...k: string[]): void => {
+      for (let i = 0; i < n && !world.ended; i++) step(keys(...k));
+    };
+    for (let i = 0; i < 20; i++) step(keys());
+    hold(25, 'ArrowRight'); // from x=-6 to about -3.9
+    step(keys('KeyE'));
+    step(keys());
+    expect(rt.getOutput('carry-1', 'holding')).toBe(true);
+    hold(70, 'ArrowRight'); // stops against the door
+    step(keys('KeyF'));
+    step(keys());
+    step(keys());
+    expect(world.entities().find((e) => e.ownerNodeId === 'door-1')!.visible).toBe(false);
+    hold(200, 'ArrowRight');
+    expect(world.ended?.result).toBe('win');
+  });
+
+  it('using the lock without holding the key does nothing', () => {
+    const { world, step } = start(board());
+    for (let i = 0; i < 20; i++) step(keys());
+    for (let i = 0; i < 200; i++) step(keys('ArrowRight'));
+    step(keys('KeyF'));
+    for (let i = 0; i < 300; i++) step(keys('ArrowRight'));
+    expect(world.ended).toBeNull();
   });
 });
 

@@ -2,14 +2,17 @@ import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
+import { buildItem, type ItemFigure } from './item-shapes';
 
 type Entry =
   | { type: 'block'; mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>; color: string }
-  | { type: 'character'; figure: Humanoid; look: string };
+  | { type: 'character'; figure: Humanoid; look: string }
+  | { type: 'item'; figure: ItemFigure; shape: string; color: string };
 
-/** Whether an existing entry can keep representing the entity (same kind and, for characters, same look). */
+/** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
-  if (entry.type === 'block') return e.kind !== 'character';
+  if (entry.type === 'block') return e.kind === 'block';
+  if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
   return e.kind === 'character' && entry.look === resolveLook(e.look);
 }
 
@@ -63,6 +66,17 @@ export class SceneView {
         entry.figure.update(e, dt);
         continue;
       }
+      if (entry.type === 'item') {
+        const { object } = entry.figure;
+        object.position.set(e.position.x, e.position.y, e.position.z);
+        object.scale.set(e.size.x, e.size.y, e.size.z);
+        if (entry.color !== e.color) {
+          entry.figure.setColor(e.color);
+          entry.color = e.color;
+        }
+        object.updateMatrixWorld(true);
+        continue;
+      }
       const { mesh } = entry;
       mesh.position.set(e.position.x, e.position.y, e.position.z);
       mesh.scale.set(e.size.x, e.size.y, e.size.z);
@@ -84,6 +98,15 @@ export class SceneView {
       this.group.add(figure.object);
       return { type: 'character', figure, look: figure.look };
     }
+    if (e.kind === 'item') {
+      const shape = e.shape ?? 'box';
+      const figure = buildItem(shape, e.color);
+      figure.object.traverse((o) => {
+        o.userData.ownerNodeId = e.ownerNodeId;
+      });
+      this.group.add(figure.object);
+      return { type: 'item', figure, shape, color: e.color };
+    }
     const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
     this.group.add(mesh);
     return { type: 'block', mesh, color: e.color };
@@ -91,6 +114,9 @@ export class SceneView {
 
   private removeEntry(id: string, entry: Entry): void {
     if (entry.type === 'character') {
+      this.group.remove(entry.figure.object);
+      entry.figure.dispose();
+    } else if (entry.type === 'item') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else {

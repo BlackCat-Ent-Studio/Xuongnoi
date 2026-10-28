@@ -3,6 +3,7 @@ import type { Board, Graph, GraphNode, Params } from '../engine/types';
 import { addWire } from '../engine/wiring';
 import {
   type Endpoint,
+  type NodeFilter,
   hasNode,
   hasWire,
   isFloor,
@@ -424,7 +425,208 @@ const lesson3: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3];
+// ---------- lesson 4 ----------
+
+const isCarryable: NodeFilter = (n) => paramOf(n, 'carryable') !== 'no';
+const isLock: NodeFilter = (n) => !isCarryable(n);
+const isDoor: NodeFilter = (n) => !isPickup(n) && !isFloor(n);
+const keyCode =
+  (code: string): NodeFilter =>
+  (n) =>
+    paramOf(n, 'key') === code;
+
+/** The key node added most recently (nodes are appended), so the hint never points at the old jump key. */
+function newestKeyTarget(snap: Snapshot): TargetList {
+  const keys = nodesOfKind(snap.graph, 'key');
+  const node = keys[keys.length - 1];
+  return [node ? [paramSel('key'), `.wc-node[data-id="${node.id}"]`] : paramSel('key')];
+}
+
+/** The mover plus a locked door, a fixed "lock" item and a goal to reach. */
+const KEY_DOOR_NODES: NodeSpec[] = [
+  { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+  { alias: 'key', kind: 'key', x: 20, y: 190 },
+  { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -4, y: 1, z: 0 } } },
+  { alias: 'floor', kind: 'block', x: 300, y: 370, params: { size: { x: 20, y: 1, z: 1 }, color: '#65a30d' } },
+  {
+    alias: 'door',
+    kind: 'block',
+    x: 300,
+    y: 520,
+    params: { position: { x: 4, y: 2, z: 0 }, size: { x: 1, y: 3, z: 1 }, color: '#92400e' },
+  },
+  {
+    alias: 'lock',
+    kind: 'item',
+    x: 300,
+    y: 670,
+    params: { position: { x: 2.6, y: 1, z: 0 }, color: '#7c3aed', shape: 'crate', carryable: 'no' },
+  },
+  {
+    alias: 'goal',
+    kind: 'block',
+    x: 560,
+    y: 20,
+    params: { type: 'pickup', position: { x: 7, y: 1, z: 0 }, color: '#22c55e' },
+  },
+  { alias: 'touch', kind: 'touch', x: 560, y: 190 },
+  { alias: 'end', kind: 'win-lose', x: 560, y: 340 },
+];
+const KEY_DOOR_WIRES: WireSpec[] = [
+  ...MOVER_WIRES,
+  ['hero', 'self', 'touch', 'a'],
+  ['goal', 'self', 'touch', 'b'],
+  ['touch', 'touching', 'end', 'win'],
+];
+
+const CARRY_WHO: Endpoint = { kind: 'carry', port: 'character' };
+const GRAB_PRESSED: Endpoint = { kind: 'key', port: 'pressed', where: keyCode('KeyE') };
+const CARRY_GRAB: Endpoint = { kind: 'carry', port: 'grab' };
+const INTERACT_WHO: Endpoint = { kind: 'interact', port: 'character' };
+const USE_PRESSED: Endpoint = { kind: 'key', port: 'pressed', where: keyCode('KeyF') };
+const INTERACT_PRESS: Endpoint = { kind: 'interact', port: 'press' };
+const LOCK_INTERACTED: Endpoint = { kind: 'item', port: 'interacted', where: isLock };
+const AND_A: Endpoint = { kind: 'and', port: 'a' };
+const CARRY_HOLDING: Endpoint = { kind: 'carry', port: 'holding' };
+const AND_B: Endpoint = { kind: 'and', port: 'b' };
+const AND_OUT: Endpoint = { kind: 'and', port: 'out' };
+const DOOR_HIDE: Endpoint = { kind: 'block', port: 'hide', where: isDoor };
+
+const lesson4: Lesson = {
+  id: 'carry-use',
+  title: T.l4.title,
+  summary: T.l4.summary,
+  createBoard: () => buildBoard(T.l4.boardName, KEY_DOOR_NODES, KEY_DOOR_WIRES),
+  steps: [
+    { id: 'intro', title: T.l4.intro.title, text: T.l4.intro.text, explain: T.l4.intro.explain },
+    {
+      ...addStep('add-item', 'item', 2),
+      title: T.l4.item.title,
+      text: T.l4.item.text,
+      explain: T.l4.item.explain,
+    },
+    {
+      id: 'item-shape',
+      title: T.l4.shape.title,
+      text: T.l4.shape.text,
+      explain: T.l4.shape.explain,
+      target: (s) => paramTarget(s, 'shape', 'item', isCarryable),
+      check: (s) => hasNode(s.graph, 'item', (n) => isCarryable(n) && paramOf(n, 'shape') === 'key'),
+    },
+    {
+      ...addStep('add-carry', 'carry'),
+      title: T.l4.carry.title,
+      text: T.l4.carry.text,
+      explain: T.l4.carry.explain,
+    },
+    {
+      ...wireStep('wire-carry', HERO_SELF, CARRY_WHO),
+      title: T.l4.wireCarry.title,
+      text: T.l4.wireCarry.text,
+    },
+    {
+      ...addStep('add-key-e', 'key', 2),
+      title: T.l4.keyE.title,
+      text: T.l4.keyE.text,
+      explain: T.l4.keyE.explain,
+    },
+    {
+      id: 'key-e-code',
+      title: T.l4.keyECode.title,
+      text: T.l4.keyECode.text,
+      target: newestKeyTarget,
+      check: (s) => hasNode(s.graph, 'key', keyCode('KeyE')),
+    },
+    {
+      ...wireStep('wire-grab', GRAB_PRESSED, CARRY_GRAB),
+      title: T.l4.wireGrab.title,
+      text: T.l4.wireGrab.text,
+      explain: T.l4.wireGrab.explain,
+    },
+    {
+      id: 'play-carry',
+      title: T.l4.playCarry.title,
+      text: T.l4.playCarry.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit',
+      title: T.l4.edit.title,
+      text: T.l4.edit.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    {
+      ...addStep('add-interact', 'interact'),
+      title: T.l4.interact.title,
+      text: T.l4.interact.text,
+      explain: T.l4.interact.explain,
+    },
+    {
+      ...wireStep('wire-interact', HERO_SELF, INTERACT_WHO),
+      title: T.l4.wireInteract.title,
+      text: T.l4.wireInteract.text,
+    },
+    {
+      ...addStep('add-key-f', 'key', 3),
+      title: T.l4.keyF.title,
+      text: T.l4.keyF.text,
+    },
+    {
+      id: 'key-f-code',
+      title: T.l4.keyFCode.title,
+      text: T.l4.keyFCode.text,
+      target: newestKeyTarget,
+      check: (s) => hasNode(s.graph, 'key', keyCode('KeyF')),
+    },
+    {
+      ...wireStep('wire-press', USE_PRESSED, INTERACT_PRESS),
+      title: T.l4.wirePress.title,
+      text: T.l4.wirePress.text,
+    },
+    {
+      ...addStep('add-and', 'and'),
+      title: T.l4.and.title,
+      text: T.l4.and.text,
+      explain: T.l4.and.explain,
+    },
+    {
+      ...wireStep('wire-lock', LOCK_INTERACTED, AND_A),
+      title: T.l4.wireLock.title,
+      text: T.l4.wireLock.text,
+      explain: T.l4.wireLock.explain,
+    },
+    {
+      ...wireStep('wire-holding', CARRY_HOLDING, AND_B),
+      title: T.l4.wireHolding.title,
+      text: T.l4.wireHolding.text,
+    },
+    {
+      ...wireStep('wire-open', AND_OUT, DOOR_HIDE),
+      title: T.l4.wireOpen.title,
+      text: T.l4.wireOpen.text,
+      explain: T.l4.wireOpen.explain,
+    },
+    {
+      id: 'play-open',
+      title: T.l4.play.title,
+      text: T.l4.play.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'win',
+      title: T.l4.win.title,
+      text: T.l4.win.text,
+      explain: T.l4.win.explain,
+      check: (s) => s.ended === 'win',
+    },
+    { id: 'done', title: T.l4.done.title, text: T.l4.done.text },
+  ],
+};
+
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

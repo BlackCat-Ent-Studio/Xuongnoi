@@ -4,8 +4,11 @@ import { andNode, notNode, orNode } from './bool-gates';
 import { blockNode } from './block';
 import { characterNode } from './character';
 import { compareNode } from './compare';
+import { carryNode } from './carry';
 import { constNode } from './const';
 import { counterNode } from './counter';
+import { interactNode } from './interact';
+import { itemNode } from './item';
 import { keyNode } from './key';
 import { mathNode } from './math';
 import { onStartNode } from './on-start';
@@ -20,6 +23,7 @@ export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   logic: 'Logic',
   math: 'Tính toán',
   object: 'Vật thể',
+  action: 'Hành động',
   output: 'Kết quả',
 };
 
@@ -42,6 +46,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   touchNode,
   winLoseNode,
   showNumberNode,
+  itemNode,
+  carryNode,
+  interactNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

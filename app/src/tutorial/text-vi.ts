@@ -227,4 +227,108 @@ export const LESSON_TEXT = {
       text: 'Bây giờ bạn đã biết làm một game có đi, nhảy, nhặt đồ, thắng và thua. Bấm Hoàn thành rồi tự làm game của riêng mình nhé.',
     },
   },
+  l4: {
+    title: '4. Cầm và dùng đồ',
+    summary: 'Nhặt chìa khoá, mang tới ổ khoá và mở cánh cửa chắn đường.',
+    boardName: 'Bài 4 - Cầm và dùng đồ',
+    intro: {
+      title: 'Cánh cửa bị khoá',
+      text: 'Bảng này có sẵn nhân vật, sàn, một cánh cửa chắn đường, một cái thùng tím là ổ khoá và ô xanh là đích. Ta cần làm chiếc chìa để mở cửa.',
+      explain: 'Nhân vật có thể cầm đồ, thả hoặc ném đồ, và "tương tác" với đồ ở gần.',
+    },
+    item: {
+      title: 'Thêm một món đồ',
+      text: 'Kéo khối "Đồ vật" vào bảng. Đây sẽ là chiếc chìa khoá.',
+      explain: 'Đồ vật rơi xuống đất và không chặn đường. Nhân vật nhặt được nó lên.',
+    },
+    shape: {
+      title: 'Biến nó thành chìa khoá',
+      text: 'Chọn đồ vật mới. Ở Thuộc tính, đổi "Hình dạng" thành "Chìa khoá".',
+      explain: 'Hình dạng chỉ để nhìn cho đẹp. Bạn còn có hộp, quả bóng và thùng.',
+    },
+    carry: {
+      title: 'Thêm khối cầm / thả',
+      text: 'Kéo khối "Cầm / Thả" vào bảng.',
+      explain: 'Khối này cho nhân vật cầm món đồ ở gần. Mỗi nhân vật chỉ cầm được một món.',
+    },
+    wireCarry: {
+      title: 'Nói ai sẽ cầm',
+      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của khối Cầm / Thả.',
+    },
+    keyE: {
+      title: 'Thêm phím để cầm',
+      text: 'Kéo thêm một khối "Phím bấm" vào bảng.',
+      explain: 'Khối Phím bấm đầu tiên đang dùng cho nhảy, nên ta cần một khối nữa.',
+    },
+    keyECode: {
+      title: 'Chọn phím E',
+      text: 'Chọn khối Phím bấm mới. Ở Thuộc tính, bấm ô "Phím" rồi nhấn phím E.',
+    },
+    wireGrab: {
+      title: 'Bấm E để cầm',
+      text: 'Nối cổng "Vừa bấm" của phím E sang cổng "Cầm" của khối Cầm / Thả.',
+      explain: '"Vừa bấm" chỉ bật một nhịp lúc nhấn xuống, nên mỗi lần bấm chỉ cầm một lần.',
+    },
+    playCarry: {
+      title: 'Thử cầm chìa',
+      text: 'Bấm "Chơi". Đi sang phải tới chiếc chìa rồi bấm E. Chìa sẽ nằm trên đầu bạn.',
+    },
+    edit: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Sửa" để làm tiếp phần mở cửa.',
+    },
+    interact: {
+      title: 'Thêm khối tương tác',
+      text: 'Kéo khối "Tương tác" vào bảng.',
+      explain: 'Khi bấm, nhân vật "dùng" món đồ gần nhất. Món đồ đó sẽ báo "Vừa được tương tác".',
+    },
+    wireInteract: {
+      title: 'Nói ai sẽ tương tác',
+      text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Nhân vật" của khối Tương tác.',
+    },
+    keyF: {
+      title: 'Thêm phím để dùng',
+      text: 'Kéo thêm một khối "Phím bấm" nữa vào bảng.',
+    },
+    keyFCode: {
+      title: 'Chọn phím F',
+      text: 'Chọn khối Phím bấm mới nhất. Đổi "Phím" thành phím F.',
+    },
+    wirePress: {
+      title: 'Bấm F để dùng',
+      text: 'Nối cổng "Vừa bấm" của phím F sang cổng "Bấm" của khối Tương tác.',
+    },
+    and: {
+      title: 'Chỉ mở khi có chìa',
+      text: 'Kéo khối "Và" vào bảng.',
+      explain: 'Khối "Và" chỉ bật khi cả hai đầu vào cùng bật. Ở đây: vừa dùng ổ khoá, vừa đang cầm chìa.',
+    },
+    wireLock: {
+      title: 'Ổ khoá vừa được dùng',
+      text: 'Nối cổng "Vừa được tương tác" của cái thùng tím (ổ khoá) sang cổng "A" của khối Và.',
+      explain: 'Thùng tím là đồ vật "Cố định": không cầm được, chỉ để bấm F vào.',
+    },
+    wireHolding: {
+      title: 'Đang cầm chìa',
+      text: 'Nối cổng "Đang cầm" của khối Cầm / Thả sang cổng "B" của khối Và.',
+    },
+    wireOpen: {
+      title: 'Mở cửa',
+      text: 'Nối cổng "Kết quả" của khối Và sang cổng "Ẩn đi" của cánh cửa (khối cao màu nâu).',
+      explain: 'Cửa bị "ẩn đi" thì biến mất, nhân vật đi qua được.',
+    },
+    play: {
+      title: 'Mở cửa nào',
+      text: 'Bấm "Chơi". Nhặt chìa bằng E, mang tới sát cánh cửa rồi bấm F.',
+    },
+    win: {
+      title: 'Đi tới đích',
+      text: 'Khi cửa biến mất, chạy sang phải tới ô xanh để thắng.',
+      explain: 'Muốn thả chìa, đổi "Cách dùng" của khối Cầm / Thả thành "1 phím cầm-thả". Muốn ném, nối thêm một phím vào cổng "Ném".',
+    },
+    done: {
+      title: 'Bạn mở được cửa rồi!',
+      text: 'Bạn đã biết cầm, dùng đồ và kết hợp bằng khối Và. Thử đổi hình dạng, sức ném, hoặc tự làm một game giấu chìa nhé.',
+    },
+  },
 } as const;
