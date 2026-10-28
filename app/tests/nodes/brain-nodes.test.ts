@@ -122,11 +122,13 @@ describe('sequence node', () => {
 // ---------- steering helpers ----------
 
 describe('steering helpers', () => {
-  it('the waypoint hook returns the goal itself (straight-line steering)', () => {
+  it('the waypoint hook returns the goal itself when there is nothing to path around or when told to go straight', () => {
     const world = createWorld('2d-side');
-    const self = { id: 'x' } as EntityView;
+    const id = world.spawn({ kind: 'character', ownerNodeId: 'x', position: v(0, 1, 0), size: v(1, 1, 1), color: '#fff', solid: true });
+    const self = world.getEntity(id)!;
     const goal = v(3, 1, 0);
     expect(nextWaypoint({ world, self, goal, dt: TICK_DT, memo: {} })).toBe(goal);
+    expect(nextWaypoint({ world, self, goal, dt: TICK_DT, memo: {}, straight: true })).toBe(goal);
   });
 
   it('moveForDirection undoes the 3D camera turn so the world direction is kept', () => {

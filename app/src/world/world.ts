@@ -5,6 +5,7 @@ import type {
   EntityView,
   GameResult,
   HudItem,
+  SolidBox,
   Vec3,
   ViewMode,
   World,
@@ -39,6 +40,7 @@ export function createWorld(mode: ViewMode): World {
   let ended: { result: GameResult; message: string } | null = null;
   let yaw = 0;
   let nextId = 1;
+  let solidRev = 0;
   /** Interactions requested this tick; they become visible (one tick) after the next step. */
   let pendingInteract = new Set<EntityId>();
   let interacted = new Set<EntityId>();
@@ -111,6 +113,7 @@ export function createWorld(mode: ViewMode): World {
       ...v,
       ...(tool && tool.shape !== undefined ? { tool: { shape: tool.shape, color: tool.color } } : {}),
       ...(e.swingTime >= 0 ? { swing: Math.min(1, e.swingTime / SWING_SECONDS) } : {}),
+      ...(e.intent ? { drive: { speed: finiteOr(e.intent.speed, 0), jumpPower: finiteOr(e.intent.jumpPower, 0) } } : {}),
     };
   }
 
@@ -200,6 +203,7 @@ export function createWorld(mode: ViewMode): World {
       if (mode === '2d-side') e.pos.z = 0;
       list.push(e);
       byId.set(id, e);
+      if (e.kind === 'block' && e.solid) solidRev++;
       return id;
     },
     setCharacterIntent(id: EntityId, intent: CharacterIntent): void {
@@ -221,6 +225,7 @@ export function createWorld(mode: ViewMode): World {
         if (tool) release(tool);
         e.handHolding = null;
       }
+      if (e.visible && e.kind === 'block' && e.solid) solidRev++;
       e.visible = false;
       e.onGround = false;
       for (const k of [...contacts]) if (k.split('|').includes(id)) contacts.delete(k);
@@ -347,6 +352,16 @@ export function createWorld(mode: ViewMode): World {
         }
       }
       return false;
+    },
+    solidBoxes(): readonly SolidBox[] {
+      const boxes: SolidBox[] = [];
+      for (const e of list) {
+        if (e.visible && e.solid && e.kind === 'block') boxes.push({ position: { ...e.pos }, size: { ...e.size } });
+      }
+      return boxes;
+    },
+    solidRevision(): number {
+      return solidRev;
     },
     cameraYaw(): number {
       return yaw;

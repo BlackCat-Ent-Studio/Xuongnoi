@@ -1,0 +1,609 @@
+{
+  "format_version": 1,
+  "name": "Mê cung",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -7.5,
+            "y": 0.5,
+            "z": -4.5
+          },
+          "speed": 5,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 7.5,
+            "y": 0.5,
+            "z": -4.5
+          },
+          "speed": 3.4,
+          "color": "#ef4444",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "chase-1",
+        "kind": "chase",
+        "params": {
+          "mode": "chase",
+          "sightRange": 40,
+          "giveUpRange": 60
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-caught",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 240
+        }
+      },
+      {
+        "id": "touch-goal",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 560,
+          "y": 380
+        }
+      },
+      {
+        "id": "goal-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 7.5,
+            "y": 0.5,
+            "z": 4.5
+          },
+          "size": {
+            "x": 1.6,
+            "y": 1,
+            "z": 1.6
+          },
+          "color": "#22c55e",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 300,
+          "y": 240
+        }
+      },
+      {
+        "id": "end-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn thoát khỏi mê cung!",
+          "loseMessage": "Bot đã bắt được bạn!"
+        },
+        "pos": {
+          "x": 820,
+          "y": 300
+        }
+      },
+      {
+        "id": "wall-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -6
+          },
+          "size": {
+            "x": 19,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -9,
+            "y": 0.5,
+            "z": -4.5
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 0.5,
+            "z": -3
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 5
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1600,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-4",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": -4
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 3
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1860,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-5",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 9,
+            "y": 0.5,
+            "z": -3
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 5
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 190
+        }
+      },
+      {
+        "id": "wall-6",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -7.5,
+            "y": 0.5,
+            "z": -3
+          },
+          "size": {
+            "x": 4,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 190
+        }
+      },
+      {
+        "id": "wall-7",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 1.5,
+            "y": 0.5,
+            "z": -3
+          },
+          "size": {
+            "x": 4,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1600,
+          "y": 190
+        }
+      },
+      {
+        "id": "wall-8",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -9,
+            "y": 0.5,
+            "z": 1.5
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 8
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1860,
+          "y": 190
+        }
+      },
+      {
+        "id": "wall-9",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 5
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 340
+        }
+      },
+      {
+        "id": "wall-10",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0.5,
+            "z": -1.5
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 340
+        }
+      },
+      {
+        "id": "wall-11",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -1.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 4,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1600,
+          "y": 340
+        }
+      },
+      {
+        "id": "wall-12",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 7,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1860,
+          "y": 340
+        }
+      },
+      {
+        "id": "wall-13",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 9,
+            "y": 0.5,
+            "z": 3
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 5
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 490
+        }
+      },
+      {
+        "id": "wall-14",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -4.5,
+            "y": 0.5,
+            "z": 3
+          },
+          "size": {
+            "x": 4,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 490
+        }
+      },
+      {
+        "id": "wall-15",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0.5,
+            "z": 3
+          },
+          "size": {
+            "x": 7,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1600,
+          "y": 490
+        }
+      },
+      {
+        "id": "wall-16",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 6
+          },
+          "size": {
+            "x": 19,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1860,
+          "y": 490
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "chase-1",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "chase-1",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "chase-1",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "chase-1",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-caught",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-caught",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "touch-caught",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "lose"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-goal",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "goal-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-goal",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "touch-goal",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "win"
+        }
+      }
+    ]
+  }
+}

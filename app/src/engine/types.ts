@@ -241,7 +241,17 @@ export interface EntityView {
   tool?: { shape: ItemShape; color: string };
   /** Characters only; 0..1 progress of a swing in progress, absent otherwise. */
   swing?: number;
+  /** Characters only; run speed and jump power from the latest intent (absent before the first one). Lets a bot plan its jumps. */
+  drive?: { speed: number; jumpPower: number };
   visible: boolean;
+}
+
+/** An axis-aligned solid block as the pathfinder sees it. */
+export interface SolidBox {
+  /** Center. */
+  position: Vec3;
+  /** Full size. */
+  size: Vec3;
 }
 
 export type HudCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
@@ -307,6 +317,10 @@ export interface WorldApi {
 
   /** True when the point lies inside a visible solid block (the ground, a wall...). */
   solidAt(point: Vec3): boolean;
+  /** Every visible solid block right now. */
+  solidBoxes(): readonly SolidBox[];
+  /** Changes whenever the set of visible solid blocks changes (one spawns or is hidden); lets callers cache what they derive. */
+  solidRevision(): number;
   /** Camera yaw last given to the world (3D stick input is relative to it). */
   cameraYaw(): number;
 }

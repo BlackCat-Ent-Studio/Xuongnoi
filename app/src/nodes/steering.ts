@@ -1,13 +1,14 @@
 import type { EntityId, EntityView, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { clamp } from './util';
+import { pathStep, type WaypointRequest } from './path-follower';
+export type { SteerMemo, WaypointRequest } from './path-follower';
 
 /**
  * Steering shared by the brain nodes (patrol / go-to / chase). It turns "walk toward this point"
  * into the same -1..1 move values a stick gives, plus a jump request.
  *
- * Path-following hook: brain nodes never aim at their goal directly. They call `nextWaypoint`
- * to learn where to head this tick, then `steerToward` to walk there. A pathfinder replaces
- * the body of `nextWaypoint` (and may keep its path in `memo`); nothing else needs to change.
+ * Brain nodes call `followPath`: the path follower (`path-follower.ts`) says where to head this tick
+ * (and when a planned jump is due), then `steerToward` walks there.
  */
 
 export interface SteerOut {
@@ -18,25 +19,9 @@ export interface SteerOut {
 
 export const STILL: Readonly<SteerOut> = { moveX: 0, moveY: 0, jump: false };
 
-/** Per-node scratch space owned by the brain node and handed to `nextWaypoint` (e.g. a cached path). */
-export type SteerMemo = Record<string, unknown>;
-
-export interface WaypointRequest {
-  world: WorldApi;
-  self: EntityView;
-  /** Where the node ultimately wants to be. */
-  goal: Vec3;
-  dt: number;
-  memo: SteerMemo;
-}
-
-/**
- * THE single place that picks the point to walk to next.
- * Straight-line steering: the goal itself. A path follower returns the next point on its path
- * (and falls back to `goal` when no path exists).
- */
+/** The point to walk to next on the way to `req.goal` (the goal itself when no route exists). */
 export function nextWaypoint(req: WaypointRequest): Vec3 {
-  return req.goal;
+  return pathStep(req).waypoint;
 }
 
 // ---------- geometry ----------
@@ -130,6 +115,8 @@ export function moveForDirection(mode: ViewMode, yaw: number, ux: number, uz: nu
 export interface SteerOptions {
   /** Never walk or jump into a drop (fleeing, guarding a ledge): stand still at an edge instead. */
   avoidFall?: boolean;
+  /** false = never hop obstacles or gaps on its own (a planned route decides the jumps). Default true. */
+  hop?: boolean;
 }
 
 /** One tick of walking from `self` toward `waypoint`. Hops small obstacles and gaps in the side and 3D views. */
@@ -145,9 +132,26 @@ export function steerToward(world: WorldApi, self: EntityView, waypoint: Vec3, o
     const edge = edgeAhead(world, self, ux, uz);
     if (edge && opts.avoidFall) return { ...STILL };
     const goalNotBelow = waypoint.y >= self.position.y - 1;
-    jump = hoppableObstacleAhead(world, self, ux, uz) || (edge && goalNotBelow);
+    jump = opts.hop !== false && (hoppableObstacleAhead(world, self, ux, uz) || (edge && goalNotBelow));
   }
   return { ...moveForDirection(mode, world.cameraYaw(), ux, uz, mag), jump };
+}
+
+/** Below this horizontal gap a full-speed move stops pushing, so the bot settles instead of shaking. */
+const FULL_SPEED_SETTLE = 0.15;
+
+/**
+ * One tick of "go toward `req.goal`": plans (or reuses) a route, walks along it, and jumps when the route says so.
+ * Straight-line steering when no route exists.
+ */
+export function followPath(req: WaypointRequest, opts: SteerOptions = {}): SteerOut {
+  const step = pathStep(req);
+  const out = steerToward(req.world, req.self, step.waypoint, { ...opts, hop: opts.hop !== false && step.hop });
+  if (req.world.mode === '2d-side' && step.fullSpeed && Math.abs(step.waypoint.x - req.self.position.x) > FULL_SPEED_SETTLE) {
+    out.moveX = Math.sign(out.moveX);
+  }
+  if (step.jump) out.jump = true;
+  return out;
 }
 
 // ---------- helpers for brain nodes ----------

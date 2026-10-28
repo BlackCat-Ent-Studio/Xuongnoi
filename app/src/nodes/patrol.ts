@@ -5,9 +5,8 @@ import {
   distanceFor,
   edgeAhead,
   hasArrived,
+  followPath,
   liveCharacter,
-  nextWaypoint,
-  steerToward,
   unitToward,
   type SteerMemo,
 } from './steering';
@@ -91,8 +90,8 @@ export const patrolNode: NodeDef<PatrolState> = {
       }
     }
 
-    const waypoint = nextWaypoint({ world, self, goal, dt: ctx.dt, memo: s.memo });
-    const steer = steerToward(world, self, waypoint, { avoidFall: turnAtEdge });
+    // A patrol told to turn at ledges walks straight; otherwise it routes around walls and over platforms.
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: turnAtEdge }, { avoidFall: turnAtEdge });
     return { moveX: steer.moveX, moveY: steer.moveY, atEnd: false };
   },
 };

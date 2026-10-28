@@ -2,10 +2,9 @@ import type { NodeDef, Vec3 } from '../engine/types';
 import {
   STILL,
   distanceFor,
+  followPath,
   hasArrived,
   liveCharacter,
-  nextWaypoint,
-  steerToward,
   unitToward,
   visiblePosition,
   type SteerMemo,
@@ -79,8 +78,8 @@ export const chaseNode: NodeDef<ChaseState> = {
       return { ...STILL, seeing: true };
     }
 
-    const waypoint = nextWaypoint({ world, self, goal, dt: ctx.dt, memo: s.memo });
-    const steer = steerToward(world, self, waypoint, { avoidFall: fleeing });
+    // Fleeing runs straight away from the threat: a route to a point behind a wall could lead past the chaser.
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: fleeing }, { avoidFall: fleeing });
     return { ...steer, seeing: true };
   },
 };

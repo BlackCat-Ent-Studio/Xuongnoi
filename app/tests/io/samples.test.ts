@@ -3,6 +3,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type InputSnapshot } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { pickFollowTarget } from '../../src/render/cameras';
+import { findPlanePath, planeGridFor } from '../../src/world/navigation';
 import { createWorld } from '../../src/world/world';
 import { listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { safeFileName } from '../../src/io/file-io';
@@ -23,9 +24,9 @@ function start(board: Board) {
 describe('samples', () => {
   const samples = listSamples();
 
-  it('lists seven samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top']);
+  it('lists nine samples with distinct ids and the expected modes', () => {
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -43,7 +44,8 @@ describe('samples', () => {
         for (let i = 0; i < 600; i++) step(keys());
       }).not.toThrow();
       expect(world.entities().length).toBeGreaterThan(0);
-      expect(world.ended).toBeNull();
+      // The bot-only boards play themselves; the platform bot reaches its star within ten seconds.
+      if (s.id !== 'platform-bot') expect(world.ended).toBeNull();
     });
   }
 
@@ -267,6 +269,68 @@ describe('cleaner-bot sample', () => {
     const g = start(board());
     g.step(keys());
     expect(pickFollowTarget(g.world.entities())?.ownerNodeId).toBe('bot');
+  });
+});
+
+describe('maze-chase sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'maze-chase')!.board;
+
+  it('the bot finds its way through the walls and catches a player who stands still', () => {
+    const g = start(board());
+    for (let i = 0; i < 60 * 40 && !g.world.ended; i++) g.step(keys());
+    expect(g.world.ended?.result).toBe('lose');
+  });
+
+  it('crosses the whole maze to a player waiting in the far corner', () => {
+    const b = board();
+    b.graph.nodes.find((n) => n.id === 'player')!.params.position = { x: 7.5, y: 0.5, z: 1.5 };
+    b.graph.nodes.find((n) => n.id === 'bot')!.params.position = { x: -7.5, y: 0.5, z: -4.5 };
+    const g = start(b);
+    for (let i = 0; i < 60 * 40 && !g.world.ended; i++) g.step(keys());
+    expect(g.world.ended?.result).toBe('lose');
+  });
+
+  it('can be won: running the maze route to the exit stays ahead of the bot', () => {
+    const g = start(board());
+    const find = (owner: string) => g.world.entities().find((e) => e.ownerNodeId === owner)!;
+    const goal = find('goal-1').position;
+    let keysNow: string[] = [];
+    let route: { x: number; z: number }[] = [];
+    for (let i = 0; i < 60 * 40 && !g.world.ended; i++) {
+      const me = find('player');
+      if (i % 30 === 0) {
+        const grid = planeGridFor(g.world, { halfWidth: 0.5, height: 1 }, 0);
+        route = grid ? (findPlanePath(grid, { x: me.position.x, z: me.position.z }, { x: goal.x, z: goal.z })?.points ?? []) : [];
+      }
+      while (route.length > 1 && Math.hypot(route[0]!.x - me.position.x, route[0]!.z - me.position.z) < 0.35) route.shift();
+      const next = route[0] ?? { x: goal.x, z: goal.z };
+      const dx = next.x - me.position.x;
+      const dz = next.z - me.position.z;
+      keysNow = [];
+      if (dx > 0.1) keysNow.push('KeyD');
+      else if (dx < -0.1) keysNow.push('KeyA');
+      if (dz > 0.1) keysNow.push('KeyS');
+      else if (dz < -0.1) keysNow.push('KeyW');
+      g.step(keys(...keysNow));
+    }
+    expect(g.world.ended?.result).toBe('win');
+  });
+});
+
+describe('platform-bot sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'platform-bot')!.board;
+
+  it('the bot drops down, climbs the ledges, leaps the gap and takes the star', () => {
+    const g = start(board());
+    const bot = () => g.world.entities().find((e) => e.ownerNodeId === 'bot')!;
+    let highest = 0;
+    for (let i = 0; i < 60 * 40 && !g.world.ended; i++) {
+      g.step(keys());
+      highest = Math.max(highest, bot().position.y);
+    }
+    expect(g.world.ended?.result).toBe('win');
+    expect(highest).toBeGreaterThan(4.4);
+    expect(bot().position.x).toBeGreaterThan(10);
   });
 });
 

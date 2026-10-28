@@ -2,10 +2,9 @@ import type { NodeDef, Vec3 } from '../engine/types';
 import {
   MIN_STOP_DISTANCE,
   STILL,
+  followPath,
   hasArrived,
   liveCharacter,
-  nextWaypoint,
-  steerToward,
   visiblePosition,
   type SteerMemo,
 } from './steering';
@@ -64,8 +63,7 @@ export const goToNode: NodeDef<GoToState> = {
     const arrivedPulse = risingEdge(s.arrived, arrived);
     if (!go || near) return { ...STILL, arrived, arrivedPulse };
 
-    const waypoint = nextWaypoint({ world, self, goal, dt: ctx.dt, memo: s.memo });
-    const steer = steerToward(world, self, waypoint);
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo });
     return { ...steer, arrived, arrivedPulse };
   },
 };

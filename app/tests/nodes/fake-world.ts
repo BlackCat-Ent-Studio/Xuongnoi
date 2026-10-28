@@ -9,6 +9,7 @@ import type {
   NodeDef,
   Params,
   PortValues,
+  SolidBox,
   WorldApi,
 } from '../../src/engine/types';
 
@@ -21,6 +22,8 @@ export interface FakeWorld extends WorldApi {
   touching: Set<string>;
   grounded: boolean;
   entities: Map<EntityId, EntityView>;
+  boxes: SolidBox[];
+  revision: number;
 }
 
 export function makeWorld(): FakeWorld {
@@ -35,6 +38,8 @@ export function makeWorld(): FakeWorld {
     touching: new Set(),
     grounded: false,
     entities: new Map(),
+    boxes: [],
+    revision: 0,
     ended: null,
     spawn(spec) {
       const id = `e${++n}`;
@@ -63,6 +68,8 @@ export function makeWorld(): FakeWorld {
     useTool: () => null,
     wasUsedOn: () => false,
     solidAt: () => false,
+    solidBoxes: () => w.boxes,
+    solidRevision: () => w.revision,
     cameraYaw: () => 0,
   };
   return w;

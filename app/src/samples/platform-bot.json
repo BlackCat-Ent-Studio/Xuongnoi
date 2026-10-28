@@ -1,0 +1,321 @@
+{
+  "format_version": 1,
+  "name": "Bot leo bục",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -8.5,
+            "y": 2.5,
+            "z": 0
+          },
+          "speed": 4.5,
+          "jumpPower": 10,
+          "color": "#f59e0b",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "go-star",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 11,
+            "y": 4.5,
+            "z": 0
+          },
+          "stopDistance": 0.4
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "star-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 11.5,
+            "y": 4.3,
+            "z": 0
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 300,
+          "y": 300
+        }
+      },
+      {
+        "id": "end-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bot đã leo lên lấy được ngôi sao!",
+          "loseMessage": "Thua mất rồi!"
+        },
+        "pos": {
+          "x": 560,
+          "y": 300
+        }
+      },
+      {
+        "id": "ground",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 2,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 28,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 190
+        }
+      },
+      {
+        "id": "ledge-start",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -8.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "size": {
+            "x": 3,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 820,
+          "y": 340
+        }
+      },
+      {
+        "id": "step-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 1.5,
+            "y": 0.75,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 340
+        }
+      },
+      {
+        "id": "step-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 4.5,
+            "y": 1.75,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1340,
+          "y": 340
+        }
+      },
+      {
+        "id": "step-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 8.5,
+            "y": 2.75,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 820,
+          "y": 490
+        }
+      },
+      {
+        "id": "step-4",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 12,
+            "y": 3.75,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 490
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "go-star",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "star-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "go-star",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "go-star",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "go-star",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "go-star",
+          "port": "jump"
+        },
+        "to": {
+          "node": "bot",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "star-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "star-1",
+          "port": "hide"
+        }
+      }
+    ]
+  }
+}
