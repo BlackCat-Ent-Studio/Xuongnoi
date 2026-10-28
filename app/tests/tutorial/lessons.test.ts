@@ -306,6 +306,73 @@ describe('lesson 4: carry and use', () => {
   });
 });
 
+describe('lesson 5: hand tools', () => {
+  it('walks through the pickaxe, hand tool and rock wiring, and the result is winnable', () => {
+    const s = session('hand-tools');
+    s.runner.next();
+    expect(s.stepId()).toBe('add-item');
+    const pick = s.add('item');
+    expect(s.stepId()).toBe('item-shape');
+    s.param(pick, 'shape', 'pickaxe');
+    expect(s.stepId()).toBe('item-hold');
+    s.param(pick, 'holdStyle', 'hand');
+    expect(s.stepId()).toBe('add-hand');
+    const hand = s.add('hand-tool');
+    const hero = s.idOf('character');
+    expect(s.stepId()).toBe('wire-hand');
+    s.wire(p(hero, 'self'), p(hand, 'character'));
+    expect(s.stepId()).toBe('add-key-e');
+    const keyE = s.add('key');
+    expect(s.stepId()).toBe('key-e-code');
+    s.param(keyE, 'key', 'KeyE');
+    expect(s.stepId()).toBe('wire-equip');
+    s.wire(p(keyE, 'pressed'), p(hand, 'toggle'));
+    expect(s.stepId()).toBe('add-key-f');
+    const keyF = s.add('key');
+    expect(s.stepId()).toBe('key-f-code');
+    s.param(keyF, 'key', 'KeyF');
+    expect(s.stepId()).toBe('wire-use');
+    s.wire(p(keyF, 'pressed'), p(hand, 'use'));
+    expect(s.stepId()).toBe('play-tool');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit');
+    s.play(false);
+    expect(s.stepId()).toBe('add-and');
+    const and = s.add('and');
+    const rock = s.state.getGraph().nodes.find((n) => n.kind === 'block' && (n.params.size as { y: number }).y === 3)!;
+    expect(s.stepId()).toBe('wire-rock');
+    s.wire(p(rock.id, 'usedOn'), p(and, 'a'));
+    expect(s.stepId()).toBe('wire-in-hand');
+    s.wire(p(pick, 'inHand'), p(and, 'b'));
+    expect(s.stepId()).toBe('wire-break');
+    s.wire(p(and, 'out'), p(rock.id, 'hide'));
+    expect(s.stepId()).toBe('play-break');
+    s.play(true);
+    expect(s.stepId()).toBe('win');
+
+    const graph = s.state.getGraph();
+    const world = createWorld('2d-side');
+    const rt = createRuntime(graph, world, '2d-side');
+    const step = (...k: string[]): void => {
+      rt.tick({ keysDown: new Set(k) });
+      world.step(TICK_DT);
+    };
+    for (let i = 0; i < 20; i++) step();
+    for (let i = 0; i < 40; i++) step('ArrowRight');
+    step('KeyE');
+    step();
+    expect(rt.getOutput(hand, 'holding')).toBe(true);
+    for (let i = 0; i < 100; i++) step('ArrowRight'); // stops against the rock
+    step('KeyF');
+    step();
+    step();
+    for (let i = 0; i < 200 && !world.ended; i++) step('ArrowRight');
+    expect(world.ended?.result).toBe('win');
+    s.end('win');
+    expect(s.stepId()).toBe('done');
+  });
+});
+
 describe('step targets', () => {
   it('resolve to selectors for every step of every lesson on the starting board', () => {
     for (const lesson of LESSONS) {

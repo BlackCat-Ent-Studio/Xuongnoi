@@ -1,4 +1,4 @@
-import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef } from '../engine/types';
+import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
 import { strParam, vec3Param } from './util';
 
 export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
@@ -6,10 +6,20 @@ export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
   key: 'Chìa khoá',
   ball: 'Quả bóng',
   crate: 'Thùng',
+  sword: 'Kiếm',
+  pickaxe: 'Cuốc',
+  hammer: 'Búa',
+  torch: 'Đuốc',
+  wand: 'Gậy phép',
+  bucket: 'Xô nước',
 };
 
 function shapeParam(raw: string): ItemShape {
   return (ITEM_SHAPES as readonly string[]).includes(raw) ? (raw as ItemShape) : 'box';
+}
+
+function holdStyleParam(raw: string): HoldStyle {
+  return (HOLD_STYLES as readonly string[]).includes(raw) ? (raw as HoldStyle) : 'head';
 }
 
 export const itemNode: NodeDef<{ id: EntityId }> = {
@@ -17,12 +27,14 @@ export const itemNode: NodeDef<{ id: EntityId }> = {
   label: 'Đồ vật',
   category: 'object',
   description:
-    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. Đồ vật rơi xuống đất và không chặn đường.',
+    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm tay.',
   inputs: [],
   outputs: [
     { id: 'self', type: 'object', label: 'Đồ vật' },
     { id: 'held', type: 'bool', label: 'Đang được cầm' },
     { id: 'interacted', type: 'bool', label: 'Vừa được tương tác' },
+    { id: 'inHand', type: 'bool', label: 'Đang ở trên tay' },
+    { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
   ],
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },
@@ -45,6 +57,16 @@ export const itemNode: NodeDef<{ id: EntityId }> = {
         { value: 'no', label: 'Cố định (chỉ để tương tác)' },
       ],
     },
+    {
+      id: 'holdStyle',
+      label: 'Cách cầm',
+      kind: 'select',
+      default: 'head',
+      options: [
+        { value: 'head', label: 'Khiêng trên đầu' },
+        { value: 'hand', label: 'Cầm trên tay' },
+      ],
+    },
   ],
   create(ctx, params) {
     const id = ctx.world.spawn({
@@ -56,6 +78,7 @@ export const itemNode: NodeDef<{ id: EntityId }> = {
       solid: false,
       shape: shapeParam(strParam(params, 'shape', 'box')),
       carryable: strParam(params, 'carryable', 'yes') !== 'no',
+      holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
     });
     return { id };
   },
@@ -64,6 +87,8 @@ export const itemNode: NodeDef<{ id: EntityId }> = {
       self: s.id,
       held: ctx.world.isHeld(s.id),
       interacted: ctx.world.wasInteracted(s.id),
+      inHand: ctx.world.isInHand(s.id),
+      usedOn: ctx.world.wasUsedOn(s.id),
     };
   },
 };

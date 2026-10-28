@@ -58,6 +58,9 @@ export const catStyle: StyleDef = {
       kit.box(root, pink, [0.02, 0.06, 0.04], [0.245, 0.33, z]);
     }
 
+    // Tools are carried in the mouth, at the front of the muzzle.
+    const mouth = kit.joint(root, [0.47, 0.06, 0]);
+
     // Raised tail with a curled cream tip.
     const tail = kit.joint(root, [-0.28, -0.1, 0]);
     kit.box(tail, kit.main, [0.07, 0.26, 0.07], [0, 0.13, 0]);
@@ -71,6 +74,6 @@ export const catStyle: StyleDef = {
       rl.rotation.z = p.rl;
       rr.rotation.z = p.rr;
       tail.rotation.z = p.tail;
-    });
+    }, undefined, { swing: mouth, at: [0, 0, 0], length: 0.6, swingShare: 0.6 });
   },
 };

@@ -8,8 +8,11 @@ import {
   facingTarget,
   motionOf,
   smoothAngle,
+  swingAngle,
+  swingLunge,
   walkPhaseRate,
 } from './character-motion';
+import { buildItem, handGrip, type ItemFigure } from './item-shapes';
 import { PartKit, type StyleRig, localYRange, resolveLook, styleFor } from './character-styles';
 
 /** Lowest point of the figure sits on the collision box's floor (figure space: y -0.5 .. 0.5). */
@@ -30,6 +33,8 @@ export class Humanoid {
   private readonly kit: PartKit;
   private readonly rig: StyleRig;
 
+  /** Tool currently drawn on the figure (rebuilt when the shape or color changes). */
+  private tool: { key: string; figure: ItemFigure; holder: THREE.Group } | null = null;
   private colorHex: string;
   private mode: ViewMode;
   private yaw: number;
@@ -74,11 +79,13 @@ export class Humanoid {
     // Uniform horizontal scale keeps the figure inside the box under any yaw.
     const h = Math.min(view.size.x, view.size.z);
     this.body.scale.set(h, view.size.y, h);
+    this.syncTool(view.tool);
     this.object.traverse((o) => {
       o.userData.ownerNodeId = view.ownerNodeId;
     });
 
     if (dt > 0) this.animate(p, dt);
+    this.applySwing(view.swing);
     this.fitToFloor();
     this.object.updateMatrixWorld(true);
   }
@@ -107,6 +114,40 @@ export class Humanoid {
     this.applyYaw();
   }
 
+  /** Show, replace or remove the tool in hand. Looks without a hand mount never show tools. */
+  private syncTool(tool: EntityView['tool']): void {
+    const mount = this.rig.hand;
+    if (!mount) return;
+    const key = tool ? `${tool.shape}|${tool.color}` : '';
+    if ((this.tool?.key ?? '') === key) return;
+    if (this.tool) {
+      mount.swing.remove(this.tool.holder);
+      this.tool.figure.dispose();
+      this.tool = null;
+    }
+    if (!tool) return;
+    const figure = buildItem(tool.shape, tool.color);
+    const grip = handGrip(tool.shape);
+    const holder = new THREE.Group();
+    holder.userData.noFit = true;
+    holder.position.set(mount.at[0], mount.at[1], mount.at[2]);
+    holder.rotation.z = grip.tilt;
+    holder.scale.setScalar(mount.length * grip.scale);
+    figure.object.position.y = grip.dy;
+    holder.add(figure.object);
+    mount.swing.add(holder);
+    this.tool = { key, figure, holder };
+  }
+
+  /** Swing pose for a swing in progress (`progress` 0..1), rest otherwise; also a small lunge forward. */
+  private applySwing(progress: number | undefined): void {
+    const mount = this.rig.hand;
+    if (!mount) return;
+    const active = progress !== undefined;
+    mount.swing.rotation.z = active ? swingAngle(progress) * mount.swingShare : 0;
+    this.body.position.x = active ? swingLunge(progress) : 0;
+  }
+
   private applyYaw(): void {
     this.yawGroup.rotation.y = this.yaw;
   }
@@ -126,6 +167,8 @@ export class Humanoid {
   }
 
   dispose(): void {
+    this.tool?.figure.dispose();
+    this.tool = null;
     this.kit.dispose();
   }
 }

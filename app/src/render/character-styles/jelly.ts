@@ -41,6 +41,9 @@ export const jellyStyle: StyleDef = {
     kit.box(blob, shine, [0.02, 0.2, 0.1], [0.51, 0.85, -0.3]);
     kit.box(blob, shine, [0.02, 0.07, 0.07], [0.51, 0.72, -0.3]);
 
+    // Tools stick to the side of the body; this joint is outside the blob so squashing does not warp them.
+    const side = kit.joint(root, [0.08, -0.12, 0.36]);
+
     return poseRig(
       root,
       REST,
@@ -51,6 +54,7 @@ export const jellyStyle: StyleDef = {
         blob.position.y = -0.5 + p.hop;
       },
       18,
+      { swing: side, at: [0, 0, 0], length: 0.6, swingShare: 0.7 },
     );
   },
 };

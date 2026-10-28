@@ -1,4 +1,4 @@
-import type { EntityKind, EntityView, ItemShape, Vec3, CharacterIntent } from '../engine/types';
+import type { EntityKind, EntityView, HoldStyle, ItemShape, Vec3, CharacterIntent } from '../engine/types';
 
 /** Internal mutable entity record; EntityView is the public snapshot. */
 export interface Entity {
@@ -17,12 +17,20 @@ export interface Entity {
   intent: CharacterIntent | null;
   /** Characters: unit horizontal direction of the last non-zero movement. */
   facing: Vec3;
-  /** Characters: id of the carried item. */
+  /** Characters: id of the item carried above the head. */
   holding: string | null;
+  /** Characters: id of the tool in hand. */
+  handHolding: string | null;
+  /** Characters: seconds since the current swing began, or -1 when not swinging. */
+  swingTime: number;
   /** Items: id of the carrying character. */
   heldBy: string | null;
+  /** Items: true when `heldBy` carries it in hand rather than above the head. */
+  inHand: boolean;
   /** Items: false = never picked up. */
   carryable: boolean;
+  /** Items: which slot picks it up. */
+  holdStyle: HoldStyle;
 }
 
 export function toView(e: Entity): EntityView {
@@ -35,6 +43,8 @@ export function toView(e: Entity): EntityView {
     color: e.color,
     ...(e.look !== undefined ? { look: e.look } : {}),
     ...(e.shape !== undefined ? { shape: e.shape } : {}),
+    ...(e.kind === 'item' && e.holdStyle === 'hand' ? { holdStyle: 'hand' as const } : {}),
+    ...(e.kind === 'item' && e.inHand && e.heldBy !== null ? { inHand: true } : {}),
     visible: e.visible,
   };
 }

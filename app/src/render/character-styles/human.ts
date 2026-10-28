@@ -59,12 +59,16 @@ export const humanStyle: StyleDef = {
     kit.box(upper, skin, [0.26, 0.26, 0.26], [0, 0.445, 0]);
     kit.box(upper, eyes, [0.02, 0.045, 0.045], [0.131, 0.47, 0.065]);
     kit.box(upper, eyes, [0.02, 0.045, 0.045], [0.131, 0.47, -0.065]);
-    const [armL, armR] = ([0.25, -0.25] as const).map((z) => {
+    // Each arm hangs from a pose joint; an inner swing joint (same pivot) carries the arm and any tool.
+    const arms = ([0.25, -0.25] as const).map((z) => {
       const arm = kit.joint(upper, [0, shoulderY - hipY, z]);
-      kit.box(arm, kit.main, [0.14, 0.24, 0.14], [0, -0.12, 0]);
-      kit.box(arm, skin, [0.13, 0.1, 0.13], [0, -0.29, 0]);
-      return arm;
-    }) as [THREE.Group, THREE.Group];
+      const swing = kit.joint(arm, [0, 0, 0]);
+      kit.box(swing, kit.main, [0.14, 0.24, 0.14], [0, -0.12, 0]);
+      kit.box(swing, skin, [0.13, 0.1, 0.13], [0, -0.29, 0]);
+      return { arm, swing };
+    }) as [{ arm: THREE.Group; swing: THREE.Group }, { arm: THREE.Group; swing: THREE.Group }];
+    const armL = arms[0].arm;
+    const armR = arms[1].arm;
 
     return poseRig(root, REST, humanTarget, (p) => {
       armL.rotation.z = p.armL;
@@ -72,6 +76,6 @@ export const humanStyle: StyleDef = {
       legL.rotation.z = p.legL;
       legR.rotation.z = p.legR;
       upper.scale.y = 1 + p.breathe;
-    });
+    }, undefined, { swing: arms[0].swing, at: [0.03, -0.3, 0], length: 0.7, swingShare: 1 });
   },
 };

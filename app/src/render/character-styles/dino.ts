@@ -59,6 +59,8 @@ export const dinoStyle: StyleDef = {
     kit.box(upper, eyes, [0.02, 0.06, 0.05], [0.431, 0.5, -0.1]);
     for (const x of [-0.1, 0, 0.1]) kit.box(upper, plates, [0.08, 0.09, 0.06], [x, 0.395, 0]);
 
+    // Tools are carried in the mouth, at the front of the jaw; they lean with the body.
+    const mouth = kit.joint(upper, [0.43, 0.38, 0]);
     const [armL, armR] = ([0.2, -0.2] as const).map((z) => {
       const arm = kit.joint(upper, [0.14, 0.19, z]);
       kit.box(arm, kit.main, [0.09, 0.14, 0.07], [0.01, -0.07, 0]);
@@ -83,6 +85,6 @@ export const dinoStyle: StyleDef = {
       tail1.rotation.y = p.tail;
       tail2.rotation.y = p.tail * 0.8;
       tail3.rotation.y = p.tail * 0.8;
-    });
+    }, undefined, { swing: mouth, at: [0, 0, 0], length: 0.6, swingShare: 0.6 });
   },
 };

@@ -331,4 +331,102 @@ export const LESSON_TEXT = {
       text: 'Bạn đã biết cầm, dùng đồ và kết hợp bằng khối Và. Thử đổi hình dạng, sức ném, hoặc tự làm một game giấu chìa nhé.',
     },
   },
+  l5: {
+    title: '5. Dụng cụ cầm tay',
+    summary: 'Cầm chiếc cuốc trên tay và đập vỡ tảng đá chắn đường.',
+    boardName: 'Bài 5 - Dụng cụ cầm tay',
+    intro: {
+      title: 'Tảng đá chắn đường',
+      text: 'Bảng này có sẵn nhân vật, sàn, một tảng đá cao chắn đường và ô xanh là đích. Ta sẽ làm một chiếc cuốc để đập vỡ tảng đá.',
+      explain: 'Ngoài việc khiêng đồ trên đầu, nhân vật còn cầm được dụng cụ trên tay và vung nó vào thứ ở phía trước.',
+    },
+    item: {
+      title: 'Thêm một món đồ',
+      text: 'Kéo khối "Đồ vật" vào bảng. Đây sẽ là chiếc cuốc.',
+    },
+    shape: {
+      title: 'Biến nó thành cái cuốc',
+      text: 'Chọn đồ vật mới. Ở Thuộc tính, đổi "Hình dạng" thành "Cuốc".',
+      explain: 'Bạn còn có kiếm, búa, đuốc, gậy phép và xô nước để tự làm game khác.',
+    },
+    hold: {
+      title: 'Cho cầm trên tay',
+      text: 'Vẫn ở đồ vật đó, đổi "Cách cầm" thành "Cầm trên tay".',
+      explain: 'Món "Khiêng trên đầu" dùng với khối Cầm / Thả. Món "Cầm trên tay" dùng với khối Cầm tay, hai bên không lẫn vào nhau.',
+    },
+    tool: {
+      title: 'Thêm khối cầm tay',
+      text: 'Kéo khối "Cầm tay" vào bảng.',
+      explain: 'Khối này cho nhân vật nhặt dụng cụ, cất xuống, và vung dụng cụ vào thứ ở phía trước.',
+    },
+    wireTool: {
+      title: 'Nói ai sẽ cầm',
+      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của khối Cầm tay.',
+    },
+    keyE: {
+      title: 'Thêm phím để cầm',
+      text: 'Kéo thêm một khối "Phím bấm" vào bảng.',
+    },
+    keyECode: {
+      title: 'Chọn phím E',
+      text: 'Chọn khối Phím bấm mới. Ở Thuộc tính, bấm ô "Phím" rồi nhấn phím E.',
+    },
+    wireEquip: {
+      title: 'Bấm E để cầm hoặc cất',
+      text: 'Nối cổng "Vừa bấm" của phím E sang cổng "Cầm/Cất" của khối Cầm tay.',
+      explain: 'Bấm lần một thì nhặt dụng cụ gần nhất lên tay, bấm lần nữa thì đặt xuống.',
+    },
+    keyF: {
+      title: 'Thêm phím để vung',
+      text: 'Kéo thêm một khối "Phím bấm" nữa vào bảng.',
+    },
+    keyFCode: {
+      title: 'Chọn phím F',
+      text: 'Chọn khối Phím bấm mới nhất. Đổi "Phím" thành phím F.',
+    },
+    wireUse: {
+      title: 'Bấm F để vung',
+      text: 'Nối cổng "Vừa bấm" của phím F sang cổng "Dùng" của khối Cầm tay.',
+      explain: 'Mỗi lần vung mất khoảng một phần ba giây, vung xong mới vung tiếp được.',
+    },
+    playTool: {
+      title: 'Thử vung cuốc',
+      text: 'Bấm "Chơi". Đi sang phải tới chiếc cuốc, bấm E để cầm, rồi bấm F để vung thử.',
+    },
+    edit: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Sửa" để làm tiếp phần đập đá.',
+    },
+    and: {
+      title: 'Chỉ cuốc mới đập được đá',
+      text: 'Kéo khối "Và" vào bảng.',
+      explain: 'Vung dụng cụ nào trúng đá thì đá cũng báo "Vừa bị dùng lên". Khối "Và" giúp đòi thêm điều kiện: phải đang cầm cuốc.',
+    },
+    wireRock: {
+      title: 'Đá vừa bị dùng lên',
+      text: 'Nối cổng "Vừa bị dùng lên" của tảng đá (khối cao màu xám) sang cổng "A" của khối Và.',
+    },
+    wireInHand: {
+      title: 'Cuốc đang ở trên tay',
+      text: 'Nối cổng "Đang ở trên tay" của chiếc cuốc sang cổng "B" của khối Và.',
+    },
+    wireBreak: {
+      title: 'Đập vỡ đá',
+      text: 'Nối cổng "Kết quả" của khối Và sang cổng "Ẩn đi" của tảng đá.',
+      explain: 'Đá bị "ẩn đi" thì biến mất, nhân vật đi qua được.',
+    },
+    play: {
+      title: 'Đập đá nào',
+      text: 'Bấm "Chơi". Nhặt cuốc bằng E, đi sát tảng đá rồi bấm F.',
+    },
+    win: {
+      title: 'Đi tới đích',
+      text: 'Khi đá vỡ, chạy sang phải tới ô xanh để thắng.',
+      explain: 'Thử thêm một chiếc kiếm: cầm kiếm vung vào đá thì đá không vỡ, vì điều kiện "đang cầm cuốc" không đúng.',
+    },
+    done: {
+      title: 'Bạn đập được đá rồi!',
+      text: 'Bạn đã biết cầm dụng cụ trên tay, vung nó, và dùng khối Và để chỉ đúng dụng cụ mới có tác dụng. Thử đổi sang búa hay xô nước nhé.',
+    },
+  },
 } as const;

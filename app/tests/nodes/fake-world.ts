@@ -56,6 +56,12 @@ export function makeWorld(): FakeWorld {
     isHeld: () => false,
     interact: () => null,
     wasInteracted: () => false,
+    equip: () => null,
+    unequip: () => null,
+    handItem: () => null,
+    isInHand: () => false,
+    useTool: () => null,
+    wasUsedOn: () => false,
   };
   return w;
 }

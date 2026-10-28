@@ -155,8 +155,33 @@ export interface Runtime {
 export type EntityKind = 'character' | 'block' | 'item';
 
 /** Look of an item entity (built from boxes by the renderer). */
-export type ItemShape = 'box' | 'key' | 'ball' | 'crate';
-export const ITEM_SHAPES: readonly ItemShape[] = ['box', 'key', 'ball', 'crate'];
+export type ItemShape =
+  | 'box'
+  | 'key'
+  | 'ball'
+  | 'crate'
+  | 'sword'
+  | 'pickaxe'
+  | 'hammer'
+  | 'torch'
+  | 'wand'
+  | 'bucket';
+export const ITEM_SHAPES: readonly ItemShape[] = [
+  'box',
+  'key',
+  'ball',
+  'crate',
+  'sword',
+  'pickaxe',
+  'hammer',
+  'torch',
+  'wand',
+  'bucket',
+];
+
+/** How a character carries an item: balanced above the head, or as a tool in hand. */
+export type HoldStyle = 'head' | 'hand';
+export const HOLD_STYLES: readonly HoldStyle[] = ['head', 'hand'];
 
 export interface EntitySpec {
   kind: EntityKind;
@@ -176,6 +201,8 @@ export interface EntitySpec {
   shape?: ItemShape;
   /** Items only: false = can be touched and used, but never picked up. Omitted = true. */
   carryable?: boolean;
+  /** Items only: which slot picks it up. Omitted = 'head'. */
+  holdStyle?: HoldStyle;
 }
 
 export interface CharacterIntent {
@@ -199,6 +226,14 @@ export interface EntityView {
   look?: string;
   /** Items only. */
   shape?: ItemShape;
+  /** Items only; present as 'hand' for tools. */
+  holdStyle?: HoldStyle;
+  /** Items only; true while the item is in a character's hand (the renderer draws it on the figure). */
+  inHand?: boolean;
+  /** Characters only; the tool currently in hand. */
+  tool?: { shape: ItemShape; color: string };
+  /** Characters only; 0..1 progress of a swing in progress, absent otherwise. */
+  swing?: number;
   visible: boolean;
 }
 
@@ -244,6 +279,22 @@ export interface WorldApi {
   interact(character: EntityId, reach: number): EntityId | null;
   /** True for exactly one tick after the item was interacted with. */
   wasInteracted(item: EntityId): boolean;
+
+  // ---- hand-held tools: a second slot, independent of the above-head one ----
+
+  /** Takes the nearest free carryable `hand` item within `reach` into the hand. One tool per character. */
+  equip(character: EntityId, reach: number): EntityId | null;
+  /** Puts the tool in hand down in front of the character. Returns it, or null when the hand was empty. */
+  unequip(character: EntityId): EntityId | null;
+  handItem(character: EntityId): EntityId | null;
+  isInHand(item: EntityId): boolean;
+  /**
+   * Swings (with or without a tool) and marks the nearest visible block/item/character in front within `reach`
+   * as used. Returns null while a swing is still in progress (cooldown) or for a bad character.
+   */
+  useTool(character: EntityId, reach: number): { target: EntityId | null } | null;
+  /** True for exactly one tick after something was used on this entity. */
+  wasUsedOn(id: EntityId): boolean;
 }
 
 /** Full world used by the game loop and renderer. */

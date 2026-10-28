@@ -71,3 +71,33 @@ export function facingTarget(mode: ViewMode, vx: number, vz: number, current: nu
   if (Math.hypot(vx, vz) < WALK_SPEED_MIN) return current;
   return yawToward(vx, vz);
 }
+
+/** Portion of a swing spent winding up, then striking; the rest is the return to rest. */
+const SWING_WINDUP_END = 0.35;
+const SWING_STRIKE_END = 0.65;
+const SWING_BACK = 2.3;
+const SWING_FOLLOW_THROUGH = -0.2;
+
+/**
+ * Arm angle (radians about the lateral axis, positive = toward the facing side) for a swing at `progress`
+ * 0..1: raise back, strike down and forward, settle at rest. 0 outside the swing.
+ */
+export function swingAngle(progress: number): number {
+  const p = clamp(progress, 0, 1);
+  if (p <= SWING_WINDUP_END) {
+    const t = p / SWING_WINDUP_END;
+    return SWING_BACK * (1 - (1 - t) * (1 - t));
+  }
+  if (p <= SWING_STRIKE_END) {
+    const t = (p - SWING_WINDUP_END) / (SWING_STRIKE_END - SWING_WINDUP_END);
+    return SWING_BACK + (SWING_FOLLOW_THROUGH - SWING_BACK) * t * t;
+  }
+  const t = (p - SWING_STRIKE_END) / (1 - SWING_STRIKE_END);
+  return SWING_FOLLOW_THROUGH * (1 - t);
+}
+
+/** Small forward step (figure units) that leans the whole body into a swing. */
+export function swingLunge(progress: number): number {
+  const p = clamp(progress, 0, 1);
+  return Math.sin(Math.PI * p) * 0.12;
+}

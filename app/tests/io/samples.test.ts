@@ -22,9 +22,9 @@ function start(board: Board) {
 describe('samples', () => {
   const samples = listSamples();
 
-  it('lists four samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side']);
+  it('lists five samples with distinct ids and the expected modes', () => {
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -124,6 +124,69 @@ describe('key-door sample', () => {
     for (let i = 0; i < 200; i++) step(keys('ArrowRight'));
     step(keys('KeyF'));
     for (let i = 0; i < 300; i++) step(keys('ArrowRight'));
+    expect(world.ended).toBeNull();
+  });
+});
+
+describe('pickaxe-rock sample', () => {
+  const board = () => listSamples().find((s) => s.id === 'pickaxe-rock')!.board;
+
+  function play() {
+    const g = start(board());
+    const hold = (n: number, ...k: string[]): void => {
+      for (let i = 0; i < n && !g.world.ended; i++) g.step(keys(...k));
+    };
+    const walkTo = (x: number): void => {
+      for (let i = 0; i < 400 && Number(g.rt.getOutput('character-1', 'x')) < x; i++) g.step(keys('ArrowRight'));
+    };
+    const tap = (code: string): void => {
+      g.step(keys(code));
+      g.step(keys());
+      g.step(keys());
+    };
+    const rockVisible = (): boolean => g.world.entities().find((e) => e.ownerNodeId === 'rock-1')!.visible;
+    for (let i = 0; i < 20; i++) g.step(keys());
+    return { ...g, hold, walkTo, tap, rockVisible };
+  }
+
+  it('is not won without breaking the rock', () => {
+    const { world, hold } = play();
+    hold(900, 'ArrowRight');
+    expect(world.ended).toBeNull();
+  });
+
+  it('is won by: take the pickaxe, walk to the rock, swing, walk to the goal', () => {
+    const { world, rt, hold, walkTo, tap, rockVisible } = play();
+    walkTo(-0.5);
+    tap('KeyE');
+    expect(rt.getOutput('hand-1', 'holding')).toBe(true);
+    expect(rt.getOutput('pickaxe-item', 'inHand')).toBe(true);
+    hold(120, 'ArrowRight'); // stops against the rock
+    expect(rockVisible()).toBe(true);
+    tap('KeyF');
+    expect(rockVisible()).toBe(false);
+    hold(300, 'ArrowRight');
+    expect(world.ended?.result).toBe('win');
+  });
+
+  it('the sword cannot break the rock', () => {
+    const { world, rt, hold, walkTo, tap, rockVisible } = play();
+    walkTo(-4.6);
+    tap('KeyE');
+    expect(rt.getOutput('hand-1', 'tool')).toBe(world.entities().find((e) => e.ownerNodeId === 'sword-item')!.id);
+    hold(200, 'ArrowRight'); // stops against the rock, still holding the sword
+    tap('KeyF');
+    expect(rockVisible()).toBe(true);
+    hold(300, 'ArrowRight');
+    expect(world.ended).toBeNull();
+  });
+
+  it('swinging an empty hand at the rock does nothing', () => {
+    const { world, hold, tap, rockVisible } = play();
+    hold(200, 'ArrowRight');
+    tap('KeyF');
+    expect(rockVisible()).toBe(true);
+    hold(100, 'ArrowRight');
     expect(world.ended).toBeNull();
   });
 });

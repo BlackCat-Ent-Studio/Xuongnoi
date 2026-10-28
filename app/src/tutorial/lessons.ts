@@ -626,7 +626,159 @@ const lesson4: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4];
+// ---------- lesson 5 ----------
+
+const isRock: NodeFilter = isDoor;
+
+/** The mover plus a tall rock in the way and a goal to reach. */
+const ROCK_NODES: NodeSpec[] = [
+  { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+  { alias: 'key', kind: 'key', x: 20, y: 190 },
+  { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -4, y: 1, z: 0 } } },
+  { alias: 'floor', kind: 'block', x: 300, y: 370, params: { size: { x: 20, y: 1, z: 1 }, color: '#65a30d' } },
+  {
+    alias: 'rock',
+    kind: 'block',
+    x: 300,
+    y: 520,
+    params: { position: { x: 4, y: 2, z: 0 }, size: { x: 1, y: 3, z: 1 }, color: '#78716c' },
+  },
+  {
+    alias: 'goal',
+    kind: 'block',
+    x: 560,
+    y: 20,
+    params: { type: 'pickup', position: { x: 7, y: 1, z: 0 }, color: '#22c55e' },
+  },
+  { alias: 'touch', kind: 'touch', x: 560, y: 190 },
+  { alias: 'end', kind: 'win-lose', x: 560, y: 340 },
+];
+const ROCK_WIRES: WireSpec[] = [
+  ...MOVER_WIRES,
+  ['hero', 'self', 'touch', 'a'],
+  ['goal', 'self', 'touch', 'b'],
+  ['touch', 'touching', 'end', 'win'],
+];
+
+const HAND_WHO: Endpoint = { kind: 'hand-tool', port: 'character' };
+const HAND_TOGGLE: Endpoint = { kind: 'hand-tool', port: 'toggle' };
+const HAND_USE: Endpoint = { kind: 'hand-tool', port: 'use' };
+const EQUIP_PRESSED: Endpoint = { kind: 'key', port: 'pressed', where: keyCode('KeyE') };
+const SWING_PRESSED: Endpoint = { kind: 'key', port: 'pressed', where: keyCode('KeyF') };
+const ROCK_USED_ON: Endpoint = { kind: 'block', port: 'usedOn', where: isRock };
+const TOOL_IN_HAND: Endpoint = { kind: 'item', port: 'inHand' };
+const ROCK_HIDE: Endpoint = { kind: 'block', port: 'hide', where: isRock };
+
+const lesson5: Lesson = {
+  id: 'hand-tools',
+  title: T.l5.title,
+  summary: T.l5.summary,
+  createBoard: () => buildBoard(T.l5.boardName, ROCK_NODES, ROCK_WIRES),
+  steps: [
+    { id: 'intro', title: T.l5.intro.title, text: T.l5.intro.text, explain: T.l5.intro.explain },
+    { ...addStep('add-item', 'item'), title: T.l5.item.title, text: T.l5.item.text },
+    {
+      id: 'item-shape',
+      title: T.l5.shape.title,
+      text: T.l5.shape.text,
+      explain: T.l5.shape.explain,
+      target: (s) => paramTarget(s, 'shape', 'item'),
+      check: (s) => hasNode(s.graph, 'item', (n) => paramOf(n, 'shape') === 'pickaxe'),
+    },
+    {
+      id: 'item-hold',
+      title: T.l5.hold.title,
+      text: T.l5.hold.text,
+      explain: T.l5.hold.explain,
+      target: (s) => paramTarget(s, 'holdStyle', 'item'),
+      check: (s) => hasNode(s.graph, 'item', (n) => paramOf(n, 'holdStyle') === 'hand'),
+    },
+    {
+      ...addStep('add-hand', 'hand-tool'),
+      title: T.l5.tool.title,
+      text: T.l5.tool.text,
+      explain: T.l5.tool.explain,
+    },
+    { ...wireStep('wire-hand', HERO_SELF, HAND_WHO), title: T.l5.wireTool.title, text: T.l5.wireTool.text },
+    { ...addStep('add-key-e', 'key', 2), title: T.l5.keyE.title, text: T.l5.keyE.text },
+    {
+      id: 'key-e-code',
+      title: T.l5.keyECode.title,
+      text: T.l5.keyECode.text,
+      target: newestKeyTarget,
+      check: (s) => hasNode(s.graph, 'key', keyCode('KeyE')),
+    },
+    {
+      ...wireStep('wire-equip', EQUIP_PRESSED, HAND_TOGGLE),
+      title: T.l5.wireEquip.title,
+      text: T.l5.wireEquip.text,
+      explain: T.l5.wireEquip.explain,
+    },
+    { ...addStep('add-key-f', 'key', 3), title: T.l5.keyF.title, text: T.l5.keyF.text },
+    {
+      id: 'key-f-code',
+      title: T.l5.keyFCode.title,
+      text: T.l5.keyFCode.text,
+      target: newestKeyTarget,
+      check: (s) => hasNode(s.graph, 'key', keyCode('KeyF')),
+    },
+    {
+      ...wireStep('wire-use', SWING_PRESSED, HAND_USE),
+      title: T.l5.wireUse.title,
+      text: T.l5.wireUse.text,
+      explain: T.l5.wireUse.explain,
+    },
+    {
+      id: 'play-tool',
+      title: T.l5.playTool.title,
+      text: T.l5.playTool.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit',
+      title: T.l5.edit.title,
+      text: T.l5.edit.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    {
+      ...addStep('add-and', 'and'),
+      title: T.l5.and.title,
+      text: T.l5.and.text,
+      explain: T.l5.and.explain,
+    },
+    { ...wireStep('wire-rock', ROCK_USED_ON, AND_A), title: T.l5.wireRock.title, text: T.l5.wireRock.text },
+    {
+      ...wireStep('wire-in-hand', TOOL_IN_HAND, AND_B),
+      title: T.l5.wireInHand.title,
+      text: T.l5.wireInHand.text,
+    },
+    {
+      ...wireStep('wire-break', AND_OUT, ROCK_HIDE),
+      title: T.l5.wireBreak.title,
+      text: T.l5.wireBreak.text,
+      explain: T.l5.wireBreak.explain,
+    },
+    {
+      id: 'play-break',
+      title: T.l5.play.title,
+      text: T.l5.play.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'win',
+      title: T.l5.win.title,
+      text: T.l5.win.text,
+      explain: T.l5.win.explain,
+      check: (s) => s.ended === 'win',
+    },
+    { id: 'done', title: T.l5.done.title, text: T.l5.done.text },
+  ],
+};
+
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

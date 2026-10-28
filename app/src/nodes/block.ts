@@ -12,9 +12,12 @@ export const blockNode: NodeDef<BlockState> = {
   label: 'Khối',
   category: 'object',
   description:
-    'Một khối đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm khối biến mất.',
+    'Một khối đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm khối biến mất. "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng khối.',
   inputs: [{ id: 'hide', type: 'bool', label: 'Ẩn đi' }],
-  outputs: [{ id: 'self', type: 'object', label: 'Khối' }],
+  outputs: [
+    { id: 'self', type: 'object', label: 'Khối' },
+    { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
+  ],
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 1, y: 1, z: 1 } },
@@ -46,6 +49,6 @@ export const blockNode: NodeDef<BlockState> = {
       s.hidden = true;
       ctx.world.hide(s.id);
     }
-    return { self: s.id };
+    return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id) };
   },
 };

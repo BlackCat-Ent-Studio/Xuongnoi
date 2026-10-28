@@ -151,6 +151,16 @@ export function holdPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3
   };
 }
 
+/** Where a tool in hand rides: just ahead of the holder at chest height (it only reports contacts). */
+export function handPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3 {
+  const reach = Math.max(holder.size.x, holder.size.z) / 2 + item.size.x / 2 + 0.05;
+  return {
+    x: holder.pos.x + holder.facing.x * reach,
+    y: mode === '2d-top' ? holder.pos.y : holder.pos.y - holder.size.y * 0.1,
+    z: mode === '2d-side' ? 0 : holder.pos.z + holder.facing.z * reach,
+  };
+}
+
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
 export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number): void {
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
@@ -174,7 +184,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (item.kind !== 'item' || !item.visible) continue;
     const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
     if (holder) {
-      Object.assign(item.pos, holdPosition(holder, item, mode));
+      Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : holdPosition(holder, item, mode));
       item.vel.x = 0;
       item.vel.y = 0;
       item.vel.z = 0;

@@ -20,6 +20,8 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
   const object = new THREE.Group();
   let dark = kit.mat(shade(color));
   const darkParts: THREE.Mesh[] = [];
+  const wood = kit.mat('#9a6a3a');
+  const steel = kit.mat('#d5dce6');
   const main = kit.main;
   const part = (mat: THREE.Material, size: [number, number, number], pos: [number, number, number]) =>
     kit.box(object, mat, size, pos);
@@ -52,6 +54,50 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       for (const x of [-0.38, 0.38]) darkParts.push(part(dark, [0.2, 1.04, 1.04], [x, 0, 0]));
       break;
     }
+    // Hand tools are drawn upright: grip at the bottom, working end at the top.
+    case 'sword': {
+      part(wood, [0.1, 0.26, 0.1], [0, -0.37, 0]);
+      part(main, [0.1, 0.1, 0.1], [0, -0.5 + 0.05, 0]);
+      part(main, [0.36, 0.07, 0.14], [0, -0.21, 0]);
+      part(steel, [0.14, 0.62, 0.05], [0, 0.13, 0]);
+      part(steel, [0.08, 0.08, 0.05], [0, 0.48, 0]);
+      break;
+    }
+    case 'pickaxe': {
+      part(wood, [0.1, 0.96, 0.1], [0, 0, 0]);
+      part(main, [0.92, 0.14, 0.14], [0, 0.36, 0]);
+      for (const x of [-0.42, 0.42]) part(main, [0.12, 0.22, 0.14], [x, 0.28, 0]);
+      darkParts.push(part(dark, [0.16, 0.18, 0.16], [0, 0.36, 0]));
+      break;
+    }
+    case 'hammer': {
+      part(wood, [0.1, 0.84, 0.1], [0, -0.08, 0]);
+      part(main, [0.62, 0.32, 0.32], [0, 0.34, 0]);
+      for (const x of [-0.3, 0.3]) darkParts.push(part(dark, [0.08, 0.36, 0.36], [x, 0.34, 0]));
+      break;
+    }
+    case 'torch': {
+      part(wood, [0.12, 0.62, 0.12], [0, -0.2, 0]);
+      part(main, [0.22, 0.14, 0.22], [0, 0.14, 0]);
+      part(kit.glow('#ff8a1f'), [0.24, 0.24, 0.24], [0, 0.31, 0]);
+      part(kit.glow('#ffd84a'), [0.14, 0.18, 0.14], [0, 0.44, 0]);
+      break;
+    }
+    case 'wand': {
+      part(wood, [0.08, 0.82, 0.08], [0, -0.09, 0]);
+      part(main, [0.22, 0.22, 0.22], [0, 0.38, 0]);
+      part(kit.glow('#fff3a8'), [0.36, 0.07, 0.07], [0, 0.38, 0]);
+      part(kit.glow('#fff3a8'), [0.07, 0.36, 0.07], [0, 0.38, 0]);
+      break;
+    }
+    case 'bucket': {
+      darkParts.push(part(dark, [0.5, 0.08, 0.5], [0, -0.4, 0]));
+      part(main, [0.64, 0.5, 0.64], [0, -0.11, 0]);
+      part(kit.mat('#4aa8ff'), [0.52, 0.04, 0.52], [0, 0.13, 0]);
+      for (const x of [-0.32, 0.32]) darkParts.push(part(dark, [0.05, 0.3, 0.05], [x, 0.25, 0]));
+      darkParts.push(part(dark, [0.69, 0.05, 0.05], [0, 0.4, 0]));
+      break;
+    }
     default:
       part(main, [1, 1, 1], [0, 0, 0]);
       darkParts.push(part(dark, [0.5, 0.12, 1.02], [0, 0.2, 0]));
@@ -68,4 +114,28 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       kit.dispose();
     },
   };
+}
+
+/** How a shape sits in a hand: tilt about the lateral axis (0 = upright), shift along its length, size factor. */
+export interface HandGrip {
+  tilt: number;
+  /** Shift (in item units) that puts the grip point at the hand. */
+  dy: number;
+  scale: number;
+}
+
+const FORWARD_TILT = -1.25;
+const TOOL_GRIPS: Partial<Record<ItemShape, HandGrip>> = {
+  sword: { tilt: FORWARD_TILT, dy: 0.38, scale: 1.1 },
+  pickaxe: { tilt: FORWARD_TILT, dy: 0.2, scale: 1.1 },
+  hammer: { tilt: FORWARD_TILT, dy: 0.34, scale: 1 },
+  torch: { tilt: -0.5, dy: 0.4, scale: 1 },
+  wand: { tilt: -1, dy: 0.34, scale: 1 },
+  bucket: { tilt: 0, dy: -0.38, scale: 0.75 },
+};
+/** Non-tool items carried in hand are just held out small. */
+const PLAIN_GRIP: HandGrip = { tilt: 0, dy: 0, scale: 0.6 };
+
+export function handGrip(shape: ItemShape): HandGrip {
+  return TOOL_GRIPS[shape] ?? PLAIN_GRIP;
 }

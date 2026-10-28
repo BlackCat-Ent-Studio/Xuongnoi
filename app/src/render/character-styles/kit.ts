@@ -10,8 +10,22 @@ export type Vec3Tuple = [number, number, number];
  */
 export interface StyleRig {
   readonly root: THREE.Group;
+  /** Where a tool in hand is attached; absent = the look cannot hold tools. */
+  readonly hand?: HandMount;
   /** Advance the pose toward what `motion` asks for and apply it to the parts. */
   update(motion: Motion, dt: number): void;
+}
+
+/**
+ * A spot on the figure that carries the tool. `swing` is a joint at the pivot of the swing (shoulder for
+ * arms, mouth/side for the others); the tool sits at `at`, expressed in `swing`'s space, `length` figure units long.
+ */
+export interface HandMount {
+  swing: THREE.Object3D;
+  at: Vec3Tuple;
+  length: number;
+  /** Share of the full swing angle this look uses (arms 1, mouth/side looks less). */
+  swingShare: number;
 }
 
 export interface StyleDef {
@@ -37,11 +51,13 @@ export function poseRig<P extends PoseValues>(
   target: (m: Motion) => P,
   apply: (pose: P) => void,
   rate = 14,
+  hand?: HandMount,
 ): StyleRig {
   let pose: P = { ...rest };
   apply(pose);
   return {
     root,
+    ...(hand ? { hand } : {}),
     update(motion, dt) {
       pose = blendPose(pose, target(motion), dt, rate);
       apply(pose);
@@ -126,6 +142,8 @@ export function localYRange(root: THREE.Object3D): { min: number; max: number } 
   let max = -Infinity;
   const v = new THREE.Vector3();
   const visit = (o: THREE.Object3D, parentMatrix: THREE.Matrix4): void => {
+    // Held tools may stick out of the figure's box; they do not count toward the pose height.
+    if (o.userData.noFit === true) return;
     o.updateMatrix();
     const m = new THREE.Matrix4().multiplyMatrices(parentMatrix, o.matrix);
     if (o instanceof THREE.Mesh) {

@@ -51,7 +51,8 @@ export class SceneView {
   sync(entities: readonly EntityView[], dt = 0): void {
     const seen = new Set<string>();
     for (const e of entities) {
-      if (!e.visible) continue;
+      // A tool in hand is drawn on its holder's figure, not as a separate object.
+      if (!e.visible || e.inHand) continue;
       seen.add(e.id);
       let entry = this.entries.get(e.id);
       if (entry && !matches(entry, e)) {

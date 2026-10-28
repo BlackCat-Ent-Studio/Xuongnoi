@@ -7,6 +7,7 @@ import { compareNode } from './compare';
 import { carryNode } from './carry';
 import { constNode } from './const';
 import { counterNode } from './counter';
+import { handToolNode } from './hand-tool';
 import { interactNode } from './interact';
 import { itemNode } from './item';
 import { keyNode } from './key';
@@ -49,6 +50,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   itemNode,
   carryNode,
   interactNode,
+  handToolNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

@@ -56,13 +56,16 @@ export const robotStyle: StyleDef = {
     kit.box(antenna, dark, [0.03, 0.07, 0.03], [0, 0.035, 0]);
     kit.box(antenna, tip, [0.06, 0.06, 0.06], [0, 0.1, 0]);
 
-    const [armL, armR] = ([0.27, -0.27] as const).map((z) => {
+    const arms = ([0.27, -0.27] as const).map((z) => {
       const arm = kit.joint(upper, [0, 0.24, z]);
-      kit.box(arm, dark, [0.1, 0.2, 0.1], [0, -0.1, 0]);
-      kit.box(arm, metal, [0.08, 0.08, 0.03], [0.02, -0.24, 0.03]);
-      kit.box(arm, metal, [0.08, 0.08, 0.03], [0.02, -0.24, -0.03]);
-      return arm;
-    }) as [THREE.Group, THREE.Group];
+      const swing = kit.joint(arm, [0, 0, 0]);
+      kit.box(swing, dark, [0.1, 0.2, 0.1], [0, -0.1, 0]);
+      kit.box(swing, metal, [0.08, 0.08, 0.03], [0.02, -0.24, 0.03]);
+      kit.box(swing, metal, [0.08, 0.08, 0.03], [0.02, -0.24, -0.03]);
+      return { arm, swing };
+    }) as [{ arm: THREE.Group; swing: THREE.Group }, { arm: THREE.Group; swing: THREE.Group }];
+    const armL = arms[0].arm;
+    const armR = arms[1].arm;
 
     // Stiff joints: a high blend rate keeps the stepped gait crisp.
     return poseRig(
@@ -77,6 +80,7 @@ export const robotStyle: StyleDef = {
         antenna.rotation.z = p.antenna;
       },
       32,
+      { swing: arms[0].swing, at: [0.05, -0.24, 0], length: 0.7, swingShare: 1 },
     );
   },
 };

@@ -58,6 +58,9 @@ export const chickStyle: StyleDef = {
     const wingR = kit.joint(body, [0, 0.46, -0.28]);
     kit.box(wingR, cream, [0.22, 0.24, 0.04], [-0.03, -0.12, 0]);
 
+    // Tools are tucked under the near wing; the whole body rocks with them.
+    const underWing = kit.joint(body, [0.02, 0.2, 0.33]);
+
     return poseRig(root, REST, chickTarget, (p) => {
       legL.rotation.z = p.legL;
       legR.rotation.z = p.legR;
@@ -65,6 +68,6 @@ export const chickStyle: StyleDef = {
       const lift = Math.min(p.wing, WING_MAX);
       wingL.rotation.x = -lift;
       wingR.rotation.x = lift;
-    });
+    }, undefined, { swing: underWing, at: [0, 0, 0], length: 0.55, swingShare: 0.7 });
   },
 };
