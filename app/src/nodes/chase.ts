@@ -9,6 +9,7 @@ import {
   visiblePosition,
   type SteerMemo,
 } from './steering';
+import { PATHFIND_PARAM, pathfindOn } from './pathfind-param';
 import { asObject, numParam, strParam } from './util';
 
 interface ChaseState {
@@ -51,6 +52,7 @@ export const chaseNode: NodeDef<ChaseState> = {
     },
     { id: 'sightRange', label: 'Tầm nhìn', kind: 'number', default: 6, min: 0, max: 50, step: 0.5 },
     { id: 'giveUpRange', label: 'Bỏ cuộc khi xa hơn', kind: 'number', default: 9, min: 0, max: 80, step: 0.5 },
+    PATHFIND_PARAM,
   ],
   create: () => ({ engaged: false, memo: {} }),
   evaluate(ctx, i, params, s) {
@@ -79,7 +81,7 @@ export const chaseNode: NodeDef<ChaseState> = {
     }
 
     // Fleeing runs straight away from the threat: a route to a point behind a wall could lead past the chaser.
-    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: fleeing }, { avoidFall: fleeing });
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: fleeing || !pathfindOn(params) }, { avoidFall: fleeing });
     return { ...steer, seeing: true };
   },
 };

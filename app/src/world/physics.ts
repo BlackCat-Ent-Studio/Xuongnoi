@@ -1,5 +1,6 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import type { Entity } from './entity';
+import { driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
 export const GRAVITY = -30;
 export const TERMINAL_SPEED = 40;
@@ -161,12 +162,45 @@ export function handPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3
   };
 }
 
+/** One tick of a vehicle: stick -> speed and heading -> velocity, then the usual fall and collision against blocks. */
+function stepVehicle(v: Entity, dt: number, mode: ViewMode, yaw: number, solids: readonly Entity[]): void {
+  const body = v.vehicle;
+  if (!body) return;
+  const flat = driveVehicle(body, dt, mode, yaw);
+  const wanted = { x: flat.x, z: flat.z };
+  v.vel.x = flat.x;
+  v.vel.z = flat.z;
+  v.facing = vehicleFacing(body, mode);
+  if (mode === '2d-top') v.vel.y = 0;
+  else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + GRAVITY * dt);
+  if (mode === '2d-side') v.pos.z = 0;
+  v.onGround = integrate(v, dt, mode, solids);
+  settleVehicle(body, v.vel, wanted, dt, mode);
+  v.facing = vehicleFacing(body, mode);
+}
+
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
 export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number): void {
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
+  // Solid vehicles stop people on foot (but not the vehicles themselves, which only hit blocks).
+  const vehicleSolids = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.solid);
+  const walkSolids = vehicleSolids.length > 0 ? [...solids, ...vehicleSolids] : solids;
+
+  for (const c of entities) {
+    if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids);
+  }
   for (const c of entities) {
     if (c.kind !== 'character' || !c.visible) continue;
+    const seat = c.seatedIn !== null ? entities.find((e) => e.id === c.seatedIn) : undefined;
+    if (seat) {
+      // A driver rides along with the vehicle and ignores its own controls.
+      Object.assign(c.pos, seatPosition(seat, c));
+      c.vel.x = c.vel.y = c.vel.z = 0;
+      c.onGround = false;
+      c.facing = { ...seat.facing };
+      continue;
+    }
     applyIntent(c, mode, yaw);
 
     if (mode === '2d-top') {
@@ -176,7 +210,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     }
     if (mode === '2d-side') c.pos.z = 0;
 
-    c.onGround = integrate(c, dt, mode, solids);
+    c.onGround = integrate(c, dt, mode, walkSolids);
   }
 
   const byId = new Map(entities.map((e) => [e.id, e]));

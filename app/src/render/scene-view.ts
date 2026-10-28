@@ -3,17 +3,29 @@ import type { EntityView, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
 import { buildItem, type ItemFigure } from './item-shapes';
+import { VehicleFigure } from './vehicle-models';
 
 type Entry =
   | { type: 'block'; mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>; color: string }
   | { type: 'character'; figure: Humanoid; look: string }
-  | { type: 'item'; figure: ItemFigure; shape: string; color: string };
+  | { type: 'item'; figure: ItemFigure; shape: string; color: string }
+  | { type: 'vehicle'; figure: VehicleFigure; model: string };
 
 /** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
   if (entry.type === 'block') return e.kind === 'block';
   if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
+  if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
   return e.kind === 'character' && entry.look === resolveLook(e.look);
+}
+
+/** Share of its height a driver keeps while sitting. */
+const SEATED_HEIGHT = 0.65;
+
+/** The driver as drawn: shorter, with feet on the same floor, so the legs sink into the seat. */
+function seatedView(e: EntityView): EntityView {
+  const h = e.size.y * SEATED_HEIGHT;
+  return { ...e, size: { ...e.size, y: h }, position: { ...e.position, y: e.position.y - e.size.y / 2 + h / 2 } };
 }
 
 /**
@@ -63,8 +75,13 @@ export class SceneView {
         entry = this.createEntry(e);
         this.entries.set(e.id, entry);
       }
+      if (entry.type === 'vehicle') {
+        entry.figure.update(e);
+        continue;
+      }
       if (entry.type === 'character') {
-        entry.figure.update(e, dt);
+        entry.figure.setSeated(e.seatedIn !== undefined);
+        entry.figure.update(e.seatedIn !== undefined ? seatedView(e) : e, dt);
         continue;
       }
       if (entry.type === 'item') {
@@ -94,6 +111,11 @@ export class SceneView {
   }
 
   private createEntry(e: EntityView): Entry {
+    if (e.kind === 'vehicle') {
+      const figure = new VehicleFigure(e.vehicle?.model ?? 'car', e.color);
+      this.group.add(figure.object);
+      return { type: 'vehicle', figure, model: figure.model };
+    }
     if (e.kind === 'character') {
       const figure = new Humanoid(e.color, this.mode, e.look);
       this.group.add(figure.object);
@@ -114,7 +136,10 @@ export class SceneView {
   }
 
   private removeEntry(id: string, entry: Entry): void {
-    if (entry.type === 'character') {
+    if (entry.type === 'vehicle') {
+      this.group.remove(entry.figure.object);
+      entry.figure.dispose();
+    } else if (entry.type === 'character') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'item') {

@@ -8,6 +8,7 @@ import guardPatrol from '../samples/guard-patrol.json';
 import cleanerBot from '../samples/cleaner-bot.json';
 import mazeChase from '../samples/maze-chase.json';
 import platformBot from '../samples/platform-bot.json';
+import race from '../samples/race.json';
 import { parseBoard } from './save-format';
 
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
@@ -20,6 +21,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'cleaner-bot', label: 'Bot dọn dẹp (xem bot tự làm việc)', json: cleanerBot },
   { id: 'maze-chase', label: 'Mê cung (bot đuổi qua các lối đi, nhìn từ trên)', json: mazeChase },
   { id: 'platform-bot', label: 'Bot leo bục (bot tự nhảy lên lấy sao, 2D)', json: platformBot },
+  { id: 'race', label: 'Đua xe về đích (lái xe thi với bot, nhìn từ trên)', json: race },
 ];
 
 /** Fresh copies on every call, so callers may mutate the boards freely. */

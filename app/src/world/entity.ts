@@ -7,6 +7,7 @@ import type {
   ItemShape,
   Vec3,
 } from '../engine/types';
+import type { VehicleBody } from './vehicles';
 
 /** Internal mutable entity record; EntityView is the public snapshot. */
 export interface Entity {
@@ -40,6 +41,10 @@ export interface Entity {
   carryable: boolean;
   /** Items: which slot picks it up. */
   holdStyle: HoldStyle;
+  /** Vehicles: dynamics state. */
+  vehicle?: VehicleBody;
+  /** Characters: id of the vehicle this one sits in, else null. */
+  seatedIn: string | null;
 }
 
 export function toView(e: Entity): EntityView {
@@ -55,6 +60,12 @@ export function toView(e: Entity): EntityView {
     ...(e.shape !== undefined ? { shape: e.shape } : {}),
     ...(e.kind === 'item' && e.holdStyle === 'hand' ? { holdStyle: 'hand' as const } : {}),
     ...(e.kind === 'item' && e.inHand && e.heldBy !== null ? { inHand: true } : {}),
+    ...(e.vehicle
+      ? {
+          vehicle: { model: e.vehicle.spec.model, speed: e.vehicle.speed, wheelSpin: e.vehicle.wheelSpin, heading: e.vehicle.heading, driver: e.vehicle.driver },
+        }
+      : {}),
+    ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
     visible: e.visible,
   };
 }

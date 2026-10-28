@@ -91,6 +91,8 @@ export interface SideStep {
 
 export interface SidePath {
   steps: SideStep[];
+  /** True when the goal cannot be reached: the steps lead to the reachable spot closest to it. */
+  partial?: boolean;
 }
 
 export function colX(graph: SideGraph, col: number): number {
@@ -305,8 +307,9 @@ export interface SideQuery {
 }
 
 /**
- * A* over spots. Cost is travel time. Returns null when the goal spot cannot be reached (or the search hit
- * `maxExpansions`); an empty step list means start and goal share a spot.
+ * A* over spots. Cost is travel time. When the goal spot cannot be reached (or the search hit `maxExpansions`)
+ * the steps lead to the explored spot closest to the goal and the path is marked `partial`. Returns null only when
+ * the start or goal has no spot; an empty step list means start and goal share a spot (or nothing closer exists).
  */
 export function findSidePath(
   graph: SideGraph,
@@ -331,6 +334,8 @@ export function findSidePath(
   g[start.id] = 0;
   heap.push(heuristic(start), start.id);
   let found = false;
+  let closest = start.id;
+  let closestDist = Infinity;
   for (let expanded = 0; expanded < maxExpansions; expanded++) {
     const cur = heap.pop();
     if (cur < 0) break;
@@ -339,6 +344,11 @@ export function findSidePath(
       break;
     }
     const spot = graph.spots[cur]!;
+    const dist = Math.hypot(spot.x - goal.x, spot.y - goal.y);
+    if (dist < closestDist - 1e-9 || (Math.abs(dist - closestDist) <= 1e-9 && g[cur]! < g[closest]!)) {
+      closest = spot.id;
+      closestDist = dist;
+    }
     for (const e of edgesOf(graph, spot, limits)) {
       const cost = g[cur]! + e.cost;
       if (cost >= g[e.to]!) continue;
@@ -348,14 +358,15 @@ export function findSidePath(
       heap.push(cost + heuristic(graph.spots[e.to]!), e.to);
     }
   }
-  if (!found) return null;
+  const end = found ? goal.id : closest;
+  if (!found && end === start.id) return { steps: [], partial: true };
 
   const steps: SideStep[] = [];
-  for (let id = goal.id; parent[id]! >= 0; id = parent[id]!) {
+  for (let id = end; parent[id]! >= 0; id = parent[id]!) {
     const s = graph.spots[id]!;
     const p = graph.spots[parent[id]!]!;
     steps.push({ x: s.x, y: s.y, kind: via[id]!, srcX: p.x, srcY: p.y, dir: s.x >= p.x ? 1 : -1 });
   }
   steps.reverse();
-  return { steps };
+  return found ? { steps } : { steps, partial: true };
 }

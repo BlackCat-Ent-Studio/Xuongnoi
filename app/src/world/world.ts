@@ -12,6 +12,8 @@ import type {
 } from '../engine/types';
 import { toView, type Entity } from './entity';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
+import { exitSpot, nearestEnterable } from './vehicle-seats';
+import { createVehicleBody, seatPosition } from './vehicles';
 
 function pairKey(a: EntityId, b: EntityId): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
@@ -105,8 +107,20 @@ export function createWorld(mode: ViewMode): World {
     return holder;
   }
 
+  /** Gets a seated character out beside its vehicle (no-op when it is not seated). Returns the vehicle left. */
+  function leaveSeat(c: Entity): Entity | undefined {
+    const veh = c.seatedIn !== null ? byId.get(c.seatedIn) : undefined;
+    c.seatedIn = null;
+    if (!veh) return undefined;
+    if (veh.vehicle && veh.vehicle.driver === c.id) veh.vehicle.driver = null;
+    c.pos = exitSpot(list, veh, c, mode);
+    c.vel = { x: 0, y: 0, z: 0 };
+    return veh;
+  }
+
   function viewOf(e: Entity): EntityView {
     const v = toView(e);
+    if (e.kind === 'vehicle' && e.vehicle) return { ...v, drive: { speed: e.vehicle.spec.maxSpeed, jumpPower: 0 } };
     if (e.kind !== 'character') return v;
     const tool = e.handHolding !== null ? byId.get(e.handHolding) : undefined;
     return {
@@ -199,6 +213,8 @@ export function createWorld(mode: ViewMode): World {
         inHand: false,
         carryable: spec.kind === 'item' && spec.carryable !== false,
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
+        seatedIn: null,
+        ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
       list.push(e);
@@ -226,6 +242,10 @@ export function createWorld(mode: ViewMode): World {
         e.handHolding = null;
       }
       if (e.visible && e.kind === 'block' && e.solid) solidRev++;
+      // A hidden vehicle puts its driver out first; a hidden driver leaves the seat empty.
+      const driver = e.vehicle?.driver != null ? byId.get(e.vehicle.driver) : undefined;
+      if (driver) leaveSeat(driver);
+      if (e.seatedIn !== null) leaveSeat(e);
       e.visible = false;
       e.onGround = false;
       for (const k of [...contacts]) if (k.split('|').includes(id)) contacts.delete(k);
@@ -365,6 +385,29 @@ export function createWorld(mode: ViewMode): World {
     },
     cameraYaw(): number {
       return yaw;
+    },
+    setVehicleInput(id: EntityId, moveX: number, moveY: number): void {
+      const body = byId.get(id)?.vehicle;
+      if (!body) return;
+      body.inputX = finiteOr(moveX, 0);
+      body.inputY = finiteOr(moveY, 0);
+    },
+    enterVehicle(character: EntityId, reach: number): EntityId | null {
+      const c = liveCharacter(character);
+      if (!c || c.seatedIn !== null) return null;
+      const veh = nearestEnterable(list, c, Math.max(0, finiteOr(reach, 0)), mode);
+      if (!veh || !veh.vehicle) return null;
+      veh.vehicle.driver = c.id;
+      c.seatedIn = veh.id;
+      Object.assign(c.pos, seatPosition(veh, c));
+      c.vel = { x: 0, y: 0, z: 0 };
+      c.onGround = false;
+      return veh.id;
+    },
+    exitVehicle(character: EntityId): EntityId | null {
+      const c = byId.get(character);
+      if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
+      return leaveSeat(c)?.id ?? null;
     },
     step(dt: number): void {
       if (ended) return;

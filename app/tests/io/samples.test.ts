@@ -24,9 +24,9 @@ function start(board: Board) {
 describe('samples', () => {
   const samples = listSamples();
 
-  it('lists nine samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side']);
+  it('lists ten samples with distinct ids and the expected modes', () => {
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'race']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-top']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
