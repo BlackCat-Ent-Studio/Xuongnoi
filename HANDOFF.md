@@ -1,50 +1,59 @@
-# HANDOFF — GameBuilder — 2026-10-28 15:50
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-29 02:30
 
 ## Goal
-Build an ORIGINAL node-wiring game builder (players drag pre-made nodes, connect wires, and get playable games — no code typing), using Game Builder Garage (GBG) only as a design-study reference. Claude writes all code; user (non-coder, Vietnamese-speaking) plays and gives feedback. First deliverable: a small playable web prototype ("v0") so the user can try the concept before bigger decisions.
+An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes, wire ports and press Chơi to play. Claude writes all code and the user playtests. NOT a clone of Game Builder Garage: never read `D:\gbg\` and never mirror its nodes, UI or text.
 
-## Status
-- ✅ Done:
-  - Unzipped `game-builder-garage-full-extract.zip` (4.7 GB) to `D:\gbg\` (short path needed: Windows 260-char limit). 33,752/33,752 files OK.
-  - 4 research agents ran; reports in `plans/reports/`:
-    - `researcher-261027-gbg-logic-nodon.md` (node signal/eval model, 90 node types, graph format)
-    - `researcher-261027-gbg-graphics.md` (art style, assets pipeline)
-    - `researcher-261027-gbg-content-ux-audio.md` (7 lessons/59 steps, checkpoints, UX, audio, l10n)
-    - `researcher-261027-gbg-engine-architecture.md` (sead/Havok stack, .blgc format, cost cap 2000)
-  - Synthesis: `plans/reports/brainstorm-261027-1759-gbg-research-synthesis-report.md`
-  - v0 prototype design presented to user (see Key decisions + Next steps).
-- 🔄 In progress:
-  - Waiting for user "ok" on the v0 design (last message of 2026-10-28 session). User asked for this handoff before answering.
-- ⬜ Not started:
-  - Brainstorm report for v0 design, `/ck:plan`, implementation in `D:\workspace\GameBuilder\app\`.
+## Run
+`cd app; npm install; npm run dev` → http://localhost:5173. Then `npx vitest run`, `npx tsc --noEmit -p .` and `npm run build`.
 
-## Key decisions (and why)
-- NO clone / port / emulation of GBG (incl. "high % similar", local-only, or web port) — dump comes from pirated NSP (Ziperto); Nintendo IP. Repeatedly declined; do not revisit. Dump at `D:\gbg\` = read-only reference, nothing from it ships (no assets, text, code, node list, lessons, characters).
-- OK to use generic genre mechanics: node wiring, input→logic→output layers, objects-as-nodes, timers/counters/AND/NOT/compare, edit-time caps, versioned save.
-- Claude writes all code; user only tests — user explicitly said "bạn làm thay tôi vẫn được".
-- Web stack (TypeScript + Vite, Canvas/SVG) — runs via browser link, no install for player; Node v24.15.0 / npm 11.12.1 present.
-- v0 = 2D side view; logic core decoupled from renderer so 3D can be added later — user wants both 2D and 3D eventually; 2D first = fastest playable.
-- Eval model: fixed 60 Hz tick, topological order, back-edge reads previous tick (avoid GBG's push-recursion); typed ports checked at connect time; JSON save with `format_version`.
-- Audience: both beginners and hobbyists ("low floor, high ceiling"). Sharing: undecided → v0 uses local JSON export/import + localStorage autosave.
+## Done (all committed on `main`, latest `dff2719`, 392 tests)
+- Engine:
+  - typed ports bool/number/object, 60 Hz ticks, back-edges
+  - one 3D world with 3 view modes: 2d-side, 2d-top, 3d
+- Editor:
+  - palette, wiring canvas, properties panel
+  - resizable splitters and ⛶ maximize
+  - edit-mode pan/zoom with 🎯 reset
+- Save:
+  - autosave and JSON files
+  - samples: side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot
+- Characters: 6 animated looks with a thumbnail picker, plus a role param (player/bot) so the camera follows the player.
+- Items:
+  - carry above head, drop, throw
+  - interact
+  - hand-tool slot with use/swing
+- Bots:
+  - brains: patrol, go-to, chase/flee, sequence
+  - A* pathfinding: grid for top/3d, platform graph for side
+- Tutorial: 6 in-app lessons.
 
-## Next steps (in order)
-1. Get user approval ("ok" or edits) on v0 design below.
-   - Working name "Xưởng Nối". Screen: left node palette | center wiring canvas | right properties; buttons Chơi / Sửa / Lưu / Mở.
-   - 12 original nodes: Phím, Mũi tên (axis -1..1), Và, Không, Hẹn giờ, Bộ đếm, So sánh, Nhân vật, Khối, Sao, Cảm biến chạm, Thắng/Thua, Hiện số.
-   - Sample game "Hái sao": collect 5 stars within 30s; fall = lose.
-   - Out of scope v0: 3D, sound, tutorials, online share, mobile/touch, node personas.
-   - Acceptance: `npm run dev` → editor at http://localhost:5173; sample game plays win/lose correctly; user can wire a run/jump game from blank; save survives browser restart.
-2. Write brainstorm report for approved design — `plans/reports/brainstorm-<date>-v0-node-builder-prototype-report.md`.
-3. Run `/ck:plan` with that report → `plans/<date>-v0-node-builder-prototype/`.
-4. Implement in `D:\workspace\GameBuilder\app\` (Vite + TS); verify acceptance criteria; user playtests.
+## In progress / next (approved, see `plans/reports/brainstorm-261029-0228-combat-vehicles-polish-report.md`)
+Run these as sequential agent jobs. Commit and update this file after each one.
+1. Lesson 7 "Chuỗi việc"; tools smaller in hand and lying flat on the ground; a lock shape; a "Hiện chữ" node.
+2. Combat:
+   - Máu node with health bar; punch and tool damage; thrown-item damage
+   - knockback and i-frames; death = tip over, then hide
+   - fight brain for bots
+   - arena sample, lesson 8
+3. Vehicles:
+   - Phương tiện node (xe hơi/xe máy/xe tải nhỏ; steer modes Theo hướng / Ga-Lái); Lên/Xuống xe node
+   - bots drive, with path clearance for vehicles
+   - unreachable goal → path to the closest reachable cell; brain "Tìm đường" on/off param
+   - race sample, lesson 9
 
-## Open questions / blockers
-- Awaiting user "ok" on v0 design.
-- Later: 3D timing, sharing method (file vs online), node art/persona style (possibly Vietnamese flavor), Vietnamese UI copy (pronoun pair for any host character).
-- Workspace is not a git repo (no commits possible until `git init`, if user wants).
+## Parallel run (started 02:35)
+- Job 1 is running in the main tree. It must NOT commit.
+- Job 2 (combat) runs in worktree `D:\workspace\GameBuilder-combat`, branch `feat/combat`. It commits on its branch.
+- Job 3 (vehicles) runs in worktree `D:\workspace\GameBuilder-vehicles`, branch `feat/vehicles`. It commits on its branch.
+- Merge order:
+  1. Commit Job 1 on main.
+  2. `git merge feat/combat`, resolve conflicts, then run tests.
+  3. `git merge feat/vehicles`, resolve conflicts, then run tests.
+  4. Remove the worktrees.
+- Lessons, appended in order: 7 `sequence`, 8 `combat`, 9 `vehicles`.
 
-## Resume info
-- Important files: `HANDOFF.md`, `plans/reports/brainstorm-261027-1759-gbg-research-synthesis-report.md`, `plans/reports/researcher-261027-gbg-*.md`, `.claude/rules/*.md`
-- Reference dump (read-only, do not ship): `D:\gbg\game-builder-garage\` (REPORT.md inside); original zip `D:\workspace\GameBuilder\game-builder-garage-full-extract.zip`
-- Commands to run: (after app exists) `cd app; npm install; npm run dev`
-- Environment notes: Windows 11, PowerShell 5.1 primary; user communicates in Vietnamese and is not a programmer — explain plainly, avoid jargon; user sometimes rejects AskUserQuestion popups — plain-text numbered questions work better.
+## Gotchas
+- A project hook blocks Bash commands whose text contains "node_modules" or "dist", so prefer the Write/Edit tools.
+- Commit only `app/` (the zip/dump and tooling are gitignored). The git identity is repo-local.
+- Playwright smoke scripts live in the session scratchpad and may be lost. Some legacy tutorial browser checks flake on headless fps (verified against a baseline): L4 alternating E/F loop.
+- The user prefers plain-text numbered questions and simple Vietnamese explanations.

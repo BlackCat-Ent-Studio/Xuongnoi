@@ -12,6 +12,7 @@ export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
   torch: 'Đuốc',
   wand: 'Gậy phép',
   bucket: 'Xô nước',
+  lock: 'Ổ khoá',
 };
 
 function shapeParam(raw: string): ItemShape {

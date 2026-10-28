@@ -2,12 +2,27 @@ import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
-import { buildItem, type ItemFigure } from './item-shapes';
+import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 
 type Entry =
   | { type: 'block'; mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>; color: string }
   | { type: 'character'; figure: Humanoid; look: string }
-  | { type: 'item'; figure: ItemFigure; shape: string; color: string };
+  | {
+      type: 'item';
+      figure: ItemFigure;
+      /** Parent of the figure; turns lying tools onto their side. */
+      pose: THREE.Group;
+      flat: boolean;
+      /** Bounds of the figure at unit scale, unrotated. */
+      bounds: THREE.Box3;
+      shape: string;
+      color: string;
+    };
+
+/** Length along x, head along z, resting on its side: yaw a quarter turn, then lay the long axis down. */
+const LYING_POSE = new THREE.Quaternion()
+  .setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2)
+  .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2));
 
 /** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
@@ -69,13 +84,19 @@ export class SceneView {
       }
       if (entry.type === 'item') {
         const { object } = entry.figure;
-        object.position.set(e.position.x, e.position.y, e.position.z);
         object.scale.set(e.size.x, e.size.y, e.size.z);
+        if (entry.flat) {
+          // Lying tool: the pose group turns it onto its side; lift so its lowest point rests on the entity's floor.
+          object.position.set(0, 0, 0);
+          entry.pose.position.set(e.position.x, e.position.y - e.size.y / 2 - entry.bounds.min.z * e.size.z, e.position.z);
+        } else {
+          object.position.set(e.position.x, e.position.y, e.position.z);
+        }
         if (entry.color !== e.color) {
           entry.figure.setColor(e.color);
           entry.color = e.color;
         }
-        object.updateMatrixWorld(true);
+        entry.pose.updateMatrixWorld(true);
         continue;
       }
       const { mesh } = entry;
@@ -105,8 +126,13 @@ export class SceneView {
       figure.object.traverse((o) => {
         o.userData.ownerNodeId = e.ownerNodeId;
       });
-      this.group.add(figure.object);
-      return { type: 'item', figure, shape, color: e.color };
+      const pose = new THREE.Group();
+      pose.add(figure.object);
+      const bounds = new THREE.Box3().setFromObject(figure.object); // before the pose turns it
+      const flat = liesFlat(shape);
+      if (flat) pose.quaternion.copy(LYING_POSE);
+      this.group.add(pose);
+      return { type: 'item', figure, pose, flat, bounds, shape, color: e.color };
     }
     const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
     this.group.add(mesh);
@@ -118,7 +144,7 @@ export class SceneView {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'item') {
-      this.group.remove(entry.figure.object);
+      this.group.remove(entry.pose);
       entry.figure.dispose();
     } else {
       this.group.remove(entry.mesh);

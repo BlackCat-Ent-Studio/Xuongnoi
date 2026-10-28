@@ -12,7 +12,7 @@ import {
   swingLunge,
   walkPhaseRate,
 } from './character-motion';
-import { buildItem, handGrip, type ItemFigure } from './item-shapes';
+import { buildItem, handGrip, IN_HAND_SCALE, type ItemFigure } from './item-shapes';
 import { PartKit, type StyleRig, localYRange, resolveLook, styleFor } from './character-styles';
 
 /** Lowest point of the figure sits on the collision box's floor (figure space: y -0.5 .. 0.5). */
@@ -132,7 +132,7 @@ export class Humanoid {
     holder.userData.noFit = true;
     holder.position.set(mount.at[0], mount.at[1], mount.at[2]);
     holder.rotation.z = grip.tilt;
-    holder.scale.setScalar(mount.length * grip.scale);
+    holder.scale.setScalar(mount.length * grip.scale * IN_HAND_SCALE);
     figure.object.position.y = grip.dy;
     holder.add(figure.object);
     mount.swing.add(holder);

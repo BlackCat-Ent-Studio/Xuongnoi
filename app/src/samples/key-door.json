@@ -235,11 +235,24 @@
             "z": 0.6
           },
           "color": "#7c3aed",
-          "shape": "crate",
+          "shape": "lock",
           "carryable": "no"
         },
         "pos": {
           "x": 300,
+          "y": 780
+        }
+      },
+      {
+        "id": "hint-1",
+        "kind": "show-text",
+        "params": {
+          "text": "Bấm F để mở",
+          "color": "#7c3aed",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 560,
           "y": 780
         }
       }
@@ -386,6 +399,17 @@
         "to": {
           "node": "win-lose-1",
           "port": "win"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "lock-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "hint-1",
+          "port": "anchor"
         }
       }
     ]

@@ -18,6 +18,7 @@ import { onStartNode } from './on-start';
 import { patrolNode } from './patrol';
 import { sequenceNode } from './sequence';
 import { showNumberNode } from './show-number';
+import { showTextNode } from './show-text';
 import { stickNode } from './stick';
 import { timerNode } from './timer';
 import { touchNode } from './touch';
@@ -52,6 +53,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   touchNode,
   winLoseNode,
   showNumberNode,
+  showTextNode,
   itemNode,
   carryNode,
   interactNode,

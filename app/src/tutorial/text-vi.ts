@@ -504,4 +504,95 @@ export const LESSON_TEXT = {
       text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng cảm biến chạm để thua khi bị bắt. Hãy thử hai game mẫu "Lính gác" và "Bot dọn dẹp" để xem các bộ não khác nhé.',
     },
   },
+  l7: {
+    title: '7. Chuỗi việc',
+    summary: 'Bảo bot làm ba việc lần lượt: lấy thùng, mang ra bệ xanh, rồi đi về chỗ cũ.',
+    boardName: 'Bài 7 - Chuỗi việc',
+    intro: {
+      title: 'Làm lần lượt từng việc',
+      text: 'Bot ở bên trái, thùng nằm giữa sàn, bệ xanh ở bên phải. Ta muốn bot làm 3 việc: 1) đi tới thùng và cầm lên, 2) mang ra bệ xanh và đặt xuống, 3) đi về chỗ cũ.',
+      explain: 'Bảng đã có sẵn 3 khối "Đi tới" (một khối cho mỗi việc) và các dây nối hướng đi vào bot. Thiếu mỗi một thứ: ai bảo khối nào làm trước.',
+    },
+    watch: {
+      title: 'Xem chuyện gì xảy ra',
+      text: 'Bấm "Chơi" để xem bot lúc chưa có ai chỉ huy.',
+      explain: 'Cả 3 khối Đi tới cùng kéo bot về những hướng khác nhau nên bot đi lung tung, không làm việc nào ra việc nào.',
+    },
+    edit: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Sửa" để làm tiếp.',
+    },
+    sequence: {
+      title: 'Thêm người chỉ huy',
+      text: 'Kéo khối "Chuỗi việc" (nhóm Bộ não) vào bảng.',
+      explain: 'Chuỗi việc chỉ cho một việc chạy mỗi lúc. Xong việc này nó mới bật việc kế tiếp.',
+    },
+    count: {
+      title: 'Đếm số việc',
+      text: 'Chọn khối Chuỗi việc. Ở Thuộc tính, đổi "Số việc" thành 3.',
+      explain: 'Ba việc thì có ba cổng "Việc 1", "Việc 2", "Việc 3" cùng được dùng.',
+    },
+    wire1: {
+      title: 'Việc 1: tới chỗ thùng',
+      text: 'Nối cổng "Việc 1" của Chuỗi việc sang cổng "Cho đi" của khối Đi tới đang chỉ về phía cái thùng (khối trên cùng).',
+      explain: 'Khối Đi tới chỉ chạy khi "Cho đi" bật. Việc 1 bật thì chỉ khối này làm việc.',
+    },
+    wire2: {
+      title: 'Việc 2: tới bệ xanh',
+      text: 'Nối cổng "Việc 2" sang cổng "Cho đi" của khối Đi tới ở giữa (đích là bệ xanh).',
+    },
+    wire3: {
+      title: 'Việc 3: đi về',
+      text: 'Nối cổng "Việc 3" sang cổng "Cho đi" của khối Đi tới cuối cùng (đích là chỗ bot đứng lúc đầu).',
+    },
+    wireNext: {
+      title: 'Báo xong việc',
+      text: 'Nối cổng "Kết quả" của khối "Hoặc" (khối dưới, nhận tín hiệu từ khối Đi tới cuối) sang cổng "Xong việc" của Chuỗi việc.',
+      explain: 'Hai khối "Hoặc" gom tín hiệu "Vừa tới" của cả 3 khối Đi tới. Mỗi lần bot tới nơi, Chuỗi việc nhận một nhịp và chuyển sang việc kế tiếp.',
+    },
+    playOrder: {
+      title: 'Xem bot làm theo thứ tự',
+      text: 'Bấm "Chơi". Bot đi tới thùng, rồi ra bệ xanh, rồi đi về. Nhưng nó chưa biết cầm thùng.',
+    },
+    edit2: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Sửa" để dạy bot cầm thùng.',
+    },
+    carry: {
+      title: 'Dạy bot cầm đồ',
+      text: 'Kéo khối "Cầm / Thả" vào bảng.',
+      explain: 'Bot cũng dùng được khối Cầm / Thả như người chơi, chỉ khác là tín hiệu đến từ các khối bộ não thay vì phím bấm.',
+    },
+    wireCarry: {
+      title: 'Nói ai cầm',
+      text: 'Nối cổng "Nhân vật" của bot (khối Nhân vật màu cam) sang cổng "Nhân vật" của khối Cầm / Thả.',
+    },
+    wireGrab: {
+      title: 'Tới thùng thì cầm',
+      text: 'Nối cổng "Vừa tới" của khối Đi tới thứ nhất (đích là thùng) sang cổng "Cầm" của khối Cầm / Thả.',
+      explain: '"Vừa tới" chỉ bật một nhịp đúng lúc bot tới nơi, rất hợp để bấm "nút" cầm.',
+    },
+    wireDrop: {
+      title: 'Tới bệ thì thả',
+      text: 'Nối cổng "Vừa tới" của khối Đi tới thứ hai (đích là bệ xanh) sang cổng "Thả" của khối Cầm / Thả.',
+    },
+    wireFinished: {
+      title: 'Làm xong hết thì thắng',
+      text: 'Kéo thêm dây từ cổng "Đã xong hết" của Chuỗi việc sang cổng "Thắng" của khối Thắng/Thua.',
+      explain: 'Khi cả ba việc xong, Chuỗi việc báo "Đã xong hết". Ta dùng tín hiệu đó để kết thúc game.',
+    },
+    play: {
+      title: 'Xem bot làm việc',
+      text: 'Bấm "Chơi" và chờ bot: tới thùng, cầm lên, mang ra bệ xanh, đặt xuống, rồi đi về chỗ cũ.',
+    },
+    win: {
+      title: 'Bot làm xong rồi!',
+      text: 'Cả ba việc đã xong theo đúng thứ tự và game báo thắng.',
+      explain: 'Muốn bot lặp lại mãi, đổi "Làm hết thì" của Chuỗi việc thành "Lặp lại từ việc 1".',
+    },
+    done: {
+      title: 'Bạn biết giao nhiều việc cho bot rồi!',
+      text: 'Bạn đã dùng Chuỗi việc để xếp thứ tự, Đi tới để bot tự tìm đường và Cầm / Thả để bot mang đồ. Thử đổi sang 4 việc hoặc cho bot lặp lại xem sao.',
+    },
+  },
 } as const;

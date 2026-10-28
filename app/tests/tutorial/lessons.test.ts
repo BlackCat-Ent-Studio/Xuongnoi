@@ -427,6 +427,95 @@ describe('lesson 6: make a bot', () => {
   });
 });
 
+describe('lesson 7: chores', () => {
+  function buildLesson() {
+    const s = session('chores');
+    s.runner.next();
+    expect(s.stepId()).toBe('watch-mess');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit');
+    s.play(false);
+    expect(s.stepId()).toBe('add-sequence');
+    const seq = s.add('sequence');
+    expect(s.stepId()).toBe('step-count');
+    s.param(seq, 'stepCount', 2);
+    expect(s.stepId()).toBe('step-count');
+    s.param(seq, 'stepCount', 3);
+    expect(s.stepId()).toBe('wire-step1');
+    const gos = s.state.getGraph().nodes.filter((n) => n.kind === 'go-to');
+    const byX = (x: number) => gos.find((n) => (n.params.targetPos as { x: number }).x === x)!.id;
+    s.wire(p(seq, 'step1'), p(byX(-1.5), 'go'));
+    expect(s.stepId()).toBe('wire-step2');
+    s.wire(p(seq, 'step2'), p(byX(4.5), 'go'));
+    expect(s.stepId()).toBe('wire-step3');
+    s.wire(p(seq, 'step3'), p(byX(-5), 'go'));
+    expect(s.stepId()).toBe('wire-next');
+    const ors = s.state.getGraph().nodes.filter((n) => n.kind === 'or');
+    s.wire(p(ors[0]!.id, 'out'), p(seq, 'next')); // the first Hoặc only gathers two of the three pulses
+    expect(s.stepId()).toBe('wire-next');
+    s.state.select({ kind: 'wire', id: s.state.getGraph().wires.find((w) => w.from.node === ors[0]!.id && w.to.node === seq)!.id });
+    s.state.deleteSelection();
+    s.wire(p(ors[1]!.id, 'out'), p(seq, 'next'));
+    expect(s.stepId()).toBe('play-order');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit-2');
+    s.play(false);
+    expect(s.stepId()).toBe('add-carry');
+    const carry = s.add('carry');
+    const bot = s.state.getGraph().nodes.find((n) => n.kind === 'character' && n.params.role === 'bot')!;
+    expect(s.stepId()).toBe('wire-carry');
+    s.wire(p(bot.id, 'self'), p(carry, 'character'));
+    expect(s.stepId()).toBe('wire-grab');
+    s.wire(p(byX(-1.5), 'arrivedPulse'), p(carry, 'grab'));
+    expect(s.stepId()).toBe('wire-drop');
+    s.wire(p(byX(4.5), 'arrivedPulse'), p(carry, 'drop'));
+    expect(s.stepId()).toBe('wire-finished');
+    s.wire(p(seq, 'finished'), p(s.idOf('win-lose'), 'win'));
+    expect(s.stepId()).toBe('play-chores');
+    s.play(true);
+    expect(s.stepId()).toBe('win');
+    return { s, bot: bot.id, carry };
+  }
+
+  it('walks through the order, carry and finish wiring', () => {
+    const { s } = buildLesson();
+    s.end('win');
+    expect(s.stepId()).toBe('done');
+  });
+
+  it('the finished board really delivers the crate to the pad and then wins with the bot back home', () => {
+    const { s } = buildLesson();
+    const graph = s.state.getGraph();
+    const world = createWorld('2d-side');
+    const rt = createRuntime(graph, world, '2d-side');
+    const crateOwner = graph.nodes.find((n) => n.kind === 'item')!.id;
+    const botOwner = graph.nodes.find((n) => n.kind === 'character' && n.params.role === 'bot')!.id;
+    const view = (owner: string) => world.entities().find((e) => e.ownerNodeId === owner)!;
+    let crateAtPad = false;
+    for (let i = 0; i < 60 * 40 && !world.ended; i++) {
+      rt.tick({ keysDown: new Set() });
+      world.step(TICK_DT);
+      const c = view(crateOwner).position;
+      if (Math.abs(c.x - 4.5) < 1.5 && !view(crateOwner).inHand && c.y < 1.2) crateAtPad = true;
+    }
+    expect(crateAtPad).toBe(true);
+    expect(world.ended?.result).toBe('win');
+    expect(Math.abs(view(botOwner).position.x - -5)).toBeLessThan(0.6);
+    expect(Math.abs(view(crateOwner).position.x - 4.5)).toBeLessThan(2.2);
+  });
+
+  it('without the order brick the bot does not finish the chores', () => {
+    const board = findLesson('chores')!.createBoard();
+    const world = createWorld('2d-side');
+    const rt = createRuntime(board.graph, world, '2d-side');
+    for (let i = 0; i < 60 * 15; i++) {
+      rt.tick({ keysDown: new Set() });
+      world.step(TICK_DT);
+    }
+    expect(world.ended).toBeNull();
+  });
+});
+
 describe('step targets', () => {
   it('resolve to selectors for every step of every lesson on the starting board', () => {
     for (const lesson of LESSONS) {

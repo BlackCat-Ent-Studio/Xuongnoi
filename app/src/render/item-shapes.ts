@@ -98,6 +98,16 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       darkParts.push(part(dark, [0.69, 0.05, 0.05], [0, 0.4, 0]));
       break;
     }
+    case 'lock': {
+      // Padlock: wide body with a dark keyhole, steel U-shaped shackle on top.
+      part(main, [0.84, 0.56, 0.5], [0, -0.2, 0]);
+      darkParts.push(part(dark, [0.86, 0.1, 0.52], [0, -0.38, 0]));
+      darkParts.push(part(dark, [0.12, 0.2, 0.52], [0, -0.17, 0]));
+      darkParts.push(part(dark, [0.2, 0.1, 0.52], [0, -0.1, 0]));
+      for (const x of [-0.26, 0.26]) part(steel, [0.13, 0.36, 0.2], [x, 0.26, 0]);
+      part(steel, [0.65, 0.13, 0.2], [0, 0.43, 0]);
+      break;
+    }
     default:
       part(main, [1, 1, 1], [0, 0, 0]);
       darkParts.push(part(dark, [0.5, 0.12, 1.02], [0, 0.2, 0]));
@@ -114,6 +124,15 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       kit.dispose();
     },
   };
+}
+
+/** Anything held in a hand is drawn this much smaller than its size on the ground. */
+export const IN_HAND_SCALE = 0.65;
+
+/** Long thin tools are drawn lying flat when they are not in a hand. */
+const LIES_FLAT: ReadonlySet<ItemShape> = new Set<ItemShape>(['sword', 'pickaxe', 'hammer', 'torch', 'wand']);
+export function liesFlat(shape: ItemShape): boolean {
+  return LIES_FLAT.has(shape);
 }
 
 /** How a shape sits in a hand: tilt about the lateral axis (0 = upright), shift along its length, size factor. */

@@ -875,7 +875,248 @@ const lesson6: Lesson = {
   ],
 };
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6];
+// ---------- lesson 7 ----------
+
+/** Three "Đi tới" bricks tell the bot where to walk; they are told apart by the fallback point they hold. */
+const GO_CRATE_X = -1.5;
+const GO_PAD_X = 4.5;
+const GO_HOME_X = -5;
+const goAt =
+  (x: number): NodeFilter =>
+  (n) =>
+    Math.abs((vecParam(n, 'targetPos')?.x ?? Number.NaN) - x) < 0.01;
+const isGoCrate = goAt(GO_CRATE_X);
+const isGoPad = goAt(GO_PAD_X);
+const isGoHome = goAt(GO_HOME_X);
+
+/**
+ * A bot that already knows how to walk to the crate, to the pad and back home, but has no order
+ * to do them in. The player stands in the middle so the camera shows the whole trip.
+ */
+const CHORE_NODES: NodeSpec[] = [
+  { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+  { alias: 'key', kind: 'key', x: 20, y: 190 },
+  { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: 0, y: 1, z: 0 } } },
+  { alias: 'floor', kind: 'block', x: 300, y: 370, params: { size: { x: 24, y: 1, z: 1 }, color: '#65a30d' } },
+  {
+    alias: 'bot',
+    kind: 'character',
+    x: 560,
+    y: 20,
+    params: { position: { x: GO_HOME_X, y: 1, z: 0 }, color: '#f59e0b', look: 'robot', role: 'bot' },
+  },
+  {
+    alias: 'crate',
+    kind: 'item',
+    x: 300,
+    y: 520,
+    params: {
+      position: { x: GO_CRATE_X, y: 0.85, z: 0 },
+      size: { x: 0.7, y: 0.7, z: 0.7 },
+      color: '#b45309',
+      shape: 'crate',
+    },
+  },
+  {
+    alias: 'pad',
+    kind: 'block',
+    x: 300,
+    y: 670,
+    params: { type: 'pickup', position: { x: GO_PAD_X, y: 0.6, z: 0 }, size: { x: 2, y: 0.2, z: 1 }, color: '#22c55e' },
+  },
+  {
+    alias: 'go-crate',
+    kind: 'go-to',
+    x: 820,
+    y: 20,
+    params: { targetPos: { x: GO_CRATE_X, y: 1, z: 0 }, stopDistance: 0.5 },
+  },
+  {
+    alias: 'go-pad',
+    kind: 'go-to',
+    x: 820,
+    y: 250,
+    params: { targetPos: { x: GO_PAD_X, y: 1, z: 0 }, stopDistance: 0.5 },
+  },
+  {
+    alias: 'go-home',
+    kind: 'go-to',
+    x: 820,
+    y: 480,
+    params: { targetPos: { x: GO_HOME_X, y: 1, z: 0 }, stopDistance: 0.4 },
+  },
+  { alias: 'add-1', kind: 'math', x: 1080, y: 20 },
+  { alias: 'add-2', kind: 'math', x: 1080, y: 200 },
+  { alias: 'or-1', kind: 'or', x: 1080, y: 400 },
+  { alias: 'or-2', kind: 'or', x: 1080, y: 520 },
+  { alias: 'end', kind: 'win-lose', x: 1340, y: 400 },
+];
+const CHORE_WIRES: WireSpec[] = [
+  ...MOVER_WIRES,
+  ['bot', 'self', 'go-crate', 'self'],
+  ['bot', 'self', 'go-pad', 'self'],
+  ['bot', 'self', 'go-home', 'self'],
+  ['crate', 'self', 'go-crate', 'target'],
+  ['pad', 'self', 'go-pad', 'target'],
+  ['go-crate', 'moveX', 'add-1', 'a'],
+  ['go-pad', 'moveX', 'add-1', 'b'],
+  ['add-1', 'out', 'add-2', 'a'],
+  ['go-home', 'moveX', 'add-2', 'b'],
+  ['add-2', 'out', 'bot', 'moveX'],
+  ['go-crate', 'arrivedPulse', 'or-1', 'a'],
+  ['go-pad', 'arrivedPulse', 'or-1', 'b'],
+  ['or-1', 'out', 'or-2', 'a'],
+  ['go-home', 'arrivedPulse', 'or-2', 'b'],
+];
+
+const isChoreBot: NodeFilter = isBot;
+const SEQ_STEP1: Endpoint = { kind: 'sequence', port: 'step1' };
+const SEQ_STEP2: Endpoint = { kind: 'sequence', port: 'step2' };
+const SEQ_STEP3: Endpoint = { kind: 'sequence', port: 'step3' };
+const SEQ_FINISHED: Endpoint = { kind: 'sequence', port: 'finished' };
+const GO_CRATE_GO: Endpoint = { kind: 'go-to', port: 'go', where: isGoCrate };
+const GO_PAD_GO: Endpoint = { kind: 'go-to', port: 'go', where: isGoPad };
+const GO_HOME_GO: Endpoint = { kind: 'go-to', port: 'go', where: isGoHome };
+const CHORE_BOT_SELF: Endpoint = { kind: 'character', port: 'self', where: isChoreBot };
+const GO_CRATE_ARRIVED: Endpoint = { kind: 'go-to', port: 'arrivedPulse', where: isGoCrate };
+const GO_PAD_ARRIVED: Endpoint = { kind: 'go-to', port: 'arrivedPulse', where: isGoPad };
+const CARRY_DROP: Endpoint = { kind: 'carry', port: 'drop' };
+
+/** The "Hoặc" that gathers all three "arrived" pulses: the one fed directly by the walk-home brick. */
+function finalOr(graph: Graph): GraphNode | undefined {
+  const home = firstNode(graph, 'go-to', isGoHome);
+  const wire = home && graph.wires.find((w) => w.from.node === home.id && w.from.port === 'arrivedPulse');
+  return wire ? graph.nodes.find((n) => n.id === wire.to.node && n.kind === 'or') : undefined;
+}
+
+function wireNextStep(snap: Snapshot): boolean {
+  const or = finalOr(snap.graph);
+  const seq = firstNode(snap.graph, 'sequence');
+  return !!or && !!seq && snap.graph.wires.some((w) => w.from.node === or.id && w.from.port === 'out' && w.to.node === seq.id && w.to.port === 'next');
+}
+
+function wireNextTarget(snap: Snapshot): TargetList {
+  const or = finalOr(snap.graph);
+  const seq = firstNode(snap.graph, 'sequence');
+  const sels: string[] = [];
+  if (or) sels.push(`.wc-port[data-node="${or.id}"][data-port="out"][data-dir="out"]`);
+  if (seq) sels.push(`.wc-port[data-node="${seq.id}"][data-port="next"][data-dir="in"]`);
+  return sels;
+}
+
+const lesson7: Lesson = {
+  id: 'chores',
+  title: T.l7.title,
+  summary: T.l7.summary,
+  createBoard: () => buildBoard(T.l7.boardName, CHORE_NODES, CHORE_WIRES),
+  steps: [
+    { id: 'intro', title: T.l7.intro.title, text: T.l7.intro.text, explain: T.l7.intro.explain },
+    {
+      id: 'watch-mess',
+      title: T.l7.watch.title,
+      text: T.l7.watch.text,
+      explain: T.l7.watch.explain,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit',
+      title: T.l7.edit.title,
+      text: T.l7.edit.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    {
+      ...addStep('add-sequence', 'sequence'),
+      title: T.l7.sequence.title,
+      text: T.l7.sequence.text,
+      explain: T.l7.sequence.explain,
+    },
+    {
+      id: 'step-count',
+      title: T.l7.count.title,
+      text: T.l7.count.text,
+      explain: T.l7.count.explain,
+      target: (s) => paramTarget(s, 'stepCount', 'sequence'),
+      check: (s) => hasNode(s.graph, 'sequence', (n) => numParam(n, 'stepCount') === 3),
+    },
+    {
+      ...wireStep('wire-step1', SEQ_STEP1, GO_CRATE_GO),
+      title: T.l7.wire1.title,
+      text: T.l7.wire1.text,
+      explain: T.l7.wire1.explain,
+    },
+    { ...wireStep('wire-step2', SEQ_STEP2, GO_PAD_GO), title: T.l7.wire2.title, text: T.l7.wire2.text },
+    { ...wireStep('wire-step3', SEQ_STEP3, GO_HOME_GO), title: T.l7.wire3.title, text: T.l7.wire3.text },
+    {
+      id: 'wire-next',
+      target: wireNextTarget,
+      check: wireNextStep,
+      title: T.l7.wireNext.title,
+      text: T.l7.wireNext.text,
+      explain: T.l7.wireNext.explain,
+    },
+    {
+      id: 'play-order',
+      title: T.l7.playOrder.title,
+      text: T.l7.playOrder.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit-2',
+      title: T.l7.edit2.title,
+      text: T.l7.edit2.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    {
+      ...addStep('add-carry', 'carry'),
+      title: T.l7.carry.title,
+      text: T.l7.carry.text,
+      explain: T.l7.carry.explain,
+    },
+    {
+      ...wireStep('wire-carry', CHORE_BOT_SELF, CARRY_WHO),
+      title: T.l7.wireCarry.title,
+      text: T.l7.wireCarry.text,
+    },
+    {
+      ...wireStep('wire-grab', GO_CRATE_ARRIVED, CARRY_GRAB),
+      title: T.l7.wireGrab.title,
+      text: T.l7.wireGrab.text,
+      explain: T.l7.wireGrab.explain,
+    },
+    {
+      ...wireStep('wire-drop', GO_PAD_ARRIVED, CARRY_DROP),
+      title: T.l7.wireDrop.title,
+      text: T.l7.wireDrop.text,
+    },
+    {
+      ...wireStep('wire-finished', SEQ_FINISHED, WIN_IN),
+      title: T.l7.wireFinished.title,
+      text: T.l7.wireFinished.text,
+      explain: T.l7.wireFinished.explain,
+    },
+    {
+      id: 'play-chores',
+      title: T.l7.play.title,
+      text: T.l7.play.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'win',
+      title: T.l7.win.title,
+      text: T.l7.win.text,
+      explain: T.l7.win.explain,
+      check: (s) => s.ended === 'win',
+    },
+    { id: 'done', title: T.l7.done.title, text: T.l7.done.text },
+  ],
+};
+
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

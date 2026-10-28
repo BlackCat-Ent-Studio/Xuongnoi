@@ -15,6 +15,7 @@ import { createWorld } from '../world/world';
 import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
 import { createAccumulator } from './game-loop';
+import { floatingLabels } from './floating-labels';
 import { Hud } from './hud';
 import { SceneView } from './scene-view';
 import { TEXT_VI } from './text-vi';
@@ -136,7 +137,9 @@ export function createGameView(): GameView {
       return;
     }
     draw(dt, true);
-    hud?.setItems(world.hudItems());
+    const hudItems = world.hudItems();
+    hud?.setItems(hudItems);
+    hud?.setFloating(floatingLabels(hudItems, (id) => world?.getEntity(id), rig.camera, width, height));
     const ended = world.ended;
     if (ended) {
       hud?.showEnd(ended.result, ended.message);

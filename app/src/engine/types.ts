@@ -165,7 +165,8 @@ export type ItemShape =
   | 'hammer'
   | 'torch'
   | 'wand'
-  | 'bucket';
+  | 'bucket'
+  | 'lock';
 export const ITEM_SHAPES: readonly ItemShape[] = [
   'box',
   'key',
@@ -177,6 +178,7 @@ export const ITEM_SHAPES: readonly ItemShape[] = [
   'torch',
   'wand',
   'bucket',
+  'lock',
 ];
 
 /** How a character carries an item: balanced above the head, or as a tool in hand. */
@@ -261,6 +263,14 @@ export interface HudItem {
   label: string;
   value: number;
   corner: HudCorner;
+  /** Free text: when set the corner shows `text` alone (no "label: value"). */
+  text?: string;
+  /** CSS color of the text. */
+  color?: string;
+  /** With `text`: draw the text floating above this entity instead of in the corner. */
+  anchor?: EntityId;
+  /** True = kept in the list but not drawn. */
+  hidden?: boolean;
 }
 
 export type GameResult = 'win' | 'lose';

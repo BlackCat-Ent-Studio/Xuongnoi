@@ -341,3 +341,15 @@ describe('file names', () => {
     expect(safeFileName('  ..')).toBe('game');
   });
 });
+
+describe('key-door sample polish', () => {
+  it('uses the padlock shape for the lock and floats a hint above it', () => {
+    const board = listSamples().find((s) => s.id === 'key-door')!.board;
+    const { world, step } = start(board);
+    for (let i = 0; i < 5; i++) step(keys());
+    const lock = world.entities().find((e) => e.ownerNodeId === 'lock-1')!;
+    expect(lock.shape).toBe('lock');
+    const hint = world.hudItems().find((h) => h.key === 'hint-1')!;
+    expect(hint).toMatchObject({ text: 'Bấm F để mở', anchor: lock.id, hidden: false });
+  });
+});
