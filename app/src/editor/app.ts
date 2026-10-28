@@ -20,11 +20,14 @@ import { createPalette } from './palette';
 import { createPropertiesPanel } from './properties-panel';
 import { TEXT_VI } from './text-vi';
 import { createTopBar } from './top-bar';
+import { createTutorial } from '../tutorial/controller';
+import { takeStash } from '../tutorial/storage';
+import { TUTORIAL_UI } from '../tutorial/text-vi';
 import { createWiringCanvas } from './wiring-canvas';
 
 function loadInitialBoard(): Board {
   try {
-    return loadAutosave() ?? createEmptyBoard('2d-side');
+    return takeStash() ?? loadAutosave() ?? createEmptyBoard('2d-side');
   } catch {
     return createEmptyBoard('2d-side');
   }
@@ -66,6 +69,7 @@ export function mountEditor(root: HTMLElement): void {
     onNew: () => dialog.open(),
     onTogglePlay: () => state.setPlaying(!state.isPlaying()),
     onSave() {
+      if (tutorial.isActive()) return topBar.notify(TUTORIAL_UI.saveBlocked, 'error');
       try {
         downloadBoard(state.getBoard());
         topBar.notify(TEXT_VI.saved);
@@ -89,6 +93,10 @@ export function mountEditor(root: HTMLElement): void {
     },
   });
 
+  const tutorial = createTutorial({ state, notify: (t, k) => topBar.notify(t, k) });
+  topBar.addControl(tutorial.el);
+  document.body.append(tutorial.panel);
+
   const props = createPropertiesPanel(state);
   const right = h('div', 'right-col');
   right.append(gameBox, props);
@@ -103,6 +111,7 @@ export function mountEditor(root: HTMLElement): void {
   ro.observe(gameBox);
 
   function loadBoard(board: Board): void {
+    tutorial.exit();
     state.setPlaying(false);
     state.loadBoard(board);
     topBar.notify(TEXT_VI.opened);
@@ -144,7 +153,9 @@ export function mountEditor(root: HTMLElement): void {
     showPreview();
   }
 
+  gameView.onGameEnd((result) => tutorial.noteGameEnd(result));
   gameView.onRestartRequest(() => {
+    tutorial.noteRestart();
     if (!state.isPlaying()) return;
     gameView.stop();
     startPlay();
@@ -173,7 +184,8 @@ export function mountEditor(root: HTMLElement): void {
       default:
         break;
     }
-    if (kind !== 'selection' && kind !== 'playing') scheduleAutosave(state.getBoard());
+    // A lesson board must never replace the learner's own autosave.
+    if (kind !== 'selection' && kind !== 'playing' && !tutorial.isActive()) scheduleAutosave(state.getBoard());
   });
 
   window.addEventListener('keydown', (e) => {

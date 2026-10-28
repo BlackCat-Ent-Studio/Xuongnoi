@@ -17,6 +17,8 @@ export interface TopBarDeps {
 export interface TopBar {
   el: HTMLElement;
   notify(text: string, kind?: 'info' | 'error'): void;
+  /** Insert an extra control right after the "Mở" menu. */
+  addControl(control: HTMLElement): void;
 }
 
 export function createTopBar(deps: TopBarDeps): TopBar {
@@ -34,6 +36,7 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   const newBtn = btn(TEXT_VI.newGame, '', deps.onNew);
   const playBtn = btn(TEXT_VI.play, 'primary', deps.onTogglePlay);
   playBtn.id = 'btn-play';
+  playBtn.dataset.tut = 'play';
   const saveBtn = btn(TEXT_VI.save, '', deps.onSave);
 
   // Open menu
@@ -122,6 +125,9 @@ export function createTopBar(deps: TopBarDeps): TopBar {
 
   return {
     el,
+    addControl(control) {
+      openWrap.after(control);
+    },
     notify(text, kind = 'info') {
       status.textContent = text;
       status.className = `status ${kind}`;

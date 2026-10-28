@@ -106,6 +106,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     const def = getNodeDef(node.kind);
     const box = h('div', 'wc-node');
     box.dataset.id = node.id;
+    box.dataset.kind = node.kind;
     box.style.left = `${node.pos.x}px`;
     box.style.top = `${node.pos.y}px`;
     const head = h('div', `wc-node-head cat-${def?.category ?? 'unknown'}`, def?.label ?? 'Khối lạ');

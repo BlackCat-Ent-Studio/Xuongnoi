@@ -125,3 +125,29 @@ html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 .mode-choice { font: inherit; text-align: left; padding: 12px 14px; border: 2px solid var(--line); border-radius: 10px; background: #fff; cursor: pointer; display: flex; flex-direction: column; gap: 2px; }
 .mode-choice span { font-size: 13px; color: var(--muted); }
 .mode-choice:hover, .mode-choice:focus { border-color: var(--accent); background: #f5f5ff; outline: none; }
+
+/* tutorial */
+.tut-menu { min-width: 300px; }
+.tut-menu-title { font-weight: 700; padding: 6px 10px 0; }
+.tut-menu-hint { font-size: 12px; color: var(--muted); padding: 0 10px 6px; }
+.tut-lesson-item { display: flex; flex-direction: column; gap: 2px; }
+.tut-lesson-summary { font-size: 12px; color: var(--muted); }
+.tut-done { font-size: 12px; font-weight: 600; color: #166534; }
+.tut-invite { min-width: 260px; padding: 10px; border-color: var(--accent); }
+.tut-invite-text { font-weight: 600; margin-bottom: 8px; }
+.tut-invite-row { display: flex; gap: 8px; }
+.tut-panel { position: fixed; left: 216px; bottom: 16px; width: 340px; max-width: calc(100vw - 32px); z-index: 150; background: #fff; border: 2px solid var(--accent); border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.25); padding: 10px 14px 12px; }
+.tut-head { display: flex; align-items: center; gap: 8px; margin: -2px 0 6px; cursor: move; user-select: none; font-size: 12px; color: var(--muted); }
+.tut-progress { font-weight: 700; color: var(--accent); }
+.tut-lesson { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tut-exit { font: inherit; font-size: 12px; border: 0; background: none; color: var(--danger); cursor: pointer; padding: 2px 4px; }
+.tut-title { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
+.tut-text { font-size: 14px; line-height: 1.45; }
+.tut-explain { font-size: 13px; line-height: 1.4; color: #3730a3; background: #eef2ff; border-radius: 8px; padding: 6px 10px; margin-top: 8px; }
+.tut-actions { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.tut-btn { padding: 5px 12px; }
+.tut-skip { font: inherit; font-size: 12px; border: 0; background: none; color: var(--muted); text-decoration: underline; cursor: pointer; margin-left: auto; }
+.tut-actions .primary { margin-left: auto; }
+.tut-skip:not([hidden]) + .primary { margin-left: 0; }
+.tut-hl { outline: 3px solid #f59e0b !important; outline-offset: 2px; border-radius: 6px; animation: tut-pulse 1.1s ease-in-out infinite; }
+@keyframes tut-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(245,158,11,.7); } 50% { box-shadow: 0 0 0 9px rgba(245,158,11,0); } }

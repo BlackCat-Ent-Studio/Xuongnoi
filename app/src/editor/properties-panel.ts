@@ -137,6 +137,7 @@ export function createPropertiesPanel(state: EditorState): HTMLElement {
         form.disabled = playing;
         for (const p of def.params) {
           const row = h('div', 'prop-row');
+          row.dataset.param = p.id;
           row.append(h('div', 'prop-label', p.label), editorFor(p, node));
           form.append(row);
         }
