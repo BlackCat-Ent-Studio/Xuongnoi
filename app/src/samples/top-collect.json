@@ -1,0 +1,729 @@
+{
+  "format_version": 1,
+  "name": "Thu thập",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "character-1",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "speed": 6,
+          "color": "#ef4444"
+        },
+        "pos": {
+          "x": 260,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -6.5
+          },
+          "size": {
+            "x": 18,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 190
+        }
+      },
+      {
+        "id": "wall-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 6.5
+          },
+          "size": {
+            "x": 18,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 290
+        }
+      },
+      {
+        "id": "wall-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -8.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 390
+        }
+      },
+      {
+        "id": "wall-4",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 8.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 490
+        }
+      },
+      {
+        "id": "wall-5",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 5
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 590
+        }
+      },
+      {
+        "id": "item-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 0.5,
+            "z": -4
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#22d3ee",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 720
+        }
+      },
+      {
+        "id": "item-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": -4
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#22d3ee",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 820
+        }
+      },
+      {
+        "id": "item-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 0.5,
+            "z": 4
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#22d3ee",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 920
+        }
+      },
+      {
+        "id": "item-4",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": 4
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#22d3ee",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1020
+        }
+      },
+      {
+        "id": "item-5",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#22d3ee",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1120
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-2",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 150
+        }
+      },
+      {
+        "id": "touch-3",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 260
+        }
+      },
+      {
+        "id": "touch-4",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 370
+        }
+      },
+      {
+        "id": "touch-5",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 480
+        }
+      },
+      {
+        "id": "or-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 40
+        }
+      },
+      {
+        "id": "or-2",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 130
+        }
+      },
+      {
+        "id": "or-3",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 220
+        }
+      },
+      {
+        "id": "or-4",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 310
+        }
+      },
+      {
+        "id": "counter-1",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 5
+        },
+        "pos": {
+          "x": 960,
+          "y": 40
+        }
+      },
+      {
+        "id": "timer-1",
+        "kind": "timer",
+        "params": {
+          "seconds": 30
+        },
+        "pos": {
+          "x": 960,
+          "y": 240
+        }
+      },
+      {
+        "id": "show-number-1",
+        "kind": "show-number",
+        "params": {
+          "label": "Điểm",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1200,
+          "y": 40
+        }
+      },
+      {
+        "id": "show-number-2",
+        "kind": "show-number",
+        "params": {
+          "label": "Giây còn lại",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1200,
+          "y": 150
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Thu đủ 5 viên rồi, giỏi quá!",
+          "loseMessage": "Hết giờ mất rồi!"
+        },
+        "pos": {
+          "x": 1200,
+          "y": 280
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "item-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "touch-1",
+          "port": "began"
+        },
+        "to": {
+          "node": "item-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "item-2",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "touch-2",
+          "port": "began"
+        },
+        "to": {
+          "node": "item-2",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "item-3",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "touch-3",
+          "port": "began"
+        },
+        "to": {
+          "node": "item-3",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-4",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "item-4",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-4",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "touch-4",
+          "port": "began"
+        },
+        "to": {
+          "node": "item-4",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-5",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "item-5",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-5",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "touch-5",
+          "port": "began"
+        },
+        "to": {
+          "node": "item-5",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "touch-1",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "touch-2",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "or-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "touch-3",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "or-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "touch-4",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "or-3",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-4",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "touch-5",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-4",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w26",
+        "from": {
+          "node": "or-4",
+          "port": "out"
+        },
+        "to": {
+          "node": "counter-1",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w27",
+        "from": {
+          "node": "counter-1",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-number-1",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w28",
+        "from": {
+          "node": "timer-1",
+          "port": "left"
+        },
+        "to": {
+          "node": "show-number-2",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w29",
+        "from": {
+          "node": "counter-1",
+          "port": "reached"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w30",
+        "from": {
+          "node": "timer-1",
+          "port": "done"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "lose"
+        }
+      }
+    ]
+  }
+}

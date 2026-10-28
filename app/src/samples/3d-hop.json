@@ -1,0 +1,303 @@
+{
+  "format_version": 1,
+  "name": "Nhảy cóc 3D",
+  "mode": "3d",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-1",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "character-1",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#f97316"
+        },
+        "pos": {
+          "x": 260,
+          "y": 40
+        }
+      },
+      {
+        "id": "start-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 4,
+            "y": 1,
+            "z": 4
+          },
+          "color": "#16a34a",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 330
+        }
+      },
+      {
+        "id": "platform-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": -5
+          },
+          "size": {
+            "x": 3,
+            "y": 1,
+            "z": 3
+          },
+          "color": "#0ea5e9",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 430
+        }
+      },
+      {
+        "id": "platform-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0,
+            "z": -9
+          },
+          "size": {
+            "x": 3,
+            "y": 1,
+            "z": 3
+          },
+          "color": "#0ea5e9",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 530
+        }
+      },
+      {
+        "id": "platform-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0.5,
+            "z": -13.5
+          },
+          "size": {
+            "x": 3,
+            "y": 1,
+            "z": 3
+          },
+          "color": "#0ea5e9",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 630
+        }
+      },
+      {
+        "id": "goal-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 1,
+            "z": -18
+          },
+          "size": {
+            "x": 2,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#facc15",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 730
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 40
+        }
+      },
+      {
+        "id": "compare-1",
+        "kind": "compare",
+        "params": {
+          "op": "lt"
+        },
+        "pos": {
+          "x": 500,
+          "y": 190
+        }
+      },
+      {
+        "id": "const-1",
+        "kind": "const",
+        "params": {
+          "value": -5
+        },
+        "pos": {
+          "x": 500,
+          "y": 330
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn tới đích rồi!",
+          "loseMessage": "Bạn rơi xuống rồi, thử lại nhé!"
+        },
+        "pos": {
+          "x": 960,
+          "y": 40
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "key-1",
+          "port": "held"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "goal-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "character-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "compare-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "const-1",
+          "port": "value"
+        },
+        "to": {
+          "node": "compare-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "compare-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "lose"
+        }
+      }
+    ]
+  }
+}

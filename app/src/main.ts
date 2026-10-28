@@ -1,3 +1,7 @@
-// Placeholder entry; the editor mounts here once src/editor exists.
+import { mountEditor } from './editor/app';
+import { registerAllNodes } from './nodes';
+import './style.css';
+
+registerAllNodes();
 const root = document.querySelector<HTMLDivElement>('#app');
-if (root) root.textContent = 'Xưởng Nối';
+if (root) mountEditor(root);
