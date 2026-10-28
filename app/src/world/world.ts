@@ -10,6 +10,7 @@ import type {
   ViewMode,
   World,
 } from '../engine/types';
+import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
 
@@ -48,6 +49,13 @@ export function createWorld(mode: ViewMode): World {
   let pendingUsed = new Set<EntityId>();
   let usedOn = new Set<EntityId>();
 
+  const combat = createCombat({
+    mode,
+    touches: touching,
+    hide: (id) => api.hide(id),
+    letGo: (c) => letGoOfAll(c),
+  });
+
   function computeContacts(): void {
     const next = new Set<string>();
     const live = list.filter((e) => e.visible);
@@ -65,7 +73,7 @@ export function createWorld(mode: ViewMode): World {
 
   function liveCharacter(id: EntityId): Entity | undefined {
     const e = byId.get(id);
-    return e && e.kind === 'character' && e.visible ? e : undefined;
+    return e && e.kind === 'character' && e.visible && !e.combat?.dead ? e : undefined;
   }
 
   /** Nearest matching item within reach; items on the character's facing side win close calls. */
@@ -169,7 +177,22 @@ export function createWorld(mode: ViewMode): World {
     return holdPosition(c, item, mode);
   }
 
-  return {
+  /** Lets go of the carried and the hand-held item (and of the carrier, for an item) where they are. */
+  function letGoOfAll(e: Entity): void {
+    if (e.heldBy !== null) release(e);
+    if (e.holding !== null) {
+      const held = byId.get(e.holding);
+      if (held) release(held);
+      e.holding = null;
+    }
+    if (e.handHolding !== null) {
+      const tool = byId.get(e.handHolding);
+      if (tool) release(tool);
+      e.handHolding = null;
+    }
+  }
+
+  const api: World = {
     mode,
     get ended() {
       return ended;
@@ -199,6 +222,7 @@ export function createWorld(mode: ViewMode): World {
         inHand: false,
         carryable: spec.kind === 'item' && spec.carryable !== false,
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
+        ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
       list.push(e);
@@ -214,17 +238,7 @@ export function createWorld(mode: ViewMode): World {
       const e = byId.get(id);
       if (!e) return;
       // Hiding a carried item, or a character holding one, lets go of it where it is.
-      if (e.heldBy !== null) release(e);
-      if (e.holding !== null) {
-        const held = byId.get(e.holding);
-        if (held) release(held);
-        e.holding = null;
-      }
-      if (e.handHolding !== null) {
-        const tool = byId.get(e.handHolding);
-        if (tool) release(tool);
-        e.handHolding = null;
-      }
+      letGoOfAll(e);
       if (e.visible && e.kind === 'block' && e.solid) solidRev++;
       e.visible = false;
       e.onGround = false;
@@ -273,6 +287,7 @@ export function createWorld(mode: ViewMode): World {
       if (!c || !item) return null;
       const p = Math.max(0, finiteOr(power, 0));
       release(item);
+      item.thrownBy = c.id;
       Object.assign(item.pos, holdPosition(c, item, mode));
       item.vel = {
         x: c.facing.x * p,
@@ -334,11 +349,30 @@ export function createWorld(mode: ViewMode): World {
       if (!c || c.swingTime >= 0) return null;
       c.swingTime = 0;
       const target = useTarget(c, reach);
-      if (target) pendingUsed.add(target.id);
+      if (target) {
+        pendingUsed.add(target.id);
+        const tool = c.handHolding !== null ? byId.get(c.handHolding) : undefined;
+        combat.strike(target, tool ? itemDamage(tool) : PUNCH_DAMAGE, target.pos.x - c.pos.x, target.pos.z - c.pos.z);
+      }
       return { target: target ? target.id : null };
     },
     wasUsedOn(id: EntityId): boolean {
       return usedOn.has(id);
+    },
+    setHealth(id: EntityId, maxHp: number, showBar: boolean): void {
+      const e = byId.get(id);
+      if (e) combat.register(e, maxHp, showBar);
+    },
+    heal(id: EntityId, amount: number): void {
+      const e = byId.get(id);
+      if (e) combat.heal(e, amount);
+    },
+    healthOf(id: EntityId): { hp: number; max: number; dead: boolean } | null {
+      const k = byId.get(id)?.combat;
+      return k ? { hp: k.hp, max: k.maxHp, dead: k.dead } : null;
+    },
+    wasHurt(id: EntityId): boolean {
+      return combat.wasHurt(id);
     },
     solidAt(p: Vec3): boolean {
       for (const e of list) {
@@ -367,9 +401,14 @@ export function createWorld(mode: ViewMode): World {
       return yaw;
     },
     step(dt: number): void {
-      if (ended) return;
+      if (ended) {
+        // The game is over, but anyone mid-fall may finish tipping over.
+        combat.update(list, dt);
+        return;
+      }
       stepPhysics(list, dt, mode, yaw);
       computeContacts();
+      combat.update(list, dt);
       interacted = pendingInteract;
       pendingInteract = new Set();
       usedOn = pendingUsed;
@@ -390,4 +429,5 @@ export function createWorld(mode: ViewMode): World {
       yaw = Number.isFinite(rad) ? rad : 0;
     },
   };
+  return api;
 }

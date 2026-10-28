@@ -12,6 +12,7 @@ import {
   swingLunge,
   walkPhaseRate,
 } from './character-motion';
+import { applyHitFlash } from './hit-flash';
 import { buildItem, handGrip, IN_HAND_SCALE, type ItemFigure } from './item-shapes';
 import { PartKit, type StyleRig, localYRange, resolveLook, styleFor } from './character-styles';
 
@@ -44,6 +45,7 @@ export class Humanoid {
   private vx = 0;
   private vy = 0;
   private vz = 0;
+  private flash = 0;
 
   constructor(color: string, mode: ViewMode, look?: string) {
     this.colorHex = color;
@@ -86,6 +88,8 @@ export class Humanoid {
 
     if (dt > 0) this.animate(p, dt);
     this.applySwing(view.swing);
+    this.applyHurt(view.hurt ?? 0);
+    this.applyFall(view.fallen);
     this.fitToFloor();
     this.object.updateMatrixWorld(true);
   }
@@ -146,6 +150,20 @@ export class Humanoid {
     const active = progress !== undefined;
     mount.swing.rotation.z = active ? swingAngle(progress) * mount.swingShare : 0;
     this.body.position.x = active ? swingLunge(progress) : 0;
+  }
+
+  /** Red flash after a hit; only touches the materials when the strength changes. */
+  private applyHurt(strength: number): void {
+    if (strength === this.flash) return;
+    this.flash = strength;
+    applyHitFlash(this.object, strength);
+  }
+
+  /** Tips the whole figure over backward (`progress` 0..1) and sinks it to lie on the floor. */
+  private applyFall(progress: number | undefined): void {
+    const p = progress ?? 0;
+    this.body.rotation.z = p * (Math.PI / 2);
+    this.body.position.y = -p * 0.32 * this.body.scale.y;
   }
 
   private applyYaw(): void {

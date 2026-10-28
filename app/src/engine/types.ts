@@ -210,6 +210,8 @@ export interface EntitySpec {
   carryable?: boolean;
   /** Items only: which slot picks it up. Omitted = 'head'. */
   holdStyle?: HoldStyle;
+  /** Items only: damage dealt as a tool or when thrown. 0 / omitted = by shape (sword 3, hammer 2, pickaxe 2, else 1). */
+  damage?: number;
 }
 
 export interface CharacterIntent {
@@ -245,6 +247,12 @@ export interface EntityView {
   swing?: number;
   /** Characters only; run speed and jump power from the latest intent (absent before the first one). Lets a bot plan its jumps. */
   drive?: { speed: number; jumpPower: number };
+  /** Characters only; present once a health node registered it. `bar` = draw the bar above the head. */
+  health?: { hp: number; max: number; bar: boolean };
+  /** Characters only; 0..1 red-flash strength right after a hit, absent otherwise. */
+  hurt?: number;
+  /** Characters only; 0..1 progress of tipping over after running out of health, absent while alive. */
+  fallen?: number;
   visible: boolean;
 }
 
@@ -322,6 +330,17 @@ export interface WorldApi {
   useTool(character: EntityId, reach: number): { target: EntityId | null } | null;
   /** True for exactly one tick after something was used on this entity. */
   wasUsedOn(id: EntityId): boolean;
+
+  // ---- combat: health, damage from tool swings and thrown items ----
+
+  /** Gives a character health (full). Characters without it cannot be hurt. Calling again only updates max / bar. */
+  setHealth(id: EntityId, maxHp: number, showBar: boolean): void;
+  /** Adds health (not above max). Ignored for the dead and for characters without health. */
+  heal(id: EntityId, amount: number): void;
+  /** Current health, or null when the entity has none. `dead` stays true even after the body is hidden. */
+  healthOf(id: EntityId): { hp: number; max: number; dead: boolean } | null;
+  /** True for exactly one tick after the character took a hit. */
+  wasHurt(id: EntityId): boolean;
 
   // ---- read-only probes for brain nodes ----
 
