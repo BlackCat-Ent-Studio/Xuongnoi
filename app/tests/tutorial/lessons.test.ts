@@ -71,7 +71,7 @@ describe('lesson boards', () => {
   it('build without errors and only use known nodes and ports', () => {
     for (const lesson of LESSONS) {
       const board = lesson.createBoard();
-      expect(board.mode).toBe('2d-side');
+      expect(board.mode).toBe(lesson.id === 'bot-driver' ? '2d-top' : '2d-side');
       for (const n of board.graph.nodes) expect(getNodeDef(n.kind)).toBeDefined();
       for (const w of board.graph.wires) {
         const from = board.graph.nodes.find((n) => n.id === w.from.node);
