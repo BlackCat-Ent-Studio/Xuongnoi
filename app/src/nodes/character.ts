@@ -23,6 +23,20 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
     { id: 'speed', label: 'Tốc độ chạy', kind: 'number', default: 5, min: 0, step: 0.5 },
     { id: 'jumpPower', label: 'Sức nhảy', kind: 'number', default: 10, min: 0, step: 0.5 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#3b82f6' },
+    {
+      id: 'look',
+      label: 'Kiểu dáng',
+      kind: 'select',
+      default: 'human',
+      options: [
+        { value: 'human', label: 'Người khối' },
+        { value: 'robot', label: 'Rô-bốt' },
+        { value: 'cat', label: 'Mèo' },
+        { value: 'chick', label: 'Gà con' },
+        { value: 'jelly', label: 'Thạch nhún' },
+        { value: 'dino', label: 'Khủng long nhỏ' },
+      ],
+    },
   ],
   create(ctx, params) {
     const id = ctx.world.spawn({
@@ -31,6 +45,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       position: vec3Param(params, 'position', { x: 0, y: 1, z: 0 }),
       size: { x: 1, y: 1, z: 1 },
       color: strParam(params, 'color', '#3b82f6'),
+      look: strParam(params, 'look', 'human'),
       solid: true,
     });
     return { id };

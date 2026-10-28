@@ -1,10 +1,17 @@
 import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
+import { resolveLook } from './character-styles';
 
 type Entry =
   | { type: 'block'; mesh: THREE.Mesh<THREE.BoxGeometry, THREE.MeshLambertMaterial>; color: string }
-  | { type: 'character'; figure: Humanoid };
+  | { type: 'character'; figure: Humanoid; look: string };
+
+/** Whether an existing entry can keep representing the entity (same kind and, for characters, same look). */
+function matches(entry: Entry, e: EntityView): boolean {
+  if (entry.type === 'block') return e.kind !== 'character';
+  return e.kind === 'character' && entry.look === resolveLook(e.look);
+}
 
 /**
  * Mirrors world entities: blocks as colored boxes, characters as animated blocky humanoids.
@@ -44,7 +51,7 @@ export class SceneView {
       if (!e.visible) continue;
       seen.add(e.id);
       let entry = this.entries.get(e.id);
-      if (entry && (entry.type === 'character') !== (e.kind === 'character')) {
+      if (entry && !matches(entry, e)) {
         this.removeEntry(e.id, entry);
         entry = undefined;
       }
@@ -73,9 +80,9 @@ export class SceneView {
 
   private createEntry(e: EntityView): Entry {
     if (e.kind === 'character') {
-      const figure = new Humanoid(e.color, this.mode);
+      const figure = new Humanoid(e.color, this.mode, e.look);
       this.group.add(figure.object);
-      return { type: 'character', figure };
+      return { type: 'character', figure, look: figure.look };
     }
     const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
     this.group.add(mesh);

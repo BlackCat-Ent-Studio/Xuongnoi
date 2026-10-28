@@ -1,6 +1,7 @@
 import { getNodeDef } from '../engine/registry';
 import type { GraphNode, ParamDef, ParamValue, Vec3 } from '../engine/types';
 import { h } from './dom';
+import { createLookPicker, type LookPicker } from './look-picker';
 import type { EditorState } from './editor-state';
 import { TEXT_VI, keyLabel } from './text-vi';
 
@@ -32,6 +33,7 @@ function numberInput(def: ParamDef, value: number, onValue: (v: number) => void)
 export function createPropertiesPanel(state: EditorState): HTMLElement {
   const el = h('section', 'props');
   let stopKeyCapture: (() => void) | null = null;
+  let lookPicker: LookPicker | null = null;
 
   function vec3Editor(def: ParamDef, node: GraphNode, value: Vec3): HTMLElement {
     const row = h('div', 'prop-vec3');
@@ -78,12 +80,28 @@ export function createPropertiesPanel(state: EditorState): HTMLElement {
     return btn;
   }
 
+  function lookEditor(def: ParamDef, node: GraphNode, value: string): HTMLElement {
+    const colorOf = (): string => {
+      const c = state.getGraph().nodes.find((n) => n.id === node.id)?.params.color;
+      return typeof c === 'string' && /^#[0-9a-fA-F]{6}$/.test(c) ? c : '#3b82f6';
+    };
+    lookPicker = createLookPicker({
+      options: def.options ?? [],
+      value,
+      getColor: colorOf,
+      onPick: (v) => state.setParam(node.id, def.id, v),
+    });
+    return lookPicker.el;
+  }
+
   function editorFor(def: ParamDef, node: GraphNode): HTMLElement {
     const raw: ParamValue = node.params[def.id] ?? def.default;
     switch (def.kind) {
       case 'number':
         return numberInput(def, typeof raw === 'number' ? raw : 0, (v) => state.setParam(node.id, def.id, v));
       case 'select': {
+        // The character's look is chosen from pictures rather than a plain drop-down.
+        if (node.kind === 'character' && def.id === 'look') return lookEditor(def, node, String(raw));
         const sel = h('select', 'prop-input');
         for (const o of def.options ?? []) {
           const opt = h('option', '', o.label);
@@ -121,6 +139,8 @@ export function createPropertiesPanel(state: EditorState): HTMLElement {
 
   function render(): void {
     stopKeyCapture?.();
+    lookPicker?.dispose();
+    lookPicker = null;
     el.replaceChildren();
     el.append(h('div', 'panel-title', TEXT_VI.propsTitle));
     const sel = state.getSelection();
@@ -173,7 +193,10 @@ export function createPropertiesPanel(state: EditorState): HTMLElement {
   state.subscribe((kind) => {
     if (kind === 'params') {
       // Do not rebuild while the user is typing in this panel (would drop focus).
-      if (el.contains(document.activeElement) && document.activeElement !== document.body) return;
+      if (el.contains(document.activeElement) && document.activeElement !== document.body) {
+        lookPicker?.refreshColor();
+        return;
+      }
       render();
       return;
     }

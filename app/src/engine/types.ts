@@ -164,6 +164,8 @@ export interface EntitySpec {
   size: Vec3;
   /** CSS hex color, e.g. '#ff8800'. */
   color: string;
+  /** Character look id (e.g. 'robot'); omitted = the default human. Ignored for blocks. */
+  look?: string;
   /** Solid entities block movement; non-solid ones (pickups) only produce contacts. */
   solid: boolean;
 }
@@ -186,6 +188,7 @@ export interface EntityView {
   position: Vec3;
   size: Vec3;
   color: string;
+  look?: string;
   visible: boolean;
 }
 

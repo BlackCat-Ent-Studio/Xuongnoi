@@ -1,17 +1,10 @@
 import * as THREE from 'three';
 import { describe, expect, it } from 'vitest';
 import type { EntityView } from '../../src/engine/types';
-import {
-  Humanoid,
-  IDLE_POSE,
-  blendPose,
-  defaultYaw,
-  facingTarget,
-  shortestAngle,
-  smoothAngle,
-  targetPose,
-  yawToward,
-} from '../../src/render/humanoid-model';
+import { defaultYaw, facingTarget, motionOf, shortestAngle, smoothAngle, yawToward } from '../../src/render/character-motion';
+import { humanTarget } from '../../src/render/character-styles/human';
+import { blendPose } from '../../src/render/character-styles/kit';
+import { Humanoid } from '../../src/render/humanoid-model';
 import { SceneView } from '../../src/render/scene-view';
 
 function view(over: Partial<EntityView> = {}): EntityView {
@@ -29,28 +22,29 @@ function view(over: Partial<EntityView> = {}): EntityView {
 
 describe('pose math', () => {
   it('idle has no limb swing but breathes', () => {
-    const p = targetPose(0, false, 1, 0.4);
+    const p = humanTarget(motionOf(0, false, 1, 0.4));
     expect(p.legL).toBe(0);
     expect(p.legR).toBe(0);
     expect(Math.abs(p.breathe)).toBeGreaterThan(0);
   });
   it('walk swings opposite limbs and scales with speed', () => {
-    const slow = targetPose(1, false, Math.PI / 2, 0);
-    const fast = targetPose(3, false, Math.PI / 2, 0);
+    const slow = humanTarget(motionOf(1, false, Math.PI / 2, 0));
+    const fast = humanTarget(motionOf(3, false, Math.PI / 2, 0));
     expect(fast.legL).toBeCloseTo(-fast.legR);
     expect(fast.armL).toBeCloseTo(-fast.legL * 0.9);
     expect(Math.abs(fast.legL)).toBeGreaterThan(Math.abs(slow.legL));
   });
   it('airborne raises arms and tucks legs regardless of speed', () => {
-    const p = targetPose(5, true, 1, 0);
+    const p = humanTarget(motionOf(5, true, 1, 0));
     expect(p.armL).toBeGreaterThan(2);
     expect(p.legL).toBeGreaterThan(0.5);
   });
   it('blend converges toward target and is a no-op at dt 0', () => {
-    const t = targetPose(0, true, 0, 0);
-    expect(blendPose(IDLE_POSE, t, 0)).toEqual(IDLE_POSE);
-    let p = IDLE_POSE;
-    for (let i = 0; i < 120; i++) p = blendPose(p, t, 1 / 60);
+    const t = humanTarget(motionOf(0, true, 0, 0));
+    const rest = { armL: 0, armR: 0, legL: 0, legR: 0, breathe: 0 };
+    expect(blendPose(rest, t, 0, 14)).toEqual(rest);
+    let p = rest;
+    for (let i = 0; i < 120; i++) p = blendPose(p, t, 1 / 60, 14);
     expect(p.armL).toBeCloseTo(t.armL, 2);
   });
 });

@@ -9,6 +9,7 @@ export interface Entity {
   size: Vec3;
   vel: Vec3;
   color: string;
+  look?: string;
   solid: boolean;
   visible: boolean;
   onGround: boolean;
@@ -23,6 +24,7 @@ export function toView(e: Entity): EntityView {
     position: { ...e.pos },
     size: { ...e.size },
     color: e.color,
+    ...(e.look !== undefined ? { look: e.look } : {}),
     visible: e.visible,
   };
 }

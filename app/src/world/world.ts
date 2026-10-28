@@ -53,6 +53,7 @@ export function createWorld(mode: ViewMode): World {
         size: { ...spec.size },
         vel: { x: 0, y: 0, z: 0 },
         color: spec.color,
+        look: spec.look,
         solid: spec.solid,
         visible: true,
         onGround: false,
