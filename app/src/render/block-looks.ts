@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { TRAFFIC_COLORS, type BlockStyle } from '../engine/block-styles';
-import type { Vec3 } from '../engine/types';
+import type { EntityView, Vec3 } from '../engine/types';
 
 /**
  * Low-poly looks for blocks ("Kiểu dáng"). Every look is built inside the unit cube (-0.5..0.5) and the scene
@@ -14,11 +14,13 @@ export interface BlockLookFigure {
   readonly object: THREE.Group;
   /** Re-tints the look; for a traffic light the colour picks the lit lamp. */
   setColor(color: string): void;
+  /** Per-frame animation from the live entity (belt stripes); absent for looks that never move. */
+  update?(view: EntityView): void;
   /** Look geometry and materials are shared, so there is nothing per-figure to free. */
   dispose(): void;
 }
 
-type Tpl = 'box' | 'cyl' | 'pyr' | 'cone6' | 'ico0' | 'ico1';
+type Tpl = 'box' | 'cyl' | 'cylx' | 'cylz' | 'pyr' | 'cone6' | 'ico0' | 'ico1';
 type V3 = [number, number, number];
 
 export interface LookPart {
@@ -61,6 +63,8 @@ class Frame {
     return Math.min(w / Math.max(this.size.y, 0.01), 0.6);
   }
 }
+
+const BELT_SURFACE = '#2b2f36';
 
 const clampInt = (v: number, lo: number, hi: number): number => Math.min(hi, Math.max(lo, Math.round(v)));
 
@@ -230,6 +234,43 @@ function sign(): LookPart[] {
   return parts;
 }
 
+/** Width of the frame beams and the end rollers of a belt, in world units. */
+const BELT_EDGE = 0.1;
+
+/** Frame of a belt: body, side beams, belt surface and the two end rollers. The moving stripes are added by the figure. */
+function conveyor(size: Vec3): LookPart[] {
+  const f = new Frame(size);
+  const roller = f.Y(0.2);
+  const rollerCyl: Tpl = size.x >= size.z ? 'cylz' : 'cylx';
+  const parts: LookPart[] = [
+    tinted('box', [0, -0.14, 0], [1, 0.72, 1], 0.8),
+    fixed('box', [0, 0.45, 0], f.sz(1 - 2 * f.U(BELT_EDGE), 0.1, 1 - 2 * f.V(BELT_EDGE)), BELT_SURFACE),
+  ];
+  for (const v of [-1, 1]) {
+    parts.push(tinted('box', f.pos(0, 0.36, v * (0.5 - f.V(BELT_EDGE) / 2)), f.sz(1, 0.28, f.V(BELT_EDGE)), 1));
+  }
+  for (const u of [-1, 1]) {
+    parts.push(fixed(rollerCyl, f.pos(u * (0.5 - f.U(BELT_EDGE)), 0.5 - roller / 2, 0), f.sz(f.U(0.2), roller, 1 - 2 * f.V(BELT_EDGE)), '#9ca3af'));
+  }
+  return parts;
+}
+
+/** Sleepers and two rails over a bed of gravel, repeating along the longer side. */
+function rail(size: Vec3): LookPart[] {
+  const f = new Frame(size);
+  const parts: LookPart[] = [tinted('box', [0, -0.15, 0], [1, 0.7, 1], 0.6)];
+  const n = clampInt(f.long / 0.6, 2, 60);
+  const w = f.U(0.2);
+  for (let i = 0; i < n; i++) {
+    parts.push(fixed('box', f.pos(-0.5 + (i + 0.5) / n, 0.27, 0), f.sz(w, 0.14, 0.94), '#6b4a2b'));
+  }
+  const thick = f.Y(0.12);
+  for (const v of [-1, 1]) {
+    parts.push(fixed('box', f.pos(0, 0.5 - thick / 2, v * 0.3), f.sz(1, thick, f.V(0.1)), '#aab2bd'));
+  }
+  return parts;
+}
+
 /** Parts of a look; `size` only matters for looks laid out along the block (road, fence, ...). */
 export function blockLookParts(style: BlockStyle, size: Vec3): LookPart[] {
   switch (style) {
@@ -246,6 +287,8 @@ export function blockLookParts(style: BlockStyle, size: Vec3): LookPart[] {
     case 'rock': return rock();
     case 'fence': return fence(size);
     case 'sign': return sign();
+    case 'conveyor': return conveyor(size);
+    case 'rail': return rail(size);
     case 'box': return [tinted('box', [0, 0, 0], [1, 1, 1])];
   }
 }
@@ -259,6 +302,8 @@ function template(tpl: Tpl): THREE.BufferGeometry {
   switch (tpl) {
     case 'box': g = new THREE.BoxGeometry(1, 1, 1); break;
     case 'cyl': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10); break;
+    case 'cylx': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10).rotateZ(Math.PI / 2); break;
+    case 'cylz': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10).rotateX(Math.PI / 2); break;
     // Square pyramid whose base exactly fills the unit square.
     case 'pyr': g = new THREE.ConeGeometry(Math.SQRT1_2, 1, 4).rotateY(Math.PI / 4); break;
     case 'cone6': g = new THREE.ConeGeometry(0.5, 1, 6); break;
@@ -314,7 +359,9 @@ function cacheKey(style: BlockStyle, size: Vec3): string {
     case 'road':
     case 'sidewalk':
     case 'field':
-    case 'fence': {
+    case 'fence':
+    case 'conveyor':
+    case 'rail': {
       // Layout depends on the proportions, so blocks of nearly the same size share one bake.
       const q = (n: number) => Math.round(n * 2) / 2;
       return `${style}:${q(size.x)}x${q(size.y)}x${q(size.z)}`;
@@ -411,6 +458,55 @@ const textMaterials = new Map<THREE.Texture, THREE.MeshBasicMaterial>();
 const UNIT_PLANE = new THREE.PlaneGeometry(1, 1);
 const BOX_GEOMETRY = new THREE.BoxGeometry(1, 1, 1);
 
+// ---------------------------------------------------------------- belt stripes
+
+const STRIPE_MATERIAL = new THREE.MeshLambertMaterial({ color: '#59616c' });
+/** World distance between stripes and their thickness along the travel direction. */
+const STRIPE_PERIOD = 0.6;
+const STRIPE_THICK = 0.14;
+
+/**
+ * Cross stripes on the belt surface. Their position follows the belt's travelled distance (`view.belt.phase`), so they
+ * run at the live speed, stand still when the belt stops and go back when it reverses.
+ */
+function beltStripes(parent: THREE.Group): (view: EntityView) => void {
+  const stripes: THREE.Mesh[] = [];
+  return (view) => {
+    const belt = view.belt;
+    if (!belt) return;
+    const a = belt.axis;
+    const o = a === 'x' ? 'z' : 'x';
+    const sa = Math.max(view.size[a], 0.01);
+    const so = Math.max(view.size[o], 0.01);
+    const run = Math.max(sa - 2 * BELT_EDGE, 0.05);
+    const n = Math.max(1, Math.round(run / STRIPE_PERIOD));
+    const period = run / n;
+    while (stripes.length < n) {
+      const m = new THREE.Mesh(BOX_GEOMETRY, STRIPE_MATERIAL);
+      m.receiveShadow = true;
+      parent.add(m);
+      stripes.push(m);
+    }
+    const across = Math.max(so - 2 * BELT_EDGE, 0.05) / so;
+    stripes.forEach((m, i) => {
+      if (i >= n) {
+        m.visible = false;
+        return;
+      }
+      const t = (((i * period + belt.phase) % run) + run) % run;
+      const c = -run / 2 + t;
+      const lo = Math.max(c - STRIPE_THICK / 2, -run / 2);
+      const hi = Math.min(c + STRIPE_THICK / 2, run / 2);
+      m.visible = hi - lo > 0.005;
+      m.position.set(0, 0.5 + 0.004, 0);
+      m.position[a] = (lo + hi) / 2 / sa;
+      m.scale.set(1, 0.008, 1);
+      m.scale[a] = (hi - lo) / sa;
+      m.scale[o] = across;
+    });
+  };
+}
+
 // ---------------------------------------------------------------- figure
 
 export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, label = ''): BlockLookFigure {
@@ -424,6 +520,7 @@ export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, lab
   if (baked.fixed) object.add(new THREE.Mesh(baked.fixed, FIXED_MATERIAL));
 
   let recolor: (c: string) => void = () => undefined;
+  let animate: ((view: EntityView) => void) | undefined;
   if (style === 'trafficlight') {
     const lamps = TRAFFIC_LAMP_Y.map((y) => {
       const lamp = new THREE.Mesh(BOX_GEOMETRY, lampMaterial(dim(TRAFFIC_COLORS[0])));
@@ -444,6 +541,8 @@ export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, lab
       });
       cap.material = lampMaterial(c);
     };
+  } else if (style === 'conveyor') {
+    animate = beltStripes(object);
   } else if (style === 'sign' && label) {
     const aspect = Math.min(8, Math.max(0.5, (size.x * 0.92) / Math.max(size.y * 0.42, 0.05)));
     const tex = signTexture(label, aspect);
@@ -473,6 +572,7 @@ export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, lab
   recolor(color);
   return {
     object,
+    ...(animate ? { update: animate } : {}),
     setColor(c) {
       if (tintedMesh) tintedMesh.material = tintMaterial(c);
       recolor(c);

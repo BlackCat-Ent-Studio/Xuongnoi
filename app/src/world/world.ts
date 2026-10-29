@@ -17,6 +17,7 @@ import type {
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
 import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
+import { advanceBelts, syncBeltWalls } from './conveyor';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { bodyTuning } from './body-tuning';
 import { colliderBox } from './collider';
@@ -251,6 +252,11 @@ export function createWorld(mode: ViewMode): World {
     if (e.solid) solidRev++;
   }
 
+  /** Keeps the side walls of a belt in place (and as visible / as coloured as the belt). */
+  function syncWalls(belt: Entity): void {
+    if (syncBeltWalls(belt, byId)) solidRev++;
+  }
+
   /** Forgets hidden entities that asked to be dropped (shots and spawned copies), so long runs stay light. */
   function dropDisposed(): void {
     let keep = 0;
@@ -306,6 +312,16 @@ export function createWorld(mode: ViewMode): World {
       list.push(e);
       byId.set(id, e);
       if (e.kind === 'block' && e.solid) solidRev++;
+      if (spec.kind === 'block' && spec.belt) {
+        const axis = mode === '2d-side' ? 'x' : spec.belt.axis;
+        e.belt = { axis, speed: 0, phase: 0, walls: [] };
+        if (spec.belt.walls && mode === '3d' && e.solid) {
+          for (let i = 0; i < 2; i++) {
+            e.belt.walls.push(api.spawn({ kind: 'block', ownerNodeId: spec.ownerNodeId, position: e.pos, size: e.size, color: e.color, solid: true }));
+          }
+          syncWalls(e);
+        }
+      }
       return id;
     },
     setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void {
@@ -313,6 +329,7 @@ export function createWorld(mode: ViewMode): World {
       if (!e) return;
       if (style.color !== undefined) e.color = style.color;
       if (style.look !== undefined && e.kind === 'character') e.look = style.look;
+      if (e.belt) syncWalls(e);
     },
     tagOf(id: EntityId): string {
       return byId.get(id)?.tag ?? '';
@@ -333,6 +350,7 @@ export function createWorld(mode: ViewMode): World {
       if (e.seatedIn !== null) leaveSeat(e);
       e.visible = false;
       e.onGround = false;
+      if (e.belt) syncWalls(e);
       for (const k of [...contacts]) if (k.split('|').includes(id)) contacts.delete(k);
     },
     show(id: EntityId): void {
@@ -341,6 +359,7 @@ export function createWorld(mode: ViewMode): World {
       e.visible = true;
       e.vel = { x: 0, y: 0, z: 0 };
       if (e.kind === 'block' && e.solid) solidRev++;
+      if (e.belt) syncWalls(e);
     },
     getEntity(id: EntityId): EntityView | undefined {
       const e = byId.get(id);
@@ -589,6 +608,10 @@ export function createWorld(mode: ViewMode): World {
       markMover(e);
       return moveBlockTo(list, e, to, mode);
     },
+    setBeltSpeed(id: EntityId, speed: number): void {
+      const e = byId.get(id);
+      if (e?.belt) e.belt.speed = finiteOr(speed, 0);
+    },
     setBlockAngle(id: EntityId, rad: number): boolean {
       const e = byId.get(id);
       if (!e || e.kind !== 'block' || !e.visible) return false;
@@ -630,6 +653,8 @@ export function createWorld(mode: ViewMode): World {
         combat.update(list, dt);
         return;
       }
+      for (const e of list) if (e.belt) syncWalls(e);
+      advanceBelts(list, dt);
       stepPhysics(list, dt, mode, yaw);
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),

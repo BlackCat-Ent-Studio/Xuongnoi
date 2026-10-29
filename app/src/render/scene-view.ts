@@ -146,6 +146,7 @@ export class SceneView {
           entry.figure.setColor(e.color);
           entry.color = e.color;
         }
+        entry.figure.update?.(e);
         object.updateMatrixWorld();
         continue;
       }
