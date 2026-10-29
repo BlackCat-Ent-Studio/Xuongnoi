@@ -96,7 +96,7 @@ await sleep(200);
 check('undo wire delete', (await wireCount()) === wiresBefore);
 
 // box select with shift drag across whole canvas, copy/paste
-await page.locator('button', { hasText: 'Tạo mới' }).click();
+await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Tạo game mới' }).click();
 await sleep(300);
 await page.screenshot({ path: `${OUT}/dialog.png` });
 await page.locator('.mode-choice[data-mode="2d-side"]').click();
@@ -120,7 +120,7 @@ for (let i = 0; i < 3; i++) {
   await page.mouse.down();
   await page.mouse.move(hb2.x + 10 + i * 10, hb2.y + 8 + 3, { steps: 3 });
   const tx = 330 + i * 0;
-  await page.mouse.move(tx + (i === 2 ? 350 : 0), 160 + i * 150, { steps: 8 });
+  await page.mouse.move(tx + (i === 2 ? 200 : 0), 160 + i * 150, { steps: 8 });
   await page.mouse.up();
   await sleep(100);
 }
@@ -146,9 +146,9 @@ check('2 wires', (await wireCount()) === 2, `${await wireCount()}`);
 // box select all (shift+drag on empty canvas)
 const cv = await page.locator('.wc').boundingBox();
 await page.keyboard.down('Shift');
-await page.mouse.move(cv.x + 4, cv.y + 4);
+await page.mouse.move(cv.x + 14, cv.y + 14);
 await page.mouse.down();
-await page.mouse.move(cv.x + cv.width - 6, cv.y + cv.height - 6, { steps: 8 });
+await page.mouse.move(Math.min(cv.x + cv.width - 6, 800), cv.y + cv.height - 6, { steps: 8 });
 await page.screenshot({ path: `${OUT}/marquee.png` });
 await page.mouse.up();
 await page.keyboard.up('Shift');
@@ -172,14 +172,15 @@ check('undo delete -> 9', (await nodeCount()) === 9);
 
 // notes: clear the canvas first so nothing overlaps the note
 await page.keyboard.down('Shift');
-await page.mouse.move(cv.x + 4, cv.y + 4);
+await page.mouse.move(cv.x + 14, cv.y + 14);
 await page.mouse.down();
-await page.mouse.move(cv.x + cv.width - 6, cv.y + cv.height - 6, { steps: 8 });
+await page.mouse.move(Math.min(cv.x + cv.width - 6, 800), cv.y + cv.height - 6, { steps: 8 });
 await page.mouse.up();
 await page.keyboard.up('Shift');
 await page.keyboard.press('Delete');
 await sleep(200);
 check('canvas cleared', (await nodeCount()) === 0);
+if (await page.locator('[data-launch="blank"]').isVisible().catch(() => false)) await page.locator('[data-launch="blank"]').click(); // empty board shows the launchpad card; dismiss it
 await page.locator('.palette-item[data-kind="note"]').click();
 await sleep(300);
 check('note added', (await noteCount()) === 1);
@@ -201,7 +202,7 @@ const tb = await page.locator('.wc-note-tools').first().boundingBox();
 const nb0 = await page.locator('.wc-note').first().boundingBox();
 await page.mouse.move(tb.x + 12, tb.y + 8);
 await page.mouse.down();
-await page.mouse.move(tb.x + 80, tb.y + 60, { steps: 6 });
+await page.mouse.move(tb.x - 120, tb.y - 120, { steps: 6 });
 await page.mouse.up();
 await sleep(200);
 const nb1 = await page.locator('.wc-note').first().boundingBox();

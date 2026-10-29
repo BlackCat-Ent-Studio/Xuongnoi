@@ -41,7 +41,7 @@ while (Date.now() - t0 < 40000 && !overlay) {
   }
   const txt = (await page.locator('.game-box').innerText().catch(() => '')).replace(/\s+/g, ' ');
   if (i % 10 === 0) console.log(`t=${Math.round((Date.now() - t0) / 1000)}s ${txt.slice(0, 140)}`);
-  if (/Thắng|Thua|đích/i.test(txt.replace(/Chạm cổng tím[^⛶]*/, ''))) overlay = txt.slice(0, 160);
+  if (/Thắng|Thua|đích/i.test(txt.replace(/Chạm cổng tím.*?về lại./, ''))) overlay = txt.slice(0, 160);
   i++;
 }
 await page.keyboard.up('ArrowRight');
