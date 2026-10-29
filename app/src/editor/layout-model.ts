@@ -1,28 +1,50 @@
-/** Pure sizing + persistence rules for the resizable editor layout. */
+/** Pure sizing + persistence rules for the docked editor layout. */
+
+export type LayoutPreset = 'default' | 'split' | 'wide';
+export const LAYOUT_PRESETS: readonly LayoutPreset[] = ['default', 'split', 'wide'];
 
 export interface LayoutSizes {
-  /** Width of the right column (game view + properties), px. */
+  /** Width of the left dock, px. */
+  leftW: number;
+  /** Width of the right dock, px. */
   rightW: number;
-  /** Height of the game view, px. */
-  gameH: number;
+  /** Height of the bottom dock, px (its minimum shows only the tab bar). */
+  bottomH: number;
 }
 
 export interface LayoutBounds {
-  /** Width available to palette + canvas + splitter + right column. */
+  /** Width of the whole dock area. */
   mainW: number;
-  /** Height of the right column. */
-  rightH: number;
+  /** Height of the whole dock area. */
+  mainH: number;
+}
+
+export interface LayoutPrefs {
+  sizes: LayoutSizes;
+  preset: LayoutPreset;
+  /** true/false once the user chose; null means "decide from the window width". */
+  leftCollapsed: boolean | null;
 }
 
 export const LAYOUT_KEY = 'xuong-noi:layout';
-export const DEFAULT_SIZES: LayoutSizes = { rightW: 420, gameH: 300 };
+export const DEFAULT_SIZES: LayoutSizes = { leftW: 236, rightW: 280, bottomH: 188 };
 
-export const MIN_CANVAS_W = 240;
-export const MIN_RIGHT_W = 280;
-export const MIN_PROPS_H = 120;
-export const MIN_GAME_H = 160;
-export const PALETTE_W = 200;
-export const SPLITTER_PX = 8;
+export const MIN_LEFT_W = 180;
+export const MAX_LEFT_W = 440;
+export const MIN_RIGHT_W = 236;
+export const MAX_RIGHT_W = 460;
+/** Just the tab bar. */
+export const MIN_BOTTOM_H = 32;
+export const MAX_BOTTOM_H = 440;
+export const MIN_CENTER_W = 360;
+export const MIN_CENTER_H = 160;
+export const SPLITTER_PX = 5;
+/** Width of the left dock when collapsed to its tab rail. */
+export const COLLAPSED_LEFT_W = 40;
+/** Windows at most this wide start with the left dock collapsed. */
+export const NARROW_WIDTH = 1366;
+/** Below this the bottom dock counts as folded away. */
+export const BOTTOM_OPEN_H = 80;
 
 function finiteOr(v: number, fallback: number): number {
   return Number.isFinite(v) ? v : fallback;
@@ -33,52 +55,94 @@ function clampRange(v: number, min: number, max: number): number {
   return Math.round(Math.min(Math.max(v, min), Math.max(min, max)));
 }
 
-export function clampRightW(v: number, b: LayoutBounds): number {
-  const max = b.mainW - PALETTE_W - MIN_CANVAS_W - SPLITTER_PX;
-  return clampRange(finiteOr(v, DEFAULT_SIZES.rightW), MIN_RIGHT_W, max);
+/** Left dock width actually used: the collapsed rail or the preferred width. */
+export function effectiveLeftW(s: LayoutSizes, collapsed: boolean): number {
+  return collapsed ? COLLAPSED_LEFT_W : s.leftW;
 }
 
-export function clampGameH(v: number, b: LayoutBounds): number {
-  const max = b.rightH - MIN_PROPS_H - SPLITTER_PX;
-  return clampRange(finiteOr(v, DEFAULT_SIZES.gameH), MIN_GAME_H, max);
+export function clampSizes(s: LayoutSizes, b: LayoutBounds, leftCollapsed = false): LayoutSizes {
+  const gaps = 2 * SPLITTER_PX;
+  const leftW = clampRange(
+    finiteOr(s.leftW, DEFAULT_SIZES.leftW),
+    MIN_LEFT_W,
+    leftCollapsed ? MAX_LEFT_W : Math.min(MAX_LEFT_W, b.mainW - MIN_RIGHT_W - MIN_CENTER_W - gaps),
+  );
+  const rightW = clampRange(
+    finiteOr(s.rightW, DEFAULT_SIZES.rightW),
+    MIN_RIGHT_W,
+    Math.min(MAX_RIGHT_W, b.mainW - effectiveLeftW({ ...s, leftW }, leftCollapsed) - MIN_CENTER_W - gaps),
+  );
+  const bottomH = clampRange(
+    finiteOr(s.bottomH, DEFAULT_SIZES.bottomH),
+    MIN_BOTTOM_H,
+    Math.min(MAX_BOTTOM_H, b.mainH - MIN_CENTER_H - SPLITTER_PX),
+  );
+  return { leftW, rightW, bottomH };
 }
 
-export function clampSizes(s: LayoutSizes, b: LayoutBounds): LayoutSizes {
-  return { rightW: clampRightW(s.rightW, b), gameH: clampGameH(s.gameH, b) };
+/** Sizes a preset implies: "wide" folds the bottom dock; the others make sure it is open. */
+export function sizesForPreset(preset: LayoutPreset, sizes: LayoutSizes): LayoutSizes {
+  if (preset === 'wide') return { ...sizes, bottomH: MIN_BOTTOM_H };
+  if (sizes.bottomH < BOTTOM_OPEN_H) return { ...sizes, bottomH: DEFAULT_SIZES.bottomH };
+  return sizes;
 }
 
-/** Reads saved sizes; anything missing or malformed falls back to defaults. */
-export function parseSizes(raw: string | null): LayoutSizes {
-  if (!raw) return { ...DEFAULT_SIZES };
+export function isNarrowWindow(width: number): boolean {
+  return width <= NARROW_WIDTH;
+}
+
+export function defaultPrefs(): LayoutPrefs {
+  return { sizes: { ...DEFAULT_SIZES }, preset: 'default', leftCollapsed: null };
+}
+
+function numOr(v: unknown, fallback: number): number {
+  return typeof v === 'number' && Number.isFinite(v) ? v : fallback;
+}
+
+/** Reads saved prefs; anything missing or malformed falls back to defaults. */
+export function parsePrefs(raw: string | null): LayoutPrefs {
+  if (!raw) return defaultPrefs();
   try {
     const data: unknown = JSON.parse(raw);
-    if (typeof data !== 'object' || data === null) return { ...DEFAULT_SIZES };
+    if (typeof data !== 'object' || data === null) return defaultPrefs();
     const o = data as Record<string, unknown>;
+    const preset = LAYOUT_PRESETS.find((p) => p === o.preset) ?? 'default';
     return {
-      rightW: typeof o.rightW === 'number' && Number.isFinite(o.rightW) ? o.rightW : DEFAULT_SIZES.rightW,
-      gameH: typeof o.gameH === 'number' && Number.isFinite(o.gameH) ? o.gameH : DEFAULT_SIZES.gameH,
+      sizes: {
+        leftW: numOr(o.leftW, DEFAULT_SIZES.leftW),
+        rightW: numOr(o.rightW, DEFAULT_SIZES.rightW),
+        bottomH: numOr(o.bottomH, DEFAULT_SIZES.bottomH),
+      },
+      preset,
+      leftCollapsed: typeof o.leftCollapsed === 'boolean' ? o.leftCollapsed : null,
     };
   } catch {
-    return { ...DEFAULT_SIZES };
+    return defaultPrefs();
   }
 }
 
-export function serializeSizes(s: LayoutSizes): string {
-  return JSON.stringify({ rightW: Math.round(s.rightW), gameH: Math.round(s.gameH) });
+export function serializePrefs(p: LayoutPrefs): string {
+  return JSON.stringify({
+    leftW: Math.round(p.sizes.leftW),
+    rightW: Math.round(p.sizes.rightW),
+    bottomH: Math.round(p.sizes.bottomH),
+    preset: p.preset,
+    leftCollapsed: p.leftCollapsed,
+  });
 }
 
-export function loadSizes(storage: Pick<Storage, 'getItem'> = localStorage): LayoutSizes {
+export function loadPrefs(storage: Pick<Storage, 'getItem'> = localStorage): LayoutPrefs {
   try {
-    return parseSizes(storage.getItem(LAYOUT_KEY));
+    return parsePrefs(storage.getItem(LAYOUT_KEY));
   } catch {
-    return { ...DEFAULT_SIZES };
+    return defaultPrefs();
   }
 }
 
 /** Storage may be full or blocked; losing a layout preference is harmless. */
-export function saveSizes(s: LayoutSizes, storage: Pick<Storage, 'setItem'> = localStorage): void {
+export function savePrefs(p: LayoutPrefs, storage: Pick<Storage, 'setItem'> = localStorage): void {
   try {
-    storage.setItem(LAYOUT_KEY, serializeSizes(s));
+    storage.setItem(LAYOUT_KEY, serializePrefs(p));
   } catch {
     /* preference only */
   }
