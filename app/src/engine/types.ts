@@ -366,6 +366,8 @@ export interface EntityView {
   tool?: { shape: ItemShape; color: string };
   /** Characters only; height of the item carried above the head (side and 3D views), absent when nothing rides there. */
   carriedHeight?: number;
+  /** Characters only; unit direction on the ground plane the figure is facing. */
+  facing?: { x: number; z: number };
   /** Characters only; 0..1 progress of a swing in progress, absent otherwise. */
   swing?: number;
   /** Characters only; run speed and jump power from the latest intent (absent before the first one). Lets a bot plan its jumps. */
