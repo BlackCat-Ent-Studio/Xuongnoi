@@ -505,12 +505,12 @@ export const LESSON_TEXT = {
     },
   },
   l7: {
-    title: '7. Chuỗi việc',
-    summary: 'Bảo bot làm ba việc lần lượt: lấy thùng, mang ra bệ xanh, rồi đi về chỗ cũ.',
-    boardName: 'Bài 7 - Chuỗi việc',
+    title: '7. Bot quăng thùng',
+    summary: 'Bảo bot làm ba việc lần lượt: cầm thùng, mang ra bệ xanh rồi quăng thùng đi, sau đó đi về chỗ cũ.',
+    boardName: 'Bài 7 - Bot quăng thùng',
     intro: {
       title: 'Làm lần lượt từng việc',
-      text: 'Bot ở bên trái, thùng nằm giữa sàn, bệ xanh ở bên phải. Ta muốn bot làm 3 việc: 1) đi tới thùng và cầm lên, 2) mang ra bệ xanh và đặt xuống, 3) đi về chỗ cũ.',
+      text: 'Bot ở bên trái, thùng nằm giữa sàn, bệ xanh ở bên phải. Ta muốn bot làm 3 việc: 1) đi tới thùng và cầm lên, 2) mang ra bệ xanh và quăng thùng đi, 3) đi về chỗ cũ.',
       explain: 'Bảng đã có sẵn 3 mảnh ghép "Đi tới" (một mảnh ghép cho mỗi việc) và các dây nối hướng đi vào bot. Thiếu mỗi một thứ: ai bảo mảnh ghép nào làm trước.',
     },
     watch: {
@@ -552,11 +552,11 @@ export const LESSON_TEXT = {
     },
     playOrder: {
       title: 'Xem bot làm theo thứ tự',
-      text: 'Bấm "Chơi". Bot đi tới thùng, rồi ra bệ xanh, rồi đi về. Nhưng nó chưa biết cầm thùng.',
+      text: 'Bấm "Chơi". Bot đi tới thùng, rồi ra bệ xanh, rồi đi về. Nhưng nó chưa biết cầm hay quăng thùng.',
     },
     edit2: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Dừng" để dạy bot cầm thùng.',
+      text: 'Bấm nút "Dừng" để dạy bot cầm và quăng thùng.',
     },
     carry: {
       title: 'Dạy bot cầm đồ',
@@ -573,8 +573,9 @@ export const LESSON_TEXT = {
       explain: '"Vừa tới" chỉ bật một nhịp đúng lúc bot tới nơi, rất hợp để bấm "nút" cầm.',
     },
     wireDrop: {
-      title: 'Tới bệ thì thả',
-      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Thả" của mảnh ghép Cầm / Thả.',
+      title: 'Tới bệ thì quăng',
+      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Ném" của mảnh ghép Cầm / Thả.',
+      explain: '"Ném" làm bot quăng thùng bay đi thật xa, nên thùng sẽ rơi qua khỏi bệ xanh. Bài sau ta sẽ học cách đặt thùng nhẹ nhàng xuống bệ.',
     },
     wireFinished: {
       title: 'Làm xong hết thì thắng',
@@ -583,16 +584,57 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Xem bot làm việc',
-      text: 'Bấm "Chơi" và chờ bot: tới thùng, cầm lên, mang ra bệ xanh, đặt xuống, rồi đi về chỗ cũ.',
+      text: 'Bấm "Chơi" và chờ bot: tới thùng, cầm lên, mang ra bệ xanh, quăng thùng bay đi, rồi đi về chỗ cũ.',
     },
     win: {
       title: 'Bot làm xong rồi!',
-      text: 'Cả ba việc đã xong theo đúng thứ tự và game báo thắng.',
+      text: 'Cả ba việc đã xong theo đúng thứ tự và game báo thắng. Thùng đã bay qua khỏi bệ xanh.',
       explain: 'Muốn bot lặp lại mãi, đổi "Làm hết thì" của Chuỗi việc thành "Lặp lại từ việc 1".',
     },
     done: {
       title: 'Bạn biết giao nhiều việc cho bot rồi!',
-      text: 'Bạn đã dùng Chuỗi việc để xếp thứ tự, Đi tới để bot tự tìm đường và Cầm / Thả để bot mang đồ. Thử đổi sang 4 việc hoặc cho bot lặp lại xem sao.',
+      text: 'Bạn đã dùng Chuỗi việc để xếp thứ tự, Đi tới để bot tự tìm đường và Cầm / Thả để bot cầm và quăng đồ. Thử đổi sang 4 việc hoặc cho bot lặp lại xem sao.',
+    },
+  },
+  l8: {
+    title: '8. Bot đặt thùng',
+    summary: 'Bot mang thùng ra bệ xanh. Game chỉ thắng khi thùng nằm yên trên bệ, nên phải đổi "Ném" thành "Thả".',
+    boardName: 'Bài 8 - Bot đặt thùng',
+    intro: {
+      title: 'Ném và Thả khác nhau',
+      text: 'Bảng này giống bài trước: bot cầm thùng, ra bệ xanh rồi quăng thùng đi. Lần này game chỉ báo thắng khi bot làm xong hết VÀ thùng đang chạm bệ xanh.',
+      explain: '"Ném" quăng thùng bay đi xa. "Thả" chỉ buông tay cho thùng rơi xuống ngay chỗ bot đứng. Muốn đặt thùng lên bệ thì phải dùng "Thả".',
+    },
+    watchThrow: {
+      title: 'Xem thùng bay đi',
+      text: 'Bấm "Chơi". Nhìn thùng bay qua khỏi bệ xanh và game không báo thắng.',
+      explain: 'Bot làm xong cả ba việc nhưng thùng không nằm trên bệ, nên cảm biến chạm không bật. Mảnh ghép "Và" cần cả hai tín hiệu cùng bật mới cho thắng.',
+    },
+    edit: {
+      title: 'Quay lại sửa',
+      text: 'Bấm nút "Dừng" để đổi cách bot đặt thùng.',
+    },
+    removeThrow: {
+      title: 'Bỏ dây "Ném"',
+      text: 'Bấm vào dây nối từ "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Ném", rồi bấm phím Delete để xóa dây.',
+      explain: 'Nếu cùng lúc có dây vào cả "Ném" và "Thả" thì "Ném" thắng, thùng vẫn bay đi. Vì vậy phải xóa dây "Ném" trước.',
+    },
+    wireDrop: {
+      title: 'Tới bệ thì thả',
+      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Thả" của mảnh ghép Cầm / Thả.',
+    },
+    play: {
+      title: 'Xem bot đặt thùng',
+      text: 'Bấm "Chơi" và chờ bot: cầm thùng, ra bệ xanh, thả thùng xuống bệ, rồi đi về chỗ cũ.',
+    },
+    win: {
+      title: 'Thùng nằm trên bệ rồi!',
+      text: 'Thùng nằm yên trên bệ xanh, bot đã về chỗ cũ và game báo thắng.',
+      explain: 'Cảm biến chạm báo thùng đang chạm bệ, mảnh ghép "Và" gộp với tín hiệu "Đã xong hết" nên mới cho thắng.',
+    },
+    done: {
+      title: 'Bạn biết bảo bot đặt đồ rồi!',
+      text: '"Ném" để quăng đồ thật xa, "Thả" để đặt đồ xuống ngay chỗ đứng. Nhớ chỉ nối một trong hai cho mỗi lần bot buông thùng.',
     },
   },
 } as const;

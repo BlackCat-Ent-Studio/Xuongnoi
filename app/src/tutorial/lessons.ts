@@ -988,6 +988,7 @@ const CHORE_BOT_SELF: Endpoint = { kind: 'character', port: 'self', where: isCho
 const GO_CRATE_ARRIVED: Endpoint = { kind: 'go-to', port: 'arrivedPulse', where: isGoCrate };
 const GO_PAD_ARRIVED: Endpoint = { kind: 'go-to', port: 'arrivedPulse', where: isGoPad };
 const CARRY_DROP: Endpoint = { kind: 'carry', port: 'drop' };
+const CARRY_THROW: Endpoint = { kind: 'carry', port: 'throw' };
 
 /** The "Hoặc" that gathers all three "arrived" pulses: the one fed directly by the walk-home brick. */
 function finalOr(graph: Graph): GraphNode | undefined {
@@ -1095,9 +1096,10 @@ const lesson7: Lesson = {
       explain: T.l7.wireGrab.explain,
     },
     {
-      ...wireStep('wire-drop', GO_PAD_ARRIVED, CARRY_DROP),
+      ...wireStep('wire-drop', GO_PAD_ARRIVED, CARRY_THROW),
       title: T.l7.wireDrop.title,
       text: T.l7.wireDrop.text,
+      explain: T.l7.wireDrop.explain,
     },
     {
       ...wireStep('wire-finished', SEQ_FINISHED, WIN_IN),
@@ -1123,13 +1125,92 @@ const lesson7: Lesson = {
   ],
 };
 
+// ---------- lesson 8 ----------
+
+/** Lesson 7 solved with the throw wire, plus a win that also needs the crate to touch the pad. */
+const PLACE_NODES: NodeSpec[] = [
+  ...CHORE_NODES,
+  { alias: 'seq', kind: 'sequence', x: 1340, y: 160, params: { stepCount: 3 } },
+  { alias: 'carry', kind: 'carry', x: 1080, y: 640 },
+  { alias: 'touch', kind: 'touch', x: 560, y: 760 },
+  { alias: 'and', kind: 'and', x: 1340, y: 640 },
+];
+const PLACE_WIRES: WireSpec[] = [
+  ...CHORE_WIRES,
+  ['seq', 'step1', 'go-crate', 'go'],
+  ['seq', 'step2', 'go-pad', 'go'],
+  ['seq', 'step3', 'go-home', 'go'],
+  ['or-2', 'out', 'seq', 'next'],
+  ['bot', 'self', 'carry', 'character'],
+  ['go-crate', 'arrivedPulse', 'carry', 'grab'],
+  ['go-pad', 'arrivedPulse', 'carry', 'throw'],
+  ['crate', 'self', 'touch', 'a'],
+  ['pad', 'self', 'touch', 'b'],
+  ['seq', 'finished', 'and', 'a'],
+  ['touch', 'touching', 'and', 'b'],
+  ['and', 'out', 'end', 'win'],
+];
+
+const lesson8: Lesson = {
+  id: 'chores-place',
+  title: T.l8.title,
+  summary: T.l8.summary,
+  createBoard: () => buildBoard(T.l8.boardName, PLACE_NODES, PLACE_WIRES),
+  steps: [
+    { id: 'intro', title: T.l8.intro.title, text: T.l8.intro.text, explain: T.l8.intro.explain },
+    {
+      id: 'watch-throw',
+      title: T.l8.watchThrow.title,
+      text: T.l8.watchThrow.text,
+      explain: T.l8.watchThrow.explain,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'back-to-edit',
+      title: T.l8.edit.title,
+      text: T.l8.edit.text,
+      target: () => [PLAY_BTN],
+      check: (s) => !s.playing,
+    },
+    {
+      id: 'remove-throw',
+      title: T.l8.removeThrow.title,
+      text: T.l8.removeThrow.text,
+      explain: T.l8.removeThrow.explain,
+      target: (s) => [portSel(s.graph, CARRY_THROW, 'in')].filter((x): x is string => x !== null),
+      check: (s) => !hasWire(s.graph, GO_PAD_ARRIVED, CARRY_THROW),
+    },
+    {
+      ...wireStep('wire-drop', GO_PAD_ARRIVED, CARRY_DROP),
+      title: T.l8.wireDrop.title,
+      text: T.l8.wireDrop.text,
+    },
+    {
+      id: 'play-place',
+      title: T.l8.play.title,
+      text: T.l8.play.text,
+      target: () => [PLAY_BTN],
+      check: (s) => s.playing,
+    },
+    {
+      id: 'win',
+      title: T.l8.win.title,
+      text: T.l8.win.text,
+      explain: T.l8.win.explain,
+      check: (s) => s.ended === 'win',
+    },
+    { id: 'done', title: T.l8.done.title, text: T.l8.done.text },
+  ],
+};
+
 const lessonVehicles = createVehicleLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonBotDriver = createBotDriverLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonChanceZones = createChanceZonesLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonCameraPortals = createCameraPortalsLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonEditorTools = createEditorToolsLesson({ buildBoard });
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools];
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

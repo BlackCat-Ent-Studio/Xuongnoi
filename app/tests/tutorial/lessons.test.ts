@@ -427,7 +427,7 @@ describe('lesson 6: make a bot', () => {
   });
 });
 
-describe('lesson 7: chores', () => {
+describe('lesson 7: bot throws the crate', () => {
   function buildLesson() {
     const s = session('chores');
     s.runner.next();
@@ -468,7 +468,7 @@ describe('lesson 7: chores', () => {
     expect(s.stepId()).toBe('wire-grab');
     s.wire(p(byX(-1.5), 'arrivedPulse'), p(carry, 'grab'));
     expect(s.stepId()).toBe('wire-drop');
-    s.wire(p(byX(4.5), 'arrivedPulse'), p(carry, 'drop'));
+    s.wire(p(byX(4.5), 'arrivedPulse'), p(carry, 'throw'));
     expect(s.stepId()).toBe('wire-finished');
     s.wire(p(seq, 'finished'), p(s.idOf('win-lose'), 'win'));
     expect(s.stepId()).toBe('play-chores');
@@ -483,7 +483,7 @@ describe('lesson 7: chores', () => {
     expect(s.stepId()).toBe('done');
   });
 
-  it('the finished board really delivers the crate to the pad and then wins with the bot back home', () => {
+  it('the finished board throws the crate past the pad and then wins with the bot back home', () => {
     const { s } = buildLesson();
     const graph = s.state.getGraph();
     const world = createWorld('2d-side');
@@ -491,17 +491,18 @@ describe('lesson 7: chores', () => {
     const crateOwner = graph.nodes.find((n) => n.kind === 'item')!.id;
     const botOwner = graph.nodes.find((n) => n.kind === 'character' && n.params.role === 'bot')!.id;
     const view = (owner: string) => world.entities().find((e) => e.ownerNodeId === owner)!;
-    let crateAtPad = false;
+    let thrownPastPad = false;
     for (let i = 0; i < 60 * 40 && !world.ended; i++) {
       rt.tick({ keysDown: new Set() });
       world.step(TICK_DT);
-      const c = view(crateOwner).position;
-      if (Math.abs(c.x - 4.5) < 1.5 && !view(crateOwner).inHand && c.y < 1.2) crateAtPad = true;
+      const c = view(crateOwner);
+      if (!c.inHand && c.position.x > 5.5) thrownPastPad = true;
     }
-    expect(crateAtPad).toBe(true);
+    expect(thrownPastPad).toBe(true);
     expect(world.ended?.result).toBe('win');
     expect(Math.abs(view(botOwner).position.x - -5)).toBeLessThan(0.6);
-    expect(Math.abs(view(crateOwner).position.x - 4.5)).toBeLessThan(2.2);
+    expect(view(crateOwner).position.x).toBeGreaterThan(5.5);
+    expect(view(crateOwner).inHand).toBeFalsy();
   });
 
   it('without the order brick the bot does not finish the chores', () => {
@@ -513,6 +514,73 @@ describe('lesson 7: chores', () => {
       world.step(TICK_DT);
     }
     expect(world.ended).toBeNull();
+  });
+});
+
+describe('lesson 8: bot places the crate', () => {
+  /** Plays the board headless and reports where the crate and bot ended up. */
+  function simulate(graph: Snapshot['graph'], seconds: number) {
+    const world = createWorld('2d-side');
+    const rt = createRuntime(graph, world, '2d-side');
+    const crateOwner = graph.nodes.find((n) => n.kind === 'item')!.id;
+    const botOwner = graph.nodes.find((n) => n.kind === 'character' && n.params.role === 'bot')!.id;
+    const view = (owner: string) => world.entities().find((e) => e.ownerNodeId === owner)!;
+    for (let i = 0; i < 60 * seconds && !world.ended; i++) {
+      rt.tick({ keysDown: new Set() });
+      world.step(TICK_DT);
+    }
+    return { ended: world.ended, crate: view(crateOwner), bot: view(botOwner) };
+  }
+
+  function walk() {
+    const s = session('chores-place');
+    expect(s.stepId()).toBe('intro');
+    s.runner.next();
+    expect(s.stepId()).toBe('watch-throw');
+    s.play(true);
+    expect(s.stepId()).toBe('back-to-edit');
+    s.play(false);
+    expect(s.stepId()).toBe('remove-throw');
+    const carry = s.idOf('carry');
+    const wire = s.state.getGraph().wires.find((w) => w.to.node === carry && w.to.port === 'throw')!;
+    s.state.select({ kind: 'wire', id: wire.id });
+    s.state.deleteSelection();
+    s.play(false); // re-evaluates the runner against the edited graph
+    expect(s.stepId()).toBe('wire-drop');
+    const padGo = s.state.getGraph().nodes.find((n) => n.kind === 'go-to' && (n.params.targetPos as { x: number }).x === 4.5)!;
+    s.wire(p(padGo.id, 'arrivedPulse'), p(carry, 'drop'));
+    expect(s.stepId()).toBe('play-place');
+    s.play(true);
+    expect(s.stepId()).toBe('win');
+    return s;
+  }
+
+  it('walks through watch, delete the throw wire, wire the drop, play and win', () => {
+    const s = walk();
+    s.end('win');
+    expect(s.stepId()).toBe('done');
+  });
+
+  it('is registered right after lesson 7 and the titles count 1 to 15', () => {
+    expect(LESSONS.map((l) => l.id).slice(6, 9)).toEqual(['chores', 'chores-place', 'combat']);
+    expect(LESSONS).toHaveLength(15);
+    expect(LESSONS.map((l) => Number.parseInt(l.title, 10))).toEqual(Array.from({ length: 15 }, (_, i) => i + 1));
+  });
+
+  it('with Ném the crate flies off the pad and the game never wins', () => {
+    const board = findLesson('chores-place')!.createBoard();
+    const r = simulate(board.graph, 40);
+    expect(r.ended).toBeNull();
+    expect(r.crate.position.x).toBeGreaterThan(5.5);
+  });
+
+  it('with Thả the crate rests on the pad and the game wins with the bot home', () => {
+    const s = walk();
+    const r = simulate(s.state.getGraph(), 40);
+    expect(r.ended?.result).toBe('win');
+    expect(Math.abs(r.crate.position.x - 4.5)).toBeLessThan(1);
+    expect(r.crate.inHand).toBeFalsy();
+    expect(Math.abs(r.bot.position.x - -5)).toBeLessThan(0.6);
   });
 });
 
