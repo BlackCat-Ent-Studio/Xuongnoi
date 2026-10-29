@@ -69,8 +69,6 @@ export interface Entity {
   /** Blocks: drawing style id and sign text (see EntitySpec). */
   blockStyle?: string;
   label?: string;
-  /** Items: free-text goods type. */
-  tag?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
 }

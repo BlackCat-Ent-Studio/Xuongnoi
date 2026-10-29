@@ -310,8 +310,6 @@ export interface EntitySpec {
   tag?: string;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
   disposable?: boolean;
-  /** Items only: goods type (free text). Omitted = untagged. */
-  tag?: string;
 }
 
 /** How a shot leaves a shooter. */
@@ -542,8 +540,6 @@ export interface WorldApi {
   loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string): EntityId | null;
   /** Puts the most recently loaded item (of goods type `tag` when given and non-empty) down beside the vehicle (clear of solids). Null when none or no room. */
   unloadCargo(vehicle: EntityId, tag?: string): EntityId | null;
-  /** Goods type of an item ('' when untagged or unknown). */
-  tagOf(id: EntityId): string;
   /** Items riding on the vehicle, oldest first. */
   cargoOf(vehicle: EntityId): readonly EntityId[];
 

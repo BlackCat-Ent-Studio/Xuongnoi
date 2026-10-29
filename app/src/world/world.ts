@@ -291,7 +291,6 @@ export function createWorld(mode: ViewMode): World {
         carryable: spec.kind === 'item' && spec.carryable !== false,
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
         ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
-        ...(spec.kind === 'item' && spec.tag ? { tag: spec.tag } : {}),
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
@@ -545,9 +544,6 @@ export function createWorld(mode: ViewMode): World {
       top.pos = spot;
       top.vel = { x: 0, y: 0, z: 0 };
       return top.id;
-    },
-    tagOf(id: EntityId): string {
-      return byId.get(id)?.tag ?? '';
     },
     cargoOf(vehicle: EntityId): readonly EntityId[] {
       return cargoOn(list, vehicle).map((e) => e.id);
