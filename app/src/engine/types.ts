@@ -231,6 +231,8 @@ export interface EntitySpec {
   damage?: number;
   /** Vehicles only (kind 'vehicle'). */
   vehicle?: VehicleSpec;
+  /** Blocks only: a zone marker, drawn translucent so the area can be seen while editing. */
+  zone?: boolean;
 }
 
 export interface CharacterIntent {
@@ -278,6 +280,8 @@ export interface EntityView {
   vehicle?: { model: VehicleModel; speed: number; wheelSpin: number; heading: number; driver: EntityId | null };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
+  /** Blocks only; true for a zone marker (drawn translucent). */
+  zone?: boolean;
   visible: boolean;
 }
 
@@ -386,6 +390,13 @@ export interface WorldApi {
   enterVehicle(character: EntityId, reach: number): EntityId | null;
   /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */
   exitVehicle(character: EntityId): EntityId | null;
+
+  // ---- sensors and randomness ----
+
+  /** Snapshot of every entity (including hidden ones; check `visible`). */
+  listEntities(): readonly EntityView[];
+  /** Seed picked once per run; nodes with seed 0 derive their random sequence from it. */
+  runSeed(): number;
 }
 
 /** Full world used by the game loop and renderer. */

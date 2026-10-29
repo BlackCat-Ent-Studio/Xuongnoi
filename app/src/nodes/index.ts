@@ -27,6 +27,11 @@ import { touchNode } from './touch';
 import { winLoseNode } from './win-lose';
 import { enterExitNode } from './enter-exit';
 import { vehicleNode } from './vehicle';
+import { randomNode } from './random';
+import { latchNode } from './latch';
+import { mapRangeNode } from './map-range';
+import { zoneSensorNode } from './zone-sensor';
+import { distanceNode } from './distance';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -70,6 +75,11 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   fightNode,
   vehicleNode,
   enterExitNode,
+  randomNode,
+  latchNode,
+  mapRangeNode,
+  zoneSensorNode,
+  distanceNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

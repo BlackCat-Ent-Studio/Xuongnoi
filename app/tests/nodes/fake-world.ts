@@ -78,6 +78,8 @@ export function makeWorld(): FakeWorld {
     setVehicleInput: () => undefined,
     enterVehicle: () => null,
     exitVehicle: () => null,
+    listEntities: () => [...w.entities.values()],
+    runSeed: () => 12345,
   };
   return w;
 }

@@ -159,7 +159,10 @@ export class SceneView {
       this.group.add(pose);
       return { type: 'item', figure, pose, flat, bounds, shape, color: e.color };
     }
-    const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial({ color: e.color }));
+    const mesh = new THREE.Mesh(
+      this.geometry,
+      new THREE.MeshLambertMaterial(e.zone ? { color: e.color, transparent: true, opacity: 0.28, depthWrite: false } : { color: e.color }),
+    );
     this.group.add(mesh);
     return { type: 'block', mesh, color: e.color };
   }

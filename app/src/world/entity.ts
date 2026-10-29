@@ -23,6 +23,8 @@ export interface Entity {
   role?: CharacterRole;
   shape?: ItemShape;
   solid: boolean;
+  /** Blocks: zone marker, drawn translucent. */
+  zone?: boolean;
   visible: boolean;
   onGround: boolean;
   intent: CharacterIntent | null;
@@ -74,6 +76,7 @@ export function toView(e: Entity): EntityView {
         }
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
+    ...(e.zone ? { zone: true } : {}),
     visible: e.visible,
   };
 }

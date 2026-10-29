@@ -43,6 +43,8 @@ export function createWorld(mode: ViewMode): World {
   let ended: { result: GameResult; message: string } | null = null;
   let yaw = 0;
   let nextId = 1;
+  /** Differs every run; a node's own seed param overrides it for repeatable results. */
+  const seed = Math.floor(Math.random() * 0xffffffff) + 1;
   let solidRev = 0;
   /** Interactions requested this tick; they become visible (one tick) after the next step. */
   let pendingInteract = new Set<EntityId>();
@@ -227,6 +229,7 @@ export function createWorld(mode: ViewMode): World {
         ...(spec.kind === 'character' && spec.role !== undefined ? { role: spec.role } : {}),
         ...(spec.kind === 'item' ? { shape: spec.shape ?? 'box' } : {}),
         solid: spec.kind === 'item' ? false : spec.solid,
+        ...(spec.kind === 'block' && spec.zone ? { zone: true } : {}),
         visible: true,
         onGround: false,
         intent: null,
@@ -466,6 +469,12 @@ export function createWorld(mode: ViewMode): World {
     },
     entities(): readonly EntityView[] {
       return list.map(viewOf);
+    },
+    listEntities(): readonly EntityView[] {
+      return list.map(viewOf);
+    },
+    runSeed(): number {
+      return seed;
     },
     hudItems(): readonly HudItem[] {
       return [...hud.values()].map((h) => ({ ...h }));
