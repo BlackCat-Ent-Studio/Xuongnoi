@@ -55,6 +55,8 @@ export function mountEditor(root: HTMLElement): void {
   const gameView: GameView = createGameView();
   const keyboard = createKeyboardInput();
 
+  /** Param values the running game currently holds, per node; reset on every (re)start. */
+  const liveBase = new Map<string, Record<string, unknown>>();
   let consoleDock: ConsoleDock | null = null;
   const log = (kind: LogKind, text: string): void => consoleDock?.log(kind, text);
   /** Logs at most once per `ms` for a given key, so slider drags and key repeats do not flood the log. */
@@ -101,7 +103,13 @@ export function mountEditor(root: HTMLElement): void {
   const dialog = createNewGameDialog((mode) => loadBoard(createEmptyBoard(mode)));
   const props = createPropertiesPanel(state, {
     onLiveParamChange(nodeId, params) {
-      if (gameView.applyNodeParams(nodeId, params)) {
+      // The panel reports the node's full param set; send only what differs from what the running game has.
+      const running = liveBase.get(nodeId) ?? {};
+      const patch: Record<string, unknown> = {};
+      for (const [k, v] of Object.entries(params)) if (JSON.stringify(v) !== JSON.stringify(running[k])) patch[k] = v;
+      if (Object.keys(patch).length === 0) return;
+      liveBase.set(nodeId, { ...running, ...patch });
+      if (gameView.applyNodeParams(nodeId, patch)) {
         logThrottled('live-ok', 1500, 'info', CONSOLE_TEXT.logLiveApplied);
       } else if (logThrottled('live-defer', 1500, 'warn', CONSOLE_TEXT.logLiveDeferred)) {
         topBar.notify(CONSOLE_TEXT.logLiveDeferred);
@@ -401,6 +409,8 @@ export function mountEditor(root: HTMLElement): void {
     if (document.activeElement instanceof HTMLElement && !isTypingTarget(document.activeElement)) {
       document.activeElement.blur();
     }
+    liveBase.clear();
+    for (const n of state.getGraph().nodes) liveBase.set(n.id, structuredClone(n.params));
     keyboard.attach();
     try {
       gameView.play(state.getGraph(), state.getMode(), () => keyboard.snapshot());
