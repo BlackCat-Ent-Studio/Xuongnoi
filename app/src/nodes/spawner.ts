@@ -18,7 +18,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
   description:
     'Mỗi lần "Sinh ra" bật, tạo thêm một khối hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Cảm biến chạm); hoặc nối nhân vật vào "Ai chạm" để biết có bản nào đang chạm người đó.',
   inputs: [
-    { id: 'spawn', type: 'bool', label: 'Sinh ra' },
+    { id: 'spawn', type: 'bool', label: 'Sinh ra', required: true },
     { id: 'at', type: 'object', label: 'Tại vật' },
     { id: 'toucher', type: 'object', label: 'Ai chạm' },
   ],

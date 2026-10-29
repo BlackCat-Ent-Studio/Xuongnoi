@@ -40,6 +40,8 @@ export interface PortDef {
   label: string;
   /** Value used when the input port has no wire. Falls back to PORT_DEFAULTS[type]. */
   default?: PortValue;
+  /** Input only: the node does nothing useful until this port is wired. The editor flags it when empty. */
+  required?: boolean;
 }
 
 export type ParamKind = 'number' | 'select' | 'key' | 'color' | 'vec3' | 'text';

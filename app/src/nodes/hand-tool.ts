@@ -13,7 +13,7 @@ export const handToolNode: NodeDef<HandToolState> = {
   description:
     'Cầm một dụng cụ (kiếm, cuốc, búa...) trên tay, tách riêng với món khiêng trên đầu. Bật "Cầm/Cất" để nhặt món gần nhất hoặc cất xuống. Bật "Dùng" để vung tay: thứ nằm ngay phía trước sẽ nhận một tín hiệu "Vừa bị dùng lên".',
   inputs: [
-    { id: 'character', type: 'object', label: 'Nhân vật' },
+    { id: 'character', type: 'object', label: 'Nhân vật', required: true },
     { id: 'toggle', type: 'bool', label: 'Cầm/Cất' },
     { id: 'use', type: 'bool', label: 'Dùng' },
   ],

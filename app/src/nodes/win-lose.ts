@@ -7,7 +7,7 @@ export const winLoseNode: NodeDef<null> = {
   category: 'output',
   description: 'Kết thúc trò chơi. Khi "Thắng" bật thì báo thắng, khi "Thua" bật thì báo thua.',
   inputs: [
-    { id: 'win', type: 'bool', label: 'Thắng' },
+    { id: 'win', type: 'bool', label: 'Thắng', required: true },
     { id: 'lose', type: 'bool', label: 'Thua' },
   ],
   outputs: [],

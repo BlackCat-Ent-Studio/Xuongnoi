@@ -17,7 +17,7 @@ export const carryNode: NodeDef<CarryState> = {
   description:
     'Cho nhân vật cầm đồ vật ở gần, thả xuống hoặc ném đi. Mỗi lần bật một tín hiệu mới tính một lần bấm. Mỗi nhân vật chỉ cầm được một món.',
   inputs: [
-    { id: 'character', type: 'object', label: 'Nhân vật' },
+    { id: 'character', type: 'object', label: 'Nhân vật', required: true },
     { id: 'grab', type: 'bool', label: 'Cầm' },
     { id: 'drop', type: 'bool', label: 'Thả' },
     { id: 'throw', type: 'bool', label: 'Ném' },

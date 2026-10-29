@@ -8,7 +8,7 @@ export const interactNode: NodeDef<EdgeState> = {
   description:
     'Khi bấm, nhân vật "dùng" món đồ vật gần nhất (trong tầm với). Món đó sẽ báo "Vừa được tương tác" một nhịp. Món đang cầm trên tay không tính.',
   inputs: [
-    { id: 'character', type: 'object', label: 'Nhân vật' },
+    { id: 'character', type: 'object', label: 'Nhân vật', required: true },
     { id: 'press', type: 'bool', label: 'Bấm' },
   ],
   outputs: [

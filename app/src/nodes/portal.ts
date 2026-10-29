@@ -8,7 +8,7 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
   description:
     'Một cổng phát sáng: ai chạm vào sẽ được đưa tới cổng còn lại của cặp (phải bước ra khỏi cổng mới đi lại được). Ghép đôi bằng cách nối "Cổng đối diện" tới khối Cổng kia, hoặc đặt cùng một "Mã cặp" cho hai cổng. Người, đồ vật và xe đều đi qua được.',
   inputs: [
-    { id: 'partner', type: 'object', label: 'Cổng đối diện' },
+    { id: 'partner', type: 'object', label: 'Cổng đối diện', required: true },
     { id: 'on', type: 'bool', label: 'Bật', default: true },
   ],
   outputs: [
