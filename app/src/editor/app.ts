@@ -13,6 +13,7 @@ import {
 import { createGameView } from '../render/game-view';
 import { h, isTypingTarget } from './dom';
 import { countUnavailable, createEditorState } from './editor-state';
+import { mountSceneTree } from './scene-tree';
 import { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID, createDock, createMount } from './dock-tabs';
 import { installEntityDrag } from './entity-drag';
 import { mountIconSprite } from './icons';
@@ -104,12 +105,14 @@ export function mountEditor(root: HTMLElement): void {
     });
   }
 
+  const sceneMount = createMount(DOCK_SCENE_ID, SHELL_TEXT.scenePlaceholder);
+  mountSceneTree(sceneMount, state);
   const leftDock = createDock({
     className: 'dock-left',
     ariaLabel: SHELL_TEXT.dockLeftAria,
     initial: 'palette',
     tabs: [
-      { id: 'scene', label: SHELL_TEXT.tabScene, icon: 'tree', panel: createMount(DOCK_SCENE_ID, SHELL_TEXT.scenePlaceholder) },
+      { id: 'scene', label: SHELL_TEXT.tabScene, icon: 'tree', panel: sceneMount },
       { id: 'palette', label: SHELL_TEXT.tabPalette, icon: 'blocks', panel: palette },
     ],
     onSelect: () => {
