@@ -34,6 +34,16 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
 - Integration: vehicles/seated drivers not damageable; key-door hint hides after opening; health bar lifts above carried item.
 - Samples (11): side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot, arena, race. Lessons: 9.
 
+## Latest (2026-10-29 13:20) — main = 657b7be, 631 tests, 41 node kinds, 14 samples, 10 lessons
+- Lesson 10 is 'bot-driver' (a bot boards a car and drives to a flag).
+- Gap-closing batch, all merged (design in `plans/reports/brainstorm-261029-1255-gap-closing-batch-report.md`; each feature's report is `plans/reports/fullstack-developer-261029-1300-wt-*`):
+  - Editor tools: undo/redo, multi-select copy/paste/duplicate, sticky notes saved in board JSON.
+  - Logic/sensors: random (seeded), latch, map-range, zone sensor, distance; sample dice-zones.
+  - Objects: moving platform (carries riders), rotating platform (90° steps when solid, spin when not), shooter, spawner; sample dodge-shoot.
+  - Camera/teleport: play-camera node, teleport, portal pairs; sample portal-camera.
+- A post-merge browser sweep is running; its report will be `plans/reports/tester-261029-1320-post-merge-sweep-report.md`.
+- Bots treat moving/turning blocks as empty space when pathfinding.
+
 ## Known issues / ideas
 - Characters pass through each other; vehicles pass through each other.
 - Health-bar lift and 3D vehicle visuals only unit-tested (not eyeballed in browser).
