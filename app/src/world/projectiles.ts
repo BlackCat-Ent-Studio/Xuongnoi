@@ -1,4 +1,5 @@
 import type { EntityId, ShotSpec, Vec3, ViewMode } from '../engine/types';
+import { colliderBox } from './collider';
 import type { Entity } from './entity';
 
 /** Shots fly straight (or in an arc when gravity is on) and stop at the first solid or character they meet. */
@@ -66,10 +67,12 @@ export function muzzlePosition(shooter: Entity, dir: Vec3, size: number, mode: V
 }
 
 function overlaps(a: Entity, b: Entity): boolean {
+  const ba = colliderBox(a);
+  const bb = colliderBox(b);
   return (
-    Math.abs(a.pos.x - b.pos.x) < (a.size.x + b.size.x) / 2 &&
-    Math.abs(a.pos.y - b.pos.y) < (a.size.y + b.size.y) / 2 &&
-    Math.abs(a.pos.z - b.pos.z) < (a.size.z + b.size.z) / 2
+    Math.abs(ba.pos.x - bb.pos.x) < (ba.size.x + bb.size.x) / 2 &&
+    Math.abs(ba.pos.y - bb.pos.y) < (ba.size.y + bb.size.y) / 2 &&
+    Math.abs(ba.pos.z - bb.pos.z) < (ba.size.z + bb.size.z) / 2
   );
 }
 

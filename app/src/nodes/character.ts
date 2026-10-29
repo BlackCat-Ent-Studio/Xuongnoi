@@ -1,4 +1,5 @@
 import type { EntityId, NodeDef } from '../engine/types';
+import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
 import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
 
 export const characterNode: NodeDef<{ id: EntityId }> = {
@@ -47,8 +48,9 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
         { value: 'bot', label: 'Bot (do mảnh ghép Bộ não điều khiển)' },
       ],
     },
+    ...BODY_PARAMS,
   ],
-  createOnly: ['position', 'color', 'look', 'role'],
+  createOnly: ['position', 'color', 'look', 'role', ...BODY_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
     look: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { look: String(p.look) }),
@@ -63,6 +65,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       look: strParam(params, 'look', 'human'),
       role: strParam(params, 'role', 'player') === 'bot' ? 'bot' : 'player',
       solid: true,
+      ...bodySpec(params),
     });
     return { id };
   },

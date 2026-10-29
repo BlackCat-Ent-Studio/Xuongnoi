@@ -56,6 +56,8 @@ export function createGameView(): GameView {
   let drag: { id: number; x: number; y: number; kind: 'orbit' | 'pan' } | null = null;
   let resetBtn: HTMLButtonElement | null = null;
   let resetOnNextPreview = false;
+  /** Graph nodes selected in the editor; their objects get a collision frame while editing. */
+  let selectedOwners: ReadonlySet<string> = new Set();
 
   const raycaster = new THREE.Raycaster();
   const uiBuf = new UiInputBuffer();
@@ -72,6 +74,7 @@ export function createGameView(): GameView {
     if (!renderer) return;
     const entities = world ? world.entities() : [];
     sceneView.sync(entities, dt);
+    sceneView.syncColliderFrames(entities, playing ? new Set() : selectedOwners);
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
     if (rig.mode === '3d') sceneView.focusSun(rig.focus, rig.size);
     renderer.render(sceneView.scene, rig.camera);
@@ -419,6 +422,11 @@ export function createGameView(): GameView {
         console.error(err);
         return false;
       }
+    },
+
+    setSelection(ownerNodeIds: ReadonlySet<string>): void {
+      selectedOwners = new Set(ownerNodeIds);
+      redrawStatic();
     },
 
     isPlaying: () => playing,

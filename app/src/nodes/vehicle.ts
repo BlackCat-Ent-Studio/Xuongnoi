@@ -1,6 +1,7 @@
 import type { EntityId, NodeDef, SteerMode, VehicleModel } from '../engine/types';
 import { VEHICLE_MODELS } from '../engine/types';
 import { vehicleSize } from '../world/vehicles';
+import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
 import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
 
 function modelParam(raw: string): VehicleModel {
@@ -92,8 +93,9 @@ export const vehicleNode: NodeDef<VehicleState> = {
         { value: 'no', label: 'Không (xe đi xuyên qua nhau)' },
       ],
     },
+    ...BODY_PARAMS,
   ],
-  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide'],
+  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide', ...BODY_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -113,6 +115,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
         accel: numParam(params, 'accel', 8),
         ...(strParam(params, 'collide', 'yes') === 'no' ? { collide: false } : {}),
       },
+      ...bodySpec(params),
     });
     return { id, seenHits: 0 };
   },

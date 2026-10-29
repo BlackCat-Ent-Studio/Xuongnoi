@@ -30,6 +30,8 @@ export interface GameView {
    * in the running game; false = not playing, unknown node/param, or it only applies on the next run.
    */
   applyNodeParams(nodeId: string, params: Record<string, unknown>): boolean;
+  /** Edit mode: the graph nodes currently selected; the objects they own get a green collision-box frame. Hidden while playing. */
+  setSelection(ownerNodeIds: ReadonlySet<string>): void;
   /** Runtime of the current play session (for wire value inspection), null when not playing. */
   getRuntime(): Runtime | null;
   /** Graph node id owning the entity under the pointer, or null. */

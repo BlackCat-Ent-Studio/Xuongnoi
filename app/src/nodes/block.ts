@@ -1,5 +1,6 @@
 import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf } from '../engine/block-styles';
 import type { EntityId, NodeDef } from '../engine/types';
+import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
 import { asBool, asNum, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 interface BlockState {
@@ -51,8 +52,9 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'color1', label: 'Màu 1', kind: 'color', default: TRAFFIC_COLORS[0] },
     { id: 'color2', label: 'Màu 2', kind: 'color', default: TRAFFIC_COLORS[1] },
     { id: 'color3', label: 'Màu 3', kind: 'color', default: TRAFFIC_COLORS[2] },
+    ...BODY_PARAMS,
   ],
-  createOnly: ['position', 'size', 'color', 'type', 'style', 'signText'],
+  createOnly: ['position', 'size', 'color', 'type', 'style', 'signText', ...BODY_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -66,6 +68,7 @@ export const blockNode: NodeDef<BlockState> = {
       solid: strParam(params, 'type', 'solid') !== 'pickup',
       blockStyle: blockStyleOf(strParam(params, 'style', 'box')),
       label: strParam(params, 'signText', '').trim(),
+      ...bodySpec(params),
     });
     return { id, pick: 0, hide: { prev: false }, show: { prev: false }, hidden: false };
   },

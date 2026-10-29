@@ -1,5 +1,6 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
+import { boxOverlap, colliderBox, colliderOffset } from './collider';
 import { lockMotion } from './combat';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
@@ -25,10 +26,20 @@ function clamp1(n: number): number {
 }
 
 function overlapOn(a: Entity, b: Entity, axis: Axis): number {
-  return (
-    Math.min(a.pos[axis] + a.size[axis] / 2, b.pos[axis] + b.size[axis] / 2) -
-    Math.max(a.pos[axis] - a.size[axis] / 2, b.pos[axis] - b.size[axis] / 2)
-  );
+  return boxOverlap(a, b, axis);
+}
+
+/** Gravity of one body: the world pull times its own scale (1 = normal, 0 = floats). */
+function gravityOf(e: Entity): number {
+  return GRAVITY * (e.gravityScale ?? 1);
+}
+
+/** Puts `c` flush against `b` on one side along `axis` (collision boxes touch; offsets are respected). */
+function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
+  const cb = colliderBox(c);
+  const bb = colliderBox(b);
+  const half = (cb.size[axis] + bb.size[axis]) / 2;
+  c.pos[axis] = (delta > 0 ? bb.pos[axis] - half : bb.pos[axis] + half) - colliderOffset(c, axis);
 }
 
 function overlapsAll(a: Entity, b: Entity): boolean {
@@ -40,10 +51,12 @@ export function touching(a: Entity, b: Entity): boolean {
   // A spinning block touches through its rotated outline, not its bounding box.
   if (isSpinner(a)) return spinnerTouches(a, b);
   if (isSpinner(b)) return spinnerTouches(b, a);
+  const ba = colliderBox(a);
+  const bb = colliderBox(b);
   return (
-    Math.abs(a.pos.x - b.pos.x) <= (a.size.x + b.size.x) / 2 + CONTACT_EPS &&
-    Math.abs(a.pos.y - b.pos.y) <= (a.size.y + b.size.y) / 2 + CONTACT_EPS &&
-    Math.abs(a.pos.z - b.pos.z) <= (a.size.z + b.size.z) / 2 + CONTACT_EPS
+    Math.abs(ba.pos.x - bb.pos.x) <= (ba.size.x + bb.size.x) / 2 + CONTACT_EPS &&
+    Math.abs(ba.pos.y - bb.pos.y) <= (ba.size.y + bb.size.y) / 2 + CONTACT_EPS &&
+    Math.abs(ba.pos.z - bb.pos.z) <= (ba.size.z + bb.size.z) / 2 + CONTACT_EPS
   );
 }
 
@@ -56,15 +69,13 @@ function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[
   let blocked = false;
   for (const b of solids) {
     if (!overlapsAll(c, b)) continue;
-    const half = (c.size[axis] + b.size[axis]) / 2;
-    c.pos[axis] = delta > 0 ? b.pos[axis] - half : b.pos[axis] + half;
+    pushOut(c, b, axis, delta);
     blocked = true;
   }
   if (rivals && free) {
     for (const r of free) {
       if (!overlapsAll(c, r)) continue;
-      const half = (c.size[axis] + r.size[axis]) / 2;
-      c.pos[axis] = delta > 0 ? r.pos[axis] - half : r.pos[axis] + half;
+      pushOut(c, r, axis, delta);
       rivals.hit.add(r);
       blocked = true;
     }
@@ -139,17 +150,27 @@ const ITEM_FRICTION = 10;
 const ITEM_FRICTION_TOP = 3;
 /** Below this horizontal speed a sliding item stops dead. */
 const ITEM_STOP_SPEED = 0.05;
+/** Friction an item gets when its node does not say otherwise. */
+export const DEFAULT_ITEM_FRICTION = ITEM_FRICTION;
+/** A fall slower than this does not bounce, so a bouncing item eventually settles. */
+const BOUNCE_MIN_SPEED = 1.5;
 
 function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): void {
   if (mode === '2d-top') item.vel.y = 0;
-  else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + GRAVITY * dt);
+  else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + gravityOf(item) * dt);
   if (mode === '2d-side') {
     item.pos.z = 0;
     item.vel.z = 0;
   }
+  const fallSpeed = item.vel.y;
   item.onGround = integrate(item, dt, mode, solids);
+  if (item.onGround && item.bounce && fallSpeed < -BOUNCE_MIN_SPEED) {
+    item.vel.y = -fallSpeed * item.bounce;
+    item.onGround = false;
+  }
   if (item.onGround || mode === '2d-top') {
-    const k = Math.max(0, 1 - (mode === '2d-top' ? ITEM_FRICTION_TOP : ITEM_FRICTION) * dt);
+    const friction = item.friction ?? ITEM_FRICTION;
+    const k = Math.max(0, 1 - (mode === '2d-top' ? (friction * ITEM_FRICTION_TOP) / ITEM_FRICTION : friction) * dt);
     item.vel.x *= k;
     item.vel.z *= k;
     if (Math.hypot(item.vel.x, item.vel.z) < ITEM_STOP_SPEED) {
@@ -206,7 +227,7 @@ function stepVehicle(
   v.vel.z = flat.z;
   v.facing = vehicleFacing(body, mode);
   if (mode === '2d-top') v.vel.y = 0;
-  else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + GRAVITY * dt);
+  else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + gravityOf(v) * dt);
   if (mode === '2d-side') v.pos.z = 0;
   v.onGround = integrate(v, dt, mode, solids, rivals);
   settleVehicle(body, v.vel, wanted, dt, mode);
@@ -283,7 +304,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (mode === '2d-top') {
       c.vel.y = 0;
     } else {
-      c.vel.y = Math.max(-TERMINAL_SPEED, c.vel.y + GRAVITY * dt);
+      c.vel.y = Math.max(-TERMINAL_SPEED, c.vel.y + gravityOf(c) * dt);
     }
     if (mode === '2d-side') c.pos.z = 0;
 

@@ -1,3 +1,4 @@
+import { colliderBox, type ColliderSpec } from './collider';
 import { combatView, type CombatState } from './combat';
 import type {
   CharacterIntent,
@@ -71,6 +72,20 @@ export interface Entity {
   label?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
+
+  // ---- collision and body tuning; unset = plain visual box and normal physics ----
+  collider?: ColliderSpec;
+  /** Gravity multiplier; unset = 1. */
+  gravityScale?: number;
+  /** Items: ground friction; unset = default. */
+  friction?: number;
+  /** Items: 0..1 landing bounce; unset = none. */
+  bounce?: number;
+}
+
+function colliderView(e: Entity): { position: Vec3; size: Vec3 } {
+  const b = colliderBox(e);
+  return { position: { ...b.pos }, size: { ...b.size } };
 }
 
 export function toView(e: Entity): EntityView {
@@ -97,6 +112,7 @@ export function toView(e: Entity): EntityView {
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
     ...(e.zone ? { zone: true } : {}),
     ...turnAngle(e),
+    ...(e.collider ? { collider: colliderView(e) } : {}),
     visible: e.visible,
   };
 }

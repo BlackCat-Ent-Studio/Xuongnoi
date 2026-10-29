@@ -686,6 +686,9 @@ export function mountEditor(root: HTMLElement): void {
       case 'mode':
         schedulePreview();
         break;
+      case 'selection':
+        gameView.setSelection(state.getMulti());
+        break;
       default:
         break;
     }

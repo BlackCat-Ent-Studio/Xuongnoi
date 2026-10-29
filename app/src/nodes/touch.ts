@@ -11,7 +11,10 @@ interface TouchState {
 type TouchMode = 'edge' | 'center' | 'inside';
 
 /** Geometric test on the axes the current view uses; grow > 0 widens A's box, < 0 shrinks it. */
-function boxTest(a: EntityView, b: EntityView, mode: TouchMode, grow: number, useY: boolean, useZ: boolean): boolean {
+function boxTest(viewA: EntityView, viewB: EntityView, mode: TouchMode, grow: number, useY: boolean, useZ: boolean): boolean {
+  // Objects with a custom collision box are tested by that box, not by what is drawn.
+  const a = { position: viewA.collider?.position ?? viewA.position, size: viewA.collider?.size ?? viewA.size };
+  const b = { position: viewB.collider?.position ?? viewB.position, size: viewB.collider?.size ?? viewB.size };
   const axes: ('x' | 'y' | 'z')[] = ['x'];
   if (useY) axes.push('y');
   if (useZ) axes.push('z');
