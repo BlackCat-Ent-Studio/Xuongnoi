@@ -51,6 +51,7 @@ export function removeWire(graph: Graph, wireId: string): Graph {
 /** Removes a node and every wire attached to it. */
 export function removeNode(graph: Graph, nodeId: string): Graph {
   return {
+    ...graph,
     nodes: graph.nodes.filter((n) => n.id !== nodeId),
     wires: graph.wires.filter((w) => w.from.node !== nodeId && w.to.node !== nodeId),
   };

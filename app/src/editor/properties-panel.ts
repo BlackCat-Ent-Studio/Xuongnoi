@@ -2,6 +2,7 @@ import { getNodeDef } from '../engine/registry';
 import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { h } from './dom';
+import { renderGroupInspector, renderMultiSelect } from './groups/group-inspector';
 import { createLookPicker, type LookPicker } from './look-picker';
 import type { EditorState } from './editor-state';
 import { categoryTile, panelIcon } from './panels/panel-icons';
@@ -332,6 +333,14 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     const graph = state.getGraph();
     const playing = state.isPlaying();
 
+    if (sel?.kind === 'group' && renderGroupInspector(el, state, sel.id)) return;
+    if (!sel) {
+      const loose = [...state.getMulti()].filter((id) => graph.nodes.some((n) => n.id === id));
+      if (loose.length >= 2) {
+        renderMultiSelect(el, state, loose.length);
+        return;
+      }
+    }
     if (sel?.kind === 'node') {
       const node = graph.nodes.find((n) => n.id === sel.id);
       const def = node ? getNodeDef(node.kind) : undefined;

@@ -15,6 +15,18 @@ import type {
 } from '../engine/types';
 import { addWire, removeNode, removeWire } from '../engine/wiring';
 import { PASTE_OFFSET, buildClip, pasteClip, readStoredClip, writeStoredClip } from './clipboard';
+import {
+  cleanGroupName,
+  createGroup,
+  findGroup,
+  groupOfNode,
+  groupsOf,
+  patchGroup,
+  pruneGroups,
+  ungroup,
+  withGroups,
+  type GroupFail,
+} from './groups/group-model';
 import { createHistory } from './history';
 import { nextNodeId } from './node-ids';
 
@@ -23,6 +35,7 @@ export { nextNodeId };
 /**
  * graph: structure changed (nodes/wires). params: a param value changed. layout: node moved on canvas.
  * board: a whole new board was loaded. notes: sticky notes changed. history: undo/redo availability changed.
+ * scope: the canvas entered or left a group (navigation only, never a document change).
  */
 export type ChangeKind =
   | 'graph'
@@ -34,9 +47,10 @@ export type ChangeKind =
   | 'playing'
   | 'board'
   | 'notes'
-  | 'history';
+  | 'history'
+  | 'scope';
 
-export type Selection = { kind: 'node' | 'wire' | 'note'; id: string } | null;
+export type Selection = { kind: 'node' | 'wire' | 'note' | 'group'; id: string } | null;
 
 // ---------- pure helpers ----------
 
@@ -56,6 +70,14 @@ export function createNode(graph: Graph, kind: string, pos: { x: number; y: numb
   const params: Params = {};
   for (const p of def.params) params[p.id] = cloneParam(p.default);
   return { id: nextNodeId(graph), kind, params, pos: { x: Math.round(pos.x), y: Math.round(pos.y) } };
+}
+
+/** Adds a node to the member list of an existing group. */
+function addMember(graph: Graph, groupId: string, nodeId: string): Graph {
+  return withGroups(
+    graph,
+    groupsOf(graph).map((g) => (g.id === groupId ? { ...g, nodeIds: [...g.nodeIds, nodeId] } : g)),
+  );
 }
 
 export function withParam(graph: Graph, nodeId: string, paramId: string, value: ParamValue): Graph {
@@ -110,14 +132,29 @@ export interface NotePatch {
 
 type Move = { id: string; pos: { x: number; y: number } };
 
+export type GroupResult = { ok: true; groupId: string } | { ok: false; reason: GroupFail | 'locked' | 'in-group' };
+
 export interface EditorState {
   getBoard(): Board;
   getGraph(): Graph;
   getNotes(): readonly Note[];
   getMode(): ViewMode;
   getSelection(): Selection;
-  /** Ids of every selected node and note (single selections included). */
+  /** Ids of every selected node, group and note (single selections included). */
   getMulti(): ReadonlySet<string>;
+  /** Id of the group the canvas is inside, or null on the main board. */
+  getScope(): string | null;
+  /** Show the inside of a group (no-op for an unknown id). Clears the selection. */
+  enterGroup(id: string): void;
+  /** Back to the main board. */
+  exitGroup(): void;
+  /** Gom nhóm: replace the selected loose nodes by one named block. */
+  groupSelection(): GroupResult;
+  /** Bung nhóm: dissolve the selected groups, or the entered one when nothing is selected. Returns how many. */
+  ungroupSelection(): number;
+  renameGroup(id: string, name: string): void;
+  /** `null` restores the default colour. */
+  setGroupColor(id: string, color: string | null): void;
   isPlaying(): boolean;
   subscribe(fn: (kind: ChangeKind) => void): () => void;
   loadBoard(board: Board): void;
@@ -132,7 +169,7 @@ export interface EditorState {
   addNode(kind: string, pos: { x: number; y: number }): string | null;
   setParam(nodeId: string, paramId: string, value: ParamValue): void;
   setNodePos(nodeId: string, pos: { x: number; y: number }): void;
-  /** Move nodes and/or notes in one undo step. */
+  /** Move nodes, groups and/or notes in one undo step. */
   moveItems(moves: readonly Move[], opts?: { amend?: boolean }): void;
   /** `replace`: an occupied input drops its old wire inside the same undo step instead of failing. */
   connect(from: PortRef, to: PortRef, opts?: { replace?: boolean }): ConnectResult;
@@ -155,6 +192,7 @@ export function createEditorState(initial: Board): EditorState {
   let board = initial;
   let selection: Selection = null;
   let multi = new Set<string>();
+  let scope: string | null = null;
   let playing = false;
   let clip: Board | null = null;
   let pasteStep = 0;
@@ -166,11 +204,13 @@ export function createEditorState(initial: Board): EditorState {
   };
   const notesOf = (): readonly Note[] => board.notes ?? [];
   const isNote = (id: string): boolean => notesOf().some((n) => n.id === id);
+  const isGroup = (id: string): boolean => groupsOf(board.graph).some((g) => g.id === id);
 
   /** Records the current board for undo, then swaps in `next`. */
   const commit = (next: Board, kinds: readonly ChangeKind[], key?: string): void => {
     history.record(board, key);
-    board = next;
+    board = { ...next, graph: pruneGroups(next.graph) };
+    if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     for (const k of kinds) emit(k);
     emit('history');
   };
@@ -194,14 +234,25 @@ export function createEditorState(initial: Board): EditorState {
   const selectionFor = (ids: ReadonlySet<string>): Selection => {
     if (ids.size !== 1) return null;
     const id = [...ids][0] as string;
-    return { kind: isNote(id) ? 'note' : 'node', id };
+    return { kind: isNote(id) ? 'note' : isGroup(id) ? 'group' : 'node', id };
   };
+
+  /** Switch what the canvas shows. The selection is cleared because its items may be hidden now. */
+  function setScope(next: string | null): void {
+    if (next === scope) return;
+    scope = next;
+    selection = null;
+    multi = new Set();
+    emit('scope');
+    emit('selection');
+  }
 
   /** Swap the whole board for an undo/redo step and tell every listener what changed. */
   const restore = (next: Board): void => {
     const prev = board;
     board = next;
-    const alive = new Set([...board.graph.nodes.map((n) => n.id), ...notesOf().map((n) => n.id)]);
+    const alive = new Set([...board.graph.nodes.map((n) => n.id), ...groupsOf(board.graph).map((g) => g.id), ...notesOf().map((n) => n.id)]);
+    if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     if (selection?.kind === 'wire') {
       const id = selection.id;
       if (!board.graph.wires.some((w) => w.id === id)) selection = null;
@@ -219,6 +270,12 @@ export function createEditorState(initial: Board): EditorState {
 
   /** Board with the moved positions applied, or null when nothing actually moved. */
   const applyMoves = (moves: readonly Move[]): { board: Board; notesMoved: boolean } | null => {
+    const byGroup = new Map(moves.map((m) => [m.id, m.pos]));
+    const groups = groupsOf(board.graph).map((g) => {
+      const p = byGroup.get(g.id);
+      return p && (p.x !== g.x || p.y !== g.y) ? { ...g, x: p.x, y: p.y } : g;
+    });
+    const groupsMoved = groups.some((g, i) => g !== groupsOf(board.graph)[i]);
     const byId = new Map(moves.map((m) => [m.id, m.pos]));
     const moved = <T extends { id: string; pos: { x: number; y: number } }>(items: readonly T[]): T[] | null => {
       let changed = false;
@@ -232,15 +289,16 @@ export function createEditorState(initial: Board): EditorState {
     };
     const nodes = moved(board.graph.nodes);
     const notes = moved(notesOf());
-    if (!nodes && !notes) return null;
+    if (!nodes && !notes && !groupsMoved) return null;
     let next: Board = nodes ? { ...board, graph: { ...board.graph, nodes } } : board;
+    if (groupsMoved) next = { ...next, graph: withGroups(next.graph, groups) };
     if (notes) next = { ...next, notes };
     return { board: next, notesMoved: notes !== null };
   };
 
   const insertClip = (source: Board, step: number): number => {
     const off = PASTE_OFFSET * step;
-    const res = pasteClip(board.graph, notesOf(), source, { x: off, y: off });
+    const res = pasteClip(board.graph, notesOf(), source, { x: off, y: off }, scope);
     if (res.newIds.length === 0) return 0;
     const hasNotes = (source.notes?.length ?? 0) > 0;
     commit(withNotes({ ...board, graph: res.graph }, res.notes), hasNotes ? ['graph', 'notes'] : ['graph']);
@@ -270,6 +328,48 @@ export function createEditorState(initial: Board): EditorState {
     getMode: () => board.mode,
     getSelection: () => selection,
     getMulti: () => multi,
+    getScope: () => scope,
+    enterGroup(id) {
+      if (isGroup(id)) setScope(id);
+    },
+    exitGroup() {
+      setScope(null);
+    },
+    groupSelection() {
+      if (playing) return { ok: false, reason: 'locked' };
+      if (scope !== null) return { ok: false, reason: 'in-group' };
+      const ids = [...multi];
+      if (ids.some(isGroup)) return { ok: false, reason: 'has-group' };
+      const res = createGroup(board.graph, ids.filter((i) => !isNote(i)));
+      if (!res.ok) return res;
+      commit({ ...board, graph: res.graph }, ['graph']);
+      setSelectionState({ kind: 'group', id: res.groupId }, new Set([res.groupId]));
+      return { ok: true, groupId: res.groupId };
+    },
+    ungroupSelection() {
+      if (playing) return 0;
+      const ids = [...multi].filter(isGroup);
+      if (ids.length === 0 && scope !== null) ids.push(scope);
+      if (ids.length === 0) return 0;
+      let graph = board.graph;
+      for (const id of ids) graph = ungroup(graph, id);
+      const members = new Set(ids.flatMap((id) => findGroup(board.graph, id)?.nodeIds ?? []));
+      scope = null;
+      commit({ ...board, graph }, ['scope', 'graph']);
+      setSelectionState(selectionFor(members), members);
+      return ids.length;
+    },
+    renameGroup(id, name) {
+      const clean = cleanGroupName(name);
+      const g = findGroup(board.graph, id);
+      if (playing || !g || !clean || clean === g.name) return;
+      commit({ ...board, graph: patchGroup(board.graph, id, { name: clean }) }, ['graph'], `gname:${id}`);
+    },
+    setGroupColor(id, color) {
+      const g = findGroup(board.graph, id);
+      if (playing || !g || (color ?? undefined) === g.color) return;
+      commit({ ...board, graph: patchGroup(board.graph, id, { color: color ?? undefined }) }, ['graph']);
+    },
     isPlaying: () => playing,
     subscribe(fn) {
       listeners.add(fn);
@@ -279,6 +379,7 @@ export function createEditorState(initial: Board): EditorState {
       board = next;
       selection = null;
       multi = new Set();
+      scope = null;
       history.clear();
       emit('board');
       emit('history');
@@ -298,6 +399,11 @@ export function createEditorState(initial: Board): EditorState {
       emit('history');
     },
     select(sel) {
+      // A node selected from elsewhere (scene tree, issue list, game view) may live in a group the canvas is not showing.
+      if (sel?.kind === 'node') {
+        const home = groupOfNode(board.graph, sel.id)?.id ?? null;
+        if (home !== scope) setScope(home);
+      }
       setSelectionState(sel, sel && sel.kind !== 'wire' ? new Set([sel.id]) : new Set());
     },
     toggleSelect(id) {
@@ -314,7 +420,8 @@ export function createEditorState(initial: Board): EditorState {
       if (playing) return null;
       const node = createNode(board.graph, kind, pos);
       if (!node) return null;
-      commit({ ...board, graph: { ...board.graph, nodes: [...board.graph.nodes, node] } }, ['graph']);
+      const graph = { ...board.graph, nodes: [...board.graph.nodes, node] };
+      commit({ ...board, graph: scope === null ? graph : addMember(graph, scope, node.id) }, ['graph']);
       setSelectionState({ kind: 'node', id: node.id }, new Set([node.id]));
       return node.id;
     },
@@ -354,7 +461,9 @@ export function createEditorState(initial: Board): EditorState {
       }
       if (multi.size === 0) return false;
       let graph = board.graph;
-      for (const n of board.graph.nodes) if (multi.has(n.id)) graph = removeNode(graph, n.id);
+      const doomed = new Set(multi);
+      for (const g of groupsOf(graph)) if (multi.has(g.id)) for (const id of g.nodeIds) doomed.add(id);
+      for (const n of board.graph.nodes) if (doomed.has(n.id)) graph = removeNode(graph, n.id);
       const keptNotes = notesOf().filter((n) => !multi.has(n.id));
       const notesChanged = keptNotes.length !== notesOf().length;
       selection = null;
