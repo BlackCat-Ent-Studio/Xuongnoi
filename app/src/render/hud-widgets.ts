@@ -6,7 +6,31 @@ export const HUD_CORNER_LIST: HudCorner[] = ['top-left', 'top-right', 'bottom-le
 export function cornerStyle(c: HudCorner): string {
   const v = c.startsWith('top') ? 'top:8px;' : 'bottom:8px;';
   const h = c.endsWith('left') ? 'left:8px;text-align:left;align-items:flex-start;' : 'right:8px;text-align:right;align-items:flex-end;';
-  return `position:absolute;${v}${h}display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px #fff;`;
+  return `position:absolute;${v}${h}display:flex;flex-direction:column;gap:4px;text-shadow:0 1px 2px rgba(0,0,0,0.6);`;
+}
+
+/** Text colour used when a HUD item sets none: white, for the dark backdrop. */
+export const HUD_TEXT_COLOR = '#ffffff';
+const BACKDROP_DARK = 'rgba(10,12,16,0.6)';
+const BACKDROP_LIGHT = 'rgba(255,255,255,0.8)';
+
+function isDarkColor(c: string): boolean {
+  const m = /^#([0-9a-f]{6})$/i.exec(c);
+  if (!m) return false;
+  const n = Number.parseInt(m[1] ?? '000000', 16);
+  return (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255 < 0.4;
+}
+
+/** Text colour and backdrop that keep `color` (default white) readable over any scene. A dark chosen colour gets a light backdrop. */
+export function readableStyle(color?: string): { color: string; background: string } {
+  const c = color ?? HUD_TEXT_COLOR;
+  return { color: c, background: isDarkColor(c) ? BACKDROP_LIGHT : BACKDROP_DARK };
+}
+
+/** CSS for a rounded text backdrop. */
+export function backdropCss(color?: string, radius = 6): string {
+  const s = readableStyle(color);
+  return `color:${s.color};background:${s.background};padding:2px 8px;border-radius:${radius}px;`;
 }
 
 /** Click and hold events a widget sends back to the game. */
@@ -124,6 +148,7 @@ export class CornerWidgets {
     el.style.cssText = 'display:flex;flex-direction:column;gap:2px;min-width:140px;';
     const caption = document.createElement('div');
     caption.textContent = `${item.label}: ${fmt(item.value)}`;
+    caption.style.cssText = `${backdropCss()}align-self:flex-start;`;
     const track = barTrack();
     fillBar(track, fraction, item.color ?? '#e11d48');
     el.replaceChildren(caption, track);

@@ -1,6 +1,6 @@
 import type { GameResult, HudCorner, HudItem } from '../engine/types';
 import { HudModals } from './hud-modals';
-import { CornerWidgets, HUD_CORNER_LIST, barTrack, cornerStyle, fillBar, type WidgetEvents } from './hud-widgets';
+import { CornerWidgets, HUD_CORNER_LIST, backdropCss, barTrack, cornerStyle, fillBar, readableStyle, type WidgetEvents } from './hud-widgets';
 import { TEXT_VI } from './text-vi';
 
 /** Whole numbers as-is; fractional values (e.g. a running timer) rounded to one decimal. */
@@ -72,7 +72,7 @@ export class Hud {
       if (!el) continue;
       const row = document.createElement('div');
       row.textContent = item.text !== undefined ? item.text : `${item.label}: ${formatHudValue(item.value)}`;
-      if (item.text !== undefined && item.color) row.style.color = item.color;
+      row.style.cssText = backdropCss(item.text !== undefined ? item.color : undefined);
       el.appendChild(row);
     }
   }
@@ -86,7 +86,7 @@ export class Hud {
       if (!el) {
         el = document.createElement('div');
         el.style.cssText =
-          'position:absolute;left:0;top:0;white-space:nowrap;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.25);font-size:14px;';
+          'position:absolute;left:0;top:0;white-space:nowrap;padding:2px 8px;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.35);font-size:14px;';
         this.floating.set(l.key, el);
         this.root.insertBefore(el, this.modals.firstEl);
       }
@@ -95,7 +95,9 @@ export class Hud {
       } else {
         this.paintFloatingBar(el, l);
       }
-      el.style.color = l.color;
+      const look = readableStyle(l.bar === undefined ? l.color : undefined);
+      el.style.color = look.color;
+      el.style.background = look.background;
       el.style.transform = `translate(${Math.round(l.x)}px,${Math.round(l.y)}px) translate(-50%,-100%)`;
     }
     for (const [key, el] of this.floating) {
