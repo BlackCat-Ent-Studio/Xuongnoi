@@ -34,6 +34,11 @@ function loadInitialBoard(): Board {
   }
 }
 
+/** True when the user has highlighted page text, so Ctrl+C should keep its normal meaning. */
+function hasTextSelection(): boolean {
+  return (window.getSelection()?.toString() ?? '') !== '';
+}
+
 export function mountEditor(root: HTMLElement): void {
   const state = createEditorState(loadInitialBoard());
   const gameView: GameView = createGameView();
@@ -46,8 +51,15 @@ export function mountEditor(root: HTMLElement): void {
     notify: (t, k) => topBar.notify(t, k),
   });
 
+  const addNoteAtCenter = (): void => {
+    const c = canvas.viewCenter();
+    const n = state.getNotes().length % 6;
+    state.addNote({ x: c.x - 90 + n * 24, y: c.y - 55 + n * 24 });
+  };
+
   const palette = createPalette({
     state,
+    onAddNote: addNoteAtCenter,
     onAdd(kind, cx, cy) {
       let pos;
       if (cx !== null && cy !== null) {
@@ -87,6 +99,7 @@ export function mountEditor(root: HTMLElement): void {
       );
     },
     onOpenSample: (b) => loadBoard(structuredClone(b)),
+    onAddNote: addNoteAtCenter,
     onChangeMode(mode) {
       state.setMode(mode);
       const n = countUnavailable(state.getGraph(), mode);
@@ -221,6 +234,37 @@ export function mountEditor(root: HTMLElement): void {
     if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
       setMaximized(!root.classList.contains('maximized'));
       return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+      const key = e.key.toLowerCase();
+      if (key === 'z' || key === 'y') {
+        e.preventDefault();
+        if (key === 'y' || e.shiftKey) state.redo();
+        else state.undo();
+        return;
+      }
+      if (key === 'c' && !hasTextSelection()) {
+        const n = state.copy();
+        if (n > 0) {
+          e.preventDefault();
+          topBar.notify(TEXT_VI.copied(n));
+        }
+        return;
+      }
+      if (key === 'v') {
+        const n = state.paste();
+        if (n > 0) {
+          e.preventDefault();
+          topBar.notify(TEXT_VI.pasted(n));
+        }
+        return;
+      }
+      if (key === 'd') {
+        e.preventDefault();
+        const n = state.duplicate();
+        if (n > 0) topBar.notify(TEXT_VI.duplicated(n));
+        return;
+      }
     }
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (state.deleteSelection()) e.preventDefault();

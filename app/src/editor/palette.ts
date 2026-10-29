@@ -12,9 +12,10 @@ export interface PaletteDeps {
   state: EditorState;
   /** Add a node. Coordinates are client px when dropped, or null for "add at the center". */
   onAdd(kind: string, clientX: number | null, clientY: number | null): void;
+  onAddNote(): void;
 }
 
-export function createPalette({ state, onAdd }: PaletteDeps): HTMLElement {
+export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): HTMLElement {
   const el = h('aside', 'palette');
   const title = h('div', 'panel-title', TEXT_VI.paletteTitle);
   const hint = h('div', 'panel-hint', TEXT_VI.paletteHint);
@@ -23,6 +24,14 @@ export function createPalette({ state, onAdd }: PaletteDeps): HTMLElement {
 
   function render(): void {
     list.replaceChildren();
+    const noteItem = h('button', 'palette-item palette-note', TEXT_VI.addNote);
+    noteItem.type = 'button';
+    noteItem.title = TEXT_VI.addNoteTip;
+    noteItem.dataset.kind = 'note';
+    noteItem.addEventListener('click', () => {
+      if (!state.isPlaying()) onAddNote();
+    });
+    list.append(noteItem);
     const defs = listNodeDefs(state.getMode());
     for (const cat of CATEGORY_ORDER) {
       const inCat = defs.filter((d) => d.category === cat);

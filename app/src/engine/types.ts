@@ -121,10 +121,23 @@ export interface Graph {
 }
 
 /** A saved board = one game. */
+export type NoteColor = 'yellow' | 'green' | 'blue' | 'pink';
+
+/** Sticky note on the wiring canvas. Editor-only: never affects the game. */
+export interface Note {
+  id: string;
+  text: string;
+  color: NoteColor;
+  pos: { x: number; y: number };
+  size: { w: number; h: number };
+}
+
 export interface Board {
   name: string;
   mode: ViewMode;
   graph: Graph;
+  /** Optional sticky notes (absent in older files). */
+  notes?: Note[];
 }
 
 // ---------- engine API (implemented in src/engine) ----------

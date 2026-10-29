@@ -60,7 +60,7 @@ describe('editor state', () => {
   it('blocks edits while playing and notifies subscribers', () => {
     const s = createEditorState(emptyBoard());
     const seen: string[] = [];
-    s.subscribe((k) => seen.push(k));
+    s.subscribe((k) => k !== 'history' && seen.push(k));
     s.setPlaying(true);
     expect(s.addNode('key', { x: 0, y: 0 })).toBeNull();
     s.setPlaying(false);
