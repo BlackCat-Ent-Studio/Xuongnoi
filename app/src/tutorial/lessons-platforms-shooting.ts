@@ -43,7 +43,7 @@ const T = {
   },
   back1: {
     title: 'Quay lại sửa',
-    text: 'Bấm nút "Sửa" để làm tiếp.',
+    text: 'Bấm nút "Dừng" để làm tiếp.',
   },
   addShooter: {
     title: 'Thêm mảnh ghép Bắn đạn',
@@ -65,7 +65,7 @@ const T = {
   },
   hitTarget: {
     title: 'Bắn đủ ba phát',
-    text: 'Mục tiêu có 3 máu, mỗi viên đạn mất 1. Khi nó ngã xuống, bấm "Sửa" để làm tiếp.',
+    text: 'Mục tiêu có 3 máu, mỗi viên đạn mất 1. Khi nó ngã xuống, bấm "Dừng" để làm tiếp.',
     explain: 'Muốn đạn mạnh hơn hay bay xa hơn, chỉnh "Sát thương" và "Bay bao lâu" trong mảnh ghép Bắn đạn.',
   },
   addSpawner: {
@@ -130,7 +130,7 @@ const T = {
   },
   win: {
     title: 'Tới cờ rồi!',
-    text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Sửa" rồi "Chơi" thử lại.',
+    text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Dừng" rồi "Chơi" thử lại.',
     explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Sinh vật thể kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
   },
   done: {

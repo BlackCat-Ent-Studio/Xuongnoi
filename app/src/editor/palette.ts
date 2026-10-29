@@ -29,8 +29,13 @@ interface Entry {
   category: NodeCategory;
 }
 
-export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): HTMLElement {
-  const el = h('aside', 'palette pn-palette');
+export type PaletteElement = HTMLElement & {
+  /** Make the item for `kind` visible: clear the search and expand its category. */
+  reveal(kind: string): void;
+};
+
+export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): PaletteElement {
+  const el = h('aside', 'palette pn-palette') as PaletteElement;
   const title = h('div', 'panel-title pn-title', TEXT_VI.paletteTitle);
 
   const box = h('label', 'pn-search');
@@ -218,6 +223,15 @@ export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): HTMLEle
     }
     if (kind === 'playing') syncPlaying();
   });
+  el.reveal = (kind) => {
+    const entry = entries.find((e) => e.kind === kind);
+    if (!entry && kind !== 'note') return;
+    const wasSearching = input.value !== '';
+    const wasCollapsed = entry ? collapsed.delete(entry.category) : false;
+    input.value = '';
+    if (wasSearching || wasCollapsed) render();
+  };
+
   loadEntries();
   render();
   syncPlaying();

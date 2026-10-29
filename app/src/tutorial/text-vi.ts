@@ -56,7 +56,7 @@ export const LESSON_TEXT = {
     },
     edit: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để trở về chỉnh game.',
+      text: 'Bấm nút "Dừng" để trở về chỉnh game.',
     },
     stick: {
       title: 'Thêm cần điều khiển',
@@ -275,7 +275,7 @@ export const LESSON_TEXT = {
     },
     edit: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để làm tiếp phần mở cửa.',
+      text: 'Bấm nút "Dừng" để làm tiếp phần mở cửa.',
     },
     interact: {
       title: 'Thêm mảnh ghép tương tác',
@@ -395,7 +395,7 @@ export const LESSON_TEXT = {
     },
     edit: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để làm tiếp phần đập đá.',
+      text: 'Bấm nút "Dừng" để làm tiếp phần đập đá.',
     },
     and: {
       title: 'Chỉ cuốc mới đập được đá',
@@ -468,7 +468,7 @@ export const LESSON_TEXT = {
     },
     edit: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để làm tiếp.',
+      text: 'Bấm nút "Dừng" để làm tiếp.',
     },
     touch: {
       title: 'Chạm bot là thua',
@@ -520,7 +520,7 @@ export const LESSON_TEXT = {
     },
     edit: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để làm tiếp.',
+      text: 'Bấm nút "Dừng" để làm tiếp.',
     },
     sequence: {
       title: 'Thêm người chỉ huy',
@@ -556,7 +556,7 @@ export const LESSON_TEXT = {
     },
     edit2: {
       title: 'Quay lại sửa',
-      text: 'Bấm nút "Sửa" để dạy bot cầm thùng.',
+      text: 'Bấm nút "Dừng" để dạy bot cầm thùng.',
     },
     carry: {
       title: 'Dạy bot cầm đồ',

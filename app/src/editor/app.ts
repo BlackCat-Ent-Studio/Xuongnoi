@@ -23,6 +23,7 @@ import { createKeyboardInput } from './keyboard-input';
 import { LAYOUT_PRESETS } from './layout-model';
 import { installLayoutSplitters } from './layout-splitters';
 import type { MenuDef } from './menu-bar';
+import { mountLaunchpad } from './launchpad';
 import { createNewGameDialog } from './new-game-dialog';
 import { findFreeNoteSpot } from './note-placement';
 import { createPalette } from './palette';
@@ -342,9 +343,35 @@ export function mountEditor(root: HTMLElement): void {
   });
   layout.onPrefsChange(() => topBar.setPreset(layout.preset()));
 
-  const tutorial = createTutorial({ state, notify: (t, k) => topBar.notify(t, k) });
+  const revealLeft = (): void => {
+    leftDock.select('palette');
+    if (layout.leftCollapsed()) layout.setLeftCollapsed(false);
+  };
+  const tutorial = createTutorial({
+    state,
+    notify: (t, k) => topBar.notify(t, k),
+    onStart: () => {
+      bottomDock.select('lessons');
+      layout.ensureBottomOpen();
+    },
+    revealPaletteItem: (kind) => {
+      revealLeft();
+      palette.reveal(kind);
+    },
+  });
   topBar.addControl(tutorial.el);
-  document.body.append(tutorial.panel);
+  bottomDock.el.querySelector(`#${DOCK_LESSONS_ID}`)?.append(tutorial.dock);
+
+  const launchpad = mountLaunchpad({
+    host: canvas.el,
+    nodeCount: () => state.getGraph().nodes.length,
+    isPlaying: () => state.isPlaying(),
+    tutorialActive: () => tutorial.isActive(),
+    startLesson: () => tutorial.startFirst(),
+    openSample: (b) => loadBoard(b),
+    startBlank: revealLeft,
+  });
+  state.subscribe((kind) => (kind === 'board' ? launchpad.boardLoaded() : launchpad.update()));
 
   root.replaceChildren(topBar.el, work);
   root.classList.add('app');
