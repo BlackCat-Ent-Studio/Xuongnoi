@@ -4,7 +4,8 @@ import { formatHudValue, type FloatingLabel } from './hud';
 
 /** Gap between the top of the entity and the bottom of its label, in world units. */
 const LABEL_LIFT = 0.25;
-const DEFAULT_COLOR = '#1d2330';
+const DEFAULT_COLOR = '#ffffff';
+const DEFAULT_BAR_COLOR = '#e11d48';
 
 /**
  * Screen positions for HUD texts anchored to entities. Skips hidden items, entities that are gone or
@@ -29,7 +30,7 @@ export function floatingLabels(
     out.push({
       key: item.key,
       text: item.widget?.type === 'bar' ? `${item.label}: ${formatHudValue(item.value)}` : (item.text ?? ''),
-      color: item.color ?? DEFAULT_COLOR,
+      color: item.color ?? (isBar ? DEFAULT_BAR_COLOR : DEFAULT_COLOR),
       x: ((p.x + 1) / 2) * width,
       y: ((1 - p.y) / 2) * height,
       ...(item.widget?.type === 'bar' ? { bar: item.widget.fraction } : {}),
