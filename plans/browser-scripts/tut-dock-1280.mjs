@@ -6,7 +6,13 @@ await sleep(1500);
 record('launchpad visible', await page.locator('.launchpad').isVisible(), '');
 const lp = await page.locator('.launchpad-in').boundingBox();
 const cv = await page.locator('.wc').boundingBox();
-record('launchpad centred in canvas', Math.abs((lp.x + lp.width / 2) - (cv.x + cv.width / 2)) < 4 && Math.abs((lp.y + lp.height / 2) - (cv.y + cv.height / 2)) < 4, JSON.stringify({ lp, cv }));
+// The card is centred in the canvas minus the PiP column, and must clear both the PiP and the bottom-left corner.
+const hits = (r, q) => q && r.x < q.x + q.width && r.x + r.width > q.x && r.y < q.y + q.height && r.y + r.height > q.y;
+const pipBox = (await page.locator('.pip').isVisible()) ? await page.locator('.pip').boundingBox() : null;
+const cornerBox = await page.locator('.wc-corner').boundingBox();
+record('launchpad inside canvas', lp.x >= cv.x && lp.x + lp.width <= cv.x + cv.width && lp.y >= cv.y && lp.y + lp.height <= cv.y + cv.height, JSON.stringify({ lp, cv }));
+record('launchpad clear of PiP', !hits(lp, pipBox), JSON.stringify({ lp, pipBox }));
+record('launchpad clear of bottom-left corner', !hits(lp, cornerBox), JSON.stringify({ lp, cornerBox }));
 await shot(page, '1280-launchpad');
 record('left dock collapsed at 1280', await page.locator('.work.left-collapsed').count() === 1, '');
 // samples inline
