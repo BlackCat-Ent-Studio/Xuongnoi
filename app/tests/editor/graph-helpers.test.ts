@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { computeLayout } from '../../src/editor/graph/auto-layout';
-import { boxesOverlap, fitView, nearestWithin, zoomAround } from '../../src/editor/graph/graph-geometry';
+import { boxesOverlap, fitView, nearestWithin, zoomAround, type Box } from '../../src/editor/graph/graph-geometry';
 import { listMissingWires } from '../../src/editor/graph/missing-wires';
 import { findFreeNodeSpot, occupiedBoxes } from '../../src/editor/graph/node-placement';
 import { checkPortPair } from '../../src/editor/graph/port-compat';
@@ -132,5 +132,37 @@ describe('geometry', () => {
     const pts = [{ x: 100, y: 100 }, { x: 10, y: 10 }];
     expect(nearestWithin(pts, { x: 90, y: 100 }, 24)).toEqual({ x: 100, y: 100 });
     expect(nearestWithin(pts, { x: 60, y: 60 }, 24)).toBeNull();
+  });
+});
+
+describe('findFreeNodeSpot with a visible area', () => {
+  const visible: Box = { x: 0, y: 0, w: 900, h: 560 };
+  const size = { w: 168, h: 99 };
+  const rail: Box = { x: -4, y: 328, w: 270, h: 254 };
+
+  it('keeps a clear drop point exactly where it was dropped', () => {
+    expect(findFreeNodeSpot({ x: 300, y: 340 }, size, [rail], visible)).toEqual({ x: 300, y: 340 });
+  });
+
+  it('nudges a drop on the corner rail to a close spot that is fully in view', () => {
+    const want = { x: 20, y: 340 };
+    const spot = findFreeNodeSpot(want, size, [rail, { x: 20, y: 164, w: 168, h: 99 }], visible);
+    const box = { ...spot, ...size };
+    expect(boxesOverlap(box, rail)).toBe(false);
+    expect(spot.x >= 0 && spot.y >= 0 && spot.x + size.w <= 900 && spot.y + size.h <= 560).toBe(true);
+    expect(Math.hypot(spot.x - want.x, spot.y - want.y)).toBeLessThan(400);
+  });
+
+  it('never picks a spot outside the visible area, even when a hidden one is nearer', () => {
+    const left: Box = { x: 0, y: 0, w: 900, h: 560 };
+    const spot = findFreeNodeSpot({ x: 20, y: 220 }, size, [{ x: 20, y: 220, w: 168, h: 99 }], left);
+    expect(spot.x).toBeGreaterThanOrEqual(0);
+    expect(spot.y + size.h).toBeLessThanOrEqual(560);
+  });
+
+  it('on a packed view stays at the drop point instead of jumping below the board', () => {
+    const wall: Box = { x: -100, y: -100, w: 1200, h: 800 };
+    const spot = findFreeNodeSpot({ x: 40, y: 700 }, size, [wall], visible);
+    expect(spot).toEqual({ x: 40, y: 461 });
   });
 });

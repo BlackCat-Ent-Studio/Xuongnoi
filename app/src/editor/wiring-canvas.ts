@@ -160,6 +160,11 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   }
 
   const blockedWorld = (): Box[] => overlayRects().map((r) => screenRectToWorld(view, r, CORNER_GAP));
+  /** The part of the board on screen, in world units (a small pad keeps nodes off the very edge). */
+  const visibleWorld = (): Box => {
+    const c = el.getBoundingClientRect();
+    return screenRectToWorld(view, { x: 0, y: 0, w: c.width, h: c.height }, -8);
+  };
 
   function applyView(): void {
     world.style.transform = `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`;
@@ -285,10 +290,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function findFreeSpot(want: Point, kind?: string): Point {
     const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }) : { w: 168, h: 90 };
-    return findFreeNodeSpot(want, size, [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf), ...blockedWorld()]);
+    return findFreeNodeSpot(want, size, [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf), ...blockedWorld()], visibleWorld());
   }
 
-  const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent(), blocked: blockedWorld });
+  const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent(), blocked: blockedWorld, visibleWorld });
   const { flash } = actions;
   const arrange = actions.arrange;
 

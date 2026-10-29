@@ -18,10 +18,14 @@ export function occupiedBoxes(graph: Graph, notes: readonly Note[], sizeOf?: Siz
 /**
  * Where a new node of size `size` should go: `want` when it is clear, else the nearest clear spot.
  * Palette code can call this with the viewport centre or the drop point.
- * On a board too crowded to find a gap, returns a spot just below everything.
+ * With `visible` (world-space area the user can see) a spot is never outside it; when no gap is found near the drop
+ * point the node stays at the drop point (clamped into view) instead of jumping away.
+ * Without `visible`, a crowded board gets a spot just below everything.
  */
-export function findFreeNodeSpot(want: Point, size: Size, taken: readonly Box[]): Point {
-  const free = (p: Point): boolean => taken.every((t) => !boxesOverlap({ ...p, ...size }, t, MARGIN));
+export function findFreeNodeSpot(want: Point, size: Size, taken: readonly Box[], visible?: Box): Point {
+  const inside = (p: Point): boolean =>
+    !visible || (p.x >= visible.x && p.y >= visible.y && p.x + size.w <= visible.x + visible.w && p.y + size.h <= visible.y + visible.h);
+  const free = (p: Point): boolean => inside(p) && taken.every((t) => !boxesOverlap({ ...p, ...size }, t, MARGIN));
   if (free(want)) return want;
   const offsets: Point[] = [];
   for (let i = -REACH; i <= REACH; i++) for (let j = -REACH; j <= REACH; j++) offsets.push({ x: i * STEP, y: j * STEP });
@@ -30,6 +34,14 @@ export function findFreeNodeSpot(want: Point, size: Size, taken: readonly Box[])
     const p = { x: Math.round(want.x + o.x), y: Math.round(want.y + o.y) };
     if (free(p)) return p;
   }
+  // With a visible area, never wander off it: stay at the drop point, pulled back inside the view.
+  if (visible) return clampInto(want, size, visible);
   const bottom = Math.max(...taken.map((t) => t.y + t.h));
   return { x: want.x, y: bottom + MARGIN * 2 };
+}
+
+function clampInto(p: Point, size: Size, area: Box): Point {
+  const x = Math.min(p.x, area.x + area.w - size.w);
+  const y = Math.min(p.y, area.y + area.h - size.h);
+  return { x: Math.round(Math.max(area.x, x)), y: Math.round(Math.max(area.y, y)) };
 }

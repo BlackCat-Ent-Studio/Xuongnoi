@@ -103,7 +103,7 @@ await sleep(300);
 record('user board has 1 node', (await nodeCount(page)) === 1, String(await nodeCount(page)));
 
 await startLesson(page, 'win-lose');
-const fit = async () => { await page.getByText('Vừa màn hình').click(); await sleep(250); };
+const fit = async () => { await page.locator('.wc-corner [aria-label="Vừa màn hình"]').click(); await sleep(250); };
 const L3 = (label, n) => expectStep(label, n, 14);
 await L3('L3 intro', 1);
 record('L3 base has 8 nodes', (await nodeCount(page)) === 8, String(await nodeCount(page)));

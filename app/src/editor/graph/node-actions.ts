@@ -13,12 +13,14 @@ interface Ctx {
   fit: () => void;
   /** World-space regions covered by overlays; new nodes are kept off them. */
   blocked?: () => Box[];
+  /** World-space area currently on screen; new nodes are placed inside it. */
+  visibleWorld?: () => Box;
 }
 
 const ARRANGE_MS = 300;
 
 /** Node-level actions on the canvas: pulse/shake feedback, free-spot placement, animated auto-layout. */
-export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, blocked }: Ctx) {
+export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, blocked, visibleWorld }: Ctx) {
   let animating = false;
 
   function flash(id: string, cls: 'new' | 'shake'): void {
@@ -35,7 +37,7 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, 
     const box = nodeEls.get(node.id);
     if (!box) return;
     const taken = [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf, node.id), ...(blocked?.() ?? [])];
-    const spot = findFreeNodeSpot(node.pos, { w: box.offsetWidth, h: box.offsetHeight }, taken);
+    const spot = findFreeNodeSpot(node.pos, { w: box.offsetWidth, h: box.offsetHeight }, taken, visibleWorld?.());
     if (spot.x !== node.pos.x || spot.y !== node.pos.y) {
       state.moveItems([{ id: node.id, pos: spot }], { amend: true });
       box.style.left = `${spot.x}px`;
