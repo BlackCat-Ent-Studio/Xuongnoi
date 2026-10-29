@@ -162,6 +162,7 @@ export function createWorld(mode: ViewMode): World {
       ...v,
       ...(carried ? { carriedHeight: carried.size.y + 0.05 } : {}),
       ...(tool && tool.shape !== undefined ? { tool: { shape: tool.shape, color: tool.color } } : {}),
+      facing: { x: e.facing.x, z: e.facing.z },
       ...(e.swingTime >= 0 ? { swing: Math.min(1, e.swingTime / SWING_SECONDS) } : {}),
       ...(e.intent ? { drive: { speed: finiteOr(e.intent.speed, 0), jumpPower: finiteOr(e.intent.jumpPower, 0) } } : {}),
     };

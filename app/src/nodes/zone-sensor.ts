@@ -1,5 +1,5 @@
 import type { EntityId, EntityView, NodeDef } from '../engine/types';
-import { asObject, strParam, vec3Param } from './util';
+import { asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 interface ZoneState {
   /** Marker box that shows the zone while editing; hidden as soon as the game runs. */
@@ -23,6 +23,21 @@ function matchesFilter(e: EntityView, filter: string): boolean {
   }
 }
 
+/** Yaw (radians, 0 = +X, toward +Z positive) a followed entity points at; 0 when it has no direction. */
+function yawOf(e: EntityView): number {
+  if (e.vehicle) return e.vehicle.heading;
+  if (e.facing) return Math.atan2(e.facing.z, e.facing.x);
+  return 0;
+}
+
+/** Whether distance `d` (entity centre to zone centre) with extents `ee` (entity) and `zz` (zone) counts under `rule`. */
+function axisHit(rule: string, d: number, ee: number, zz: number): boolean {
+  const ad = Math.abs(d);
+  if (rule === 'center') return ad <= zz / 2;
+  if (rule === 'inside') return ad + ee / 2 <= zz / 2;
+  return ad < (ee + zz) / 2;
+}
+
 const DEFAULT_CENTER = { x: 0, y: 1, z: 0 };
 const DEFAULT_SIZE = { x: 4, y: 3, z: 4 };
 
@@ -31,7 +46,7 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
   label: 'Cảm biến vùng',
   category: 'logic',
   description:
-    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng. Nối "Bám theo vật" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng".',
+    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng. Nối "Bám theo vật" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng". Bật "Xoay theo vật" để vùng quay theo hướng vật (chỉ ở 3D và nhìn từ trên). "Chỉ tính loại hàng" lọc đồ vật theo loại hàng; "Tính khi nào" chọn chạm mép, tâm vật vào trong hay nằm trọn bên trong; "Ít nhất bao nhiêu vật" là số vật tối thiểu để "Có ai trong vùng" bật.',
   inputs: [{ id: 'follow', type: 'object', label: 'Bám theo vật' }],
   outputs: [
     { id: 'inside', type: 'bool', label: 'Có ai trong vùng' },
@@ -56,6 +71,29 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
         { value: 'vehicle', label: 'Phương tiện' },
       ],
     },
+    {
+      id: 'rotate',
+      label: 'Xoay theo vật',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có' },
+      ],
+    },
+    { id: 'goods', label: 'Chỉ tính loại hàng', kind: 'text', default: '' },
+    {
+      id: 'rule',
+      label: 'Tính khi nào',
+      kind: 'select',
+      default: 'touch',
+      options: [
+        { value: 'touch', label: 'Chạm mép' },
+        { value: 'center', label: 'Tâm vật vào trong' },
+        { value: 'inside', label: 'Nằm trọn bên trong' },
+      ],
+    },
+    { id: 'minCount', label: 'Ít nhất bao nhiêu vật', kind: 'number', default: 1, min: 1, max: 50, step: 1 },
     { id: 'color', label: 'Màu vùng (khi chỉnh sửa)', kind: 'color', default: '#22c55e' },
   ],
   createOnly: ['center', 'size', 'color'],
@@ -81,10 +119,20 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     }
     const offset = vec3Param(params, 'center', DEFAULT_CENTER);
     const followId = asObject(i.follow);
-    const anchor = followId !== null ? ctx.world.getEntity(followId)?.position : undefined;
-    const c = anchor ? { x: anchor.x + offset.x, y: anchor.y + offset.y, z: anchor.z + offset.z } : offset;
+    const anchorView = followId !== null ? ctx.world.getEntity(followId) : undefined;
+    const anchor = anchorView?.position;
+    // The side view has no yaw to turn with, so rotation only applies in 3D and from above.
+    const yaw = anchorView && strParam(params, 'rotate', 'no') === 'yes' && ctx.mode !== '2d-side' ? yawOf(anchorView) : 0;
+    const cos = Math.cos(yaw);
+    const sin = Math.sin(yaw);
+    const ox = offset.x * cos - offset.z * sin;
+    const oz = offset.x * sin + offset.z * cos;
+    const c = anchor ? { x: anchor.x + ox, y: anchor.y + offset.y, z: anchor.z + oz } : offset;
     const z = vec3Param(params, 'size', DEFAULT_SIZE);
     const filter = strParam(params, 'filter', 'character');
+    const goods = strParam(params, 'goods', '');
+    const rule = strParam(params, 'rule', 'touch');
+    const minCount = Math.round(clamp(numParam(params, 'minCount', 1), 1, 50));
     // Flat views ignore the unused axis so a thin zone still catches everyone on the plane.
     const useY = ctx.mode !== '2d-top';
     const useZ = ctx.mode !== '2d-side';
@@ -92,13 +140,21 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     let first: EntityId | null = null;
     for (const e of ctx.world.listEntities()) {
       if (!e.visible || e.seatedIn !== undefined || e.inHand || !matchesFilter(e, filter)) continue;
-      if (Math.abs(e.position.x - c.x) >= (e.size.x + Math.abs(z.x)) / 2) continue;
-      if (useY && Math.abs(e.position.y - c.y) >= (e.size.y + Math.abs(z.y)) / 2) continue;
-      if (useZ && Math.abs(e.position.z - c.z) >= (e.size.z + Math.abs(z.z)) / 2) continue;
+      if (goods !== '' && ctx.world.tagOf(e.id) !== goods) continue;
+      // Entity centre in the zone's own frame, and its box extent along the zone's axes.
+      const dx = e.position.x - c.x;
+      const dz = e.position.z - c.z;
+      const lx = dx * cos + dz * sin;
+      const lz = -dx * sin + dz * cos;
+      const ex = Math.abs(cos) * e.size.x + Math.abs(sin) * e.size.z;
+      const ez = Math.abs(sin) * e.size.x + Math.abs(cos) * e.size.z;
+      if (!axisHit(rule, lx, ex, Math.abs(z.x))) continue;
+      if (useY && !axisHit(rule, e.position.y - c.y, e.size.y, Math.abs(z.y))) continue;
+      if (useZ && !axisHit(rule, lz, ez, Math.abs(z.z))) continue;
       count++;
       if (first === null) first = e.id;
     }
-    const inside = count > 0;
+    const inside = count >= minCount;
     const entered = inside && !s.wasInside;
     const exited = !inside && s.wasInside;
     s.wasInside = inside;
