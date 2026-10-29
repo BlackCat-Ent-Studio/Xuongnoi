@@ -1,0 +1,556 @@
+{
+  "format_version": 1,
+  "name": "Né và bắn",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-jump",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "key-fire",
+        "kind": "key",
+        "params": {
+          "key": "KeyF"
+        },
+        "pos": {
+          "x": 40,
+          "y": 330
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "gun",
+        "kind": "shooter",
+        "params": {
+          "speed": 12,
+          "lifetime": 0.8,
+          "damage": 1,
+          "size": 0.3,
+          "color": "#f97316",
+          "gravity": "no",
+          "cooldown": 0.4
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "dummy",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 10,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 0,
+          "jumpPower": 0,
+          "color": "#ef4444",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "dummy-health",
+        "kind": "health",
+        "params": {
+          "maxHp": 3,
+          "healAmount": 1,
+          "showBar": "yes"
+        },
+        "pos": {
+          "x": 560,
+          "y": 330
+        }
+      },
+      {
+        "id": "show-dummy",
+        "kind": "show-number",
+        "params": {
+          "label": "Máu mục tiêu",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 820,
+          "y": 330
+        }
+      },
+      {
+        "id": "fall-check",
+        "kind": "compare",
+        "params": {
+          "op": "lt"
+        },
+        "pos": {
+          "x": 560,
+          "y": 180
+        }
+      },
+      {
+        "id": "fall-line",
+        "kind": "const",
+        "params": {
+          "value": -6
+        },
+        "pos": {
+          "x": 300,
+          "y": 190
+        }
+      },
+      {
+        "id": "lose-or",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 180
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Trúng đủ ba phát, mục tiêu gục rồi!",
+          "loseMessage": "Bạn rơi xuống hố hoặc bị đá rơi trúng!"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 230
+        }
+      },
+      {
+        "id": "rain-timer",
+        "kind": "timer",
+        "params": {
+          "seconds": 2.5
+        },
+        "pos": {
+          "x": 300,
+          "y": 470
+        }
+      },
+      {
+        "id": "rain-loop",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 300,
+          "y": 560
+        }
+      },
+      {
+        "id": "rocks",
+        "kind": "spawner",
+        "params": {
+          "template": "item",
+          "position": {
+            "x": 0,
+            "y": 6,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#7c2d12",
+          "shape": "ball",
+          "carryable": "no",
+          "maxAlive": 3,
+          "lifetime": 0.9
+        },
+        "pos": {
+          "x": 560,
+          "y": 470
+        }
+      },
+      {
+        "id": "hint",
+        "kind": "show-text",
+        "params": {
+          "text": "Mũi tên: đi, Space: nhảy, F: bắn. Đứng lên bệ để qua hố, né đá rơi, bắn trúng mục tiêu 3 lần!",
+          "color": "#111827",
+          "corner": "bottom-left"
+        },
+        "pos": {
+          "x": 820,
+          "y": 470
+        }
+      },
+      {
+        "id": "bank-left",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 8,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 620
+        }
+      },
+      {
+        "id": "bank-right",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 8,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 8,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 760
+        }
+      },
+      {
+        "id": "wall-left",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -12.5,
+            "y": 3,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 8,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 900
+        }
+      },
+      {
+        "id": "wall-right",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 12.5,
+            "y": 3,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 8,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 1040
+        }
+      },
+      {
+        "id": "lift",
+        "kind": "moving-platform",
+        "params": {
+          "position": {
+            "x": -2.5,
+            "y": -0.25,
+            "z": 0
+          },
+          "to": {
+            "x": 2.5,
+            "y": -0.25,
+            "z": 0
+          },
+          "size": {
+            "x": 3,
+            "y": 0.5,
+            "z": 1
+          },
+          "color": "#f59e0b",
+          "speed": 2,
+          "wait": 1,
+          "loop": "pingpong"
+        },
+        "pos": {
+          "x": 560,
+          "y": 620
+        }
+      },
+      {
+        "id": "shield",
+        "kind": "rotating-platform",
+        "params": {
+          "position": {
+            "x": 7.5,
+            "y": 2,
+            "z": 0
+          },
+          "size": {
+            "x": 0.5,
+            "y": 4,
+            "z": 1
+          },
+          "color": "#8b5cf6",
+          "mode": "step",
+          "every": 3,
+          "speed": 90
+        },
+        "pos": {
+          "x": 560,
+          "y": 780
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-jump",
+          "port": "held"
+        },
+        "to": {
+          "node": "player",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "gun",
+          "port": "shooter"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "key-fire",
+          "port": "held"
+        },
+        "to": {
+          "node": "gun",
+          "port": "fire"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "dummy",
+          "port": "self"
+        },
+        "to": {
+          "node": "dummy-health",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "dummy-health",
+          "port": "hp"
+        },
+        "to": {
+          "node": "show-dummy",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "dummy-health",
+          "port": "dead"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "player",
+          "port": "y"
+        },
+        "to": {
+          "node": "fall-check",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "fall-line",
+          "port": "value"
+        },
+        "to": {
+          "node": "fall-check",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "fall-check",
+          "port": "out"
+        },
+        "to": {
+          "node": "lose-or",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "rocks",
+          "port": "touched"
+        },
+        "to": {
+          "node": "lose-or",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "lose-or",
+          "port": "out"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "lose"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "rain-timer",
+          "port": "done"
+        },
+        "to": {
+          "node": "rain-loop",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "rain-loop",
+          "port": "out"
+        },
+        "to": {
+          "node": "rain-timer",
+          "port": "reset"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "rain-timer",
+          "port": "done"
+        },
+        "to": {
+          "node": "rocks",
+          "port": "spawn"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "rocks",
+          "port": "at"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "rocks",
+          "port": "toucher"
+        }
+      }
+    ]
+  }
+}

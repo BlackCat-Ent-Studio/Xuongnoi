@@ -121,6 +121,8 @@ export class SceneView {
       const { mesh } = entry;
       mesh.position.set(e.position.x, e.position.y, e.position.z);
       mesh.scale.set(e.size.x, e.size.y, e.size.z);
+      // Turning blocks: about Z in the side view, about the vertical axis elsewhere.
+      mesh.rotation.set(0, this.mode === '2d-side' ? 0 : (e.angle ?? 0), this.mode === '2d-side' ? (e.angle ?? 0) : 0);
       mesh.userData.ownerNodeId = e.ownerNodeId;
       if (entry.color !== e.color) {
         mesh.material.color.set(e.color);

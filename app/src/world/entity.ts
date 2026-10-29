@@ -9,6 +9,8 @@ import type {
   Vec3,
 } from '../engine/types';
 import type { VehicleBody } from './vehicles';
+import { turnAngle, type TurnState } from './platforms';
+import type { BulletState } from './projectiles';
 
 /** Internal mutable entity record; EntityView is the public snapshot. */
 export interface Entity {
@@ -52,6 +54,14 @@ export interface Entity {
   vehicle?: VehicleBody;
   /** Characters: id of the vehicle this one sits in, else null. */
   seatedIn: string | null;
+  /** Blocks: set once a node moved or turned it; it then no longer counts as static terrain for path planning. */
+  mover?: boolean;
+  /** Blocks: turning state, once a node turned the block. */
+  turn?: TurnState;
+  /** Items that are shots in flight (moved by the projectile step, not by item physics). */
+  bullet?: BulletState;
+  /** Dropped from the world for good once hidden. */
+  disposable?: boolean;
 }
 
 export function toView(e: Entity): EntityView {
@@ -74,6 +84,7 @@ export function toView(e: Entity): EntityView {
         }
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
+    ...turnAngle(e),
     visible: e.visible,
   };
 }

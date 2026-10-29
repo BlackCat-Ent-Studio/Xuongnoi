@@ -231,6 +231,25 @@ export interface EntitySpec {
   damage?: number;
   /** Vehicles only (kind 'vehicle'). */
   vehicle?: VehicleSpec;
+  /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
+  disposable?: boolean;
+}
+
+/** How a shot leaves a shooter. */
+export interface ShotSpec {
+  ownerNodeId: string;
+  /** Units per second. */
+  speed: number;
+  /** Seconds before the shot fades. */
+  lifetime: number;
+  damage: number;
+  /** Edge length of the shot. */
+  size: number;
+  color: string;
+  /** True = the shot arcs downward (ignored in the top-down view). */
+  gravity: boolean;
+  /** Aim at this entity instead of the shooter's facing. */
+  aimAt?: EntityId | null;
 }
 
 export interface CharacterIntent {
@@ -278,6 +297,11 @@ export interface EntityView {
   vehicle?: { model: VehicleModel; speed: number; wheelSpin: number; heading: number; driver: EntityId | null };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
+  /**
+   * Blocks only: extra turn in radians for the renderer (about Z in the side view, about the vertical axis elsewhere).
+   * Solid blocks: how far the picture still lags behind the snapped quarter turn. Non-solid blocks: the full spin angle.
+   */
+  angle?: number;
   visible: boolean;
 }
 
@@ -386,6 +410,25 @@ export interface WorldApi {
   enterVehicle(character: EntityId, reach: number): EntityId | null;
   /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */
   exitVehicle(character: EntityId): EntityId | null;
+
+  // ---- moving objects: platforms, turning blocks, shots ----
+
+  /**
+   * Moves a block to `to` right away (axes the view mode does not have are ignored). Characters, items and vehicles standing on a
+   * solid block ride along; others in the way are pushed. If that would squeeze anything into another solid, the block stays put
+   * on that axis and false is returned. The first call makes the block a mover: it leaves the static list given by `solidBoxes`.
+   */
+  moveBlock(id: EntityId, to: Vec3): boolean;
+  /**
+   * Turns a block to `rad`. Solid blocks only take quarter turns (nearest multiple of 90 degrees; width and depth swap so collision
+   * stays exact) and wait (false) while whoever is in the way has no free spot to be moved to. Non-solid blocks spin freely and
+   * touch through their real rotated outline.
+   */
+  setBlockAngle(id: EntityId, rad: number): boolean;
+  /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
+  shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
+  /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */
+  shotHits(shooter: EntityId): readonly EntityId[];
 }
 
 /** Full world used by the game loop and renderer. */

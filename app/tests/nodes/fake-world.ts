@@ -78,6 +78,10 @@ export function makeWorld(): FakeWorld {
     setVehicleInput: () => undefined,
     enterVehicle: () => null,
     exitVehicle: () => null,
+    moveBlock: () => true,
+    setBlockAngle: () => true,
+    shoot: () => null,
+    shotHits: () => [],
   };
   return w;
 }

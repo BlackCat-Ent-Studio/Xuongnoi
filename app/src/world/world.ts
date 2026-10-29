@@ -5,6 +5,7 @@ import type {
   EntityView,
   GameResult,
   HudItem,
+  ShotSpec,
   SolidBox,
   Vec3,
   ViewMode,
@@ -12,7 +13,9 @@ import type {
 } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
+import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
+import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { createVehicleBody, seatPosition } from './vehicles';
 
@@ -50,6 +53,8 @@ export function createWorld(mode: ViewMode): World {
   /** Same one-tick pulse for tool use. */
   let pendingUsed = new Set<EntityId>();
   let usedOn = new Set<EntityId>();
+  /** Characters hit by shots in the latest step, per shooter. */
+  let shotHitsNow = new Map<EntityId, EntityId[]>();
 
   const combat = createCombat({
     mode,
@@ -208,6 +213,23 @@ export function createWorld(mode: ViewMode): World {
     }
   }
 
+  /** A block that moves or turns no longer belongs to the static solids that path planning caches. */
+  function markMover(e: Entity): void {
+    if (e.mover) return;
+    e.mover = true;
+    if (e.solid) solidRev++;
+  }
+
+  /** Forgets hidden entities that asked to be dropped (shots and spawned copies), so long runs stay light. */
+  function dropDisposed(): void {
+    let keep = 0;
+    for (const e of list) {
+      if (!e.visible && e.disposable) byId.delete(e.id);
+      else list[keep++] = e;
+    }
+    list.length = keep;
+  }
+
   const api: World = {
     mode,
     get ended() {
@@ -240,6 +262,7 @@ export function createWorld(mode: ViewMode): World {
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
         ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
         seatedIn: null,
+        ...(spec.disposable ? { disposable: true } : {}),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
@@ -412,7 +435,8 @@ export function createWorld(mode: ViewMode): World {
     solidBoxes(): readonly SolidBox[] {
       const boxes: SolidBox[] = [];
       for (const e of list) {
-        if (e.visible && e.solid && e.kind === 'block') boxes.push({ position: { ...e.pos }, size: { ...e.size } });
+        // Movers are left out: their place changes, so the static maps built from this list ignore them.
+        if (e.visible && e.solid && e.kind === 'block' && !e.mover) boxes.push({ position: { ...e.pos }, size: { ...e.size } });
       }
       return boxes;
     },
@@ -445,15 +469,61 @@ export function createWorld(mode: ViewMode): World {
       if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
       return leaveSeat(c)?.id ?? null;
     },
+    moveBlock(id: EntityId, to: Vec3): boolean {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'block' || !e.visible) return false;
+      markMover(e);
+      return moveBlockTo(list, e, to, mode);
+    },
+    setBlockAngle(id: EntityId, rad: number): boolean {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'block' || !e.visible) return false;
+      const angle = finiteOr(rad, 0);
+      markMover(e);
+      if (e.solid) return turnSolidTo(list, e, angle / (Math.PI / 2), mode);
+      spinBlockTo(e, angle, mode);
+      return true;
+    },
+    shoot(shooter: EntityId, spec: ShotSpec): EntityId | null {
+      const s = byId.get(shooter);
+      if (!s || !s.visible || s.combat?.dead || countBullets(list) >= MAX_BULLETS) return null;
+      const shot = clampShot(spec);
+      const target = spec.aimAt != null ? byId.get(spec.aimAt) : undefined;
+      const dir = aimDirection(s, target && target.visible ? target : undefined, mode);
+      const id = api.spawn({
+        kind: 'item',
+        ownerNodeId: spec.ownerNodeId,
+        position: muzzlePosition(s, dir, shot.size, mode),
+        size: { x: shot.size, y: shot.size, z: shot.size },
+        color: spec.color,
+        solid: false,
+        shape: 'ball',
+        carryable: false,
+        disposable: true,
+      });
+      const b = byId.get(id)!;
+      b.vel = { x: dir.x * shot.speed, y: dir.y * shot.speed, z: dir.z * shot.speed };
+      b.bullet = { owner: shooter, damage: shot.damage, ttl: shot.lifetime, gravity: spec.gravity === true };
+      return id;
+    },
+    shotHits(shooter: EntityId): readonly EntityId[] {
+      return shotHitsNow.get(shooter) ?? [];
+    },
     step(dt: number): void {
+      settleTurns(list, dt);
       if (ended) {
         // The game is over, but anyone mid-fall may finish tipping over.
         combat.update(list, dt);
         return;
       }
       stepPhysics(list, dt, mode, yaw);
+      shotHitsNow = stepBullets(list, dt, mode, {
+        strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),
+        hide: (id) => api.hide(id),
+      });
       computeContacts();
       combat.update(list, dt);
+      dropDisposed();
       interacted = pendingInteract;
       pendingInteract = new Set();
       usedOn = pendingUsed;
