@@ -1,5 +1,6 @@
 import * as THREE from 'three';
-import type { EntityView, ViewMode } from '../engine/types';
+import type { EntityView, PlayCameraCommand, ViewMode } from '../engine/types';
+import { CameraDirector } from './camera-director';
 
 export const SIDE_VIEW_HEIGHT = 16;
 /** The default framing is this many times closer than the raw fit. */
@@ -140,6 +141,7 @@ export class CameraRig {
   private following = false;
   private target = new THREE.Vector3();
   private snapNext = true;
+  private readonly director = new CameraDirector();
 
   constructor(mode: ViewMode) {
     this.mode = mode;
@@ -162,7 +164,7 @@ export class CameraRig {
 
   /** Visible height (ortho) or orbit distance (3d) at the current zoom. */
   get size(): number {
-    return this.view.homeSize / this.view.mag;
+    return this.view.homeSize / (this.view.mag * (this.following ? this.director.zoom : 1));
   }
 
   get zoomMagnification(): number {
@@ -229,21 +231,25 @@ export class CameraRig {
     }
   }
 
-  update(entities: readonly EntityView[], dt: number, follow: boolean): void {
+  update(entities: readonly EntityView[], dt: number, follow: boolean, playCamera: PlayCameraCommand | null = null): void {
     this.syncFollow(follow);
+    const cmd = follow ? playCamera : null;
+    this.director.update(cmd, dt, this.snapNext || !follow);
     const bounds = entityBounds(entities);
     if (follow) {
       const character = pickFollowTarget(entities);
-      let goal: THREE.Vector3;
-      if (character) goal = new THREE.Vector3(character.position.x, character.position.y, character.position.z);
-      else if (bounds) goal = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);
-      else goal = new THREE.Vector3(0, this.mode === '3d' ? 2 : 0, 0);
-      if (this.snapNext) this.target.copy(goal);
+      let base: THREE.Vector3;
+      if (character) base = new THREE.Vector3(character.position.x, character.position.y, character.position.z);
+      else if (bounds) base = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);
+      else base = new THREE.Vector3(0, this.mode === '3d' ? 2 : 0, 0);
+      const goal = this.director.goal(cmd, entities, base);
+      if (this.snapNext) this.target.set(goal.x, goal.y, goal.z);
       else {
+        const rate = this.director.rate(cmd);
         this.target.set(
-          smoothValue(this.target.x, goal.x, dt),
-          smoothValue(this.target.y, goal.y, dt),
-          smoothValue(this.target.z, goal.z, dt),
+          smoothValue(this.target.x, goal.x, dt, rate),
+          smoothValue(this.target.y, goal.y, dt, rate),
+          smoothValue(this.target.z, goal.z, dt, rate),
         );
       }
     } else {
@@ -302,6 +308,12 @@ export class CameraRig {
       cam.position.copy(look).add(orbitOffset(this.yaw, this.pitch, this.size));
       cam.up.set(0, 1, 0);
       cam.lookAt(look);
+    }
+    const shake = this.following ? this.director.shakeOffset(this.size) : null;
+    if (shake && (shake.right !== 0 || shake.up !== 0)) {
+      const right = new THREE.Vector3(1, 0, 0).applyQuaternion(cam.quaternion);
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(cam.quaternion);
+      cam.position.addScaledVector(right, shake.right).addScaledVector(up, shake.up);
     }
     cam.updateMatrixWorld();
   }

@@ -78,6 +78,10 @@ export function makeWorld(): FakeWorld {
     setVehicleInput: () => undefined,
     enterVehicle: () => null,
     exitVehicle: () => null,
+    setCamera: () => undefined,
+    teleport: () => null,
+    setPortal: () => undefined,
+    portalUser: () => null,
   };
   return w;
 }

@@ -1,0 +1,505 @@
+{
+  "format_version": 1,
+  "name": "Cổng dịch chuyển",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-jump",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "key-back",
+        "kind": "key",
+        "params": {
+          "key": "KeyR"
+        },
+        "pos": {
+          "x": 40,
+          "y": 330
+        }
+      },
+      {
+        "id": "character-1",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6",
+          "look": "human"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "floor-left",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -4,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 16,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "floor-right",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 22,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 12,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 430
+        }
+      },
+      {
+        "id": "floor-pit",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 10,
+            "y": -8.5,
+            "z": 0
+          },
+          "size": {
+            "x": 14,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#78716c",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 530
+        }
+      },
+      {
+        "id": "portal-a",
+        "kind": "portal",
+        "params": {
+          "position": {
+            "x": 2,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 1.2,
+            "y": 2,
+            "z": 1.2
+          },
+          "color": "#8b5cf6",
+          "pair": "",
+          "cooldown": 0.5
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "portal-b",
+        "kind": "portal",
+        "params": {
+          "position": {
+            "x": 19,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 1.2,
+            "y": 2,
+            "z": 1.2
+          },
+          "color": "#f97316",
+          "pair": "",
+          "cooldown": 0.5
+        },
+        "pos": {
+          "x": 560,
+          "y": 230
+        }
+      },
+      {
+        "id": "goal-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 26,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#22c55e",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 300,
+          "y": 630
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn đã qua cổng và về tới đích!",
+          "loseMessage": "Thua rồi!"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 40
+        }
+      },
+      {
+        "id": "or-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 230
+        }
+      },
+      {
+        "id": "x-limit",
+        "kind": "const",
+        "params": {
+          "value": 15
+        },
+        "pos": {
+          "x": 820,
+          "y": 400
+        }
+      },
+      {
+        "id": "far-side",
+        "kind": "compare",
+        "params": {
+          "op": "gt"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 330
+        }
+      },
+      {
+        "id": "cam-main",
+        "kind": "camera",
+        "params": {
+          "mode": "follow",
+          "point": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "zoom": 1,
+          "smoothness": 5,
+          "shakeTime": 0.5,
+          "shakeStrength": 1.2
+        },
+        "pos": {
+          "x": 1340,
+          "y": 40
+        }
+      },
+      {
+        "id": "cam-close",
+        "kind": "camera",
+        "params": {
+          "mode": "follow",
+          "point": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "zoom": 1.6,
+          "smoothness": 6,
+          "shakeTime": 0.5,
+          "shakeStrength": 1.2
+        },
+        "pos": {
+          "x": 1340,
+          "y": 330
+        }
+      },
+      {
+        "id": "tele-back",
+        "kind": "teleport",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": 1,
+            "z": 0
+          },
+          "keepVelocity": "no"
+        },
+        "pos": {
+          "x": 560,
+          "y": 430
+        }
+      },
+      {
+        "id": "hint-1",
+        "kind": "show-text",
+        "params": {
+          "text": "Chạm cổng tím để sang bên kia vực. Rơi xuống thì bấm R để về lại.",
+          "color": "#7c3aed",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 560,
+          "y": 620
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-jump",
+          "port": "held"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "portal-b",
+          "port": "self"
+        },
+        "to": {
+          "node": "portal-a",
+          "port": "partner"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "goal-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "portal-a",
+          "port": "used"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "portal-b",
+          "port": "used"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "or-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "cam-main",
+          "port": "shake"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "or-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "cam-close",
+          "port": "shake"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "cam-main",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "cam-close",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "character-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "far-side",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "x-limit",
+          "port": "value"
+        },
+        "to": {
+          "node": "far-side",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "far-side",
+          "port": "out"
+        },
+        "to": {
+          "node": "cam-close",
+          "port": "on"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "tele-back",
+          "port": "who"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "key-back",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "tele-back",
+          "port": "go"
+        }
+      }
+    ]
+  }
+}

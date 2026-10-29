@@ -27,6 +27,9 @@ import { touchNode } from './touch';
 import { winLoseNode } from './win-lose';
 import { enterExitNode } from './enter-exit';
 import { vehicleNode } from './vehicle';
+import { cameraNode } from './camera';
+import { teleportNode } from './teleport';
+import { portalNode } from './portal';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -70,6 +73,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   fightNode,
   vehicleNode,
   enterExitNode,
+  cameraNode,
+  teleportNode,
+  portalNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

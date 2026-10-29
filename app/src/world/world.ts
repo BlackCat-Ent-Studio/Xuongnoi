@@ -5,6 +5,8 @@ import type {
   EntityView,
   GameResult,
   HudItem,
+  PlayCameraCommand,
+  PortalLink,
   SolidBox,
   Vec3,
   ViewMode,
@@ -14,6 +16,7 @@ import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
+import { createTeleporter } from './teleport';
 import { createVehicleBody, seatPosition } from './vehicles';
 
 function pairKey(a: EntityId, b: EntityId): string {
@@ -50,6 +53,19 @@ export function createWorld(mode: ViewMode): World {
   /** Same one-tick pulse for tool use. */
   let pendingUsed = new Set<EntityId>();
   let usedOn = new Set<EntityId>();
+
+  /** Play-camera requests by camera node; `seq` orders them by when they became active. */
+  const cameraCmds = new Map<string, { seq: number; cmd: PlayCameraCommand }>();
+  let cameraSeq = 0;
+
+  const teleporter = createTeleporter({
+    list,
+    byId,
+    mode,
+    isTouching: (a, b) => contacts.has(pairKey(a, b)),
+    // Routes planned from the old spot are stale; solidRevision is the signal brain nodes replan on.
+    invalidatePlans: () => void solidRev++,
+  });
 
   const combat = createCombat({
     mode,
@@ -445,6 +461,28 @@ export function createWorld(mode: ViewMode): World {
       if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
       return leaveSeat(c)?.id ?? null;
     },
+    setCamera(owner: string, command: PlayCameraCommand | null): void {
+      if (command === null) {
+        cameraCmds.delete(owner);
+        return;
+      }
+      const prev = cameraCmds.get(owner);
+      cameraCmds.set(owner, { seq: prev ? prev.seq : ++cameraSeq, cmd: command });
+    },
+    cameraCommand(): PlayCameraCommand | null {
+      let best: { seq: number; cmd: PlayCameraCommand } | null = null;
+      for (const c of cameraCmds.values()) if (!best || c.seq > best.seq) best = c;
+      return best ? best.cmd : null;
+    },
+    teleport(id: EntityId, to: Vec3, keepVelocity: boolean): Vec3 | null {
+      return teleporter.teleport(id, to, keepVelocity);
+    },
+    setPortal(id: EntityId, link: PortalLink): void {
+      teleporter.setPortal(id, link);
+    },
+    portalUser(id: EntityId): EntityId | null {
+      return teleporter.portalUser(id);
+    },
     step(dt: number): void {
       if (ended) {
         // The game is over, but anyone mid-fall may finish tipping over.
@@ -453,6 +491,7 @@ export function createWorld(mode: ViewMode): World {
       }
       stepPhysics(list, dt, mode, yaw);
       computeContacts();
+      teleporter.step(dt);
       combat.update(list, dt);
       interacted = pendingInteract;
       pendingInteract = new Set();

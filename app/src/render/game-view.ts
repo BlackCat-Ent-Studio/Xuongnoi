@@ -65,7 +65,7 @@ export function createGameView(): GameView {
     if (!renderer) return;
     const entities = world ? world.entities() : [];
     sceneView.sync(entities, dt);
-    rig.update(entities, dt, follow);
+    rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
     renderer.render(sceneView.scene, rig.camera);
   }
 
