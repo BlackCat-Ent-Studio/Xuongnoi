@@ -3,6 +3,7 @@ import { computeLayout } from '../../src/editor/graph/auto-layout';
 import { boxesOverlap, fitView, nearestWithin, zoomAround, type Box } from '../../src/editor/graph/graph-geometry';
 import { listMissingWires } from '../../src/editor/graph/missing-wires';
 import { findFreeNodeSpot, occupiedBoxes } from '../../src/editor/graph/node-placement';
+import { findFreeNoteSpot } from '../../src/editor/note-placement';
 import { checkPortPair } from '../../src/editor/graph/port-compat';
 import { listSamples } from '../../src/io/samples';
 import { createNode } from '../../src/editor/editor-state';
@@ -164,5 +165,15 @@ describe('findFreeNodeSpot with a visible area', () => {
     const wall: Box = { x: -100, y: -100, w: 1200, h: 800 };
     const spot = findFreeNodeSpot({ x: 40, y: 700 }, size, [wall], visible);
     expect(spot).toEqual({ x: 40, y: 461 });
+  });
+});
+
+describe('findFreeNoteSpot with overlays', () => {
+  it('moves a note off a floating window and keeps it in view', () => {
+    const overlay: Box = { x: 500, y: 300, w: 330, h: 270 };
+    const visible: Box = { x: 0, y: 0, w: 914, h: 579 };
+    const spot = findFreeNoteSpot({ x: 520, y: 320 }, { nodes: [], wires: [] } as never, [], [overlay], visible);
+    expect(boxesOverlap({ ...spot, w: 180, h: 110 }, overlay)).toBe(false);
+    expect(spot.x >= 0 && spot.y >= 0 && spot.x + 180 <= 914 && spot.y + 110 <= 579).toBe(true);
   });
 });

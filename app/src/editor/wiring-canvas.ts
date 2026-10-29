@@ -26,6 +26,8 @@ export interface WiringCanvas {
   clientToWorld(clientX: number, clientY: number): { x: number; y: number };
   /** World coordinates of the visible center. */
   viewCenter(): { x: number; y: number };
+  /** World-space regions covered by overlays, and the part of the board on screen, for placing new items. */
+  placementAreas(): { blocked: Box[]; visible: Box };
   isOver(clientX: number, clientY: number): boolean;
   fitToContent(): void;
   /** Pan so the node sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
@@ -405,6 +407,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     },
     refreshBadges,
     findFreeSpot,
+    placementAreas: () => ({ blocked: blockedWorld(), visible: visibleWorld() }),
     arrange,
     setOverlayInsets({ right, bottom }) {
       const ok = (n: number): number => (Number.isFinite(n) && n > 0 ? Math.round(n) : 0);

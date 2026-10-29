@@ -29,14 +29,22 @@ const overlaps = (a: Box, b: Box): boolean =>
  * Notes sit under the blocks, so one dropped onto a block would be hidden and could not be grabbed.
  * Falls back to `want` on a crowded board.
  */
-export function findFreeNoteSpot(want: { x: number; y: number }, graph: Graph, notes: readonly Note[]): { x: number; y: number } {
+export function findFreeNoteSpot(
+  want: { x: number; y: number },
+  graph: Graph,
+  notes: readonly Note[],
+  overlays: readonly Box[] = [],
+  visible?: Box,
+): { x: number; y: number } {
   const taken: Box[] = [
+    ...overlays,
     ...graph.nodes.map(nodeBox),
     ...notes.map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
   ];
   const free = (x: number, y: number): boolean => {
     const box = { x, y, w: NOTE_DEFAULT_SIZE.w, h: NOTE_DEFAULT_SIZE.h };
-    return taken.every((t) => !overlaps(box, t));
+    const inView = !visible || (x >= visible.x && y >= visible.y && x + box.w <= visible.x + visible.w && y + box.h <= visible.y + visible.h);
+    return inView && taken.every((t) => !overlaps(box, t));
   };
   if (free(want.x, want.y)) return want;
   const offsets: { dx: number; dy: number }[] = [];
