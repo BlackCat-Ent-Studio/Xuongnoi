@@ -32,11 +32,11 @@ function session() {
   };
 }
 
-describe('lesson 14: board tools', () => {
+describe('lesson 15: board tools', () => {
   it('is registered with a stable id and a starter board', () => {
     const lesson = findLesson('editor-tools')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('14. Công cụ bảng nối');
+    expect(lesson.title).toBe('15. Công cụ bảng nối');
     const board = lesson.createBoard();
     expect(board.graph.nodes.map((n) => n.kind).sort()).toEqual(['block', 'character', 'key']);
     expect(board.graph.wires).toHaveLength(1);

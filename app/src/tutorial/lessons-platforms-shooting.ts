@@ -14,9 +14,9 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
 // ---------- Vietnamese text ----------
 
 const T = {
-  title: '12. Bệ và bắn đạn',
+  title: '13. Bệ và bắn đạn',
   summary: 'Bắc bệ di chuyển qua hố, bắn hạ mục tiêu, thả đá bằng hẹn giờ và mở cổng xoay.',
-  boardName: 'Bài 12 - Bệ và bắn đạn',
+  boardName: 'Bài 13 - Bệ và bắn đạn',
   intro: {
     title: 'Qua hố, hạ mục tiêu, tới cờ',
     text: 'Bảng này có hai bờ cỏ với một cái hố ở giữa, một mục tiêu đỏ có thanh máu bên bờ phải, và lá cờ vàng phía sau. Bạn sẽ bắc cầu, bắn mục tiêu rồi mở đường tới cờ.',

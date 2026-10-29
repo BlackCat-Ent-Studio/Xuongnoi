@@ -49,11 +49,11 @@ function session() {
   };
 }
 
-describe('lesson 9: drive a vehicle', () => {
+describe('lesson 10: drive a vehicle', () => {
   it('is the ninth-or-later lesson and only uses known nodes and ports', () => {
     const lesson = findLesson('vehicles')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('9. Lái xe');
+    expect(lesson.title).toBe('10. Lái xe');
     expect(lesson.createBoard().mode).toBe('2d-side');
   });
 

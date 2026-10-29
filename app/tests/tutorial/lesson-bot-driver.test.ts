@@ -44,11 +44,11 @@ function session() {
   };
 }
 
-describe('lesson 10: a bot that drives', () => {
+describe('lesson 11: a bot that drives', () => {
   it('is a lesson that starts in top view with a bot, a car and a flag', () => {
     const lesson = findLesson('bot-driver')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('10. Bot lái xe');
+    expect(lesson.title).toBe('11. Bot lái xe');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-top');
     const kinds = board.graph.nodes.map((n) => n.kind);

@@ -12,9 +12,9 @@ beforeAll(() => registerAllNodes());
 
 const p = (node: string, port: string): PortRef => ({ node, port });
 
-describe('lesson 8: combat', () => {
+describe('lesson 9: combat', () => {
   it('is the lesson after the hand-tool and bot lessons', () => {
-    expect(findLesson('combat')?.title).toMatch(/^8\./);
+    expect(findLesson('combat')?.title).toMatch(/^9[.]/);
   });
 
   it('walks through health, win on dead, fight brain and attack wiring, and the finished board plays', () => {

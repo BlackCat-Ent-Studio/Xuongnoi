@@ -12,9 +12,9 @@ type NodeSpec = { alias: string; kind: string; x: number; y: number; params?: Pa
 type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: string];
 
 const T = {
-  title: '14. Công cụ bảng nối',
+  title: '15. Công cụ bảng nối',
   summary: 'Chọn nhiều mảnh ghép, sao chép, hoàn tác và ghi chú để sửa bảng nhanh hơn.',
-  boardName: 'Bài 14 - Công cụ bảng nối',
+  boardName: 'Bài 15 - Công cụ bảng nối',
   intro: {
     title: 'Sửa bảng thật nhanh',
     text: 'Bảng này có sẵn một nhóm nhỏ: Phím bấm nối với Nhân vật (để nhảy), và một mảnh ghép Sàn. Bài này dạy vài công cụ giúp bạn làm nhanh và không sợ làm hỏng.',

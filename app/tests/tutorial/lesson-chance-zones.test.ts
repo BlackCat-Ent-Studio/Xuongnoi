@@ -116,10 +116,10 @@ function buildLesson() {
   return { s, dice, gate, hero, keyE };
 }
 
-describe('lesson 11: dice and zones', () => {
+describe('lesson 12: dice and zones', () => {
   it('starts in side view with a hero, a gate, a flag and a pre-placed E key', () => {
     const lesson = findLesson('chance-zones')!;
-    expect(lesson.title).toBe('11. Xúc xắc và vùng');
+    expect(lesson.title).toBe('12. Xúc xắc và vùng');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
     expect(board.graph.nodes.filter((n) => n.kind === 'key' && n.params.key === 'KeyE')).toHaveLength(1);

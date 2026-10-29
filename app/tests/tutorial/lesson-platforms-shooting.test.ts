@@ -121,10 +121,10 @@ function build() {
   return { s, hero, health, gate, spawner, timer, plat };
 }
 
-describe('lesson 12: platforms and shooting', () => {
-  it('is registered as lesson 12 with a 2d-side board', () => {
+describe('lesson 13: platforms and shooting', () => {
+  it('is registered as lesson 13 with a 2d-side board', () => {
     const lesson = findLesson('platforms-shooting')!;
-    expect(lesson.title).toMatch(/^12\./);
+    expect(lesson.title).toMatch(/^13[.]/);
     expect(lesson.createBoard().mode).toBe('2d-side');
     expect(lesson.steps.length).toBeGreaterThanOrEqual(18);
     expect(lesson.steps.length).toBeLessThanOrEqual(26);

@@ -10,9 +10,9 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
  */
 
 const T = {
-  title: '13. Máy quay và cổng',
+  title: '14. Máy quay và cổng',
   summary: 'Dùng cổng dịch chuyển để vượt vực, máy quay phóng to và rung, phím R để về nhà.',
-  boardName: 'Bài 13 - Máy quay và cổng',
+  boardName: 'Bài 14 - Máy quay và cổng',
   intro: {
     title: 'Vực quá rộng để nhảy',
     text: 'Nhân vật đang đứng trên vách đá. Bên kia vực là một hòn đảo có lá cờ xanh, nhưng vực rộng quá, nhảy không tới. Ta sẽ dùng cổng dịch chuyển để sang đảo.',

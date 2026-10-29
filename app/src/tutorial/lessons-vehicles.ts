@@ -18,9 +18,9 @@ export interface LessonKit {
 }
 
 const T = {
-  title: '9. Lái xe',
+  title: '10. Lái xe',
   summary: 'Làm một chiếc xe, leo lên xe và lái đi.',
-  boardName: 'Bài 9 - Lái xe',
+  boardName: 'Bài 10 - Lái xe',
   intro: {
     title: 'Làm một chiếc xe',
     text: 'Bảng này có sẵn nhân vật và sàn nhà. Ta sẽ thêm một chiếc xe, rồi cho nhân vật leo lên xe và lái đi.',

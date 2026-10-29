@@ -9,9 +9,9 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
  */
 
 const T = {
-  title: '11. Xúc xắc và vùng',
+  title: '12. Xúc xắc và vùng',
   summary: 'Đứng trên bệ, bấm E đổ xúc xắc: ra 5 hoặc 6 thì cổng mở, chạy tới lá cờ.',
-  boardName: 'Bài 11 - Xúc xắc và vùng',
+  boardName: 'Bài 12 - Xúc xắc và vùng',
   intro: {
     title: 'Thử vận may',
     text: 'Bảng này có nhân vật, bệ vàng giữa sàn, một cổng xám chắn đường và lá cờ đỏ phía sau. Ta sẽ làm trò đổ xúc xắc: đứng trên bệ, bấm E, được 5 hoặc 6 thì cổng mở.',

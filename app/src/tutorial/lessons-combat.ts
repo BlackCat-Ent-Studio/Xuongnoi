@@ -12,9 +12,9 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
 // ---------- Vietnamese text ----------
 
 const T = {
-  title: '8. Đánh nhau',
+  title: '9. Đánh nhau',
   summary: 'Cho bot có máu, đánh bại nó, rồi dạy nó đánh lại bạn.',
-  boardName: 'Bài 8 - Đánh nhau',
+  boardName: 'Bài 9 - Đánh nhau',
   intro: {
     title: 'Đánh nhau trong game',
     text: 'Bảng này có sẵn bạn (xanh), một con bot đỏ đứng im, một thanh kiếm dưới sàn, và mảnh ghép Máu của bạn. Ta sẽ cho bot có máu để bạn đánh bại nó.',

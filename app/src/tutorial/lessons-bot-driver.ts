@@ -5,13 +5,13 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
 
 /**
  * Lesson 10, "Bot lái xe": a robot walks to a parked car, climbs in and drives it round a bend to the finish flag.
- * Self-contained like lesson 9: the shared builders of `lessons.ts` arrive through `LessonKit`.
+ * Self-contained like lesson 10: the shared builders of `lessons.ts` arrive through `LessonKit`.
  */
 
 const T = {
-  title: '10. Bot lái xe',
+  title: '11. Bot lái xe',
   summary: 'Dạy một con bot tự đi tới xe, lên xe và lái đến đích.',
-  boardName: 'Bài 10 - Bot lái xe',
+  boardName: 'Bài 11 - Bot lái xe',
   intro: {
     title: 'Bot biết lái xe',
     text: 'Bảng này có một con bot, một chiếc xe đậu bên đường và lá cờ ở cuối đường. Ta sẽ dạy bot tự đi tới xe, lên xe và lái qua khúc cua đến cờ.',

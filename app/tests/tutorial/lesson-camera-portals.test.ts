@@ -42,10 +42,10 @@ function session() {
   };
 }
 
-describe('lesson 13: camera and portals', () => {
+describe('lesson 14: camera and portals', () => {
   it('starts side-view with a ready-wired hero, a gap and a flag, and no step done', () => {
     const lesson = findLesson('camera-portals')!;
-    expect(lesson.title).toBe('13. Máy quay và cổng');
+    expect(lesson.title).toBe('14. Máy quay và cổng');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
     expect(board.graph.nodes.filter((n) => n.kind === 'portal')).toHaveLength(0);
