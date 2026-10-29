@@ -79,10 +79,56 @@ export function unionBox(boxes: readonly Box[]): Box | null {
   };
 }
 
-/** View that shows `content` inside a viewport of the given size, never below the fit floor. */
-export function fitView(content: Box | null, viewport: Size): View {
-  if (!content) return { panX: 40, panY: 40, zoom: 1 };
-  const raw = Math.min((viewport.w - 80) / content.w, (viewport.h - 80) / content.h);
-  const zoom = Math.min(1, Math.max(FIT_FLOOR, raw));
-  return { zoom, panX: 40 - content.x * zoom, panY: 40 - content.y * zoom };
+/** Screen-space size of an overlay pinned to a bottom corner of the canvas. */
+export interface CornerInset {
+  w: number;
+  h: number;
+}
+/** Overlays that sit on top of the canvas and must not hide content. */
+export interface CornerInsets {
+  bl: CornerInset;
+  br: CornerInset;
+}
+export const NO_INSETS: CornerInsets = { bl: { w: 0, h: 0 }, br: { w: 0, h: 0 } };
+
+const FIT_PAD = 40;
+/** Breathing room kept between content and an overlay. */
+export const CORNER_GAP = 16;
+
+/**
+ * View that shows `content` inside a viewport of the given size, never below the fit floor.
+ * Corner overlays are avoided: each one is dodged by giving up either a side column or a bottom strip,
+ * and the combination that leaves the biggest zoom wins.
+ */
+export function fitView(content: Box | null, viewport: Size, insets: CornerInsets = NO_INSETS): View {
+  if (!content) return { panX: FIT_PAD, panY: FIT_PAD, zoom: 1 };
+  const has = (c: CornerInset): boolean => c.w > 0 && c.h > 0;
+  let best: View | null = null;
+  let bestRaw = -Infinity;
+  for (const blSide of [true, false]) {
+    for (const brSide of [true, false]) {
+      const left = FIT_PAD + (blSide && has(insets.bl) ? insets.bl.w + CORNER_GAP : 0);
+      const right = FIT_PAD + (brSide && has(insets.br) ? insets.br.w + CORNER_GAP : 0);
+      const bottom =
+        FIT_PAD +
+        Math.max(!blSide && has(insets.bl) ? insets.bl.h + CORNER_GAP : 0, !brSide && has(insets.br) ? insets.br.h + CORNER_GAP : 0);
+      const raw = Math.min((viewport.w - left - right) / content.w, (viewport.h - FIT_PAD - bottom) / content.h);
+      if (raw > bestRaw + 1e-9) {
+        bestRaw = raw;
+        const zoom = Math.min(1, Math.max(FIT_FLOOR, raw));
+        best = { zoom, panX: left - content.x * zoom, panY: FIT_PAD - content.y * zoom };
+      }
+    }
+  }
+  return best as View;
+}
+
+/** A screen rectangle (canvas px) as a world-space box, grown by `margin` screen px. */
+export function screenRectToWorld(view: View, r: Box, margin = 0): Box {
+  return {
+    x: (r.x - margin - view.panX) / view.zoom,
+    y: (r.y - margin - view.panY) / view.zoom,
+    w: (r.w + margin * 2) / view.zoom,
+    h: (r.h + margin * 2) / view.zoom,
+  };
 }

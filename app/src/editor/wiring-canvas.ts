@@ -2,7 +2,7 @@ import { getNodeDef } from '../engine/registry';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
-import { LOW_ZOOM, clampZoom, estimateNodeSize, fitView, unionBox, wirePath, zoomAround, type Box, type Point, type Size, type View } from './graph/graph-geometry';
+import { CORNER_GAP, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
 import { createGraphToolbar } from './graph/graph-toolbar';
 import './graph/graph.css';
 import { listMissingWires } from './graph/missing-wires';
@@ -36,6 +36,12 @@ export interface WiringCanvas {
   findFreeSpot(want: Point, kind?: string): Point;
   /** Re-lay out all nodes in layers, animated. */
   arrange(): void;
+  /**
+   * Reserve the bottom-right corner (px of the canvas) for a floating window such as the game view.
+   * Fit and new-node placement keep clear of a `right` x `bottom` box pinned to that corner.
+   * Call again whenever the window moves or resizes; zeros (the default) release it.
+   */
+  setOverlayInsets(insets: { right: number; bottom: number }): void;
 }
 
 interface Deps {
@@ -64,6 +70,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   world.append(wireLayer, noteLayer, nodeLayer, badgeLayer);
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
+  let overlayBR = { w: 0, h: 0 };
   const nodeEls = new Map<string, HTMLElement>();
   const noteEls = new Map<string, NoteParts>();
   const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
@@ -111,14 +118,48 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       applyView();
     },
   });
-  const toolbar = createGraphToolbar({
-    zoomOut: () => zoomBy(1 / ZOOM_STEP),
-    zoomIn: () => zoomBy(ZOOM_STEP),
-    reset: () => zoomBy(1 / view.zoom),
-    fit: () => fitToContent(),
-    arrange: () => arrange(),
-  });
-  el.append(world, hint, toolbar.el, minimap.el, tip);
+  const toolbar = createGraphToolbar(
+    {
+      zoomOut: () => zoomBy(1 / ZOOM_STEP),
+      zoomIn: () => zoomBy(ZOOM_STEP),
+      reset: () => zoomBy(1 / view.zoom),
+      fit: () => fitToContent(),
+      arrange: () => arrange(),
+    },
+    minimap.el,
+  );
+  el.append(world, hint, toolbar.el, tip);
+
+  /** Canvas-relative screen rect of an element, or null when it is not laid out. */
+  function localRect(target: Element): Box | null {
+    const r = target.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return null;
+    const c = el.getBoundingClientRect();
+    return { x: r.left - c.left, y: r.top - c.top, w: r.width, h: r.height };
+  }
+
+  /** Screen rects of the overlays that sit on the canvas (bottom-left cluster, reserved bottom-right box). */
+  function overlayRects(): Box[] {
+    const rects: Box[] = [];
+    const corner = localRect(toolbar.el);
+    if (corner) rects.push(corner);
+    if (overlayBR.w > 0 && overlayBR.h > 0) {
+      const c = el.getBoundingClientRect();
+      rects.push({ x: c.width - overlayBR.w, y: c.height - overlayBR.h, w: overlayBR.w, h: overlayBR.h });
+    }
+    return rects;
+  }
+
+  function cornerInsets(): CornerInsets {
+    const corner = localRect(toolbar.el);
+    const height = el.getBoundingClientRect().height;
+    return {
+      bl: corner ? { w: corner.x + corner.w, h: height - corner.y } : { w: 0, h: 0 },
+      br: { ...overlayBR },
+    };
+  }
+
+  const blockedWorld = (): Box[] => overlayRects().map((r) => screenRectToWorld(view, r, CORNER_GAP));
 
   function applyView(): void {
     world.style.transform = `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`;
@@ -137,7 +178,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function fitToContent(): void {
     const r = el.getBoundingClientRect();
-    view = fitView(unionBox(contentBoxes()), { w: r.width || 800, h: r.height || 600 });
+    view = fitView(unionBox(contentBoxes()), { w: r.width || 800, h: r.height || 600 }, cornerInsets());
     applyView();
   }
 
@@ -244,10 +285,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function findFreeSpot(want: Point, kind?: string): Point {
     const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }) : { w: 168, h: 90 };
-    return findFreeNodeSpot(want, size, occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf));
+    return findFreeNodeSpot(want, size, [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf), ...blockedWorld()]);
   }
 
-  const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent() });
+  const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent(), blocked: blockedWorld });
   const { flash } = actions;
   const arrange = actions.arrange;
 
@@ -278,6 +319,36 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     setView: (v) => { view = v; applyView(); },
     clientToWorld, render, drawWires,
   });
+
+  // Fade the bottom-left cluster while a dragged node or wire passes under it (it still takes clicks).
+  let pressOnItem = false;
+  const touchesCorner = (e: PointerEvent): boolean => {
+    const c = el.getBoundingClientRect();
+    const corner = localRect(toolbar.el);
+    if (!corner) return false;
+    const m = CORNER_GAP;
+    const inside = (x: number, y: number): boolean =>
+      x > corner.x - m && x < corner.x + corner.w + m && y > corner.y - m && y < corner.y + corner.h + m;
+    if (inside(e.clientX - c.left, e.clientY - c.top)) return true;
+    for (const box of nodeEls.values()) {
+      if (!box.classList.contains('selected')) continue;
+      const r = box.getBoundingClientRect();
+      if (r.right - c.left > corner.x - m && r.left - c.left < corner.x + corner.w + m && r.bottom - c.top > corner.y - m && r.top - c.top < corner.y + corner.h + m) return true;
+    }
+    return false;
+  };
+  el.addEventListener('pointerdown', (e) => {
+    pressOnItem = e.target instanceof Element && !e.target.closest('.wc-ui') && !!e.target.closest('.wc-node, .wc-note');
+  }, true);
+  el.addEventListener('pointermove', (e) => {
+    toolbar.el.classList.toggle('dim', pressOnItem && (e.buttons & 1) === 1 && touchesCorner(e));
+  }, true);
+  const endDrag = (): void => {
+    pressOnItem = false;
+    toolbar.el.classList.remove('dim');
+  };
+  el.addEventListener('pointerup', endDrag, true);
+  el.addEventListener('pointercancel', endDrag, true);
 
   // ---------- state sync ----------
 
@@ -330,5 +401,9 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     refreshBadges,
     findFreeSpot,
     arrange,
+    setOverlayInsets({ right, bottom }) {
+      const ok = (n: number): number => (Number.isFinite(n) && n > 0 ? Math.round(n) : 0);
+      overlayBR = { w: ok(right), h: ok(bottom) };
+    },
   };
 }
