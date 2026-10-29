@@ -68,6 +68,36 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   5. Tablet/touch in scope? The recommendation is no.
 - **After approval:** brainstorm report → plan phases (tokens/CSS, top bar, palette with search and icons, node cards with smart placement, canvas zoom/fit/minimap, properties, game view and toast, tutorial card, rename and colours, required ports) → split into parallel worktrees by file ownership → merge → browser sweep.
 
+## 3b. UPDATE 2026-10-29 15:45: a second round of mockups (D/E/F, pro game-engine style)
+- **The user's request.** Make more mockups in a professional, modern game-engine editor style (Unity/Unreal genre, without their names or logos). Use these 3 skill kits as read-only guidance, plus https://21st.dev/community/components for visual inspiration only.
+- **Skill kits.** All three were checked by hand and scanned with Windows Defender, and none had threats. Do not install them: their hooks would clash with ClaudeKit.
+  - `D:\skill\taste-skill-main`
+  - `D:\skill\impeccable-main`: its `impeccable.cmd` downloads an exe from GitHub, so never run it.
+  - `E:\ux-ui-agent-skills-main`: the user wants it kept on drive E, not drive C.
+- **Three ui-ux-designer agents** were launched in the background. Each writes `plans/ui-mockups/<dir>/index.html` + `preview.png` and a report `plans/reports/ui-ux-designer-261029-1520-mockup-<x>-report.md`:
+  - **D `d-pro-docked`**: 4 docked panels. **DONE, published at https://claude.ai/artifact/NcZBP7Gy3Ysx2CUfFsTMjD.** Fit zoom is 65% at 1280. Porting is estimated at 13–17 days.
+  - **E `e-graph-focus`**: the graph fills the screen, with presets Nối dây/Chơi thử/Cân bằng and a floating PiP game. **DONE, published at https://claude.ai/artifact/4CxnpFqtjZ2qhg4X6RgCtZ.** It passed the checks at 1280 and 1440. Concerns:
+    - the fit zoom is only 57% at 1280
+    - it renames nodes to "Mảnh ghép" and the box to "Hộp"
+    - play mode allows live editing
+    - porting is estimated at 11–14 dev days
+  - **F `f-split-live`**: a 50/50 game/graph split, wires show live values during play, plus Ctrl+K. **DONE, published at https://claude.ai/artifact/H2sAgUkXkV9ERYRbKzWXCa.** Fit zoom is 65% at 1280. Porting is estimated at 16–18 days. All 3 are done; the next step is asking the user to choose.
+  - **2026-10-29 16:48: the user tentatively chose D (Xưởng Pro) as the base.** Parts of E/F will be picked later. Still waiting on questions 2–7 (renaming Khối, "Mảnh ghép", live editing during play, colours, required ports, touch).
+  - **2026-10-29 16:50: decisions locked** (2a Hộp, 3a Mảnh ghép, 4a, 5a, 6a, 7a). Report: `plans/reports/brainstorm-261029-1648-ui-redesign-pro-docked-report.md`. Next: /ck:plan (P1 Shell first, then P2–P6 in parallel). Note: the engine has no pause/step yet.
+- **Next steps:**
+  1. When D and F finish (if those agents are gone, check whether the files exist and re-run any missing mockup), eyeball each preview.png.
+  2. Publish each with `mcp__claude-artifacts__publish_files` (files: index.html as index.html, title "Xưởng Nối – Mẫu D/E/F …", icon "layout").
+  3. Give the user the links.
+  4. Ask, batched as plain numbered text:
+     - which of A–F
+     - the Khối rename (Hộp / Vật cản / Mảnh ghép)
+     - category colours only for port types
+     - a required-port flag
+     - live editing during play vs locking
+     - a collapsed palette at 1280
+     - tablet out of scope
+- **Note:** Playwright is NOT in `app/package.json`. Agents used an install from an old scratchpad, so add it as a devDependency or reuse `plans/browser-scripts`.
+
 ## 4. Workflow that works (keep doing this)
 1. **Requests.** The user writes short Vietnamese requests, usually through `/brainstorm`. Reply in simple Vietnamese with tables.
    - Present the options and a recommendation first.
