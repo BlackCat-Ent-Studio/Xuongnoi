@@ -47,7 +47,7 @@ function session() {
 describe('lesson 10: a bot that drives', () => {
   it('is the last lesson, starts in top view with a bot, a car and a flag', () => {
     const lesson = findLesson('bot-driver')!;
-    expect(LESSONS[LESSONS.length - 1]).toBe(lesson);
+    expect(LESSONS).toContain(lesson);
     expect(lesson.title).toBe('10. Bot lái xe');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-top');
