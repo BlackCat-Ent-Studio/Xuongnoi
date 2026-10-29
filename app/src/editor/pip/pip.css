@@ -26,3 +26,6 @@
 .pip-dropzone.active { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
 .dock-center .tabs.pip-drop { box-shadow: inset 0 -2px 0 var(--accent); background: var(--accent-soft); }
 .pip-ghost { position: fixed; z-index: 90; pointer-events: none; padding: 4px 12px; border-radius: 6px; background: var(--panel2); border: 1px solid var(--accent); color: var(--text); font-weight: 600; box-shadow: 0 8px 20px rgba(4, 6, 9, 0.5); transform: translate(8px, 8px); }
+
+/* the empty-board card keeps clear of the window */
+.launchpad { padding-right: var(--pip-inset-r, 0px); }

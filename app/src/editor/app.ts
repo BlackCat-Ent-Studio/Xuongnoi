@@ -181,7 +181,21 @@ export function mountEditor(root: HTMLElement): void {
     onSplit: () => layout.setPreset('split'),
     onFloatRequest: () => showCenter('graph'),
     onMoved: relayout,
+    onGeometry: updateCanvasInsets,
   });
+  /** Tells the wiring board how much of its bottom-right corner the floating window covers. */
+  function updateCanvasInsets(): void {
+    if (!pip.visible()) {
+      canvas.el.style.removeProperty('--pip-inset-r');
+      return canvas.setOverlayInsets({ right: 0, bottom: 0 });
+    }
+    const c = canvas.el.getBoundingClientRect();
+    const p = pip.el.getBoundingClientRect();
+    if (c.width === 0 || p.width === 0) return;
+    const right = Math.max(0, c.right - p.left + 12);
+    canvas.el.style.setProperty('--pip-inset-r', `${right}px`);
+    canvas.setOverlayInsets({ right, bottom: Math.max(0, c.bottom - p.top + 12) });
+  }
   /** The window floats while the board tab is open, except in the split layout where the game is already beside it. */
   function syncPip(): void {
     pip.setVisible(centerDock.selected() === 'graph' && layout.preset() !== 'split');

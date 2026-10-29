@@ -75,6 +75,8 @@ export interface GamePipOptions {
   onSplit(): void;
   /** Called after the game box moved or the window changed size. */
   onMoved(): void;
+  /** Called whenever the window's rectangle may have changed (shown, hidden, moved, resized, collapsed). */
+  onGeometry(): void;
 }
 
 export function createGamePip(opts: GamePipOptions): GamePip {
@@ -139,6 +141,7 @@ export function createGamePip(opts: GamePipOptions): GamePip {
     el.classList.toggle('collapsed', prefs.collapsed);
     collapseBtn.replaceChildren(icon(prefs.collapsed ? 'plus' : 'minus'));
     collapseBtn.title = collapseBtn.ariaLabel = prefs.collapsed ? PIP_TEXT.expand : PIP_TEXT.collapse;
+    opts.onGeometry();
   }
 
   function setCollapsed(on: boolean): void {
@@ -337,6 +340,7 @@ export function createGamePip(opts: GamePipOptions): GamePip {
         apply();
       } else {
         home.append(gameBox);
+        opts.onGeometry();
       }
       opts.onMoved();
     },
