@@ -3,7 +3,7 @@ import { unionBox, type Box, type Point } from './graph-geometry';
 import { GRAPH_TEXT } from './graph-text-vi';
 
 const W = 176;
-const H = 110;
+const H = 96;
 const PAD = 12;
 
 export interface Minimap {
