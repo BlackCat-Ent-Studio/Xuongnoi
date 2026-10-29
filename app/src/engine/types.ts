@@ -397,6 +397,46 @@ export interface WorldApi {
   listEntities(): readonly EntityView[];
   /** Seed picked once per run; nodes with seed 0 derive their random sequence from it. */
   runSeed(): number;
+  // ---- play camera, teleport and portals ----
+
+  /**
+   * Sets (or, with null, clears) the play-camera request of one camera node. When several are set the one
+   * that became active most recently wins. Never touches the edit camera.
+   */
+  setCamera(owner: string, command: PlayCameraCommand | null): void;
+  /**
+   * Moves a character, item or vehicle so its center is at `to`, or at the nearest spot clear of solid blocks.
+   * Held items travel with their holder; a seated driver moves its vehicle (and stays seated). Returns the final
+   * center, or null when nothing moved (unknown / hidden / dead / a block / an item in someone's hand / no free spot).
+   */
+  teleport(id: EntityId, to: Vec3, keepVelocity: boolean): Vec3 | null;
+  /** Declares (each tick, idempotent) a portal entity and who it leads to; see PortalLink. */
+  setPortal(id: EntityId, link: PortalLink): void;
+  /** The entity that stepped into this portal on the last physics step, else null (one tick). */
+  portalUser(id: EntityId): EntityId | null;
+}
+
+/** What a camera node asks of the play camera. */
+export interface PlayCameraCommand {
+  /** 'follow' tracks `target` (else the usual follow subject) shifted by `point`; 'fixed' looks at `point`. */
+  mode: 'follow' | 'fixed';
+  target: EntityId | null;
+  point: Vec3;
+  /** Magnification, 1 = default framing. */
+  zoom: number;
+  /** 0 = instant; larger = slower, softer motion. */
+  smoothness: number;
+  /** Current shake strength, 0 = still. */
+  shake: number;
+}
+
+/** A portal entity's link: partner by wire, or any other portal with the same non-empty `pair`. */
+export interface PortalLink {
+  partner: EntityId | null;
+  pair: string;
+  enabled: boolean;
+  /** Seconds an entity that just came through cannot be sent again. */
+  cooldown: number;
 }
 
 /** Full world used by the game loop and renderer. */
@@ -407,6 +447,8 @@ export interface World extends WorldApi {
   hudItems(): readonly HudItem[];
   /** 3D mode: stick input is relative to this camera yaw (radians, 0 = looking toward −Z). */
   setCameraYaw(rad: number): void;
+  /** The play-camera request that applies right now (most recently activated camera node), or null. */
+  cameraCommand(): PlayCameraCommand | null;
 }
 
 export const TICK_DT = 1 / 60;

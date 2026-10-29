@@ -11,6 +11,7 @@ import platformBot from '../samples/platform-bot.json';
 import arena from '../samples/arena.json';
 import race from '../samples/race.json';
 import diceZones from '../samples/dice-zones.json';
+import portalCamera from '../samples/portal-camera.json';
 import { parseBoard } from './save-format';
 
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
@@ -26,6 +27,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'arena', label: 'Võ đài (đấu tay đôi với bot, 2D)', json: arena },
   { id: 'race', label: 'Đua xe về đích (lái xe thi với bot, nhìn từ trên)', json: race },
   { id: 'dice-zones', label: 'Xúc xắc và vùng (đổ xúc xắc, mở cổng, 2D)', json: diceZones },
+  { id: 'portal-camera', label: 'Cổng dịch chuyển (qua vực bằng cổng, camera zoom và rung, 2D)', json: portalCamera },
 ];
 
 /** Fresh copies on every call, so callers may mutate the boards freely. */

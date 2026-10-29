@@ -80,6 +80,10 @@ export function makeWorld(): FakeWorld {
     exitVehicle: () => null,
     listEntities: () => [...w.entities.values()],
     runSeed: () => 12345,
+    setCamera: () => undefined,
+    teleport: () => null,
+    setPortal: () => undefined,
+    portalUser: () => null,
   };
   return w;
 }

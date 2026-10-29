@@ -32,6 +32,9 @@ import { latchNode } from './latch';
 import { mapRangeNode } from './map-range';
 import { zoneSensorNode } from './zone-sensor';
 import { distanceNode } from './distance';
+import { cameraNode } from './camera';
+import { teleportNode } from './teleport';
+import { portalNode } from './portal';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -80,6 +83,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   mapRangeNode,
   zoneSensorNode,
   distanceNode,
+  cameraNode,
+  teleportNode,
+  portalNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

@@ -4,6 +4,7 @@ import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
 import { HealthBarLayer } from './health-bar';
 import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
+import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
 
 type Entry =
@@ -20,7 +21,8 @@ type Entry =
       shape: string;
       color: string;
     }
-  | { type: 'vehicle'; figure: VehicleFigure; model: string };
+  | { type: 'vehicle'; figure: VehicleFigure; model: string }
+  | { type: 'portal'; figure: PortalFigure };
 
 /** Length along x, head along z, resting on its side: yaw a quarter turn, then lay the long axis down. */
 const LYING_POSE = new THREE.Quaternion()
@@ -29,7 +31,8 @@ const LYING_POSE = new THREE.Quaternion()
 
 /** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
-  if (entry.type === 'block') return e.kind === 'block';
+  if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
+  if (entry.type === 'block') return e.kind === 'block' && e.look !== PORTAL_LOOK;
   if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
   if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
   return e.kind === 'character' && entry.look === resolveLook(e.look);
@@ -74,6 +77,8 @@ export class SceneView {
     for (const entry of this.entries.values()) {
       if (entry.type === 'character') entry.figure.setMode(mode);
     }
+    // Portals are drawn differently per view; they are rebuilt on the next sync.
+    for (const [id, entry] of [...this.entries]) if (entry.type === 'portal') this.removeEntry(id, entry);
   }
 
   /** Create / update / remove objects so they match the entity list. `dt` drives character animation. */
@@ -94,6 +99,10 @@ export class SceneView {
       }
       if (entry.type === 'vehicle') {
         entry.figure.update(e);
+        continue;
+      }
+      if (entry.type === 'portal') {
+        entry.figure.update(e, dt);
         continue;
       }
       if (entry.type === 'character') {
@@ -159,16 +168,21 @@ export class SceneView {
       this.group.add(pose);
       return { type: 'item', figure, pose, flat, bounds, shape, color: e.color };
     }
-    const mesh = new THREE.Mesh(
-      this.geometry,
-      new THREE.MeshLambertMaterial(e.zone ? { color: e.color, transparent: true, opacity: 0.28, depthWrite: false } : { color: e.color }),
-    );
+    if (e.kind === 'block' && e.look === PORTAL_LOOK) {
+      const figure = new PortalFigure(e.color, this.mode);
+      this.group.add(figure.object);
+      return { type: 'portal', figure };
+    }
+    const mesh = new THREE.Mesh(this.geometry, new THREE.MeshLambertMaterial(e.zone ? { color: e.color, transparent: true, opacity: 0.28, depthWrite: false } : { color: e.color }));
     this.group.add(mesh);
     return { type: 'block', mesh, color: e.color };
   }
 
   private removeEntry(id: string, entry: Entry): void {
-    if (entry.type === 'vehicle') {
+    if (entry.type === 'portal') {
+      this.group.remove(entry.figure.object);
+      entry.figure.dispose();
+    } else if (entry.type === 'vehicle') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'character') {
