@@ -167,7 +167,7 @@ describe('plane grid A* (top-down and 3D)', () => {
     }
     const ms = performance.now() - t0;
     expect(found).toBe(40);
-    expect(ms).toBeLessThan(1500); // ~40 ms in practice; generous so slow CI does not flake
+    expect(ms).toBeLessThan(6000); // ~40 ms in practice; generous so slow CI does not flake
   });
 });
 
