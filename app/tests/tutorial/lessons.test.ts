@@ -561,10 +561,10 @@ describe('lesson 8: bot places the crate', () => {
     expect(s.stepId()).toBe('done');
   });
 
-  it('is registered right after lesson 7 and the titles count 1 to 15', () => {
+  it('is registered right after lesson 7 and the titles count 1 to 15 then 17', () => {
     expect(LESSONS.map((l) => l.id).slice(6, 9)).toEqual(['chores', 'chores-place', 'combat']);
-    expect(LESSONS).toHaveLength(15);
-    expect(LESSONS.map((l) => Number.parseInt(l.title, 10))).toEqual(Array.from({ length: 15 }, (_, i) => i + 1));
+    expect(LESSONS).toHaveLength(16);
+    expect(LESSONS.map((l) => Number.parseInt(l.title, 10))).toEqual([...Array.from({ length: 15 }, (_, i) => i + 1), 17]);
   });
 
   it('with Ném the crate flies off the pad and the game never wins', () => {

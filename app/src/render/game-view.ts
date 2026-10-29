@@ -20,6 +20,7 @@ import { floatingLabels } from './floating-labels';
 import { Hud } from './hud';
 import { SceneView } from './scene-view';
 import { TEXT_VI } from './text-vi';
+import { UiInputBuffer, createClickTracker, pickEntities } from './ui-input';
 
 let nodesRegistered = false;
 function ensureNodesRegistered(): void {
@@ -55,6 +56,8 @@ export function createGameView(): GameView {
   let resetOnNextPreview = false;
 
   const raycaster = new THREE.Raycaster();
+  const uiBuf = new UiInputBuffer();
+  const clicks = createClickTracker();
 
   function ensureRig(m: ViewMode): void {
     sceneView.setMode(m);
@@ -90,7 +93,10 @@ export function createGameView(): GameView {
   function setPaused(paused: boolean): void {
     if (pacer.isPaused() === paused) return;
     if (paused) pacer.pause();
-    else pacer.resume();
+    else {
+      pacer.resume();
+      hud?.showPauseMenu(false, resumePlay);
+    }
     for (const cb of pauseCallbacks) cb(paused);
   }
 
@@ -101,8 +107,29 @@ export function createGameView(): GameView {
     if (was) for (const cb of pauseCallbacks) cb(false);
   }
 
+  function resumePlay(): void {
+    if (!playing || !pacer.isPaused()) return;
+    setPaused(false);
+    lastTime = performance.now();
+  }
+
+  /** Esc opens or closes the pause menu of a start screen that asked for one. */
+  function onEscape(e: KeyboardEvent): void {
+    if (e.code !== 'Escape' || !playing || !hud || world?.ended) return;
+    const t = e.target;
+    if (t instanceof HTMLElement && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
+    if (hud.pauseMenuShown()) {
+      resumePlay();
+    } else if (hud.canPause() && !pacer.isPaused()) {
+      setPaused(true);
+      hud.showPauseMenu(true, resumePlay);
+    }
+  }
+
   function resetSession(): void {
     cancelLoop();
+    uiBuf.clear();
+    clicks.cancel();
     clearPause();
     playing = false;
     runtime = null;
@@ -143,7 +170,7 @@ export function createGameView(): GameView {
       if (mode === '3d') world.setCameraYaw(rig.yaw);
       const steps = pacer.stepsFor(dt);
       for (let i = 0; i < steps && !world.ended; i++) {
-        runtime.tick(readInputFn());
+        runtime.tick({ ...readInputFn(), ui: i === 0 ? uiBuf.take() : uiBuf.peekHeld() });
         world.step(TICK_DT);
       }
     } catch (err) {
@@ -198,7 +225,15 @@ export function createGameView(): GameView {
     if (renderer) renderer.domElement.style.cursor = playing && mode !== '3d' ? '' : drag ? 'grabbing' : 'grab';
   }
 
+  /** A click on the playing view reaches the game as the entities under the pointer. */
+  function pickForGame(e: PointerEvent): void {
+    if (!world || e.button !== 0 || !clicks.up(e.pointerId, e.clientX, e.clientY)) return;
+    const ndc = toNdc(e.clientX, e.clientY);
+    if (ndc) uiBuf.pick(pickEntities(ndc, rig.camera, world.entities(), mode === '3d'));
+  }
+
   function onPointerDown(e: PointerEvent): void {
+    if (playing && e.button === 0) clicks.down(e.pointerId, e.clientX, e.clientY);
     if (!renderer || drag) return;
     let kind: 'orbit' | 'pan' | null = null;
     if (playing) {
@@ -227,6 +262,7 @@ export function createGameView(): GameView {
   }
 
   function onPointerUp(e: PointerEvent): void {
+    if (playing) pickForGame(e);
     if (drag && drag.id === e.pointerId) {
       drag = null;
       syncChrome();
@@ -256,13 +292,17 @@ export function createGameView(): GameView {
       const canvas = renderer.domElement;
       canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;';
       el.appendChild(canvas);
-      hud = new Hud(() => restartCallbacks.forEach((cb) => cb()));
+      hud = new Hud(() => restartCallbacks.forEach((cb) => cb()), {
+        click: (key) => uiBuf.click(key),
+        hold: (key, down) => uiBuf.hold(key, down),
+      });
       el.appendChild(hud.root);
       canvas.addEventListener('pointerdown', onPointerDown);
       canvas.addEventListener('pointermove', onPointerMove);
       canvas.addEventListener('pointerup', onPointerUp);
       canvas.addEventListener('pointercancel', onPointerUp);
       canvas.addEventListener('wheel', onWheel, { passive: false });
+      window.addEventListener('keydown', onEscape);
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
       resetBtn = document.createElement('button');
       resetBtn.type = 'button';
@@ -329,11 +369,7 @@ export function createGameView(): GameView {
       if (playing) setPaused(true);
     },
 
-    resume(): void {
-      if (!playing || !pacer.isPaused()) return;
-      setPaused(false);
-      lastTime = performance.now();
-    },
+    resume: resumePlay,
 
     stepFrame(): void {
       if (playing) pacer.requestStep(); // the running loop picks it up on the next frame

@@ -63,6 +63,21 @@ export interface ParamDef {
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */
 export interface InputSnapshot {
   keysDown: ReadonlySet<string>;
+  /** On-screen clicks and taps for this tick. Absent = none (older callers and headless sims never set it). */
+  ui?: UiInput;
+}
+
+/**
+ * Pointer events that reached the game for one tick. Widget keys are the graph node id of the UI node that drew
+ * the widget; a dialog answer is `${nodeId}#${answerIndex}`.
+ */
+export interface UiInput {
+  /** Widgets clicked since the previous tick (a one-tick pulse). */
+  clicked: ReadonlySet<string>;
+  /** Widgets whose button is held down right now. */
+  held: ReadonlySet<string>;
+  /** Entities under the pointer when the game view was clicked since the previous tick. */
+  picked: ReadonlySet<EntityId>;
 }
 
 export interface EvalCtx {
@@ -350,6 +365,14 @@ export interface SolidBox {
 
 export type HudCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
+/** An interactive or graphical widget drawn by the HUD instead of a plain text line. */
+export type HudWidget =
+  | { type: 'button'; text: string }
+  /** `fraction` is 0..1. The row shows `label` and `value` next to the bar. */
+  | { type: 'bar'; fraction: number }
+  | { type: 'dialog'; question: string; answers: string[] }
+  | { type: 'start'; title: string; buttonText: string; pauseMenu: boolean };
+
 export interface HudItem {
   key: string;
   label: string;
@@ -363,6 +386,8 @@ export interface HudItem {
   anchor?: EntityId;
   /** True = kept in the list but not drawn. */
   hidden?: boolean;
+  /** Set = drawn as this widget (button, bar, dialog, start screen) rather than as text. */
+  widget?: HudWidget;
 }
 
 export type GameResult = 'win' | 'lose';

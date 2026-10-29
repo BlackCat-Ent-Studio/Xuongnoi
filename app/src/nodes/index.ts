@@ -39,6 +39,11 @@ import { movingPlatformNode } from './moving-platform';
 import { rotatingPlatformNode } from './rotating-platform';
 import { shooterNode } from './shooter';
 import { spawnerNode } from './spawner';
+import { uiButtonNode } from './ui-button';
+import { uiDialogNode } from './ui-dialog';
+import { uiMeterNode } from './ui-meter';
+import { uiPickNode } from './ui-pick';
+import { uiStartNode } from './ui-start';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -94,6 +99,11 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   rotatingPlatformNode,
   shooterNode,
   spawnerNode,
+  uiButtonNode,
+  uiPickNode,
+  uiMeterNode,
+  uiDialogNode,
+  uiStartNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

@@ -1,18 +1,12 @@
 import type { GameResult, HudCorner, HudItem } from '../engine/types';
+import { HudModals } from './hud-modals';
+import { CornerWidgets, HUD_CORNER_LIST, barTrack, cornerStyle, fillBar, type WidgetEvents } from './hud-widgets';
 import { TEXT_VI } from './text-vi';
-
-const CORNERS: HudCorner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
 /** Whole numbers as-is; fractional values (e.g. a running timer) rounded to one decimal. */
 export function formatHudValue(v: number): string {
   if (!Number.isFinite(v)) return '0';
   return Number.isInteger(v) ? String(v) : v.toFixed(1);
-}
-
-function cornerStyle(c: HudCorner): string {
-  const v = c.startsWith('top') ? 'top:8px;' : 'bottom:8px;';
-  const h = c.endsWith('left') ? 'left:8px;text-align:left;' : 'right:8px;text-align:right;';
-  return `position:absolute;${v}${h}display:flex;flex-direction:column;gap:2px;text-shadow:0 1px 2px #fff;`;
 }
 
 /** A text bubble pinned to a screen position (its bottom-center). */
@@ -22,26 +16,42 @@ export interface FloatingLabel {
   color: string;
   x: number;
   y: number;
+  /** Set = a bar of this fill (0..1) under the text instead of a plain bubble. */
+  bar?: number;
 }
 
 /** HTML overlay: corner HUD items, end-of-game panel, error message. */
 export class Hud {
   readonly root = document.createElement('div');
   private readonly corners = new Map<HudCorner, HTMLElement>();
+  private readonly widgets: CornerWidgets;
+  private readonly modals: HudModals;
+  private pauseMenuReady = false;
   private readonly overlay = document.createElement('div');
   private readonly errorBox = document.createElement('div');
   private readonly floating = new Map<string, HTMLElement>();
   private lastSig = '';
 
-  constructor(private readonly onRestart: () => void) {
+  constructor(
+    private readonly onRestart: () => void,
+    events: WidgetEvents = { click: () => undefined, hold: () => undefined },
+  ) {
     this.root.style.cssText =
       'position:absolute;inset:0;pointer-events:none;font:600 16px system-ui,sans-serif;color:#1d2330;overflow:hidden;';
-    for (const c of CORNERS) {
-      const el = document.createElement('div');
-      el.style.cssText = cornerStyle(c);
-      this.corners.set(c, el);
-      this.root.appendChild(el);
+    const widgetColumns = new Map<HudCorner, HTMLElement>();
+    for (const c of HUD_CORNER_LIST) {
+      const column = document.createElement('div');
+      column.style.cssText = cornerStyle(c);
+      const texts = document.createElement('div');
+      const widgets = document.createElement('div');
+      widgets.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+      column.append(texts, widgets);
+      this.corners.set(c, texts);
+      widgetColumns.set(c, widgets);
+      this.root.appendChild(column);
     }
+    this.widgets = new CornerWidgets(widgetColumns, events);
+    this.modals = new HudModals(this.root, events);
     this.overlay.style.cssText =
       'position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(255,255,255,0.7);pointer-events:auto;';
     this.errorBox.style.cssText =
@@ -50,7 +60,9 @@ export class Hud {
   }
 
   setItems(items: readonly HudItem[]): void {
-    const shown = items.filter((i) => !i.hidden && i.anchor === undefined);
+    this.widgets.sync(items.filter((i) => !i.hidden && i.anchor === undefined));
+    this.pauseMenuReady = this.modals.sync(items);
+    const shown = items.filter((i) => !i.hidden && i.anchor === undefined && i.widget === undefined);
     const sig = shown.map((i) => `${i.corner}|${i.key}|${i.label}|${i.value}|${i.text ?? ''}|${i.color ?? ''}`).join(';');
     if (sig === this.lastSig) return;
     this.lastSig = sig;
@@ -78,7 +90,11 @@ export class Hud {
         this.floating.set(l.key, el);
         this.root.insertBefore(el, this.overlay);
       }
-      if (el.textContent !== l.text) el.textContent = l.text;
+      if (l.bar === undefined) {
+        if (el.textContent !== l.text) el.textContent = l.text;
+      } else {
+        this.paintFloatingBar(el, l);
+      }
       el.style.color = l.color;
       el.style.transform = `translate(${Math.round(l.x)}px,${Math.round(l.y)}px) translate(-50%,-100%)`;
     }
@@ -87,6 +103,31 @@ export class Hud {
       el.remove();
       this.floating.delete(key);
     }
+  }
+
+  private paintFloatingBar(el: HTMLElement, l: FloatingLabel): void {
+    let track = el.querySelector<HTMLElement>('[data-ui-track]');
+    if (!track) {
+      track = barTrack();
+      track.dataset.uiTrack = '1';
+      el.replaceChildren(document.createElement('div'), track);
+    }
+    const caption = el.firstElementChild as HTMLElement;
+    if (caption.textContent !== l.text) caption.textContent = l.text;
+    fillBar(track, l.bar ?? 0, l.color);
+  }
+
+  /** True while a started game with a pause-menu start screen is on, so Esc may open the menu. */
+  canPause(): boolean {
+    return this.pauseMenuReady;
+  }
+
+  showPauseMenu(on: boolean, onResume: () => void): void {
+    this.modals.showPause(on, onResume, this.onRestart);
+  }
+
+  pauseMenuShown(): boolean {
+    return this.modals.pauseShown();
   }
 
   showEnd(result: GameResult, message: string): void {
@@ -106,6 +147,7 @@ export class Hud {
   }
 
   hideEnd(): void {
+    this.modals.showPause(false, () => undefined, () => undefined);
     this.overlay.style.display = 'none';
     this.overlay.replaceChildren();
   }
