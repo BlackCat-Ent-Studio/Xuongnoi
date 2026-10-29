@@ -1,7 +1,7 @@
 import type { GraphNode } from '../../engine/types';
 import type { EditorState } from '../editor-state';
 import { computeLayout } from './auto-layout';
-import type { Size } from './graph-geometry';
+import type { Box, Size } from './graph-geometry';
 import { findFreeNodeSpot, occupiedBoxes } from './node-placement';
 
 interface Ctx {
@@ -11,12 +11,14 @@ interface Ctx {
   sizeOf: (id: string) => Size | undefined;
   drawWires: () => void;
   fit: () => void;
+  /** World-space regions covered by overlays; new nodes are kept off them. */
+  blocked?: () => Box[];
 }
 
 const ARRANGE_MS = 300;
 
 /** Node-level actions on the canvas: pulse/shake feedback, free-spot placement, animated auto-layout. */
-export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit }: Ctx) {
+export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, blocked }: Ctx) {
   let animating = false;
 
   function flash(id: string, cls: 'new' | 'shake'): void {
@@ -32,7 +34,7 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit }
   function placeNewNode(node: GraphNode): void {
     const box = nodeEls.get(node.id);
     if (!box) return;
-    const taken = occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf, node.id);
+    const taken = [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf, node.id), ...(blocked?.() ?? [])];
     const spot = findFreeNodeSpot(node.pos, { w: box.offsetWidth, h: box.offsetHeight }, taken);
     if (spot.x !== node.pos.x || spot.y !== node.pos.y) {
       state.moveItems([{ id: node.id, pos: spot }], { amend: true });
