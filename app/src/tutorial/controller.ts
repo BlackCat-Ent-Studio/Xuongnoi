@@ -140,6 +140,9 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
   // ---------- lifecycle ----------
 
   function start(lesson: Lesson): void {
+    // Starting a lesson from anywhere (launchpad, menu, list) answers the first-launch invite.
+    invite.hidden = true;
+    markInviteSeen();
     // Only the first lesson of a session stashes: switching lessons keeps the learner's own board.
     if (!stash) {
       stash = state.getBoard();
