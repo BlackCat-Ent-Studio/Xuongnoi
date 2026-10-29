@@ -50,6 +50,8 @@ export interface VehicleBody {
   hitWith: EntityId | null;
   /** Seconds during which a continuing contact does not count as a new crash. */
   hitCooldown: number;
+  /** Items per layer on the bed, set by a cargo node (see `normalizeCells`). Omitted = the default layout. */
+  cargoCells?: number;
 }
 
 export function createVehicleBody(spec: VehicleSpec): VehicleBody {
@@ -60,6 +62,10 @@ export function createVehicleBody(spec: VehicleSpec): VehicleBody {
       maxSpeed: positive(spec.maxSpeed, 8),
       accel: positive(spec.accel, 8),
       collide: spec.collide !== false,
+      brakeFactor: positive(spec.brakeFactor, BRAKE_FACTOR),
+      reverseShare: positive(spec.reverseShare, REVERSE_SHARE),
+      crashSpeed: positive(spec.crashSpeed, CRASH_SPEED),
+      shoveShare: nonNegative(spec.shoveShare, SHOVE_SHARE),
     },
     heading: 0,
     speed: 0,
@@ -75,20 +81,28 @@ export function createVehicleBody(spec: VehicleSpec): VehicleBody {
 }
 
 /** Braking and coasting to a stop is stronger than speeding up. */
-const BRAKE_FACTOR = 2;
+export const BRAKE_FACTOR = 2;
 /** In "direction" steering the vehicle turns faster than in throttle steering: it is the easy mode. */
 const DIRECTION_TURN_BOOST = 1.6;
 /** Throttle steering needs this share of top speed before the wheels bite fully. */
 const STEER_FULL_AT = 0.35;
 /** Reverse is slower than forward. */
-const REVERSE_SHARE = 0.4;
+export const REVERSE_SHARE = 0.4;
+/** Closing speed (units/s) above which a touch counts as a crash rather than a nudge. */
+export const CRASH_SPEED = 1.5;
+/** Share of the closing speed passed on to the vehicle that was hit (it is shoved a little, not launched). */
+export const SHOVE_SHARE = 0.25;
 /** Stick below this length counts as "no input" in direction steering. */
 const STICK_DEAD_ZONE = 0.05;
 /** Slowest a misaligned vehicle may crawl while it turns toward its target direction. */
 const MIN_ALIGN_SHARE = 0.15;
 
-function positive(n: number, fallback: number): number {
-  return Number.isFinite(n) && n > 0 ? n : fallback;
+function positive(n: number | undefined, fallback: number): number {
+  return n !== undefined && Number.isFinite(n) && n > 0 ? n : fallback;
+}
+
+function nonNegative(n: number | undefined, fallback: number): number {
+  return n !== undefined && Number.isFinite(n) && n >= 0 ? n : fallback;
 }
 
 function clamp1(n: number): number {
@@ -121,7 +135,7 @@ export function stickDirection(mode: ViewMode, yaw: number, mx: number, my: numb
 
 function speedRate(body: VehicleBody, target: number): number {
   const braking = Math.abs(target) < Math.abs(body.speed) || Math.sign(target) * Math.sign(body.speed) < 0;
-  return body.spec.accel * (braking ? BRAKE_FACTOR : 1);
+  return body.spec.accel * (braking ? (body.spec.brakeFactor ?? BRAKE_FACTOR) : 1);
 }
 
 /** Updates heading and speed from the stick and returns the velocity on the ground plane. */
@@ -154,7 +168,7 @@ export function driveVehicle(body: VehicleBody, dt: number, mode: ViewMode, yaw:
     body.speed = approach(body.speed, target, speedRate(body, target), dt);
   } else {
     // Gas / steer: up is gas, down is brake then reverse, left/right turns while rolling.
-    const target = iy >= 0 ? iy * spec.maxSpeed : iy * spec.maxSpeed * REVERSE_SHARE;
+    const target = iy >= 0 ? iy * spec.maxSpeed : iy * spec.maxSpeed * (spec.reverseShare ?? REVERSE_SHARE);
     body.speed = approach(body.speed, target, speedRate(body, target), dt);
     const grip = Math.min(1, Math.abs(body.speed) / (spec.maxSpeed * STEER_FULL_AT));
     body.heading = wrapAngle(body.heading + ix * dims.turnRate * grip * Math.sign(body.speed) * dt);

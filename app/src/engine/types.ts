@@ -219,6 +219,12 @@ export interface Runtime {
 
 export type EntityKind = 'character' | 'block' | 'item' | 'vehicle';
 
+/** Optional cargo tuning a cargo node passes on: items per layer on the bed (1, 2, 4 or 6) and the gap left when unloading. */
+export interface CargoLayout {
+  cellsPerLayer?: number;
+  unloadGap?: number;
+}
+
 /** Look and size class of a vehicle (built from boxes by the renderer). */
 export type VehicleModel = 'car' | 'bike' | 'truck';
 export const VEHICLE_MODELS: readonly VehicleModel[] = ['car', 'bike', 'truck'];
@@ -236,6 +242,14 @@ export interface VehicleSpec {
   accel: number;
   /** false = passes through other vehicles. Omitted = true. */
   collide?: boolean;
+  /** Braking strength as a multiple of `accel`. Omitted = 2. */
+  brakeFactor?: number;
+  /** Top reverse speed as a share of `maxSpeed` (throttle steering). Omitted = 0.4. */
+  reverseShare?: number;
+  /** Closing speed (units/s) above which a touch with another vehicle counts as a crash. Omitted = 1.5. */
+  crashSpeed?: number;
+  /** Share of the closing speed passed on to the vehicle that was hit. Omitted = 0.25. */
+  shoveShare?: number;
 }
 
 /** Look of an item entity (built from boxes by the renderer). */
@@ -539,9 +553,9 @@ export interface WorldApi {
    * Loads the nearest free carryable item within `reach` of the vehicle's edge onto its bed, unless it already
    * carries `capacity` items. Loaded items follow the vehicle and cannot be grabbed. Returns the item or null.
    */
-  loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string): EntityId | null;
+  loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string, layout?: CargoLayout): EntityId | null;
   /** Puts the most recently loaded item (of goods type `tag` when given and non-empty) down beside the vehicle (clear of solids). Null when none or no room. */
-  unloadCargo(vehicle: EntityId, tag?: string): EntityId | null;
+  unloadCargo(vehicle: EntityId, tag?: string, layout?: CargoLayout): EntityId | null;
   /** Items riding on the vehicle, oldest first. */
   cargoOf(vehicle: EntityId): readonly EntityId[];
 
