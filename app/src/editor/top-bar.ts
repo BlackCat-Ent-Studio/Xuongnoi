@@ -125,6 +125,9 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   save.setAttribute('aria-live', 'polite');
   const saveLabel = h('span', 'save-label');
   save.append(h('i'), saveLabel);
+  const syncSaveTip = (): void => {
+    save.title = saveLabel.textContent ?? '';
+  };
 
   const status = h('div', 'status');
   status.setAttribute('role', 'status');
@@ -160,6 +163,7 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
     saveLabel.textContent = `${SHELL_TEXT.saveStatusSaved} ${hh}:${mm}`;
+    syncSaveTip();
   }
   showSaved();
 
@@ -177,6 +181,7 @@ export function createTopBar(deps: TopBarDeps): TopBar {
       if (!saves) {
         save.classList.add('saving');
         saveLabel.textContent = SHELL_TEXT.saveStatusLesson;
+        syncSaveTip();
         return;
       }
       save.classList.add('saving');
