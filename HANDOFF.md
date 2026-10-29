@@ -1,61 +1,130 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-29 03:05
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-29 15:00
 
-## Goal
-An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes, wire ports and press Chơi to play. Claude writes all code and the user playtests. NOT a clone of Game Builder Garage: never read `D:\gbg\` and never mirror its nodes, UI or text.
+## 1. Goal
+An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes, wire ports and press Chơi to play a 2D or 3D game.
+- Claude writes all the code; the user only playtests and decides.
+- It is NOT a clone of Game Builder Garage. The user asked for "98% giống" early on and was declined. Never read `D:\gbg\` and never mirror its nodes, UI, lessons or text. Generic genre mechanics are fine.
 
-## Run
-`cd app; npm install; npm run dev` → http://localhost:5173. Then `npx vitest run`, `npx tsc --noEmit -p .` and `npm run build`.
-
-## Done (all committed on `main`, latest `dff2719`, 392 tests)
-- Engine:
-  - typed ports bool/number/object, 60 Hz ticks, back-edges
-  - one 3D world with 3 view modes: 2d-side, 2d-top, 3d
-- Editor:
-  - palette, wiring canvas, properties panel
-  - resizable splitters and ⛶ maximize
+## 2. Current state (main = a840e3e + this handoff, 654 tests green)
+- **Run:** `cd app; npm install; npm run dev` → http://localhost:5173.
+- **Gates:** `npx vitest run`, `npx tsc --noEmit -p .` and `npm run build` must all pass.
+- **Stack:** Vite 8, TypeScript 7 strict (noUncheckedIndexedAccess, noUnused*), three 0.186, vitest 5, plain DOM (no UI framework).
+- **Engine:** typed ports bool/number/object, a fixed 60 Hz tick, back-edges read the previous tick, and one 3D world with 3 view modes: 2d-side, 2d-top and 3d.
+- **41 node kinds in 7 categories** (`app/src/nodes/index.ts`):
+  - input: key, stick, on-start
+  - logic: and/or/not, compare, latch, zone, distance, touch
+  - math: const, math, counter, timer, random, map-range
+  - object: character (6 looks plus role player/bot), block, item (10+ shapes, holdStyle head/hand, damage, carryable), vehicle, moving/rotating platform, spawner, portal
+  - action: carry, interact, hand-tool, enter-exit, shooter, teleport, health
+  - brain: patrol, go-to, chase/flee, sequence, fight (A* pathfinding with a path-finding on/off param)
+  - output: win-lose, show-number, show-text, camera
+- **Editor:**
+  - palette, wiring canvas, properties panel with a look picker
+  - resizable splitters and a maximize button
   - edit-mode pan/zoom with 🎯 reset
-- Save:
-  - autosave and JSON files
-  - samples: side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot
-- Characters: 6 animated looks with a thumbnail picker, plus a role param (player/bot) so the camera follows the player.
-- Items:
-  - carry above head, drop, throw
-  - interact
-  - hand-tool slot with use/swing
-- Bots:
-  - brains: patrol, go-to, chase/flee, sequence
-  - A* pathfinding: grid for top/3d, platform graph for side
-- Tutorial: 6 in-app lessons.
+  - undo/redo, multi-select copy/paste/duplicate (Ctrl+C/V/D), sticky notes
+  - a floating status toast and an autosave/JSON file
+- **14 samples:** side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot, arena, race, dice-zones, portal-camera, dodge-shoot.
+- **14 lessons:**
+  - 1–3 basics
+  - 4 carry
+  - 5 tools
+  - 6 make-bot
+  - 7 chores (sequence)
+  - 8 combat
+  - 9 vehicles
+  - 10 bot-driver
+  - 11 chance-zones
+  - 12 platforms-shooting
+  - 13 camera-portals
+  - 14 editor-tools
+  - Each lesson is its own file `app/src/tutorial/lessons-*.ts`, registered in `lessons.ts` → `LESSONS`.
 
-## Latest (2026-10-29 03:05) — all approved jobs DONE, main = df1ede5, 511 tests
-- Job 1: lesson 7 'chores' (Chuỗi việc), show-text node + floating labels, lock shape, tools smaller in hand / flat on ground.
-- Job 2 combat: health node + bar, punch/tool/thrown damage, knockback, i-frames, death = tip over then hide, fight brain, arena sample, lesson 8.
-- Job 3 vehicles: vehicle + enter-exit nodes, steer modes, bots drive, closest-cell pathing, brain 'Tìm đường' param, race sample, lesson 9.
-- Integration: vehicles/seated drivers not damageable; key-door hint hides after opening; health bar lifts above carried item.
-- Samples (11): side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot, arena, race. Lessons: 9.
+## 3. NEXT: UI/UX redesign (waiting for the user's choice)
+- **Audit:** `plans/reports/ui-ux-designer-261029-1440-editor-ux-audit-report.md` (15 problems). The top ones:
+  - narrow node cards cut off Vietnamese labels
+  - nodes overlap when added
+  - busy boards are unreadable (no zoom buttons, fit or minimap)
+  - "Khối" means two things (all nodes, and the box object)
+  - the palette has no search or icons
+  - category colours fail contrast and clash with wire colours
+  - Chơi turns into "Sửa" instead of "Dừng" plus "Chơi lại"
+  - hints cover the game view
+  - the top bar wraps at 1280px
+- **Three mockups** (private artifacts; local copies in `plans/ui-mockups/*/index.html` + `preview.png`; each has its own report `plans/reports/ui-ux-designer-261029-1440-mockup-*-report.md`):
 
-## Latest (2026-10-29 13:20) — main = 657b7be, 631 tests, 41 node kinds, 14 samples, 10 lessons
-- Lesson 10 is 'bot-driver' (a bot boards a car and drives to a flag).
-- Gap-closing batch, all merged (design in `plans/reports/brainstorm-261029-1255-gap-closing-batch-report.md`; each feature's report is `plans/reports/fullstack-developer-261029-1300-wt-*`):
-  - Editor tools: undo/redo, multi-select copy/paste/duplicate, sticky notes saved in board JSON.
-  - Logic/sensors: random (seeded), latch, map-range, zone sensor, distance; sample dice-zones.
-  - Objects: moving platform (carries riders), rotating platform (90° steps when solid, spin when not), shooter, spawner; sample dodge-shoot.
-  - Camera/teleport: play-camera node, teleport, portal pairs; sample portal-camera.
-- The post-merge sweep is green: all 14 samples play. Report: `plans/reports/tester-261029-1320-post-merge-sweep-report.md`.
-- 2026-10-29 14:30: added lessons 11–14 (chance-zones, platforms-shooting, camera-portals, editor-tools). There are now 14 lessons. Main = 03bd680, 654 tests, stable 5/5 when the machine is idle.
-- Fixed a real bug: the top-bar status toast was shifting the layout mid-drag and causing missed wires. It now floats instead.
-- New sticky notes are placed in free space.
-- The A* perf test budget was relaxed to 6 s because it was flaky under parallel load.
-- Bots treat moving/turning blocks as empty space when pathfinding.
+  | Mockup | Artifact | Notes |
+  |---|---|---|
+  | A Studio tối (dark, amber accent) | https://claude.ai/artifact/KNSN9o6woKHZku7qZBzjcA | Most interactive: real wire drag, wrong-type port shake, "Nối giúp tôi". About 4–6 dev days |
+  | B Sáng thân thiện (warm light, pastel) | https://claude.ai/artifact/UieGR5Z6c9X5ntby13QNJ4 | Stacked ports (labels never clip), tutorial card docked under the palette, "Thiếu 1 dây" badge |
+  | C Kính mờ hiện đại (glass bento) | https://claude.ai/artifact/1HP4DBh5pgSKYnqvreBAwm | Ctrl+K that ignores diacritics, flowing wires in play, solid fallbacks |
 
-## Known issues / ideas
-- Characters pass through each other; vehicles pass through each other.
-- Health-bar lift and 3D vehicle visuals only unit-tested (not eyeballed in browser).
-- Browser scripts (scratchpad, may be lost): L4 E/F loop flaky; L9 script step index stale.
-- Backlog: character accessories (hats), tutorial for 2D-top/3D basics, arrow keys on WASD samples.
+- **Recommendation already given to the user:** B as the base, plus A's wire interactions and "Nối giúp tôi", plus C's Ctrl+K. A dark-mode toggle can come later.
+- **Five questions are pending; ask them again as plain numbered text:**
+  1. Which mockup?
+  2. Rename the box object "Khối" to "Hộp" or "Vật cản"? Keep the internal kind `block` so saves still load.
+  3. Change category colours so green/blue/orange mean port type only?
+  4. Add a `required` flag to port defs to drive the "Thiếu dây" badge?
+  5. Tablet/touch in scope? The recommendation is no.
+- **After approval:** brainstorm report → plan phases (tokens/CSS, top bar, palette with search and icons, node cards with smart placement, canvas zoom/fit/minimap, properties, game view and toast, tutorial card, rename and colours, required ports) → split into parallel worktrees by file ownership → merge → browser sweep.
 
-## Gotchas
-- A project hook blocks Bash commands whose text contains "node_modules" or "dist", so prefer the Write/Edit tools.
-- Commit only `app/` (the zip/dump and tooling are gitignored). The git identity is repo-local.
-- Playwright smoke scripts live in the session scratchpad and may be lost. Some legacy tutorial browser checks flake on headless fps (verified against a baseline): L4 alternating E/F loop.
-- The user prefers plain-text numbered questions and simple Vietnamese explanations.
+## 4. Workflow that works (keep doing this)
+1. **Requests.** The user writes short Vietnamese requests, usually through `/brainstorm`. Reply in simple Vietnamese with tables.
+   - Present the options and a recommendation first.
+   - Ask plain-text numbered questions (`1a 2b`), never AskUserQuestion popups.
+   - Batch every open question into one message when the user asks for that.
+2. **Scale.** For each approved feature write a short brainstorm report in `plans/reports/brainstorm-<date>-<slug>-report.md`, then spawn `fullstack-developer` agents.
+   - The user wants max parallelism ("mở hết agent").
+3. **Parallelism means git worktrees.**
+   - Create them yourself: `git worktree add -b feat/x ../GameBuilder-x HEAD`. The Agent tool's `isolation: worktree` failed here.
+   - Each agent runs `npm install`, uses its own dev port (5174+), commits on its branch and writes a report in `plans/reports/`.
+4. **Merging.** Merge as each agent finishes with `git merge --no-edit feat/x`. Conflicts are almost always append points:
+   - `nodes/index.ts` (imports and the node list)
+   - the `types.ts` WorldApi tail
+   - the `io/samples.ts` list
+   - the `tests/io/samples.test.ts` id/mode arrays and idle exclusions
+   - the node count in `tests/nodes/step-1-nodes.test.ts`
+   - the `fake-world.ts` stubs
+   - the `LESSONS` array and imports in `tutorial/lessons.ts`
+   - `scene-view.ts`
+5. **Resolving.** Use a small node script that does union merging (HEAD + theirs) and preserves CRLF/LF per file.
+   - Watch for methods landing inside the wrong interface (e.g. after `PortalLink`), and for a missing `},` between union-merged object methods in `world.ts`.
+   - Big multi-file semantic conflicts (combat vs vehicles) go to a resolver agent.
+6. **Verifying.** After each merge run tsc and vitest, then commit, `git worktree remove --force` and `git branch -d`. After a batch, run a tester agent browser sweep of every sample and key lessons.
+7. **Wrapping up.** Update this file and commit after every batch. Give the user `http://localhost:5173`; start the dev server in the background if it is down.
+8. **Mockups.** Write the files and publish them with `mcp__claude-artifacts__publish_files`; they are private by default. Read `guide(pages)` once per session.
+
+## 5. Lessons learned, bugs and fixes
+- **The status toast shifted the layout.** It made the top bar wrap, so the canvas jumped 33 px and wire drags missed (the lesson 3 "flake").
+  - Fix: `.status` is absolutely positioned with `pointer-events:none`.
+  - Lesson: intermittent UI script failures can be REAL bugs; probe element rects per action.
+- **Perf and determinism tests flake when 4+ agents run at once.** The A* budget was raised to 6 s. Re-run on an idle machine before calling it a bug; 5/5 green when idle.
+- **Tutorial gotchas:**
+  - Step checks must be tolerant: match by node kind + port, never by id or exact position.
+  - Lessons hard-coding "is the last lesson" break when lessons are appended; use `toContain`.
+  - A node cannot be wired to itself (`same-node`), so timer loops need an extra node.
+- **Samples:** a solid car means `go-to` must have stopDistance ≥ 1.5 to "arrive". Bots treat moving/turning blocks as empty space in A*.
+- **Bash hook:** it blocks commands containing the words "node_modules" or "dist", which affects Bash heredocs that mention them. Write files with the Write tool.
+- **Git:** the identity is repo-local (user "trong"). Commit `app/`, HANDOFF and plans as needed; `plans/**` is gitignored except templates, so reports stay local only. The zip/dump, ClaudeKit and `.agents` are ignored.
+- **Scratchpad:** session scratchpads are lost between sessions. Useful Playwright scripts are copied to `plans/browser-scripts/*.mjs` (tut-run/tut-common, sweep, lessons 11–14). Point them at port 5173.
+- **Known open issues:**
+  - characters and vehicles pass through each other
+  - 3D vehicle visuals, portals in top/3D and camera shake checked only in unit tests
+  - lessons 11–13 are long (24–28 steps)
+  - no sound
+  - no mouse, touch or gamepad input
+  - no online sharing
+
+## 6. Backlog ideas (not approved yet)
+- sound and music
+- mouse, touch and gamepad input
+- character–character collision
+- shorter lessons 11–13
+- character accessories
+- 2D-top/3D basics lessons
+- arrow keys on WASD samples
+- dark mode
+
+## 7. Gotchas
+- The user is a non-coder. Explain plainly, give links, and say what was not verified in the browser.
+- Report honestly: list unverified items and deviations from the approved design.
