@@ -1,4 +1,5 @@
 import type {
+  CargoLayout,
   CharacterIntent,
   EntityId,
   EntitySpec,
@@ -19,7 +20,7 @@ import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms'
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
-import { cargoOn, nearestLoadable, unloadSpot } from './cargo';
+import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
 import { probeAhead } from './probe-ahead';
 import { createVehicleBody, seatPosition } from './vehicles';
@@ -522,9 +523,10 @@ export function createWorld(mode: ViewMode): World {
       if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
       return leaveSeat(c)?.id ?? null;
     },
-    loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string): EntityId | null {
+    loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string, layout?: CargoLayout): EntityId | null {
       const veh = byId.get(vehicle);
       if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
+      if (veh.vehicle && layout?.cellsPerLayer !== undefined) veh.vehicle.cargoCells = normalizeCells(layout.cellsPerLayer);
       const onBoard = cargoOn(list, veh.id);
       if (onBoard.length >= Math.max(0, Math.floor(finiteOr(capacity, 0)))) return null;
       const item = nearestLoadable(list, veh, Math.max(0, finiteOr(reach, 0)), mode, tag);
@@ -534,12 +536,13 @@ export function createWorld(mode: ViewMode): World {
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
-    unloadCargo(vehicle: EntityId, tag?: string): EntityId | null {
+    unloadCargo(vehicle: EntityId, tag?: string, layout?: CargoLayout): EntityId | null {
       const veh = byId.get(vehicle);
       if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
+      if (veh.vehicle && layout?.cellsPerLayer !== undefined) veh.vehicle.cargoCells = normalizeCells(layout.cellsPerLayer);
       const top = cargoOn(list, veh.id, tag).pop();
       if (!top) return null;
-      const spot = unloadSpot(list, veh, top, mode);
+      const spot = unloadSpot(list, veh, top, mode, layout?.unloadGap);
       if (!spot) return null;
       release(top);
       top.pos = spot;

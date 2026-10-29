@@ -1,4 +1,4 @@
-import type { NodeDef } from '../engine/types';
+import type { CargoLayout, NodeDef } from '../engine/types';
 import { asBool, asObject, numParam, risingEdge, strParam, type EdgeState } from './util';
 
 interface CargoState {
@@ -31,6 +31,20 @@ export const cargoNode: NodeDef<CargoState> = {
     { id: 'loadType', label: 'Loại cần chất (để trống = loại nào cũng chất)', kind: 'text', default: '' },
     { id: 'unloadType', label: 'Loại cần dỡ (để trống = món trên cùng)', kind: 'text', default: '' },
     { id: 'reach', label: 'Tầm với (tính từ mép xe)', kind: 'number', default: 2, min: 0.2, max: 10, step: 0.1 },
+    { id: 'unloadGap', label: 'Khoảng cách đặt hàng (từ mép xe)', kind: 'number', default: 0.1, min: 0, max: 3, step: 0.1, advanced: true },
+    {
+      id: 'cellsPerLayer',
+      label: 'Số món mỗi tầng trên thùng xe',
+      kind: 'select',
+      default: '4',
+      advanced: true,
+      options: [
+        { value: '1', label: '1 (một chỗ giữa thùng)' },
+        { value: '2', label: '2 (một hàng ngang)' },
+        { value: '4', label: '4 (2 hàng x 2 cột)' },
+        { value: '6', label: '6 (3 hàng x 2 cột)' },
+      ],
+    },
   ],
   create: () => ({ load: { prev: false }, unload: { prev: false }, unloadAll: { prev: false } }),
   evaluate(ctx, i, params, s) {
@@ -39,17 +53,21 @@ export const cargoNode: NodeDef<CargoState> = {
     const unload = risingEdge(s.unload, asBool(i.unload));
     const unloadAll = risingEdge(s.unloadAll, asBool(i.unloadAll));
     const unloadType = strParam(params, 'unloadType', '').trim();
+    const layout: CargoLayout = {
+      cellsPerLayer: Number(strParam(params, 'cellsPerLayer', '4')),
+      unloadGap: numParam(params, 'unloadGap', 0.1),
+    };
     let loaded = false;
     let unloaded = false;
     if (veh !== null) {
       if (unloadAll) {
         // Stops at the first item with no free spot, so nothing is dropped into a wall.
-        while (ctx.world.unloadCargo(veh, unloadType) !== null) unloaded = true;
+        while (ctx.world.unloadCargo(veh, unloadType, layout) !== null) unloaded = true;
       } else if (unload) {
-        unloaded = ctx.world.unloadCargo(veh, unloadType) !== null;
+        unloaded = ctx.world.unloadCargo(veh, unloadType, layout) !== null;
       } else if (load) {
         const capacity = Math.max(1, Math.floor(numParam(params, 'capacity', 4)));
-        loaded = ctx.world.loadCargo(veh, numParam(params, 'reach', 2), capacity, strParam(params, 'loadType', '').trim()) !== null;
+        loaded = ctx.world.loadCargo(veh, numParam(params, 'reach', 2), capacity, strParam(params, 'loadType', '').trim(), layout) !== null;
       }
     }
     const onBoard = veh !== null ? ctx.world.cargoOf(veh) : [];

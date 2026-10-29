@@ -3,7 +3,7 @@ import { cargoPositions } from './cargo';
 import { lockMotion } from './combat';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
-import { driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
+import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
 export const GRAVITY = -30;
 export const TERMINAL_SPEED = 40;
@@ -214,10 +214,6 @@ function stepVehicle(
   if (rivals) for (const other of rivals.hit) crashInto(v, other, wanted, dt, mode, solids, colliders);
 }
 
-/** Closing speed (units/s) above which a touch counts as a crash rather than a nudge. */
-const CRASH_SPEED = 1.5;
-/** Share of the closing speed passed on to the vehicle that was hit (it is shoved a little, not launched). */
-const SHOVE_SHARE = 0.25;
 /** Seconds a contact must stay broken before the same pair can crash again. */
 const CRASH_COOLDOWN = 0.5;
 
@@ -242,14 +238,14 @@ function crashInto(
   dz /= dist;
   const closing = wanted.x * dx + wanted.z * dz - (other.vel.x * dx + other.vel.z * dz);
   if (closing <= 0) return;
-  if (closing > CRASH_SPEED && a.hitCooldown <= 0 && b.hitCooldown <= 0) {
+  if (closing > (a.spec.crashSpeed ?? CRASH_SPEED) && a.hitCooldown <= 0 && b.hitCooldown <= 0) {
     a.hitSeq++;
     a.hitWith = other.id;
     b.hitSeq++;
     b.hitWith = v.id;
   }
   a.hitCooldown = b.hitCooldown = CRASH_COOLDOWN;
-  const push = closing * SHOVE_SHARE * dt;
+  const push = closing * (a.spec.shoveShare ?? SHOVE_SHARE) * dt;
   const around = { list: colliders.filter((o) => o !== other && o !== v), hit: new Set<Entity>() };
   moveAxis(other, 'x', dx * push, solids, around);
   if (mode !== '2d-side') moveAxis(other, 'z', dz * push, solids, around);

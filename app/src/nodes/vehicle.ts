@@ -1,4 +1,4 @@
-import type { EntityId, NodeDef, SteerMode, VehicleModel } from '../engine/types';
+import type { EntityId, NodeDef, SteerMode, VehicleModel, VehicleSpec } from '../engine/types';
 import { VEHICLE_MODELS } from '../engine/types';
 import { vehicleSize } from '../world/vehicles';
 import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
@@ -9,6 +9,20 @@ function modelParam(raw: string): VehicleModel {
 
 function steerParam(raw: string): SteerMode {
   return raw === 'throttle' ? 'throttle' : 'direction';
+}
+
+/** Advanced handling values that differ from the built-in defaults (so a plain vehicle spawns with the plain spec). */
+function tuning(params: Parameters<typeof numParam>[0]): Partial<VehicleSpec> {
+  const out: Partial<VehicleSpec> = {};
+  const brake = numParam(params, 'brake', 2);
+  const reverse = numParam(params, 'reverseShare', 0.4);
+  const crash = numParam(params, 'crashSpeed', 1.5);
+  const shove = numParam(params, 'shove', 0.25);
+  if (brake !== 2) out.brakeFactor = brake;
+  if (reverse !== 0.4) out.reverseShare = reverse;
+  if (crash !== 1.5) out.crashSpeed = crash;
+  if (shove !== 0.25) out.shoveShare = shove;
+  return out;
 }
 
 interface VehicleState {
@@ -92,8 +106,24 @@ export const vehicleNode: NodeDef<VehicleState> = {
         { value: 'no', label: 'Không (xe đi xuyên qua nhau)' },
       ],
     },
+    { id: 'brake', label: 'Sức phanh (nhân với độ tăng tốc)', kind: 'number', default: 2, min: 0.5, max: 10, step: 0.5, advanced: true },
+    {
+      id: 'reverseShare',
+      label: 'Tốc độ lùi (phần của tốc độ tối đa)',
+      kind: 'number',
+      default: 0.4,
+      min: 0.1,
+      max: 1,
+      step: 0.05,
+      advanced: true,
+    },
+    { id: 'crashSpeed', label: 'Tốc độ tính là đâm', kind: 'number', default: 1.5, min: 0.1, max: 20, step: 0.1, advanced: true },
+    { id: 'shove', label: 'Lực hất khi đâm', kind: 'number', default: 0.25, min: 0, max: 2, step: 0.05, advanced: true },
   ],
-  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide'],
+  createOnly: [
+    'model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide',
+    'brake', 'reverseShare', 'crashSpeed', 'shove',
+  ],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -112,6 +142,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
         maxSpeed: numParam(params, 'maxSpeed', 9),
         accel: numParam(params, 'accel', 8),
         ...(strParam(params, 'collide', 'yes') === 'no' ? { collide: false } : {}),
+        ...tuning(params),
       },
     });
     return { id, seenHits: 0 };

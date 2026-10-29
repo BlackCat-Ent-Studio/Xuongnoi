@@ -76,24 +76,24 @@ function wrapAngle(a: number): number {
 }
 
 /** Stick values that make a driverless vehicle roll toward `goal` at about `speed` units/s. */
-function vehicleSticks(world: WorldApi, self: EntityView, goal: Vec3, speed: number): { moveX: number; moveY: number } {
+function vehicleSticks(world: WorldApi, self: EntityView, goal: Vec3, speed: number, gain: number): { moveX: number; moveY: number } {
   const toward = unitToward(world.mode, self.position, goal);
   if (!toward) return { moveX: 0, moveY: 0 };
   const top = self.drive?.speed ?? 1;
   const mag = clamp(speed / Math.max(top, 1e-6), 0.1, 1);
   if (world.mode === '2d-side') return { moveX: Math.sign(toward.ux) * mag, moveY: 0 };
-  if (self.vehicle?.steerMode === 'throttle') return throttleSticks(self, toward, mag);
+  if (self.vehicle?.steerMode === 'throttle') return throttleSticks(self, toward, mag, gain);
   // Direction steering: the stick simply points where the vehicle should go.
   return moveForDirection(world.mode, world.cameraYaw(), toward.ux, toward.uz, mag);
 }
 
 /** Gas and wheel for a throttle-steered vehicle: wheel from the heading error, gas from the wanted speed. */
-function throttleSticks(self: EntityView, toward: { ux: number; uz: number }, mag: number): { moveX: number; moveY: number } {
+function throttleSticks(self: EntityView, toward: { ux: number; uz: number }, mag: number, gain: number): { moveX: number; moveY: number } {
   const body = self.vehicle;
   if (!body) return { moveX: 0, moveY: 0 };
   const diff = wrapAngle(Math.atan2(toward.uz, toward.ux) - body.heading);
   return {
-    moveX: clamp(diff * STEER_GAIN, -1, 1),
+    moveX: clamp(diff * gain, -1, 1),
     moveY: Math.abs(diff) > SHARP_TURN ? mag * SHARP_TURN_GAS : mag,
   };
 }
@@ -142,6 +142,17 @@ export const routeFollowNode: NodeDef<RouteState> = {
       max: 20,
       step: 0.5,
     },
+    {
+      id: 'arriveRadius',
+      label: 'Bán kính tới điểm (0 = tự chọn: xe rộng hơn người)',
+      kind: 'number',
+      default: 0,
+      min: 0,
+      max: 10,
+      step: 0.1,
+      advanced: true,
+    },
+    { id: 'steerGain', label: 'Độ gắt khi cua (xe lái bằng ga - lái)', kind: 'number', default: 2, min: 0.5, max: 8, step: 0.5, advanced: true },
   ],
   create: () => ({ idx: null, dir: 1 }),
   evaluate(ctx, i, params, s): PortValues {
@@ -154,12 +165,15 @@ export const routeFollowNode: NodeDef<RouteState> = {
     if (i.on !== undefined && !asBool(i.on)) return { ...IDLE, index: shown() };
 
     const isVehicle = self.kind === 'vehicle';
+    // 0 = automatic: vehicles use a wide circle (they never stop at a point), walkers a tight one.
+    const arriveParam = Math.max(0, numParam(params, 'arriveRadius', 0));
+    const arriveRadius = arriveParam > 0 ? arriveParam : isVehicle ? VEHICLE_ARRIVE : WALKER_ARRIVE;
     // Reaching a point selects the next one at once, so the vehicle keeps rolling through the corner.
     let reached = false;
     const arrived = (p: Vec3): boolean => {
-      if (!isVehicle) return hasArrived(world.mode, self.position, p, WALKER_ARRIVE);
+      if (!isVehicle) return hasArrived(world.mode, self.position, p, arriveRadius);
       const d = planarDelta(world.mode, self.position, p);
-      return Math.hypot(d.x, d.z) <= VEHICLE_ARRIVE;
+      return Math.hypot(d.x, d.z) <= arriveRadius;
     };
     if (arrived(points[s.idx]!)) {
       reached = true;
@@ -183,7 +197,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     }
 
     if (isVehicle) {
-      const sticks = vehicleSticks(world, self, goal, speed);
+      const sticks = vehicleSticks(world, self, goal, speed, clamp(numParam(params, 'steerGain', STEER_GAIN), 0.5, 8));
       world.setVehicleInput(self.id, sticks.moveX, sticks.moveY);
       return { moveX: sticks.moveX, moveY: sticks.moveY, jump: false, blocked, reached, index: shown() };
     }

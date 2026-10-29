@@ -2,14 +2,28 @@ import type { Vec3, ViewMode } from '../engine/types';
 import type { Entity } from './entity';
 import { overlapsSolid } from './physics';
 
-/** Crates per layer on a vehicle bed (2 rows x 2 columns); more stack on top. */
-const CELLS_PER_LAYER = 4;
-/** Rows sit this share of the footprint along the nose direction (rear row first). */
-const ROW_OFFSETS = [-0.3, 0.1];
+/**
+ * Crates per layer on a vehicle bed; more stack on top. Layout rule: 1 = a single spot in the middle,
+ * 2 = one row of 2 columns, 4 = 2 rows x 2 columns (default), 6 = 3 rows x 2 columns.
+ */
+export const DEFAULT_CELLS_PER_LAYER = 4;
+const ALLOWED_CELLS = [1, 2, 4, 6];
+/** Rows sit this share of the footprint along the nose direction (rear row first), per row count. */
+const ROW_OFFSETS: Readonly<Record<number, readonly number[]>> = {
+  1: [-0.1],
+  2: [-0.3, 0.1],
+  3: [-0.4, -0.1, 0.2],
+};
 /** Columns sit this share of the footprint to either side. */
 const COLUMN_OFFSET = 0.22;
 /** Gap left between a vehicle and an unloaded item. */
-const UNLOAD_GAP = 0.1;
+export const DEFAULT_UNLOAD_GAP = 0.1;
+
+/** Snaps any number to an allowed layer size (1, 2, 4 or 6); anything else falls back to the default 4. */
+export function normalizeCells(n: number): number {
+  const r = Math.round(n);
+  return ALLOWED_CELLS.includes(r) ? r : DEFAULT_CELLS_PER_LAYER;
+}
 
 /** Items loaded on a vehicle, oldest first; only goods of type `tag` when it is non-empty. */
 export function cargoOn(list: readonly Entity[], vehicleId: string, tag = ''): Entity[] {
@@ -35,11 +49,14 @@ export function cargoPositions(list: readonly Entity[], mode: ViewMode): Map<str
     const f = veh.facing;
     const side = { x: -f.z, z: f.x };
     const span = Math.max(veh.size.x, veh.size.z);
-    const stackHeight = new Array<number>(CELLS_PER_LAYER).fill(0);
+    const cells = normalizeCells(veh.vehicle?.cargoCells ?? DEFAULT_CELLS_PER_LAYER);
+    const columns = cells === 1 ? 1 : 2;
+    const rowOffsets = ROW_OFFSETS[cells / columns]!;
+    const stackHeight = new Array<number>(cells).fill(0);
     items.forEach((item, i) => {
-      const cell = i % CELLS_PER_LAYER;
-      const fwd = ROW_OFFSETS[Math.floor(cell / 2)]! * span;
-      const lat = (cell % 2 === 0 ? -1 : 1) * COLUMN_OFFSET * span;
+      const cell = i % cells;
+      const fwd = rowOffsets[Math.floor(cell / columns)]! * span;
+      const lat = columns === 1 ? 0 : (cell % 2 === 0 ? -1 : 1) * COLUMN_OFFSET * span;
       const base = veh.pos.y + veh.size.y / 2 + stackHeight[cell]!;
       stackHeight[cell]! += item.size.y;
       out.set(item.id, {
@@ -73,7 +90,7 @@ export function nearestLoadable(list: readonly Entity[], veh: Entity, reach: num
 }
 
 /** A resting spot for an unloaded item beside the vehicle (behind first), clear of solid blocks and the vehicle. */
-export function unloadSpot(list: readonly Entity[], veh: Entity, item: Entity, mode: ViewMode): Vec3 | null {
+export function unloadSpot(list: readonly Entity[], veh: Entity, item: Entity, mode: ViewMode, gap = DEFAULT_UNLOAD_GAP): Vec3 | null {
   const solids = list.filter((e) => e.visible && e.solid && e.kind === 'block');
   const y = mode === '2d-top' ? veh.pos.y : veh.pos.y - veh.size.y / 2 + item.size.y / 2;
   const f = veh.facing;
@@ -83,7 +100,7 @@ export function unloadSpot(list: readonly Entity[], veh: Entity, item: Entity, m
     { x: f.z, z: -f.x },
     { x: f.x, z: f.z },
   ];
-  const base = Math.max(veh.size.x, veh.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + UNLOAD_GAP;
+  const base = Math.max(veh.size.x, veh.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + (Number.isFinite(gap) ? Math.max(0, gap) : DEFAULT_UNLOAD_GAP);
   for (const extra of [0, 0.7]) {
     for (const d of dirs) {
       // Side view has no depth: the sideways spots would land on the vehicle itself.
