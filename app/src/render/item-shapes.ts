@@ -54,6 +54,31 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       for (const x of [-0.38, 0.38]) darkParts.push(part(dark, [0.2, 1.04, 1.04], [x, 0, 0]));
       break;
     }
+    case 'veggie': {
+      // A bunch of leafy greens tied with a band: three stalks fanning out of a dark tie.
+      const stem = kit.mat('#a7d86a');
+      for (const [x, tilt] of [[-0.2, 0.28], [0, 0], [0.2, -0.28]] as const) {
+        const s = part(stem, [0.1, 0.5, 0.1], [x * 0.55, -0.2, 0]);
+        s.rotation.z = tilt;
+      }
+      darkParts.push(part(dark, [0.36, 0.1, 0.2], [0, -0.28, 0]));
+      for (const [x, y, w] of [[-0.27, 0.12, 0.34], [0, 0.22, 0.42], [0.27, 0.12, 0.34]] as const) {
+        part(main, [w, 0.34, 0.36], [x, y, 0]);
+      }
+      part(main, [0.2, 0.12, 0.2], [0, 0.42, 0]);
+      break;
+    }
+    case 'ore': {
+      // A rough rock with ore crystals poking out.
+      part(kit.mat('#7b8089'), [0.84, 0.5, 0.74], [0, -0.25, 0]);
+      part(kit.mat('#666b74'), [0.6, 0.34, 0.56], [0.05, 0.08, 0]).rotation.y = 0.4;
+      for (const [x, y, z, s] of [[-0.22, 0.2, 0.1, 0.26], [0.24, 0.12, -0.12, 0.22], [0.06, 0.34, 0.06, 0.2]] as const) {
+        const c = part(main, [s, s * 1.3, s], [x, y, z]);
+        c.rotation.set(0.5, 0.6, 0.3);
+      }
+      part(kit.glow('#fff3a8'), [0.08, 0.08, 0.08], [-0.22, 0.34, 0.14]);
+      break;
+    }
     // Hand tools are drawn upright: grip at the bottom, working end at the top.
     case 'sword': {
       part(wood, [0.1, 0.26, 0.1], [0, -0.37, 0]);

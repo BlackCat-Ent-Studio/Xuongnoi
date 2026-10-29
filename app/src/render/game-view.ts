@@ -73,6 +73,7 @@ export function createGameView(): GameView {
     const entities = world ? world.entities() : [];
     sceneView.sync(entities, dt);
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
+    if (rig.mode === '3d') sceneView.focusSun(rig.focus, rig.size);
     renderer.render(sceneView.scene, rig.camera);
   }
 
@@ -164,11 +165,30 @@ export function createGameView(): GameView {
     }
   }
 
+  /** Slow machines lose the shadows (the costliest part of the 3D look) instead of the frame rate. */
+  const SLOW_FPS = 40;
+  const WATCH_FRAMES = 90;
+  let watchTime = 0;
+  let watchFrames = 0;
+  function watchFrameRate(dt: number): void {
+    if (mode !== '3d' || !sceneView.shadowsOn || pacer.isPaused()) return;
+    watchTime += dt;
+    if (++watchFrames < WATCH_FRAMES) return;
+    const fps = watchFrames / Math.max(watchTime, 0.001);
+    watchTime = 0;
+    watchFrames = 0;
+    if (fps < SLOW_FPS) {
+      sceneView.setShadowsAllowed(false);
+      console.info(`Shadows turned off: ${fps.toFixed(0)} fps`);
+    }
+  }
+
   function frame(now: number): void {
     rafId = 0;
     if (!playing || !world || !runtime || !readInputFn) return;
     const dt = Math.min((now - lastTime) / 1000, 0.25);
     lastTime = now;
+    watchFrameRate(dt);
     try {
       if (mode === '3d') world.setCameraYaw(rig.yaw);
       const steps = pacer.stepsFor(dt);
@@ -293,6 +313,8 @@ export function createGameView(): GameView {
         container = null;
         return;
       }
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFShadowMap;
       const canvas = renderer.domElement;
       canvas.style.cssText = 'display:block;width:100%;height:100%;touch-action:none;';
       el.appendChild(canvas);
@@ -351,6 +373,8 @@ export function createGameView(): GameView {
         return;
       }
       playing = true;
+      watchTime = 0;
+      watchFrames = 0;
       rig.snap();
       syncChrome();
       hud?.clearItems();

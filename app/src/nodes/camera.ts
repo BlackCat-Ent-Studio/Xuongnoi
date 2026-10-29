@@ -10,6 +10,13 @@ interface CameraState {
 export const CAMERA_MIN_ZOOM = 0.3;
 export const CAMERA_MAX_ZOOM = 4;
 
+/** Fixed 3D elevations of the "Góc nhìn" presets; 'free' leaves the orbit to the player. */
+export function viewPitch(view: string): { pitch?: number } {
+  if (view === 'tilted') return { pitch: 1.05 };
+  if (view === 'top') return { pitch: 1.45 };
+  return {};
+}
+
 export const cameraNode: NodeDef<CameraState> = {
   kind: 'camera',
   label: 'Máy quay',
@@ -42,6 +49,17 @@ export const cameraNode: NodeDef<CameraState> = {
     },
     { id: 'zoom', label: 'Phóng to mặc định', kind: 'number', default: 1, min: CAMERA_MIN_ZOOM, max: CAMERA_MAX_ZOOM, step: 0.1 },
     { id: 'smoothness', label: 'Độ mượt (0 = tức thì)', kind: 'number', default: 5, min: 0, max: 20, step: 0.5 },
+    {
+      id: 'view',
+      label: 'Góc nhìn (chỉ bản 3D)',
+      kind: 'select',
+      default: 'free',
+      options: [
+        { value: 'free', label: 'Tự do (người chơi xoay được)' },
+        { value: 'tilted', label: 'Chéo từ trên (khoảng 60 độ)' },
+        { value: 'top', label: 'Thẳng từ trên xuống' },
+      ],
+    },
     { id: 'shakeTime', label: 'Rung kéo dài (giây)', kind: 'number', default: 0.5, min: 0.1, max: 5, step: 0.1 },
     { id: 'shakeStrength', label: 'Độ mạnh khi rung', kind: 'number', default: 1, min: 0, max: 5, step: 0.1 },
   ],
@@ -69,6 +87,7 @@ export const cameraNode: NodeDef<CameraState> = {
       zoom: clamp(wired > 0 ? wired : numParam(params, 'zoom', 1), CAMERA_MIN_ZOOM, CAMERA_MAX_ZOOM),
       smoothness: Math.max(0, numParam(params, 'smoothness', 5)),
       shake,
+      ...viewPitch(strParam(params, 'view', 'free')),
     };
     ctx.world.setCamera(ctx.nodeId, cmd);
     return { active: true };

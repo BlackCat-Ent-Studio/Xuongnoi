@@ -276,6 +276,9 @@ export function createWorld(mode: ViewMode): World {
         ...(spec.kind === 'item' ? { shape: spec.shape ?? 'box' } : {}),
         solid: spec.kind === 'item' ? false : spec.solid,
         ...(spec.kind === 'block' && spec.zone ? { zone: true } : {}),
+        ...(spec.kind === 'block' && spec.blockStyle && spec.blockStyle !== 'box' ? { blockStyle: spec.blockStyle } : {}),
+        ...(spec.kind === 'block' && spec.label ? { label: spec.label } : {}),
+        ...(spec.kind === 'item' && spec.tag ? { tag: spec.tag } : {}),
         visible: true,
         onGround: false,
         intent: null,
@@ -304,6 +307,9 @@ export function createWorld(mode: ViewMode): World {
       if (!e) return;
       if (style.color !== undefined) e.color = style.color;
       if (style.look !== undefined && e.kind === 'character') e.look = style.look;
+    },
+    tagOf(id: EntityId): string {
+      return byId.get(id)?.tag ?? '';
     },
     setCharacterIntent(id: EntityId, intent: CharacterIntent): void {
       const e = byId.get(id);

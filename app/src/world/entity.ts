@@ -66,6 +66,11 @@ export interface Entity {
   turn?: TurnState;
   /** Items that are shots in flight (moved by the projectile step, not by item physics). */
   bullet?: BulletState;
+  /** Blocks: drawing style id and sign text (see EntitySpec). */
+  blockStyle?: string;
+  label?: string;
+  /** Items: free-text goods type. */
+  tag?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
 }
@@ -81,6 +86,8 @@ export function toView(e: Entity): EntityView {
     ...(e.look !== undefined ? { look: e.look } : {}),
     ...(e.role !== undefined ? { role: e.role } : {}),
     ...(e.shape !== undefined ? { shape: e.shape } : {}),
+    ...(e.kind === 'block' && e.blockStyle !== undefined ? { blockStyle: e.blockStyle } : {}),
+    ...(e.kind === 'block' && e.label ? { label: e.label } : {}),
     ...(e.kind === 'item' && e.holdStyle === 'hand' ? { holdStyle: 'hand' as const } : {}),
     ...(e.kind === 'item' && e.inHand && e.heldBy !== null ? { inHand: true } : {}),
     ...combatView(e),
