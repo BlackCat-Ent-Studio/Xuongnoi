@@ -143,9 +143,26 @@ export interface Wire {
   to: PortRef; // input port
 }
 
+/**
+ * Editor-only grouping of nodes ("Nhóm mảnh ghép"). The engine ignores it: nodes and wires stay flat.
+ * A node is in at most one group and groups never nest.
+ */
+export interface NodeGroup {
+  id: string;
+  name: string;
+  /** `#rrggbb` accent, absent for the default. */
+  color?: string;
+  nodeIds: string[];
+  /** Position of the collapsed block on the main board. */
+  x: number;
+  y: number;
+}
+
 export interface Graph {
   nodes: GraphNode[];
   wires: Wire[];
+  /** Optional groups (absent in older files and whenever there are none). */
+  groups?: NodeGroup[];
 }
 
 /** A saved board = one game. */

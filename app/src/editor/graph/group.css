@@ -1,0 +1,25 @@
+/* Nhóm mảnh ghép: collapsed block, port stubs inside an open group, breadcrumb. */
+.wc .wc-group { --gc: var(--accent, #3ecf8e); min-width: 200px; border: 2px solid var(--gc); background: linear-gradient(180deg, #262b33, #1f2329); box-shadow: 0 8px 22px rgba(4, 6, 9, .55); }
+.wc .wc-group.selected { box-shadow: 0 0 0 2px var(--gc), 0 10px 24px rgba(4, 6, 9, .6); border-color: var(--gc); }
+.wc .wc-group .wc-node-head { cursor: move; }
+.wc .wc-group-tile { color: var(--gc); background: transparent; border: 1.5px solid var(--gc); }
+.wc .wc-group-tile svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linejoin: round; }
+.wc .wc-group .wc-name { font-size: 14px; }
+.wc .wc-group-hint { padding: 4px 12px 7px; font-size: 11px; color: var(--text3, #8f98a4); }
+.wc .wc-group:hover { filter: brightness(1.1); }
+.wc-stubs { position: absolute; left: 0; top: 0; }
+.wc .wc-stub { position: absolute; box-sizing: border-box; display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 16px; font-size: 12px; color: var(--text2, #aab2bd); white-space: nowrap; overflow: visible; background: rgba(255, 255, 255, .04); border: 1px dashed var(--g-line2); border-radius: 6px; user-select: none; }
+.wc .wc-stub.in { justify-content: flex-end; }
+.wc .wc-stub .wc-pl { overflow: hidden; text-overflow: ellipsis; }
+.wc .wc-stub.in .wc-dot { right: -8px; }
+.wc .wc-stub.out .wc-dot { left: -8px; }
+.wc.lowzoom .wc-stub .wc-pl { visibility: hidden; }
+.wc-crumb { position: absolute; left: 12px; top: 10px; z-index: 5; display: flex; align-items: center; gap: 6px; padding: 4px 6px 4px 8px; background: var(--panel, #1c1f25); border: 1px solid var(--line2, #3a404a); border-radius: 8px; box-shadow: 0 4px 14px rgba(4, 6, 9, .45); font-size: 12.5px; }
+.wc-crumb[hidden] { display: none; }
+.wc-crumb button { height: 26px; padding: 0 9px; border: 0; border-radius: 5px; background: none; color: var(--text2, #aab2bd); font: inherit; cursor: pointer; }
+.wc-crumb button:hover { background: var(--raise, #2b3038); color: var(--text, #e7e9ec); }
+.wc-crumb .wc-crumb-back { background: var(--accent-soft, rgba(62, 207, 142, .14)); color: var(--accent, #3ecf8e); font-weight: 600; }
+.wc-crumb-sep { color: var(--text3, #8f98a4); }
+.wc-crumb-name { width: 150px; height: 26px; padding: 0 8px; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--text, #e7e9ec); font: inherit; font-weight: 700; }
+.wc-crumb-name:hover { border-color: var(--line2, #3a404a); }
+.wc-crumb-name:focus { border-color: var(--accent, #3ecf8e); background: var(--bg, #121418); outline: 0; }

@@ -1,5 +1,6 @@
 import type { GraphNode } from '../../engine/types';
 import type { EditorState } from '../editor-state';
+import { sceneGraph } from '../groups/group-model';
 import { computeLayout } from './auto-layout';
 import type { Box, Size } from './graph-geometry';
 import { findFreeNodeSpot, occupiedBoxes } from './node-placement';
@@ -36,7 +37,8 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, 
   function placeNewNode(node: GraphNode): void {
     const box = nodeEls.get(node.id);
     if (!box) return;
-    const taken = [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf, node.id), ...(blocked?.() ?? [])];
+    const scope = state.getScope();
+    const taken = [...occupiedBoxes(sceneGraph(state.getGraph(), scope), scope === null ? state.getNotes() : [], sizeOf, node.id), ...(blocked?.() ?? [])];
     const spot = findFreeNodeSpot(node.pos, { w: box.offsetWidth, h: box.offsetHeight }, taken, visibleWorld?.());
     if (spot.x !== node.pos.x || spot.y !== node.pos.y) {
       state.moveItems([{ id: node.id, pos: spot }], { amend: true });
@@ -48,7 +50,7 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, 
   }
 
   function arrange(): void {
-    const graph = state.getGraph();
+    const graph = sceneGraph(state.getGraph(), state.getScope());
     if (state.isPlaying() || graph.nodes.length === 0 || animating) return;
     const origin = { x: Math.min(...graph.nodes.map((n) => n.pos.x)), y: Math.min(...graph.nodes.map((n) => n.pos.y)) };
     const layout = computeLayout(graph, sizeOf, origin);

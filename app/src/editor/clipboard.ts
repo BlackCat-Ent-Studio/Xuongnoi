@@ -1,14 +1,20 @@
 import { nextNoteId } from '../engine/notes';
-import type { Board, Graph, GraphNode, Note, Wire } from '../engine/types';
+import type { Board, Graph, GraphNode, Note, NodeGroup, Wire } from '../engine/types';
 import { parseBoard, serializeBoard } from '../io/save-format';
+import { GROUP_NAME_MAX, groupsOf, nextGroupId, withGroups } from './groups/group-model';
 import { nextNodeId } from './node-ids';
 
 export const CLIPBOARD_KEY = 'xuong-noi:clipboard';
 export const PASTE_OFFSET = 30;
 
-/** Copies the chosen nodes/notes plus the wires running between two chosen nodes. */
+/**
+ * Copies the chosen nodes/notes plus the wires running between two chosen nodes.
+ * A chosen group brings all its members and stays a group in the clip.
+ */
 export function buildClip(board: Board, ids: ReadonlySet<string>): Board | null {
-  const nodes = board.graph.nodes.filter((n) => ids.has(n.id));
+  const groups = groupsOf(board.graph).filter((g) => ids.has(g.id));
+  const members = new Set(groups.flatMap((g) => g.nodeIds));
+  const nodes = board.graph.nodes.filter((n) => ids.has(n.id) || members.has(n.id));
   const notes = (board.notes ?? []).filter((n) => ids.has(n.id));
   if (nodes.length + notes.length === 0) return null;
   const inside = new Set(nodes.map((n) => n.id));
@@ -16,7 +22,7 @@ export function buildClip(board: Board, ids: ReadonlySet<string>): Board | null 
   const clip: Board = {
     name: 'clip',
     mode: board.mode,
-    graph: structuredClone({ nodes, wires }),
+    graph: structuredClone(withGroups({ nodes, wires }, groups)),
   };
   if (notes.length > 0) clip.notes = structuredClone(notes);
   return clip;
@@ -25,16 +31,20 @@ export function buildClip(board: Board, ids: ReadonlySet<string>): Board | null 
 export interface PasteResult {
   graph: Graph;
   notes: Note[];
-  /** Ids of everything just inserted (new ids). */
+  /** Ids to select after the insert: new groups, new loose nodes and new notes (members of a new group stay hidden inside it). */
   newIds: string[];
 }
 
-/** Inserts a clip into the board with fresh ids and an offset; internal wires are remapped. */
+/**
+ * Inserts a clip into the board with fresh ids and an offset; internal wires are remapped.
+ * With `intoGroup` (pasting while inside a group) every new node joins that group and clip groups are flattened away.
+ */
 export function pasteClip(
   graph: Graph,
   notes: readonly Note[],
   clip: Board,
   offset: { x: number; y: number },
+  intoGroup: string | null = null,
 ): PasteResult {
   const idMap = new Map<string, string>();
   let work: Graph = graph;
@@ -76,10 +86,25 @@ export function pasteClip(
     newNoteIds.push(note.id);
   }
 
+  let groups: NodeGroup[] = [...groupsOf(graph)];
+  const inNewGroup = new Set<string>();
+  if (intoGroup) {
+    groups = groups.map((g) => (g.id === intoGroup ? { ...g, nodeIds: [...g.nodeIds, ...newNodes.map((n) => n.id)] } : g));
+  } else {
+    for (const g of groupsOf(clip.graph)) {
+      const ids = g.nodeIds.flatMap((i) => idMap.get(i) ?? []);
+      if (ids.length === 0) continue;
+      const id = nextGroupId(withGroups(graph, groups));
+      groups.push({ ...structuredClone(g), id, name: `${g.name} (bản sao)`.slice(0, GROUP_NAME_MAX), nodeIds: ids, x: g.x + offset.x, y: g.y + offset.y });
+      for (const i of ids) inNewGroup.add(i);
+    }
+  }
+  const newGroupIds = groups.slice(groupsOf(graph).length).map((g) => g.id);
+  const loose = intoGroup ? newNodes.map((n) => n.id) : newNodes.filter((n) => !inNewGroup.has(n.id)).map((n) => n.id);
   return {
-    graph: { nodes: [...graph.nodes, ...newNodes], wires: [...graph.wires, ...newWires] },
+    graph: withGroups({ ...graph, nodes: [...graph.nodes, ...newNodes], wires: [...graph.wires, ...newWires] }, groups),
     notes: allNotes,
-    newIds: [...newNodes.map((n) => n.id), ...newNoteIds],
+    newIds: [...newGroupIds, ...loose, ...newNoteIds],
   };
 }
 

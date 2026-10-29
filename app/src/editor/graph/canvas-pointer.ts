@@ -1,6 +1,7 @@
 import { NOTE_MIN_H, NOTE_MIN_W } from '../../engine/notes';
 import type { EditorState } from '../editor-state';
 import { h } from '../dom';
+import { groupsOf } from '../groups/group-model';
 import { zoomAround, type Point, type View } from './graph-geometry';
 import { syncNotes, type NoteParts } from './note-view';
 import type { WireDrag } from './wire-drag';
@@ -29,6 +30,8 @@ interface Ctx {
 /** Mouse and wheel handling for the canvas: pan, zoom, move items, resize notes, marquee select, wire drags. */
 export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, getView, setView, clientToWorld, render, drawWires }: Ctx): void {
   let drag: Drag | null = null;
+  const kindOf = (id: string): 'note' | 'group' | 'node' =>
+    noteEls.has(id) ? 'note' : groupsOf(state.getGraph()).some((g) => g.id === id) ? 'group' : 'node';
 
   /** Pointer pressed on a node or note: Shift toggles it, otherwise select it and maybe start moving. */
   function beginItemDrag(e: PointerEvent, id: string, readonly: boolean): void {
@@ -38,13 +41,14 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     }
     const multi = state.getMulti();
     const group = multi.size > 1 && multi.has(id);
-    if (!group) state.select({ kind: noteEls.has(id) ? 'note' : 'node', id });
+    if (!group) state.select({ kind: kindOf(id), id });
     if (readonly) return;
     const graph = state.getGraph();
     const notes = state.getNotes();
     const items: { id: string; ox: number; oy: number }[] = [];
     for (const i of group ? [...multi] : [id]) {
-      const pos = graph.nodes.find((n) => n.id === i)?.pos ?? notes.find((n) => n.id === i)?.pos;
+      const g = groupsOf(graph).find((x) => x.id === i);
+      const pos = graph.nodes.find((n) => n.id === i)?.pos ?? (g ? { x: g.x, y: g.y } : undefined) ?? notes.find((n) => n.id === i)?.pos;
       if (pos) items.push({ id: i, ox: pos.x, oy: pos.y });
     }
     if (items.length === 0) return;
@@ -158,7 +162,7 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
         const dy = (e.clientY - d.sy) / getView().zoom;
         state.moveItems(d.items.map((it) => ({ id: it.id, pos: { x: Math.round(it.ox + dx), y: Math.round(it.oy + dy) } })));
         render();
-      } else if (d.groupClick) state.select({ kind: noteEls.has(d.id) ? 'note' : 'node', id: d.id });
+      } else if (d.groupClick) state.select({ kind: kindOf(d.id), id: d.id });
     } else if (d.kind === 'resize') {
       state.updateNote(d.id, { size: { w: d.w + (e.clientX - d.sx) / getView().zoom, h: d.h + (e.clientY - d.sy) / getView().zoom } });
       syncNotes(state, noteLayer, noteEls);
@@ -170,6 +174,7 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
         const hit = new Set(d.base);
         const boxes = [...nodeEls.entries(), ...[...noteEls.entries()].map(([i, p]) => [i, p.el] as const)];
         for (const [id, box] of boxes) {
+          if (box.offsetWidth === 0) continue; // hidden (notes while a group is open)
           const x = box.offsetLeft;
           const y = box.offsetTop;
           if (x < b.x && x + box.offsetWidth > a.x && y < b.y && y + box.offsetHeight > a.y) hit.add(id);
@@ -185,6 +190,15 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     drag = null;
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     render();
+  });
+
+  // Double-clicking a group block opens it.
+  el.addEventListener('dblclick', (e) => {
+    // Pointer capture retargets the event to the canvas, so look at what is really under the cursor.
+    const target = document.elementFromPoint(e.clientX, e.clientY);
+    if (!target || target.closest('.wc-ui, .wc-port')) return;
+    const id = target.closest<HTMLElement>('.wc-group')?.dataset.id;
+    if (id) state.enterGroup(id);
   });
 
   el.addEventListener(

@@ -5,6 +5,7 @@ import {
   VIEW_MODES,
   type Board,
   type Graph,
+  type NodeGroup,
   type Note,
   type GraphNode,
   type ParamDef,
@@ -13,6 +14,7 @@ import {
   type ViewMode,
 } from '../engine/types';
 import { NOTE_MAX_COUNT, NOTE_MAX_TEXT, clampNoteSize, isNoteColor } from '../engine/notes';
+import { GROUP_NAME_MAX, cleanGroupName, isGroupColor, withGroups } from '../editor/groups/group-model';
 import { registerAllNodes } from '../nodes';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
 import { IO_TEXT } from './text-vi';
@@ -119,6 +121,42 @@ function parseNotes(raw: unknown): Note[] | string {
   return notes;
 }
 
+/**
+ * Reads the optional `graph.groups`. Groups are pure organisation, so bad entries are repaired instead of
+ * failing the load: unknown or repeated node ids are dropped, empty or malformed groups vanish.
+ */
+function parseGroups(raw: unknown, nodes: readonly GraphNode[]): NodeGroup[] {
+  if (!Array.isArray(raw)) return [];
+  const alive = new Set(nodes.map((n) => n.id));
+  const taken = new Set<string>();
+  const usedIds = new Set<string>();
+  const groups: NodeGroup[] = [];
+  for (const g of raw) {
+    if (!isRecord(g) || typeof g.id !== 'string' || usedIds.has(g.id) || !Array.isArray(g.nodeIds)) continue;
+    const nodeIds: string[] = [];
+    for (const id of g.nodeIds) {
+      if (typeof id === 'string' && alive.has(id) && !taken.has(id)) {
+        taken.add(id);
+        nodeIds.push(id);
+      }
+    }
+    if (nodeIds.length === 0) continue;
+    usedIds.add(g.id);
+    const name = typeof g.name === 'string' ? cleanGroupName(g.name) : '';
+    const first = nodes.find((n) => n.id === nodeIds[0]);
+    const group: NodeGroup = {
+      id: g.id,
+      name: name || `Nhóm ${groups.length + 1}`.slice(0, GROUP_NAME_MAX),
+      nodeIds,
+      x: isFiniteNum(g.x) ? g.x : (first?.pos.x ?? 0),
+      y: isFiniteNum(g.y) ? g.y : (first?.pos.y ?? 0),
+    };
+    if (isGroupColor(g.color)) group.color = g.color;
+    groups.push(group);
+  }
+  return groups;
+}
+
 /** Validates untrusted text into a Board. Never throws; errors are Vietnamese. */
 export function parseBoard(text: string): ParseResult {
   registerAllNodes();
@@ -178,6 +216,8 @@ export function parseBoard(text: string): ParseResult {
     seenWires.add(raw.id);
     graph = { nodes, wires: [...graph.wires, { id: raw.id, from, to }] };
   }
+
+  graph = withGroups(graph, parseGroups(rawGraph.groups, nodes));
 
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };

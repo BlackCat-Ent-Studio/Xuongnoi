@@ -5,6 +5,10 @@ import type { EditorState } from './editor-state';
 import { CORNER_GAP, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
 import { createGraphToolbar } from './graph/graph-toolbar';
 import './graph/graph.css';
+import './graph/group.css';
+import { createGroupCrumb } from './graph/group-crumb';
+import { buildGroupView, buildStub, layoutStubs, stubBox, type StubSpot } from './graph/group-view';
+import { deriveGroupPorts, findGroup, groupOfNode, groupsOf, nodesInScope, sceneGraph } from './groups/group-model';
 import { listMissingWires } from './graph/missing-wires';
 import { createMinimap } from './graph/minimap';
 import { findFreeNodeSpot, occupiedBoxes } from './graph/node-placement';
@@ -30,7 +34,7 @@ export interface WiringCanvas {
   placementAreas(): { blocked: Box[]; visible: Box };
   isOver(clientX: number, clientY: number): boolean;
   fitToContent(): void;
-  /** Pan so the node sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
+  /** Pan so the node (or group block) sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
   centerOn(nodeId: string): void;
   /** Update live wire value badges (play mode). */
   refreshBadges(): void;
@@ -67,9 +71,11 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const nodeLayer = h('div', 'wc-nodes');
   const badgeLayer = h('div', 'wc-badges');
   const hint = h('div', 'wc-hint', TEXT_VI.canvasEmpty);
+  const crumb = createGroupCrumb(state);
   const tip = h('div', 'wc-tip');
   tip.hidden = true;
-  world.append(wireLayer, noteLayer, nodeLayer, badgeLayer);
+  const stubLayer = h('div', 'wc-stubs');
+  world.append(wireLayer, noteLayer, stubLayer, nodeLayer, badgeLayer);
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
   let overlayBR = { w: 0, h: 0 };
@@ -78,6 +84,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
   const wirePaths = new Map<string, SVGPathElement>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
+  let stubSpots: StubSpot[] = [];
   const seenNodes = new Set(state.getGraph().nodes.map((n) => n.id));
 
   const portKey = (node: string, port: string, dir: PortDir): string => `${node}|${port}|${dir}`;
@@ -102,10 +109,17 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     return { x: a.x, y: a.y, w: r.width / view.zoom, h: r.height / view.zoom };
   }
 
+  const inGroup = (): boolean => state.getScope() !== null;
+  /** Notes belong to the main board; they are hidden while a group is open. */
+  const notesInView = () => (inGroup() ? [] : state.getNotes());
+
   function contentBoxes(): Box[] {
+    const graph = state.getGraph();
     return [
-      ...state.getGraph().nodes.map((n) => ({ x: n.pos.x, y: n.pos.y, ...(sizeOf(n.id) ?? estimateNodeSize(n)) })),
-      ...state.getNotes().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
+      ...nodesInScope(graph, state.getScope()).map((n) => ({ x: n.pos.x, y: n.pos.y, ...(sizeOf(n.id) ?? estimateNodeSize(n)) })),
+      ...(inGroup() ? [] : groupsOf(graph).map((g) => ({ x: g.x, y: g.y, ...(sizeOf(g.id) ?? { w: 200, h: 110 }) }))),
+      ...stubSpots.map(stubBox),
+      ...notesInView().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
     ];
   }
 
@@ -130,7 +144,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     },
     minimap.el,
   );
-  el.append(world, hint, toolbar.el, tip);
+  el.append(world, hint, toolbar.el, crumb.el, tip);
 
   /** Canvas-relative screen rect of an element, or null when it is not laid out. */
   function localRect(target: Element): Box | null {
@@ -200,16 +214,19 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function renderNodes(): void {
     nodeLayer.replaceChildren();
+    stubLayer.replaceChildren();
     nodeEls.clear();
     portEls.clear();
+    stubSpots = [];
     const graph = state.getGraph();
+    const scope = state.getScope();
     const missing = new Map<string, Set<string>>();
     for (const m of listMissingWires(graph)) {
       const set = missing.get(m.nodeId) ?? new Set<string>();
       set.add(m.portId);
       missing.set(m.nodeId, set);
     }
-    for (const node of graph.nodes) {
+    for (const node of nodesInScope(graph, scope)) {
       const { box, dots } = buildNodeView(node, missing.get(node.id) ?? new Set());
       for (const [k, dot] of dots) {
         const [dir, port] = k.split('|') as [PortDir, string];
@@ -217,6 +234,29 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       }
       nodeLayer.append(box);
       nodeEls.set(node.id, box);
+    }
+    if (scope === null) {
+      for (const group of groupsOf(graph)) {
+        const inside = new Set(group.nodeIds);
+        const miss = [...missing].reduce((n, [id, ports]) => (inside.has(id) ? n + ports.size : n), 0);
+        const { box, dots } = buildGroupView(group, deriveGroupPorts(graph, group), miss);
+        for (const d of dots) portEls.set(portKey(d.node, d.port, d.dir), d.dot);
+        nodeLayer.append(box);
+        nodeEls.set(group.id, box);
+      }
+      return;
+    }
+    const group = findGroup(graph, scope);
+    if (!group) return;
+    stubSpots = layoutStubs(deriveGroupPorts(graph, group), nodesInScope(graph, scope), sizeOf);
+    for (const spot of stubSpots) {
+      const { el: stub, dot } = buildStub(spot);
+      stubLayer.append(stub);
+      // The stub's dot is the outside end of every wire crossing through this port.
+      for (const w of spot.port.wires) {
+        const out = spot.port.dir === 'in' ? portKey(w.from.node, w.from.port, 'out') : portKey(w.to.node, w.to.port, 'in');
+        portEls.set(out, dot);
+      }
     }
   }
 
@@ -260,6 +300,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   function render(): void {
     renderNodes();
     syncNotes(state, noteLayer, noteEls);
+    noteLayer.hidden = inGroup();
+    crumb.update();
     hint.hidden = state.getGraph().nodes.length > 0 || state.getNotes().length > 0;
     el.classList.toggle('readonly', state.isPlaying());
     drawWires();
@@ -292,7 +334,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function findFreeSpot(want: Point, kind?: string): Point {
     const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }) : { w: 168, h: 90 };
-    return findFreeNodeSpot(want, size, [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf), ...blockedWorld()], visibleWorld());
+    const scene = sceneGraph(state.getGraph(), state.getScope());
+    return findFreeNodeSpot(want, size, [...occupiedBoxes(scene, notesInView(), sizeOf), ...blockedWorld()], visibleWorld());
   }
 
   const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent(), blocked: blockedWorld, visibleWorld });
@@ -360,7 +403,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   // ---------- state sync ----------
 
   state.subscribe((kind) => {
-    if (kind === 'board') {
+    if (kind === 'scope') {
+      render();
+      fitToContent();
+    } else if (kind === 'board') {
       seenNodes.clear();
       for (const n of state.getGraph().nodes) seenNodes.add(n.id);
       render();
@@ -394,8 +440,11 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     },
     fitToContent,
     centerOn(nodeId) {
-      const node = state.getGraph().nodes.find((n) => n.id === nodeId);
+      const group = findGroup(state.getGraph(), nodeId);
+      const node = group ? { id: nodeId, kind: 'group', params: {}, pos: { x: group.x, y: group.y } } : state.getGraph().nodes.find((n) => n.id === nodeId);
       if (!node) return;
+      // Show the group the node lives in first (this also selects it).
+      if (!group && (groupOfNode(state.getGraph(), nodeId)?.id ?? null) !== state.getScope()) state.select({ kind: 'node', id: nodeId });
       const size = sizeOf(nodeId) ?? estimateNodeSize(node);
       const r = el.getBoundingClientRect();
       view = {

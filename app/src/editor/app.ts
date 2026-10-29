@@ -29,6 +29,7 @@ import { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID, createDock, createMoun
 import { installEntityDrag } from './entity-drag';
 import { createGamePip } from './game-pip';
 import { mountIconSprite } from './icons';
+import { GROUP_VI } from './groups/group-text-vi';
 import { createKeyboardInput } from './keyboard-input';
 import { createLibraryDialog } from './library-dialog';
 import { LIBRARY_TEXT } from './library-text-vi';
@@ -366,6 +367,9 @@ export function mountEditor(root: HTMLElement): void {
           onSelect: () => void state.deleteSelection(),
         },
         { type: 'separator' },
+        { type: 'item', label: GROUP_VI.group, hint: 'Ctrl G', disabled: state.isPlaying(), onSelect: groupSelected },
+        { type: 'item', label: GROUP_VI.ungroup, hint: 'Ctrl Shift G', disabled: state.isPlaying(), onSelect: ungroupSelected },
+        { type: 'separator' },
         { type: 'item', label: SHELL_TEXT.editArrange, icon: 'arrange', disabled: state.isPlaying(), onSelect: () => canvasAction(() => canvas.arrange()) },
         { type: 'item', label: SHELL_TEXT.editFit, icon: 'fit', onSelect: () => canvasAction(() => canvas.fitToContent()) },
       ],
@@ -612,6 +616,27 @@ export function mountEditor(root: HTMLElement): void {
   });
 
   // Structure is locked while the game runs; dragging from a port is the one edit gesture the canvas ignores silently.
+  /** Gom nhóm: wrap the selected mảnh ghép in a named block, then put the cursor in its name field. */
+  function groupSelected(): void {
+    const res = state.groupSelection();
+    if (!res.ok) {
+      topBar.notify(GROUP_VI.fail[res.reason], 'error');
+      return;
+    }
+    const name = state.getGraph().groups?.find((g) => g.id === res.groupId)?.name ?? '';
+    topBar.notify(GROUP_VI.grouped(name));
+    if (isShown(canvas.el)) canvas.centerOn(res.groupId);
+    requestAnimationFrame(() => {
+      const input = root.querySelector<HTMLInputElement>('.pn-group-name');
+      input?.focus();
+      input?.select();
+    });
+  }
+  function ungroupSelected(): void {
+    const n = state.ungroupSelection();
+    if (n > 0) topBar.notify(GROUP_VI.ungrouped(n));
+  }
+
   const notifyStructureLocked = (): void => {
     if (logThrottled('locked', 2000, 'warn', CONSOLE_TEXT.blockedStructure)) topBar.notify(CONSOLE_TEXT.blockedStructure);
   };
@@ -669,7 +694,7 @@ export function mountEditor(root: HTMLElement): void {
     else if (kind !== 'history' && kind !== 'selection' && kind !== 'playing') loadedUnedited = false;
     // A lesson board must never replace the learner's own autosave.
     const saves = !tutorial.isActive();
-    if (kind !== 'selection' && kind !== 'playing') {
+    if (kind !== 'selection' && kind !== 'playing' && kind !== 'scope') {
       topBar.noteDocumentChange({ saves });
       if (saves) scheduleAutosave(state.getBoard(), { library: !loadedUnedited });
     }
@@ -696,6 +721,10 @@ export function mountEditor(root: HTMLElement): void {
       setMaximized(false);
       return;
     }
+    if (e.key === 'Escape' && state.getScope() !== null) {
+      state.exitGroup();
+      return;
+    }
     if (state.isPlaying()) {
       const k = e.key.toLowerCase();
       const editKey = e.key === 'Delete' || e.key === 'Backspace' || ((e.ctrlKey || e.metaKey) && (k === 'v' || k === 'd'));
@@ -708,6 +737,12 @@ export function mountEditor(root: HTMLElement): void {
     }
     if ((e.ctrlKey || e.metaKey) && !e.altKey) {
       const key = e.key.toLowerCase();
+      if (key === 'g') {
+        e.preventDefault();
+        if (e.shiftKey) ungroupSelected();
+        else groupSelected();
+        return;
+      }
       if (key === 'z' || key === 'y') {
         e.preventDefault();
         if (key === 'y' || e.shiftKey) state.redo();
@@ -739,6 +774,7 @@ export function mountEditor(root: HTMLElement): void {
     }
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (state.deleteSelection()) e.preventDefault();
+      else if (e.key === 'Backspace' && state.getScope() !== null) state.exitGroup();
     }
   });
   window.addEventListener('pagehide', () => flushAutosave());
