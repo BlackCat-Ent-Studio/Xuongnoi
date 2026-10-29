@@ -74,6 +74,10 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
       ],
     },
   ],
+  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const model = modelParam(strParam(params, 'model', 'car'));
     const id = ctx.world.spawn({

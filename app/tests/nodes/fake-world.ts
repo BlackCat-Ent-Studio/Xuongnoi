@@ -47,6 +47,10 @@ export function makeWorld(): FakeWorld {
       w.entities.set(id, { id, kind: spec.kind, ownerNodeId: spec.ownerNodeId, position: { ...spec.position }, size: spec.size, color: spec.color, visible: true });
       return id;
     },
+    setEntityStyle(id, style) {
+      const e = w.entities.get(id);
+      if (e) w.entities.set(id, { ...e, ...(style.color !== undefined ? { color: style.color } : {}), ...(style.look !== undefined ? { look: style.look } : {}) });
+    },
     setCharacterIntent: (id, intent) => void w.intents.push({ id, intent }),
     hide: (id) => void w.hidden.push(id),
     getEntity: (id) => w.entities.get(id),

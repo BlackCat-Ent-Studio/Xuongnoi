@@ -76,6 +76,10 @@ export const itemNode: NodeDef<ItemState> = {
     },
     { id: 'damage', label: 'Sát thương (0 = tuỳ loại)', kind: 'number', default: 0, min: 0, max: 100, step: 1 },
   ],
+  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'item',

@@ -48,6 +48,11 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       ],
     },
   ],
+  createOnly: ['position', 'color', 'look', 'role'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+    look: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { look: String(p.look) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'character',

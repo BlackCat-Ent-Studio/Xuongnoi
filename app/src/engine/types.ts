@@ -92,6 +92,17 @@ export interface NodeDef<S = unknown> {
   create?(ctx: EvalCtx, params: Params): S;
   /** Called every tick in topological order. Must return a value for every output port. */
   evaluate(ctx: EvalCtx, inputs: PortValues, params: Params, state: S): PortValues;
+  /**
+   * Params that are only read inside create() (spawn position, size, ...). Changing one of these
+   * while the game runs has no effect unless `liveApply` has a handler for it; otherwise it is rejected.
+   * Params not listed here are re-read by evaluate() every tick, so they apply live automatically.
+   */
+  createOnly?: string[];
+  /**
+   * Handlers that push a changed create-only param into the running state / world.
+   * `params` already holds the new value; `prev` is the old one.
+   */
+  liveApply?: Record<string, (ctx: EvalCtx, params: Params, state: S, prev: ParamValue) => void>;
 }
 
 // ---------- graph (what the user builds) ----------
@@ -161,6 +172,11 @@ export interface Runtime {
   getOutput(nodeId: string, portId: string): PortValue;
   /** Value currently travelling on a wire (= its source output). */
   getWireValue(wire: Wire): PortValue;
+  /**
+   * Changes params of a running node. Applies every key it can; returns true only when all
+   * of them took effect in the running game (false = unknown node / param, or needs a restart).
+   */
+  applyNodeParams(nodeId: string, params: Params): boolean;
 }
 
 // ---------- world API (implemented in src/world) ----------
@@ -358,6 +374,8 @@ export interface WorldApi {
   /** Removes the entity for the rest of the run (no rendering, no contacts, no collision). */
   hide(id: EntityId): void;
   getEntity(id: EntityId): EntityView | undefined;
+  /** Repaints a living entity: colour (any entity) and look (characters only). Unknown ids are ignored. */
+  setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void;
   isOnGround(id: EntityId): boolean;
   /** Contact state from the last physics step (works for solid and non-solid). */
   isTouching(a: EntityId, b: EntityId): boolean;

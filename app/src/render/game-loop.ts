@@ -31,3 +31,50 @@ export function createAccumulator(dt: number = TICK_DT, maxSteps = 5): Accumulat
     },
   };
 }
+
+export interface SimPacer {
+  /** Fixed steps to run for this frame: 0 while paused (except a requested single step). */
+  stepsFor(frameSeconds: number): number;
+  pause(): void;
+  /** Leaves pause without replaying the time spent paused. */
+  resume(): void;
+  /** While paused: the next stepsFor() returns exactly 1. Ignored when running. */
+  requestStep(): void;
+  isPaused(): boolean;
+  /** Back to running with no pending step or leftover time (new session). */
+  reset(): void;
+}
+
+/** Wraps an Accumulator with pause / single-step so paused time never turns into a burst of ticks. */
+export function createSimPacer(acc: Accumulator): SimPacer {
+  let paused = false;
+  let stepPending = false;
+  return {
+    stepsFor(frameSeconds: number): number {
+      if (paused) {
+        const n = stepPending ? 1 : 0;
+        stepPending = false;
+        return n;
+      }
+      return acc.advance(frameSeconds);
+    },
+    pause(): void {
+      paused = true;
+      stepPending = false;
+    },
+    resume(): void {
+      paused = false;
+      stepPending = false;
+      acc.reset();
+    },
+    requestStep(): void {
+      if (paused) stepPending = true;
+    },
+    isPaused: () => paused,
+    reset(): void {
+      paused = false;
+      stepPending = false;
+      acc.reset();
+    },
+  };
+}

@@ -4,6 +4,7 @@ import {
   TICK_DT,
   type GameResult,
   type Graph,
+  type Params,
   type InputSnapshot,
   type Runtime,
   type Vec3,
@@ -14,7 +15,7 @@ import { createRuntime } from '../engine/runtime';
 import { createWorld } from '../world/world';
 import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
-import { createAccumulator } from './game-loop';
+import { createAccumulator, createSimPacer } from './game-loop';
 import { floatingLabels } from './floating-labels';
 import { Hud } from './hud';
 import { SceneView } from './scene-view';
@@ -29,7 +30,8 @@ function ensureNodesRegistered(): void {
 
 export function createGameView(): GameView {
   const sceneView = new SceneView();
-  const accumulator = createAccumulator();
+  const pacer = createSimPacer(createAccumulator());
+  const pauseCallbacks: Array<(paused: boolean) => void> = [];
   const endCallbacks: Array<(result: GameResult, message: string) => void> = [];
   const restartCallbacks: Array<() => void> = [];
 
@@ -85,8 +87,23 @@ export function createGameView(): GameView {
     rafId = 0;
   }
 
+  function setPaused(paused: boolean): void {
+    if (pacer.isPaused() === paused) return;
+    if (paused) pacer.pause();
+    else pacer.resume();
+    for (const cb of pauseCallbacks) cb(paused);
+  }
+
+  /** Session over: back to the running state silently (listeners learn from stop / play). */
+  function clearPause(): void {
+    const was = pacer.isPaused();
+    pacer.reset();
+    if (was) for (const cb of pauseCallbacks) cb(false);
+  }
+
   function resetSession(): void {
     cancelLoop();
+    clearPause();
     playing = false;
     runtime = null;
     // Fresh figures per session so animation state never carries across restarts.
@@ -124,7 +141,7 @@ export function createGameView(): GameView {
     lastTime = now;
     try {
       if (mode === '3d') world.setCameraYaw(rig.yaw);
-      const steps = accumulator.advance(dt);
+      const steps = pacer.stepsFor(dt);
       for (let i = 0; i < steps && !world.ended; i++) {
         runtime.tick(readInputFn());
         world.step(TICK_DT);
@@ -291,7 +308,6 @@ export function createGameView(): GameView {
       playing = true;
       rig.snap();
       syncChrome();
-      accumulator.reset();
       hud?.clearItems();
       lastTime = performance.now();
       rafId = requestAnimationFrame(frame);
@@ -299,6 +315,7 @@ export function createGameView(): GameView {
 
     stop(): void {
       cancelLoop();
+      clearPause();
       playing = false;
       runtime = null;
       hud?.hideEnd();
@@ -306,6 +323,36 @@ export function createGameView(): GameView {
 
     resetCamera(): void {
       resetOnNextPreview = true;
+    },
+
+    pause(): void {
+      if (playing) setPaused(true);
+    },
+
+    resume(): void {
+      if (!playing || !pacer.isPaused()) return;
+      setPaused(false);
+      lastTime = performance.now();
+    },
+
+    stepFrame(): void {
+      if (playing) pacer.requestStep(); // the running loop picks it up on the next frame
+    },
+
+    isPaused: () => playing && pacer.isPaused(),
+
+    onPauseChange(cb): void {
+      pauseCallbacks.push(cb);
+    },
+
+    applyNodeParams(nodeId: string, params: Record<string, unknown>): boolean {
+      if (!playing || !runtime) return false;
+      try {
+        return runtime.applyNodeParams(nodeId, params as Params);
+      } catch (err) {
+        console.error(err);
+        return false;
+      }
     },
 
     isPlaying: () => playing,

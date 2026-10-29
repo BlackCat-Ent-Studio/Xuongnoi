@@ -27,6 +27,7 @@ export const counterNode: NodeDef<CounterState> = {
     { id: 'start', label: 'Bắt đầu từ', kind: 'number', default: 0, step: 1 },
     { id: 'target', label: 'Mục tiêu', kind: 'number', default: 5, step: 1 },
   ],
+  createOnly: ['start'],
   create: (_ctx, params) => ({
     value: numParam(params, 'start', 0),
     up: { prev: false },
