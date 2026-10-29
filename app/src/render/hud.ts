@@ -88,7 +88,7 @@ export class Hud {
         el.style.cssText =
           'position:absolute;left:0;top:0;white-space:nowrap;padding:2px 8px;border-radius:10px;background:rgba(255,255,255,0.85);box-shadow:0 1px 4px rgba(0,0,0,0.25);font-size:14px;';
         this.floating.set(l.key, el);
-        this.root.insertBefore(el, this.overlay);
+        this.root.insertBefore(el, this.modals.firstEl);
       }
       if (l.bar === undefined) {
         if (el.textContent !== l.text) el.textContent = l.text;

@@ -36,6 +36,8 @@ export class HudModals {
   private readonly start = backdrop('start');
   private readonly dialog = backdrop('dialog');
   private readonly pause = backdrop('pause');
+  /** First card in the DOM: floating labels go in front of it so every card covers them. */
+  readonly firstEl: HTMLElement = this.dialog;
   private startSig = '';
   private dialogSig = '';
 
