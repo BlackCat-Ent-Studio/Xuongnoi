@@ -6,7 +6,7 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
   label: 'Cổng dịch chuyển',
   category: 'object',
   description:
-    'Một cổng phát sáng: ai chạm vào sẽ được đưa tới cổng còn lại của cặp (phải bước ra khỏi cổng mới đi lại được). Ghép đôi bằng cách nối "Cổng đối diện" tới khối Cổng kia, hoặc đặt cùng một "Mã cặp" cho hai cổng. Người, đồ vật và xe đều đi qua được.',
+    'Một cổng phát sáng: ai chạm vào sẽ được đưa tới cổng còn lại của cặp (phải bước ra khỏi cổng mới đi lại được). Ghép đôi bằng cách nối "Cổng đối diện" tới mảnh ghép Cổng kia, hoặc đặt cùng một "Mã cặp" cho hai cổng. Người, đồ vật và xe đều đi qua được.',
   inputs: [
     { id: 'partner', type: 'object', label: 'Cổng đối diện' },
     { id: 'on', type: 'bool', label: 'Bật', default: true },
@@ -23,6 +23,10 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
     { id: 'pair', label: 'Mã cặp (hai cổng cùng mã thì nối với nhau)', kind: 'text', default: '' },
     { id: 'cooldown', label: 'Nghỉ sau khi dùng (giây)', kind: 'number', default: 0.5, min: 0, max: 10, step: 0.1 },
   ],
+  createOnly: ['position', 'size', 'color'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',

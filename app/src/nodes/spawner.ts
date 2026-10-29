@@ -16,7 +16,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
   label: 'Sinh vật thể',
   category: 'action',
   description:
-    'Mỗi lần "Sinh ra" bật, tạo thêm một khối hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Cảm biến chạm); hoặc nối nhân vật vào "Ai chạm" để biết có bản nào đang chạm người đó.',
+    'Mỗi lần "Sinh ra" bật, tạo thêm một hộp hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Cảm biến chạm); hoặc nối nhân vật vào "Ai chạm" để biết có bản nào đang chạm người đó.',
   inputs: [
     { id: 'spawn', type: 'bool', label: 'Sinh ra' },
     { id: 'at', type: 'object', label: 'Tại vật' },
@@ -35,7 +35,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
       kind: 'select',
       default: 'item',
       options: [
-        { value: 'block', label: 'Khối' },
+        { value: 'block', label: 'Hộp' },
         { value: 'item', label: 'Đồ vật (rơi xuống đất)' },
       ],
     },
@@ -51,7 +51,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     },
     {
       id: 'solid',
-      label: 'Khối rắn không',
+      label: 'Hộp rắn không',
       kind: 'select',
       default: 'solid',
       options: [

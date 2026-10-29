@@ -16,7 +16,7 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
   label: 'Phương tiện',
   category: 'object',
   description:
-    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ khối Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng khối "Lên / Xuống xe"), trừ khi chọn "Tự chạy".',
+    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy".',
   inputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
@@ -74,6 +74,10 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
       ],
     },
   ],
+  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const model = modelParam(strParam(params, 'model', 'car'));
     const id = ctx.world.spawn({

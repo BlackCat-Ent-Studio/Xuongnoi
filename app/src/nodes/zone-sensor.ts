@@ -58,6 +58,10 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     },
     { id: 'color', label: 'Màu vùng (khi chỉnh sửa)', kind: 'color', default: '#22c55e' },
   ],
+  createOnly: ['center', 'size', 'color'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.marker, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const marker = ctx.world.spawn({
       kind: 'block',

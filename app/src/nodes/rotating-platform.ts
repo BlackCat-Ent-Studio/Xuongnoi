@@ -18,13 +18,13 @@ export const rotatingPlatformNode: NodeDef<RotatingState> = {
   label: 'Bệ xoay',
   category: 'object',
   description:
-    'Khối xoay quanh tâm. Kiểu "Xoay từng nấc 90°": khối rắn, mỗi lần "Xoay" bật (hoặc mỗi "Tự xoay sau" giây) nó quay một góc vuông, rộng và dài đổi chỗ cho nhau; ai đang đứng chỗ nó xoay tới sẽ bị đẩy sang chỗ trống, nếu không có chỗ thì nó chờ. Kiểu "Quay liên tục": khối không rắn (không chặn đường), quay tròn như cánh quạt hay bẫy; nối Cảm biến chạm để biết ai bị quét trúng (chạm tính theo đúng hình đang quay). Khối trong game 2D ngang quay trong mặt phẳng nhìn, còn nhìn từ trên và 3D thì quay quanh trục đứng. Bot tìm đường coi khối này như chỗ trống.',
+    'Hộp xoay quanh tâm. Kiểu "Xoay từng nấc 90°": hộp rắn, mỗi lần "Xoay" bật (hoặc mỗi "Tự xoay sau" giây) nó quay một góc vuông, rộng và dài đổi chỗ cho nhau; ai đang đứng chỗ nó xoay tới sẽ bị đẩy sang chỗ trống, nếu không có chỗ thì nó chờ. Kiểu "Quay liên tục": hộp không rắn (không chặn đường), quay tròn như cánh quạt hay bẫy; nối Cảm biến chạm để biết ai bị quét trúng (chạm tính theo đúng hình đang quay). Hộp trong game 2D ngang quay trong mặt phẳng nhìn, còn nhìn từ trên và 3D thì quay quanh trục đứng. Bot tìm đường coi hộp này như chỗ trống.',
   inputs: [
     { id: 'turn', type: 'bool', label: 'Xoay' },
     { id: 'run', type: 'bool', label: 'Chạy', default: true },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Khối xoay' },
+    { id: 'self', type: 'object', label: 'Hộp xoay' },
     { id: 'angle', type: 'number', label: 'Góc (độ)' },
     { id: 'turned', type: 'bool', label: 'Vừa xoay xong' },
   ],
@@ -45,6 +45,10 @@ export const rotatingPlatformNode: NodeDef<RotatingState> = {
     { id: 'every', label: 'Tự xoay sau (giây, 0 = chỉ khi bật "Xoay")', kind: 'number', default: 0, min: 0, max: 60, step: 0.5 },
     { id: 'speed', label: 'Tốc độ quay (độ/giây)', kind: 'number', default: 90, min: -720, max: 720, step: 10 },
   ],
+  createOnly: ['position', 'size', 'color', 'mode'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',

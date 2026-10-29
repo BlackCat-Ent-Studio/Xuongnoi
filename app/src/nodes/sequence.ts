@@ -28,7 +28,7 @@ export const sequenceNode: NodeDef<SequenceState> = {
   label: 'Chuỗi việc',
   category: 'brain',
   description:
-    'Làm lần lượt từng việc: mỗi lúc chỉ một "Việc" bật. Khi "Xong việc" bật lên một nhịp thì chuyển sang việc kế tiếp (có thể lặp lại từ đầu). Nối "Việc 1", "Việc 2"... vào cổng "Cho đi" của các khối Đi tới.',
+    'Làm lần lượt từng việc: mỗi lúc chỉ một "Việc" bật. Khi "Xong việc" bật lên một nhịp thì chuyển sang việc kế tiếp (có thể lặp lại từ đầu). Nối "Việc 1", "Việc 2"... vào cổng "Cho đi" của các mảnh ghép Đi tới.',
   inputs: [
     { id: 'next', type: 'bool', label: 'Xong việc' },
     { id: 'reset', type: 'bool', label: 'Làm lại từ đầu' },

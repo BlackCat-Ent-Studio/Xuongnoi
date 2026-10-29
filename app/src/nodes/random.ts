@@ -74,6 +74,7 @@ export const randomNode: NodeDef<RandomState> = {
     },
     { id: 'seed', label: 'Hạt giống (0 = mỗi lần chơi khác nhau)', kind: 'number', default: 0, step: 1 },
   ],
+  createOnly: ['seed'],
   create(ctx, params) {
     const seed = Math.trunc(numParam(params, 'seed', 0));
     const base = seed !== 0 ? seed : ctx.world.runSeed();

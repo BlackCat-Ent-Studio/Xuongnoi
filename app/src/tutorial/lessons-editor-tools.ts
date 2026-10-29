@@ -13,22 +13,22 @@ type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: s
 
 const T = {
   title: '14. Công cụ bảng nối',
-  summary: 'Chọn nhiều khối, sao chép, hoàn tác và ghi chú để sửa bảng nhanh hơn.',
+  summary: 'Chọn nhiều mảnh ghép, sao chép, hoàn tác và ghi chú để sửa bảng nhanh hơn.',
   boardName: 'Bài 14 - Công cụ bảng nối',
   intro: {
     title: 'Sửa bảng thật nhanh',
-    text: 'Bảng này có sẵn một nhóm nhỏ: Phím bấm nối với Nhân vật (để nhảy), và một khối Sàn. Bài này dạy vài công cụ giúp bạn làm nhanh và không sợ làm hỏng.',
+    text: 'Bảng này có sẵn một nhóm nhỏ: Phím bấm nối với Nhân vật (để nhảy), và một mảnh ghép Sàn. Bài này dạy vài công cụ giúp bạn làm nhanh và không sợ làm hỏng.',
     explain: 'Ai cũng có lúc xóa nhầm. Đã có nút Hoàn tác, nên cứ thoải mái thử.',
   },
   select: {
     title: 'Chọn cả nhóm bằng một khung',
-    text: 'Giữ phím Shift, rồi bấm và kéo chuột trên chỗ trống để vẽ một khung bao quanh Phím bấm và Nhân vật. Khối Sàn nằm ngoài khung.',
-    explain: 'Khối nào chạm vào khung sẽ được chọn. Nếu chọn thừa, bấm vào chỗ trống rồi thử lại. Giữ Shift rồi bấm vào một khối cũng thêm hoặc bỏ khối đó.',
+    text: 'Giữ phím Shift, rồi bấm và kéo chuột trên chỗ trống để vẽ một khung bao quanh Phím bấm và Nhân vật. Mảnh ghép Sàn nằm ngoài khung.',
+    explain: 'Mảnh ghép nào chạm vào khung sẽ được chọn. Nếu chọn thừa, bấm vào chỗ trống rồi thử lại. Giữ Shift rồi bấm vào một mảnh ghép cũng thêm hoặc bỏ mảnh ghép đó.',
   },
   copy: {
     title: 'Sao chép rồi dán',
     text: 'Bấm Ctrl+C để sao chép nhóm đang chọn, rồi bấm Ctrl+V để dán ra một bản mới.',
-    explain: 'Dây nối giữa hai khối cũng được chép theo. Bản dán nằm lệch một chút để bạn dễ thấy.',
+    explain: 'Dây nối giữa hai mảnh ghép cũng được chép theo. Bản dán nằm lệch một chút để bạn dễ thấy.',
   },
   paste: {
     title: 'Dán thêm một lần nữa',
@@ -41,13 +41,13 @@ const T = {
   },
   remove: {
     title: 'Lỡ tay xóa nhầm',
-    text: 'Hai khối mới đang được chọn. Bấm phím Delete để xóa chúng, coi như bạn xóa nhầm.',
-    explain: 'Phím Backspace cũng xóa được khối đang chọn.',
+    text: 'Hai mảnh ghép mới đang được chọn. Bấm phím Delete để xóa chúng, coi như bạn xóa nhầm.',
+    explain: 'Phím Backspace cũng xóa được mảnh ghép đang chọn.',
   },
   undo: {
     title: 'Hoàn tác để lấy lại',
-    text: 'Bấm Ctrl+Z hoặc nút "Hoàn tác" trên thanh trên cùng. Hai khối vừa xóa sẽ quay về. Chỉ cần bấm một lần.',
-    explain: 'Hoàn tác lùi từng bước một: bao gồm cả thêm khối, kéo khối, nối và xóa dây.',
+    text: 'Bấm Ctrl+Z hoặc nút "Hoàn tác" trên thanh trên cùng. Hai mảnh ghép vừa xóa sẽ quay về. Chỉ cần bấm một lần.',
+    explain: 'Hoàn tác lùi từng bước một: bao gồm cả thêm mảnh ghép, kéo mảnh ghép, nối và xóa dây.',
   },
   redo: {
     title: 'Làm lại',
@@ -56,12 +56,12 @@ const T = {
   },
   undoAgain: {
     title: 'Lấy lại lần nữa',
-    text: 'Hoàn tác thêm một lần nữa bằng Ctrl+Z (hoặc nút "Hoàn tác") để hai khối quay về.',
+    text: 'Hoàn tác thêm một lần nữa bằng Ctrl+Z (hoặc nút "Hoàn tác") để hai mảnh ghép quay về.',
   },
   addNote: {
     title: 'Dán tờ ghi chú',
-    text: 'Bấm nút "📝 Ghi chú" (ở thanh trên cùng hoặc đầu danh sách khối bên trái) để thêm một tờ giấy ghi chú vào bảng.',
-    explain: 'Ghi chú không phải là khối và không ảnh hưởng đến game. Nó chỉ để bạn nhắc mình biết nhóm khối này làm gì.',
+    text: 'Bấm nút "📝 Ghi chú" (ở thanh trên cùng hoặc đầu danh sách mảnh ghép bên trái) để thêm một tờ giấy ghi chú vào bảng.',
+    explain: 'Ghi chú không phải là mảnh ghép và không ảnh hưởng đến game. Nó chỉ để bạn nhắc mình biết nhóm mảnh ghép này làm gì.',
   },
   noteText: {
     title: 'Viết vào ghi chú',
@@ -73,7 +73,7 @@ const T = {
   },
   done: {
     title: 'Bạn dùng công cụ như thợ rồi!',
-    text: 'Bạn đã biết chọn nhiều khối, sao chép, nhân đôi, hoàn tác, làm lại và ghi chú. Ghi chú được lưu cùng game của bạn.',
+    text: 'Bạn đã biết chọn nhiều mảnh ghép, sao chép, nhân đôi, hoàn tác, làm lại và ghi chú. Ghi chú được lưu cùng game của bạn.',
   },
 } as const;
 

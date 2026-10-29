@@ -7,6 +7,7 @@ import {
   type Graph,
   type InputSnapshot,
   type NodeDef,
+  type ParamValue,
   type Params,
   type PortDef,
   type PortValue,
@@ -31,6 +32,14 @@ function defaultOutputs(def: NodeDef<any>): PortValues {
   const out: PortValues = {};
   for (const p of def.outputs) out[p.id] = portDefault(p);
   return out;
+}
+
+/** A live value must have the same shape as the param's default (finite number, string or vec3). */
+function sameParamShape(def: ParamValue, v: unknown): v is ParamValue {
+  if (typeof def === 'number') return typeof v === 'number' && Number.isFinite(v);
+  if (typeof def === 'string') return typeof v === 'string';
+  const o = v as Record<string, unknown> | null;
+  return typeof o === 'object' && o !== null && ['x', 'y', 'z'].every((k) => typeof o[k] === 'number' && Number.isFinite(o[k]));
 }
 
 /** Builds a runtime: compiles the graph and calls create() on every node in topo order. */
@@ -71,12 +80,14 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
   }
 
   let tickIndex = 0;
+  let lastInput: InputSnapshot = emptyInput;
 
   const rt: Runtime = {
     get tickIndex() {
       return tickIndex;
     },
     tick(input) {
+      lastInput = input;
       [prev, curr] = [curr, prev];
       for (const id of order) {
         const n = nodes.get(id)!;
@@ -102,6 +113,27 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     getWireValue(wire) {
       return rt.getOutput(wire.from.node, wire.from.port);
     },
+    applyNodeParams(nodeId, patch) {
+      const n = nodes.get(nodeId);
+      if (!n) return false;
+      let allApplied = true;
+      for (const [key, value] of Object.entries(patch)) {
+        const pd = n.def.params.find((p) => p.id === key);
+        if (!pd || !sameParamShape(pd.default, value)) {
+          allApplied = false;
+          continue;
+        }
+        const handler = n.def.liveApply?.[key];
+        if (n.def.createOnly?.includes(key) && !handler) {
+          allApplied = false;
+          continue;
+        }
+        const prev = n.params[key];
+        n.params[key] = value;
+        if (handler) handler(makeCtx(nodeId, tickIndex, lastInput), n.params, n.state, prev ?? value);
+      }
+      return allApplied;
+    },
   };
   return rt;
-}
+}

@@ -44,10 +44,15 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       default: 'player',
       options: [
         { value: 'player', label: 'Người chơi (camera theo dõi)' },
-        { value: 'bot', label: 'Bot (do khối Bộ não điều khiển)' },
+        { value: 'bot', label: 'Bot (do mảnh ghép Bộ não điều khiển)' },
       ],
     },
   ],
+  createOnly: ['position', 'color', 'look', 'role'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+    look: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { look: String(p.look) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'character',

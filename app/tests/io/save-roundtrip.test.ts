@@ -36,6 +36,13 @@ describe('save format', () => {
     }
   });
 
+  it('loads a save whose nodes keep the internal kind "block"', () => {
+    const board = ok(sampleJson(() => {}));
+    const blocks = board.graph.nodes.filter((n) => n.kind === 'block');
+    expect(blocks.length).toBeGreaterThan(0);
+    expect(ok(serializeBoard(board)).graph.nodes.filter((n) => n.kind === 'block')).toHaveLength(blocks.length);
+  });
+
   it('writes format_version 1', () => {
     expect(JSON.parse(serializeBoard(createEmptyBoard('3d'))).format_version).toBe(1);
   });
@@ -99,7 +106,7 @@ describe('save format', () => {
 
   it('rejects a wire to a missing port or node', () => {
     expect(fail(sampleJson((o) => (o.graph.wires[0].to.port = 'nope')))).toContain('cổng');
-    expect(fail(sampleJson((o) => (o.graph.wires[0].to.node = 'ghost')))).toContain('khối');
+    expect(fail(sampleJson((o) => (o.graph.wires[0].to.node = 'ghost')))).toContain('mảnh ghép');
   });
 
   it('rejects a newer version with a Vietnamese message', () => {

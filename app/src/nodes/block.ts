@@ -9,13 +9,13 @@ interface BlockState {
 
 export const blockNode: NodeDef<BlockState> = {
   kind: 'block',
-  label: 'Khối',
+  label: 'Hộp',
   category: 'object',
   description:
-    'Một khối đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm khối biến mất. "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng khối.',
+    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất. "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp.',
   inputs: [{ id: 'hide', type: 'bool', label: 'Ẩn đi' }],
   outputs: [
-    { id: 'self', type: 'object', label: 'Khối' },
+    { id: 'self', type: 'object', label: 'Hộp' },
     { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
   ],
   params: [
@@ -24,7 +24,7 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'color', label: 'Màu', kind: 'color', default: '#a3a3a3' },
     {
       id: 'type',
-      label: 'Loại khối',
+      label: 'Loại hộp',
       kind: 'select',
       default: 'solid',
       options: [
@@ -33,6 +33,10 @@ export const blockNode: NodeDef<BlockState> = {
       ],
     },
   ],
+  createOnly: ['position', 'size', 'color', 'type'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',
