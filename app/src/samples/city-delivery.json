@@ -1,0 +1,3833 @@
+{
+  "format_version": 1,
+  "name": "Thành phố giao hàng",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "ground",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -1,
+            "z": 0
+          },
+          "size": {
+            "x": 61,
+            "y": 1,
+            "z": 36
+          },
+          "color": "#6b7280",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 0,
+          "y": 150
+        }
+      },
+      {
+        "id": "wall-n",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -18
+          },
+          "size": {
+            "x": 62,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 330,
+          "y": 150
+        }
+      },
+      {
+        "id": "wall-s",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 18
+          },
+          "size": {
+            "x": 62,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 660,
+          "y": 150
+        }
+      },
+      {
+        "id": "wall-w",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -30,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 35
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 990,
+          "y": 150
+        }
+      },
+      {
+        "id": "wall-e",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 30,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 35
+          },
+          "color": "#475569",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1320,
+          "y": 150
+        }
+      },
+      {
+        "id": "park",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 24,
+            "y": 1,
+            "z": 8
+          },
+          "color": "#16a34a",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1650,
+          "y": 150
+        }
+      },
+      {
+        "id": "house-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -20,
+            "y": 0.8,
+            "z": -14
+          },
+          "size": {
+            "x": 5,
+            "y": 1.6,
+            "z": 4
+          },
+          "color": "#ef4444",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 0,
+          "y": 366
+        }
+      },
+      {
+        "id": "house-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.8,
+            "z": -14
+          },
+          "size": {
+            "x": 5,
+            "y": 1.6,
+            "z": 4
+          },
+          "color": "#eab308",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 330,
+          "y": 366
+        }
+      },
+      {
+        "id": "house-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 20,
+            "y": 0.8,
+            "z": -14
+          },
+          "size": {
+            "x": 5,
+            "y": 1.6,
+            "z": 4
+          },
+          "color": "#8b5cf6",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 660,
+          "y": 366
+        }
+      },
+      {
+        "id": "mat-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -20,
+            "y": 0.1,
+            "z": -10.2
+          },
+          "size": {
+            "x": 3,
+            "y": 0.2,
+            "z": 1
+          },
+          "color": "#fde047",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 990,
+          "y": 366
+        }
+      },
+      {
+        "id": "mat-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.1,
+            "z": -10.2
+          },
+          "size": {
+            "x": 3,
+            "y": 0.2,
+            "z": 1
+          },
+          "color": "#fde047",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1320,
+          "y": 366
+        }
+      },
+      {
+        "id": "mat-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 20,
+            "y": 0.1,
+            "z": -10.2
+          },
+          "size": {
+            "x": 3,
+            "y": 0.2,
+            "z": 1
+          },
+          "color": "#fde047",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1650,
+          "y": 366
+        }
+      },
+      {
+        "id": "farm-pad",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -20.5,
+            "y": -0.35,
+            "z": 11
+          },
+          "size": {
+            "x": 17,
+            "y": 0.3,
+            "z": 12
+          },
+          "color": "#65a30d",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 0,
+          "y": 582
+        }
+      },
+      {
+        "id": "depot-pad",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.35,
+            "z": 11
+          },
+          "size": {
+            "x": 20,
+            "y": 0.3,
+            "z": 12
+          },
+          "color": "#a98467",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 330,
+          "y": 582
+        }
+      },
+      {
+        "id": "mine-pad",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 20.5,
+            "y": -0.35,
+            "z": 11
+          },
+          "size": {
+            "x": 17,
+            "y": 0.3,
+            "z": 12
+          },
+          "color": "#a8a29e",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 660,
+          "y": 582
+        }
+      },
+      {
+        "id": "farm-bay",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -20,
+            "y": -0.2,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 0.2,
+            "z": 5
+          },
+          "color": "#fbbf24",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 990,
+          "y": 582
+        }
+      },
+      {
+        "id": "depot-bay",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.2,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 0.2,
+            "z": 5
+          },
+          "color": "#fbbf24",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1320,
+          "y": 582
+        }
+      },
+      {
+        "id": "mine-bay",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 20,
+            "y": -0.2,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 0.2,
+            "z": 5
+          },
+          "color": "#fbbf24",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1650,
+          "y": 582
+        }
+      },
+      {
+        "id": "label-farm",
+        "kind": "show-text",
+        "params": {
+          "text": "Nông trại",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 0,
+          "y": 798
+        }
+      },
+      {
+        "id": "label-depot",
+        "kind": "show-text",
+        "params": {
+          "text": "Kho hàng",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 330,
+          "y": 798
+        }
+      },
+      {
+        "id": "label-mine",
+        "kind": "show-text",
+        "params": {
+          "text": "Mỏ đá",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 660,
+          "y": 798
+        }
+      },
+      {
+        "id": "label-h1",
+        "kind": "show-text",
+        "params": {
+          "text": "Nhà 1",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 990,
+          "y": 798
+        }
+      },
+      {
+        "id": "label-h2",
+        "kind": "show-text",
+        "params": {
+          "text": "Nhà 2",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1320,
+          "y": 798
+        }
+      },
+      {
+        "id": "label-h3",
+        "kind": "show-text",
+        "params": {
+          "text": "Nhà 3",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1650,
+          "y": 798
+        }
+      },
+      {
+        "id": "farm-bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -24,
+            "y": 0.5,
+            "z": 11
+          },
+          "speed": 1.6,
+          "jumpPower": 10,
+          "color": "#16a34a",
+          "look": "human",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 0,
+          "y": 1302
+        }
+      },
+      {
+        "id": "farm-hand",
+        "kind": "hand-tool",
+        "params": {
+          "reach": 1.3
+        },
+        "pos": {
+          "x": 330,
+          "y": 1302
+        }
+      },
+      {
+        "id": "farm-bucket",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -24.6,
+            "y": 0.4,
+            "z": 11.4
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#38bdf8",
+          "shape": "bucket",
+          "carryable": "yes",
+          "holdStyle": "hand"
+        },
+        "pos": {
+          "x": 660,
+          "y": 1302
+        }
+      },
+      {
+        "id": "farm-seq",
+        "kind": "sequence",
+        "params": {
+          "stepCount": 2,
+          "loop": "yes"
+        },
+        "pos": {
+          "x": 0,
+          "y": 1643
+        }
+      },
+      {
+        "id": "farm-go-work",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": -27.5,
+            "y": 0.4,
+            "z": 11
+          },
+          "stopDistance": 1.2,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 330,
+          "y": 1643
+        }
+      },
+      {
+        "id": "farm-go-bay",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": -22.3,
+            "y": 0.5,
+            "z": 11
+          },
+          "stopDistance": 0.4,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 660,
+          "y": 1643
+        }
+      },
+      {
+        "id": "farm-or-next",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 0,
+          "y": 2047
+        }
+      },
+      {
+        "id": "farm-or-gone",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 330,
+          "y": 2047
+        }
+      },
+      {
+        "id": "farm-mx",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 660,
+          "y": 2047
+        }
+      },
+      {
+        "id": "farm-my",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 0,
+          "y": 2232
+        }
+      },
+      {
+        "id": "farm-crop",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -27.5,
+            "y": 0.4,
+            "z": 11
+          },
+          "size": {
+            "x": 1.6,
+            "y": 0.8,
+            "z": 1.6
+          },
+          "color": "#fb7185",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 330,
+          "y": 2232
+        }
+      },
+      {
+        "id": "farm-count",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 6
+        },
+        "pos": {
+          "x": 660,
+          "y": 2232
+        }
+      },
+      {
+        "id": "farm-pick",
+        "kind": "select-number",
+        "params": {
+          "choices": 6
+        },
+        "pos": {
+          "x": 0,
+          "y": 2604
+        }
+      },
+      {
+        "id": "farm-goods-1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -20.8,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 330,
+          "y": 2604
+        }
+      },
+      {
+        "id": "farm-goods-2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -20,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 660,
+          "y": 2604
+        }
+      },
+      {
+        "id": "farm-goods-3",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -19.2,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 0,
+          "y": 2945
+        }
+      },
+      {
+        "id": "farm-goods-4",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -20.8,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 330,
+          "y": 2945
+        }
+      },
+      {
+        "id": "farm-goods-5",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -20,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 660,
+          "y": 2945
+        }
+      },
+      {
+        "id": "farm-goods-6",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -19.2,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#f43f5e",
+          "shape": "ball",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 0,
+          "y": 3255
+        }
+      },
+      {
+        "id": "label-farm-work",
+        "kind": "show-text",
+        "params": {
+          "text": "Ruộng",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 330,
+          "y": 3255
+        }
+      },
+      {
+        "id": "mine-bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 24,
+            "y": 0.5,
+            "z": 11
+          },
+          "speed": 1.6,
+          "jumpPower": 10,
+          "color": "#f59e0b",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 1100,
+          "y": 1302
+        }
+      },
+      {
+        "id": "mine-hand",
+        "kind": "hand-tool",
+        "params": {
+          "reach": 1.3
+        },
+        "pos": {
+          "x": 1430,
+          "y": 1302
+        }
+      },
+      {
+        "id": "mine-pickaxe",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 24.6,
+            "y": 0.4,
+            "z": 11.4
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#f59e0b",
+          "shape": "pickaxe",
+          "carryable": "yes",
+          "holdStyle": "hand"
+        },
+        "pos": {
+          "x": 1760,
+          "y": 1302
+        }
+      },
+      {
+        "id": "mine-seq",
+        "kind": "sequence",
+        "params": {
+          "stepCount": 2,
+          "loop": "yes"
+        },
+        "pos": {
+          "x": 1100,
+          "y": 1643
+        }
+      },
+      {
+        "id": "mine-go-work",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 27.5,
+            "y": 0.4,
+            "z": 11
+          },
+          "stopDistance": 1.2,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 1430,
+          "y": 1643
+        }
+      },
+      {
+        "id": "mine-go-bay",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 22.3,
+            "y": 0.5,
+            "z": 11
+          },
+          "stopDistance": 0.4,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 1760,
+          "y": 1643
+        }
+      },
+      {
+        "id": "mine-or-next",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 1100,
+          "y": 2047
+        }
+      },
+      {
+        "id": "mine-or-gone",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 1430,
+          "y": 2047
+        }
+      },
+      {
+        "id": "mine-mx",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 1760,
+          "y": 2047
+        }
+      },
+      {
+        "id": "mine-my",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 1100,
+          "y": 2232
+        }
+      },
+      {
+        "id": "mine-rock",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 27.5,
+            "y": 0.4,
+            "z": 11
+          },
+          "size": {
+            "x": 1.8,
+            "y": 0.9,
+            "z": 1.8
+          },
+          "color": "#334155",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1430,
+          "y": 2232
+        }
+      },
+      {
+        "id": "mine-count",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 6
+        },
+        "pos": {
+          "x": 1760,
+          "y": 2232
+        }
+      },
+      {
+        "id": "mine-pick",
+        "kind": "select-number",
+        "params": {
+          "choices": 6
+        },
+        "pos": {
+          "x": 1100,
+          "y": 2604
+        }
+      },
+      {
+        "id": "mine-goods-1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 19.2,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1430,
+          "y": 2604
+        }
+      },
+      {
+        "id": "mine-goods-2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 20,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1760,
+          "y": 2604
+        }
+      },
+      {
+        "id": "mine-goods-3",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 20.8,
+            "y": 0.35,
+            "z": 10.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1100,
+          "y": 2945
+        }
+      },
+      {
+        "id": "mine-goods-4",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 19.2,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1430,
+          "y": 2945
+        }
+      },
+      {
+        "id": "mine-goods-5",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 20,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1760,
+          "y": 2945
+        }
+      },
+      {
+        "id": "mine-goods-6",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 20.8,
+            "y": 0.35,
+            "z": 11.5
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#1e293b",
+          "shape": "box",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 1100,
+          "y": 3255
+        }
+      },
+      {
+        "id": "label-mine-work",
+        "kind": "show-text",
+        "params": {
+          "text": "Tảng đá",
+          "color": "#1d2330",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1430,
+          "y": 3255
+        }
+      },
+      {
+        "id": "load-bot",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": 14
+          },
+          "speed": 1.6,
+          "jumpPower": 10,
+          "color": "#0ea5e9",
+          "look": "dino",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 2200,
+          "y": 1302
+        }
+      },
+      {
+        "id": "load-carry",
+        "kind": "carry",
+        "params": {
+          "mode": "separate",
+          "throwPower": 8
+        },
+        "pos": {
+          "x": 2530,
+          "y": 1302
+        }
+      },
+      {
+        "id": "load-seq",
+        "kind": "sequence",
+        "params": {
+          "stepCount": 2,
+          "loop": "yes"
+        },
+        "pos": {
+          "x": 2860,
+          "y": 1302
+        }
+      },
+      {
+        "id": "load-go-pile",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 9.5,
+            "y": 0.5,
+            "z": 16
+          },
+          "stopDistance": 0.7,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 2200,
+          "y": 1706
+        }
+      },
+      {
+        "id": "load-go-bay",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 1.4,
+            "y": 0.5,
+            "z": 11
+          },
+          "stopDistance": 0.4,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 2530,
+          "y": 1706
+        }
+      },
+      {
+        "id": "load-or-next",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 2860,
+          "y": 1706
+        }
+      },
+      {
+        "id": "load-mx",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 2200,
+          "y": 2047
+        }
+      },
+      {
+        "id": "load-my",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 2530,
+          "y": 2047
+        }
+      },
+      {
+        "id": "pile-crate-1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 9,
+            "y": 0.35,
+            "z": 15.65
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2860,
+          "y": 2047
+        }
+      },
+      {
+        "id": "pile-crate-2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 9.5,
+            "y": 0.35,
+            "z": 15.65
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2200,
+          "y": 2357
+        }
+      },
+      {
+        "id": "pile-crate-3",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 10,
+            "y": 0.35,
+            "z": 15.65
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2530,
+          "y": 2357
+        }
+      },
+      {
+        "id": "pile-crate-4",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 9,
+            "y": 0.35,
+            "z": 16.35
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2860,
+          "y": 2357
+        }
+      },
+      {
+        "id": "pile-crate-5",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 9.5,
+            "y": 0.35,
+            "z": 16.35
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2200,
+          "y": 2667
+        }
+      },
+      {
+        "id": "pile-crate-6",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 10,
+            "y": 0.35,
+            "z": 16.35
+          },
+          "size": {
+            "x": 0.7,
+            "y": 0.7,
+            "z": 0.7
+          },
+          "color": "#b45309",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head"
+        },
+        "pos": {
+          "x": 2530,
+          "y": 2667
+        }
+      },
+      {
+        "id": "stick",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 0,
+          "y": 3915
+        }
+      },
+      {
+        "id": "start",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 330,
+          "y": 3915
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -2,
+            "y": 0.5,
+            "z": -7
+          },
+          "speed": 5,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 660,
+          "y": 3915
+        }
+      },
+      {
+        "id": "truck",
+        "kind": "vehicle",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.6,
+            "z": -7
+          },
+          "model": "truck",
+          "steerMode": "direction",
+          "maxSpeed": 5,
+          "accel": 8,
+          "color": "#f97316",
+          "solid": "yes",
+          "control": "driver"
+        },
+        "pos": {
+          "x": 990,
+          "y": 3915
+        }
+      },
+      {
+        "id": "enter",
+        "kind": "enter-exit",
+        "params": {
+          "reach": 3
+        },
+        "pos": {
+          "x": 1320,
+          "y": 3915
+        }
+      },
+      {
+        "id": "cam",
+        "kind": "camera",
+        "params": {
+          "mode": "follow",
+          "point": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "zoom": 0.6,
+          "smoothness": 5,
+          "shakeTime": 0.5,
+          "shakeStrength": 1
+        },
+        "pos": {
+          "x": 0,
+          "y": 4256
+        }
+      },
+      {
+        "id": "zone-farm",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": -20,
+            "y": 1,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 3,
+            "z": 5
+          },
+          "filter": "vehicle",
+          "color": "#fbbf24"
+        },
+        "pos": {
+          "x": 330,
+          "y": 4256
+        }
+      },
+      {
+        "id": "zone-depot",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": 0,
+            "y": 1,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 3,
+            "z": 5
+          },
+          "filter": "vehicle",
+          "color": "#fbbf24"
+        },
+        "pos": {
+          "x": 660,
+          "y": 4256
+        }
+      },
+      {
+        "id": "zone-mine",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": 20,
+            "y": 1,
+            "z": 11
+          },
+          "size": {
+            "x": 5,
+            "y": 3,
+            "z": 5
+          },
+          "filter": "vehicle",
+          "color": "#fbbf24"
+        },
+        "pos": {
+          "x": 990,
+          "y": 4256
+        }
+      },
+      {
+        "id": "or-bay-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 1320,
+          "y": 4256
+        }
+      },
+      {
+        "id": "or-bay-2",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 0,
+          "y": 4535
+        }
+      },
+      {
+        "id": "load-tick",
+        "kind": "timer",
+        "params": {
+          "seconds": 0.3
+        },
+        "pos": {
+          "x": 330,
+          "y": 4535
+        }
+      },
+      {
+        "id": "tick-again",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 660,
+          "y": 4535
+        }
+      },
+      {
+        "id": "and-load",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 990,
+          "y": 4535
+        }
+      },
+      {
+        "id": "cargo",
+        "kind": "cargo",
+        "params": {
+          "capacity": 2,
+          "reach": 4
+        },
+        "pos": {
+          "x": 1320,
+          "y": 4535
+        }
+      },
+      {
+        "id": "order-roll",
+        "kind": "random",
+        "params": {
+          "min": 1,
+          "max": 3,
+          "whole": "yes",
+          "mode": "press",
+          "seed": 0
+        },
+        "pos": {
+          "x": 1800,
+          "y": 3915
+        }
+      },
+      {
+        "id": "order-pick",
+        "kind": "select-number",
+        "params": {
+          "choices": 3
+        },
+        "pos": {
+          "x": 2130,
+          "y": 3915
+        }
+      },
+      {
+        "id": "or-new-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 2460,
+          "y": 3915
+        }
+      },
+      {
+        "id": "or-new-2",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 2790,
+          "y": 3915
+        }
+      },
+      {
+        "id": "order-timer",
+        "kind": "timer",
+        "params": {
+          "seconds": 50
+        },
+        "pos": {
+          "x": 3120,
+          "y": 3915
+        }
+      },
+      {
+        "id": "zone-h1",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": -20,
+            "y": 1,
+            "z": -10
+          },
+          "size": {
+            "x": 9,
+            "y": 3,
+            "z": 9
+          },
+          "filter": "vehicle",
+          "color": "#fde047"
+        },
+        "pos": {
+          "x": 1800,
+          "y": 4256
+        }
+      },
+      {
+        "id": "in-h1",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 2130,
+          "y": 4256
+        }
+      },
+      {
+        "id": "zone-h2",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": 0,
+            "y": 1,
+            "z": -10
+          },
+          "size": {
+            "x": 9,
+            "y": 3,
+            "z": 9
+          },
+          "filter": "vehicle",
+          "color": "#fde047"
+        },
+        "pos": {
+          "x": 2460,
+          "y": 4256
+        }
+      },
+      {
+        "id": "in-h2",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 2790,
+          "y": 4256
+        }
+      },
+      {
+        "id": "zone-h3",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": 20,
+            "y": 1,
+            "z": -10
+          },
+          "size": {
+            "x": 9,
+            "y": 3,
+            "z": 9
+          },
+          "filter": "vehicle",
+          "color": "#fde047"
+        },
+        "pos": {
+          "x": 3120,
+          "y": 4256
+        }
+      },
+      {
+        "id": "in-h3",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 1800,
+          "y": 4535
+        }
+      },
+      {
+        "id": "or-in-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 2130,
+          "y": 4535
+        }
+      },
+      {
+        "id": "or-in-2",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 2460,
+          "y": 4535
+        }
+      },
+      {
+        "id": "has-cargo",
+        "kind": "compare",
+        "params": {
+          "op": "gt"
+        },
+        "pos": {
+          "x": 2790,
+          "y": 4535
+        }
+      },
+      {
+        "id": "and-can",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 3120,
+          "y": 4535
+        }
+      },
+      {
+        "id": "not-just",
+        "kind": "not",
+        "params": {},
+        "pos": {
+          "x": 1800,
+          "y": 4720
+        }
+      },
+      {
+        "id": "and-drop",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 2130,
+          "y": 4720
+        }
+      },
+      {
+        "id": "delivered",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 5
+        },
+        "pos": {
+          "x": 2460,
+          "y": 4720
+        }
+      },
+      {
+        "id": "hearts",
+        "kind": "counter",
+        "params": {
+          "start": 3,
+          "target": 0
+        },
+        "pos": {
+          "x": 2790,
+          "y": 4720
+        }
+      },
+      {
+        "id": "price",
+        "kind": "const",
+        "params": {
+          "value": 10
+        },
+        "pos": {
+          "x": 3120,
+          "y": 4720
+        }
+      },
+      {
+        "id": "money",
+        "kind": "math",
+        "params": {
+          "op": "mul"
+        },
+        "pos": {
+          "x": 1800,
+          "y": 5092
+        }
+      },
+      {
+        "id": "lose-check",
+        "kind": "compare",
+        "params": {
+          "op": "le"
+        },
+        "pos": {
+          "x": 0,
+          "y": 5627
+        }
+      },
+      {
+        "id": "end",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Giao đủ 5 đơn rồi! Cả thành phố cảm ơn bạn!",
+          "loseMessage": "Trễ 3 đơn hàng rồi, hết tim. Thử lại nhé!"
+        },
+        "pos": {
+          "x": 330,
+          "y": 5627
+        }
+      },
+      {
+        "id": "ui-start",
+        "kind": "ui-start",
+        "params": {
+          "title": "Thành phố giao hàng: giao 5 đơn!",
+          "buttonText": "Bấm để lái xe",
+          "pauseMenu": "yes"
+        },
+        "pos": {
+          "x": 800,
+          "y": 5627
+        }
+      },
+      {
+        "id": "meter-time",
+        "kind": "ui-meter",
+        "params": {
+          "label": "Thời gian của đơn",
+          "min": 0,
+          "max": 50,
+          "color": "#ef4444",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1130,
+          "y": 5627
+        }
+      },
+      {
+        "id": "show-delivered",
+        "kind": "show-number",
+        "params": {
+          "label": "Đã giao (cần 5)",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1460,
+          "y": 5627
+        }
+      },
+      {
+        "id": "show-hearts",
+        "kind": "show-number",
+        "params": {
+          "label": "Tim",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 800,
+          "y": 5812
+        }
+      },
+      {
+        "id": "show-money",
+        "kind": "show-number",
+        "params": {
+          "label": "Tiền",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1130,
+          "y": 5812
+        }
+      },
+      {
+        "id": "show-cargo",
+        "kind": "show-number",
+        "params": {
+          "label": "Hàng trên xe (tối đa 2)",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1460,
+          "y": 5812
+        }
+      },
+      {
+        "id": "help-1",
+        "kind": "show-text",
+        "params": {
+          "text": "Lái xe: W A S D. Vào ô vàng của bãi hàng để chất hàng.",
+          "color": "#1d2330",
+          "corner": "bottom-left"
+        },
+        "pos": {
+          "x": 800,
+          "y": 5935
+        }
+      },
+      {
+        "id": "help-2",
+        "kind": "show-text",
+        "params": {
+          "text": "Chở hàng tới nhà có chữ \"Giao ở đây!\" (thảm vàng trước cửa).",
+          "color": "#1d2330",
+          "corner": "bottom-left"
+        },
+        "pos": {
+          "x": 1130,
+          "y": 5935
+        }
+      },
+      {
+        "id": "here-h1",
+        "kind": "show-text",
+        "params": {
+          "text": "Giao ở đây!",
+          "color": "#dc2626",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1460,
+          "y": 5935
+        }
+      },
+      {
+        "id": "here-h2",
+        "kind": "show-text",
+        "params": {
+          "text": "Giao ở đây!",
+          "color": "#dc2626",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 800,
+          "y": 6089
+        }
+      },
+      {
+        "id": "here-h3",
+        "kind": "show-text",
+        "params": {
+          "text": "Giao ở đây!",
+          "color": "#dc2626",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1130,
+          "y": 6089
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "farm-bay",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-farm",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "depot-bay",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-depot",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "mine-bay",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-mine",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "mat-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-h1",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "mat-2",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-h2",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "mat-3",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-h3",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "stick",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "stick",
+          "port": "y"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "stick",
+          "port": "x"
+        },
+        "to": {
+          "node": "truck",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "stick",
+          "port": "y"
+        },
+        "to": {
+          "node": "truck",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "enter",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "enter",
+          "port": "press"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "truck",
+          "port": "self"
+        },
+        "to": {
+          "node": "cam",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "zone-farm",
+          "port": "inside"
+        },
+        "to": {
+          "node": "or-bay-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "zone-depot",
+          "port": "inside"
+        },
+        "to": {
+          "node": "or-bay-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "or-bay-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-bay-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "zone-mine",
+          "port": "inside"
+        },
+        "to": {
+          "node": "or-bay-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "load-tick",
+          "port": "done"
+        },
+        "to": {
+          "node": "tick-again",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "tick-again",
+          "port": "out"
+        },
+        "to": {
+          "node": "load-tick",
+          "port": "reset"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "or-bay-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "and-load",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "load-tick",
+          "port": "done"
+        },
+        "to": {
+          "node": "and-load",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "truck",
+          "port": "self"
+        },
+        "to": {
+          "node": "cargo",
+          "port": "vehicle"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "and-load",
+          "port": "out"
+        },
+        "to": {
+          "node": "cargo",
+          "port": "load"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "farm-pick",
+          "port": "is1"
+        },
+        "to": {
+          "node": "farm-goods-1",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w26",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-2",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w27",
+        "from": {
+          "node": "farm-pick",
+          "port": "is2"
+        },
+        "to": {
+          "node": "farm-goods-2",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w28",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-3",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w29",
+        "from": {
+          "node": "farm-pick",
+          "port": "is3"
+        },
+        "to": {
+          "node": "farm-goods-3",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w30",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-4",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w31",
+        "from": {
+          "node": "farm-pick",
+          "port": "is4"
+        },
+        "to": {
+          "node": "farm-goods-4",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w32",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-5",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w33",
+        "from": {
+          "node": "farm-pick",
+          "port": "is5"
+        },
+        "to": {
+          "node": "farm-goods-5",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w34",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-goods-6",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w35",
+        "from": {
+          "node": "farm-pick",
+          "port": "is6"
+        },
+        "to": {
+          "node": "farm-goods-6",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w36",
+        "from": {
+          "node": "farm-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "farm-hand",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w37",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "farm-hand",
+          "port": "toggle"
+        }
+      },
+      {
+        "id": "w38",
+        "from": {
+          "node": "farm-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "farm-go-work",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w39",
+        "from": {
+          "node": "farm-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "farm-go-bay",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w40",
+        "from": {
+          "node": "farm-crop",
+          "port": "self"
+        },
+        "to": {
+          "node": "farm-go-work",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w41",
+        "from": {
+          "node": "farm-seq",
+          "port": "step1"
+        },
+        "to": {
+          "node": "farm-go-work",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w42",
+        "from": {
+          "node": "farm-seq",
+          "port": "step2"
+        },
+        "to": {
+          "node": "farm-go-bay",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w43",
+        "from": {
+          "node": "farm-go-work",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "farm-hand",
+          "port": "use"
+        }
+      },
+      {
+        "id": "w44",
+        "from": {
+          "node": "farm-crop",
+          "port": "usedOn"
+        },
+        "to": {
+          "node": "farm-or-gone",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w45",
+        "from": {
+          "node": "farm-or-gone",
+          "port": "out"
+        },
+        "to": {
+          "node": "farm-crop",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w46",
+        "from": {
+          "node": "farm-crop",
+          "port": "usedOn"
+        },
+        "to": {
+          "node": "farm-or-next",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w47",
+        "from": {
+          "node": "farm-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "farm-or-next",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w48",
+        "from": {
+          "node": "farm-or-next",
+          "port": "out"
+        },
+        "to": {
+          "node": "farm-seq",
+          "port": "next"
+        }
+      },
+      {
+        "id": "w49",
+        "from": {
+          "node": "farm-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "farm-crop",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w50",
+        "from": {
+          "node": "farm-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "farm-count",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w51",
+        "from": {
+          "node": "farm-count",
+          "port": "value"
+        },
+        "to": {
+          "node": "farm-pick",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w52",
+        "from": {
+          "node": "farm-go-work",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "farm-mx",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w53",
+        "from": {
+          "node": "farm-go-bay",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "farm-mx",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w54",
+        "from": {
+          "node": "farm-go-work",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "farm-my",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w55",
+        "from": {
+          "node": "farm-go-bay",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "farm-my",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w56",
+        "from": {
+          "node": "farm-mx",
+          "port": "out"
+        },
+        "to": {
+          "node": "farm-bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w57",
+        "from": {
+          "node": "farm-my",
+          "port": "out"
+        },
+        "to": {
+          "node": "farm-bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w58",
+        "from": {
+          "node": "farm-crop",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-farm-work",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w59",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w60",
+        "from": {
+          "node": "mine-pick",
+          "port": "is1"
+        },
+        "to": {
+          "node": "mine-goods-1",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w61",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-2",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w62",
+        "from": {
+          "node": "mine-pick",
+          "port": "is2"
+        },
+        "to": {
+          "node": "mine-goods-2",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w63",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-3",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w64",
+        "from": {
+          "node": "mine-pick",
+          "port": "is3"
+        },
+        "to": {
+          "node": "mine-goods-3",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w65",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-4",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w66",
+        "from": {
+          "node": "mine-pick",
+          "port": "is4"
+        },
+        "to": {
+          "node": "mine-goods-4",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w67",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-5",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w68",
+        "from": {
+          "node": "mine-pick",
+          "port": "is5"
+        },
+        "to": {
+          "node": "mine-goods-5",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w69",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-goods-6",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w70",
+        "from": {
+          "node": "mine-pick",
+          "port": "is6"
+        },
+        "to": {
+          "node": "mine-goods-6",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w71",
+        "from": {
+          "node": "mine-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "mine-hand",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w72",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "mine-hand",
+          "port": "toggle"
+        }
+      },
+      {
+        "id": "w73",
+        "from": {
+          "node": "mine-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "mine-go-work",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w74",
+        "from": {
+          "node": "mine-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "mine-go-bay",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w75",
+        "from": {
+          "node": "mine-rock",
+          "port": "self"
+        },
+        "to": {
+          "node": "mine-go-work",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w76",
+        "from": {
+          "node": "mine-seq",
+          "port": "step1"
+        },
+        "to": {
+          "node": "mine-go-work",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w77",
+        "from": {
+          "node": "mine-seq",
+          "port": "step2"
+        },
+        "to": {
+          "node": "mine-go-bay",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w78",
+        "from": {
+          "node": "mine-go-work",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "mine-hand",
+          "port": "use"
+        }
+      },
+      {
+        "id": "w79",
+        "from": {
+          "node": "mine-rock",
+          "port": "usedOn"
+        },
+        "to": {
+          "node": "mine-or-gone",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w80",
+        "from": {
+          "node": "mine-or-gone",
+          "port": "out"
+        },
+        "to": {
+          "node": "mine-rock",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w81",
+        "from": {
+          "node": "mine-rock",
+          "port": "usedOn"
+        },
+        "to": {
+          "node": "mine-or-next",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w82",
+        "from": {
+          "node": "mine-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "mine-or-next",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w83",
+        "from": {
+          "node": "mine-or-next",
+          "port": "out"
+        },
+        "to": {
+          "node": "mine-seq",
+          "port": "next"
+        }
+      },
+      {
+        "id": "w84",
+        "from": {
+          "node": "mine-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "mine-rock",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w85",
+        "from": {
+          "node": "mine-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "mine-count",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w86",
+        "from": {
+          "node": "mine-count",
+          "port": "value"
+        },
+        "to": {
+          "node": "mine-pick",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w87",
+        "from": {
+          "node": "mine-go-work",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "mine-mx",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w88",
+        "from": {
+          "node": "mine-go-bay",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "mine-mx",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w89",
+        "from": {
+          "node": "mine-go-work",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "mine-my",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w90",
+        "from": {
+          "node": "mine-go-bay",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "mine-my",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w91",
+        "from": {
+          "node": "mine-mx",
+          "port": "out"
+        },
+        "to": {
+          "node": "mine-bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w92",
+        "from": {
+          "node": "mine-my",
+          "port": "out"
+        },
+        "to": {
+          "node": "mine-bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w93",
+        "from": {
+          "node": "mine-rock",
+          "port": "self"
+        },
+        "to": {
+          "node": "label-mine-work",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w94",
+        "from": {
+          "node": "load-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "load-carry",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w95",
+        "from": {
+          "node": "load-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "load-go-pile",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w96",
+        "from": {
+          "node": "load-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "load-go-bay",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w97",
+        "from": {
+          "node": "load-seq",
+          "port": "step1"
+        },
+        "to": {
+          "node": "load-go-pile",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w98",
+        "from": {
+          "node": "load-seq",
+          "port": "step2"
+        },
+        "to": {
+          "node": "load-go-bay",
+          "port": "go"
+        }
+      },
+      {
+        "id": "w99",
+        "from": {
+          "node": "load-go-pile",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "load-carry",
+          "port": "grab"
+        }
+      },
+      {
+        "id": "w100",
+        "from": {
+          "node": "load-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "load-carry",
+          "port": "drop"
+        }
+      },
+      {
+        "id": "w101",
+        "from": {
+          "node": "load-go-pile",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "load-or-next",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w102",
+        "from": {
+          "node": "load-go-bay",
+          "port": "arrivedPulse"
+        },
+        "to": {
+          "node": "load-or-next",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w103",
+        "from": {
+          "node": "load-or-next",
+          "port": "out"
+        },
+        "to": {
+          "node": "load-seq",
+          "port": "next"
+        }
+      },
+      {
+        "id": "w104",
+        "from": {
+          "node": "load-go-pile",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "load-mx",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w105",
+        "from": {
+          "node": "load-go-bay",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "load-mx",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w106",
+        "from": {
+          "node": "load-go-pile",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "load-my",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w107",
+        "from": {
+          "node": "load-go-bay",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "load-my",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w108",
+        "from": {
+          "node": "load-mx",
+          "port": "out"
+        },
+        "to": {
+          "node": "load-bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w109",
+        "from": {
+          "node": "load-my",
+          "port": "out"
+        },
+        "to": {
+          "node": "load-bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w110",
+        "from": {
+          "node": "start",
+          "port": "fired"
+        },
+        "to": {
+          "node": "or-new-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w111",
+        "from": {
+          "node": "cargo",
+          "port": "unloaded"
+        },
+        "to": {
+          "node": "or-new-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w112",
+        "from": {
+          "node": "or-new-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-new-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w113",
+        "from": {
+          "node": "order-timer",
+          "port": "done"
+        },
+        "to": {
+          "node": "or-new-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w114",
+        "from": {
+          "node": "or-new-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "order-roll",
+          "port": "roll"
+        }
+      },
+      {
+        "id": "w115",
+        "from": {
+          "node": "or-new-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "order-timer",
+          "port": "reset"
+        }
+      },
+      {
+        "id": "w116",
+        "from": {
+          "node": "order-roll",
+          "port": "value"
+        },
+        "to": {
+          "node": "order-pick",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w117",
+        "from": {
+          "node": "order-pick",
+          "port": "is1"
+        },
+        "to": {
+          "node": "in-h1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w118",
+        "from": {
+          "node": "zone-h1",
+          "port": "inside"
+        },
+        "to": {
+          "node": "in-h1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w119",
+        "from": {
+          "node": "order-pick",
+          "port": "is2"
+        },
+        "to": {
+          "node": "in-h2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w120",
+        "from": {
+          "node": "zone-h2",
+          "port": "inside"
+        },
+        "to": {
+          "node": "in-h2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w121",
+        "from": {
+          "node": "order-pick",
+          "port": "is3"
+        },
+        "to": {
+          "node": "in-h3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w122",
+        "from": {
+          "node": "zone-h3",
+          "port": "inside"
+        },
+        "to": {
+          "node": "in-h3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w123",
+        "from": {
+          "node": "in-h1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-in-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w124",
+        "from": {
+          "node": "in-h2",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-in-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w125",
+        "from": {
+          "node": "or-in-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-in-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w126",
+        "from": {
+          "node": "in-h3",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-in-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w127",
+        "from": {
+          "node": "cargo",
+          "port": "count"
+        },
+        "to": {
+          "node": "has-cargo",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w128",
+        "from": {
+          "node": "or-in-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "and-can",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w129",
+        "from": {
+          "node": "has-cargo",
+          "port": "out"
+        },
+        "to": {
+          "node": "and-can",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w130",
+        "from": {
+          "node": "cargo",
+          "port": "unloaded"
+        },
+        "to": {
+          "node": "not-just",
+          "port": "in"
+        }
+      },
+      {
+        "id": "w131",
+        "from": {
+          "node": "and-can",
+          "port": "out"
+        },
+        "to": {
+          "node": "and-drop",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w132",
+        "from": {
+          "node": "not-just",
+          "port": "out"
+        },
+        "to": {
+          "node": "and-drop",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w133",
+        "from": {
+          "node": "and-drop",
+          "port": "out"
+        },
+        "to": {
+          "node": "cargo",
+          "port": "unload"
+        }
+      },
+      {
+        "id": "w134",
+        "from": {
+          "node": "cargo",
+          "port": "unloaded"
+        },
+        "to": {
+          "node": "delivered",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w135",
+        "from": {
+          "node": "order-timer",
+          "port": "done"
+        },
+        "to": {
+          "node": "hearts",
+          "port": "down"
+        }
+      },
+      {
+        "id": "w136",
+        "from": {
+          "node": "delivered",
+          "port": "value"
+        },
+        "to": {
+          "node": "money",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w137",
+        "from": {
+          "node": "price",
+          "port": "value"
+        },
+        "to": {
+          "node": "money",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w138",
+        "from": {
+          "node": "hearts",
+          "port": "value"
+        },
+        "to": {
+          "node": "lose-check",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w139",
+        "from": {
+          "node": "delivered",
+          "port": "reached"
+        },
+        "to": {
+          "node": "end",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w140",
+        "from": {
+          "node": "lose-check",
+          "port": "out"
+        },
+        "to": {
+          "node": "end",
+          "port": "lose"
+        }
+      },
+      {
+        "id": "w141",
+        "from": {
+          "node": "ui-start",
+          "port": "started"
+        },
+        "to": {
+          "node": "order-timer",
+          "port": "run"
+        }
+      },
+      {
+        "id": "w142",
+        "from": {
+          "node": "order-timer",
+          "port": "left"
+        },
+        "to": {
+          "node": "meter-time",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w143",
+        "from": {
+          "node": "delivered",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-delivered",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w144",
+        "from": {
+          "node": "hearts",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-hearts",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w145",
+        "from": {
+          "node": "money",
+          "port": "out"
+        },
+        "to": {
+          "node": "show-money",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w146",
+        "from": {
+          "node": "cargo",
+          "port": "count"
+        },
+        "to": {
+          "node": "show-cargo",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w147",
+        "from": {
+          "node": "order-pick",
+          "port": "is1"
+        },
+        "to": {
+          "node": "here-h1",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w148",
+        "from": {
+          "node": "house-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "here-h1",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w149",
+        "from": {
+          "node": "order-pick",
+          "port": "is2"
+        },
+        "to": {
+          "node": "here-h2",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w150",
+        "from": {
+          "node": "house-2",
+          "port": "self"
+        },
+        "to": {
+          "node": "here-h2",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w151",
+        "from": {
+          "node": "order-pick",
+          "port": "is3"
+        },
+        "to": {
+          "node": "here-h3",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w152",
+        "from": {
+          "node": "house-3",
+          "port": "self"
+        },
+        "to": {
+          "node": "here-h3",
+          "port": "anchor"
+        }
+      }
+    ]
+  },
+  "notes": [
+    {
+      "id": "note-1",
+      "text": "Thành phố\nMặt đất, tường, công viên, 3 nhà, 3 bãi hàng và nhãn chữ. Toàn là hộp và chữ, không có luật chơi ở đây.",
+      "color": "green",
+      "pos": {
+        "x": 0,
+        "y": 0
+      },
+      "size": {
+        "w": 1950,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-2",
+      "text": "Bot nông dân\nĐi tới ruộng, vung xô tưới cây, cây biến mất. Rồi đi về bãi hàng và một món hàng mới hiện ra (chọn món theo số lần đã làm). Cây mọc lại, bot làm lại mãi.",
+      "color": "green",
+      "pos": {
+        "x": 0,
+        "y": 1152
+      },
+      "size": {
+        "w": 960,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-3",
+      "text": "Bot thợ mỏ\nCầm cuốc, đi tới tảng đá và đập. Đá vỡ rồi bot đem quặng về bãi hàng: một món quặng mới hiện ra. Đá mọc lại, bot làm lại mãi.",
+      "color": "pink",
+      "pos": {
+        "x": 1100,
+        "y": 1152
+      },
+      "size": {
+        "w": 960,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-4",
+      "text": "Bot bốc vác\nKhiêng từng thùng từ đống thùng ở góc kho ra giữa bãi Kho hàng rồi thả xuống. Hết thùng thì bot đứng chờ.",
+      "color": "yellow",
+      "pos": {
+        "x": 2200,
+        "y": 1152
+      },
+      "size": {
+        "w": 960,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-5",
+      "text": "Xe của bạn\nLái xe bằng W A S D. Xe tự chở bạn ngay khi chơi. Vào ô vàng của một bãi hàng thì xe tự chất hàng (mỗi 0,3 giây một món, tối đa 2).",
+      "color": "blue",
+      "pos": {
+        "x": 0,
+        "y": 3765
+      },
+      "size": {
+        "w": 1620,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-6",
+      "text": "Đơn hàng\nMỗi đơn là một ngôi nhà ngẫu nhiên (1 đến 3), có 50 giây để giao. Xe vào vùng của nhà đang cần và còn hàng thì dỡ 1 món: giao xong đơn mới. Hết giờ thì mất 1 tim và có đơn mới.",
+      "color": "pink",
+      "pos": {
+        "x": 1800,
+        "y": 3765
+      },
+      "size": {
+        "w": 1620,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-7",
+      "text": "Thắng / Thua\nGiao đủ 5 đơn thì thắng. Hết 3 tim (3 đơn bị trễ) thì thua.",
+      "color": "green",
+      "pos": {
+        "x": 0,
+        "y": 5477
+      },
+      "size": {
+        "w": 630,
+        "h": 120
+      }
+    },
+    {
+      "id": "note-8",
+      "text": "Màn hình\nMàn hình bắt đầu, thanh thời gian của đơn, các con số (đơn đã giao, tim, tiền, hàng trên xe) và chữ \"Giao ở đây!\" nổi trên nhà đang cần hàng.",
+      "color": "blue",
+      "pos": {
+        "x": 800,
+        "y": 5477
+      },
+      "size": {
+        "w": 960,
+        "h": 120
+      }
+    }
+  ]
+}

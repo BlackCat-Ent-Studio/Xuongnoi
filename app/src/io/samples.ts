@@ -13,6 +13,7 @@ import race from '../samples/race.json';
 import diceZones from '../samples/dice-zones.json';
 import portalCamera from '../samples/portal-camera.json';
 import dodgeShoot from '../samples/dodge-shoot.json';
+import cityDelivery from '../samples/city-delivery.json';
 import { parseBoard } from './save-format';
 
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
@@ -30,6 +31,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'dice-zones', label: 'Xúc xắc và vùng (đổ xúc xắc, mở cổng, 2D)', json: diceZones },
   { id: 'portal-camera', label: 'Cổng dịch chuyển (qua vực bằng cổng, camera zoom và rung, 2D)', json: portalCamera },
   { id: 'dodge-shoot', label: 'Né và bắn (bệ di chuyển, bệ xoay, bắn đạn, đá rơi, 2D)', json: dodgeShoot },
+  { id: 'city-delivery', label: 'Thành phố giao hàng (lái xe tải giao hàng, nhìn từ trên)', json: cityDelivery },
 ];
 
 /** Fresh copies on every call, so callers may mutate the boards freely. */
