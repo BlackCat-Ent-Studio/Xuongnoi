@@ -229,7 +229,9 @@ export type ItemShape =
   | 'torch'
   | 'wand'
   | 'bucket'
-  | 'lock';
+  | 'lock'
+  | 'veggie'
+  | 'ore';
 export const ITEM_SHAPES: readonly ItemShape[] = [
   'box',
   'key',
@@ -242,6 +244,8 @@ export const ITEM_SHAPES: readonly ItemShape[] = [
   'wand',
   'bucket',
   'lock',
+  'veggie',
+  'ore',
 ];
 
 /** How a character carries an item: balanced above the head, or as a tool in hand. */
@@ -279,6 +283,12 @@ export interface EntitySpec {
   vehicle?: VehicleSpec;
   /** Blocks only: a zone marker, drawn translucent so the area can be seen while editing. */
   zone?: boolean;
+  /** Blocks only: how the block is drawn (a BlockStyle id). Omitted = plain box. Collision is unaffected. */
+  blockStyle?: string;
+  /** Blocks only: text shown on a sign-style block. */
+  label?: string;
+  /** Items only: free-text goods type ("Loại hàng"); read back with WorldApi.tagOf. */
+  tag?: string;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
   disposable?: boolean;
 }
@@ -323,6 +333,10 @@ export interface EntityView {
   role?: CharacterRole;
   /** Items only. */
   shape?: ItemShape;
+  /** Blocks only; present when the block is drawn in a style other than the plain box. */
+  blockStyle?: string;
+  /** Blocks only; sign text, present when non-empty. */
+  label?: string;
   /** Items only; present as 'hand' for tools. */
   holdStyle?: HoldStyle;
   /** Items only; true while the item is in a character's hand (the renderer draws it on the figure). */
@@ -405,6 +419,8 @@ export interface WorldApi {
   getEntity(id: EntityId): EntityView | undefined;
   /** Repaints a living entity: colour (any entity) and look (characters only). Unknown ids are ignored. */
   setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void;
+  /** Free-text goods type of an item ("Loại hàng"); '' when unset or the id is unknown. */
+  tagOf(id: EntityId): string;
   isOnGround(id: EntityId): boolean;
   /** Contact state from the last physics step (works for solid and non-solid). */
   isTouching(a: EntityId, b: EntityId): boolean;
@@ -539,6 +555,8 @@ export interface PlayCameraCommand {
   smoothness: number;
   /** Current shake strength, 0 = still. */
   shake: number;
+  /** 3D only: fixed camera elevation in radians (0 = horizontal, ~1.5 = straight down). Omitted = the player's own orbit. */
+  pitch?: number;
 }
 
 /** A portal entity's link: partner by wire, or any other portal with the same non-empty `pair`. */

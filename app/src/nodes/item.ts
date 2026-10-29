@@ -13,6 +13,8 @@ export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
   wand: 'Gậy phép',
   bucket: 'Xô nước',
   lock: 'Ổ khoá',
+  veggie: 'Bó rau',
+  ore: 'Cục quặng',
 };
 
 function shapeParam(raw: string): ItemShape {
@@ -79,8 +81,9 @@ export const itemNode: NodeDef<ItemState> = {
       ],
     },
     { id: 'damage', label: 'Sát thương (0 = tuỳ loại)', kind: 'number', default: 0, min: 0, max: 100, step: 1 },
+    { id: 'tag', label: 'Loại hàng (chữ, để trống nếu không cần)', kind: 'text', default: '' },
   ],
-  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage'],
+  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage', 'tag'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -96,6 +99,7 @@ export const itemNode: NodeDef<ItemState> = {
       carryable: strParam(params, 'carryable', 'yes') !== 'no',
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
       damage: numParam(params, 'damage', 0),
+      tag: strParam(params, 'tag', '').trim(),
     });
     return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
   },

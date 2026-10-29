@@ -53,6 +53,7 @@ export function makeWorld(): FakeWorld {
       const e = w.entities.get(id);
       if (e) w.entities.set(id, { ...e, ...(style.color !== undefined ? { color: style.color } : {}), ...(style.look !== undefined ? { look: style.look } : {}) });
     },
+    tagOf: (id) => w.spawned.find((_, i) => `e${i + 1}` === id)?.tag ?? '',
     setCharacterIntent: (id, intent) => void w.intents.push({ id, intent }),
     hide: (id) => void w.hidden.push(id),
     show: (id) => void w.shown.push(id),

@@ -167,6 +167,11 @@ export class CameraRig {
     return this.view.homeSize / (this.view.mag * (this.following ? this.director.zoom : 1));
   }
 
+  /** The point the camera orbits / centres on (ground level of the followed subject). */
+  get focus(): { x: number; y: number; z: number } {
+    return this.target;
+  }
+
   get zoomMagnification(): number {
     return this.view.mag;
   }
@@ -235,6 +240,10 @@ export class CameraRig {
     this.syncFollow(follow);
     const cmd = follow ? playCamera : null;
     this.director.update(cmd, dt, this.snapNext || !follow);
+    if (this.mode === '3d' && cmd?.pitch !== undefined) {
+      const goal = clampPitch(cmd.pitch);
+      this.pitch = this.snapNext ? goal : smoothValue(this.pitch, goal, dt, this.director.rate(cmd));
+    }
     const bounds = entityBounds(entities);
     if (follow) {
       const character = pickFollowTarget(entities);

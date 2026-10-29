@@ -1,8 +1,11 @@
+import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf } from '../engine/block-styles';
 import type { EntityId, NodeDef } from '../engine/types';
-import { asBool, risingEdge, strParam, vec3Param, type EdgeState } from './util';
+import { asBool, asNum, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 interface BlockState {
   id: EntityId;
+  /** Last "Đổi màu" value seen (0 = none), so a colour is applied only when the number changes. */
+  pick?: number;
   hide: EdgeState;
   show: EdgeState;
   hidden: boolean;
@@ -17,6 +20,7 @@ export const blockNode: NodeDef<BlockState> = {
   inputs: [
     { id: 'hide', type: 'bool', label: 'Ẩn đi' },
     { id: 'show', type: 'bool', label: 'Hiện lại' },
+    { id: 'pick', type: 'number', label: 'Đổi màu (1, 2 hoặc 3)' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Hộp' },
@@ -36,8 +40,19 @@ export const blockNode: NodeDef<BlockState> = {
         { value: 'pickup', label: 'Vật nhặt (đi xuyên qua)' },
       ],
     },
+    {
+      id: 'style',
+      label: 'Kiểu dáng',
+      kind: 'select',
+      default: 'box',
+      options: BLOCK_STYLES.map((value) => ({ value, label: BLOCK_STYLE_LABELS[value] })),
+    },
+    { id: 'signText', label: 'Chữ trên biển (kiểu Biển tên)', kind: 'text', default: '' },
+    { id: 'color1', label: 'Màu 1', kind: 'color', default: TRAFFIC_COLORS[0] },
+    { id: 'color2', label: 'Màu 2', kind: 'color', default: TRAFFIC_COLORS[1] },
+    { id: 'color3', label: 'Màu 3', kind: 'color', default: TRAFFIC_COLORS[2] },
   ],
-  createOnly: ['position', 'size', 'color', 'type'],
+  createOnly: ['position', 'size', 'color', 'type', 'style', 'signText'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -49,10 +64,19 @@ export const blockNode: NodeDef<BlockState> = {
       size: vec3Param(params, 'size', { x: 1, y: 1, z: 1 }),
       color: strParam(params, 'color', '#a3a3a3'),
       solid: strParam(params, 'type', 'solid') !== 'pickup',
+      blockStyle: blockStyleOf(strParam(params, 'style', 'box')),
+      label: strParam(params, 'signText', '').trim(),
     });
-    return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
+    return { id, pick: 0, hide: { prev: false }, show: { prev: false }, hidden: false };
   },
-  evaluate(ctx, i, _params, s) {
+  evaluate(ctx, i, params, s) {
+    const pick = Math.round(asNum(i.pick));
+    if (pick !== (s.pick ?? 0)) {
+      s.pick = pick;
+      if (pick >= 1 && pick <= 3) {
+        ctx.world.setEntityStyle(s.id, { color: strParam(params, `color${pick}`, TRAFFIC_COLORS[pick - 1] ?? '#ffffff') });
+      }
+    }
     if (risingEdge(s.hide, asBool(i.hide)) && !s.hidden) {
       s.hidden = true;
       ctx.world.hide(s.id);
