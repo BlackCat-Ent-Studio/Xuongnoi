@@ -27,6 +27,8 @@
 /* Empty-board launchpad, centred over the wiring canvas. */
 .launchpad { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; }
 .launchpad[hidden] { display: none; }
+/* The launchpad says the same thing as the canvas hint, so show only one of them. */
+.wc:has(.launchpad:not([hidden])) .wc-hint { display: none; }
 .launchpad-in { width: min(560px, 92%); pointer-events: auto; cursor: default; padding: 18px; border-radius: 12px; background: color-mix(in srgb, var(--panel, #1c1f24) 92%, transparent); border: 1px solid var(--line2, #3a404a); box-shadow: 0 12px 32px rgba(0, 0, 0, .4); }
 .launchpad h2 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
 .launchpad p { margin: 0 0 14px; color: var(--text2, #aab2bd); }

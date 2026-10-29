@@ -27,7 +27,7 @@ export interface LayoutPrefs {
 }
 
 export const LAYOUT_KEY = 'xuong-noi:layout';
-export const DEFAULT_SIZES: LayoutSizes = { leftW: 236, rightW: 280, bottomH: 188 };
+export const DEFAULT_SIZES: LayoutSizes = { leftW: 236, rightW: 280, bottomH: 244 };
 
 export const MIN_LEFT_W = 180;
 export const MAX_LEFT_W = 440;

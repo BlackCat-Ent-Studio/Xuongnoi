@@ -26,7 +26,7 @@ export const SHELL_TEXT = {
   editRedo: 'Làm lại',
   editAddNote: 'Thêm ghi chú',
   editDuplicate: 'Nhân đôi',
-  editDelete: 'Xóa khối hoặc dây',
+  editDelete: 'Xóa mảnh ghép hoặc dây',
 
   // Xem
   viewGame: 'Màn chơi',
@@ -61,7 +61,7 @@ export const SHELL_TEXT = {
 
   // Docks
   tabScene: 'Cảnh',
-  tabPalette: 'Khối',
+  tabPalette: 'Mảnh ghép',
   tabGame: 'Màn chơi',
   tabGraph: 'Bảng nối',
   tabProps: 'Thuộc tính',
@@ -86,8 +86,8 @@ export const SHELL_TEXT = {
   helpClose: 'Đóng',
   helpRows: [
     ['Ctrl + Z / Ctrl + Y', 'Hoàn tác / Làm lại'],
-    ['Ctrl + C / V / D', 'Sao chép / Dán / Nhân đôi khối'],
-    ['Delete', 'Xóa khối hoặc dây đang chọn'],
+    ['Ctrl + C / V / D', 'Sao chép / Dán / Nhân đôi mảnh ghép'],
+    ['Delete', 'Xóa mảnh ghép hoặc dây đang chọn'],
     ['F', 'Phóng to màn chơi'],
     ['Esc', 'Thu màn chơi về lại'],
     ['Mũi tên, Cách', 'Điều khiển khi đang chơi'],

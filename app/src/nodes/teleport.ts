@@ -16,7 +16,7 @@ export const teleportNode: NodeDef<TeleportState> = {
   inputs: [
     { id: 'who', type: 'object', label: 'Ai (vật)', required: true },
     { id: 'go', type: 'bool', label: 'Đi' },
-    { id: 'dest', type: 'object', label: 'Nơi đến (vật)', required: true },
+    { id: 'dest', type: 'object', label: 'Nơi đến (vật)' },
   ],
   outputs: [{ id: 'done', type: 'bool', label: 'Vừa dịch chuyển' }],
   params: [
