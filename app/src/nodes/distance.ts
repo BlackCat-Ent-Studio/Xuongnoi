@@ -8,8 +8,8 @@ export const distanceNode: NodeDef<undefined> = {
   description:
     'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). "Đủ gần" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Đủ gần" tắt.',
   inputs: [
-    { id: 'a', type: 'object', label: 'Vật A' },
-    { id: 'b', type: 'object', label: 'Vật B' },
+    { id: 'a', type: 'object', label: 'Vật A', required: true },
+    { id: 'b', type: 'object', label: 'Vật B', required: true },
   ],
   outputs: [
     { id: 'distance', type: 'number', label: 'Khoảng cách' },

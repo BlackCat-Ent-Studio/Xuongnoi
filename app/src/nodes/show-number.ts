@@ -8,7 +8,7 @@ export const showNumberNode: NodeDef<null> = {
   label: 'Hiện số',
   category: 'output',
   description: 'Hiện một con số lên màn hình game, ví dụ điểm số hoặc số giây còn lại.',
-  inputs: [{ id: 'value', type: 'number', label: 'Số cần hiện' }],
+  inputs: [{ id: 'value', type: 'number', label: 'Số cần hiện', required: true }],
   outputs: [],
   params: [
     { id: 'label', label: 'Tên hiển thị', kind: 'text', default: 'Điểm' },

@@ -30,8 +30,8 @@ export const chaseNode: NodeDef<ChaseState> = {
   description:
     'Bot để mắt tới một vật: thấy trong tầm nhìn thì đuổi theo (hoặc chạy trốn), ra xa quá tầm bỏ cuộc thì thôi. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
   inputs: [
-    { id: 'self', type: 'object', label: 'Bot' },
-    { id: 'target', type: 'object', label: 'Mục tiêu' },
+    { id: 'self', type: 'object', label: 'Bot', required: true },
+    { id: 'target', type: 'object', label: 'Mục tiêu', required: true },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
