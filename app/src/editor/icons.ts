@@ -46,6 +46,12 @@ const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidden=
   <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M9 14h12"/></symbol>
   <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 5L4 10l5 5"/><path d="M4 10h10.5a5 5 0 0 1 0 10H11"/></symbol>
   <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 5l5 5-5 5"/><path d="M20 10H9.5a5 5 0 0 0 0 10H13"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7.5A1.5 1.5 0 0 1 4.5 6H9l2 2.5h8.5A1.5 1.5 0 0 1 21 10v8a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 18z"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4h11l3 3v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z"/><path d="M8 4v5h7V4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19.5h14"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7 14h10"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v10l-5 6H5z"/><path d="M14 20v-5a1 1 0 0 1 1-1h4M8.5 8.5h7M8.5 12h4"/></symbol>
 </svg>`;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -57,7 +63,7 @@ export type IconName =
   | 'fit' | 'arrange' | 'check' | 'help' | 'trash' | 'copy' | 'warn' | 'error' | 'info'
   | 'eye' | 'close' | 'user' | 'box' | 'coin' | 'enemy' | 'flag' | 'camera' | 'layers'
   | 'ground' | 'expand' | 'book' | 'term' | 'tree' | 'blocks' | 'sliders' | 'game'
-  | 'graph' | 'layout' | 'undo' | 'redo';
+  | 'graph' | 'layout' | 'undo' | 'redo' | 'folder' | 'save' | 'download' | 'star' | 'keyboard' | 'note';
 
 let mounted = false;
 

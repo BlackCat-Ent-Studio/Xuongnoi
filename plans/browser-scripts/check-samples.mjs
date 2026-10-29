@@ -62,7 +62,7 @@ for (const id of SAMPLES) {
   dialogs.length = 0;
   const row = { id, open: false, play: false, errors: 0, end: '' };
   try {
-    await page.locator('[data-menu="file"]').click();
+    await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
     await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
     await sleep(900);
     row.open = true;
@@ -99,7 +99,7 @@ console.log('SAMPLE_TABLE', JSON.stringify(sampleRows));
 // ---- check 4: dodge-shoot and portal-camera end-to-end ----
 for (const id of ['dodge-shoot', 'portal-camera']) {
   logs = [];
-  await page.locator('[data-menu="file"]').click();
+  await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
   await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
   await sleep(900);
   await page.locator('#btn-play').click();
