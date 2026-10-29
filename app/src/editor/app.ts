@@ -1,5 +1,5 @@
 import type { GameView } from '../app-contracts';
-import { VIEW_MODES, type Board, type ViewMode } from '../engine/types';
+import { type Board, type ViewMode } from '../engine/types';
 import {
   createEmptyBoard,
   downloadBoard,
@@ -30,7 +30,7 @@ import { findFreeNoteSpot } from './note-placement';
 import { createPalette } from './palette';
 import { createPropertiesPanel } from './properties-panel';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
-import { MODE_LABELS, TEXT_VI } from './text-vi';
+import { TEXT_VI } from './text-vi';
 import { createTopBar } from './top-bar';
 import { createTutorial } from '../tutorial/controller';
 import { takeStash } from '../tutorial/storage';
@@ -257,42 +257,42 @@ export function mountEditor(root: HTMLElement): void {
     {
       id: 'file',
       label: SHELL_TEXT.menuFile,
-      entries: () => [
-        { type: 'item', label: SHELL_TEXT.fileNew, onSelect: () => dialog.open() },
-        { type: 'item', label: SHELL_TEXT.fileOpen, onSelect: openFile },
-        { type: 'item', label: SHELL_TEXT.fileSave, onSelect: saveToFile },
-        { type: 'separator' },
-        { type: 'heading', label: SHELL_TEXT.fileSamples },
-        ...(listSamples().length === 0
-          ? [{ type: 'heading', label: TEXT_VI.noSamples } as const]
-          : listSamples().map((s) => ({
+      entries: () => {
+        const samples = listSamples();
+        return [
+          { type: 'item', label: SHELL_TEXT.fileNew, icon: 'plus', onSelect: () => dialog.open() },
+          {
+            type: 'item',
+            label: SHELL_TEXT.fileSamples,
+            icon: 'star',
+            disabled: samples.length === 0,
+            submenu: samples.map((s) => ({
               type: 'item' as const,
               label: s.label,
               onSelect: () => loadBoard(structuredClone(s.board)),
-            }))),
-        { type: 'separator' },
-        { type: 'heading', label: SHELL_TEXT.fileViewAngle },
-        ...VIEW_MODES.map((m) => ({
-          type: 'item' as const,
-          label: MODE_LABELS[m],
-          checked: state.getMode() === m,
-          disabled: state.isPlaying(),
-          onSelect: () => changeMode(m),
-        })),
-      ],
+            })),
+            onSelect: () => undefined,
+          },
+          { type: 'item', label: SHELL_TEXT.fileOpen, icon: 'folder', onSelect: openFile },
+          { type: 'separator' },
+          { type: 'item', label: SHELL_TEXT.fileSave, icon: 'save', hint: 'Ctrl S', onSelect: saveLocal },
+          { type: 'item', label: SHELL_TEXT.fileExport, icon: 'download', onSelect: saveToFile },
+        ];
+      },
     },
     {
       id: 'edit',
       label: SHELL_TEXT.menuEdit,
       entries: () => [
-        { type: 'item', label: SHELL_TEXT.editUndo, hint: 'Ctrl+Z', disabled: !state.canUndo(), onSelect: () => state.undo() },
-        { type: 'item', label: SHELL_TEXT.editRedo, hint: 'Ctrl+Y', disabled: !state.canRedo(), onSelect: () => state.redo() },
+        { type: 'item', label: SHELL_TEXT.editUndo, icon: 'undo', hint: 'Ctrl Z', disabled: !state.canUndo(), onSelect: () => state.undo() },
+        { type: 'item', label: SHELL_TEXT.editRedo, icon: 'redo', hint: 'Ctrl Y', disabled: !state.canRedo(), onSelect: () => state.redo() },
         { type: 'separator' },
-        { type: 'item', label: SHELL_TEXT.editAddNote, disabled: state.isPlaying(), onSelect: addNoteAtCenter },
+        { type: 'item', label: SHELL_TEXT.editAddNote, icon: 'note', disabled: state.isPlaying(), onSelect: addNoteAtCenter },
         {
           type: 'item',
           label: SHELL_TEXT.editDuplicate,
-          hint: 'Ctrl+D',
+          icon: 'copy',
+          hint: 'Ctrl D',
           disabled: state.isPlaying(),
           onSelect: () => {
             const n = state.duplicate();
@@ -302,10 +302,14 @@ export function mountEditor(root: HTMLElement): void {
         {
           type: 'item',
           label: SHELL_TEXT.editDelete,
-          hint: 'Delete',
+          icon: 'trash',
+          hint: 'Del',
           disabled: state.isPlaying(),
           onSelect: () => void state.deleteSelection(),
         },
+        { type: 'separator' },
+        { type: 'item', label: SHELL_TEXT.editArrange, icon: 'arrange', disabled: state.isPlaying(), onSelect: () => canvasAction(() => canvas.arrange()) },
+        { type: 'item', label: SHELL_TEXT.editFit, icon: 'fit', onSelect: () => canvasAction(() => canvas.fitToContent()) },
       ],
     },
     {
@@ -314,9 +318,9 @@ export function mountEditor(root: HTMLElement): void {
       entries: () => {
         const split = layout.preset() === 'split';
         return [
-          { type: 'item', label: SHELL_TEXT.viewGame, checked: split || centerDock.selected() === 'game', onSelect: () => showCenter('game') },
-          { type: 'item', label: SHELL_TEXT.viewGraph, checked: split || centerDock.selected() === 'graph', onSelect: () => showCenter('graph') },
-          { type: 'item', label: SHELL_TEXT.viewMaximize, hint: 'F', onSelect: () => setMaximized(!root.classList.contains('maximized')) },
+          { type: 'item', label: SHELL_TEXT.viewGame, icon: 'game', checked: split || centerDock.selected() === 'game', onSelect: () => showCenter('game') },
+          { type: 'item', label: SHELL_TEXT.viewGraph, icon: 'graph', checked: split || centerDock.selected() === 'graph', onSelect: () => showCenter('graph') },
+          { type: 'item', label: SHELL_TEXT.viewMaximize, icon: 'expand', hint: 'F', onSelect: () => setMaximized(!root.classList.contains('maximized')) },
           { type: 'separator' },
           { type: 'heading', label: SHELL_TEXT.viewLayout },
           ...LAYOUT_PRESETS.map((p) => ({
@@ -326,14 +330,25 @@ export function mountEditor(root: HTMLElement): void {
             onSelect: () => layout.setPreset(p),
           })),
           { type: 'separator' },
-          { type: 'item', label: SHELL_TEXT.viewLeftDock, checked: !layout.leftCollapsed(), onSelect: () => layout.setLeftCollapsed(!layout.leftCollapsed()) },
+          { type: 'item', label: SHELL_TEXT.viewLeftDock, icon: 'tree', checked: !layout.leftCollapsed(), onSelect: () => layout.setLeftCollapsed(!layout.leftCollapsed()) },
         ];
       },
     },
     {
       id: 'help',
       label: SHELL_TEXT.menuHelp,
-      entries: () => [{ type: 'item', label: SHELL_TEXT.helpShortcuts, onSelect: openHelp }],
+      entries: () => [
+        {
+          type: 'item',
+          label: SHELL_TEXT.helpLessons,
+          icon: 'book',
+          onSelect: () => {
+            bottomDock.select('lessons');
+            layout.ensureBottomOpen();
+          },
+        },
+        { type: 'item', label: SHELL_TEXT.helpShortcuts, icon: 'keyboard', hint: '?', onSelect: openHelp },
+      ],
     },
   ];
 
@@ -345,6 +360,18 @@ export function mountEditor(root: HTMLElement): void {
     } catch (e) {
       topBar.notify(e instanceof Error ? e.message : TEXT_VI.openFailed, 'error');
     }
+  }
+  /** Writes the current game to the browser's own storage now; lessons never overwrite the learner's save. */
+  function saveLocal(): void {
+    if (tutorial.isActive()) return topBar.notify(TUTORIAL_UI.saveBlocked, 'error');
+    scheduleAutosave(state.getBoard());
+    flushAutosave();
+    topBar.notify(SHELL_TEXT.savedLocal);
+  }
+  /** Runs a wiring-board action, showing the board first when the game tab is on top. */
+  function canvasAction(run: () => void): void {
+    if (!isShown(canvas.el)) showCenter('graph');
+    requestAnimationFrame(run);
   }
   function openFile(): void {
     pickBoardFile().then(
@@ -373,6 +400,7 @@ export function mountEditor(root: HTMLElement): void {
     onRestart: restartPlay,
     onNotify: (text, kind) => log(kind, text),
     onHelp: openHelp,
+    onModeChange: changeMode,
     onPresetChange: (p) => layout.setPreset(p),
     initialPreset: layout.preset(),
   });
@@ -582,6 +610,16 @@ export function mountEditor(root: HTMLElement): void {
     if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
       e.preventDefault();
       if (!e.repeat) state.setPlaying(!state.isPlaying());
+      return;
+    }
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey && e.key.toLowerCase() === 's') {
+      e.preventDefault();
+      if (!e.repeat) saveLocal();
+      return;
+    }
+    if (e.key === '?' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      e.preventDefault();
+      openHelp();
       return;
     }
     if (e.key === 'Escape' && root.classList.contains('maximized')) {

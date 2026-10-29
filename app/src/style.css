@@ -53,9 +53,9 @@ button:disabled { cursor: not-allowed; }
 .app { display: grid; grid-template-rows: 40px minmax(0, 1fr); height: 100%; user-select: none; -webkit-user-select: none; }
 .app input, .app textarea, .app select, .help-dialog { user-select: text; -webkit-user-select: text; }
 
-/* ==== Top bar: 3-column grid, the play cluster stays centred, never wraps ==== */
+/* ==== Top bar: 3-column grid (left sizes to content, right takes the rest), never wraps ==== */
 .topbar {
-  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px;
+  position: relative; display: grid; grid-template-columns: minmax(0, auto) auto minmax(0, 1fr); align-items: center; gap: 12px;
   padding: 0 8px; background: var(--chrome); border-bottom: 1px solid var(--line); white-space: nowrap; min-width: 0; z-index: 30;
 }
 .tb-left, .tb-right { display: flex; align-items: center; gap: 4px; min-width: 0; }
@@ -63,10 +63,7 @@ button:disabled { cursor: not-allowed; }
 .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13.5px; padding: 0 10px 0 4px; letter-spacing: -0.01em; flex: none; }
 .brand-logo { display: grid; }
 .brand svg { width: 22px; height: 22px; }
-.menubar { display: flex; gap: 1px; flex: none; }
-.mb-btn { height: 28px; padding: 0 9px; border: 0; background: none; border-radius: 5px; color: var(--text2); }
-.mb-btn:hover, .mb-btn[aria-expanded='true'] { background: var(--raise); color: var(--text); }
-.name-input { margin-left: 8px; min-width: 60px; flex: 0 1 220px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--text); font: inherit; font-weight: 600; text-overflow: ellipsis; }
+.name-input { margin-left: 8px; min-width: 72px; flex: 0 1 180px; height: 28px; padding: 0 8px; border: 1px solid transparent; border-radius: 5px; background: none; color: var(--text); font: inherit; font-weight: 600; text-overflow: ellipsis; }
 .name-input:hover { border-color: var(--line2); }
 .name-input:focus { border-color: var(--accent); background: var(--bg); outline: 0; }
 .play { display: flex; align-items: center; gap: 2px; padding: 3px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
@@ -92,21 +89,18 @@ button:disabled { cursor: not-allowed; }
 .status:empty { display: none; }
 .status.info { background: #163a2a; color: #b6f0d3; border: 1px solid rgba(62, 207, 142, 0.5); }
 .status.error { background: #43191c; color: #ffc2c2; border: 1px solid rgba(255, 123, 123, 0.55); }
+@media (min-width: 1430px) { .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); } }
 @media (max-width: 1520px) { .save-label { display: none; } }
-@media (max-width: 1280px) { .pstate { display: none; } .name-input { flex-basis: 140px; } }
-@media (max-width: 1100px) { .pbtn:not(.primary) > span { display: none; } .pbtn:not(.primary) { padding: 0 8px; } .brand-name { display: none; } .sel-ui { max-width: 150px; } }
+@media (max-width: 1560px) { .pstate { display: none; } .brand-name { display: none; } }
+@media (max-width: 1500px) { .pbtn:not(.primary) > span { display: none; } .pbtn:not(.primary) { padding: 0 8px; } .name-input { flex-basis: 140px; } }
+@media (max-width: 1100px) { .sel-ui { max-width: 104px; } .name-input { flex-basis: 90px; min-width: 64px; } .tb-right > .tut-wrap > .btn { max-width: 40px; padding: 0 8px; overflow: hidden; } }
 
 /* menus (menu bar popups and the lessons dropdown) */
-.mb-menu, .menu { position: fixed; z-index: 50; min-width: 236px; padding: 4px; background: var(--panel2); border: 1px solid var(--line2); border-radius: 8px; box-shadow: 0 12px 32px rgba(4, 6, 9, 0.6); }
+.menu { position: fixed; z-index: 50; min-width: 236px; padding: 4px; background: var(--panel2); border: 1px solid var(--line2); border-radius: 8px; box-shadow: 0 12px 32px rgba(4, 6, 9, 0.6); }
 .menu-wrap { position: relative; }
 .menu-wrap > .menu { position: absolute; top: 100%; right: 0; margin-top: 4px; }
-.mb-item, .menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 30px; padding: 4px 10px; border: 0; background: none; border-radius: 5px; color: var(--text); text-align: left; font-size: 12.5px; }
-.mb-item:hover:not(:disabled), .mb-item:focus-visible, .menu-item:hover { background: var(--raise); outline: none; }
-.mb-item:disabled { color: #6b737e; }
-.mb-tick { width: 14px; color: var(--accent); display: grid; flex: none; }
-.mb-hint { margin-left: auto; color: var(--text3); font-size: 11.5px; padding-left: 14px; }
-.mb-head { padding: 8px 10px 3px; font-size: 11.5px; font-weight: 600; color: var(--text3); }
-.mb-sep { height: 1px; background: var(--line2); margin: 4px 6px; }
+.menu-item { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 30px; padding: 4px 10px; border: 0; background: none; border-radius: 5px; color: var(--text); text-align: left; font-size: 12.5px; }
+.menu-item:hover { background: var(--raise); outline: none; }
 
 /* buttons (also used by tutorial and dialogs) */
 .btn { height: 28px; display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 6px; background: var(--panel2); color: var(--text); font-weight: 500; font-size: 12.5px; white-space: nowrap; }

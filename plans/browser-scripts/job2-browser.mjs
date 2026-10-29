@@ -21,7 +21,7 @@ const shot = (n) => page.screenshot({ path: `${SHOTS}/${n}.png` });
 const gshot = (n) => page.locator('.game-box').screenshot({ path: `${SHOTS}/${n}.png` });
 const body = () => page.locator('body').innerText();
 async function openSample(id) {
-  await page.locator('[data-menu="file"]').click();
+  await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
   await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
   await sleep(700);
 }

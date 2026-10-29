@@ -1,0 +1,42 @@
+/* Menus (dark rounded panel, icon + label + shortcut chip) and the view-mode segmented control. */
+
+.menubar { display: flex; gap: 1px; flex: none; }
+.menubar .mb-btn { height: 28px; padding: 0 10px; border: 0; background: none; border-radius: 6px; color: var(--text2); font-weight: 500; }
+.menubar .mb-btn:hover { background: var(--raise); color: var(--text); }
+.menubar .mb-btn[aria-expanded='true'] { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px rgba(62, 207, 142, 0.35); }
+
+.mb-menu { position: fixed; z-index: 50; min-width: 244px; max-height: calc(100vh - 56px); overflow-y: auto; padding: 5px; background: var(--panel2); border: 1px solid var(--line2); border-radius: 10px; box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.35); }
+.mb-menu[hidden] { display: none; }
+.mb-menu.mb-sub { z-index: 51; max-height: calc(100vh - 16px); }
+.mb-sub-wrap { display: block; }
+
+.mb-menu .mb-item { display: flex; align-items: center; gap: 10px; width: 100%; height: 32px; padding: 0 10px; border: 0; background: none; border-radius: 6px; color: var(--text); text-align: left; font-size: 13px; cursor: pointer; }
+.mb-menu .mb-item:hover:not(:disabled), .mb-menu .mb-item:focus-visible, .mb-menu .mb-item[aria-expanded='true'] { background: var(--raise); outline: none; }
+.mb-menu .mb-item:disabled { color: #626a75; cursor: default; }
+.mb-menu .mb-item:disabled .mb-ic { opacity: 0.5; }
+.mb-ic { width: 16px; height: 16px; flex: none; display: grid; place-items: center; color: var(--text2); }
+.mb-ic.on { color: var(--accent); }
+.mb-ic .ic { width: 16px; height: 16px; }
+.mb-item:hover:not(:disabled) .mb-ic, .mb-item:focus-visible .mb-ic { color: var(--text); }
+.mb-item:hover:not(:disabled) .mb-ic.on, .mb-item:focus-visible .mb-ic.on { color: var(--accent); }
+.mb-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mb-hint { margin-left: auto; flex: none; padding: 1px 6px; border: 1px solid var(--line2); border-radius: 4px; background: var(--panel); color: var(--text3); font: 500 11px/16px var(--font); }
+.mb-item:disabled .mb-hint { opacity: 0.55; }
+.mb-chev { margin-left: auto; flex: none; display: grid; color: var(--text3); }
+.mb-chev .ic { width: 14px; height: 14px; }
+.mb-menu .mb-head { padding: 8px 10px 3px; font-size: 11.5px; font-weight: 600; color: var(--text3); }
+.mb-menu .mb-sep { height: 1px; background: var(--line); margin: 5px 4px; }
+
+/* ---------- view-mode segmented control ---------- */
+.seg { display: inline-flex; flex: none; padding: 2px; gap: 2px; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; }
+.seg-opt { height: 24px; padding: 0 10px; border: 0; border-radius: 6px; background: none; color: var(--text2); font: 500 12px/1 var(--font); cursor: pointer; white-space: nowrap; }
+.seg-opt:hover:not(:disabled):not([aria-checked='true']) { background: var(--raise); color: var(--text); }
+.seg-opt[aria-checked='true'] { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px rgba(62, 207, 142, 0.4); font-weight: 600; }
+.seg-opt:disabled { cursor: not-allowed; color: #626a75; }
+.seg-opt[aria-checked='true']:disabled { color: #4f9f7e; }
+.seg-short { display: none; }
+@media (max-width: 1180px) {
+  .seg-full { display: none; }
+  .seg-short { display: inline; }
+  .seg-opt { padding: 0 7px; }
+}

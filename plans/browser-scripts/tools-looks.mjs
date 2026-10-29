@@ -49,7 +49,7 @@ const walk = async (ms, code = 'ArrowRight') => {
 for (const look of LOOKS) {
   const path = makeBoard(look);
   const chooser = page.waitForEvent('filechooser');
-  await page.locator('[data-menu="file"]').click();
+  await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
   await page.locator('.mb-item', { hasText: 'Mở file' }).first().click();
   await (await chooser).setFiles(path);
   await sleep(800);

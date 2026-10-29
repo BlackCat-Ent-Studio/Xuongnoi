@@ -20,7 +20,7 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
   await sleep(300);
 }
 
-await page.locator('[data-menu="file"]').click();
+await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
 await page.locator('.mb-item', { hasText: 'Cổng dịch chuyển' }).first().click();
 await sleep(900);
 await page.locator('#btn-play').click();

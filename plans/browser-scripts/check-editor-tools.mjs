@@ -42,7 +42,7 @@ const noteCount = () => page.locator('.wc-note').count();
 const undoDisabled = () => page.locator('[data-act="undo"]').isDisabled();
 
 // load sample with wires
-await page.locator('[data-menu="file"]').click();
+await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
 await page.locator('.mb-item', { hasText: 'Nhặt sao' }).first().click();
 await sleep(800);
 const n0 = await nodeCount();

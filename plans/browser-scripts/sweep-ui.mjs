@@ -66,13 +66,13 @@ for (const [w, h] of sizes) {
   rows.push({ vp: `${w}x${h}`, sample: '(empty board)', mode: '-', issues: emptyIssues, logs: [...logs], played: '-' });
   logs.length = 0;
 
-  await page.locator('[data-menu="file"]').click();
+  await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
   const labels = await page.locator('.mb-item .mb-label').allInnerTexts();
   await page.keyboard.press('Escape');
   const sampleLabels = labels.slice(3, labels.length).filter((l) => !/^(2D|3D)/.test(l));
   for (const label of sampleLabels) {
     logs = [];
-    await page.locator('[data-menu="file"]').click();
+    await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
     await page.locator('.mb-item', { hasText: label }).first().click();
     await sleep(900);
     const mode = await page.evaluate(() => document.querySelector('.game-box')?.getAttribute('data-mode') ?? document.querySelector('.app')?.getAttribute('data-mode') ?? '?');

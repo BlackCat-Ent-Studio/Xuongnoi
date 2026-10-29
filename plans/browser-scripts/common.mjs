@@ -28,7 +28,7 @@ export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function openSample(page, label) {
   // Tệp menu -> sample entry by its visible label (or a RegExp).
-  await page.locator('[data-menu="file"]').click();
+  await page.locator('[data-menu="file"]').click(); await page.locator('.mb-item', { hasText: 'Mở game mẫu' }).hover();
   await page.locator('.mb-item', { hasText: label }).first().click();
   await sleep(700);
 }

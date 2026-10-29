@@ -1,4 +1,5 @@
 /** Vietnamese strings for the editor shell: top bar, menus, docks, layout presets, help. */
+import type { ViewMode } from '../engine/types';
 import type { LayoutPreset } from './layout-model';
 
 export const PRESET_LABELS: Record<LayoutPreset, string> = {
@@ -15,18 +16,21 @@ export const SHELL_TEXT = {
   menuHelp: 'Trợ giúp',
 
   // Tệp
-  fileNew: 'Tạo mới…',
+  fileNew: 'Tạo game mới',
+  fileSamples: 'Mở game mẫu',
   fileOpen: 'Mở file…',
-  fileSave: 'Lưu về máy',
-  fileSamples: 'Game mẫu',
-  fileViewAngle: 'Góc nhìn (cũng chọn khi tạo mới)',
+  fileSave: 'Lưu',
+  fileExport: 'Xuất ra file',
+  savedLocal: 'Đã lưu trong trình duyệt',
 
   // Sửa
   editUndo: 'Hoàn tác',
   editRedo: 'Làm lại',
   editAddNote: 'Thêm ghi chú',
   editDuplicate: 'Nhân đôi',
-  editDelete: 'Xóa mảnh ghép hoặc dây',
+  editDelete: 'Xóa',
+  editArrange: 'Sắp xếp gọn',
+  editFit: 'Vừa màn hình',
 
   // Xem
   viewGame: 'Màn chơi',
@@ -36,7 +40,14 @@ export const SHELL_TEXT = {
   viewLeftDock: 'Hiện dock trái',
 
   // Trợ giúp
+  helpLessons: 'Bài học',
   helpShortcuts: 'Phím tắt',
+
+  // View-mode segmented control
+  modeGroupAria: 'Góc nhìn của game',
+  modeLockedTip: 'Bấm Dừng để đổi góc nhìn',
+  modeShort: { '2d-side': '2D↔', '2d-top': '2D↓', '3d': '3D' } as Record<ViewMode, string>,
+  modeFull: { '2d-side': '2D ngang', '2d-top': '2D trên', '3d': '3D' } as Record<ViewMode, string>,
 
   // Top bar
   gameNameLabel: 'Tên game',
@@ -85,9 +96,11 @@ export const SHELL_TEXT = {
   helpTitle: 'Phím tắt',
   helpClose: 'Đóng',
   helpRows: [
+    ['Ctrl + S', 'Lưu về máy'],
     ['Ctrl + Z / Ctrl + Y', 'Hoàn tác / Làm lại'],
     ['Ctrl + C / V / D', 'Sao chép / Dán / Nhân đôi mảnh ghép'],
     ['Delete', 'Xóa mảnh ghép hoặc dây đang chọn'],
+    ['?', 'Mở bảng phím tắt'],
     ['F', 'Phóng to màn chơi'],
     ['Esc', 'Thu màn chơi về lại'],
     ['Mũi tên, Cách', 'Điều khiển khi đang chơi'],
