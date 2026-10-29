@@ -18,6 +18,7 @@ import { countUnavailable, createEditorState } from './editor-state';
 import { mountSceneTree } from './scene-tree';
 import { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID, createDock, createMount } from './dock-tabs';
 import { installEntityDrag } from './entity-drag';
+import { createGamePip } from './game-pip';
 import { mountIconSprite } from './icons';
 import { createKeyboardInput } from './keyboard-input';
 import { LAYOUT_PRESETS } from './layout-model';
@@ -161,11 +162,30 @@ export function mountEditor(root: HTMLElement): void {
       { id: 'game', label: SHELL_TEXT.tabGame, icon: 'game', panel: gameBox },
       { id: 'graph', label: SHELL_TEXT.tabGraph, icon: 'graph', panel: canvas.el },
     ],
-    onSelect: relayout,
+    onSelect: () => {
+      syncPip();
+      relayout();
+    },
   });
   const liveChip = h('span', 'livechip');
   liveChip.append(h('i'), h('span', '', SHELL_TEXT.liveChip));
   centerDock.bar.append(liveChip);
+
+  // The floating game window: the same game view container moves between its tab and the window.
+  const pip = createGamePip({
+    host: centerDock.el.querySelector<HTMLElement>('.panes')!,
+    gameBox,
+    tabBar: centerDock.bar,
+    gameTab: centerDock.bar.querySelector<HTMLElement>('#tab-game')!,
+    onDockBack: () => showCenter('game'),
+    onSplit: () => layout.setPreset('split'),
+    onFloatRequest: () => showCenter('graph'),
+    onMoved: relayout,
+  });
+  /** The window floats while the board tab is open, except in the split layout where the game is already beside it. */
+  function syncPip(): void {
+    pip.setVisible(centerDock.selected() === 'graph' && layout.preset() !== 'split');
+  }
 
   const rightDock = createDock({
     className: 'dock-right',
@@ -192,6 +212,7 @@ export function mountEditor(root: HTMLElement): void {
 
   function showCenter(which: 'game' | 'graph'): void {
     centerDock.select(which);
+    syncPip();
     relayout();
   }
 
@@ -341,7 +362,11 @@ export function mountEditor(root: HTMLElement): void {
     onPresetChange: (p) => layout.setPreset(p),
     initialPreset: layout.preset(),
   });
-  layout.onPrefsChange(() => topBar.setPreset(layout.preset()));
+  layout.onPrefsChange(() => {
+    topBar.setPreset(layout.preset());
+    syncPip();
+  });
+  syncPip();
 
   const revealLeft = (): void => {
     leftDock.select('palette');
@@ -401,7 +426,7 @@ export function mountEditor(root: HTMLElement): void {
   const maxBtn = h('button', 'view-max');
   maxBtn.type = 'button';
   function setMaximized(on: boolean): void {
-    if (on && !isShown(gameBox)) showCenter('game');
+    if (on && (pip.visible() || !isShown(gameBox))) showCenter('game');
     root.classList.toggle('maximized', on);
     maxBtn.textContent = on ? TEXT_VI.restore : TEXT_VI.maximize;
     maxBtn.title = on ? TEXT_VI.restoreTip : TEXT_VI.maximizeTip;
@@ -471,6 +496,7 @@ export function mountEditor(root: HTMLElement): void {
   gameView.onPauseChange((paused) => {
     root.classList.toggle('paused', paused);
     topBar.setPaused(paused);
+    pip.setStatus(state.isPlaying(), paused);
     if (state.isPlaying()) log('info', paused ? CONSOLE_TEXT.logPause : CONSOLE_TEXT.logResume);
   });
   gameView.onRestartRequest(() => {
@@ -496,26 +522,13 @@ export function mountEditor(root: HTMLElement): void {
 
   // ---------- state reactions ----------
 
-  // Playing shows the game even when the wiring board was the open tab; stopping goes back.
-  let switchedForPlay = false;
-  function followPlayState(playing: boolean): void {
-    if (playing) {
-      if (layout.preset() !== 'split' && centerDock.selected() === 'graph') {
-        switchedForPlay = true;
-        showCenter('game');
-      }
-    } else if (switchedForPlay) {
-      switchedForPlay = false;
-      if (centerDock.selected() === 'game') showCenter('graph');
-    }
-  }
-
+  // Playing no longer switches tabs: on the board tab the game plays in the floating window.
   state.subscribe((kind) => {
     switch (kind) {
       case 'playing':
         root.classList.toggle('playing', state.isPlaying());
         if (!state.isPlaying()) root.classList.remove('paused');
-        followPlayState(state.isPlaying());
+        pip.setStatus(state.isPlaying(), false);
         if (state.isPlaying()) {
           startPlay();
           const open = consoleDock?.issueCount() ?? 0;
