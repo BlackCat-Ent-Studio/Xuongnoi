@@ -4,7 +4,7 @@ import type { EditorState } from '../editor/editor-state';
 import type { Board, GameResult } from '../engine/types';
 import { DOCK_TEXT as D } from './dock-text-vi';
 import { createHighlighter } from './highlight';
-import { paletteKinds } from './palette-targets';
+import { paletteKinds, pointsAtCanvas } from './palette-targets';
 import './lessons-dock.css';
 import { LESSONS } from './lessons';
 import { createStepPanel } from './panel';
@@ -31,6 +31,8 @@ export interface TutorialDeps {
   onStart?(): void;
   /** Make a palette item reachable (clear search, expand its category, show the palette tab). */
   revealPaletteItem?(kind: string): void;
+  /** Show the wiring canvas (centre tab) when the game view is on top of it. */
+  revealGraph?(): void;
 }
 
 export interface Tutorial {
@@ -47,7 +49,7 @@ export interface Tutorial {
   noteRestart(): void;
 }
 
-export function createTutorial({ state, notify, onStart, revealPaletteItem }: TutorialDeps): Tutorial {
+export function createTutorial({ state, notify, onStart, revealPaletteItem, revealGraph }: TutorialDeps): Tutorial {
   const highlighter = createHighlighter();
   const done = loadProgress();
   let runner: Runner | null = null;
@@ -100,6 +102,7 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem }: Tu
   function showMe(): void {
     if (!runner) return;
     revealTargets();
+    if (revealGraph && pointsAtCanvas(runner.step().target?.(snapshot()) ?? [])) revealGraph();
     highlighter.clear();
     refreshHighlight();
     window.setTimeout(refreshHighlight, 0);

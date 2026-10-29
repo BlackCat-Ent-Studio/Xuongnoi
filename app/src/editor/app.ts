@@ -358,6 +358,9 @@ export function mountEditor(root: HTMLElement): void {
       revealLeft();
       palette.reveal(kind);
     },
+    revealGraph: () => {
+      if (centerDock.selected() === 'game') showCenter('graph');
+    },
   });
   topBar.addControl(tutorial.el);
   bottomDock.el.querySelector(`#${DOCK_LESSONS_ID}`)?.append(tutorial.dock);

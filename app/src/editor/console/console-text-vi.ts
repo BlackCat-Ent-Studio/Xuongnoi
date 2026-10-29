@@ -5,7 +5,7 @@ export const CONSOLE_TEXT = {
   logTitle: 'Nhật ký',
   logEmpty: 'Chưa có gì xảy ra.',
   view: 'Xem',
-  viewTip: 'Chọn và đưa khối này vào giữa màn hình',
+  viewTip: 'Chọn và đưa mảnh ghép này vào giữa màn hình',
   filterAll: 'Tất cả',
   filterWarn: 'Cảnh báo',
   filterError: 'Lỗi',
@@ -13,7 +13,7 @@ export const CONSOLE_TEXT = {
   clearTip: 'Xóa nhật ký',
   filterAria: 'Lọc nhật ký',
   missingWire: (node: string, port: string) => `${node}: chưa nối dây vào "${port}"`,
-  noCharacter: 'Chưa có khối Nhân vật nên chưa có ai để chơi',
+  noCharacter: 'Chưa có mảnh ghép Nhân vật nên chưa có ai để chơi',
 
   // play controls
   restart: 'Chơi lại',

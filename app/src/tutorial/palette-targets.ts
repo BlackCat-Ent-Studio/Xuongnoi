@@ -2,6 +2,11 @@ import type { TargetList } from './types';
 
 const PALETTE_KIND = /\.palette-item\[data-kind="([^"]+)"\]/;
 
+/** True when a step points at something on the wiring canvas (a node or a port). */
+export function pointsAtCanvas(targets: TargetList): boolean {
+  return targets.some((t) => (typeof t === 'string' ? [t] : t).some((sel) => sel.startsWith('.wc-')));
+}
+
 /** Node kinds a step points at in the palette, so the palette can reveal them first. */
 export function paletteKinds(targets: TargetList): string[] {
   const kinds: string[] = [];
