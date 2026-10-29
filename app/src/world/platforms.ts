@@ -1,4 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
+import { boxOverlap, colliderBox, colliderOffset, type Collidable } from './collider';
 import type { Entity } from './entity';
 
 /**
@@ -42,18 +43,12 @@ export interface TurnState {
 }
 
 function overlap(a: Entity, b: Entity, axis: Axis): number {
-  return (
-    Math.min(a.pos[axis] + a.size[axis] / 2, b.pos[axis] + b.size[axis] / 2) -
-    Math.max(a.pos[axis] - a.size[axis] / 2, b.pos[axis] - b.size[axis] / 2)
-  );
+  return boxOverlap(a, b, axis);
 }
 
-function overlapsBox(a: { pos: Vec3; size: Vec3 }, b: { pos: Vec3; size: Vec3 }): boolean {
+function overlapsBox(a: Collidable, b: Collidable): boolean {
   for (const axis of ['x', 'y', 'z'] as const) {
-    const o =
-      Math.min(a.pos[axis] + a.size[axis] / 2, b.pos[axis] + b.size[axis] / 2) -
-      Math.max(a.pos[axis] - a.size[axis] / 2, b.pos[axis] - b.size[axis] / 2);
-    if (o <= OVERLAP_MIN) return false;
+    if (boxOverlap(a, b, axis) <= OVERLAP_MIN) return false;
   }
   return true;
 }
@@ -74,7 +69,9 @@ function solidBlocksExcept(list: readonly Entity[], p: Entity): Entity[] {
 
 function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
   if (mode === '2d-top') return false;
-  if (Math.abs(e.pos.y - e.size.y / 2 - (p.pos.y + p.size.y / 2)) > RIDE_GAP) return false;
+  const eb = colliderBox(e);
+  const pb = colliderBox(p);
+  if (Math.abs(eb.pos.y - eb.size.y / 2 - (pb.pos.y + pb.size.y / 2)) > RIDE_GAP) return false;
   if (overlap(e, p, 'x') <= OVERLAP_MIN) return false;
   return mode === '2d-side' || overlap(e, p, 'z') > OVERLAP_MIN;
 }
@@ -97,8 +94,9 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], s
       continue;
     }
     undo.push({ e, from: e.pos[axis] });
-    const reach = (p.size[axis] + e.size[axis]) / 2;
-    e.pos[axis] = d > 0 ? p.pos[axis] + reach : p.pos[axis] - reach;
+    const pb = colliderBox(p);
+    const reach = (pb.size[axis] + colliderBox(e).size[axis]) / 2;
+    e.pos[axis] = (d > 0 ? pb.pos[axis] + reach : pb.pos[axis] - reach) - colliderOffset(e, axis);
   }
   for (const u of undo) {
     if (u.e !== p && solids.some((s) => overlapsBox(u.e, s))) {
@@ -150,7 +148,8 @@ function freeSpot(e: Entity, p: Entity, solids: readonly Entity[], mode: ViewMod
   const candidates: Vec3[] = [];
   const add = (axis: Axis, sign: 1 | -1): void => {
     const c = { ...e.pos };
-    c[axis] = p.pos[axis] + sign * (p.size[axis] + e.size[axis]) / 2;
+    const pb = colliderBox(p);
+    c[axis] = pb.pos[axis] + (sign * (pb.size[axis] + colliderBox(e).size[axis])) / 2 - colliderOffset(e, axis);
     candidates.push(c);
   };
   add('x', 1);
@@ -167,7 +166,7 @@ function freeSpot(e: Entity, p: Entity, solids: readonly Entity[], mode: ViewMod
   candidates.sort((a, b) => dist(a) - dist(b));
   for (const c of candidates) {
     if (dist(c) > MAX_PUSH) break; // sorted: the rest are farther
-    const probe = { pos: c, size: e.size };
+    const probe = { pos: c, size: e.size, ...(e.collider ? { collider: e.collider } : {}) };
     if (!overlapsBox(probe, p) && !solids.some((s) => overlapsBox(probe, s))) return c;
   }
   return null;

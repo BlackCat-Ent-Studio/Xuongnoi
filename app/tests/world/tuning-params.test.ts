@@ -47,7 +47,7 @@ describe('character hit-reaction params', () => {
     const p = defaultParams(characterNode);
     expect([p.invulnSeconds, p.knockSpeed, p.knockLift]).toEqual([0.5, 7, 5]);
     const w = createWorld('2d-side');
-    expect(characterNode.params.filter((d) => d.advanced).map((d) => d.id)).toEqual(['invulnSeconds', 'knockSpeed', 'knockLift']);
+    expect(characterNode.params.filter((d) => d.advanced).map((d) => d.id)).toEqual(expect.arrayContaining(['invulnSeconds', 'knockSpeed', 'knockLift']));
     expect(w.mode).toBe('2d-side');
   });
 

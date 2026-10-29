@@ -18,6 +18,8 @@ import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
 import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
+import { bodyTuning } from './body-tuning';
+import { colliderBox } from './collider';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
@@ -297,6 +299,7 @@ export function createWorld(mode: ViewMode): World {
         ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
+        ...bodyTuning(spec),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
@@ -472,10 +475,11 @@ export function createWorld(mode: ViewMode): World {
     solidAt(p: Vec3): boolean {
       for (const e of list) {
         if (!e.visible || !e.solid || e.kind !== 'block') continue;
+        const b = colliderBox(e);
         if (
-          Math.abs(p.x - e.pos.x) <= e.size.x / 2 &&
-          Math.abs(p.y - e.pos.y) <= e.size.y / 2 &&
-          Math.abs(p.z - e.pos.z) <= e.size.z / 2
+          Math.abs(p.x - b.pos.x) <= b.size.x / 2 &&
+          Math.abs(p.y - b.pos.y) <= b.size.y / 2 &&
+          Math.abs(p.z - b.pos.z) <= b.size.z / 2
         ) {
           return true;
         }
@@ -486,7 +490,10 @@ export function createWorld(mode: ViewMode): World {
       const boxes: SolidBox[] = [];
       for (const e of list) {
         // Movers are left out: their place changes, so the static maps built from this list ignore them.
-        if (e.visible && e.solid && e.kind === 'block' && !e.mover) boxes.push({ position: { ...e.pos }, size: { ...e.size } });
+        if (e.visible && e.solid && e.kind === 'block' && !e.mover) {
+          const b = colliderBox(e);
+          boxes.push({ position: { ...b.pos }, size: { ...b.size } });
+        }
       }
       return boxes;
     },

@@ -1,4 +1,6 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
+import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
+import { DEFAULT_ITEM_FRICTION } from '../world/physics';
 import { asBool, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 export const ITEM_SHAPE_LABELS: Record<ItemShape, string> = {
@@ -82,8 +84,11 @@ export const itemNode: NodeDef<ItemState> = {
     },
     { id: 'damage', label: 'Sát thương (0 = tuỳ loại)', kind: 'number', default: 0, min: 0, max: 100, step: 1 },
     { id: 'tag', label: 'Loại hàng (chữ, để trống nếu không cần)', kind: 'text', default: '' },
+    ...BODY_PARAMS,
+    { id: 'friction', label: 'Độ trượt (càng lớn càng mau dừng)', kind: 'number', default: DEFAULT_ITEM_FRICTION, min: 0, max: 40, step: 1, advanced: true },
+    { id: 'bounce', label: 'Độ nảy (0 = không nảy, 1 = nảy lại hết)', kind: 'number', default: 0, min: 0, max: 1, step: 0.05, advanced: true },
   ],
-  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage', 'tag'],
+  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage', 'tag', ...BODY_PARAM_IDS, 'friction', 'bounce'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -100,6 +105,9 @@ export const itemNode: NodeDef<ItemState> = {
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
       damage: numParam(params, 'damage', 0),
       tag: strParam(params, 'tag', '').trim(),
+      ...bodySpec(params),
+      friction: numParam(params, 'friction', DEFAULT_ITEM_FRICTION),
+      bounce: numParam(params, 'bounce', 0),
     });
     return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
   },

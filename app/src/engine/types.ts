@@ -338,6 +338,18 @@ export interface EntitySpec {
   tag?: string;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
   disposable?: boolean;
+
+  // ---- collision and body tuning (all optional; omitted = the plain visual box and normal physics) ----
+  /** Size of the collision box; an axis of 0 (or omitted) uses the same axis of `size`. */
+  colliderSize?: Vec3;
+  /** Collision box center relative to `position`. */
+  colliderOffset?: Vec3;
+  /** Multiplier on gravity: 1 / omitted = normal, 0 = floats, 2 = twice as heavy. */
+  gravityScale?: number;
+  /** Items only: how fast a sliding item loses speed on the ground (units/s of speed lost per unit of speed). Omitted = 10. */
+  friction?: number;
+  /** Items only: 0..1 share of the fall speed given back on landing. Omitted / 0 = no bounce. */
+  bounce?: number;
 }
 
 /** How a shot leaves a shooter. */
@@ -426,6 +438,8 @@ export interface EntityView {
    * Solid blocks: how far the picture still lags behind the snapped quarter turn. Non-solid blocks: the full spin angle.
    */
   angle?: number;
+  /** Collision box (center and full size), present only when it differs from `position` / `size`. */
+  collider?: { position: Vec3; size: Vec3 };
   visible: boolean;
 }
 

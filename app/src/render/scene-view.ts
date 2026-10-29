@@ -8,6 +8,7 @@ import { buildBlockLook, type BlockLookFigure } from './block-looks';
 import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
+import { ColliderFrames } from './collider-frames';
 
 const SUN_WITH_SHADOWS = 2;
 const SKY_WITH_SHADOWS = 0.8;
@@ -81,6 +82,7 @@ export class SceneView {
   private readonly geometry = new THREE.BoxGeometry(1, 1, 1);
   private readonly entries = new Map<string, Entry>();
   private readonly healthBars = new HealthBarLayer(this.group);
+  private readonly colliderFrames = new ColliderFrames(this.group);
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
   private mode: ViewMode = '2d-side';
@@ -185,6 +187,16 @@ export class SceneView {
       if (!seen.has(id)) this.removeEntry(id, entry);
     }
     this.healthBars.sync(entities);
+  }
+
+  /** Green collision-box frames for the entities owned by `owners` (pass an empty set to hide them). */
+  syncColliderFrames(entities: readonly EntityView[], owners: ReadonlySet<string>): void {
+    this.colliderFrames.sync(entities, owners);
+  }
+
+  /** How many collision frames are visible (for tests and checks). */
+  get colliderFrameCount(): number {
+    return this.colliderFrames.shown;
   }
 
   private createEntry(e: EntityView): Entry {
@@ -339,6 +351,7 @@ export class SceneView {
   dispose(): void {
     this.clear();
     this.healthBars.dispose();
+    this.colliderFrames.dispose();
     this.setGrid('3d', false);
     this.geometry.dispose();
   }
