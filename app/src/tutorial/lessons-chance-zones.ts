@@ -18,7 +18,7 @@ const T = {
     explain: 'Bảng đã có sẵn phím E. Phần còn lại ta tự nối.',
   },
   watch: { title: 'Xem thử trước', text: 'Bấm "Chơi", thử chạy sang phải. Cổng chặn đường, chưa qua được.' },
-  edit: { title: 'Quay lại sửa', text: 'Bấm nút "Sửa" để làm tiếp.' },
+  edit: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng" để làm tiếp.' },
   zone: {
     title: 'Thêm Cảm biến vùng',
     text: 'Kéo mảnh ghép "Cảm biến vùng" (nhóm Logic) vào bảng. Một hộp xanh mờ sẽ hiện quanh bệ vàng.',
@@ -81,7 +81,7 @@ const T = {
     title: 'Thử đổ xúc xắc',
     text: 'Bấm "Chơi". Đứng trên bệ vàng và bấm E. Chưa được 5 hoặc 6 thì cứ bấm E tung lại, tới khi cổng biến mất.',
   },
-  edit2: { title: 'Quay lại sửa', text: 'Bấm nút "Sửa". Ta sẽ làm lá cờ chiến thắng.' },
+  edit2: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng". Ta sẽ làm lá cờ chiến thắng.' },
   distance: {
     title: 'Thêm Khoảng cách',
     text: 'Kéo mảnh ghép "Khoảng cách" (nhóm Logic) vào bảng.',

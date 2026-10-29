@@ -45,7 +45,7 @@ const T = {
   },
   edit: {
     title: 'Quay lại sửa',
-    text: 'Bấm nút "Sửa". Giờ ta dạy bot đánh lại.',
+    text: 'Bấm nút "Dừng". Giờ ta dạy bot đánh lại.',
   },
   addFight: {
     title: 'Thêm bộ não đánh nhau',

@@ -1,0 +1,41 @@
+/* Lessons dock: lesson list on the left, step card on the right. Lives in the bottom dock, never over the game. */
+.ld { display: grid; grid-template-columns: minmax(180px, 240px) 1fr; height: 100%; min-height: 0; }
+.ld-list { list-style: none; margin: 0; padding: 6px; overflow: auto; border-right: 1px solid var(--line, #2a2f37); }
+.ld-item { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 8px; border: 0; background: none; border-radius: 5px; text-align: left; color: var(--text, #e7e9ec); font: inherit; font-size: 12.5px; cursor: pointer; }
+.ld-item:hover { background: var(--panel2, #23272e); }
+.ld-item[aria-current="true"] { background: var(--accent-soft, rgba(62, 207, 142, .16)); }
+.ld-tick { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid var(--line2, #3a404a); display: grid; place-items: center; flex: none; }
+.ld-tick .ic { width: 11px; height: 11px; stroke-width: 3; }
+.ld-item.done .ld-tick { background: var(--accent, #3ecf8e); border-color: var(--accent, #3ecf8e); color: var(--accent-ink, #06281a); }
+.ld-item.cur .ld-tick { border-color: var(--accent, #3ecf8e); }
+.ld-card { padding: 10px 16px; overflow: auto; min-width: 0; }
+.ld-body { display: flex; flex-direction: column; gap: 6px; }
+.ld-steps { display: flex; gap: 4px; }
+.ld-steps i { flex: 1; height: 4px; border-radius: 2px; background: var(--line2, #3a404a); }
+.ld-steps i.d { background: var(--accent, #3ecf8e); }
+.ld-steps i.c { background: color-mix(in srgb, var(--accent, #3ecf8e) 45%, var(--line2, #3a404a)); }
+.ld-head { display: flex; align-items: baseline; gap: 10px; }
+.ld-title { margin: 0; font-size: 14px; font-weight: 600; }
+.ld-where { color: var(--text3, #8a919c); font-size: 12px; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ld-text, .ld-idle p { margin: 0; max-width: 72ch; line-height: 1.55; user-select: text; }
+.ld-explain { margin: 0; max-width: 72ch; line-height: 1.45; color: var(--text2, #aab2bd); background: var(--accent-soft, rgba(62, 207, 142, .16)); border-radius: 8px; padding: 6px 10px; }
+.ld-idle h3 { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.ld-btns { display: flex; gap: 6px; margin-top: 2px; flex-wrap: wrap; }
+.ld-btns .btn .ic { width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px; }
+.ld [hidden] { display: none !important; }
+
+/* Empty-board launchpad, centred over the wiring canvas. */
+.launchpad { position: absolute; inset: 0; z-index: 5; display: grid; place-items: center; pointer-events: none; }
+.launchpad[hidden] { display: none; }
+.launchpad-in { width: min(560px, 92%); pointer-events: auto; cursor: default; padding: 18px; border-radius: 12px; background: color-mix(in srgb, var(--panel, #1c1f24) 92%, transparent); border: 1px solid var(--line2, #3a404a); box-shadow: 0 12px 32px rgba(0, 0, 0, .4); }
+.launchpad h2 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
+.launchpad p { margin: 0 0 14px; color: var(--text2, #aab2bd); }
+.lp-opts { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+.lp-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px; border: 1px solid var(--line2, #3a404a); border-radius: 8px; background: var(--panel, #1c1f24); text-align: left; color: var(--text, #e7e9ec); font: inherit; min-height: 104px; cursor: pointer; }
+.lp-opt:hover { border-color: var(--accent, #3ecf8e); }
+.lp-opt b { font-weight: 600; }
+.lp-opt small { color: var(--text2, #aab2bd); font-size: 12px; line-height: 1.4; }
+.lp-opt.main { border-color: var(--accent, #3ecf8e); background: linear-gradient(180deg, var(--accent-soft, rgba(62, 207, 142, .16)), var(--panel, #1c1f24) 70%); }
+.lp-opt .ic { width: 18px; height: 18px; }
+.lp-samples { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow: auto; }
+.lp-samples .lp-opt { min-height: 0; }
