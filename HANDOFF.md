@@ -41,7 +41,11 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   - Logic/sensors: random (seeded), latch, map-range, zone sensor, distance; sample dice-zones.
   - Objects: moving platform (carries riders), rotating platform (90° steps when solid, spin when not), shooter, spawner; sample dodge-shoot.
   - Camera/teleport: play-camera node, teleport, portal pairs; sample portal-camera.
-- A post-merge browser sweep is running; its report will be `plans/reports/tester-261029-1320-post-merge-sweep-report.md`.
+- The post-merge sweep is green: all 14 samples play. Report: `plans/reports/tester-261029-1320-post-merge-sweep-report.md`.
+- 2026-10-29 14:30: added lessons 11–14 (chance-zones, platforms-shooting, camera-portals, editor-tools). There are now 14 lessons. Main = 03bd680, 654 tests, stable 5/5 when the machine is idle.
+- Fixed a real bug: the top-bar status toast was shifting the layout mid-drag and causing missed wires. It now floats instead.
+- New sticky notes are placed in free space.
+- The A* perf test budget was relaxed to 6 s because it was flaky under parallel load.
 - Bots treat moving/turning blocks as empty space when pathfinding.
 
 ## Known issues / ideas
