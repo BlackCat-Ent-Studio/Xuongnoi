@@ -51,7 +51,7 @@ export function createHighlighter(): Highlighter {
         if (current.includes(el)) continue;
         el.classList.add(HL_CLASS);
         // Only the palette is a plain scroller; the canvas must never be scrolled programmatically.
-        if (el.closest('.palette, .props')) el.scrollIntoView({ block: 'nearest' });
+        if (el.closest('.palette, .props')) el.scrollIntoView({ block: 'center' });
       }
       current = next;
     },

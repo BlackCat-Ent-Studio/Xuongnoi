@@ -23,7 +23,7 @@ const T = {
   },
   edit: {
     title: 'Quay lại sửa',
-    text: 'Bấm nút "Sửa" để làm tiếp.',
+    text: 'Bấm nút "Dừng" để làm tiếp.',
   },
   sequence: {
     title: 'Thêm Chuỗi việc',

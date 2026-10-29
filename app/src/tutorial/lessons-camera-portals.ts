@@ -24,7 +24,7 @@ const T = {
   },
   edit: {
     title: 'Quay lại sửa',
-    text: 'Bấm nút "Sửa" để làm tiếp.',
+    text: 'Bấm nút "Dừng" để làm tiếp.',
   },
   portals: {
     title: 'Thêm hai cổng',
@@ -48,7 +48,7 @@ const T = {
   },
   edit2: {
     title: 'Quay lại sửa',
-    text: 'Bấm nút "Sửa" để thêm máy quay.',
+    text: 'Bấm nút "Dừng" để thêm máy quay.',
   },
   distance: {
     title: 'Thêm mảnh ghép Khoảng cách',

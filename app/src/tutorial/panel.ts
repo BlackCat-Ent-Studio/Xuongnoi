@@ -1,5 +1,6 @@
 import { h } from '../editor/dom';
-import { TUTORIAL_UI as T } from './text-vi';
+import { icon } from '../editor/icons';
+import { DOCK_TEXT as D } from './dock-text-vi';
 import type { Step } from './types';
 
 export interface StepView {
@@ -16,91 +17,85 @@ export interface PanelActions {
   onBack(): void;
   onNext(): void;
   onExit(): void;
+  onShow(): void;
 }
 
 export interface StepPanel {
   el: HTMLElement;
   show(view: StepView): void;
+  /** Back to the "pick a lesson" state. */
   hide(): void;
 }
 
-/** Small floating card with the current instruction. Draggable by its header so it never blocks the board. */
+/** The step card inside the lessons dock: segmented progress, text and the step buttons. */
 export function createStepPanel(actions: PanelActions): StepPanel {
-  const el = h('div', 'tut-panel');
-  el.hidden = true;
-  el.setAttribute('role', 'dialog');
+  const el = h('div', 'ld-card');
+  el.setAttribute('role', 'region');
   el.setAttribute('aria-label', 'Hướng dẫn');
 
-  const head = h('div', 'tut-head');
-  const progress = h('span', 'tut-progress');
-  const lessonName = h('span', 'tut-lesson');
-  const exitBtn = h('button', 'tut-exit', `✕ ${T.exit}`);
+  const idle = h('div', 'ld-idle');
+  idle.append(h('h3', '', D.idleTitle), h('p', '', D.idleText));
+
+  const steps = h('div', 'ld-steps');
+  const head = h('div', 'ld-head');
+  const title = h('h3', 'ld-title');
+  const where = h('span', 'ld-where');
+  const exitBtn = h('button', 'btn ghost ld-exit', D.exit);
   exitBtn.type = 'button';
-  exitBtn.title = T.exitTitle;
+  exitBtn.title = D.exitTitle;
+  exitBtn.dataset.tut = 'exit';
   exitBtn.addEventListener('click', actions.onExit);
-  head.append(progress, lessonName, exitBtn);
+  head.append(title, where, exitBtn);
+  const text = h('p', 'ld-text');
+  const explain = h('p', 'ld-explain');
 
-  const title = h('div', 'tut-title');
-  const text = h('div', 'tut-text');
-  const explain = h('div', 'tut-explain');
-
-  const foot = h('div', 'tut-actions');
-  const backBtn = h('button', 'btn tut-btn', T.back);
+  const foot = h('div', 'ld-btns');
+  const showBtn = h('button', 'btn primary', D.show);
+  showBtn.type = 'button';
+  showBtn.title = D.showTitle;
+  showBtn.dataset.tut = 'show';
+  showBtn.prepend(icon('eye'));
+  showBtn.addEventListener('click', actions.onShow);
+  const backBtn = h('button', 'btn', D.back);
   backBtn.type = 'button';
+  backBtn.dataset.tut = 'back';
   backBtn.addEventListener('click', actions.onBack);
-  const skipBtn = h('button', 'tut-skip', T.skip);
-  skipBtn.type = 'button';
-  skipBtn.addEventListener('click', actions.onNext);
-  const nextBtn = h('button', 'btn primary tut-btn', T.next);
+  const nextBtn = h('button', 'btn', D.next);
   nextBtn.type = 'button';
   nextBtn.dataset.tut = 'next';
   nextBtn.addEventListener('click', actions.onNext);
-  foot.append(backBtn, skipBtn, nextBtn);
+  foot.append(showBtn, backBtn, nextBtn);
 
-  el.append(head, title, text, explain, foot);
-
-  // ---- dragging ----
-  head.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0 || (e.target instanceof Element && e.target.closest('button'))) return;
-    const r = el.getBoundingClientRect();
-    const dx = e.clientX - r.left;
-    const dy = e.clientY - r.top;
-    const move = (ev: PointerEvent): void => {
-      const x = Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 80);
-      const y = Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 40);
-      el.style.left = `${x}px`;
-      el.style.top = `${y}px`;
-      el.style.right = 'auto';
-      el.style.bottom = 'auto';
-    };
-    const up = (): void => {
-      window.removeEventListener('pointermove', move);
-      window.removeEventListener('pointerup', up);
-    };
-    window.addEventListener('pointermove', move);
-    window.addEventListener('pointerup', up);
-    e.preventDefault();
-  });
+  const body = h('div', 'ld-body');
+  body.append(steps, head, text, explain, foot);
+  body.hidden = true;
+  el.append(idle, body);
 
   return {
     el,
     show(v) {
-      progress.textContent = T.stepOf(v.index + 1, v.total);
-      lessonName.textContent = v.lessonTitle;
+      steps.replaceChildren();
+      steps.setAttribute('aria-label', D.stepsAria(v.index + 1, v.total));
+      for (let i = 0; i < v.total; i += 1) steps.append(h('i', i < v.index ? 'd' : i === v.index ? 'c' : ''));
       title.textContent = v.step.title;
+      where.textContent = D.lessonStep(v.lessonTitle, v.index + 1, v.total);
       text.textContent = v.step.text;
       explain.textContent = v.step.explain ?? '';
       explain.hidden = !v.step.explain;
+      showBtn.hidden = !v.step.target;
       backBtn.disabled = !v.canGoBack;
-      const info = !v.step.check;
-      // Info steps and held (went back) steps wait for the learner; the rest advance by themselves.
-      nextBtn.hidden = !(info || v.held);
-      nextBtn.textContent = v.isLast ? T.finish : info ? T.next : T.nextHeld;
-      skipBtn.hidden = info || v.held || v.isLast;
-      el.hidden = false;
+      // Info steps and held (went back) steps wait for the learner; the rest advance by themselves,
+      // so for them the button is an explicit skip.
+      const waiting = !v.step.check || v.held;
+      nextBtn.textContent = v.isLast ? D.finish : waiting ? D.next : D.skip;
+      nextBtn.title = waiting || v.isLast ? '' : D.skipTitle;
+      nextBtn.classList.toggle('primary', waiting);
+      idle.hidden = true;
+      body.hidden = false;
     },
     hide() {
-      el.hidden = true;
+      body.hidden = true;
+      idle.hidden = false;
     },
   };
 }
