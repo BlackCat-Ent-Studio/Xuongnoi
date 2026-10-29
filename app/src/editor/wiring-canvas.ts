@@ -1,5 +1,6 @@
+import { NOTE_COLORS, NOTE_MAX_TEXT, NOTE_MIN_H, NOTE_MIN_W } from '../engine/notes';
 import { getNodeDef } from '../engine/registry';
-import type { GraphNode, PortRef, PortType, Runtime, Wire } from '../engine/types';
+import type { GraphNode, Note, PortRef, PortType, Runtime, Wire } from '../engine/types';
 import { CONNECT_FAIL_TEXT } from '../engine/text-vi';
 import { canConnect } from '../engine/wiring';
 import { h } from './dom';
@@ -46,12 +47,13 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   el.tabIndex = 0;
   const world = h('div', 'wc-world');
   const wireLayer = svg('svg', 'wc-wires');
+  const noteLayer = h('div', 'wc-notes');
   const nodeLayer = h('div', 'wc-nodes');
   const badgeLayer = h('div', 'wc-badges');
   const hint = h('div', 'wc-hint', TEXT_VI.canvasEmpty);
   const tip = h('div', 'wc-tip');
   tip.hidden = true;
-  world.append(wireLayer, nodeLayer, badgeLayer);
+  world.append(wireLayer, noteLayer, nodeLayer, badgeLayer);
   el.append(world, hint, tip);
 
   let panX = 40;
@@ -59,6 +61,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   let zoom = 1;
 
   const nodeEls = new Map<string, HTMLElement>();
+  const noteEls = new Map<string, { el: HTMLElement; text: HTMLTextAreaElement }>();
   const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
   const wirePaths = new Map<string, SVGPathElement>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
@@ -169,16 +172,86 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     portEls.clear();
     const graph = state.getGraph();
     for (const n of graph.nodes) renderNode(n);
-    hint.hidden = graph.nodes.length > 0;
+    renderNotes();
     el.classList.toggle('readonly', state.isPlaying());
     applySelection();
     drawWires();
   }
 
+  // ---------- sticky notes ----------
+
+  function buildNote(note: Note): { el: HTMLElement; text: HTMLTextAreaElement } {
+    const box = h('div', 'wc-note');
+    box.dataset.id = note.id;
+    const tools = h('div', 'wc-note-tools');
+    tools.append(h('span', 'wc-note-grip', '📝'));
+    const colors = h('span', 'wc-note-colors');
+    for (const c of NOTE_COLORS) {
+      const dot = h('button', `wc-note-dot dot-${c}`);
+      dot.type = 'button';
+      dot.title = TEXT_VI.noteColor;
+      dot.addEventListener('click', () => state.updateNote(note.id, { color: c }));
+      colors.append(dot);
+    }
+    const del = h('button', 'wc-note-del', '🗑');
+    del.type = 'button';
+    del.title = TEXT_VI.noteDelete;
+    del.addEventListener('click', () => {
+      state.select({ kind: 'note', id: note.id });
+      state.deleteSelection();
+    });
+    tools.append(colors, del);
+    const text = h('textarea', 'wc-note-text');
+    text.placeholder = TEXT_VI.noteHolder;
+    text.maxLength = NOTE_MAX_TEXT;
+    text.spellcheck = false;
+    text.addEventListener('input', () => state.updateNote(note.id, { text: text.value }));
+    const grab = h('div', 'wc-note-resize');
+    grab.title = TEXT_VI.noteResize;
+    box.append(tools, text, grab);
+    return { el: box, text };
+  }
+
+  /** Updates note elements in place so a note being typed in keeps its focus. */
+  function renderNotes(): void {
+    const notes = state.getNotes();
+    const alive = new Set(notes.map((n) => n.id));
+    for (const [id, parts] of noteEls) {
+      if (!alive.has(id)) {
+        parts.el.remove();
+        noteEls.delete(id);
+      }
+    }
+    const readonly = state.isPlaying();
+    for (const note of notes) {
+      let parts = noteEls.get(note.id);
+      if (!parts) {
+        parts = buildNote(note);
+        noteEls.set(note.id, parts);
+        noteLayer.append(parts.el);
+      }
+      const { el: box, text } = parts;
+      box.style.left = `${note.pos.x}px`;
+      box.style.top = `${note.pos.y}px`;
+      box.style.width = `${note.size.w}px`;
+      box.style.height = `${note.size.h}px`;
+      for (const c of NOTE_COLORS) box.classList.toggle(`color-${c}`, c === note.color);
+      if (text.value !== note.text) text.value = note.text;
+      text.readOnly = readonly;
+    }
+    hint.hidden = state.getGraph().nodes.length > 0 || notes.length > 0;
+  }
+
   function applySelection(): void {
     const sel = state.getSelection();
-    for (const [id, box] of nodeEls) box.classList.toggle('selected', sel?.kind === 'node' && sel.id === id);
+    const multi = state.getMulti();
+    for (const [id, box] of nodeEls) box.classList.toggle('selected', multi.has(id));
+    for (const [id, parts] of noteEls) parts.el.classList.toggle('selected', multi.has(id));
     for (const [id, path] of wirePaths) path.classList.toggle('selected', sel?.kind === 'wire' && sel.id === id);
+  }
+
+  function itemEl(id: string): HTMLElement | undefined {
+    return nodeEls.get(id) ?? noteEls.get(id)?.el;
   }
 
   function refreshBadges(): void {
@@ -201,16 +274,19 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   // ---------- fit ----------
 
   function fitToContent(): void {
-    const nodes = state.getGraph().nodes;
-    if (nodes.length === 0) {
+    const boxes = [
+      ...state.getGraph().nodes.map((n) => ({ x: n.pos.x, y: n.pos.y, w: 200, h: 140 })),
+      ...state.getNotes().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
+    ];
+    if (boxes.length === 0) {
       panX = 40;
       panY = 40;
       zoom = 1;
     } else {
-      const minX = Math.min(...nodes.map((n) => n.pos.x));
-      const minY = Math.min(...nodes.map((n) => n.pos.y));
-      const maxX = Math.max(...nodes.map((n) => n.pos.x)) + 200;
-      const maxY = Math.max(...nodes.map((n) => n.pos.y)) + 140;
+      const minX = Math.min(...boxes.map((b) => b.x));
+      const minY = Math.min(...boxes.map((b) => b.y));
+      const maxX = Math.max(...boxes.map((b) => b.x + b.w));
+      const maxY = Math.max(...boxes.map((b) => b.y + b.h));
       const r = el.getBoundingClientRect();
       const w = r.width || 800;
       const hgt = r.height || 600;
@@ -225,7 +301,9 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   type Drag =
     | { kind: 'pan'; sx: number; sy: number; px: number; py: number }
-    | { kind: 'node'; id: string; sx: number; sy: number; ox: number; oy: number; moved: boolean }
+    | { kind: 'items'; id: string; sx: number; sy: number; items: { id: string; ox: number; oy: number }[]; moved: boolean; groupClick: boolean }
+    | { kind: 'resize'; id: string; sx: number; sy: number; w: number; h: number }
+    | { kind: 'marquee'; sx: number; sy: number; base: Set<string>; box: HTMLElement }
     | { kind: 'wire'; start: PortRef; startDir: PortDir; hover: HTMLElement | null };
   let drag: Drag | null = null;
 
@@ -299,6 +377,29 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     if (!res.ok) notify(CONNECT_FAIL_TEXT[res.reason], 'error');
   }
 
+  /** Pointer pressed on a node or note: Shift toggles it, otherwise select it and maybe start moving. */
+  function beginItemDrag(e: PointerEvent, id: string, readonly: boolean): void {
+    if (e.shiftKey) {
+      state.toggleSelect(id);
+      return;
+    }
+    const multi = state.getMulti();
+    const group = multi.size > 1 && multi.has(id);
+    if (!group) state.select({ kind: noteEls.has(id) ? 'note' : 'node', id });
+    if (readonly) return;
+    const ids = group ? [...multi] : [id];
+    const graph = state.getGraph();
+    const notes = state.getNotes();
+    const items: { id: string; ox: number; oy: number }[] = [];
+    for (const i of ids) {
+      const pos = graph.nodes.find((n) => n.id === i)?.pos ?? notes.find((n) => n.id === i)?.pos;
+      if (pos) items.push({ id: i, ox: pos.x, oy: pos.y });
+    }
+    if (items.length === 0) return;
+    drag = { kind: 'items', id, sx: e.clientX, sy: e.clientY, items, moved: false, groupClick: group };
+    el.setPointerCapture(e.pointerId);
+  }
+
   el.addEventListener('pointerdown', (e) => {
     if (e.button !== 0 && e.button !== 1) return;
     const target = e.target instanceof Element ? e.target : null;
@@ -328,16 +429,32 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       }
     }
 
-    const box = target.closest<HTMLElement>('.wc-node');
-    if (box?.dataset.id) {
-      state.select({ kind: 'node', id: box.dataset.id });
-      if (!readonly) {
-        const node = state.getGraph().nodes.find((n) => n.id === box.dataset.id);
-        if (node) {
-          drag = { kind: 'node', id: node.id, sx: e.clientX, sy: e.clientY, ox: node.pos.x, oy: node.pos.y, moved: false };
+    const noteBox = target.closest<HTMLElement>('.wc-note');
+    if (noteBox?.dataset.id) {
+      const id = noteBox.dataset.id;
+      if (target.closest('button')) return;
+      if (target.closest('.wc-note-resize')) {
+        const note = state.getNotes().find((n) => n.id === id);
+        if (note && !readonly) {
+          e.preventDefault();
+          state.select({ kind: 'note', id });
+          drag = { kind: 'resize', id, sx: e.clientX, sy: e.clientY, w: note.size.w, h: note.size.h };
           el.setPointerCapture(e.pointerId);
         }
+        return;
       }
+      if (target.closest('textarea')) {
+        if (e.shiftKey) state.toggleSelect(id);
+        else state.select({ kind: 'note', id });
+        return;
+      }
+      beginItemDrag(e, id, readonly);
+      return;
+    }
+
+    const box = target.closest<HTMLElement>('.wc-node');
+    if (box?.dataset.id) {
+      beginItemDrag(e, box.dataset.id, readonly);
       return;
     }
 
@@ -347,6 +464,13 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       return;
     }
 
+    if (e.shiftKey) {
+      const marquee = h('div', 'wc-marquee');
+      el.append(marquee);
+      drag = { kind: 'marquee', sx: e.clientX, sy: e.clientY, base: new Set(state.getMulti()), box: marquee };
+      el.setPointerCapture(e.pointerId);
+      return;
+    }
     state.select(null);
     drag = { kind: 'pan', sx: e.clientX, sy: e.clientY, px: panX, py: panY };
     el.setPointerCapture(e.pointerId);
@@ -358,17 +482,31 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       panX = drag.px + (e.clientX - drag.sx);
       panY = drag.py + (e.clientY - drag.sy);
       applyView();
-    } else if (drag.kind === 'node') {
+    } else if (drag.kind === 'items') {
       const dx = (e.clientX - drag.sx) / zoom;
       const dy = (e.clientY - drag.sy) / zoom;
       if (!drag.moved && Math.hypot(dx, dy) * zoom < 3) return;
       drag.moved = true;
-      const box = nodeEls.get(drag.id);
-      if (box) {
-        box.style.left = `${Math.round(drag.ox + dx)}px`;
-        box.style.top = `${Math.round(drag.oy + dy)}px`;
+      for (const it of drag.items) {
+        const box = itemEl(it.id);
+        if (box) {
+          box.style.left = `${Math.round(it.ox + dx)}px`;
+          box.style.top = `${Math.round(it.oy + dy)}px`;
+        }
       }
       drawWires();
+    } else if (drag.kind === 'resize') {
+      const box = noteEls.get(drag.id)?.el;
+      if (box) {
+        box.style.width = `${Math.max(NOTE_MIN_W, Math.round(drag.w + (e.clientX - drag.sx) / zoom))}px`;
+        box.style.height = `${Math.max(NOTE_MIN_H, Math.round(drag.h + (e.clientY - drag.sy) / zoom))}px`;
+      }
+    } else if (drag.kind === 'marquee') {
+      const r = el.getBoundingClientRect();
+      drag.box.style.left = `${Math.min(drag.sx, e.clientX) - r.left}px`;
+      drag.box.style.top = `${Math.min(drag.sy, e.clientY) - r.top}px`;
+      drag.box.style.width = `${Math.abs(e.clientX - drag.sx)}px`;
+      drag.box.style.height = `${Math.abs(e.clientY - drag.sy)}px`;
     } else {
       updateWireDrag(drag, e);
     }
@@ -379,10 +517,32 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     drag = null;
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     if (!d) return;
-    if (d.kind === 'node' && d.moved) {
-      const dx = (e.clientX - d.sx) / zoom;
-      const dy = (e.clientY - d.sy) / zoom;
-      state.setNodePos(d.id, { x: Math.round(d.ox + dx), y: Math.round(d.oy + dy) });
+    if (d.kind === 'items') {
+      if (d.moved) {
+        const dx = (e.clientX - d.sx) / zoom;
+        const dy = (e.clientY - d.sy) / zoom;
+        state.moveItems(d.items.map((it) => ({ id: it.id, pos: { x: Math.round(it.ox + dx), y: Math.round(it.oy + dy) } })));
+        render();
+      } else if (d.groupClick) {
+        state.select({ kind: noteEls.has(d.id) ? 'note' : 'node', id: d.id });
+      }
+    } else if (d.kind === 'resize') {
+      state.updateNote(d.id, { size: { w: d.w + (e.clientX - d.sx) / zoom, h: d.h + (e.clientY - d.sy) / zoom } });
+      renderNotes();
+    } else if (d.kind === 'marquee') {
+      d.box.remove();
+      const a = clientToWorld(Math.min(d.sx, e.clientX), Math.min(d.sy, e.clientY));
+      const b = clientToWorld(Math.max(d.sx, e.clientX), Math.max(d.sy, e.clientY));
+      if (Math.hypot(e.clientX - d.sx, e.clientY - d.sy) >= 3) {
+        const hit = new Set(d.base);
+        const boxes = [...nodeEls.entries(), ...[...noteEls.entries()].map(([i, p]) => [i, p.el] as const)];
+        for (const [id, box] of boxes) {
+          const x = box.offsetLeft;
+          const y = box.offsetTop;
+          if (x < b.x && x + box.offsetWidth > a.x && y < b.y && y + box.offsetHeight > a.y) hit.add(id);
+        }
+        state.selectMany([...hit]);
+      }
     } else if (d.kind === 'wire') {
       finishWireDrag(d, e);
     }
@@ -395,6 +555,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       tempPath?.remove();
       tempPath = null;
     }
+    if (drag?.kind === 'marquee') drag.box.remove();
     drag = null;
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     render();
@@ -425,6 +586,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   state.subscribe((kind) => {
     if (kind === 'graph' || kind === 'playing') render();
+    else if (kind === 'notes') {
+      renderNotes();
+      applySelection();
+    }
     else if (kind === 'board') {
       render();
       fitToContent();

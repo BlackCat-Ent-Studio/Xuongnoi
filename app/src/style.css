@@ -180,3 +180,26 @@ body.resizing-y { cursor: row-resize; }
 
 .cam-reset { position: absolute; right: 8px; bottom: 8px; padding: 4px 10px; font: 600 13px system-ui, sans-serif; color: #1d2330; background: rgba(255, 255, 255, 0.9); border: 1px solid #b8bec9; border-radius: 6px; cursor: pointer; }
 .cam-reset:hover { background: #fff; }
+
+/* ---- editor tools: sticky notes, marquee ---- */
+.wc-notes { position: absolute; left: 0; top: 0; }
+.wc-note { position: absolute; display: flex; flex-direction: column; border: 2px solid rgba(0,0,0,.18); border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.12); background: #fef3a6; overflow: hidden; cursor: move; }
+.wc-note.color-yellow { background: #fef3a6; }
+.wc-note.color-green { background: #c8f0c8; }
+.wc-note.color-blue { background: #c7e3fb; }
+.wc-note.color-pink { background: #fbcfe0; }
+.wc-note.selected { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,.25); }
+.wc-note-tools { display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: rgba(0,0,0,.07); font-size: 13px; user-select: none; }
+.wc-note-grip { flex: 1; }
+.wc-note-colors { display: inline-flex; gap: 4px; }
+.wc-note-dot { width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 1px solid rgba(0,0,0,.35); cursor: pointer; }
+.wc-note-dot.dot-yellow { background: #fef3a6; }
+.wc-note-dot.dot-green { background: #c8f0c8; }
+.wc-note-dot.dot-blue { background: #c7e3fb; }
+.wc-note-dot.dot-pink { background: #fbcfe0; }
+.wc-note-del { border: none; background: transparent; cursor: pointer; padding: 0 2px; font-size: 13px; }
+.wc-note-text { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; resize: none; border: none; outline: none; background: transparent; padding: 6px 8px; font: inherit; font-size: 14px; cursor: text; }
+.wc-note-resize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, rgba(0,0,0,.35) 50%); }
+.wc.readonly .wc-note { cursor: default; }
+.wc.readonly .wc-note-resize { display: none; }
+.wc-marquee { position: absolute; z-index: 15; border: 1px dashed var(--accent); background: rgba(79,70,229,.1); pointer-events: none; }

@@ -12,6 +12,7 @@ export interface TopBarDeps {
   onOpenFile(): void;
   onOpenSample(board: Board): void;
   onChangeMode(mode: ViewMode): void;
+  onAddNote(): void;
 }
 
 export interface TopBar {
@@ -38,6 +39,15 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   playBtn.id = 'btn-play';
   playBtn.dataset.tut = 'play';
   const saveBtn = btn(TEXT_VI.save, '', deps.onSave);
+  const undoBtn = btn(TEXT_VI.undo, '', () => state.undo());
+  undoBtn.title = TEXT_VI.undoTip;
+  undoBtn.dataset.act = 'undo';
+  const redoBtn = btn(TEXT_VI.redo, '', () => state.redo());
+  redoBtn.title = TEXT_VI.redoTip;
+  redoBtn.dataset.act = 'redo';
+  const noteBtn = btn(TEXT_VI.addNote, '', deps.onAddNote);
+  noteBtn.title = TEXT_VI.addNoteTip;
+  noteBtn.dataset.act = 'add-note';
 
   // Open menu
   const openWrap = h('div', 'menu-wrap');
@@ -108,18 +118,21 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   status.setAttribute('role', 'status');
   let statusTimer = 0;
 
-  el.append(brand, newBtn, playBtn, saveBtn, openWrap, modeWrap, nameWrap, status);
+  el.append(brand, newBtn, playBtn, saveBtn, openWrap, undoBtn, redoBtn, noteBtn, modeWrap, nameWrap, status);
 
   function sync(): void {
     const playing = state.isPlaying();
     playBtn.textContent = playing ? TEXT_VI.edit : TEXT_VI.play;
     playBtn.classList.toggle('playing', playing);
     modeSel.disabled = playing;
+    undoBtn.disabled = !state.canUndo();
+    redoBtn.disabled = !state.canRedo();
+    noteBtn.disabled = playing;
     modeSel.value = state.getMode();
     if (document.activeElement !== nameInput) nameInput.value = state.getBoard().name;
   }
   state.subscribe((k) => {
-    if (k === 'playing' || k === 'mode' || k === 'board' || k === 'name') sync();
+    if (k === 'playing' || k === 'mode' || k === 'board' || k === 'name' || k === 'history') sync();
   });
   sync();
 

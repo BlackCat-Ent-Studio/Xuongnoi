@@ -5,12 +5,14 @@ import {
   VIEW_MODES,
   type Board,
   type Graph,
+  type Note,
   type GraphNode,
   type ParamDef,
   type ParamValue,
   type Params,
   type ViewMode,
 } from '../engine/types';
+import { NOTE_MAX_COUNT, NOTE_MAX_TEXT, clampNoteSize, isNoteColor } from '../engine/notes';
 import { registerAllNodes } from '../nodes';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
 import { IO_TEXT } from './text-vi';
@@ -27,7 +29,13 @@ export function createEmptyBoard(mode: ViewMode): Board {
 
 export function serializeBoard(board: Board): string {
   return JSON.stringify(
-    { format_version: CURRENT_FORMAT_VERSION, name: board.name, mode: board.mode, graph: board.graph },
+    {
+      format_version: CURRENT_FORMAT_VERSION,
+      name: board.name,
+      mode: board.mode,
+      graph: board.graph,
+      ...(board.notes && board.notes.length > 0 ? { notes: board.notes } : {}),
+    },
     null,
     2,
   );
@@ -76,6 +84,39 @@ function parseNode(raw: unknown, index: number, seen: Set<string>): GraphNode | 
   const pos = raw.pos;
   if (!isRecord(pos) || !isFiniteNum(pos.x) || !isFiniteNum(pos.y)) return IO_TEXT.badNode(index);
   return { id, kind, params, pos: { x: pos.x, y: pos.y } };
+}
+
+/** Validates the optional `notes` array. Returns the clean notes or a Vietnamese error. */
+function parseNotes(raw: unknown): Note[] | string {
+  if (raw === undefined) return [];
+  if (!Array.isArray(raw) || raw.length > NOTE_MAX_COUNT) return IO_TEXT.badNotes;
+  const notes: Note[] = [];
+  const seen = new Set<string>();
+  for (const [i, n] of raw.entries()) {
+    if (
+      !isRecord(n) ||
+      typeof n.id !== 'string' ||
+      typeof n.text !== 'string' ||
+      !isRecord(n.pos) ||
+      !isFiniteNum(n.pos.x) ||
+      !isFiniteNum(n.pos.y) ||
+      !isRecord(n.size) ||
+      !isFiniteNum(n.size.w) ||
+      !isFiniteNum(n.size.h)
+    ) {
+      return IO_TEXT.badNote(i);
+    }
+    if (seen.has(n.id)) return IO_TEXT.dupNote(n.id);
+    seen.add(n.id);
+    notes.push({
+      id: n.id,
+      text: n.text.slice(0, NOTE_MAX_TEXT),
+      color: isNoteColor(n.color) ? n.color : 'yellow',
+      pos: { x: n.pos.x, y: n.pos.y },
+      size: clampNoteSize({ w: n.size.w, h: n.size.h }),
+    });
+  }
+  return notes;
 }
 
 /** Validates untrusted text into a Board. Never throws; errors are Vietnamese. */
@@ -138,5 +179,10 @@ export function parseBoard(text: string): ParseResult {
     graph = { nodes, wires: [...graph.wires, { id: raw.id, from, to }] };
   }
 
-  return { ok: true, board: { name: data.name, mode: mode as ViewMode, graph } };
+  const notes = parseNotes(data.notes);
+  if (typeof notes === 'string') return { ok: false, error: notes };
+
+  const board: Board = { name: data.name, mode: mode as ViewMode, graph };
+  if (notes.length > 0) board.notes = notes;
+  return { ok: true, board };
 }
