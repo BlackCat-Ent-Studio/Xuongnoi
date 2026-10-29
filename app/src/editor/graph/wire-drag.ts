@@ -123,12 +123,7 @@ export function createWireDrag({ root, wireLayer, state, notify, toWorld, showTi
         return;
       }
       const [src, dst] = from.dir === 'out' ? [from.ref, to.ref] : [to.ref, from.ref];
-      const old = state.getGraph().wires.find((w) => w.to.node === dst.node && w.to.port === dst.port);
-      if (old) {
-        state.select({ kind: 'wire', id: old.id });
-        state.deleteSelection();
-      }
-      const res = state.connect(src, dst);
+      const res = state.connect(src, dst, { replace: true });
       if (!res.ok) notify(CONNECT_FAIL_TEXT[res.reason], 'error');
     },
     cancel: finish,

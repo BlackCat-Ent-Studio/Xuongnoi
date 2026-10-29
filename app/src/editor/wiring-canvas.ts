@@ -28,6 +28,8 @@ export interface WiringCanvas {
   viewCenter(): { x: number; y: number };
   isOver(clientX: number, clientY: number): boolean;
   fitToContent(): void;
+  /** Pan so the node sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
+  centerOn(nodeId: string): void;
   /** Update live wire value badges (play mode). */
   refreshBadges(): void;
   /** Nearest free spot (no overlap with nodes or notes) for a new node of `kind`, starting from `want`. */
@@ -313,6 +315,18 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
     },
     fitToContent,
+    centerOn(nodeId) {
+      const node = state.getGraph().nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+      const size = sizeOf(nodeId) ?? estimateNodeSize(node);
+      const r = el.getBoundingClientRect();
+      view = {
+        ...view,
+        panX: r.width / 2 - (node.pos.x + size.w / 2) * view.zoom,
+        panY: r.height / 2 - (node.pos.y + size.h / 2) * view.zoom,
+      };
+      applyView();
+    },
     refreshBadges,
     findFreeSpot,
     arrange,

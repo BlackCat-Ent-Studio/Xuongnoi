@@ -11,6 +11,8 @@ import {
   takeAutosaveProblem,
 } from '../io';
 import { createGameView } from '../render/game-view';
+import { CONSOLE_TEXT } from './console/console-text-vi';
+import { mountConsoleDock, type ConsoleDock, type LogKind } from './console-dock';
 import { h, isTypingTarget } from './dom';
 import { countUnavailable, createEditorState } from './editor-state';
 import { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID, createDock, createMount } from './dock-tabs';
@@ -52,6 +54,18 @@ export function mountEditor(root: HTMLElement): void {
   const gameView: GameView = createGameView();
   const keyboard = createKeyboardInput();
 
+  let consoleDock: ConsoleDock | null = null;
+  const log = (kind: LogKind, text: string): void => consoleDock?.log(kind, text);
+  /** Logs at most once per `ms` for a given key, so slider drags and key repeats do not flood the log. */
+  const lastLogged = new Map<string, number>();
+  const logThrottled = (key: string, ms: number, kind: LogKind, text: string): boolean => {
+    const now = Date.now();
+    if (now - (lastLogged.get(key) ?? 0) < ms) return false;
+    lastLogged.set(key, now);
+    log(kind, text);
+    return true;
+  };
+
   const gameBox = h('div', 'game-box');
   const canvas = createWiringCanvas({
     state,
@@ -84,7 +98,15 @@ export function mountEditor(root: HTMLElement): void {
 
   mountIconSprite();
   const dialog = createNewGameDialog((mode) => loadBoard(createEmptyBoard(mode)));
-  const props = createPropertiesPanel(state);
+  const props = createPropertiesPanel(state, {
+    onLiveParamChange(nodeId, params) {
+      if (gameView.applyNodeParams(nodeId, params)) {
+        logThrottled('live-ok', 1500, 'info', CONSOLE_TEXT.logLiveApplied);
+      } else if (logThrottled('live-defer', 1500, 'warn', CONSOLE_TEXT.logLiveDeferred)) {
+        topBar.notify(CONSOLE_TEXT.logLiveDeferred);
+      }
+    },
+  });
 
   // ---------- docks ----------
 
@@ -294,6 +316,13 @@ export function mountEditor(root: HTMLElement): void {
     menus,
     onPlay: () => state.setPlaying(true),
     onStop: () => state.setPlaying(false),
+    onPause: () => (gameView.isPaused() ? gameView.resume() : gameView.pause()),
+    onStep: () => {
+      gameView.stepFrame();
+      logThrottled('step', 400, 'info', CONSOLE_TEXT.logStep);
+    },
+    onRestart: restartPlay,
+    onNotify: (text, kind) => log(kind, text),
     onHelp: openHelp,
     onPresetChange: (p) => layout.setPreset(p),
     initialPreset: layout.preset(),
@@ -306,6 +335,15 @@ export function mountEditor(root: HTMLElement): void {
 
   root.replaceChildren(topBar.el, work);
   root.classList.add('app');
+  consoleDock = mountConsoleDock({
+    state,
+    onView(nodeId) {
+      if (!isShown(canvas.el)) showCenter('graph');
+      state.select({ kind: 'node', id: nodeId });
+      canvas.centerOn(nodeId);
+      canvas.el.focus({ preventScroll: true });
+    },
+  });
 
   gameView.mount(gameBox);
   installEntityDrag(gameBox, gameView, state);
@@ -373,13 +411,39 @@ export function mountEditor(root: HTMLElement): void {
     showPreview();
   }
 
-  gameView.onGameEnd((result) => tutorial.noteGameEnd(result));
-  gameView.onRestartRequest(() => {
-    tutorial.noteRestart();
+  function restartPlay(): void {
     if (!state.isPlaying()) return;
     gameView.stop();
     startPlay();
+    log('info', CONSOLE_TEXT.logRestart);
+  }
+
+  gameView.onGameEnd((result, message) => {
+    tutorial.noteGameEnd(result);
+    if (result === 'win') log('ok', CONSOLE_TEXT.logWin(message));
+    else log('warn', CONSOLE_TEXT.logLose(message));
   });
+  gameView.onPauseChange((paused) => {
+    root.classList.toggle('paused', paused);
+    topBar.setPaused(paused);
+    if (state.isPlaying()) log('info', paused ? CONSOLE_TEXT.logPause : CONSOLE_TEXT.logResume);
+  });
+  gameView.onRestartRequest(() => {
+    tutorial.noteRestart();
+    restartPlay();
+  });
+
+  // Structure is locked while the game runs; dragging from a port is the one edit gesture the canvas ignores silently.
+  const notifyStructureLocked = (): void => {
+    if (logThrottled('locked', 2000, 'warn', CONSOLE_TEXT.blockedStructure)) topBar.notify(CONSOLE_TEXT.blockedStructure);
+  };
+  canvas.el.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (state.isPlaying() && e.target instanceof Element && e.target.closest('.wc-port')) notifyStructureLocked();
+    },
+    true,
+  );
 
   setInterval(() => {
     if (state.isPlaying()) canvas.refreshBadges();
@@ -405,9 +469,16 @@ export function mountEditor(root: HTMLElement): void {
     switch (kind) {
       case 'playing':
         root.classList.toggle('playing', state.isPlaying());
+        if (!state.isPlaying()) root.classList.remove('paused');
         followPlayState(state.isPlaying());
-        if (state.isPlaying()) startPlay();
-        else stopPlay();
+        if (state.isPlaying()) {
+          startPlay();
+          const open = consoleDock?.issueCount() ?? 0;
+          log('info', CONSOLE_TEXT.logPlayStart + (open > 0 ? ` (còn ${open} việc cần sửa)` : ''));
+        } else {
+          stopPlay();
+          log('info', CONSOLE_TEXT.logPlayStop);
+        }
         relayout();
         break;
       case 'board':
@@ -436,11 +507,21 @@ export function mountEditor(root: HTMLElement): void {
 
   window.addEventListener('keydown', (e) => {
     if (isTypingTarget(e.target)) return;
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.altKey && !e.shiftKey) {
+      e.preventDefault();
+      if (!e.repeat) state.setPlaying(!state.isPlaying());
+      return;
+    }
     if (e.key === 'Escape' && root.classList.contains('maximized')) {
       setMaximized(false);
       return;
     }
-    if (state.isPlaying()) return;
+    if (state.isPlaying()) {
+      const k = e.key.toLowerCase();
+      const editKey = e.key === 'Delete' || e.key === 'Backspace' || ((e.ctrlKey || e.metaKey) && (k === 'v' || k === 'd'));
+      if (editKey) notifyStructureLocked();
+      return;
+    }
     if (e.code === 'KeyF' && !e.repeat && !e.ctrlKey && !e.metaKey && !e.altKey) {
       setMaximized(!root.classList.contains('maximized'));
       return;

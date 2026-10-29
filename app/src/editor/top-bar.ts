@@ -5,6 +5,7 @@ import { icon } from './icons';
 import { LAYOUT_PRESETS, type LayoutPreset } from './layout-model';
 import { createMenuBar, type MenuDef } from './menu-bar';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
+import { CONSOLE_TEXT } from './console/console-text-vi';
 import { TEXT_VI } from './text-vi';
 
 export interface TopBarDeps {
@@ -13,9 +14,13 @@ export interface TopBarDeps {
   menus: MenuDef[];
   onPlay(): void;
   onStop(): void;
-  /** Wired by the play-state feature; until then the button stays disabled with a tooltip. */
+  /** Toggles pause/resume; the button label follows `setPaused`. Without it the button stays disabled. */
   onPause?: () => void;
   onStep?: () => void;
+  /** While playing the Chơi button turns into Chơi lại and calls this. */
+  onRestart?: () => void;
+  /** Every notify() is also reported here (the console log). */
+  onNotify?: (text: string, kind: 'info' | 'error') => void;
   onHelp(): void;
   onPresetChange(preset: LayoutPreset): void;
   initialPreset: LayoutPreset;
@@ -24,6 +29,8 @@ export interface TopBarDeps {
 export interface TopBar {
   el: HTMLElement;
   notify(text: string, kind?: 'info' | 'error'): void;
+  /** Switches the pause button between Tạm dừng and Tiếp tục and enables Từng bước. */
+  setPaused(paused: boolean): void;
   /** Insert an extra control at the start of the right-hand cluster. */
   addControl(control: HTMLElement): void;
   /** Keeps the layout select in sync when the preset changes elsewhere. */
@@ -81,9 +88,11 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   const playBtn = pbtn(SHELL_TEXT.play, SHELL_TEXT.playTip, 'play', 'primary');
   playBtn.id = 'btn-play';
   playBtn.dataset.tut = 'play';
-  playBtn.addEventListener('click', deps.onPlay);
-  const pauseBtn = pbtn(SHELL_TEXT.pause, SHELL_TEXT.pauseTip, 'pause');
-  const stepBtn = pbtn(SHELL_TEXT.step, SHELL_TEXT.stepTip, 'step');
+  const playLabel = playBtn.querySelector('span') as HTMLSpanElement;
+  playBtn.addEventListener('click', () => (state.isPlaying() ? deps.onRestart?.() : deps.onPlay()));
+  const pauseBtn = pbtn(SHELL_TEXT.pause, CONSOLE_TEXT.pauseTip, 'pause');
+  const pauseLabel = pauseBtn.querySelector('span') as HTMLSpanElement;
+  const stepBtn = pbtn(SHELL_TEXT.step, CONSOLE_TEXT.stepTip, 'step');
   const stopBtn = pbtn(SHELL_TEXT.stop, SHELL_TEXT.stopTip, 'stop', 'stop');
   stopBtn.addEventListener('click', deps.onStop);
   if (deps.onPause) pauseBtn.addEventListener('click', deps.onPause);
@@ -139,14 +148,23 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   el.append(left, play, right, status);
 
   // ---------- state sync ----------
+  let paused = false;
   function sync(): void {
     const playing = state.isPlaying();
+    if (!playing) paused = false;
     el.classList.toggle('playing', playing);
-    pstate.textContent = playing ? SHELL_TEXT.statePlaying : SHELL_TEXT.stateEditing;
-    playBtn.disabled = playing;
+    el.classList.toggle('paused', paused);
+    pstate.textContent = !playing ? SHELL_TEXT.stateEditing : paused ? CONSOLE_TEXT.statePaused : SHELL_TEXT.statePlaying;
+    playLabel.textContent = playing ? CONSOLE_TEXT.restart : SHELL_TEXT.play;
+    playBtn.title = playing ? CONSOLE_TEXT.restartTip : SHELL_TEXT.playTip;
+    playBtn.setAttribute('aria-label', playLabel.textContent);
+    playBtn.disabled = playing && !deps.onRestart;
     stopBtn.disabled = !playing;
     pauseBtn.disabled = !playing || !deps.onPause;
-    stepBtn.disabled = !playing || !deps.onStep;
+    pauseLabel.textContent = paused ? CONSOLE_TEXT.resume : SHELL_TEXT.pause;
+    pauseBtn.title = paused ? CONSOLE_TEXT.resumeTip : CONSOLE_TEXT.pauseTip;
+    pauseBtn.setAttribute('aria-label', pauseLabel.textContent);
+    stepBtn.disabled = !playing || !paused || !deps.onStep;
     undoBtn.disabled = !state.canUndo();
     redoBtn.disabled = !state.canRedo();
     if (document.activeElement !== nameInput) nameInput.value = state.getBoard().name;
@@ -170,6 +188,10 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   return {
     el,
     closeMenus: () => menuBar.close(),
+    setPaused(next) {
+      paused = next && state.isPlaying();
+      sync();
+    },
     addControl(control) {
       right.prepend(control);
     },
@@ -188,6 +210,7 @@ export function createTopBar(deps: TopBarDeps): TopBar {
       saveTimer = window.setTimeout(showSaved, AUTOSAVE_DELAY_MS + 100);
     },
     notify(text, kind = 'info') {
+      deps.onNotify?.(text, kind);
       status.textContent = text;
       status.className = `status ${kind}`;
       window.clearTimeout(statusTimer);

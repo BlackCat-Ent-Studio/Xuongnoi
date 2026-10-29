@@ -35,7 +35,7 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit }
     const taken = occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf, node.id);
     const spot = findFreeNodeSpot(node.pos, { w: box.offsetWidth, h: box.offsetHeight }, taken);
     if (spot.x !== node.pos.x || spot.y !== node.pos.y) {
-      state.moveItems([{ id: node.id, pos: spot }]);
+      state.moveItems([{ id: node.id, pos: spot }], { amend: true });
       box.style.left = `${spot.x}px`;
       box.style.top = `${spot.y}px`;
       drawWires();

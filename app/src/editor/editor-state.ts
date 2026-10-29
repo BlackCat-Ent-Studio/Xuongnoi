@@ -92,6 +92,14 @@ export function countUnavailable(graph: Graph, mode: ViewMode): number {
   }).length;
 }
 
+/** Params that may change while the game runs: numbers, colours, positions and the look. Structure never can. */
+export function isLiveParam(graph: Graph, nodeId: string, paramId: string): boolean {
+  const node = graph.nodes.find((n) => n.id === nodeId);
+  const def = node && getNodeDef(node.kind)?.params.find((p) => p.id === paramId);
+  if (!def) return false;
+  return def.kind === 'number' || def.kind === 'color' || def.kind === 'vec3' || paramId === 'look';
+}
+
 // ---------- state ----------
 
 export interface NotePatch {
@@ -125,8 +133,9 @@ export interface EditorState {
   setParam(nodeId: string, paramId: string, value: ParamValue): void;
   setNodePos(nodeId: string, pos: { x: number; y: number }): void;
   /** Move nodes and/or notes in one undo step. */
-  moveItems(moves: readonly Move[]): void;
-  connect(from: PortRef, to: PortRef): ConnectResult;
+  moveItems(moves: readonly Move[], opts?: { amend?: boolean }): void;
+  /** `replace`: an occupied input drops its old wire inside the same undo step instead of failing. */
+  connect(from: PortRef, to: PortRef, opts?: { replace?: boolean }): ConnectResult;
   deleteSelection(): boolean;
   addNote(pos: { x: number; y: number }): string | null;
   updateNote(id: string, patch: NotePatch): void;
@@ -240,10 +249,18 @@ export function createEditorState(initial: Board): EditorState {
     return res.newIds.length;
   };
 
-  const moveItems = (moves: readonly Move[]): void => {
+  /** `amend` folds the move into the previous undo step (e.g. the placement nudge right after an add). */
+  const moveItems = (moves: readonly Move[], opts?: { amend?: boolean }): void => {
     const res = applyMoves(moves);
     if (!res) return;
-    commit(res.board, res.notesMoved ? ['layout', 'notes'] : ['layout']);
+    const kinds: ChangeKind[] = res.notesMoved ? ['layout', 'notes'] : ['layout'];
+    if (opts?.amend) {
+      board = res.board;
+      for (const k of kinds) emit(k);
+      emit('history');
+      return;
+    }
+    commit(res.board, kinds);
   };
 
   return {
@@ -302,18 +319,27 @@ export function createEditorState(initial: Board): EditorState {
       return node.id;
     },
     setParam(nodeId, paramId, value) {
-      if (playing) return;
+      if (playing && !isLiveParam(board.graph, nodeId, paramId)) return;
       commit({ ...board, graph: withParam(board.graph, nodeId, paramId, value) }, ['params'], `p:${nodeId}:${paramId}`);
     },
     setNodePos(nodeId, pos) {
       moveItems([{ id: nodeId, pos }]);
     },
     moveItems,
-    connect(from, to) {
+    connect(from, to, opts) {
       if (playing) return { ok: false, reason: 'unknown-node' };
-      const res = addWire(board.graph, from, to);
+      let graph = board.graph;
+      if (opts?.replace) {
+        const old = graph.wires.find((w) => w.to.node === to.node && w.to.port === to.port);
+        if (old) graph = removeWire(graph, old.id);
+      }
+      const res = addWire(graph, from, to);
       if ('ok' in res) return res;
       commit({ ...board, graph: res }, ['graph']);
+      if (selection?.kind === 'wire' && !res.wires.some((w) => w.id === selection?.id)) {
+        selection = null;
+        emit('selection');
+      }
       return { ok: true };
     },
     deleteSelection() {
