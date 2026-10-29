@@ -1,7 +1,7 @@
 import type { EntityId, NodeDef, SteerMode, VehicleModel } from '../engine/types';
 import { VEHICLE_MODELS } from '../engine/types';
 import { vehicleSize } from '../world/vehicles';
-import { asNum, clamp, numParam, strParam, vec3Param } from './util';
+import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
 
 function modelParam(raw: string): VehicleModel {
   return VEHICLE_MODELS.find((m) => m === raw) ?? 'car';
@@ -11,7 +11,13 @@ function steerParam(raw: string): SteerMode {
   return raw === 'throttle' ? 'throttle' : 'direction';
 }
 
-export const vehicleNode: NodeDef<{ id: EntityId }> = {
+interface VehicleState {
+  id: EntityId;
+  /** Crash count already reported as a pulse. */
+  seenHits: number;
+}
+
+export const vehicleNode: NodeDef<VehicleState> = {
   kind: 'vehicle',
   label: 'Phương tiện',
   category: 'object',
@@ -20,12 +26,15 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
   inputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
+    { id: 'stop', type: 'bool', label: 'Dừng' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Xe' },
     { id: 'hasDriver', type: 'bool', label: 'Có người lái' },
     { id: 'speed', type: 'number', label: 'Tốc độ' },
     { id: 'driver', type: 'object', label: 'Người lái' },
+    { id: 'crashed', type: 'bool', label: 'Vừa va chạm' },
+    { id: 'crashedWith', type: 'object', label: 'Va với' },
   ],
   params: [
     { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
@@ -73,8 +82,18 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
         { value: 'auto', label: 'Tự chạy (xe không cần người lái)' },
       ],
     },
+    {
+      id: 'collide',
+      label: 'Va chạm xe khác',
+      kind: 'select',
+      default: 'yes',
+      options: [
+        { value: 'yes', label: 'Có (xe đụng nhau, không đi xuyên qua)' },
+        { value: 'no', label: 'Không (xe đi xuyên qua nhau)' },
+      ],
+    },
   ],
-  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel'],
+  createOnly: ['model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -92,20 +111,31 @@ export const vehicleNode: NodeDef<{ id: EntityId }> = {
         steerMode: steerParam(strParam(params, 'steerMode', 'direction')),
         maxSpeed: numParam(params, 'maxSpeed', 9),
         accel: numParam(params, 'accel', 8),
+        ...(strParam(params, 'collide', 'yes') === 'no' ? { collide: false } : {}),
       },
     });
-    return { id };
+    return { id, seenHits: 0 };
   },
   evaluate(ctx, i, params, s) {
     const view = ctx.world.getEntity(s.id);
     const driver = view?.vehicle?.driver ?? null;
     const live = driver !== null || strParam(params, 'control', 'driver') === 'auto';
-    ctx.world.setVehicleInput(s.id, live ? clamp(asNum(i.moveX), -1, 1) : 0, live ? clamp(asNum(i.moveY), -1, 1) : 0);
+    ctx.world.setVehicleInput(
+      s.id,
+      live ? clamp(asNum(i.moveX), -1, 1) : 0,
+      live ? clamp(asNum(i.moveY), -1, 1) : 0,
+      asBool(i.stop),
+    );
+    const hits = view?.vehicle?.hitSeq ?? 0;
+    const crashed = hits > s.seenHits;
+    s.seenHits = hits;
     return {
       self: s.id,
       hasDriver: driver !== null,
       speed: Math.abs(view?.vehicle?.speed ?? 0),
       driver,
+      crashed,
+      crashedWith: view?.vehicle?.hitWith ?? null,
     };
   },
 };

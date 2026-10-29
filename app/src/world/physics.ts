@@ -48,8 +48,10 @@ export function touching(a: Entity, b: Entity): boolean {
 }
 
 /** Move along one axis by `delta`, pushing out of solid blocks. Returns true if blocked. */
-function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[]): boolean {
+function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[], rivals?: Rivals): boolean {
   if (delta === 0) return false;
+  // Vehicles already overlapping (spawned or teleported onto each other) may drive apart instead of being snapped through.
+  const free = rivals && rivals.list.length > 0 ? rivals.list.filter((r) => !overlapsAll(c, r)) : null;
   c.pos[axis] += delta;
   let blocked = false;
   for (const b of solids) {
@@ -58,7 +60,22 @@ function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[
     c.pos[axis] = delta > 0 ? b.pos[axis] - half : b.pos[axis] + half;
     blocked = true;
   }
+  if (rivals && free) {
+    for (const r of free) {
+      if (!overlapsAll(c, r)) continue;
+      const half = (c.size[axis] + r.size[axis]) / 2;
+      c.pos[axis] = delta > 0 ? r.pos[axis] - half : r.pos[axis] + half;
+      rivals.hit.add(r);
+      blocked = true;
+    }
+  }
   return blocked;
+}
+
+/** Other vehicles a vehicle must not drive through, and the ones it ran into during this move. */
+interface Rivals {
+  list: readonly Entity[];
+  hit: Set<Entity>;
 }
 
 function applyIntent(c: Entity, mode: ViewMode, yaw: number): void {
@@ -98,13 +115,13 @@ function applyIntent(c: Entity, mode: ViewMode, yaw: number): void {
 }
 
 /** Moves a body by its velocity in substeps, stopping at solids. Returns true when it ended resting on something. */
-function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): boolean {
+function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], rivals?: Rivals): boolean {
   const maxDist = Math.max(Math.abs(c.vel.x), Math.abs(c.vel.y), Math.abs(c.vel.z)) * dt;
   const n = Math.max(1, Math.ceil(maxDist / MAX_SUBSTEP_DISTANCE));
   const sub = dt / n;
   let grounded = false;
   for (let i = 0; i < n; i++) {
-    if (moveAxis(c, 'x', c.vel.x * sub, solids)) c.vel.x = 0;
+    if (moveAxis(c, 'x', c.vel.x * sub, solids, rivals)) c.vel.x = 0;
     if (mode !== '2d-top') {
       const dy = c.vel.y * sub;
       if (moveAxis(c, 'y', dy, solids)) {
@@ -112,7 +129,7 @@ function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entit
         c.vel.y = 0;
       }
     }
-    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids)) c.vel.z = 0;
+    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids, rivals)) c.vel.z = 0;
   }
   return grounded;
 }
@@ -170,9 +187,19 @@ export function handPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3
 }
 
 /** One tick of a vehicle: stick -> speed and heading -> velocity, then the usual fall and collision against blocks. */
-function stepVehicle(v: Entity, dt: number, mode: ViewMode, yaw: number, solids: readonly Entity[]): void {
+function stepVehicle(
+  v: Entity,
+  dt: number,
+  mode: ViewMode,
+  yaw: number,
+  solids: readonly Entity[],
+  colliders: readonly Entity[],
+): void {
   const body = v.vehicle;
   if (!body) return;
+  body.hitCooldown = Math.max(0, body.hitCooldown - dt);
+  const rivals: Rivals | undefined =
+    body.spec.collide !== false ? { list: colliders.filter((o) => o !== v), hit: new Set() } : undefined;
   const flat = driveVehicle(body, dt, mode, yaw);
   const wanted = { x: flat.x, z: flat.z };
   v.vel.x = flat.x;
@@ -181,9 +208,51 @@ function stepVehicle(v: Entity, dt: number, mode: ViewMode, yaw: number, solids:
   if (mode === '2d-top') v.vel.y = 0;
   else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + GRAVITY * dt);
   if (mode === '2d-side') v.pos.z = 0;
-  v.onGround = integrate(v, dt, mode, solids);
+  v.onGround = integrate(v, dt, mode, solids, rivals);
   settleVehicle(body, v.vel, wanted, dt, mode);
   v.facing = vehicleFacing(body, mode);
+  if (rivals) for (const other of rivals.hit) crashInto(v, other, wanted, dt, mode, solids, colliders);
+}
+
+/** Closing speed (units/s) above which a touch counts as a crash rather than a nudge. */
+const CRASH_SPEED = 1.5;
+/** Share of the closing speed passed on to the vehicle that was hit (it is shoved a little, not launched). */
+const SHOVE_SHARE = 0.25;
+/** Seconds a contact must stay broken before the same pair can crash again. */
+const CRASH_COOLDOWN = 0.5;
+
+/** `v` ran into `other`: shove it a little, and report a crash (to both) when the closing speed was high enough. */
+function crashInto(
+  v: Entity,
+  other: Entity,
+  wanted: { x: number; z: number },
+  dt: number,
+  mode: ViewMode,
+  solids: readonly Entity[],
+  colliders: readonly Entity[],
+): void {
+  const a = v.vehicle;
+  const b = other.vehicle;
+  if (!a || !b) return;
+  let dx = other.pos.x - v.pos.x;
+  let dz = mode === '2d-side' ? 0 : other.pos.z - v.pos.z;
+  const dist = Math.hypot(dx, dz);
+  if (dist < 1e-9) return;
+  dx /= dist;
+  dz /= dist;
+  const closing = wanted.x * dx + wanted.z * dz - (other.vel.x * dx + other.vel.z * dz);
+  if (closing <= 0) return;
+  if (closing > CRASH_SPEED && a.hitCooldown <= 0 && b.hitCooldown <= 0) {
+    a.hitSeq++;
+    a.hitWith = other.id;
+    b.hitSeq++;
+    b.hitWith = v.id;
+  }
+  a.hitCooldown = b.hitCooldown = CRASH_COOLDOWN;
+  const push = closing * SHOVE_SHARE * dt;
+  const around = { list: colliders.filter((o) => o !== other && o !== v), hit: new Set<Entity>() };
+  moveAxis(other, 'x', dx * push, solids, around);
+  if (mode !== '2d-side') moveAxis(other, 'z', dz * push, solids, around);
 }
 
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
@@ -194,8 +263,9 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   const vehicleSolids = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.solid);
   const walkSolids = vehicleSolids.length > 0 ? [...solids, ...vehicleSolids] : solids;
 
+  const colliders = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.vehicle?.spec.collide !== false);
   for (const c of entities) {
-    if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids);
+    if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids, colliders);
   }
   for (const c of entities) {
     if (c.kind !== 'character' || !c.visible) continue;

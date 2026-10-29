@@ -42,7 +42,14 @@ export interface VehicleBody {
   wheelSpin: number;
   inputX: number;
   inputY: number;
+  /** True = brake to a standstill whatever the stick says. */
+  stop: boolean;
   driver: EntityId | null;
+  /** Crashes with other vehicles so far, and the vehicle hit last. */
+  hitSeq: number;
+  hitWith: EntityId | null;
+  /** Seconds during which a continuing contact does not count as a new crash. */
+  hitCooldown: number;
 }
 
 export function createVehicleBody(spec: VehicleSpec): VehicleBody {
@@ -52,13 +59,18 @@ export function createVehicleBody(spec: VehicleSpec): VehicleBody {
       steerMode: spec.steerMode,
       maxSpeed: positive(spec.maxSpeed, 8),
       accel: positive(spec.accel, 8),
+      collide: spec.collide !== false,
     },
     heading: 0,
     speed: 0,
     wheelSpin: 0,
     inputX: 0,
     inputY: 0,
+    stop: false,
     driver: null,
+    hitSeq: 0,
+    hitWith: null,
+    hitCooldown: 0,
   };
 }
 
@@ -116,8 +128,8 @@ function speedRate(body: VehicleBody, target: number): number {
 export function driveVehicle(body: VehicleBody, dt: number, mode: ViewMode, yaw: number): { x: number; z: number } {
   const { spec } = body;
   const dims = VEHICLE_DIMS[spec.model];
-  const ix = clamp1(body.inputX);
-  const iy = clamp1(body.inputY);
+  const ix = body.stop ? 0 : clamp1(body.inputX);
+  const iy = body.stop ? 0 : clamp1(body.inputY);
 
   if (mode === '2d-side') {
     // Left/right only: the stick sets the speed, the nose points where it goes.
