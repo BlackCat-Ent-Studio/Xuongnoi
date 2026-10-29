@@ -16,6 +16,7 @@ import {
 import { combatLesson } from './lessons-combat';
 import { LESSON_TEXT as T } from './text-vi';
 import { createBotDriverLesson } from './lessons-bot-driver';
+import { createChanceZonesLesson } from './lessons-chance-zones';
 import { createVehicleLesson } from './lessons-vehicles';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
 
@@ -1121,8 +1122,9 @@ const lesson7: Lesson = {
 
 const lessonVehicles = createVehicleLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonBotDriver = createBotDriverLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
+const lessonChanceZones = createChanceZonesLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles, lessonBotDriver];
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);
