@@ -1,5 +1,5 @@
 import type { EntityId, EntityView, NodeDef } from '../engine/types';
-import { strParam, vec3Param } from './util';
+import { asObject, strParam, vec3Param } from './util';
 
 interface ZoneState {
   /** Marker box that shows the zone while editing; hidden as soon as the game runs. */
@@ -31,8 +31,8 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
   label: 'Cảm biến vùng',
   category: 'logic',
   description:
-    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng.',
-  inputs: [],
+    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng. Nối "Bám theo vật" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng".',
+  inputs: [{ id: 'follow', type: 'object', label: 'Bám theo vật' }],
   outputs: [
     { id: 'inside', type: 'bool', label: 'Có ai trong vùng' },
     { id: 'entered', type: 'bool', label: 'Vừa vào' },
@@ -74,12 +74,15 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     });
     return { marker, markerHidden: false, wasInside: false };
   },
-  evaluate(ctx, _i, params, s) {
+  evaluate(ctx, i, params, s) {
     if (!s.markerHidden) {
       s.markerHidden = true;
       ctx.world.hide(s.marker);
     }
-    const c = vec3Param(params, 'center', DEFAULT_CENTER);
+    const offset = vec3Param(params, 'center', DEFAULT_CENTER);
+    const followId = asObject(i.follow);
+    const anchor = followId !== null ? ctx.world.getEntity(followId)?.position : undefined;
+    const c = anchor ? { x: anchor.x + offset.x, y: anchor.y + offset.y, z: anchor.z + offset.z } : offset;
     const z = vec3Param(params, 'size', DEFAULT_SIZE);
     const filter = strParam(params, 'filter', 'character');
     // Flat views ignore the unused axis so a thin zone still catches everyone on the plane.
