@@ -15,6 +15,21 @@ export interface GameView {
   /** Edit camera returns to the default framing at the next preview (new / opened board). */
   resetCamera(): void;
   isPlaying(): boolean;
+  /** Freezes the simulation; rendering (camera) keeps running. No-op when not playing. Stop works while paused. */
+  pause(): void;
+  /** Continues from where it froze; the time spent paused is not replayed. */
+  resume(): void;
+  /** While paused: advances exactly one fixed 60 Hz tick on the next frame, then renders. No-op otherwise. */
+  stepFrame(): void;
+  /** True only while a play session is frozen. */
+  isPaused(): boolean;
+  /** Fired when pause state changes, including false when stop()/play() ends a paused session. */
+  onPauseChange(cb: (paused: boolean) => void): void;
+  /**
+   * Live edit of a running node's params (play mode only). Returns true when every given param took effect
+   * in the running game; false = not playing, unknown node/param, or it only applies on the next run.
+   */
+  applyNodeParams(nodeId: string, params: Record<string, unknown>): boolean;
   /** Runtime of the current play session (for wire value inspection), null when not playing. */
   getRuntime(): Runtime | null;
   /** Graph node id owning the entity under the pointer, or null. */

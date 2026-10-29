@@ -290,6 +290,12 @@ export function createWorld(mode: ViewMode): World {
       if (e.kind === 'block' && e.solid) solidRev++;
       return id;
     },
+    setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void {
+      const e = byId.get(id);
+      if (!e) return;
+      if (style.color !== undefined) e.color = style.color;
+      if (style.look !== undefined && e.kind === 'character') e.look = style.look;
+    },
     setCharacterIntent(id: EntityId, intent: CharacterIntent): void {
       const e = byId.get(id);
       if (e && e.kind === 'character') e.intent = { ...intent };

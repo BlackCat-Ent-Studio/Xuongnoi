@@ -33,6 +33,10 @@ export const blockNode: NodeDef<BlockState> = {
       ],
     },
   ],
+  createOnly: ['position', 'size', 'color', 'type'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',

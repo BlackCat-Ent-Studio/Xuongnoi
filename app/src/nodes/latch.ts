@@ -32,6 +32,7 @@ export const latchNode: NodeDef<LatchState> = {
       ],
     },
   ],
+  createOnly: ['start'],
   create: (_ctx, params) => ({
     on: strParam(params, 'start', 'off') === 'on',
     set: { prev: false },

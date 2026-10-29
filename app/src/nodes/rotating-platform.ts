@@ -45,6 +45,10 @@ export const rotatingPlatformNode: NodeDef<RotatingState> = {
     { id: 'every', label: 'Tự xoay sau (giây, 0 = chỉ khi bật "Xoay")', kind: 'number', default: 0, min: 0, max: 60, step: 0.5 },
     { id: 'speed', label: 'Tốc độ quay (độ/giây)', kind: 'number', default: 90, min: -720, max: 720, step: 10 },
   ],
+  createOnly: ['position', 'size', 'color', 'mode'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',

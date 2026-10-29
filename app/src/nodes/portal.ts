@@ -23,6 +23,10 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
     { id: 'pair', label: 'Mã cặp (hai cổng cùng mã thì nối với nhau)', kind: 'text', default: '' },
     { id: 'cooldown', label: 'Nghỉ sau khi dùng (giây)', kind: 'number', default: 0.5, min: 0, max: 10, step: 0.1 },
   ],
+  createOnly: ['position', 'size', 'color'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const id = ctx.world.spawn({
       kind: 'block',

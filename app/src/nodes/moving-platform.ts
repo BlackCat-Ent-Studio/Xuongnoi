@@ -50,6 +50,10 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
       ],
     },
   ],
+  createOnly: ['position', 'size', 'color', 'to'],
+  liveApply: {
+    color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
+  },
   create(ctx, params) {
     const a = vec3Param(params, 'position', { x: 0, y: 0, z: 0 });
     const id = ctx.world.spawn({

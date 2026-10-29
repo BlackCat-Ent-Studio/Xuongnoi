@@ -23,6 +23,13 @@ export const timerNode: NodeDef<TimerState> = {
     { id: 'done', type: 'bool', label: 'Hết giờ' },
   ],
   params: [{ id: 'seconds', label: 'Số giây', kind: 'number', default: 30, min: 0, step: 1 }],
+  createOnly: ['seconds'],
+  liveApply: {
+    seconds: (_ctx, p, s, prev) => {
+      // Keep the time already elapsed: only the total changes.
+      s.left = Math.max(0, s.left + Math.max(0, numParam(p, 'seconds', 30)) - Math.max(0, Number(prev)));
+    },
+  },
   create: (_ctx, params) => ({
     left: Math.max(0, numParam(params, 'seconds', 30)),
     reset: { prev: false },
