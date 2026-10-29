@@ -25,4 +25,11 @@ export const IO_TEXT = {
   readFailed: 'Không đọc được tệp đã chọn.',
   autosaveFailed: 'Không lưu tự động được (bộ nhớ trình duyệt đầy hoặc bị chặn).',
   autosaveCorrupt: 'Bản lưu tự động bị hỏng nên không mở được. Bản hỏng đã được giữ lại để cứu.',
+  libraryFull:
+    'Không lưu vào Kho game được: bộ nhớ trình duyệt đã đầy hoặc bị chặn. Hãy bấm "Xuất ra file" để giữ game quan trọng, rồi xóa bớt game cũ trong Kho.',
+  libraryUnavailable: 'Trình duyệt này không cho Xưởng Nối dùng bộ nhớ để lưu Kho game.',
+  libraryMissing: 'Không tìm thấy game này trong Kho (có thể đã bị xóa).',
+  libraryCorrupt: (reason: string) => `Game này trong Kho bị hỏng nên không mở được. ${reason}`,
+  libraryNameEmpty: 'Tên game không được để trống.',
+  libraryCopyName: (name: string) => `${name} (bản sao)`,
 } as const;

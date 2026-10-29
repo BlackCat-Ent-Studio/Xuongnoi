@@ -24,6 +24,8 @@ export const LAUNCHPAD_TEXT = {
   learnHint: 'Bài 1: cho nhân vật chạy và nhảy.',
   sample: 'Mở game mẫu',
   sampleHint: 'Mở một game đã nối sẵn để xem và sửa.',
+  library: 'Game của tôi',
+  libraryHint: 'Mở lại một game bạn đã làm trước đó.',
   blank: 'Tự làm',
   blankHint: 'Tự tìm mảnh ghép đầu tiên trong cột bên trái.',
   samplesTitle: 'Chọn một game mẫu',

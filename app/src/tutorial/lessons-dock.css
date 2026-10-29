@@ -33,7 +33,7 @@
 .launchpad-in { width: min(560px, 92%); pointer-events: auto; cursor: default; padding: 18px; border-radius: 12px; background: color-mix(in srgb, var(--panel, #1c1f24) 92%, transparent); border: 1px solid var(--line2, #3a404a); box-shadow: 0 12px 32px rgba(0, 0, 0, .4); }
 .launchpad h2 { font-size: 18px; margin: 0 0 4px; font-weight: 600; }
 .launchpad p { margin: 0 0 14px; color: var(--text2, #aab2bd); }
-.lp-opts { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; }
+.lp-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .lp-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px; border: 1px solid var(--line2, #3a404a); border-radius: 8px; background: var(--panel, #1c1f24); text-align: left; color: var(--text, #e7e9ec); font: inherit; min-height: 104px; cursor: pointer; }
 .lp-opt:hover { border-color: var(--accent, #3ecf8e); }
 .lp-opt b { font-weight: 600; }

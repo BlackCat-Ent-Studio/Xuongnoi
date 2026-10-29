@@ -1,13 +1,22 @@
 import type { GameView } from '../app-contracts';
 import { type Board, type ViewMode } from '../engine/types';
 import {
+  clearAutosave,
   createEmptyBoard,
+  deleteGame,
   downloadBoard,
+  duplicateGame,
+  ensureLibrary,
   flushAutosave,
+  getCurrentGameId,
+  LIBRARY_NAME_MAX,
   listSamples,
   loadAutosave,
+  loadGame,
   pickBoardFile,
+  renameGame,
   scheduleAutosave,
+  setCurrentGameId,
   takeAutosaveProblem,
 } from '../io';
 import { createGameView } from '../render/game-view';
@@ -21,6 +30,8 @@ import { installEntityDrag } from './entity-drag';
 import { createGamePip } from './game-pip';
 import { mountIconSprite } from './icons';
 import { createKeyboardInput } from './keyboard-input';
+import { createLibraryDialog } from './library-dialog';
+import { LIBRARY_TEXT } from './library-text-vi';
 import { LAYOUT_PRESETS } from './layout-model';
 import { installLayoutSplitters } from './layout-splitters';
 import type { MenuDef } from './menu-bar';
@@ -41,7 +52,10 @@ export { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID };
 
 function loadInitialBoard(): Board {
   try {
-    return takeStash() ?? loadAutosave() ?? createEmptyBoard('2d-side');
+    const saved = loadAutosave();
+    // First run after the library was added: the single old autosave becomes the first library entry.
+    ensureLibrary(saved);
+    return takeStash() ?? saved ?? createEmptyBoard('2d-side');
   } catch {
     return createEmptyBoard('2d-side');
   }
@@ -104,6 +118,48 @@ export function mountEditor(root: HTMLElement): void {
 
   mountIconSprite();
   const dialog = createNewGameDialog((mode) => loadBoard(createEmptyBoard(mode)));
+  const library = createLibraryDialog({
+    openGame(id) {
+      flushAutosave();
+      const res = loadGame(id);
+      if (!res.ok) return res.error;
+      loadBoard(res.board, id);
+      topBar.notify(LIBRARY_TEXT.opened(res.board.name));
+      return null;
+    },
+    renameGame(id, name) {
+      const clean = name.trim().slice(0, LIBRARY_NAME_MAX);
+      if (clean !== '' && id === getCurrentGameId() && !tutorial.isActive()) {
+        // The open game owns its name: change it on the board and let the autosave carry it into the library.
+        state.setName(clean);
+        flushAutosave();
+        topBar.notify(LIBRARY_TEXT.renamed);
+        return null;
+      }
+      const res = renameGame(id, name);
+      if (res.ok) topBar.notify(LIBRARY_TEXT.renamed);
+      return res.ok ? null : res.error;
+    },
+    duplicateGame(id) {
+      flushAutosave();
+      const res = duplicateGame(id);
+      if (!res.ok) return res.error;
+      topBar.notify(LIBRARY_TEXT.duplicated);
+      return null;
+    },
+    deleteGame(id) {
+      const wasCurrent = id === getCurrentGameId();
+      const res = deleteGame(id);
+      if (!res.ok) return res.error;
+      if (wasCurrent) {
+        // The open game is gone from the library; leave the editor on a fresh board so it cannot come back by autosave.
+        clearAutosave();
+        loadBoard(createEmptyBoard(state.getMode()));
+      }
+      topBar.notify(LIBRARY_TEXT.deleted);
+      return null;
+    },
+  });
   const props = createPropertiesPanel(state, {
     onLiveParamChange(nodeId, params) {
       // The panel reports the node's full param set; send only what differs from what the running game has.
@@ -274,6 +330,7 @@ export function mountEditor(root: HTMLElement): void {
             })),
             onSelect: () => undefined,
           },
+          { type: 'item', label: SHELL_TEXT.fileLibrary, icon: 'layers', onSelect: () => library.open() },
           { type: 'item', label: SHELL_TEXT.fileOpen, icon: 'folder', onSelect: openFile },
           { type: 'separator' },
           { type: 'item', label: SHELL_TEXT.fileSave, icon: 'save', hint: 'Ctrl S', onSelect: saveLocal },
@@ -440,6 +497,7 @@ export function mountEditor(root: HTMLElement): void {
     tutorialActive: () => tutorial.isActive(),
     startLesson: () => tutorial.startFirst(),
     openSample: (b) => loadBoard(b),
+    openLibrary: () => library.open(),
     startBlank: revealLeft,
   });
   state.subscribe((kind) => (kind === 'board' ? launchpad.boardLoaded() : launchpad.update()));
@@ -479,8 +537,14 @@ export function mountEditor(root: HTMLElement): void {
   gameBox.append(maxBtn);
   setMaximized(false);
 
-  function loadBoard(board: Board): void {
+  /**
+   * Replaces the game in the editor. The game being left already lives in the library, so it is flushed
+   * first. `libraryId` names the entry the new board comes from; null means it is not in the library until edited.
+   */
+  function loadBoard(board: Board, libraryId: string | null = null): void {
+    flushAutosave();
     tutorial.exit();
+    setCurrentGameId(libraryId);
     state.setPlaying(false);
     state.loadBoard(board);
     topBar.notify(TEXT_VI.opened);
@@ -565,6 +629,8 @@ export function mountEditor(root: HTMLElement): void {
 
   // ---------- state reactions ----------
 
+  let loadedUnedited = false;
+
   // Playing no longer switches tabs: on the board tab the game plays in the floating window.
   state.subscribe((kind) => {
     switch (kind) {
@@ -598,11 +664,14 @@ export function mountEditor(root: HTMLElement): void {
       default:
         break;
     }
+    // A freshly loaded board is not an edit: until the first real change it must not re-stamp or create a library entry.
+    if (kind === 'board') loadedUnedited = true;
+    else if (kind !== 'history' && kind !== 'selection' && kind !== 'playing') loadedUnedited = false;
     // A lesson board must never replace the learner's own autosave.
     const saves = !tutorial.isActive();
     if (kind !== 'selection' && kind !== 'playing') {
       topBar.noteDocumentChange({ saves });
-      if (saves) scheduleAutosave(state.getBoard());
+      if (saves) scheduleAutosave(state.getBoard(), { library: !loadedUnedited });
     }
   });
 

@@ -18,6 +18,7 @@ export const SHELL_TEXT = {
   // Tệp
   fileNew: 'Tạo game mới',
   fileSamples: 'Mở game mẫu',
+  fileLibrary: 'Kho game của tôi…',
   fileOpen: 'Mở file…',
   fileSave: 'Lưu',
   fileExport: 'Xuất ra file',

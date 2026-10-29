@@ -13,6 +13,8 @@ export interface LaunchpadDeps {
   tutorialActive(): boolean;
   startLesson(): void;
   openSample(board: Board): void;
+  /** Opens the library dialog (Kho game của tôi). */
+  openLibrary(): void;
   /** Focus the palette search for the "Tự làm" path. */
   startBlank(): void;
 }
@@ -53,6 +55,9 @@ export function mountLaunchpad(deps: LaunchpadDeps): Launchpad {
     const sample = option('game', L.sample, L.sampleHint);
     sample.dataset.launch = 'sample';
     sample.addEventListener('click', renderSamples);
+    const mine = option('layers', L.library, L.libraryHint);
+    mine.dataset.launch = 'library';
+    mine.addEventListener('click', () => deps.openLibrary());
     const blank = option('blocks', L.blank, L.blankHint);
     blank.dataset.launch = 'blank';
     blank.addEventListener('click', () => {
@@ -61,7 +66,7 @@ export function mountLaunchpad(deps: LaunchpadDeps): Launchpad {
       deps.startBlank();
     });
     const opts = h('div', 'lp-opts');
-    opts.append(learn, sample, blank);
+    opts.append(learn, sample, mine, blank);
     inner.replaceChildren(h('h2', '', L.title), h('p', '', L.hint), opts);
   }
 

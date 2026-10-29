@@ -1,4 +1,5 @@
 import type { Board } from '../engine/types';
+import { saveCurrentGame } from './game-library';
 import { parseBoard, serializeBoard } from './save-format';
 import { IO_TEXT } from './text-vi';
 
@@ -7,7 +8,7 @@ export const AUTOSAVE_BACKUP_KEY = 'xuong-noi:autosave-backup';
 export const AUTOSAVE_DELAY_MS = 1000;
 
 let timer: ReturnType<typeof setTimeout> | null = null;
-let pending: Board | null = null;
+let pending: { board: Board; library: boolean } | null = null;
 let problem: string | null = null;
 
 /** localStorage may be missing (node tests) or throw on access (privacy modes). */
@@ -19,7 +20,7 @@ function getStorage(): Storage | null {
   }
 }
 
-function writeNow(board: Board): void {
+function writeNow(board: Board, library: boolean): void {
   const storage = getStorage();
   if (!storage) return;
   try {
@@ -27,11 +28,18 @@ function writeNow(board: Board): void {
   } catch {
     problem = IO_TEXT.autosaveFailed;
   }
+  if (!library) return;
+  const res = saveCurrentGame(board);
+  if (res && !res.ok) problem = res.error;
 }
 
-/** Debounced write: only the latest board within the window is saved. */
-export function scheduleAutosave(board: Board): void {
-  pending = board;
+/**
+ * Debounced write: only the latest board within the window is saved. The board always goes to the
+ * autosave key; it also updates the current library entry unless `library` is false (a board that was
+ * just loaded and not edited yet must not be re-stamped or turned into an entry).
+ */
+export function scheduleAutosave(board: Board, options: { library?: boolean } = {}): void {
+  pending = { board, library: options.library ?? true };
   if (timer !== null) clearTimeout(timer);
   timer = setTimeout(flushAutosave, AUTOSAVE_DELAY_MS);
 }
@@ -43,9 +51,23 @@ export function flushAutosave(): void {
     timer = null;
   }
   if (pending) {
-    const board = pending;
+    const { board, library } = pending;
     pending = null;
-    writeNow(board);
+    writeNow(board, library);
+  }
+}
+
+/** Forgets the autosave and any write waiting for the timer (the game it held was deleted). */
+export function clearAutosave(): void {
+  if (timer !== null) {
+    clearTimeout(timer);
+    timer = null;
+  }
+  pending = null;
+  try {
+    getStorage()?.removeItem(AUTOSAVE_KEY);
+  } catch {
+    // Best effort.
   }
 }
 
