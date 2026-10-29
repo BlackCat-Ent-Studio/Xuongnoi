@@ -58,6 +58,8 @@ export interface ParamDef {
   min?: number;
   max?: number;
   step?: number;
+  /** Fine-tuning setting: shown folded under "Nâng cao" in the properties panel. */
+  advanced?: boolean;
 }
 
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */

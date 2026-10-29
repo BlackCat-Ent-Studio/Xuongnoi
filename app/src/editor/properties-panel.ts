@@ -19,6 +19,8 @@ export interface PropertiesPanelOptions {
 }
 
 /** Two-option selects that read as an on/off switch, mapped to their "on" value. */
+/** Whether the "Nâng cao" fold is open; kept across re-renders and selections. */
+let advancedOpen = false;
 const SWITCH_ON_VALUES: Readonly<Record<string, string>> = { 'yes,no': 'yes', 'no,yes': 'yes', 'on,off': 'on', 'off,on': 'on' };
 
 function switchOnValue(def: ParamDef): { on: string; off: string } | null {
@@ -357,8 +359,23 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
           const sec = h('div', 'pn-sec');
           sec.append(h('div', 'pn-sec-h', P.sectionProps));
           const form = h('div', 'prop-form pn-form');
-          for (const p of def.params) form.append(paramRow(p, node, playing));
+          for (const p of def.params) if (!p.advanced) form.append(paramRow(p, node, playing));
           sec.append(form);
+          const extra = def.params.filter((p) => p.advanced);
+          if (extra.length > 0) {
+            // Fine-tuning numbers stay folded so beginners see only the main settings.
+            const adv = document.createElement('details');
+            adv.className = 'pn-adv';
+            adv.open = advancedOpen;
+            adv.addEventListener('toggle', () => (advancedOpen = adv.open));
+            const sum = document.createElement('summary');
+            sum.className = 'pn-adv-h';
+            sum.textContent = P.sectionAdvanced;
+            const advForm = h('div', 'prop-form pn-form');
+            for (const p of extra) advForm.append(paramRow(p, node, playing));
+            adv.append(sum, advForm);
+            sec.append(adv);
+          }
           el.append(sec);
         }
         const ports = portsSection(node, def.inputs, def.outputs);

@@ -13,6 +13,7 @@ export const PANELS_TEXT_VI = {
   categoryOf: (name: string) => `Nhóm ${name}`,
   nameLabel: 'Tên riêng',
   sectionProps: 'Thuộc tính',
+  sectionAdvanced: 'Nâng cao',
   sectionPorts: 'Cổng',
   portIn: 'vào',
   portOut: 'ra',

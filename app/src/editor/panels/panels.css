@@ -70,6 +70,9 @@
 
 .pn-sec { border-top: 1px solid var(--line, #2c3139); padding: 10px 12px 6px; }
 .pn-sec-h { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; font-size: 12px; font-weight: 600; color: var(--text2, #aab2bd); }
+.pn-adv { margin-top: 10px; border-top: 1px solid var(--line, #2a2f36); padding-top: 8px; }
+.pn-adv-h { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text2, #aab2bd); margin-bottom: 8px; user-select: none; }
+.pn-adv-h:hover { color: var(--text, #e6e9ee); }
 .pn-sec-n { font-weight: 500; color: var(--text3, #8f98a4); }
 .pn-props .pn-form { border: 0; padding: 0; margin: 0; min-width: 0; }
 
