@@ -227,12 +227,24 @@ body.resizing-y { cursor: row-resize; }
 .help-rows dd { margin: 0; color: var(--text2); }
 
 /* tutorial */
-.tut-menu { min-width: 300px; }
-.tut-menu-title { font-weight: 700; padding: 6px 10px 0; }
-.tut-menu-hint { font-size: 12px; color: var(--text3); padding: 0 10px 6px; }
-.tut-lesson-item { display: flex; flex-direction: column; gap: 2px; }
-.tut-lesson-summary { font-size: 12px; color: var(--text3); }
-.tut-done { font-size: 12px; font-weight: 600; color: var(--accent); }
+.tut-menu { width: 380px; max-width: calc(100vw - 24px); padding: 0; overflow: hidden; display: flex; flex-direction: column; max-height: calc(100vh - 72px); }
+.tut-menu-head { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); background: var(--panel); }
+.tut-menu-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.tut-menu-hint { margin-top: 2px; font-size: 12px; line-height: 1.4; color: var(--text3); }
+.tut-menu-progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+.tut-menu-bar { flex: 1; height: 6px; border-radius: 3px; background: var(--raise); overflow: hidden; }
+.tut-menu-bar-fill { height: 100%; border-radius: 3px; background: var(--accent); transition: width 0.3s ease; }
+.tut-menu-count { font-size: 12px; font-weight: 600; color: var(--text2); font-variant-numeric: tabular-nums; }
+.tut-menu-list { overflow-y: auto; padding: 6px; display: flex; flex-direction: column; gap: 2px; }
+.tut-lesson-item { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; align-items: center; gap: 12px; white-space: normal; padding: 8px 10px; min-height: 52px; flex-shrink: 0; border-radius: 6px; }
+.tut-lesson-item:hover, .tut-lesson-item:focus-visible { background: var(--raise); }
+.tut-lesson-item:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.tut-lesson-num { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--panel); border: 1px solid var(--line2); font-size: 12px; font-weight: 700; color: var(--text2); font-variant-numeric: tabular-nums; }
+.tut-lesson-item.is-done .tut-lesson-num { background: var(--accent-soft); border-color: transparent; color: var(--accent); }
+.tut-lesson-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tut-lesson-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.tut-lesson-summary { font-size: 12px; line-height: 1.4; color: var(--text3); }
+.tut-done { display: grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: 11px; font-weight: 800; }
 .tut-invite { z-index: 45; min-width: 260px; padding: 10px; border-color: var(--accent); }
 .tut-invite-text { font-weight: 600; margin-bottom: 8px; }
 .tut-invite-row { display: flex; gap: 8px; }

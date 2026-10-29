@@ -245,19 +245,41 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
   el.append(button, menu, invite);
 
   function renderMenu(): void {
-    menu.replaceChildren(h('div', 'tut-menu-title', T.menuTitle), h('div', 'tut-menu-hint', T.menuHint));
+    const doneCount = LESSONS.filter((l) => done.has(l.id)).length;
+    const head = h('div', 'tut-menu-head');
+    const headText = h('div', 'tut-menu-head-text');
+    headText.append(h('div', 'tut-menu-title', T.menuTitle), h('div', 'tut-menu-hint', T.menuHint));
+    const progress = h('div', 'tut-menu-progress');
+    const bar = h('div', 'tut-menu-bar');
+    const fill = h('div', 'tut-menu-bar-fill');
+    fill.style.width = `${(doneCount / LESSONS.length) * 100}%`;
+    bar.append(fill);
+    progress.append(bar, h('span', 'tut-menu-count', `${doneCount}/${LESSONS.length}`));
+    head.append(headText, progress);
+    const list = h('div', 'tut-menu-list');
     for (const lesson of LESSONS) {
-      const item = h('button', 'menu-item tut-lesson-item');
+      // Titles carry their number ("3. Thắng và thua"); show it as a badge instead.
+      const match = /^(\d+)\.\s*(.*)$/.exec(lesson.title);
+      const isDone = done.has(lesson.id);
+      const item = h('button', `menu-item tut-lesson-item${isDone ? ' is-done' : ''}`);
       item.type = 'button';
       item.dataset.lesson = lesson.id;
-      item.append(h('strong', '', lesson.title), h('span', 'tut-lesson-summary', lesson.summary));
-      if (done.has(lesson.id)) item.append(h('span', 'tut-done', `✓ ${T.done}`));
+      const body = h('span', 'tut-lesson-body');
+      body.append(h('strong', 'tut-lesson-title', match ? match[2] : lesson.title), h('span', 'tut-lesson-summary', lesson.summary));
+      item.append(h('span', 'tut-lesson-num', match ? match[1] : '•'), body);
+      if (isDone) {
+        const mark = h('span', 'tut-done', '✓');
+        mark.title = T.done;
+        mark.setAttribute('aria-label', T.done);
+        item.append(mark);
+      }
       item.addEventListener('click', () => {
         menu.hidden = true;
         start(lesson);
       });
-      menu.append(item);
+      list.append(item);
     }
+    menu.replaceChildren(head, list);
   }
 
   button.addEventListener('click', () => {
