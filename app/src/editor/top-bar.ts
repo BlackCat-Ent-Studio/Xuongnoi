@@ -1,3 +1,4 @@
+import { VIEW_MODES, type ViewMode } from '../engine/types';
 import { AUTOSAVE_DELAY_MS } from '../io/autosave';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
@@ -6,7 +7,7 @@ import { LAYOUT_PRESETS, type LayoutPreset } from './layout-model';
 import { createMenuBar, type MenuDef } from './menu-bar';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { CONSOLE_TEXT } from './console/console-text-vi';
-import { TEXT_VI } from './text-vi';
+import { MODE_LABELS, TEXT_VI } from './text-vi';
 
 export interface TopBarDeps {
   state: EditorState;
@@ -22,6 +23,8 @@ export interface TopBarDeps {
   /** Every notify() is also reported here (the console log). */
   onNotify?: (text: string, kind: 'info' | 'error') => void;
   onHelp(): void;
+  /** User picked a view mode in the segmented control (never called while playing). */
+  onModeChange(mode: ViewMode): void;
   onPresetChange(preset: LayoutPreset): void;
   initialPreset: LayoutPreset;
 }
@@ -71,8 +74,34 @@ export function createTopBar(deps: TopBarDeps): TopBar {
       state.setName(TEXT_VI.defaultBoardName);
     }
   });
+  // View-mode segmented control: ARIA radiogroup, arrows move and select, locked while playing.
+  const seg = h('div', 'seg');
+  seg.setAttribute('role', 'radiogroup');
+  seg.setAttribute('aria-label', SHELL_TEXT.modeGroupAria);
+  const segOpts = VIEW_MODES.map((m) => {
+    const b = h('button', 'seg-opt');
+    b.type = 'button';
+    b.dataset.mode = m;
+    b.setAttribute('role', 'radio');
+    b.setAttribute('aria-label', MODE_LABELS[m]);
+    b.append(h('span', 'seg-full', SHELL_TEXT.modeFull[m]), h('span', 'seg-short', SHELL_TEXT.modeShort[m]));
+    b.addEventListener('click', () => {
+      if (!state.isPlaying() && state.getMode() !== m) deps.onModeChange(m);
+    });
+    return b;
+  });
+  seg.append(...segOpts);
+  seg.addEventListener('keydown', (e) => {
+    const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (dir === 0 || state.isPlaying()) return;
+    e.preventDefault();
+    const next = segOpts[(VIEW_MODES.indexOf(state.getMode()) + dir + segOpts.length) % segOpts.length]!;
+    next.focus();
+    next.click();
+  });
+
   const left = h('div', 'tb-left');
-  left.append(brand, menuBar.el, nameInput);
+  left.append(brand, menuBar.el, nameInput, seg);
 
   // ---------- centre: play cluster ----------
   const pstate = h('span', 'pstate');
@@ -165,12 +194,23 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     pauseBtn.title = paused ? CONSOLE_TEXT.resumeTip : CONSOLE_TEXT.pauseTip;
     pauseBtn.setAttribute('aria-label', pauseLabel.textContent);
     stepBtn.disabled = !playing || !paused || !deps.onStep;
+    const mode = state.getMode();
+    const locked = playing;
+    seg.title = locked ? SHELL_TEXT.modeLockedTip : '';
+    seg.classList.toggle('locked', locked);
+    segOpts.forEach((b, i) => {
+      const on = VIEW_MODES[i] === mode;
+      b.setAttribute('aria-checked', String(on));
+      b.tabIndex = on ? 0 : -1;
+      b.disabled = locked;
+      b.title = locked ? SHELL_TEXT.modeLockedTip : MODE_LABELS[VIEW_MODES[i]!];
+    });
     undoBtn.disabled = !state.canUndo();
     redoBtn.disabled = !state.canRedo();
     if (document.activeElement !== nameInput) nameInput.value = state.getBoard().name;
   }
   state.subscribe((k) => {
-    if (k === 'playing' || k === 'board' || k === 'name' || k === 'history') sync();
+    if (k === 'playing' || k === 'board' || k === 'name' || k === 'history' || k === 'mode') sync();
   });
   sync();
 
