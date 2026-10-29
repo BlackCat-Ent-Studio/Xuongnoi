@@ -58,7 +58,7 @@ function finiteOr(n: number, fallback: number): number {
 }
 
 /** Bodies a moving block can carry or push. */
-function movable(e: Entity): boolean {
+export function movable(e: Entity): boolean {
   if (!e.visible || e.kind === 'block' || e.bullet) return false;
   return e.heldBy === null && e.seatedIn === null;
 }
@@ -67,7 +67,7 @@ function solidBlocksExcept(list: readonly Entity[], p: Entity): Entity[] {
   return list.filter((e) => e !== p && e.visible && e.solid && e.kind === 'block');
 }
 
-function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
+export function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
   if (mode === '2d-top') return false;
   const eb = colliderBox(e);
   const pb = colliderBox(p);

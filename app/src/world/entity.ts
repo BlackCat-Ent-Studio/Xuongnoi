@@ -13,6 +13,7 @@ import type {
 import type { VehicleBody } from './vehicles';
 import { turnAngle, type TurnState } from './platforms';
 import type { BulletState } from './projectiles';
+import { beltAxis, type BeltState } from './conveyor';
 
 /** Internal mutable entity record; EntityView is the public snapshot. */
 export interface Entity {
@@ -66,6 +67,8 @@ export interface Entity {
   seatedIn: string | null;
   /** Blocks: set once a node moved or turned it; it then no longer counts as static terrain for path planning. */
   mover?: boolean;
+  /** Blocks: conveyor surface (speed, scroll, side walls), set at creation when the block is a belt. */
+  belt?: BeltState;
   /** Blocks: turning state, once a node turned the block. */
   turn?: TurnState;
   /** Items that are shots in flight (moved by the projectile step, not by item physics). */
@@ -114,6 +117,7 @@ export function toView(e: Entity): EntityView {
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
     ...(e.zone ? { zone: true } : {}),
+    ...(e.belt ? { belt: { axis: beltAxis(e), speed: e.belt.speed, phase: e.belt.phase } } : {}),
     ...turnAngle(e),
     ...(e.collider ? { collider: colliderView(e) } : {}),
     visible: e.visible,

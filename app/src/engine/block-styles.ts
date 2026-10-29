@@ -13,7 +13,9 @@ export type BlockStyle =
   | 'field'
   | 'rock'
   | 'fence'
-  | 'sign';
+  | 'sign'
+  | 'conveyor'
+  | 'rail';
 
 export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   box: 'Hộp',
@@ -30,6 +32,8 @@ export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   rock: 'Núi đá',
   fence: 'Hàng rào',
   sign: 'Biển tên',
+  conveyor: 'Băng chuyền',
+  rail: 'Đường ray',
 };
 
 export const BLOCK_STYLES = Object.keys(BLOCK_STYLE_LABELS) as readonly BlockStyle[];

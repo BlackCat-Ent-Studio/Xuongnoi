@@ -2,6 +2,7 @@ import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
 import { boxOverlap, colliderBox, colliderOffset } from './collider';
 import { lockMotion } from './combat';
+import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
 import { sameTrain } from './vehicle-train';
@@ -281,10 +282,17 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   const vehicleSolids = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.solid);
   const walkSolids = vehicleSolids.length > 0 ? [...solids, ...vehicleSolids] : solids;
 
+  // Belts and moving vehicles carry what rests on them, before the riders move on their own.
+  const solidsFor = (e: Entity): readonly Entity[] => (e.kind === 'character' ? walkSolids : solids);
+  const carry = (e: Entity, axis: Axis, d: number, against: readonly Entity[]): void => void moveAxis(e, axis, d, against);
+  carryOnBelts(entities, dt, mode, carry, solidsFor);
+  const rides = vehicleRides(entities, mode);
+
   const colliders = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.vehicle?.spec.collide !== false);
   for (const c of entities) {
     if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids, colliders);
   }
+  carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {
     if (c.kind !== 'character' || !c.visible) continue;
     const seat = c.seatedIn !== null ? entities.find((e) => e.id === c.seatedIn) : undefined;

@@ -13,7 +13,7 @@ const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src',
 const SIZES = {
   key: [168, 100], stick: [186, 100], 'on-start': [168, 74], and: [168, 126], or: [168, 126], not: [168, 100],
   const: [168, 74], math: [168, 126], compare: [168, 126], counter: [168, 282], timer: [168, 152], character: [168, 256],
-  block: [215, 178], touch: [168, 152], 'win-lose': [168, 100], 'show-number': [168, 74], 'show-text': [168, 100],
+  block: [215, 230], touch: [168, 152], 'win-lose': [168, 100], 'show-number': [168, 74], 'show-text': [168, 100],
   'guide-arrow': [186, 152], item: [193, 230], carry: [168, 204], 'hand-tool': [168, 230], 'go-to': [168, 256],
   'route-follow': [171, 282], sequence: [178, 308], 'select-number': [168, 256], vehicle: [168, 282], 'enter-exit': [186, 152],
   cargo: [178, 282], random: [168, 126], latch: [168, 152], camera: [260, 178], 'ui-meter': [168, 126], 'ui-start': [178, 74],

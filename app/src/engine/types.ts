@@ -334,6 +334,8 @@ export interface EntitySpec {
   blockStyle?: string;
   /** Blocks only: text shown on a sign-style block. */
   label?: string;
+  /** Blocks only: makes the block a conveyor belt whose surface travels along `axis`; `walls` adds thin solid side walls. */
+  belt?: { axis: 'x' | 'z'; walls: boolean };
   /** Items only: free-text goods type ("Loại hàng"); read back with WorldApi.tagOf. */
   tag?: string;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
@@ -396,6 +398,8 @@ export interface EntityView {
   blockStyle?: string;
   /** Blocks only; sign text, present when non-empty. */
   label?: string;
+  /** Blocks only; conveyor surface: travel axis, signed speed (units/s) and signed distance travelled so far (for the scrolling stripes). */
+  belt?: { axis: 'x' | 'z'; speed: number; phase: number };
   /** Items only; present as 'hand' for tools. */
   holdStyle?: HoldStyle;
   /** Items only; true while the item is in a character's hand (the renderer draws it on the figure). */
@@ -636,6 +640,8 @@ export interface WorldApi {
    * touch through their real rotated outline.
    */
   setBlockAngle(id: EntityId, rad: number): boolean;
+  /** Sets the live signed surface speed (units/s along the belt axis) of a conveyor block; ignored for other entities. 0 = stopped. */
+  setBeltSpeed(id: EntityId, speed: number): void;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */
