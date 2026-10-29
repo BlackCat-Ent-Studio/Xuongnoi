@@ -168,7 +168,7 @@ export function createWorld(mode: ViewMode): World {
 
   /**
    * Nearest visible block / item / other character in a box ahead of the swinger: from its center out to
-   * `reach`, as wide as the swinger, at the swinger's height. Closest gap along the facing wins.
+   * `reach`, as wide as the swinger, at the swinger's height. Closest box surface wins.
    */
   function useTarget(c: Entity, reach: number): Entity | null {
     const r = Math.max(0, finiteOr(reach, 0));
@@ -176,7 +176,7 @@ export function createWorld(mode: ViewMode): World {
     const fz = c.facing.z;
     const halfWidth = Math.min(c.size.x, c.size.z) / 2 + USE_LATERAL_SLACK;
     let best: Entity | null = null;
-    let bestGap = Infinity;
+    let bestDist = Infinity;
     let bestFwd = Infinity;
     for (const e of list) {
       if (e === c || !e.visible || e.seatedIn !== null) continue;
@@ -191,10 +191,14 @@ export function createWorld(mode: ViewMode): World {
       if (fwd + fwdHalf <= 0.05 || fwd - fwdHalf > r) continue;
       if (Math.abs(lat) > latHalf + halfWidth) continue;
       if (Math.abs(dy) > (e.size.y + c.size.y) / 2 - USE_MIN_VERTICAL_OVERLAP) continue;
-      const gap = Math.max(0, fwd - fwdHalf);
-      if (gap < bestGap - 1e-9 || (Math.abs(gap - bestGap) <= 1e-9 && fwd < bestFwd)) {
+      // Closest point of the target's box (on the ground plane) to the swinger: wide boxes get no head start.
+      const px = Math.min(Math.max(c.pos.x, e.pos.x - e.size.x / 2), e.pos.x + e.size.x / 2) - c.pos.x;
+      const pz = Math.min(Math.max(c.pos.z, e.pos.z - e.size.z / 2), e.pos.z + e.size.z / 2) - c.pos.z;
+      const dist = Math.hypot(px, pz);
+      if (dist > r || px * fx + pz * fz < -1e-9) continue; // out of reach, or only touching behind
+      if (dist < bestDist - 1e-9 || (Math.abs(dist - bestDist) <= 1e-9 && fwd < bestFwd)) {
         best = e;
-        bestGap = gap;
+        bestDist = dist;
         bestFwd = fwd;
       }
     }
