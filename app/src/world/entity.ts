@@ -86,7 +86,7 @@ export function toView(e: Entity): EntityView {
     ...combatView(e),
     ...(e.vehicle
       ? {
-          vehicle: { model: e.vehicle.spec.model, speed: e.vehicle.speed, wheelSpin: e.vehicle.wheelSpin, heading: e.vehicle.heading, driver: e.vehicle.driver },
+          vehicle: { model: e.vehicle.spec.model, speed: e.vehicle.speed, wheelSpin: e.vehicle.wheelSpin, heading: e.vehicle.heading, driver: e.vehicle.driver, hitSeq: e.vehicle.hitSeq, hitWith: e.vehicle.hitWith, steerMode: e.vehicle.spec.steerMode },
         }
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),

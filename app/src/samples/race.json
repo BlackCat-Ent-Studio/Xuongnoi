@@ -60,7 +60,8 @@
           "accel": 9,
           "color": "#3b82f6",
           "solid": "yes",
-          "control": "driver"
+          "control": "driver",
+          "collide": "no"
         },
         "pos": {
           "x": 360,
@@ -121,7 +122,8 @@
           "accel": 8,
           "color": "#ef4444",
           "solid": "yes",
-          "control": "driver"
+          "control": "driver",
+          "collide": "no"
         },
         "pos": {
           "x": 360,

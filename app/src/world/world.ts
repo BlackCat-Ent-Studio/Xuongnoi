@@ -21,6 +21,7 @@ import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, ste
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
+import { probeAhead } from './probe-ahead';
 import { createVehicleBody, seatPosition } from './vehicles';
 
 function pairKey(a: EntityId, b: EntityId): string {
@@ -486,11 +487,17 @@ export function createWorld(mode: ViewMode): World {
     cameraYaw(): number {
       return yaw;
     },
-    setVehicleInput(id: EntityId, moveX: number, moveY: number): void {
+    setVehicleInput(id: EntityId, moveX: number, moveY: number, stop?: boolean): void {
       const body = byId.get(id)?.vehicle;
       if (!body) return;
       body.inputX = finiteOr(moveX, 0);
       body.inputY = finiteOr(moveY, 0);
+      if (stop !== undefined) body.stop = stop;
+    },
+    probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null {
+      const e = byId.get(id);
+      if (!e || !e.visible) return null;
+      return probeAhead(list, e, finiteOr(reach, 0));
     },
     enterVehicle(character: EntityId, reach: number): EntityId | null {
       const c = liveCharacter(character);

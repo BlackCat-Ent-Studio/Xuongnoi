@@ -1,0 +1,196 @@
+import type { EntityView, NodeDef, ParamDef, PortValues, Vec3, WorldApi } from '../engine/types';
+import {
+  hasArrived,
+  moveForDirection,
+  planarDelta,
+  steerToward,
+  unitToward,
+  liveCharacter,
+} from './steering';
+import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
+
+export const ROUTE_MAX_POINTS = 8;
+const ROUTE_MIN_POINTS = 2;
+/** A vehicle counts as "at" a route point inside this planar distance (it never stops there, it just turns for the next one). */
+const VEHICLE_ARRIVE = 1.2;
+/** Walkers stop this close to a point before heading to the next. */
+const WALKER_ARRIVE = 0.5;
+/** Steering wheel gain for throttle-steered vehicles (full lock at about 30 degrees off). */
+const STEER_GAIN = 2;
+/** Beyond this misalignment (radians) a throttle-steered vehicle eases off the gas while it turns. */
+const SHARP_TURN = 1.2;
+const SHARP_TURN_GAS = 0.35;
+
+interface RouteState {
+  /** Index of the point being approached; null until the first tick picks the nearest one. */
+  idx: number | null;
+  /** +1 walking the list forward, -1 back (ping-pong only). */
+  dir: 1 | -1;
+}
+
+const DEFAULT_POINTS: readonly Vec3[] = [
+  { x: -6, y: 0.5, z: -6 },
+  { x: 6, y: 0.5, z: -6 },
+  { x: 6, y: 0.5, z: 6 },
+  { x: -6, y: 0.5, z: 6 },
+  { x: 0, y: 0.5, z: 0 },
+  { x: 0, y: 0.5, z: 0 },
+  { x: 0, y: 0.5, z: 0 },
+  { x: 0, y: 0.5, z: 0 },
+];
+
+const POINT_PARAMS: ParamDef[] = DEFAULT_POINTS.map((p, i) => ({
+  id: `p${i + 1}`,
+  label: `Điểm ${i + 1}`,
+  kind: 'vec3',
+  default: p,
+}));
+
+function readPoints(params: Parameters<typeof numParam>[0]): Vec3[] {
+  const n = Math.round(clamp(numParam(params, 'count', 4), ROUTE_MIN_POINTS, ROUTE_MAX_POINTS));
+  const out: Vec3[] = [];
+  for (let k = 0; k < n; k++) out.push(vec3Param(params, `p${k + 1}`, DEFAULT_POINTS[k]!));
+  return out;
+}
+
+function nearestIndex(world: WorldApi, from: Vec3, points: readonly Vec3[]): number {
+  let best = 0;
+  let bestD = Infinity;
+  points.forEach((p, k) => {
+    const d = planarDelta(world.mode, from, p);
+    const dist = Math.hypot(d.x, d.z);
+    if (dist < bestD) {
+      bestD = dist;
+      best = k;
+    }
+  });
+  return best;
+}
+
+function wrapAngle(a: number): number {
+  const twoPi = Math.PI * 2;
+  let d = a % twoPi;
+  if (d > Math.PI) d -= twoPi;
+  else if (d <= -Math.PI) d += twoPi;
+  return d;
+}
+
+/** Stick values that make a driverless vehicle roll toward `goal` at about `speed` units/s. */
+function vehicleSticks(world: WorldApi, self: EntityView, goal: Vec3, speed: number): { moveX: number; moveY: number } {
+  const toward = unitToward(world.mode, self.position, goal);
+  if (!toward) return { moveX: 0, moveY: 0 };
+  const top = self.drive?.speed ?? 1;
+  const mag = clamp(speed / Math.max(top, 1e-6), 0.1, 1);
+  if (world.mode === '2d-side') return { moveX: Math.sign(toward.ux) * mag, moveY: 0 };
+  if (self.vehicle?.steerMode === 'throttle') return throttleSticks(self, toward, mag);
+  // Direction steering: the stick simply points where the vehicle should go.
+  return moveForDirection(world.mode, world.cameraYaw(), toward.ux, toward.uz, mag);
+}
+
+/** Gas and wheel for a throttle-steered vehicle: wheel from the heading error, gas from the wanted speed. */
+function throttleSticks(self: EntityView, toward: { ux: number; uz: number }, mag: number): { moveX: number; moveY: number } {
+  const body = self.vehicle;
+  if (!body) return { moveX: 0, moveY: 0 };
+  const diff = wrapAngle(Math.atan2(toward.uz, toward.ux) - body.heading);
+  return {
+    moveX: clamp(diff * STEER_GAIN, -1, 1),
+    moveY: Math.abs(diff) > SHARP_TURN ? mag * SHARP_TURN_GAS : mag,
+  };
+}
+
+const IDLE: Record<string, number | boolean> = { moveX: 0, moveY: 0, jump: false, blocked: false, reached: false, index: 0 };
+
+export const routeFollowNode: NodeDef<RouteState> = {
+  kind: 'route-follow',
+  label: 'Chạy theo tuyến',
+  category: 'brain',
+  description:
+    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Phương tiện (hoặc từ nhân vật). Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
+  inputs: [
+    { id: 'self', type: 'object', label: 'Ai', required: true },
+    { id: 'on', type: 'bool', label: 'Bật', default: true },
+    { id: 'stop', type: 'bool', label: 'Dừng' },
+  ],
+  outputs: [
+    { id: 'moveX', type: 'number', label: 'Đi ngang' },
+    { id: 'moveY', type: 'number', label: 'Đi dọc' },
+    { id: 'jump', type: 'bool', label: 'Nhảy' },
+    { id: 'blocked', type: 'bool', label: 'Đang bị chặn' },
+    { id: 'reached', type: 'bool', label: 'Tới điểm' },
+    { id: 'index', type: 'number', label: 'Điểm hiện tại' },
+  ],
+  params: [
+    { id: 'count', label: 'Số điểm (2 đến 8)', kind: 'number', default: 4, min: ROUTE_MIN_POINTS, max: ROUTE_MAX_POINTS, step: 1 },
+    ...POINT_PARAMS,
+    {
+      id: 'style',
+      label: 'Kiểu',
+      kind: 'select',
+      default: 'loop',
+      options: [
+        { value: 'loop', label: 'Vòng lặp (hết điểm cuối quay về điểm 1)' },
+        { value: 'pingpong', label: 'Đi rồi quay lại' },
+      ],
+    },
+    { id: 'speed', label: 'Tốc độ', kind: 'number', default: 5, min: 0.5, max: 30, step: 0.5 },
+    {
+      id: 'lookAhead',
+      label: 'Dừng khi có vật phía trước (đơn vị)',
+      kind: 'number',
+      default: 2.5,
+      min: 0,
+      max: 20,
+      step: 0.5,
+    },
+  ],
+  create: () => ({ idx: null, dir: 1 }),
+  evaluate(ctx, i, params, s): PortValues {
+    const world = ctx.world;
+    const self = liveCharacter(world, asObject(i.self));
+    if (!self) return { ...IDLE };
+    const points = readPoints(params);
+    if (s.idx === null || s.idx >= points.length) s.idx = nearestIndex(world, self.position, points);
+    const shown = (): number => (s.idx ?? 0) + 1;
+    if (i.on !== undefined && !asBool(i.on)) return { ...IDLE, index: shown() };
+
+    const isVehicle = self.kind === 'vehicle';
+    // Reaching a point selects the next one at once, so the vehicle keeps rolling through the corner.
+    let reached = false;
+    const arrived = (p: Vec3): boolean => {
+      if (!isVehicle) return hasArrived(world.mode, self.position, p, WALKER_ARRIVE);
+      const d = planarDelta(world.mode, self.position, p);
+      return Math.hypot(d.x, d.z) <= VEHICLE_ARRIVE;
+    };
+    if (arrived(points[s.idx]!)) {
+      reached = true;
+      if (strParam(params, 'style', 'loop') === 'pingpong') {
+        if (s.idx + s.dir < 0 || s.idx + s.dir >= points.length) s.dir = s.dir === 1 ? -1 : 1;
+        s.idx += s.dir;
+      } else {
+        s.idx = (s.idx + 1) % points.length;
+      }
+    }
+    const goal = points[s.idx]!;
+
+    const reach = numParam(params, 'lookAhead', 2.5);
+    const blocked = reach > 0 && world.probeAhead(self.id, reach) !== null;
+    const halted = blocked || asBool(i.stop);
+    const speed = clamp(numParam(params, 'speed', 5), 0.5, 30);
+
+    if (halted) {
+      if (isVehicle) world.setVehicleInput(self.id, 0, 0, true);
+      return { moveX: 0, moveY: 0, jump: false, blocked, reached, index: shown() };
+    }
+
+    if (isVehicle) {
+      const sticks = vehicleSticks(world, self, goal, speed);
+      world.setVehicleInput(self.id, sticks.moveX, sticks.moveY);
+      return { moveX: sticks.moveX, moveY: sticks.moveY, jump: false, blocked, reached, index: shown() };
+    }
+
+    const steer = steerToward(world, self, goal);
+    const top = self.drive?.speed ?? 0;
+    const k = top > 0 ? clamp(speed / top, 0.1, 1) : 1;
+    return { moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump, blocked, reached, index: shown() };
+  },
+};

@@ -232,6 +232,8 @@ export interface VehicleSpec {
   maxSpeed: number;
   /** Units per second gained per second. */
   accel: number;
+  /** false = passes through other vehicles. Omitted = true. */
+  collide?: boolean;
 }
 
 /** Look of an item entity (built from boxes by the renderer). */
@@ -361,7 +363,18 @@ export interface EntityView {
   /** Characters only; 0..1 progress of tipping over after running out of health, absent while alive. */
   fallen?: number;
   /** Vehicles only: look, signed forward speed (units/s), how far the wheels have turned and which way the nose points (radians), and who sits in it. */
-  vehicle?: { model: VehicleModel; speed: number; wheelSpin: number; heading: number; driver: EntityId | null };
+  vehicle?: {
+    model: VehicleModel;
+    speed: number;
+    wheelSpin: number;
+    heading: number;
+    driver: EntityId | null;
+    /** Counts crashes with other vehicles (rises by one per crash). */
+    hitSeq?: number;
+    /** The vehicle hit in the latest crash. */
+    hitWith?: EntityId | null;
+    steerMode?: SteerMode;
+  };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
   /** Blocks only; true for a zone marker (drawn translucent). */
@@ -496,7 +509,12 @@ export interface WorldApi {
   // ---- vehicles ----
 
   /** Stick values for a vehicle this tick (-1..1); applied on the next physics step. Ignored for non-vehicles. */
-  setVehicleInput(vehicle: EntityId, moveX: number, moveY: number): void;
+  setVehicleInput(vehicle: EntityId, moveX: number, moveY: number, stop?: boolean): void;
+  /**
+   * The nearest visible solid block, vehicle or character in front of the entity (along its facing, as wide as the entity)
+   * whose gap to the entity is at most `reach`. Items, zones and riders are ignored. Null when the way is clear.
+   */
+  probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null;
   /** Seats the character in the nearest free vehicle within `reach` (gap between their boxes). Null when none is near, it is already seated, or it is dead/hidden. */
   enterVehicle(character: EntityId, reach: number): EntityId | null;
   /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */
