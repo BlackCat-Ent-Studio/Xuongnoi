@@ -1,5 +1,5 @@
 import type { NodeDef } from '../engine/types';
-import { asBool, asObject, numParam, risingEdge, type EdgeState } from './util';
+import { asBool, asObject, numParam, risingEdge, strParam, type EdgeState } from './util';
 
 interface CargoState {
   load: EdgeState;
@@ -12,7 +12,7 @@ export const cargoNode: NodeDef<CargoState> = {
   label: 'Chất / Dỡ hàng',
   category: 'action',
   description:
-    'Chất đồ vật lên thùng xe rồi dỡ xuống. Mỗi lần "Chất" bật lên một nhịp, xe nhận món đồ gần nhất (không ai đang cầm) trong tầm với. Hàng nằm trên thùng xe và chạy theo xe, người khác không cầm đi được. "Dỡ" đặt món trên cùng xuống cạnh xe (ưu tiên phía sau), "Dỡ hết" dỡ tất cả. Xe đầy (hết "Sức chứa") thì không chất thêm. Ẩn xe thì hàng rơi xuống tại chỗ.',
+    'Chất đồ vật lên thùng xe rồi dỡ xuống. Mỗi lần "Chất" bật lên một nhịp, xe nhận món đồ gần nhất (không ai đang cầm) trong tầm với. Hàng nằm trên thùng xe và chạy theo xe, người khác không cầm đi được. "Dỡ" đặt món trên cùng xuống cạnh xe (ưu tiên phía sau), "Dỡ hết" dỡ tất cả. Xe đầy (hết "Sức chứa") thì không chất thêm. Ẩn xe thì hàng rơi xuống tại chỗ. Điền "Loại cần dỡ" thì "Dỡ" chỉ lấy món trên cùng thuộc loại đó ("Số hàng loại này" đếm đúng loại ấy); điền "Loại cần chất" thì "Chất" chỉ nhận hàng loại đó. Để trống thì loại nào cũng được.',
   inputs: [
     { id: 'vehicle', type: 'object', label: 'Xe', required: true },
     { id: 'load', type: 'bool', label: 'Chất' },
@@ -24,9 +24,12 @@ export const cargoNode: NodeDef<CargoState> = {
     { id: 'loaded', type: 'bool', label: 'Vừa chất' },
     { id: 'unloaded', type: 'bool', label: 'Vừa dỡ' },
     { id: 'top', type: 'object', label: 'Hàng trên cùng' },
+    { id: 'typeCount', type: 'number', label: 'Số hàng loại này' },
   ],
   params: [
     { id: 'capacity', label: 'Sức chứa (số món)', kind: 'number', default: 4, min: 1, max: 12, step: 1 },
+    { id: 'loadType', label: 'Loại cần chất (để trống = loại nào cũng chất)', kind: 'text', default: '' },
+    { id: 'unloadType', label: 'Loại cần dỡ (để trống = món trên cùng)', kind: 'text', default: '' },
     { id: 'reach', label: 'Tầm với (tính từ mép xe)', kind: 'number', default: 2, min: 0.2, max: 10, step: 0.1 },
   ],
   create: () => ({ load: { prev: false }, unload: { prev: false }, unloadAll: { prev: false } }),
@@ -35,20 +38,29 @@ export const cargoNode: NodeDef<CargoState> = {
     const load = risingEdge(s.load, asBool(i.load));
     const unload = risingEdge(s.unload, asBool(i.unload));
     const unloadAll = risingEdge(s.unloadAll, asBool(i.unloadAll));
+    const unloadType = strParam(params, 'unloadType', '').trim();
     let loaded = false;
     let unloaded = false;
     if (veh !== null) {
       if (unloadAll) {
         // Stops at the first item with no free spot, so nothing is dropped into a wall.
-        while (ctx.world.unloadCargo(veh) !== null) unloaded = true;
+        while (ctx.world.unloadCargo(veh, unloadType) !== null) unloaded = true;
       } else if (unload) {
-        unloaded = ctx.world.unloadCargo(veh) !== null;
+        unloaded = ctx.world.unloadCargo(veh, unloadType) !== null;
       } else if (load) {
         const capacity = Math.max(1, Math.floor(numParam(params, 'capacity', 4)));
-        loaded = ctx.world.loadCargo(veh, numParam(params, 'reach', 2), capacity) !== null;
+        loaded = ctx.world.loadCargo(veh, numParam(params, 'reach', 2), capacity, strParam(params, 'loadType', '').trim()) !== null;
       }
     }
     const onBoard = veh !== null ? ctx.world.cargoOf(veh) : [];
-    return { count: onBoard.length, loaded, unloaded, top: onBoard.length > 0 ? onBoard[onBoard.length - 1]! : null };
+    // With an unload type set, "Hàng trên cùng" and "Số hàng loại này" talk about that goods type, like "Dỡ" does.
+    const ofType = unloadType === '' ? onBoard : onBoard.filter((id) => ctx.world.tagOf(id) === unloadType);
+    return {
+      count: onBoard.length,
+      loaded,
+      unloaded,
+      top: ofType.length > 0 ? ofType[ofType.length - 1]! : null,
+      typeCount: ofType.length,
+    };
   },
 };

@@ -42,6 +42,8 @@ export interface Entity {
   heldBy: string | null;
   /** Items: load order while riding as vehicle cargo (`heldBy` is then the vehicle); unset otherwise. */
   cargoSeq?: number;
+  /** Items: goods type; unset = untagged. */
+  tag?: string;
   /** Items: true when `heldBy` carries it in hand rather than above the head. */
   inHand: boolean;
   /** Items: false = never picked up. */

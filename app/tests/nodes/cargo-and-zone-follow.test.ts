@@ -101,7 +101,7 @@ describe('zone sensor follow input', () => {
 describe('cargo node', () => {
   it('has the expected ports', () => {
     expect(cargoNode.inputs.map((p) => p.id)).toEqual(['vehicle', 'load', 'unload', 'unloadAll']);
-    expect(cargoNode.outputs.map((p) => p.id)).toEqual(['count', 'loaded', 'unloaded', 'top']);
+    expect(cargoNode.outputs.map((p) => p.id)).toEqual(['count', 'loaded', 'unloaded', 'top', 'typeCount']);
   });
 
   it.each(MODES)('loads the nearest crate, pulses once and ignores a held button (%s)', (mode) => {
@@ -295,6 +295,6 @@ describe('cargo node', () => {
     const params = defaultParams(cargoNode);
     const state = cargoNode.create!(makeCtx(w), params);
     const out = cargoNode.evaluate(makeCtx(w), { vehicle: null, load: true }, params, state);
-    expect(out).toEqual({ count: 0, loaded: false, unloaded: false, top: null });
+    expect(out).toEqual({ count: 0, loaded: false, unloaded: false, top: null, typeCount: 0 });
   });
 });

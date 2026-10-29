@@ -30,6 +30,7 @@ export const PALETTE_SYNONYMS: Readonly<Record<string, readonly string[]>> = {
   'win-lose': ['chiến thắng', 'thua cuộc', 'kết thúc', 'hết game'],
   'show-number': ['điểm số', 'hiển thị số'],
   'show-text': ['hiển thị chữ', 'thông báo', 'văn bản'],
+  'guide-arrow': ['mũi tên', 'chỉ đường', 'hướng dẫn', 'la bàn', 'khoảng cách'],
   camera: ['góc nhìn', 'máy ảnh'],
   portal: ['cổng', 'dịch chuyển'],
   spawner: ['sinh ra', 'tạo ra', 'xuất hiện'],

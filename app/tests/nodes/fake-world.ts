@@ -88,6 +88,7 @@ export function makeWorld(): FakeWorld {
     loadCargo: () => null,
     unloadCargo: () => null,
     cargoOf: () => [],
+    tagOf: () => '',
     listEntities: () => [...w.entities.values()],
     runSeed: () => 12345,
     setCamera: () => undefined,

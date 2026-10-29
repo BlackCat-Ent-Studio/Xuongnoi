@@ -11,10 +11,10 @@ const COLUMN_OFFSET = 0.22;
 /** Gap left between a vehicle and an unloaded item. */
 const UNLOAD_GAP = 0.1;
 
-/** Items loaded on a vehicle, oldest first. */
-export function cargoOn(list: readonly Entity[], vehicleId: string): Entity[] {
+/** Items loaded on a vehicle, oldest first; only goods of type `tag` when it is non-empty. */
+export function cargoOn(list: readonly Entity[], vehicleId: string, tag = ''): Entity[] {
   return list
-    .filter((e) => e.kind === 'item' && e.visible && e.heldBy === vehicleId && e.cargoSeq !== undefined)
+    .filter((e) => e.kind === 'item' && e.visible && e.heldBy === vehicleId && e.cargoSeq !== undefined && (tag === '' || (e.tag ?? '') === tag))
     .sort((a, b) => a.cargoSeq! - b.cargoSeq!);
 }
 
@@ -53,13 +53,14 @@ export function cargoPositions(list: readonly Entity[], mode: ViewMode): Map<str
   return out;
 }
 
-/** Nearest free carryable item within `reach` of the vehicle's edge, else null. */
-export function nearestLoadable(list: readonly Entity[], veh: Entity, reach: number, mode: ViewMode): Entity | null {
+/** Nearest free carryable item (of goods type `tag` when non-empty) within `reach` of the vehicle's edge, else null. */
+export function nearestLoadable(list: readonly Entity[], veh: Entity, reach: number, mode: ViewMode, tag = ''): Entity | null {
   const half = Math.max(veh.size.x, veh.size.z) / 2;
   let best: Entity | null = null;
   let bestDist = Infinity;
   for (const it of list) {
     if (it.kind !== 'item' || !it.visible || !it.carryable || it.heldBy !== null || it.bullet) continue;
+    if (tag !== '' && (it.tag ?? '') !== tag) continue;
     const dx = it.pos.x - veh.pos.x;
     const dy = mode === '2d-top' ? 0 : it.pos.y - veh.pos.y;
     const dz = mode === '2d-side' ? 0 : it.pos.z - veh.pos.z;

@@ -287,6 +287,7 @@ export function createWorld(mode: ViewMode): World {
         carryable: spec.kind === 'item' && spec.carryable !== false,
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
         ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
+        ...(spec.kind === 'item' && spec.tag ? { tag: spec.tag } : {}),
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
@@ -508,22 +509,22 @@ export function createWorld(mode: ViewMode): World {
       if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
       return leaveSeat(c)?.id ?? null;
     },
-    loadCargo(vehicle: EntityId, reach: number, capacity: number): EntityId | null {
+    loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string): EntityId | null {
       const veh = byId.get(vehicle);
       if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
       const onBoard = cargoOn(list, veh.id);
       if (onBoard.length >= Math.max(0, Math.floor(finiteOr(capacity, 0)))) return null;
-      const item = nearestLoadable(list, veh, Math.max(0, finiteOr(reach, 0)), mode);
+      const item = nearestLoadable(list, veh, Math.max(0, finiteOr(reach, 0)), mode, tag);
       if (!item) return null;
       item.heldBy = veh.id;
       item.cargoSeq = (onBoard.length > 0 ? onBoard[onBoard.length - 1]!.cargoSeq! : 0) + 1;
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
-    unloadCargo(vehicle: EntityId): EntityId | null {
+    unloadCargo(vehicle: EntityId, tag?: string): EntityId | null {
       const veh = byId.get(vehicle);
       if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
-      const top = cargoOn(list, veh.id).pop();
+      const top = cargoOn(list, veh.id, tag).pop();
       if (!top) return null;
       const spot = unloadSpot(list, veh, top, mode);
       if (!spot) return null;
@@ -531,6 +532,9 @@ export function createWorld(mode: ViewMode): World {
       top.pos = spot;
       top.vel = { x: 0, y: 0, z: 0 };
       return top.id;
+    },
+    tagOf(id: EntityId): string {
+      return byId.get(id)?.tag ?? '';
     },
     cargoOf(vehicle: EntityId): readonly EntityId[] {
       return cargoOn(list, vehicle).map((e) => e.id);

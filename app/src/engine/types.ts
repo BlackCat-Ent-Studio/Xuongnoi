@@ -281,6 +281,8 @@ export interface EntitySpec {
   zone?: boolean;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
   disposable?: boolean;
+  /** Items only: goods type (free text). Omitted = untagged. */
+  tag?: string;
 }
 
 /** How a shot leaves a shooter. */
@@ -388,6 +390,14 @@ export interface HudItem {
   hidden?: boolean;
   /** Set = drawn as this widget (button, bar, dialog, start screen) rather than as text. */
   widget?: HudWidget;
+  /** With `anchor`: draw an arrow floating above the anchor pointing to `to`, with `value` as the distance label. */
+  guide?: HudGuide;
+}
+
+/** A direction arrow: from the item's `anchor` towards `to`. */
+export interface HudGuide {
+  to: EntityId;
+  showDistance: boolean;
 }
 
 export type GameResult = 'win' | 'lose';
@@ -478,9 +488,11 @@ export interface WorldApi {
    * Loads the nearest free carryable item within `reach` of the vehicle's edge onto its bed, unless it already
    * carries `capacity` items. Loaded items follow the vehicle and cannot be grabbed. Returns the item or null.
    */
-  loadCargo(vehicle: EntityId, reach: number, capacity: number): EntityId | null;
-  /** Puts the most recently loaded item down beside the vehicle (clear of solids). Null when empty or no room. */
-  unloadCargo(vehicle: EntityId): EntityId | null;
+  loadCargo(vehicle: EntityId, reach: number, capacity: number, tag?: string): EntityId | null;
+  /** Puts the most recently loaded item (of goods type `tag` when given and non-empty) down beside the vehicle (clear of solids). Null when none or no room. */
+  unloadCargo(vehicle: EntityId, tag?: string): EntityId | null;
+  /** Goods type of an item ('' when untagged or unknown). */
+  tagOf(id: EntityId): string;
   /** Items riding on the vehicle, oldest first. */
   cargoOf(vehicle: EntityId): readonly EntityId[];
 

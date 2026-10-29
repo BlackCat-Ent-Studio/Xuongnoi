@@ -22,6 +22,7 @@ import { selectNumberNode } from './select-number';
 import { sequenceNode } from './sequence';
 import { showNumberNode } from './show-number';
 import { showTextNode } from './show-text';
+import { guideArrowNode } from './guide-arrow';
 import { stickNode } from './stick';
 import { timerNode } from './timer';
 import { touchNode } from './touch';
@@ -77,6 +78,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   winLoseNode,
   showNumberNode,
   showTextNode,
+  guideArrowNode,
   itemNode,
   carryNode,
   interactNode,

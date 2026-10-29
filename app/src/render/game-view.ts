@@ -17,6 +17,7 @@ import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
 import { createAccumulator, createSimPacer } from './game-loop';
 import { floatingLabels } from './floating-labels';
+import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
 import { SceneView } from './scene-view';
 import { TEXT_VI } from './text-vi';
@@ -40,6 +41,7 @@ export function createGameView(): GameView {
   let renderer: THREE.WebGLRenderer | null = null;
   let resizeObserver: ResizeObserver | null = null;
   let hud: Hud | null = null;
+  let guideArrows: GuideArrowLayer | null = null;
   let rig = new CameraRig('2d-side');
   let width = 1;
   let height = 1;
@@ -139,6 +141,7 @@ export function createGameView(): GameView {
     hud?.hideError();
     // Values from a finished play session must not linger on the edit-mode preview.
     hud?.clearItems();
+    guideArrows?.clear();
   }
 
   function build(graph: Graph, m: ViewMode): boolean {
@@ -184,6 +187,7 @@ export function createGameView(): GameView {
     const hudItems = world.hudItems();
     hud?.setItems(hudItems);
     hud?.setFloating(floatingLabels(hudItems, (id) => world?.getEntity(id), rig.camera, width, height));
+    guideArrows?.sync(guideArrowShapes(hudItems, (id) => world?.getEntity(id), rig.camera, width, height));
     const ended = world.ended;
     // A character that ran out of health finishes tipping over before the end card appears.
     if (ended && world.entities().some((e) => e.visible && e.fallen !== undefined)) {
@@ -297,6 +301,7 @@ export function createGameView(): GameView {
         hold: (key, down) => uiBuf.hold(key, down),
       });
       el.appendChild(hud.root);
+      guideArrows = new GuideArrowLayer(hud.root);
       canvas.addEventListener('pointerdown', onPointerDown);
       canvas.addEventListener('pointermove', onPointerMove);
       canvas.addEventListener('pointerup', onPointerUp);
@@ -349,6 +354,7 @@ export function createGameView(): GameView {
       rig.snap();
       syncChrome();
       hud?.clearItems();
+      guideArrows?.clear();
       lastTime = performance.now();
       rafId = requestAnimationFrame(frame);
     },
