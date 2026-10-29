@@ -4,6 +4,7 @@ import { boxesOverlap, fitView, nearestWithin, zoomAround } from '../../src/edit
 import { listMissingWires } from '../../src/editor/graph/missing-wires';
 import { findFreeNodeSpot, occupiedBoxes } from '../../src/editor/graph/node-placement';
 import { checkPortPair } from '../../src/editor/graph/port-compat';
+import { listSamples } from '../../src/io/samples';
 import { createNode } from '../../src/editor/editor-state';
 import { registerAllNodes } from '../../src/nodes';
 import type { Graph } from '../../src/engine/types';
@@ -36,6 +37,12 @@ describe('listMissingWires', () => {
 
   it('ignores optional inputs and nodes without required ports', () => {
     expect(listMissingWires(build([['key', 0, 0], ['timer', 0, 100]]))).toEqual([]);
+  });
+
+  it('finds nothing missing in any bundled sample', () => {
+    for (const sample of listSamples()) {
+      expect(listMissingWires(sample.board.graph), sample.id).toEqual([]);
+    }
   });
 
   it('reports every required port of a node in port order', () => {
