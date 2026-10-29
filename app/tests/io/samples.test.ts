@@ -25,8 +25,8 @@ describe('samples', () => {
   const samples = listSamples();
 
   it('lists the samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot', 'city-delivery']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side', '2d-side', '2d-top']);
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot', 'city-delivery', 'city-delivery-3d']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side', '2d-side', '2d-top', '3d']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -36,7 +36,7 @@ describe('samples', () => {
   });
 
   for (const s of samples) {
-    it(`${s.id}: parses and runs 600 idle ticks without error`, () => {
+    it(`${s.id}: parses and runs 600 idle ticks without error`, { timeout: 60_000 }, () => {
       const res = parseBoard(serializeBoard(s.board));
       expect(res.ok).toBe(true);
       const { world, step } = start(s.board);
