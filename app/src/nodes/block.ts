@@ -4,6 +4,7 @@ import { asBool, risingEdge, strParam, vec3Param, type EdgeState } from './util'
 interface BlockState {
   id: EntityId;
   hide: EdgeState;
+  show: EdgeState;
   hidden: boolean;
 }
 
@@ -12,8 +13,11 @@ export const blockNode: NodeDef<BlockState> = {
   label: 'Hộp',
   category: 'object',
   description:
-    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất. "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp.',
-  inputs: [{ id: 'hide', type: 'bool', label: 'Ẩn đi' }],
+    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất, bật "Hiện lại" để hộp hiện ra lại (đứng chỗ cũ). "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp.',
+  inputs: [
+    { id: 'hide', type: 'bool', label: 'Ẩn đi' },
+    { id: 'show', type: 'bool', label: 'Hiện lại' },
+  ],
   outputs: [
     { id: 'self', type: 'object', label: 'Hộp' },
     { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
@@ -46,12 +50,17 @@ export const blockNode: NodeDef<BlockState> = {
       color: strParam(params, 'color', '#a3a3a3'),
       solid: strParam(params, 'type', 'solid') !== 'pickup',
     });
-    return { id, hide: { prev: false }, hidden: false };
+    return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
   },
   evaluate(ctx, i, _params, s) {
     if (risingEdge(s.hide, asBool(i.hide)) && !s.hidden) {
       s.hidden = true;
       ctx.world.hide(s.id);
+    }
+    // Evaluated after "Ẩn đi", so when both rise on the same tick the entity ends up visible.
+    if (risingEdge(s.show, asBool(i.show)) && s.hidden) {
+      s.hidden = false;
+      ctx.world.show(s.id);
     }
     return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id) };
   },

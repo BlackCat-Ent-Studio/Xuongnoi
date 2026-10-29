@@ -18,6 +18,7 @@ import { keyNode } from './key';
 import { mathNode } from './math';
 import { onStartNode } from './on-start';
 import { patrolNode } from './patrol';
+import { selectNumberNode } from './select-number';
 import { sequenceNode } from './sequence';
 import { showNumberNode } from './show-number';
 import { showTextNode } from './show-text';
@@ -83,6 +84,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   goToNode,
   chaseNode,
   sequenceNode,
+  selectNumberNode,
   healthNode,
   fightNode,
   vehicleNode,

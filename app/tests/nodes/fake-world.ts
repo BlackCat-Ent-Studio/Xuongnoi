@@ -17,6 +17,7 @@ export interface FakeWorld extends WorldApi {
   spawned: EntitySpec[];
   intents: { id: EntityId; intent: CharacterIntent }[];
   hidden: EntityId[];
+  shown: EntityId[];
   huds: HudItem[];
   endCalls: { result: GameResult; message: string }[];
   touching: Set<string>;
@@ -33,6 +34,7 @@ export function makeWorld(): FakeWorld {
     spawned: [],
     intents: [],
     hidden: [],
+    shown: [],
     huds: [],
     endCalls: [],
     touching: new Set(),
@@ -53,6 +55,7 @@ export function makeWorld(): FakeWorld {
     },
     setCharacterIntent: (id, intent) => void w.intents.push({ id, intent }),
     hide: (id) => void w.hidden.push(id),
+    show: (id) => void w.shown.push(id),
     getEntity: (id) => w.entities.get(id),
     isOnGround: () => w.grounded,
     isTouching: (a, b) => w.touching.has(`${a}|${b}`),

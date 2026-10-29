@@ -400,6 +400,8 @@ export interface WorldApi {
   setCharacterIntent(id: EntityId, intent: CharacterIntent): void;
   /** Removes the entity for the rest of the run (no rendering, no contacts, no collision). */
   hide(id: EntityId): void;
+  /** Brings a hidden block or item back where it was (no effect on shots, copies that were dropped, or dead bodies). Anything standing there is not moved away. */
+  show(id: EntityId): void;
   getEntity(id: EntityId): EntityView | undefined;
   /** Repaints a living entity: colour (any entity) and look (characters only). Unknown ids are ignored. */
   setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void;

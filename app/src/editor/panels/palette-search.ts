@@ -34,6 +34,7 @@ export const PALETTE_SYNONYMS: Readonly<Record<string, readonly string[]>> = {
   portal: ['cổng', 'dịch chuyển'],
   spawner: ['sinh ra', 'tạo ra', 'xuất hiện'],
   vehicle: ['xe', 'lái xe', 'ô tô'],
+  'select-number': ['switch', 'chọn', 'chọn theo số', 'lựa chọn', 'menu', 'phân nhánh'],
   random: ['ngẫu nhiên', 'may rủi', 'xúc xắc'],
   math: ['cộng', 'trừ', 'nhân', 'chia', 'toán'],
   compare: ['lớn hơn', 'nhỏ hơn', 'bằng nhau'],

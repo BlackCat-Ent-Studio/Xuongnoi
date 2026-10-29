@@ -1,11 +1,13 @@
 import type { NodeDef } from '../engine/types';
-import { asBool, numParam, risingEdge, type EdgeState } from './util';
+import { asBool, asNum, numParam, risingEdge, type EdgeState } from './util';
 
 interface CounterState {
   value: number;
   up: EdgeState;
   down: EdgeState;
   reset: EdgeState;
+  add: EdgeState;
+  set: EdgeState;
 }
 
 export const counterNode: NodeDef<CounterState> = {
@@ -13,11 +15,15 @@ export const counterNode: NodeDef<CounterState> = {
   label: 'Bộ đếm',
   category: 'math',
   description:
-    'Đếm số lần. Mỗi lần "Cộng 1" bật thì +1, "Trừ 1" bật thì −1, "Về đầu" đưa về số bắt đầu. Báo khi đếm đủ mục tiêu.',
+    'Đếm số lần. Mỗi lần "Cộng 1" bật thì +1, "Trừ 1" bật thì −1, "Về đầu" đưa về số bắt đầu. Có thể cộng thêm một số bất kỳ (cả số âm) hoặc đặt thẳng về một số. Báo khi đếm đủ mục tiêu.',
   inputs: [
     { id: 'up', type: 'bool', label: 'Cộng 1' },
     { id: 'down', type: 'bool', label: 'Trừ 1' },
     { id: 'reset', type: 'bool', label: 'Về đầu' },
+    { id: 'addAmount', type: 'number', label: 'Số cộng thêm' },
+    { id: 'add', type: 'bool', label: 'Cộng số' },
+    { id: 'setAmount', type: 'number', label: 'Số đặt' },
+    { id: 'set', type: 'bool', label: 'Đặt số' },
   ],
   outputs: [
     { id: 'value', type: 'number', label: 'Số đếm' },
@@ -33,6 +39,8 @@ export const counterNode: NodeDef<CounterState> = {
     up: { prev: false },
     down: { prev: false },
     reset: { prev: false },
+    add: { prev: false },
+    set: { prev: false },
   }),
   evaluate(_ctx, i, params, s) {
     const up = risingEdge(s.up, asBool(i.up));
@@ -41,6 +49,9 @@ export const counterNode: NodeDef<CounterState> = {
     if (up) s.value += 1;
     if (down) s.value -= 1;
     if (reset) s.value = numParam(params, 'start', 0);
+    // Number-driven edits come last so "Đặt số" wins over the +1/-1 buttons on the same tick.
+    if (risingEdge(s.add, asBool(i.add))) s.value += asNum(i.addAmount);
+    if (risingEdge(s.set, asBool(i.set))) s.value = asNum(i.setAmount);
     return { value: s.value, reached: s.value >= numParam(params, 'target', 5) };
   },
 };

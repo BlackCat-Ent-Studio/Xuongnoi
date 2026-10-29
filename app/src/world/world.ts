@@ -314,6 +314,13 @@ export function createWorld(mode: ViewMode): World {
       e.onGround = false;
       for (const k of [...contacts]) if (k.split('|').includes(id)) contacts.delete(k);
     },
+    show(id: EntityId): void {
+      const e = byId.get(id);
+      if (!e || e.visible || e.disposable || e.combat?.dead) return;
+      e.visible = true;
+      e.vel = { x: 0, y: 0, z: 0 };
+      if (e.kind === 'block' && e.solid) solidRev++;
+    },
     getEntity(id: EntityId): EntityView | undefined {
       const e = byId.get(id);
       return e ? viewOf(e) : undefined;

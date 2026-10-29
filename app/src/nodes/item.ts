@@ -26,6 +26,7 @@ function holdStyleParam(raw: string): HoldStyle {
 interface ItemState {
   id: EntityId;
   hide: EdgeState;
+  show: EdgeState;
   hidden: boolean;
 }
 
@@ -34,8 +35,11 @@ export const itemNode: NodeDef<ItemState> = {
   label: 'Đồ vật',
   category: 'object',
   description:
-    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm tay.',
-  inputs: [{ id: 'hide', type: 'bool', label: 'Ẩn đi' }],
+    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. "Ẩn đi" làm nó biến mất, "Hiện lại" cho nó hiện ra lại chỗ cũ. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm tay.',
+  inputs: [
+    { id: 'hide', type: 'bool', label: 'Ẩn đi' },
+    { id: 'show', type: 'bool', label: 'Hiện lại' },
+  ],
   outputs: [
     { id: 'self', type: 'object', label: 'Đồ vật' },
     { id: 'held', type: 'bool', label: 'Đang được cầm' },
@@ -93,12 +97,17 @@ export const itemNode: NodeDef<ItemState> = {
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
       damage: numParam(params, 'damage', 0),
     });
-    return { id, hide: { prev: false }, hidden: false };
+    return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
   },
   evaluate(ctx, i, _params, s) {
     if (risingEdge(s.hide, asBool(i.hide)) && !s.hidden) {
       s.hidden = true;
       ctx.world.hide(s.id);
+    }
+    // Evaluated after "Ẩn đi", so when both rise on the same tick the entity ends up visible.
+    if (risingEdge(s.show, asBool(i.show)) && s.hidden) {
+      s.hidden = false;
+      ctx.world.show(s.id);
     }
     return {
       self: s.id,
