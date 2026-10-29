@@ -1,8 +1,8 @@
-import { openBrowser, sleep, nodeOf, dragKind, wire, selectNode, setNumber, setSelect, clickNext, startLesson, stepNo } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/tut-common.mjs';
+import { openBrowser, sleep, nodeOf, dragKind, wire, selectNode, setNumber, setSelect, clickNext, startLesson, stepNo } from './tut-common.mjs';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/sweep';
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();

@@ -7,12 +7,15 @@ export async function shot(page, name) {
 }
 
 export async function panelInfo(page) {
-  const vis = await page.locator('.tut-panel').isVisible();
+  const vis = await page.locator('.ld-body').isVisible();
   if (!vis) return { visible: false };
+  // aria-label is "Bước n trên N"; keep the old "Bước n/N" shape for the scripts.
+  const aria = (await page.locator('.ld-steps').getAttribute('aria-label')) ?? '';
+  const m = /Bước (\d+) trên (\d+)/.exec(aria);
   return {
     visible: true,
-    progress: await page.locator('.tut-progress').innerText(),
-    title: await page.locator('.tut-title').innerText(),
+    progress: m ? `Bước ${m[1]}/${m[2]}` : aria,
+    title: await page.locator('.ld-title').innerText(),
   };
 }
 
@@ -72,13 +75,14 @@ export async function setSelect(page, param, value) {
 }
 
 export async function clickNext(page) {
-  await page.locator('.tut-panel [data-tut="next"]').click();
+  await page.locator('.ld [data-tut="next"]').click();
   await sleep(200);
 }
 
 export async function startLesson(page, lessonId) {
-  await page.locator('[data-tut="tutorial"]').click();
-  await page.locator(`[data-lesson="${lessonId}"]`).click();
+  // Lessons start from the list in the bottom dock (Bài học tab).
+  await page.locator('#tab-lessons').click();
+  await page.locator(`.ld-item[data-lesson="${lessonId}"]`).click();
   await sleep(500);
 }
 

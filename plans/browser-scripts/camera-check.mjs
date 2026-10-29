@@ -4,7 +4,7 @@ import { openBrowser, openSample, sleep, record, SCRATCH } from './common.mjs';
 const OUT = `${SCRATCH}/camera`;
 fs.mkdirSync(OUT, { recursive: true });
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').count()) await page.locator('[data-tut="invite-no"]').click();
 await sleep(300);

@@ -1,6 +1,6 @@
 import { openBrowser, sleep, openSample } from './common.mjs';
 const { browser, page } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -8,7 +8,7 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 }
 for (const id of ['side-stars', 'cleaner-bot']) {
   await openSample(page, id);
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(800);
   const frames = await page.evaluate(
     () =>
@@ -24,7 +24,7 @@ for (const id of ['side-stars', 'cleaner-bot']) {
       }),
   );
   console.log(id, 'fps', frames);
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(300);
 }
 await browser.close();

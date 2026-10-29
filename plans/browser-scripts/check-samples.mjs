@@ -1,4 +1,5 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
+const SAMPLE_NAMES = {"side-stars": "Nhặt sao", "top-collect": "Thu thập", "3d-hop": "Nhảy cóc 3D", "key-door": "Chìa khoá", "pickaxe-rock": "Cuốc đá", "guard-patrol": "Lính gác", "cleaner-bot": "Bot dọn dẹp", "maze-chase": "Mê cung", "platform-bot": "Bot leo bục", "arena": "Võ đài", "race": "Đua xe", "dice-zones": "Xúc xắc", "portal-camera": "Cổng dịch chuyển", "dodge-shoot": "Né và bắn"};
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/sweep';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -22,7 +23,7 @@ const rec = (name, ok, d = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} | ${d}`);
 };
 
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -61,8 +62,8 @@ for (const id of SAMPLES) {
   dialogs.length = 0;
   const row = { id, open: false, play: false, errors: 0, end: '' };
   try {
-    await page.locator('button', { hasText: 'Mở ▾' }).click();
-    await page.locator(`[data-sample="${id}"]`).click();
+    await page.locator('[data-menu="file"]').click();
+    await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
     await sleep(900);
     row.open = true;
     row.mode = await page.locator('.mode-select').inputValue().catch(() => '?');
@@ -98,8 +99,8 @@ console.log('SAMPLE_TABLE', JSON.stringify(sampleRows));
 // ---- check 4: dodge-shoot and portal-camera end-to-end ----
 for (const id of ['dodge-shoot', 'portal-camera']) {
   logs = [];
-  await page.locator('button', { hasText: 'Mở ▾' }).click();
-  await page.locator(`[data-sample="${id}"]`).click();
+  await page.locator('[data-menu="file"]').click();
+  await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
   await sleep(900);
   await page.locator('#btn-play').click();
   await sleep(600);

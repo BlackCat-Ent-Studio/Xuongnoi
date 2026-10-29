@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/sweep';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -13,15 +13,15 @@ page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && lo
 page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));
 page.on('dialog', (d) => d.dismiss());
 
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
   await sleep(300);
 }
 
-await page.locator('button', { hasText: 'Mở ▾' }).click();
-await page.locator('[data-sample="portal-camera"]').click();
+await page.locator('[data-menu="file"]').click();
+await page.locator('.mb-item', { hasText: 'Cổng dịch chuyển' }).first().click();
 await sleep(900);
 await page.locator('#btn-play').click();
 await sleep(600);

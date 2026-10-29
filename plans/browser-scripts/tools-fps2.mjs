@@ -1,7 +1,7 @@
 import { openBrowser, sleep } from './common.mjs';
 import { startLesson } from './tut-common.mjs';
 const { browser, page } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) await page.locator('[data-tut="invite-no"]').click();
 const fps = () =>
@@ -21,12 +21,12 @@ const fps = () =>
 for (const lesson of ['carry-use', 'hand-tools']) {
   await startLesson(page, lesson);
   console.log(lesson, 'fps editing', await fps());
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(800);
   console.log(lesson, 'fps playing', await fps());
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(400);
-  await page.locator('.tut-panel [data-tut="exit"], .tut-panel :text("Thoát")').first().click().catch(() => {});
+  await page.locator('.ld [data-tut="exit"]').first().click().catch(() => {});
   await sleep(300);
 }
 await browser.close();

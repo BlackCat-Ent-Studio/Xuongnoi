@@ -29,7 +29,7 @@ function makeBoard(look) {
 }
 
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -49,8 +49,8 @@ const walk = async (ms, code = 'ArrowRight') => {
 for (const look of LOOKS) {
   const path = makeBoard(look);
   const chooser = page.waitForEvent('filechooser');
-  await page.locator('button', { hasText: 'Mở ▾' }).click();
-  await page.locator('.menu-item', { hasText: 'Mở' }).first().click();
+  await page.locator('[data-menu="file"]').click();
+  await page.locator('.mb-item', { hasText: 'Mở file' }).first().click();
   await (await chooser).setFiles(path);
   await sleep(800);
   await page.locator('#btn-play').click();

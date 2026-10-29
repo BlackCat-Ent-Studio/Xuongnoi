@@ -3,7 +3,7 @@ import { openBrowser, sleep, record, openSample, SCRATCH } from './common.mjs';
 const SHOTS = `${SCRATCH}/job1`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();

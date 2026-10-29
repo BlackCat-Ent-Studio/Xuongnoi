@@ -6,7 +6,7 @@ const SHOTS = `${SCRATCH}/bots`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
 await page.setViewportSize({ width: 1920, height: 1100 });
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -23,7 +23,7 @@ const idOf = async (kind, nth) =>
 
 // the lesson shows up in the menu
 await page.locator('[data-tut="tutorial"]').click();
-record('menu lists lesson 6', (await page.locator('[data-lesson="make-bot"]').count()) === 1, '');
+record('menu lists lesson 6', (await page.locator('.menu-item[data-lesson="make-bot"]').count()) === 1, '');
 await page.locator('[data-tut="tutorial"]').click();
 
 await startLesson(page, 'make-bot');
@@ -45,11 +45,11 @@ await step('wire bot move', 6);
 await shot('l6-02-wire-move-step');
 await wire(page, nodeOf('patrol'), 'moveX', bot, 'moveX');
 await step('play patrol', 7);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(2500);
 await shot('l6-03-patrol-playing');
 await step('back to edit', 8);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await step('add touch', 9);
 await dragKind(page, 'touch', 560, 330);
@@ -64,7 +64,7 @@ await wire(page, nodeOf('touch'), 'touching', nodeOf('win-lose'), 'lose');
 await step('play caught', 14);
 await shot('l6-04-all-wired');
 await page.setViewportSize({ width: 1440, height: 900 });
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(800);
 await page.keyboard.down('ArrowRight');
 let caught = false;
@@ -79,8 +79,8 @@ const body = await page.locator('body').innerText();
 record('lose message shown', body.includes('Thua mất rồi'), '');
 await sleep(300);
 await step('done', 16);
-await page.locator('.tut-panel button', { hasText: 'Hoàn thành' }).click();
+await page.locator('.ld-card button', { hasText: 'Hoàn thành' }).click();
 await sleep(300);
-record('panel closed after finish', !(await page.locator('.tut-panel').isVisible()), '');
+record('panel closed after finish', !(await page.locator('.ld-body').isVisible()), '');
 record('no console errors', logs.length === 0, logs.join(' || '));
 await browser.close();

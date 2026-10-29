@@ -1,15 +1,16 @@
 import { chromium } from 'playwright';
 
-export const SCRATCH = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad';
+export const SCRATCH = process.env.SCRATCH ?? 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad';
 export const SHOTS = `${SCRATCH}/shots`;
-export const URL = 'http://localhost:5173/';
+export const URL = `http://localhost:${process.env.PORT ?? 5173}/`;
 
 export async function openBrowser() {
   const browser = await chromium.launch({
     headless: true,
     args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
   });
-  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const [vw, vh] = (process.env.VP ?? '1440x900').split('x').map(Number); // e.g. VP=1920x1200 for long lessons with far-away drop targets
+  const context = await browser.newContext({ viewport: { width: vw, height: vh } });
   const page = await context.newPage();
   const logs = [];
   page.on('console', (m) => {
@@ -25,9 +26,10 @@ export async function openBrowser() {
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-export async function openSample(page, id) {
-  await page.locator('button', { hasText: 'Mở ▾' }).click();
-  await page.locator(`[data-sample="${id}"]`).click();
+export async function openSample(page, label) {
+  // Tệp menu -> sample entry by its visible label (or a RegExp).
+  await page.locator('[data-menu="file"]').click();
+  await page.locator('.mb-item', { hasText: label }).first().click();
   await sleep(700);
 }
 
@@ -36,7 +38,7 @@ export async function gameText(page) {
 }
 
 export async function badges(page) {
-  return page.locator('.wc-badge').allInnerTexts();
+  return page.locator('.wc-badge, .gn-badge').allInnerTexts();
 }
 
 export const results = [];

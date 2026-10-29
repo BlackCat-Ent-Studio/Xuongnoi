@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/l12';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -6,7 +6,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
 });
-const context = await browser.newContext({ viewport: { width: 1920, height: 1100 } });
+const context = await browser.newContext({ viewport: { width: 1920, height: 1300 } });
 const page = await context.newPage();
 const logs = [];
 page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && logs.push(`[${m.type()}] ${m.text()}`));
@@ -19,8 +19,8 @@ const rec = (name, ok, d = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} | ${d}`);
 };
 const stepIs = async (label, id) => {
-  const title = await page.locator('.tut-title').innerText().catch(() => 'hidden');
-  const prog = await page.locator('.tut-progress').innerText().catch(() => '');
+  const title = await page.locator('.ld-title').innerText().catch(() => 'hidden');
+  const prog = await page.locator('.ld-steps').getAttribute('aria-label').then((a) => (a ?? '').replace(/Bước (\d+) trên (\d+)/, 'Bước $1/$2')).catch(() => '');
   rec(label, title === id, `${prog} | ${title}`);
 };
 const shot = (n) => page.screenshot({ path: `${OUT}/${n}.png` });
@@ -71,11 +71,11 @@ const num = async (param, value) => {
   await sleep(250);
 };
 const play = async () => {
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(600);
 };
 
-await page.goto('http://localhost:5192/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -91,12 +91,12 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 logs.length = 0;
 
 await page.locator('[data-tut="tutorial"]').click();
-rec('menu lists lesson 12', (await page.locator('[data-lesson="platforms-shooting"]').count()) === 1);
-await page.locator('[data-lesson="platforms-shooting"]').click();
+rec('menu lists lesson 12', (await page.locator('.menu-item[data-lesson="platforms-shooting"]').count()) === 1);
+await page.locator('.menu-item[data-lesson="platforms-shooting"]').click();
 await sleep(700);
 await stepIs('intro', 'Qua hố, hạ mục tiêu, tới cờ');
 await shot('01-start');
-await page.locator('.tut-panel [data-tut="next"]').click();
+await page.locator('.ld [data-tut="next"]').click();
 await sleep(300);
 
 const heroId = await page.locator('.wc-node[data-kind="character"]').first().getAttribute('data-id');
@@ -128,9 +128,9 @@ await page.keyboard.up('ArrowRight');
 await sleep(2500);
 await shot('04-riding');
 await stepIs('still on ride step while playing', 'Quay lại sửa');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
-await stepIs('edit -> shooter', 'Thêm khối Bắn đạn');
+await stepIs('edit -> shooter', 'Thêm mảnh ghép Bắn đạn');
 const gun = await add('shooter', 1000, 80);
 await stepIs('wire shooter', 'Ai là người bắn?');
 await wire(heroId, 'self', gun, 'shooter');
@@ -153,9 +153,9 @@ for (let i = 0; i < 4; i++) {
   await sleep(700);
 }
 await shot('06-shooting');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
-await stepIs('edit -> spawner', 'Thêm khối Sinh vật thể');
+await stepIs('edit -> spawner', 'Thêm mảnh ghép Sinh vật thể');
 const spawner = await add('spawner', 700, 500);
 await stepIs('spawner setup', 'Cho đá rơi trên đường tới cổng');
 await select(spawner);
@@ -172,9 +172,9 @@ await select(timer);
 await num('seconds', 3);
 await stepIs('timer->spawn', 'Hết giờ là thả đá');
 await wire(timer, 'done', spawner, 'spawn');
-await stepIs('add loop or', 'Thêm một khối Hoặc để lặp');
+await stepIs('add loop or', 'Thêm một mảnh ghép Hoặc để lặp');
 const loop = await add('or', 1000, 700);
-await stepIs('loop in', 'Hết giờ vào khối Hoặc mới');
+await stepIs('loop in', 'Hết giờ vào mảnh ghép Hoặc mới');
 await wire(timer, 'done', loop, 'a');
 await stepIs('loop out', 'Đếm lại mãi mãi');
 await wire(loop, 'out', timer, 'reset');
@@ -195,7 +195,7 @@ let title = '';
 for (let attempt = 0; attempt < 3 && title !== 'Tới cờ rồi!'; attempt++) {
   if (attempt > 0) {
     // lost: back to edit then play again
-    await page.locator('[data-tut="play"]').click();
+    await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
     await sleep(600);
   }
   await play();
@@ -217,7 +217,7 @@ for (let attempt = 0; attempt < 3 && title !== 'Tới cờ rồi!'; attempt++) {
   const t0 = Date.now();
   while (Date.now() - t0 < 12000) {
     await sleep(250);
-    title = await page.locator('.tut-title').innerText().catch(() => '');
+    title = await page.locator('.ld-title').innerText().catch(() => '');
     if (title === 'Tới cờ rồi!') break;
   }
   await page.keyboard.up('ArrowRight');

@@ -1,10 +1,11 @@
 import { mkdirSync } from 'node:fs';
 import { openBrowser, sleep, record, SCRATCH } from './common.mjs';
 import { panelInfo, dragKind, wire, clickNext, startLesson } from './tut-common.mjs';
+const SAMPLE_NAMES = {"side-stars": "Nhặt sao", "top-collect": "Thu thập", "3d-hop": "Nhảy cóc 3D", "key-door": "Chìa khoá", "pickaxe-rock": "Cuốc đá", "guard-patrol": "Lính gác", "cleaner-bot": "Bot dọn dẹp", "maze-chase": "Mê cung", "platform-bot": "Bot leo bục", "arena": "Võ đài", "race": "Đua xe", "dice-zones": "Xúc xắc", "portal-camera": "Cổng dịch chuyển", "dodge-shoot": "Né và bắn"};
 
 const SHOTS = `${SCRATCH}/job2`;
 mkdirSync(SHOTS, { recursive: true });
-const URL = 'http://localhost:5173/';
+const URL = `http://localhost:${process.env.PORT ?? 5173}/`;
 const { browser, page, logs } = await openBrowser();
 await page.setViewportSize({ width: 1600, height: 1000 });
 
@@ -20,8 +21,8 @@ const shot = (n) => page.screenshot({ path: `${SHOTS}/${n}.png` });
 const gshot = (n) => page.locator('.game-box').screenshot({ path: `${SHOTS}/${n}.png` });
 const body = () => page.locator('body').innerText();
 async function openSample(id) {
-  await page.locator('button', { hasText: 'Mở ▾' }).click();
-  await page.locator(`[data-sample="${id}"]`).click();
+  await page.locator('[data-menu="file"]').click();
+  await page.locator('.mb-item', { hasText: SAMPLE_NAMES[id] }).first().click();
   await sleep(700);
 }
 
@@ -43,7 +44,7 @@ async function tap(k) {
   await sleep(90);
   await page.keyboard.up(k);
 }
-const play = () => page.locator('[data-tut="play"]').click();
+const play = () => page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 
 // ---------- arena: idle player gets beaten ----------
 await fresh();
@@ -93,7 +94,7 @@ const botSel = async () => {
   return id('character', 1);
 };
 await page.locator('[data-tut="tutorial"]').click();
-record('menu lists combat lesson', (await page.locator('[data-lesson="combat"]').count()) === 1, '');
+record('menu lists combat lesson', (await page.locator('.menu-item[data-lesson="combat"]').count()) === 1, '');
 await page.locator('[data-tut="tutorial"]').click();
 await startLesson(page, 'combat');
 const info = async (label) => {

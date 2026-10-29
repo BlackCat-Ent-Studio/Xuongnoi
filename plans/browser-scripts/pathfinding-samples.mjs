@@ -5,7 +5,7 @@ const SHOTS = `${SCRATCH}/pathfinding`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
 const fresh = async () => {
-  await page.goto('http://localhost:5173/');
+  await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
   await sleep(1200);
   if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
     await page.locator('[data-tut="invite-no"]').click();
@@ -19,7 +19,7 @@ const body = () => page.locator('body').innerText();
 await fresh();
 await openSample(page, 'maze-chase');
 await shot('maze-1-edit');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1000);
 await shot('maze-2-start');
 let lost = false;
@@ -35,7 +35,7 @@ record('maze: bot reaches the idle player through the maze', lost, lost ? 'lose 
 await fresh();
 await openSample(page, 'platform-bot');
 await shot('plat-1-edit');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
 await shot('plat-2-start');
 let won = false;

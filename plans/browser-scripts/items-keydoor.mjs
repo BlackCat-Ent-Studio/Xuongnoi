@@ -4,7 +4,7 @@ import { openBrowser, sleep, record, openSample, SCRATCH } from './common.mjs';
 const SHOTS = `${SCRATCH}/items`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 // dismiss tutorial invite if shown
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
@@ -29,7 +29,7 @@ const palette = await page.locator('.palette-cat').allInnerTexts();
 record('palette has Hành động category', palette.some((t) => t.includes('Hành động')), palette.join(','));
 record('palette has item/carry/interact', (await page.locator('.palette-item[data-kind="item"], .palette-item[data-kind="carry"], .palette-item[data-kind="interact"]').count()) === 3, '');
 
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(800);
 await shot('02-start');
 await walk(600); // to about x=-3

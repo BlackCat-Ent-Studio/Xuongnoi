@@ -4,7 +4,7 @@ import { openBrowser, sleep, record, openSample, SCRATCH } from './common.mjs';
 const SHOTS = `${SCRATCH}/bots`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -23,7 +23,7 @@ for (const k of ['patrol', 'go-to', 'chase', 'sequence']) {
 // ---- cleaner bot ----
 await openSample(page, 'cleaner-bot');
 await shot('cleaner-1-edit');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1500);
 await shot('cleaner-2-start');
 let won = false;
@@ -44,7 +44,7 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 }
 await openSample(page, 'guard-patrol');
 await shot('guard-1-edit');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1200);
 await shot('guard-2-start');
 // walk toward the guard's beat and stand still: it should catch us
@@ -69,7 +69,7 @@ for (const id of ['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-ro
     await sleep(300);
   }
   await openSample(page, id);
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(1200);
   await shot(`old-${id}`);
 }

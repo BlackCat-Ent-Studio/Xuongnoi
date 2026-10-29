@@ -9,7 +9,7 @@ const rec = (n, ok, d = '') => { res.push(`${ok ? 'PASS' : 'FAIL'} ${n} ${d}`); 
 const box = async (sel) => page.locator(sel).first().boundingBox();
 const cvs = async () => page.evaluate(() => { const c = document.querySelector('.game-box canvas'); return { w: c.width, h: c.height, cw: c.clientWidth, ch: c.clientHeight, dpr: devicePixelRatio }; });
 
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await page.evaluate(() => localStorage.clear());
 await page.reload();
 await sleep(1200);

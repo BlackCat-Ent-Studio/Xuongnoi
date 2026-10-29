@@ -1,11 +1,11 @@
-import { openBrowser, sleep, nodeOf, dragKind, wire, selectNode, setNumber, setSelect, clickNext, startLesson, stepNo } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/tut-common.mjs';
+import { openBrowser, sleep, nodeOf, dragKind, wire, selectNode, setNumber, setSelect, clickNext, startLesson, stepNo } from './tut-common.mjs';
 const N = +process.argv[2] || 8, RATE = +process.argv[3] || 1;
 let fails = 0;
 for (let k = 0; k < N; k++) {
   const { browser, page, logs } = await openBrowser();
   const cdp = await page.context().newCDPSession(page);
   if (RATE > 1) await cdp.send('Emulation.setCPUThrottlingRate', { rate: RATE });
-  await page.goto('http://localhost:5194/');
+  await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
   await sleep(1200);
   await page.locator('[data-tut="invite-no"]').click().catch(() => {});
   await startLesson(page, 'win-lose');

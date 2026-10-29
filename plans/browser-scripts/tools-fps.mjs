@@ -1,6 +1,6 @@
 import { openBrowser, sleep, openSample } from './common.mjs';
 const { browser, page } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) await page.locator('[data-tut="invite-no"]').click();
 const fps = () =>

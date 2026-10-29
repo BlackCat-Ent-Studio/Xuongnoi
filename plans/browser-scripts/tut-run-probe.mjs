@@ -1,10 +1,10 @@
 import {
   openBrowser, sleep, record, shot, stepNo, panelInfo, dragKind, nodeOf, selectNode, setNumber, setSelect,
   clickNext, startLesson, hlCount, nodeCount,
-} from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/tut-common.mjs';
+} from './tut-common.mjs';
 
 
-import { dot as _dot } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/tut-common.mjs';
+import { dot as _dot } from './tut-common.mjs';
 let wireNo = 0;
 async function wire(page, fromNode, fromPort, toNode, toPort) {
   wireNo++;
@@ -32,7 +32,7 @@ async function wire(page, fromNode, fromPort, toNode, toPort) {
 }
 
 const { browser, page, logs } = await openBrowser();
-const URL = 'http://localhost:5194/';
+const URL = `http://localhost:${process.env.PORT ?? 5173}/`;
 await page.goto(URL);
 await sleep(1200);
 
@@ -73,11 +73,11 @@ await expectStep('L1 size 20 -> hero', 4);
 await dragKind(page, 'character', 330, 50);
 await expectStep('L1 hero -> play', 5);
 record('L1 play button highlighted', (await page.locator('[data-tut="play"].tut-hl').count()) === 1, '');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
 await expectStep('L1 playing -> back to edit', 6);
 await shot(page, '03-l1-playing');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await expectStep('L1 edit -> stick', 7);
 await dragKind(page, 'stick', 60, 260);
@@ -91,7 +91,7 @@ await dragKind(page, 'key', 60, 460);
 await expectStep('L1 key -> wire key', 10);
 await wire(page, nodeOf('key'), 'held', nodeOf('character'), 'jump');
 await expectStep('L1 wired key -> play', 11);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await expectStep('L1 playing -> done', 12);
 await page.keyboard.down('ArrowRight');
@@ -101,10 +101,10 @@ await page.keyboard.down('Space');
 await sleep(300);
 await page.keyboard.up('Space');
 await shot(page, '05-l1-done');
-const nextText = await page.locator('.tut-panel [data-tut="next"]').innerText();
+const nextText = await page.locator('.ld [data-tut="next"]').innerText();
 record('L1 last button says Hoàn thành', nextText === 'Hoàn thành', nextText);
 await clickNext(page);
-record('L1 panel closed after finish', !(await page.locator('.tut-panel').isVisible()), '');
+record('L1 panel closed after finish', !(await page.locator('.ld-body').isVisible()), '');
 record('L1 board restored (name)', (await page.locator('.name-input').inputValue()) === 'Game rieng cua toi', await page.locator('.name-input').inputValue());
 record('L1 board restored (1 node)', (await nodeCount(page)) === 1, String(await nodeCount(page)));
 record('L1 not playing after finish', (await page.locator('[data-tut="play"]').innerText()) === 'Chơi', '');
@@ -117,7 +117,7 @@ await page.locator('[data-tut="tutorial"]').click();
 await shot(page, '07-menu-with-done');
 const doneMarks = await page.locator('.tut-done').count();
 record('menu shows done mark for lesson 1', doneMarks === 1, String(doneMarks));
-await page.locator('[data-lesson="collect-stars"]').click();
+await page.locator('.menu-item[data-lesson="collect-stars"]').click();
 await sleep(600);
 const L2 = async (label, n) => {
   const got = await stepNo(page);
@@ -129,9 +129,9 @@ await shot(page, '08-l2-intro');
 // Thoát mid-lesson
 await clickNext(page);
 await L2('L2 add star', 2);
-await page.locator('.tut-exit').click();
+await page.locator('.ld-exit').click();
 await sleep(500);
-record('L2 exit hides panel', !(await page.locator('.tut-panel').isVisible()), '');
+record('L2 exit hides panel', !(await page.locator('.ld-body').isVisible()), '');
 record('L2 exit restores user board', (await page.locator('.name-input').inputValue()) === 'Game rieng cua toi' && (await nodeCount(page)) === 1, '');
 // restart
 await startLesson(page, 'collect-stars');
@@ -171,7 +171,7 @@ await dragKind(page, 'show-number', 500, 640);
 await L2('L2 show -> wire show', 12);
 await wire(page, nodeOf('counter'), 'value', nodeOf('show-number'), 'value');
 await L2('L2 wired show -> play', 13);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await L2('L2 playing -> done', 14);
 // Hold right until the score shows (the lesson editor can run slowly in headless): up to 10 s, and report how long it took.
@@ -225,7 +225,7 @@ await L3('L3 limit -> wire lose', 11);
 await wire(page, nodeOf('compare'), 'out', nodeOf('win-lose'), 'lose');
 await L3('L3 lose -> play', 12);
 await shot(page, '13-l3-wired');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await L3('L3 playing -> win step', 13);
 await page.keyboard.down('ArrowRight');

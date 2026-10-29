@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/l13';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -6,7 +6,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
 });
-const context = await browser.newContext({ viewport: { width: 1920, height: 1100 } });
+const context = await browser.newContext({ viewport: { width: 1920, height: 1300 } });
 const page = await context.newPage();
 const logs = [];
 page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && logs.push(`[${m.type()}] ${m.text()}`));
@@ -19,8 +19,8 @@ const rec = (name, ok, d = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} | ${d}`);
 };
 const stepIs = async (label, id) => {
-  const title = await page.locator('.tut-title').innerText().catch(() => 'hidden');
-  const prog = await page.locator('.tut-progress').innerText().catch(() => '');
+  const title = await page.locator('.ld-title').innerText().catch(() => 'hidden');
+  const prog = await page.locator('.ld-steps').getAttribute('aria-label').then((a) => (a ?? '').replace(/Bước (\d+) trên (\d+)/, 'Bước $1/$2')).catch(() => '');
   rec(label, title === id, `${prog} | ${title}`);
 };
 const dragKind = async (kind, x, y) => {
@@ -65,7 +65,7 @@ const axis = async (param, n, value) => {
   await sleep(250);
 };
 
-await page.goto('http://localhost:5193/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -81,17 +81,17 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 logs.length = 0;
 
 await page.locator('[data-tut="tutorial"]').click();
-rec('menu lists lesson 13', (await page.locator('[data-lesson="camera-portals"]').count()) === 1);
-await page.locator('[data-lesson="camera-portals"]').click();
+rec('menu lists lesson 13', (await page.locator('.menu-item[data-lesson="camera-portals"]').count()) === 1);
+await page.locator('.menu-item[data-lesson="camera-portals"]').click();
 await sleep(700);
 await stepIs('intro', 'Vực quá rộng để nhảy');
 await page.screenshot({ path: `${OUT}/01-start.png` });
-await page.locator('.tut-panel [data-tut="next"]').click();
+await page.locator('.ld [data-tut="next"]').click();
 await sleep(300);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1000);
 await stepIs('playing -> back', 'Quay lại sửa');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
 await stepIs('edit -> portals', 'Thêm hai cổng');
 
@@ -111,15 +111,15 @@ await axis('position', 0, 22);
 await stepIs('placed -> pair', 'Ghép hai cổng thành một cặp');
 await wire(pb, 'self', pa, 'partner');
 await stepIs('paired -> try', 'Đi qua cổng');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await page.keyboard.down('ArrowRight');
 await sleep(2500);
 await page.keyboard.up('ArrowRight');
 await page.screenshot({ path: `${OUT}/02-after-portal-no-camera.png` });
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
-await stepIs('try -> edit2', 'Thêm khối Khoảng cách');
+await stepIs('try -> edit2', 'Thêm mảnh ghép Khoảng cách');
 
 // the second "Quay lại sửa" is step index 8; the check auto-advanced because play was stopped
 const dist = await add('distance', 1000, 60);
@@ -129,7 +129,7 @@ const blocks = await page.locator('.wc-node[data-kind="block"]').evaluateAll((el
 let flagOk = null;
 for (const b of blocks.reverse()) {
   await wire(b, 'self', dist, 'b');
-  const t = await page.locator('.tut-title').innerText();
+  const t = await page.locator('.ld-title').innerText();
   if (t !== 'Đo từ nhân vật tới cờ' || (await page.locator('.wc-wire').count()) > 0) {
     flagOk = b;
   }
@@ -169,7 +169,7 @@ await wire(key, 'pressed', tele, 'go');
 await stepIs('tele wired -> home', 'Chọn nơi về');
 await select(tele);
 await axis('position', 0, -8);
-await stepIs('home -> win nodes', 'Thêm khối thắng');
+await stepIs('home -> win nodes', 'Thêm mảnh ghép thắng');
 const touch = await add('touch', 700, 800);
 const end = await add('win-lose', 1000, 760);
 await stepIs('win nodes -> wire', 'Chạm cờ là thắng');
@@ -180,7 +180,7 @@ await wire(touch, 'touching', end, 'win');
 await stepIs('wired -> play', 'Chạy thử');
 await page.screenshot({ path: `${OUT}/03-built.png` });
 
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await page.keyboard.down('ArrowRight');
 let shot = 0;
@@ -188,7 +188,7 @@ const t0 = Date.now();
 let title = '';
 while (Date.now() - t0 < 30000) {
   await sleep(250);
-  title = await page.locator('.tut-title').innerText().catch(() => '');
+  title = await page.locator('.ld-title').innerText().catch(() => '');
   if (Date.now() - t0 > 3000 && shot === 0) {
     await page.screenshot({ path: `${OUT}/04-play-mid.png` });
     shot = 1;

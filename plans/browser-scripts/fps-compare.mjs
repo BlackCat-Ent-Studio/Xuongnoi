@@ -10,7 +10,7 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 const out = [];
 for (const id of ['side-stars', 'key-door']) {
   await openSample(page, id);
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(800);
   const fps = await page.evaluate(
     () =>
@@ -26,7 +26,7 @@ for (const id of ['side-stars', 'key-door']) {
       }),
   );
   out.push(`${id}=${fps.toFixed(1)}`);
-  await page.locator('[data-tut="play"]').click();
+  await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
   await sleep(300);
 }
 console.log(`port ${port} fps ${out.join(' ')}`);

@@ -4,7 +4,7 @@ import {
 } from './tut-common.mjs';
 
 const { browser, page, logs } = await openBrowser();
-const URL = 'http://localhost:5173/';
+const URL = `http://localhost:${process.env.PORT ?? 5173}/`;
 await page.goto(URL);
 await sleep(1200);
 
@@ -16,7 +16,7 @@ await shot(page, '00-invite');
 
 await page.locator('[data-tut="invite-yes"]').click().catch(()=>{});
 await sleep(400);
-await page.locator('.tut-exit').click().catch(()=>{});
+await page.locator('.ld-exit').click().catch(()=>{});
 await sleep(300);
 const L2 = async (label, n) => {
   const got = await stepNo(page);
@@ -59,7 +59,7 @@ await dragKind(page, 'show-number', 500, 640);
 await L2('L2 show -> wire show', 12);
 await wire(page, nodeOf('counter'), 'value', nodeOf('show-number'), 'value');
 await L2('L2 wired show -> play', 13);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await L2('L2 playing -> done', 14);
 const fps = await page.evaluate(() => new Promise((res) => { let n = 0; const t0 = performance.now(); const f = () => { n++; if (performance.now() - t0 < 1500) requestAnimationFrame(f); else res(n / 1.5); }; requestAnimationFrame(f); }));

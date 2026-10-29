@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/sweep';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -21,7 +21,7 @@ const check = (name, ok, d = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} ${d}`);
 };
 
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -42,8 +42,8 @@ const noteCount = () => page.locator('.wc-note').count();
 const undoDisabled = () => page.locator('[data-act="undo"]').isDisabled();
 
 // load sample with wires
-await page.locator('button', { hasText: 'Mở ▾' }).click();
-await page.locator('[data-sample="side-stars"]').click();
+await page.locator('[data-menu="file"]').click();
+await page.locator('.mb-item', { hasText: 'Nhặt sao' }).first().click();
 await sleep(800);
 const n0 = await nodeCount();
 const w0 = await wireCount();
@@ -180,7 +180,7 @@ await page.keyboard.up('Shift');
 await page.keyboard.press('Delete');
 await sleep(200);
 check('canvas cleared', (await nodeCount()) === 0);
-await page.locator('[data-act="add-note"]').click();
+await page.locator('.palette-item[data-kind="note"]').click();
 await sleep(300);
 check('note added', (await noteCount()) === 1);
 const ta = page.locator('.wc-note-text').first();
@@ -233,10 +233,10 @@ const clipStored = await page.evaluate(() => localStorage.getItem('xuong-noi:cli
 check('clipboard persisted', clipStored);
 
 // play disables undo
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(800);
 check('undo disabled while playing', await undoDisabled());
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 
 // delete note
@@ -257,7 +257,7 @@ if (await items.count()) {
   await items.first().click();
   await sleep(1000);
   await page.screenshot({ path: `${OUT}/lesson.png` });
-  check('lesson board has nodes or panel', (await page.locator('.tut-panel, .tutorial-panel').count()) >= 0);
+  check('lesson board has nodes or panel', (await page.locator('.ld-body').count()) >= 0);
   await page.locator('.palette-item[data-kind="key"]').first().click();
   await sleep(200);
   const ln = await nodeCount();

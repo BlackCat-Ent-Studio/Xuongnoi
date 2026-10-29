@@ -6,7 +6,7 @@ const SHOTS = `${SCRATCH}/job1`;
 mkdirSync(SHOTS, { recursive: true });
 const { browser, page, logs } = await openBrowser();
 await page.setViewportSize({ width: 1920, height: 1100 });
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -22,7 +22,7 @@ const id = async (kind, nth) =>
   `.wc-node[data-id="${await page.locator(`.wc-node[data-kind="${kind}"]`).nth(nth).getAttribute('data-id')}"]`;
 
 await page.locator('[data-tut="tutorial"]').click();
-record('menu lists lesson 7', (await page.locator('[data-lesson="chores"]').count()) === 1, '');
+record('menu lists lesson 7', (await page.locator('.menu-item[data-lesson="chores"]').count()) === 1, '');
 await page.locator('[data-tut="tutorial"]').click();
 
 await startLesson(page, 'chores');
@@ -31,11 +31,11 @@ record('board nodes', (await nodeCount(page)) >= 14, String(await nodeCount(page
 await shot('l7-01-intro');
 await clickNext(page);
 await step('watch', 2);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(2500);
 await shot('l7-02-chaos');
 await step('back to edit', 3);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await step('add sequence', 4);
 await dragKind(page, 'sequence', 20, 420);
@@ -55,11 +55,11 @@ await step('wire next', 9);
 await wire(page, await id('or', 1), 'out', seq, 'next');
 await step('play order', 10);
 await shot('l7-04-wired-order');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(5000);
 await shot('l7-05-order-playing');
 await step('back to edit 2', 11);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await step('add carry', 12);
 await dragKind(page, 'carry', 560, 500);
@@ -74,7 +74,7 @@ await step('wire finished', 16);
 await wire(page, seq, 'finished', await id('win-lose', 0), 'win');
 await step('play chores', 17);
 await shot('l7-06-all-wired');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 let won = false;
 for (let i = 0; i < 80 && !won; i++) {
   await sleep(500);
@@ -84,8 +84,8 @@ for (let i = 0; i < 80 && !won; i++) {
 await shot('l7-08-win');
 record('bot finished chores (step 19)', won, (await panelInfo(page)).progress ?? '');
 await step('done', 19);
-await page.locator('.tut-panel button', { hasText: 'Hoàn thành' }).click();
+await page.locator('.ld-card button', { hasText: 'Hoàn thành' }).click();
 await sleep(300);
-record('panel closed after finish', !(await page.locator('.tut-panel').isVisible()), '');
+record('panel closed after finish', !(await page.locator('.ld-body').isVisible()), '');
 record('no console errors', logs.length === 0, logs.join(' || '));
 await browser.close();

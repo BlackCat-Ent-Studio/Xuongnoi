@@ -1,13 +1,13 @@
 import { openBrowser, sleep, openSample, SCRATCH } from './common.mjs';
 import { startLesson } from './tut-common.mjs';
 const { browser, page } = await openBrowser();
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1200);
 await page.locator('[data-tut="invite-yes"]').click().catch(() => {});
 await sleep(500);
-await page.locator('.tut-exit').click().catch(() => {});
+await page.locator('.ld-exit').click().catch(() => {});
 await startLesson(page, 'collect-stars');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(500);
 await page.screenshot({ path: `${SCRATCH}/bots/move-0.png` });
 await page.keyboard.down('ArrowRight');

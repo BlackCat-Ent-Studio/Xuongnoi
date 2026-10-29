@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/sweep';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -6,7 +6,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
 });
-const context = await browser.newContext({ viewport: { width: 1920, height: 1100 } });
+const context = await browser.newContext({ viewport: { width: 1920, height: 1300 } });
 const page = await context.newPage();
 const logs = [];
 page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && logs.push(`[${m.type()}] ${m.text()}`));
@@ -19,11 +19,11 @@ const rec = (name, ok, d = '') => {
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} | ${d}`);
 };
 const panel = async () => {
-  if (!(await page.locator('.tut-panel').isVisible().catch(() => false))) return { visible: false };
+  if (!(await page.locator('.ld-body').isVisible().catch(() => false))) return { visible: false };
   return {
     visible: true,
-    progress: await page.locator('.tut-progress').innerText(),
-    title: await page.locator('.tut-title').innerText(),
+    progress: await page.locator('.ld-steps').getAttribute('aria-label').then((a) => (a ?? '').replace(/Bước (\d+) trên (\d+)/, 'Bước $1/$2')),
+    title: await page.locator('.ld-title').innerText(),
   };
 };
 const step = async (label, n) => {
@@ -73,7 +73,7 @@ const dragHeadOf = async (sel, dx, dy) => {
   await sleep(150);
 };
 
-await page.goto('http://localhost:5173/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) {
   await page.locator('[data-tut="invite-no"]').click();
@@ -89,17 +89,17 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 logs.length = 0;
 
 await page.locator('[data-tut="tutorial"]').click();
-rec('menu lists lesson 10', (await page.locator('[data-lesson="bot-driver"]').count()) === 1);
-await page.locator('[data-lesson="bot-driver"]').click();
+rec('menu lists lesson 10', (await page.locator('.menu-item[data-lesson="bot-driver"]').count()) === 1);
+await page.locator('.menu-item[data-lesson="bot-driver"]').click();
 await sleep(700);
 await step('L10 intro', 1);
-await page.locator('.tut-panel [data-tut="next"]').click();
+await page.locator('.ld [data-tut="next"]').click();
 await sleep(300);
 await step('L10 watch', 2);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1200);
 await step('L10 playing -> back-to-edit', 3);
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
 await step('L10 edit -> add sequence', 4);
 await page.screenshot({ path: `${OUT}/l10-00-start.png` });
@@ -179,7 +179,7 @@ await dragKind('win-lose', 1060, 520);
 const endId = await newId(before);
 await step('L10 add win-lose -> wire win', 20);
 await wire(nodeSel(touch), 'touching', nodeSel(endId), 'win');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 const t0 = Date.now();
 let last = '';
 let winSeen = false;

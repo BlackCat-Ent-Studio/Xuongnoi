@@ -1,4 +1,4 @@
-import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+import { chromium } from 'playwright';
 
 const OUT = 'C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/c6588d98-de8b-47ca-8a66-fd5282a3c2b1/scratchpad/l11';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -6,7 +6,7 @@ const browser = await chromium.launch({
   headless: true,
   args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'],
 });
-const context = await browser.newContext({ viewport: { width: 1920, height: 1100 } });
+const context = await browser.newContext({ viewport: { width: 1920, height: 1700 } });
 const page = await context.newPage();
 const logs = [];
 page.on('console', (m) => (m.type() === 'error' || m.type() === 'warning') && logs.push(`[${m.type()}] ${m.text()}`));
@@ -18,10 +18,10 @@ const rec = (name, ok, d = '') => {
   if (!ok) failed++;
   console.log(`${ok ? 'PASS' : 'FAIL'} | ${name} | ${d}`);
 };
-const title = async () => (await page.locator('.tut-panel').isVisible().catch(() => false)) ? await page.locator('.tut-title').innerText() : 'hidden';
+const title = async () => (await page.locator('.ld-body').isVisible().catch(() => false)) ? await page.locator('.ld-title').innerText() : 'hidden';
 const step = async (label, expectTitle) => {
   const t = await title();
-  const prog = await page.locator('.tut-progress').innerText().catch(() => '');
+  const prog = await page.locator('.ld-steps').getAttribute('aria-label').then((a) => (a ?? '').replace(/Bước (\d+) trên (\d+)/, 'Bước $1/$2')).catch(() => '');
   rec(label, t === expectTitle, `${prog} | ${t}`);
 };
 const dragKind = async (kind, x, y) => {
@@ -58,7 +58,7 @@ const wire = async (from, fromPort, to, toPort) => {
 const attrId = (sel) => page.locator(sel).first().getAttribute('data-id');
 const hud = async () => (await page.locator('body').innerText()).replace(/\s+/g, ' ');
 
-await page.goto('http://localhost:5191/');
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
 await sleep(1500);
 if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) await page.locator('[data-tut="invite-no"]').click();
 await page.evaluate(() => localStorage.clear());
@@ -68,18 +68,18 @@ if (await page.locator('[data-tut="invite-no"]').isVisible().catch(() => false))
 logs.length = 0;
 
 await page.locator('[data-tut="tutorial"]').click();
-rec('menu lists lesson 11', (await page.locator('[data-lesson="chance-zones"]').count()) === 1);
-await page.locator('[data-lesson="chance-zones"]').click();
+rec('menu lists lesson 11', (await page.locator('.menu-item[data-lesson="chance-zones"]').count()) === 1);
+await page.locator('.menu-item[data-lesson="chance-zones"]').click();
 await sleep(800);
 await step('intro', 'Thử vận may');
 await page.screenshot({ path: `${OUT}/l11-00-start.png` });
-await page.locator('.tut-panel [data-tut="next"]').click();
+await page.locator('.ld [data-tut="next"]').click();
 await sleep(300);
 await step('watch', 'Xem thử trước');
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1000);
 await step('playing', 'Quay lại sửa');
-await page.locator('[data-tut="play"]').click();
+await page.locator('.pbtn.stop').click();
 await sleep(600);
 await step('edit', 'Thêm Cảm biến vùng');
 
@@ -136,7 +136,7 @@ rec('gate wire accepted by gate block only', opened);
 await page.screenshot({ path: `${OUT}/l11-02-wired.png` });
 
 // play: the dice part
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1500);
 await step('play roll', 'Quay lại sửa');
 const k = page.keyboard;
@@ -172,7 +172,7 @@ rec('rolled with E in zone', rolled0 && rolled.length > 0, rolled.join(','));
 rec('got a 5 or 6', gateOpen);
 await page.screenshot({ path: `${OUT}/l11-03-rolled.png` });
 console.log('HUD', (await hud()).slice(0, 200));
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(600);
 await step('back to edit 2', 'Thêm Khoảng cách');
 
@@ -191,13 +191,13 @@ await wire(nodeSel(flagId), 'self', nodeSel(dist), 'b');
 await step('dist wired', 'Thêm Hiện số thứ hai');
 const show2 = await addNode('show-number', 1000, 880);
 await wire(nodeSel(dist), 'distance', nodeSel(show2), 'value');
-await step('show2 wired', 'Thêm khối Thắng/Thua');
+await step('show2 wired', 'Thêm mảnh ghép Thắng/Thua');
 const end = await addNode('win-lose', 1150, 700);
 await wire(nodeSel(dist), 'within', nodeSel(end), 'win');
 await step('win wired', 'Chơi tới cờ');
 await page.screenshot({ path: `${OUT}/l11-04-final-board.png` });
 
-await page.locator('[data-tut="play"]').click();
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
 await sleep(1500);
 await walkAndRoll();
 let ok = false;
