@@ -45,6 +45,7 @@ export const fightNode: NodeDef<FightState> = {
     { id: 'range', label: 'Tầm đánh', kind: 'number', default: 1.2, min: 0.3, max: 5, step: 0.1 },
     { id: 'attackCooldown', label: 'Nghỉ giữa các đòn (giây)', kind: 'number', default: 0.8, min: 0.1, max: 10, step: 0.1 },
     { id: 'sightRange', label: 'Tầm nhìn', kind: 'number', default: 8, min: 0, max: 50, step: 0.5 },
+    { id: 'backoffSeconds', label: 'Thời gian lùi sau mỗi đòn (giây)', kind: 'number', default: 0.25, min: 0, max: 3, step: 0.05, advanced: true },
   ],
   create: () => ({ memo: {}, cooldown: 0, backoff: 0 }),
   evaluate(ctx, i, params, s) {
@@ -87,7 +88,7 @@ export const fightNode: NodeDef<FightState> = {
       const attack = s.cooldown <= 0;
       if (attack) {
         s.cooldown = Math.max(0.1, numParam(params, 'attackCooldown', 0.8));
-        s.backoff = BACKOFF_SECONDS;
+        s.backoff = Math.max(0, numParam(params, 'backoffSeconds', BACKOFF_SECONDS));
       }
       return { moveX: face.moveX, moveY: face.moveY, jump: false, attack };
     }

@@ -209,10 +209,11 @@ export function createWorld(mode: ViewMode): World {
   }
 
   /** A resting spot in front of (else behind, else at, else above) the character that is clear of solids. */
-  function dropSpot(c: Entity, item: Entity): Vec3 {
+  function dropSpot(c: Entity, item: Entity, distance?: number): Vec3 {
     const solids = list.filter((e) => e.visible && e.solid && e.kind === 'block');
     const y = mode === '2d-top' ? c.pos.y : c.pos.y - c.size.y / 2 + item.size.y / 2;
-    const gap = Math.max(c.size.x, c.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + 0.05;
+    const autoGap = Math.max(c.size.x, c.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + 0.05;
+    const gap = distance !== undefined && Number.isFinite(distance) && distance > 0 ? distance : autoGap;
     const spots: Vec3[] = [
       { x: c.pos.x + c.facing.x * gap, y, z: c.pos.z + c.facing.z * gap },
       { x: c.pos.x - c.facing.x * gap, y, z: c.pos.z - c.facing.z * gap },
@@ -292,6 +293,7 @@ export function createWorld(mode: ViewMode): World {
         inHand: false,
         carryable: spec.kind === 'item' && spec.carryable !== false,
         holdStyle: spec.holdStyle === 'hand' ? 'hand' : 'head',
+        ...(spec.kind === 'character' && spec.hitReaction ? { hit: { ...spec.hitReaction } } : {}),
         ...(spec.kind === 'item' && spec.damage !== undefined ? { damage: finiteOr(spec.damage, 0) } : {}),
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
@@ -365,16 +367,16 @@ export function createWorld(mode: ViewMode): World {
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
-    drop(character: EntityId): EntityId | null {
+    drop(character: EntityId, distance?: number): EntityId | null {
       const c = liveCharacter(character);
       const item = c && c.holding !== null ? byId.get(c.holding) : undefined;
       if (!c || !item) return null;
       release(item);
-      item.pos = dropSpot(c, item);
+      item.pos = dropSpot(c, item, distance);
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
-    throwHeld(character: EntityId, power: number): EntityId | null {
+    throwHeld(character: EntityId, power: number, lift?: number): EntityId | null {
       const c = liveCharacter(character);
       const item = c && c.holding !== null ? byId.get(c.holding) : undefined;
       if (!c || !item) return null;
@@ -384,7 +386,7 @@ export function createWorld(mode: ViewMode): World {
       Object.assign(item.pos, holdPosition(c, item, mode));
       item.vel = {
         x: c.facing.x * p,
-        y: mode === '2d-top' ? 0 : p * THROW_LIFT,
+        y: mode === '2d-top' ? 0 : p * (lift !== undefined && Number.isFinite(lift) ? Math.max(0, lift) : THROW_LIFT),
         z: mode === '2d-side' ? 0 : c.facing.z * p,
       };
       return item.id;

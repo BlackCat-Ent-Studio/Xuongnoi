@@ -290,6 +290,16 @@ export const HOLD_STYLES: readonly HoldStyle[] = ['head', 'hand'];
 /** Who steers a character: the person playing (camera follows it) or a bot driven by brain nodes. */
 export type CharacterRole = 'player' | 'bot';
 
+/** Per-character hit reaction (see EntitySpec.hitReaction). */
+export interface HitReaction {
+  /** Seconds a character cannot be hurt again after a hit. */
+  invulnSeconds?: number;
+  /** Horizontal speed of the knockback push. */
+  knockSpeed?: number;
+  /** Upward hop of the knockback (ignored in the top-down view). */
+  knockLift?: number;
+}
+
 export interface EntitySpec {
   kind: EntityKind;
   /** Graph node that owns this entity — lets the editor map clicks in the game view back to nodes. */
@@ -314,6 +324,8 @@ export interface EntitySpec {
   holdStyle?: HoldStyle;
   /** Items only: damage dealt as a tool or when thrown. 0 / omitted = by shape (sword 3, hammer 2, pickaxe 2, else 1). */
   damage?: number;
+  /** Characters only: hit-reaction tuning; each omitted field keeps the built-in value. */
+  hitReaction?: HitReaction;
   /** Vehicles only (kind 'vehicle'). */
   vehicle?: VehicleSpec;
   /** Blocks only: a zone marker, drawn translucent so the area can be seen while editing. */
@@ -489,10 +501,10 @@ export interface WorldApi {
 
   /** Picks up the nearest free carryable item within `reach` (prefers the facing side). One item per character. */
   grab(character: EntityId, reach: number): EntityId | null;
-  /** Puts the held item down in front of the character. Returns the item, or null when nothing was held. */
-  drop(character: EntityId): EntityId | null;
+  /** Puts the held item down in front of the character (`distance` = center-to-center offset; omitted = just clear of the body). Returns the item, or null when nothing was held. */
+  drop(character: EntityId, distance?: number): EntityId | null;
   /** Releases the held item with a forward-and-up velocity. Returns the item, or null when nothing was held. */
-  throwHeld(character: EntityId, power: number): EntityId | null;
+  throwHeld(character: EntityId, power: number, lift?: number): EntityId | null;
   heldItem(character: EntityId): EntityId | null;
   isHeld(item: EntityId): boolean;
   /** Marks the nearest item within `reach` (not the one in hand) as used; its pulse shows on the next tick. */
