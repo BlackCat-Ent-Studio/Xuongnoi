@@ -45,7 +45,7 @@ function session() {
 }
 
 describe('lesson 10: a bot that drives', () => {
-  it('is lesson 10, starts in top view with a bot, a car and a flag', () => {
+  it('is a lesson that starts in top view with a bot, a car and a flag', () => {
     const lesson = findLesson('bot-driver')!;
     expect(LESSONS).toContain(lesson);
     expect(lesson.title).toBe('10. Bot lái xe');
