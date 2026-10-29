@@ -35,6 +35,10 @@ import { distanceNode } from './distance';
 import { cameraNode } from './camera';
 import { teleportNode } from './teleport';
 import { portalNode } from './portal';
+import { movingPlatformNode } from './moving-platform';
+import { rotatingPlatformNode } from './rotating-platform';
+import { shooterNode } from './shooter';
+import { spawnerNode } from './spawner';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -86,6 +90,10 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   cameraNode,
   teleportNode,
   portalNode,
+  movingPlatformNode,
+  rotatingPlatformNode,
+  shooterNode,
+  spawnerNode,
 ];
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */

@@ -25,8 +25,8 @@ describe('samples', () => {
   const samples = listSamples();
 
   it('lists the samples with distinct ids and the expected modes', () => {
-    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side']);
+    expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side', '2d-side']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
@@ -45,7 +45,7 @@ describe('samples', () => {
       }).not.toThrow();
       expect(world.entities().length).toBeGreaterThan(0);
       // The bot-only boards play themselves; the platform bot reaches its star within ten seconds and the arena bot beats an idle player.
-      if (s.id !== 'platform-bot' && s.id !== 'arena') expect(world.ended).toBeNull();
+      if (s.id !== 'platform-bot' && s.id !== 'arena' && s.id !== 'dodge-shoot') expect(world.ended).toBeNull();
     });
   }
 

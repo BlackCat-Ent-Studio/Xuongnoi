@@ -1,6 +1,7 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { lockMotion } from './combat';
 import type { Entity } from './entity';
+import { isSpinner, spinnerTouches } from './platforms';
 import { driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
 export const GRAVITY = -30;
@@ -35,6 +36,9 @@ function overlapsAll(a: Entity, b: Entity): boolean {
 
 /** Overlapping or within CONTACT_EPS on every axis. */
 export function touching(a: Entity, b: Entity): boolean {
+  // A spinning block touches through its rotated outline, not its bounding box.
+  if (isSpinner(a)) return spinnerTouches(a, b);
+  if (isSpinner(b)) return spinnerTouches(b, a);
   return (
     Math.abs(a.pos.x - b.pos.x) <= (a.size.x + b.size.x) / 2 + CONTACT_EPS &&
     Math.abs(a.pos.y - b.pos.y) <= (a.size.y + b.size.y) / 2 + CONTACT_EPS &&
@@ -217,7 +221,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
 
   const byId = new Map(entities.map((e) => [e.id, e]));
   for (const item of entities) {
-    if (item.kind !== 'item' || !item.visible) continue;
+    if (item.kind !== 'item' || !item.visible || item.bullet) continue;
     const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
     if (holder) {
       Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : holdPosition(holder, item, mode));

@@ -84,6 +84,10 @@ export function makeWorld(): FakeWorld {
     teleport: () => null,
     setPortal: () => undefined,
     portalUser: () => null,
+    moveBlock: () => true,
+    setBlockAngle: () => true,
+    shoot: () => null,
+    shotHits: () => [],
   };
   return w;
 }

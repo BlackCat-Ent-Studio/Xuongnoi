@@ -26,8 +26,8 @@ describe('registration', () => {
     registerAllNodes();
     registerAllNodes();
     const defs = listNodeDefs();
-    expect(defs).toHaveLength(37);
-    expect(new Set(defs.map((d) => d.kind)).size).toBe(37);
+    expect(defs).toHaveLength(41);
+    expect(new Set(defs.map((d) => d.kind)).size).toBe(41);
   });
 
   it('every node has vi text, valid category and a value for every declared default', () => {
