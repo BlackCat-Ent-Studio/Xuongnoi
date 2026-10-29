@@ -12,7 +12,7 @@ export const teleportNode: NodeDef<TeleportState> = {
   label: 'Dịch chuyển',
   category: 'action',
   description:
-    'Đưa nhân vật, đồ vật hoặc xe tới chỗ khác ngay lập tức mỗi khi "Đi" có nhịp. Nối "Nơi đến (vật)" để đến chỗ một vật, hoặc nhập toạ độ. Nếu chỗ đó bị khối chặn, sẽ tìm chỗ trống gần nhất. Đồ đang cầm đi theo người cầm; người ngồi trên xe thì cả xe được dịch chuyển.',
+    'Đưa nhân vật, đồ vật hoặc xe tới chỗ khác ngay lập tức mỗi khi "Đi" có nhịp. Nối "Nơi đến (vật)" để đến chỗ một vật, hoặc nhập toạ độ. Nếu chỗ đó bị hộp chặn, sẽ tìm chỗ trống gần nhất. Đồ đang cầm đi theo người cầm; người ngồi trên xe thì cả xe được dịch chuyển.',
   inputs: [
     { id: 'who', type: 'object', label: 'Ai (vật)' },
     { id: 'go', type: 'bool', label: 'Đi' },

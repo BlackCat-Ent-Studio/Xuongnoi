@@ -15,7 +15,7 @@ const T = {
   intro: {
     title: 'Bot biết lái xe',
     text: 'Bảng này có một con bot, một chiếc xe đậu bên đường và lá cờ ở cuối đường. Ta sẽ dạy bot tự đi tới xe, lên xe và lái qua khúc cua đến cờ.',
-    explain: 'Bot không có tay chân thật để bấm phím, nên ta dùng các khối "bộ não" để ra lệnh cho nó.',
+    explain: 'Bot không có tay chân thật để bấm phím, nên ta dùng các mảnh ghép "bộ não" để ra lệnh cho nó.',
   },
   watch: {
     title: 'Xem thử trước',
@@ -27,80 +27,80 @@ const T = {
   },
   sequence: {
     title: 'Thêm Chuỗi việc',
-    text: 'Kéo khối "Chuỗi việc" (nhóm Bộ não) vào bảng.',
+    text: 'Kéo mảnh ghép "Chuỗi việc" (nhóm Bộ não) vào bảng.',
     explain: 'Chuỗi việc làm lần lượt từng việc. Mặc định có 2 việc: việc 1 là đi tới xe, việc 2 là lái xe tới cờ.',
   },
   goto1: {
     title: 'Thêm Đi tới cho bot',
-    text: 'Kéo một khối "Đi tới" (nhóm Bộ não) vào bảng. Khối này sẽ dẫn bot đi bộ tới xe.',
+    text: 'Kéo một mảnh ghép "Đi tới" (nhóm Bộ não) vào bảng. Mảnh ghép này sẽ dẫn bot đi bộ tới xe.',
     explain: 'Đi tới tự tìm đường vòng qua tường để tới đích, rồi bật "Vừa tới" một nhịp khi đã đến nơi.',
   },
   goto1Who: {
     title: 'Nói ai đi, đi đâu',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Bot" của khối Đi tới. Rồi nối cổng "Xe" của khối Phương tiện sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Bot" của mảnh ghép Đi tới. Rồi nối cổng "Xe" của mảnh ghép Phương tiện sang cổng "Đích (vật)".',
   },
   goto1Move: {
     title: 'Cho bot bước đi',
-    text: 'Nối "Đi ngang" của khối Đi tới sang "Đi ngang" của bot, và "Đi dọc" sang "Đi dọc" của bot.',
-    explain: 'Khối Đi tới chỉ nghĩ xem nên đi hướng nào. Bot chỉ bước khi ta nối hướng đó vào nó.',
+    text: 'Nối "Đi ngang" của mảnh ghép Đi tới sang "Đi ngang" của bot, và "Đi dọc" sang "Đi dọc" của bot.',
+    explain: 'Mảnh ghép Đi tới chỉ nghĩ xem nên đi hướng nào. Bot chỉ bước khi ta nối hướng đó vào nó.',
   },
   goto1Stop: {
     title: 'Dừng cách xe một chút',
-    text: 'Chọn khối Đi tới đang dẫn bot. Ở Thuộc tính, đổi "Dừng cách đích" thành 1.5.',
+    text: 'Chọn mảnh ghép Đi tới đang dẫn bot. Ở Thuộc tính, đổi "Dừng cách đích" thành 1.5.',
     explain: 'Xe là vật cứng nên bot không thể đứng đúng giữa xe. Dừng cách xe một chút là bot đã đứng đủ gần để leo lên.',
   },
   step1: {
     title: 'Việc 1: đi tới xe',
-    text: 'Nối "Việc 1" của Chuỗi việc sang cổng "Cho đi" của khối Đi tới.',
-    explain: '"Cho đi" là công tắc: khối Đi tới chỉ làm việc khi nó bật.',
+    text: 'Nối "Việc 1" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới.',
+    explain: '"Cho đi" là công tắc: mảnh ghép Đi tới chỉ làm việc khi nó bật.',
   },
   enter: {
-    title: 'Thêm khối lên xe',
-    text: 'Kéo khối "Lên / Xuống xe" (nhóm Hành động) vào bảng.',
+    title: 'Thêm mảnh ghép lên xe',
+    text: 'Kéo mảnh ghép "Lên / Xuống xe" (nhóm Hành động) vào bảng.',
     explain: 'Mỗi lần nó nhận một nhịp "Bấm", nhân vật đứng gần xe sẽ lên xe. Lần sau thì xuống xe.',
   },
   enterWho: {
     title: 'Nói bot sẽ lên xe',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Ai" của khối Lên / Xuống xe.',
+    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Ai" của mảnh ghép Lên / Xuống xe.',
   },
   arrive: {
     title: 'Tới nơi thì lên xe',
-    text: 'Nối "Vừa tới" của khối Đi tới (dẫn bot) vào hai chỗ: cổng "Bấm" của Lên / Xuống xe và cổng "Xong việc" của Chuỗi việc.',
+    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (dẫn bot) vào hai chỗ: cổng "Bấm" của Lên / Xuống xe và cổng "Xong việc" của Chuỗi việc.',
     explain: 'Một cổng nối được nhiều dây. Khi bot vừa tới xe, nó lên xe và Chuỗi việc chuyển sang việc 2.',
   },
   goto2: {
     title: 'Thêm Đi tới cho xe',
-    text: 'Kéo thêm một khối "Đi tới" nữa vào bảng. Khối này sẽ dẫn chiếc xe tới cờ.',
+    text: 'Kéo thêm một mảnh ghép "Đi tới" nữa vào bảng. Mảnh ghép này sẽ dẫn chiếc xe tới cờ.',
     explain: 'Bot ngồi trong xe thì bộ não lái luôn chiếc xe, nên lần này người đi là xe chứ không phải bot.',
   },
   goto2Who: {
     title: 'Xe đi tới cờ',
-    text: 'Nối cổng "Xe" của khối Phương tiện sang cổng "Bot" của khối Đi tới mới. Rồi nối cổng "Khối" của lá cờ (khối vàng) sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Hộp" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
   },
   step2: {
     title: 'Việc 2: lái xe tới cờ',
-    text: 'Nối "Việc 2" của Chuỗi việc sang cổng "Cho đi" của khối Đi tới mới.',
+    text: 'Nối "Việc 2" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới mới.',
   },
   goto2Move: {
     title: 'Cho xe chạy',
-    text: 'Nối "Đi ngang" của khối Đi tới mới sang "Đi ngang" của khối Phương tiện, và "Đi dọc" sang "Đi dọc".',
+    text: 'Nối "Đi ngang" của mảnh ghép Đi tới mới sang "Đi ngang" của mảnh ghép Phương tiện, và "Đi dọc" sang "Đi dọc".',
     explain: 'Xe được lái bằng đúng hai cổng này, giống như cần điều khiển lái xe.',
   },
   touch: {
     title: 'Thêm Cảm biến chạm',
-    text: 'Kéo khối "Cảm biến chạm" (nhóm Logic) vào bảng.',
+    text: 'Kéo mảnh ghép "Cảm biến chạm" (nhóm Logic) vào bảng.',
   },
   touchWho: {
     title: 'Xe chạm cờ',
-    text: 'Nối cổng "Xe" của khối Phương tiện sang "Vật A" và cổng "Khối" của lá cờ sang "Vật B" của Cảm biến chạm.',
+    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện sang "Vật A" và cổng "Hộp" của lá cờ sang "Vật B" của Cảm biến chạm.',
   },
   end: {
-    title: 'Thêm khối Thắng/Thua',
-    text: 'Kéo khối "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép Thắng/Thua',
+    text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
   },
   win: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Đang chạm" của Cảm biến chạm sang cổng "Thắng" của khối Thắng/Thua.',
+    text: 'Nối "Đang chạm" của Cảm biến chạm sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
   },
   play: {
     title: 'Chạy thử',

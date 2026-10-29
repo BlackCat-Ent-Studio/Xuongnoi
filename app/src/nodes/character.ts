@@ -44,7 +44,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       default: 'player',
       options: [
         { value: 'player', label: 'Người chơi (camera theo dõi)' },
-        { value: 'bot', label: 'Bot (do khối Bộ não điều khiển)' },
+        { value: 'bot', label: 'Bot (do mảnh ghép Bộ não điều khiển)' },
       ],
     },
   ],

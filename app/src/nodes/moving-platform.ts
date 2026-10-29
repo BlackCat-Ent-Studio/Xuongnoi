@@ -37,7 +37,7 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
     { id: 'to', label: 'Điểm B', kind: 'vec3', default: { x: 4, y: 0, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 3, y: 0.5, z: 1 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#f59e0b' },
-    { id: 'speed', label: 'Tốc độ (khối/giây)', kind: 'number', default: 2, min: 0.1, max: 20, step: 0.1 },
+    { id: 'speed', label: 'Tốc độ (ô/giây)', kind: 'number', default: 2, min: 0.1, max: 20, step: 0.1 },
     { id: 'wait', label: 'Nghỉ ở mỗi đầu (giây)', kind: 'number', default: 1, min: 0, max: 30, step: 0.5 },
     {
       id: 'loop',

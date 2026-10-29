@@ -17,21 +17,21 @@ const T = {
   boardName: 'Bài 8 - Đánh nhau',
   intro: {
     title: 'Đánh nhau trong game',
-    text: 'Bảng này có sẵn bạn (xanh), một con bot đỏ đứng im, một thanh kiếm dưới sàn, và khối Máu của bạn. Ta sẽ cho bot có máu để bạn đánh bại nó.',
-    explain: 'Nhân vật chỉ bị đau khi có khối "Máu". Không có khối này thì đánh vào cũng không sao.',
+    text: 'Bảng này có sẵn bạn (xanh), một con bot đỏ đứng im, một thanh kiếm dưới sàn, và mảnh ghép Máu của bạn. Ta sẽ cho bot có máu để bạn đánh bại nó.',
+    explain: 'Nhân vật chỉ bị đau khi có mảnh ghép "Máu". Không có mảnh ghép này thì đánh vào cũng không sao.',
   },
   addHealth: {
-    title: 'Thêm khối Máu cho bot',
-    text: 'Kéo thêm một khối "Máu" (nhóm Hành động) vào bảng.',
-    explain: 'Khối Máu cho nhân vật một thanh máu trên đầu. Mỗi cú đánh làm mất máu, và nhân vật bị đẩy lùi, nháy đỏ.',
+    title: 'Thêm mảnh ghép Máu cho bot',
+    text: 'Kéo thêm một mảnh ghép "Máu" (nhóm Hành động) vào bảng.',
+    explain: 'Mảnh ghép Máu cho nhân vật một thanh máu trên đầu. Mỗi cú đánh làm mất máu, và nhân vật bị đẩy lùi, nháy đỏ.',
   },
   wireSelf: {
-    title: 'Nói khối Máu của ai',
-    text: 'Nối cổng "Nhân vật" của con bot đỏ sang cổng "Nhân vật" của khối Máu mới.',
+    title: 'Nói mảnh ghép Máu của ai',
+    text: 'Nối cổng "Nhân vật" của con bot đỏ sang cổng "Nhân vật" của mảnh ghép Máu mới.',
   },
   wireWin: {
     title: 'Hết máu là thắng',
-    text: 'Nối cổng "Hết máu" của khối Máu mới sang cổng "Thắng" của khối Thắng/Thua.',
+    text: 'Nối cổng "Hết máu" của mảnh ghép Máu mới sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
     explain: 'Khi máu về 0, nhân vật ngã xuống rồi biến mất, và cổng "Hết máu" bật lên.',
   },
   playWin: {
@@ -49,25 +49,25 @@ const T = {
   },
   addFight: {
     title: 'Thêm bộ não đánh nhau',
-    text: 'Kéo khối "Đánh nhau" (nhóm Bộ não) vào bảng.',
+    text: 'Kéo mảnh ghép "Đánh nhau" (nhóm Bộ não) vào bảng.',
     explain: 'Bot tự tìm đường tới mục tiêu và ra đòn khi đủ gần. Đánh xong nó lùi lại một chút rồi vào tiếp.',
   },
   wireBot: {
     title: 'Bộ não điều khiển bot',
-    text: 'Nối cổng "Nhân vật" của bot đỏ sang cổng "Bot" của khối Đánh nhau.',
+    text: 'Nối cổng "Nhân vật" của bot đỏ sang cổng "Bot" của mảnh ghép Đánh nhau.',
   },
   wireTarget: {
     title: 'Mục tiêu là bạn',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của khối Đánh nhau.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của mảnh ghép Đánh nhau.',
   },
   wireMove: {
     title: 'Nối hướng đi',
-    text: 'Nối cổng "Đi ngang" của khối Đánh nhau sang cổng "Đi ngang" của bot đỏ.',
+    text: 'Nối cổng "Đi ngang" của mảnh ghép Đánh nhau sang cổng "Đi ngang" của bot đỏ.',
   },
   wireAttack: {
     title: 'Nối cú đánh',
-    text: 'Nối cổng "Ra đòn" của khối Đánh nhau sang cổng "Dùng" của khối Cầm tay còn trống (của bot).',
-    explain: 'Cổng "Ra đòn" bật lên một nhịp khi bot đủ gần. Khối Cầm tay biến nhịp đó thành cú vung tay.',
+    text: 'Nối cổng "Ra đòn" của mảnh ghép Đánh nhau sang cổng "Dùng" của mảnh ghép Cầm tay còn trống (của bot).',
+    explain: 'Cổng "Ra đòn" bật lên một nhịp khi bot đủ gần. Mảnh ghép Cầm tay biến nhịp đó thành cú vung tay.',
   },
   playFight: {
     title: 'Đánh thử với bot',
@@ -76,11 +76,11 @@ const T = {
   result: {
     title: 'Có người gục rồi',
     text: 'Ai hết máu trước thì ván đấu kết thúc.',
-    explain: 'Muốn hồi máu thì dùng cổng "Hồi máu" của khối Máu, nối với một nút bấm hoặc một vật nhặt được.',
+    explain: 'Muốn hồi máu thì dùng cổng "Hồi máu" của mảnh ghép Máu, nối với một nút bấm hoặc một vật nhặt được.',
   },
   done: {
     title: 'Bạn đã biết đánh nhau!',
-    text: 'Bạn đã biết khối Máu, đòn đánh bằng tay hoặc dụng cụ, và bộ não Đánh nhau cho bot. Thử mở game mẫu "Võ đài".',
+    text: 'Bạn đã biết mảnh ghép Máu, đòn đánh bằng tay hoặc dụng cụ, và bộ não Đánh nhau cho bot. Thử mở game mẫu "Võ đài".',
   },
 } as const;
 

@@ -28,17 +28,17 @@ const T = {
   },
   portals: {
     title: 'Thêm hai cổng',
-    text: 'Kéo hai khối "Cổng dịch chuyển" (nhóm Vật thể) vào bảng. Mỗi lần kéo một khối, nên bạn kéo hai lần.',
+    text: 'Kéo hai mảnh ghép "Cổng dịch chuyển" (nhóm Vật thể) vào bảng. Mỗi lần kéo một mảnh ghép, nên bạn kéo hai lần.',
     explain: 'Cổng là cánh cửa phát sáng. Ai chạm vào cổng này sẽ được đưa sang cổng kia của cặp.',
   },
   place: {
     title: 'Đặt một cổng sang đảo',
-    text: 'Chọn một khối Cổng. Ở Thuộc tính, đổi "Vị trí" thành X = 22 (giữ Y = 1). Cổng còn lại cứ để ở X = 0, ngay trên vách đá.',
+    text: 'Chọn một mảnh ghép Cổng. Ở Thuộc tính, đổi "Vị trí" thành X = 22 (giữ Y = 1). Cổng còn lại cứ để ở X = 0, ngay trên vách đá.',
     explain: 'X là chiều ngang: số càng lớn càng sang phải. Vách đá nằm bên trái, hòn đảo nằm từ X = 18 trở đi.',
   },
   pair: {
     title: 'Ghép hai cổng thành một cặp',
-    text: 'Nối cổng "Cổng" của khối Cổng này sang cổng "Cổng đối diện" của khối Cổng kia.',
+    text: 'Nối cổng "Cổng" của mảnh ghép Cổng này sang cổng "Cổng đối diện" của mảnh ghép Cổng kia.',
     explain: 'Chỉ cần nối một dây là đủ. Cách khác: gõ cùng một "Mã cặp" vào cả hai cổng, hai cổng có chung mã sẽ tự ghép đôi.',
   },
   tryPortals: {
@@ -51,27 +51,27 @@ const T = {
     text: 'Bấm nút "Sửa" để thêm máy quay.',
   },
   distance: {
-    title: 'Thêm khối Khoảng cách',
-    text: 'Kéo khối "Khoảng cách" (nhóm Logic) vào bảng.',
-    explain: 'Khối này đo xem hai vật cách nhau bao xa, và bật "Đủ gần" khi chúng lại gần nhau. Ta dùng nó để biết nhân vật đã gần lá cờ.',
+    title: 'Thêm mảnh ghép Khoảng cách',
+    text: 'Kéo mảnh ghép "Khoảng cách" (nhóm Logic) vào bảng.',
+    explain: 'Mảnh ghép này đo xem hai vật cách nhau bao xa, và bật "Đủ gần" khi chúng lại gần nhau. Ta dùng nó để biết nhân vật đã gần lá cờ.',
   },
   distanceWho: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật A", và cổng "Khối" của lá cờ xanh (khối nhặt được) sang "Vật B" của khối Khoảng cách.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật A", và cổng "Hộp" của lá cờ xanh (hộp nhặt được) sang "Vật B" của mảnh ghép Khoảng cách.',
   },
   threshold: {
     title: 'Gần là bao nhiêu?',
-    text: 'Chọn khối Khoảng cách. Ở Thuộc tính, đổi "Ngưỡng đủ gần" thành 8.',
-    explain: 'Cách cờ không quá 8 khối thì "Đủ gần" bật. Vừa sang đảo là đã đủ gần rồi.',
+    text: 'Chọn mảnh ghép Khoảng cách. Ở Thuộc tính, đổi "Ngưỡng đủ gần" thành 8.',
+    explain: 'Cách cờ không quá 8 mảnh ghép thì "Đủ gần" bật. Vừa sang đảo là đã đủ gần rồi.',
   },
   camera: {
     title: 'Thêm Máy quay',
-    text: 'Kéo khối "Máy quay" (nhóm Hành động) vào bảng.',
+    text: 'Kéo mảnh ghép "Máy quay" (nhóm Hành động) vào bảng.',
     explain: 'Máy quay điều khiển góc nhìn khi chơi. Khi nó bật, nó quyết định phóng to hay thu nhỏ; khi tắt, góc nhìn trở lại như thường.',
   },
   cameraOn: {
     title: 'Gần cờ thì bật máy quay',
-    text: 'Nối "Đủ gần" của khối Khoảng cách sang cổng "Bật" của Máy quay.',
+    text: 'Nối "Đủ gần" của mảnh ghép Khoảng cách sang cổng "Bật" của Máy quay.',
     explain: 'Xa cờ thì máy quay tắt, bạn thấy cảnh bình thường. Tới gần cờ thì máy quay bật.',
   },
   zoom: {
@@ -81,35 +81,35 @@ const T = {
   },
   shake: {
     title: 'Rung khi qua cổng',
-    text: 'Nối cổng "Vừa có người vào" của một khối Cổng sang cổng "Rung" của Máy quay.',
+    text: 'Nối cổng "Vừa có người vào" của một mảnh ghép Cổng sang cổng "Rung" của Máy quay.',
     explain: 'Mỗi lần có người bước vào cổng, màn hình rung nhẹ một chút. Độ mạnh và thời gian rung chỉnh được trong Thuộc tính của Máy quay.',
   },
   key: {
     title: 'Thêm phím R',
-    text: 'Kéo thêm một khối "Phím bấm" vào bảng. Ở Thuộc tính, bấm vào ô "Phím" rồi nhấn phím R.',
+    text: 'Kéo thêm một mảnh ghép "Phím bấm" vào bảng. Ở Thuộc tính, bấm vào ô "Phím" rồi nhấn phím R.',
   },
   teleport: {
     title: 'Thêm Dịch chuyển',
-    text: 'Kéo khối "Dịch chuyển" (nhóm Hành động) vào bảng.',
+    text: 'Kéo mảnh ghép "Dịch chuyển" (nhóm Hành động) vào bảng.',
     explain: 'Mỗi khi nhận một nhịp ở "Đi", nó đưa một vật tới chỗ khác ngay lập tức, không cần cổng.',
   },
   teleportWire: {
     title: 'Bấm R để về nhà',
-    text: 'Nối "Nhân vật" của nhân vật sang "Ai" của khối Dịch chuyển. Rồi nối "Vừa bấm" của phím R sang "Đi".',
+    text: 'Nối "Nhân vật" của nhân vật sang "Ai" của mảnh ghép Dịch chuyển. Rồi nối "Vừa bấm" của phím R sang "Đi".',
     explain: '"Vừa bấm" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn R là dịch chuyển một lần.',
   },
   home: {
     title: 'Chọn nơi về',
-    text: 'Chọn khối Dịch chuyển. Ở Thuộc tính, đổi "Nơi đến" thành X = -8 (giữ Y = 1), đúng chỗ nhân vật xuất phát.',
-    explain: 'Khi không nối "Nơi đến (vật)", khối dùng toạ độ này làm nơi về.',
+    text: 'Chọn mảnh ghép Dịch chuyển. Ở Thuộc tính, đổi "Nơi đến" thành X = -8 (giữ Y = 1), đúng chỗ nhân vật xuất phát.',
+    explain: 'Khi không nối "Nơi đến (vật)", mảnh ghép dùng toạ độ này làm nơi về.',
   },
   winNodes: {
-    title: 'Thêm khối thắng',
-    text: 'Kéo khối "Cảm biến chạm" (nhóm Logic) và khối "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép thắng',
+    text: 'Kéo mảnh ghép "Cảm biến chạm" (nhóm Logic) và mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
   },
   winWire: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Nhân vật" của nhân vật sang "Vật A" và "Khối" của lá cờ sang "Vật B" của Cảm biến chạm. Rồi nối "Đang chạm" sang "Thắng".',
+    text: 'Nối "Nhân vật" của nhân vật sang "Vật A" và "Hộp" của lá cờ sang "Vật B" của Cảm biến chạm. Rồi nối "Đang chạm" sang "Thắng".',
   },
   play: {
     title: 'Chạy thử',

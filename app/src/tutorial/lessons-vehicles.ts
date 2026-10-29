@@ -24,38 +24,38 @@ const T = {
   intro: {
     title: 'Làm một chiếc xe',
     text: 'Bảng này có sẵn nhân vật và sàn nhà. Ta sẽ thêm một chiếc xe, rồi cho nhân vật leo lên xe và lái đi.',
-    explain: 'Xe là một khối riêng. Nó chỉ chạy khi có người ngồi trên xe.',
+    explain: 'Xe là một mảnh ghép riêng. Nó chỉ chạy khi có người ngồi trên xe.',
   },
   vehicle: {
     title: 'Thêm chiếc xe',
-    text: 'Kéo khối "Phương tiện" (nhóm Vật thể) vào bảng.',
+    text: 'Kéo mảnh ghép "Phương tiện" (nhóm Vật thể) vào bảng.',
     explain: 'Trong Thuộc tính bạn chọn được xe hơi, xe máy hay xe tải nhỏ, và chọn cách lái.',
   },
   wireDrive: {
     title: 'Nối cần lái vào xe',
-    text: 'Nối cổng "Ngang (trái-phải)" của Cần điều khiển sang cổng "Đi ngang" của khối Phương tiện.',
+    text: 'Nối cổng "Ngang (trái-phải)" của Cần điều khiển sang cổng "Đi ngang" của mảnh ghép Phương tiện.',
     explain: 'Giống như điều khiển nhân vật: phải là số dương, trái là số âm. Xe sẽ tăng tốc và giảm tốc từ từ chứ không dừng ngay.',
   },
   enter: {
-    title: 'Thêm khối lên xe',
-    text: 'Kéo khối "Lên / Xuống xe" (nhóm Hành động) vào bảng.',
+    title: 'Thêm mảnh ghép lên xe',
+    text: 'Kéo mảnh ghép "Lên / Xuống xe" (nhóm Hành động) vào bảng.',
     explain: 'Mỗi lần bạn bấm nút, nhân vật đứng gần xe sẽ lên xe. Bấm nữa thì xuống xe.',
   },
   wireWho: {
     title: 'Nói ai sẽ lên xe',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Ai" của khối Lên / Xuống xe.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Ai" của mảnh ghép Lên / Xuống xe.',
   },
   key: {
     title: 'Thêm nút bấm',
-    text: 'Kéo thêm một khối "Phím bấm" vào bảng.',
+    text: 'Kéo thêm một mảnh ghép "Phím bấm" vào bảng.',
   },
   keyE: {
     title: 'Chọn phím E',
-    text: 'Chọn khối Phím bấm mới thêm. Ở Thuộc tính, bấm vào ô "Phím" rồi nhấn phím E.',
+    text: 'Chọn mảnh ghép Phím bấm mới thêm. Ở Thuộc tính, bấm vào ô "Phím" rồi nhấn phím E.',
   },
   wirePress: {
     title: 'Bấm E để lên xe',
-    text: 'Nối cổng "Vừa bấm" của khối Phím bấm (phím E) sang cổng "Bấm" của khối Lên / Xuống xe.',
+    text: 'Nối cổng "Vừa bấm" của mảnh ghép Phím bấm (phím E) sang cổng "Bấm" của mảnh ghép Lên / Xuống xe.',
     explain: '"Vừa bấm" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn E là một lần lên hoặc xuống.',
   },
   play: {
@@ -68,7 +68,7 @@ const T = {
   },
   model: {
     title: 'Đổi loại xe',
-    text: 'Chọn khối Phương tiện. Ở Thuộc tính, đổi "Loại xe" sang Xe máy hoặc Xe tải nhỏ rồi bấm "Chơi" thử lại.',
+    text: 'Chọn mảnh ghép Phương tiện. Ở Thuộc tính, đổi "Loại xe" sang Xe máy hoặc Xe tải nhỏ rồi bấm "Chơi" thử lại.',
     explain: 'Xe tải to và nặng hơn, xe máy gọn và quay đầu nhanh. Nếu đổi "Cách lái" sang "Ga - Lái" thì mũi tên lên là ga, xuống là lùi.',
   },
   done: {

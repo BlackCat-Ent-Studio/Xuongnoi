@@ -13,7 +13,7 @@ export const shooterNode: NodeDef<ShooterState> = {
   label: 'Bắn đạn',
   category: 'action',
   description:
-    'Mỗi lần "Bắn" bật, vật nối vào "Người bắn" phóng ra một viên đạn theo hướng nó đang nhìn (hoặc nhắm vào "Mục tiêu" nếu có nối). Đạn dừng khi đụng khối rắn, hết "Bay bao lâu", hoặc trúng một nhân vật khác: có node Máu thì nhân vật mất máu. "Trúng" bật một nhịp, "Vừa trúng" là nhân vật bị trúng gần nhất.',
+    'Mỗi lần "Bắn" bật, vật nối vào "Người bắn" phóng ra một viên đạn theo hướng nó đang nhìn (hoặc nhắm vào "Mục tiêu" nếu có nối). Đạn dừng khi đụng hộp rắn, hết "Bay bao lâu", hoặc trúng một nhân vật khác: có node Máu thì nhân vật mất máu. "Trúng" bật một nhịp, "Vừa trúng" là nhân vật bị trúng gần nhất.',
   inputs: [
     { id: 'shooter', type: 'object', label: 'Người bắn' },
     { id: 'target', type: 'object', label: 'Mục tiêu (tuỳ chọn)' },

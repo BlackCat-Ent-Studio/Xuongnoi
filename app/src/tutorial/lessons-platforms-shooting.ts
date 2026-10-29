@@ -24,13 +24,13 @@ const T = {
   },
   addPlatform: {
     title: 'Thêm bệ di chuyển',
-    text: 'Kéo khối "Bệ di chuyển" (nhóm Vật thể) vào bảng.',
+    text: 'Kéo mảnh ghép "Bệ di chuyển" (nhóm Vật thể) vào bảng.',
     explain: 'Bệ tự chạy từ điểm A tới điểm B rồi quay lại. Ai đứng trên bệ sẽ đi theo bệ.',
   },
   platformA: {
     title: 'Đặt điểm A bên bờ trái',
     text: 'Chọn Bệ di chuyển, sửa "Điểm A (xuất phát)" thành x = -2, y = -0.25, z = 0.',
-    explain: 'Bệ rộng 3 khối nên đặt ở -2 thì mép bệ chạm sát bờ trái, bước lên rất dễ.',
+    explain: 'Bệ rộng 3 ô nên đặt ở -2 thì mép bệ chạm sát bờ trái, bước lên rất dễ.',
   },
   platformB: {
     title: 'Đặt điểm B bên bờ phải',
@@ -46,18 +46,18 @@ const T = {
     text: 'Bấm nút "Sửa" để làm tiếp.',
   },
   addShooter: {
-    title: 'Thêm khối Bắn đạn',
-    text: 'Kéo khối "Bắn đạn" (nhóm Hành động) vào bảng.',
-    explain: 'Mỗi lần "Bắn" bật, người bắn phóng ra một viên đạn theo hướng đang nhìn. Đạn trúng nhân vật có khối Máu thì làm mất máu.',
+    title: 'Thêm mảnh ghép Bắn đạn',
+    text: 'Kéo mảnh ghép "Bắn đạn" (nhóm Hành động) vào bảng.',
+    explain: 'Mỗi lần "Bắn" bật, người bắn phóng ra một viên đạn theo hướng đang nhìn. Đạn trúng nhân vật có mảnh ghép Máu thì làm mất máu.',
   },
   wireShooter: {
     title: 'Ai là người bắn?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Người bắn" của khối Bắn đạn.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Người bắn" của mảnh ghép Bắn đạn.',
   },
   wireFire: {
     title: 'Bấm J để bắn',
-    text: 'Nối cổng "Đang giữ" của khối Phím bấm (phím J, đặt sẵn trên bảng) sang cổng "Bắn" của khối Bắn đạn.',
-    explain: 'Muốn đổi phím khác, chọn khối Phím bấm rồi đổi ô "Phím".',
+    text: 'Nối cổng "Đang giữ" của mảnh ghép Phím bấm (phím J, đặt sẵn trên bảng) sang cổng "Bắn" của mảnh ghép Bắn đạn.',
+    explain: 'Muốn đổi phím khác, chọn mảnh ghép Phím bấm rồi đổi ô "Phím".',
   },
   playShoot: {
     title: 'Bắn mục tiêu',
@@ -66,63 +66,63 @@ const T = {
   hitTarget: {
     title: 'Bắn đủ ba phát',
     text: 'Mục tiêu có 3 máu, mỗi viên đạn mất 1. Khi nó ngã xuống, bấm "Sửa" để làm tiếp.',
-    explain: 'Muốn đạn mạnh hơn hay bay xa hơn, chỉnh "Sát thương" và "Bay bao lâu" trong khối Bắn đạn.',
+    explain: 'Muốn đạn mạnh hơn hay bay xa hơn, chỉnh "Sát thương" và "Bay bao lâu" trong mảnh ghép Bắn đạn.',
   },
   addSpawner: {
-    title: 'Thêm khối Sinh vật thể',
-    text: 'Kéo khối "Sinh vật thể" (nhóm Hành động) vào bảng.',
+    title: 'Thêm mảnh ghép Sinh vật thể',
+    text: 'Kéo mảnh ghép "Sinh vật thể" (nhóm Hành động) vào bảng.',
     explain: 'Mỗi lần "Sinh ra" bật, nó tạo thêm một đồ vật (ở đây là hòn đá). Mỗi hòn chỉ tồn tại một lúc rồi biến mất.',
   },
   spawnerSetup: {
     title: 'Cho đá rơi trên đường tới cổng',
-    text: 'Chọn khối Sinh vật thể: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
+    text: 'Chọn mảnh ghép Sinh vật thể: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
     explain: 'Hòn đá có sẵn dáng tròn. Ai chạm vào đá khi nó đang rơi thì thua.',
   },
   wireToucher: {
     title: 'Ai bị đá làm hại?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Ai chạm" của khối Sinh vật thể.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Ai chạm" của mảnh ghép Sinh vật thể.',
   },
   wireLose: {
     title: 'Chạm đá là thua',
-    text: 'Nối cổng "Đang chạm" của khối Sinh vật thể sang cổng còn trống của khối Hoặc (cổng B).',
-    explain: 'Khối Hoặc đã có sẵn: rơi xuống hố hoặc chạm đá, một trong hai là thua.',
+    text: 'Nối cổng "Đang chạm" của mảnh ghép Sinh vật thể sang cổng còn trống của mảnh ghép Hoặc (cổng B).',
+    explain: 'Mảnh ghép Hoặc đã có sẵn: rơi xuống hố hoặc chạm đá, một trong hai là thua.',
   },
   addTimer: {
     title: 'Thêm Hẹn giờ 3 giây',
-    text: 'Kéo khối "Hẹn giờ" (nhóm Tính toán) vào bảng và đặt "Số giây" là 3.',
+    text: 'Kéo mảnh ghép "Hẹn giờ" (nhóm Tính toán) vào bảng và đặt "Số giây" là 3.',
     explain: 'Hẹn giờ đếm ngược, hết giờ thì cổng "Hết giờ" bật.',
   },
   wireSpawn: {
     title: 'Hết giờ là thả đá',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Sinh ra" của khối Sinh vật thể.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Sinh ra" của mảnh ghép Sinh vật thể.',
   },
   addLoopOr: {
-    title: 'Thêm một khối Hoặc để lặp',
-    text: 'Kéo thêm một khối "Hoặc" (nhóm Logic) vào bảng.',
-    explain: 'Một khối không nối thẳng ra chính nó được, nên ta cho tín hiệu đi vòng qua khối Hoặc.',
+    title: 'Thêm một mảnh ghép Hoặc để lặp',
+    text: 'Kéo thêm một mảnh ghép "Hoặc" (nhóm Logic) vào bảng.',
+    explain: 'Một mảnh ghép không nối thẳng ra chính nó được, nên ta cho tín hiệu đi vòng qua mảnh ghép Hoặc.',
   },
   wireLoopIn: {
-    title: 'Hết giờ vào khối Hoặc mới',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng A của khối Hoặc bạn vừa thêm.',
+    title: 'Hết giờ vào mảnh ghép Hoặc mới',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng A của mảnh ghép Hoặc bạn vừa thêm.',
   },
   wireLoopOut: {
     title: 'Đếm lại mãi mãi',
-    text: 'Nối cổng "Kết quả" của khối Hoặc mới về cổng "Đếm lại" của Hẹn giờ.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc mới về cổng "Đếm lại" của Hẹn giờ.',
     explain: 'Cứ hết giờ là đếm lại từ đầu, nên cứ 3 giây lại có một hòn đá rơi.',
   },
   addRotating: {
     title: 'Thêm bệ xoay làm cổng',
-    text: 'Kéo khối "Bệ xoay" (nhóm Vật thể) vào bảng.',
-    explain: 'Kiểu "Xoay từng nấc 90°": khối rắn, mỗi lần "Xoay" bật nó quay một góc vuông. Một bức tường đứng khi quay nằm ngang sẽ chừa lối đi bên dưới.',
+    text: 'Kéo mảnh ghép "Bệ xoay" (nhóm Vật thể) vào bảng.',
+    explain: 'Kiểu "Xoay từng nấc 90°": hộp rắn, mỗi lần "Xoay" bật nó quay một góc vuông. Một bức tường đứng khi quay nằm ngang sẽ chừa lối đi bên dưới.',
   },
   rotatingSetup: {
     title: 'Dựng cổng trước cờ',
     text: 'Chọn Bệ xoay: "Vị trí (tâm)" x = 13, y = 2, z = 0; "Kích thước" x = 0.5, y = 4, z = 1.',
-    explain: 'Giờ nó là bức tường cao 4 khối chắn giữa mục tiêu và lá cờ.',
+    explain: 'Giờ nó là bức tường cao 4 mảnh ghép chắn giữa mục tiêu và lá cờ.',
   },
   wireTurn: {
     title: 'Mục tiêu gục thì cổng xoay',
-    text: 'Nối cổng "Hết máu" của khối Máu (của mục tiêu) sang cổng "Xoay" của Bệ xoay.',
+    text: 'Nối cổng "Hết máu" của mảnh ghép Máu (của mục tiêu) sang cổng "Xoay" của Bệ xoay.',
   },
   playFinal: {
     title: 'Chơi cả ván',
