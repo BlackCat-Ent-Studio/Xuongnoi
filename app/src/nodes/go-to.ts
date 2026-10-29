@@ -25,8 +25,8 @@ export const goToNode: NodeDef<GoToState> = {
   description:
     'Cho bot đi tới một vật hoặc một điểm, rồi dừng lại và báo "Đã tới". Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot. Nếu không nối "Đích" thì bot đi tới điểm đã đặt.',
   inputs: [
-    { id: 'self', type: 'object', label: 'Bot' },
-    { id: 'target', type: 'object', label: 'Đích (vật)' },
+    { id: 'self', type: 'object', label: 'Bot', required: true },
+    { id: 'target', type: 'object', label: 'Đích (vật)', required: true },
     { id: 'go', type: 'bool', label: 'Cho đi', default: true },
   ],
   outputs: [

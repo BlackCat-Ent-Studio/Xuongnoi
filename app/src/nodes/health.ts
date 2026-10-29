@@ -13,7 +13,7 @@ export const healthNode: NodeDef<HealthState> = {
   description:
     'Cho một nhân vật có máu. Bị đánh (tay không hoặc dụng cụ trong tay người khác) hoặc bị ném trúng thì mất máu, bị đẩy lùi và nháy đỏ, rồi được miễn đòn nửa giây. Hết máu thì nhân vật ngã xuống rồi biến mất. Nhân vật không có node Máu thì không bị đau.',
   inputs: [
-    { id: 'self', type: 'object', label: 'Nhân vật' },
+    { id: 'self', type: 'object', label: 'Nhân vật', required: true },
     { id: 'heal', type: 'bool', label: 'Hồi máu' },
   ],
   outputs: [

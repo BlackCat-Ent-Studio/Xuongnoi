@@ -7,8 +7,8 @@ export const touchNode: NodeDef<EdgeState> = {
   category: 'logic',
   description: 'Kiểm tra hai vật có đang chạm nhau không. "Vừa chạm" chỉ bật một nhịp ở lúc mới chạm.',
   inputs: [
-    { id: 'a', type: 'object', label: 'Vật A' },
-    { id: 'b', type: 'object', label: 'Vật B' },
+    { id: 'a', type: 'object', label: 'Vật A', required: true },
+    { id: 'b', type: 'object', label: 'Vật B', required: true },
   ],
   outputs: [
     { id: 'touching', type: 'bool', label: 'Đang chạm' },

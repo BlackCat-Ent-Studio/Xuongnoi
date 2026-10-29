@@ -8,7 +8,7 @@ export const enterExitNode: NodeDef<EdgeState> = {
   description:
     'Mỗi lần "Bấm" bật lên một nhịp: nhân vật đứng gần xe thì lên xe ngồi lái; đang ngồi trên xe thì xuống xe, đứng cạnh xe. Nối nhân vật vào "Ai", nối nút bấm (ví dụ phím E) vào "Bấm".',
   inputs: [
-    { id: 'character', type: 'object', label: 'Ai' },
+    { id: 'character', type: 'object', label: 'Ai', required: true },
     { id: 'press', type: 'bool', label: 'Bấm' },
   ],
   outputs: [

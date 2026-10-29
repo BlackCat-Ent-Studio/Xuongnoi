@@ -31,7 +31,7 @@ export const patrolNode: NodeDef<PatrolState> = {
   description:
     'Cho bot đi qua đi lại giữa hai điểm A và B, dừng chờ một lúc ở mỗi đầu. Nối "Đi ngang" / "Đi dọc" vào nhân vật bot. Có thể quay đầu khi gặp mép vực.',
   inputs: [
-    { id: 'self', type: 'object', label: 'Bot' },
+    { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'on', type: 'bool', label: 'Hoạt động', default: true },
   ],
   outputs: [

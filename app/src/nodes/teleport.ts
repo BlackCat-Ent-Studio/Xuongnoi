@@ -14,9 +14,9 @@ export const teleportNode: NodeDef<TeleportState> = {
   description:
     'Đưa nhân vật, đồ vật hoặc xe tới chỗ khác ngay lập tức mỗi khi "Đi" có nhịp. Nối "Nơi đến (vật)" để đến chỗ một vật, hoặc nhập toạ độ. Nếu chỗ đó bị hộp chặn, sẽ tìm chỗ trống gần nhất. Đồ đang cầm đi theo người cầm; người ngồi trên xe thì cả xe được dịch chuyển.',
   inputs: [
-    { id: 'who', type: 'object', label: 'Ai (vật)' },
+    { id: 'who', type: 'object', label: 'Ai (vật)', required: true },
     { id: 'go', type: 'bool', label: 'Đi' },
-    { id: 'dest', type: 'object', label: 'Nơi đến (vật)' },
+    { id: 'dest', type: 'object', label: 'Nơi đến (vật)', required: true },
   ],
   outputs: [{ id: 'done', type: 'bool', label: 'Vừa dịch chuyển' }],
   params: [
