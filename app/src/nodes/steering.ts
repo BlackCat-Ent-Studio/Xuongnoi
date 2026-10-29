@@ -50,7 +50,7 @@ const ARRIVE_HEIGHT = 1.5;
 /** Smallest stop distance: a bot at full speed moves less than this per tick. */
 export const MIN_STOP_DISTANCE = 0.2;
 /** Inside this distance the bot slows down so it settles on the spot instead of overshooting. */
-const SLOW_RADIUS = 0.6;
+export const SLOW_RADIUS = 0.6;
 const MIN_SPEED_FRACTION = 0.3;
 
 /** True when `self` is within `stop` of `goal` on the walking plane (and at about the same height outside the top view). */
@@ -117,6 +117,8 @@ export interface SteerOptions {
   avoidFall?: boolean;
   /** false = never hop obstacles or gaps on its own (a planned route decides the jumps). Default true. */
   hop?: boolean;
+  /** Distance inside which the bot slows down on approach. Default `SLOW_RADIUS`. */
+  slowRadius?: number;
 }
 
 /** One tick of walking from `self` toward `waypoint`. Hops small obstacles and gaps in the side and 3D views. */
@@ -125,7 +127,7 @@ export function steerToward(world: WorldApi, self: EntityView, waypoint: Vec3, o
   const toward = unitToward(mode, self.position, waypoint);
   if (!toward) return { ...STILL };
   const { ux, uz, dist } = toward;
-  const mag = clamp(dist / SLOW_RADIUS, MIN_SPEED_FRACTION, 1);
+  const mag = clamp(dist / Math.max(1e-3, opts.slowRadius ?? SLOW_RADIUS), MIN_SPEED_FRACTION, 1);
 
   let jump = false;
   if (mode !== '2d-top' && world.isOnGround(self.id)) {

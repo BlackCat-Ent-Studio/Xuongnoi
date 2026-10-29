@@ -1,5 +1,6 @@
 import type { NodeDef, Vec3 } from '../engine/types';
 import {
+  SLOW_RADIUS,
   STILL,
   distanceFor,
   followPath,
@@ -52,6 +53,9 @@ export const chaseNode: NodeDef<ChaseState> = {
     },
     { id: 'sightRange', label: 'Tầm nhìn', kind: 'number', default: 6, min: 0, max: 50, step: 0.5 },
     { id: 'giveUpRange', label: 'Bỏ cuộc khi xa hơn', kind: 'number', default: 9, min: 0, max: 80, step: 0.5 },
+    { id: 'catchDistance', label: 'Khoảng bắt được', kind: 'number', default: CATCH_DISTANCE, min: 0.2, max: 5, step: 0.1, advanced: true },
+    { id: 'fleeReach', label: 'Khoảng bắt đầu chạy trốn', kind: 'number', default: FLEE_REACH, min: 1, max: 20, step: 0.5, advanced: true },
+    { id: 'slowRadius', label: 'Chậm lại khi gần tới', kind: 'number', default: SLOW_RADIUS, min: 0.1, max: 5, step: 0.1, advanced: true },
     PATHFIND_PARAM,
   ],
   create: () => ({ engaged: false, memo: {} }),
@@ -73,15 +77,16 @@ export const chaseNode: NodeDef<ChaseState> = {
 
     const fleeing = strParam(params, 'mode', 'chase') === 'flee';
     let goal: Vec3 = targetPos;
+    const fleeReach = Math.max(1, numParam(params, 'fleeReach', FLEE_REACH));
     if (fleeing) {
       const away = unitToward(world.mode, targetPos, self.position) ?? { ux: 1, uz: 0, dist: 0 };
-      goal = { x: self.position.x + away.ux * FLEE_REACH, y: self.position.y, z: self.position.z + away.uz * FLEE_REACH };
-    } else if (hasArrived(world.mode, self.position, targetPos, CATCH_DISTANCE)) {
+      goal = { x: self.position.x + away.ux * fleeReach, y: self.position.y, z: self.position.z + away.uz * fleeReach };
+    } else if (hasArrived(world.mode, self.position, targetPos, numParam(params, 'catchDistance', CATCH_DISTANCE))) {
       return { ...STILL, seeing: true };
     }
 
     // Fleeing runs straight away from the threat: a route to a point behind a wall could lead past the chaser.
-    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: fleeing || !pathfindOn(params) }, { avoidFall: fleeing });
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: fleeing || !pathfindOn(params) }, { avoidFall: fleeing, slowRadius: numParam(params, 'slowRadius', SLOW_RADIUS) });
     return { ...steer, seeing: true };
   },
 };

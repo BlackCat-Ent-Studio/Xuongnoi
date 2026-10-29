@@ -1,6 +1,7 @@
 import type { NodeDef, Vec3 } from '../engine/types';
 import {
   MIN_STOP_DISTANCE,
+  SLOW_RADIUS,
   STILL,
   followPath,
   hasArrived,
@@ -47,6 +48,7 @@ export const goToNode: NodeDef<GoToState> = {
       max: 20,
       step: 0.1,
     },
+    { id: 'slowRadius', label: 'Chậm lại khi gần tới', kind: 'number', default: SLOW_RADIUS, min: 0.1, max: 5, step: 0.1, advanced: true },
     PATHFIND_PARAM,
   ],
   create: () => ({ arrived: { prev: false }, memo: {} }),
@@ -65,7 +67,7 @@ export const goToNode: NodeDef<GoToState> = {
     const arrivedPulse = risingEdge(s.arrived, arrived);
     if (!go || near) return { ...STILL, arrived, arrivedPulse };
 
-    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: !pathfindOn(params) });
+    const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: !pathfindOn(params) }, { slowRadius: numParam(params, 'slowRadius', SLOW_RADIUS) });
     return { ...steer, arrived, arrivedPulse };
   },
 };
