@@ -1,4 +1,4 @@
-import type { Board, GameResult, Graph, ViewMode } from '../engine/types';
+import type { Board, GameResult, Graph, Note, ViewMode } from '../engine/types';
 
 /** Everything a step check may look at. Pure data, so checks are unit-testable. */
 export interface Snapshot {
@@ -7,6 +7,12 @@ export interface Snapshot {
   playing: boolean;
   /** Result of the current play session once win/lose fired, else null. */
   ended: GameResult | null;
+  /* Editor facts read by the board-tools lesson. Optional so plain snapshots stay valid; absent reads as none/false. */
+  /** Ids of the selected nodes and notes. */
+  selectedIds?: readonly string[];
+  notes?: readonly Note[];
+  /** True right after an undo, until something new is done. */
+  canRedo?: boolean;
 }
 
 /**

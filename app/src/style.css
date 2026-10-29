@@ -19,7 +19,7 @@ html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 [hidden] { display: none !important; }
 
 /* top bar */
-.topbar { display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.topbar { position: relative; display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
 .brand { font-weight: 700; font-size: 18px; color: var(--accent); margin-right: 8px; }
 .btn { font: inherit; padding: 7px 14px; border: 1px solid var(--line); background: #fff; border-radius: 8px; cursor: pointer; }
 .btn:hover:not(:disabled) { background: #eef0f6; }
@@ -32,7 +32,9 @@ html, body { margin: 0; height: 100%; background: var(--bg); overflow: hidden; }
 .field.grow { flex: 1; min-width: 140px; max-width: 320px; }
 .name-input, .mode-select, .prop-input { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--text); }
 .name-input { flex: 1; min-width: 0; }
-.status { font-size: 13px; padding: 4px 10px; border-radius: 6px; margin-left: auto; }
+/* A floating note under the bar: it must never take part in the bar's layout, or the whole editor jumps when it appears or expires (a mid-drag jump made wire drops miss). */
+.status { position: absolute; right: 12px; top: calc(100% + 6px); z-index: 40; max-width: min(520px, 60vw); font-size: 13px; padding: 4px 10px; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.18); pointer-events: none; }
+.status:empty { display: none; }
 .status.info { background: #dcfce7; color: #166534; }
 .status.error { background: #fee2e2; color: #991b1b; }
 .menu-wrap { position: relative; }

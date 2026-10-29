@@ -5,6 +5,7 @@ import { createHighlighter } from './highlight';
 import { LESSONS } from './lessons';
 import { createStepPanel } from './panel';
 import { createRunner, type Runner } from './runner';
+import { takeSnapshot } from './snapshot';
 import {
   clearStash,
   hasSeenInvite,
@@ -58,7 +59,7 @@ export function createTutorial({ state, notify }: TutorialDeps): Tutorial {
   });
 
   function snapshot(): Snapshot {
-    return { graph: state.getGraph(), mode: state.getMode(), playing: state.isPlaying(), ended };
+    return takeSnapshot(state, ended);
   }
 
   function refreshHighlight(): void {
@@ -140,7 +141,9 @@ export function createTutorial({ state, notify }: TutorialDeps): Tutorial {
   state.subscribe((kind) => {
     if (!runner) return;
     if (kind === 'playing') ended = null;
-    if (kind === 'graph' || kind === 'params' || kind === 'mode' || kind === 'board' || kind === 'playing') {
+    if (kind === 'graph' || kind === 'params' || kind === 'mode' || kind === 'board' || kind === 'playing' ||
+      kind === 'selection' || kind === 'notes' || kind === 'history'
+    ) {
       advance();
     }
   });

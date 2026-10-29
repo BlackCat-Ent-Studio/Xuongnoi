@@ -18,6 +18,7 @@ import { LESSON_TEXT as T } from './text-vi';
 import { createBotDriverLesson } from './lessons-bot-driver';
 import { createCameraPortalsLesson } from './lessons-camera-portals';
 import { createChanceZonesLesson } from './lessons-chance-zones';
+import { createEditorToolsLesson } from './lessons-editor-tools';
 import { createVehicleLesson } from './lessons-vehicles';
 import { platformsShootingLesson } from './lessons-platforms-shooting';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
@@ -1126,8 +1127,9 @@ const lessonVehicles = createVehicleLesson({ buildBoard, addStep, wireStep, play
 const lessonBotDriver = createBotDriverLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonChanceZones = createChanceZonesLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonCameraPortals = createCameraPortalsLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
+const lessonEditorTools = createEditorToolsLesson({ buildBoard });
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones, platformsShootingLesson, lessonCameraPortals];
+export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools];
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

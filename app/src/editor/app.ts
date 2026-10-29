@@ -17,6 +17,7 @@ import { installEntityDrag } from './entity-drag';
 import { createKeyboardInput } from './keyboard-input';
 import { installLayoutSplitters } from './layout-splitters';
 import { createNewGameDialog } from './new-game-dialog';
+import { findFreeNoteSpot } from './note-placement';
 import { createPalette } from './palette';
 import { createPropertiesPanel } from './properties-panel';
 import { TEXT_VI } from './text-vi';
@@ -54,7 +55,7 @@ export function mountEditor(root: HTMLElement): void {
   const addNoteAtCenter = (): void => {
     const c = canvas.viewCenter();
     const n = state.getNotes().length % 6;
-    state.addNote({ x: c.x - 90 + n * 24, y: c.y - 55 + n * 24 });
+    state.addNote(findFreeNoteSpot({ x: c.x - 90 + n * 24, y: c.y - 55 + n * 24 }, state.getGraph(), state.getNotes()));
   };
 
   const palette = createPalette({
