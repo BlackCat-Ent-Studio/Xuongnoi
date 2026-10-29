@@ -47,8 +47,11 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
         { value: 'bot', label: 'Bot (do mảnh ghép Bộ não điều khiển)' },
       ],
     },
+    { id: 'invulnSeconds', label: 'Thời gian bất tử sau khi trúng đòn (giây)', kind: 'number', default: 0.5, min: 0, max: 5, step: 0.1, advanced: true },
+    { id: 'knockSpeed', label: 'Lực bị đẩy lùi', kind: 'number', default: 7, min: 0, max: 30, step: 0.5, advanced: true },
+    { id: 'knockLift', label: 'Độ bật lên khi trúng đòn', kind: 'number', default: 5, min: 0, max: 20, step: 0.5, advanced: true },
   ],
-  createOnly: ['position', 'color', 'look', 'role'],
+  createOnly: ['position', 'color', 'look', 'role', 'invulnSeconds', 'knockSpeed', 'knockLift'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
     look: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { look: String(p.look) }),
@@ -63,6 +66,11 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
       look: strParam(params, 'look', 'human'),
       role: strParam(params, 'role', 'player') === 'bot' ? 'bot' : 'player',
       solid: true,
+      hitReaction: {
+        invulnSeconds: numParam(params, 'invulnSeconds', 0.5),
+        knockSpeed: numParam(params, 'knockSpeed', 7),
+        knockLift: numParam(params, 'knockLift', 5),
+      },
     });
     return { id };
   },

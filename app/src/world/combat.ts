@@ -83,7 +83,7 @@ export function combatView(e: Entity): {
   if (!k) return {};
   return {
     health: { hp: k.hp, max: k.maxHp, bar: k.showBar },
-    ...(k.invuln > 0 ? { hurt: Math.min(1, k.invuln / IFRAME_SECONDS) } : {}),
+    ...(k.invuln > 0 ? { hurt: Math.min(1, k.invuln / Math.max(0.01, e.hit?.invulnSeconds ?? IFRAME_SECONDS)) } : {}),
     ...(k.dead ? { fallen: Math.min(1, k.deathT / DEATH_SECONDS) } : {}),
   };
 }
@@ -123,7 +123,7 @@ export function createCombat(deps: CombatDeps): Combat {
     if (!k || k.dead || k.invuln > 0 || !victim.visible) return false;
     const dmg = Math.max(0, finiteOr(damage, 0));
     k.hp = Math.max(0, k.hp - dmg);
-    k.invuln = IFRAME_SECONDS;
+    k.invuln = Math.max(0, finiteOr(victim.hit?.invulnSeconds ?? IFRAME_SECONDS, IFRAME_SECONDS));
     pending.add(victim.id);
 
     // Push away along the attack direction (the side view has no depth).
@@ -136,10 +136,11 @@ export function createCombat(deps: CombatDeps): Combat {
       len = Math.hypot(dx, dz);
     }
     k.knockT = KNOCK_SECONDS;
-    k.knockVx = (dx / len) * KNOCK_SPEED;
-    k.knockVz = (dz / len) * KNOCK_SPEED;
+    const knockSpeed = Math.max(0, finiteOr(victim.hit?.knockSpeed ?? KNOCK_SPEED, KNOCK_SPEED));
+    k.knockVx = (dx / len) * knockSpeed;
+    k.knockVz = (dz / len) * knockSpeed;
     if (deps.mode !== '2d-top') {
-      victim.vel.y = KNOCK_LIFT;
+      victim.vel.y = Math.max(0, finiteOr(victim.hit?.knockLift ?? KNOCK_LIFT, KNOCK_LIFT));
       victim.onGround = false;
     }
 

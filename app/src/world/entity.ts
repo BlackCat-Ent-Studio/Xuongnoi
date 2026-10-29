@@ -4,6 +4,7 @@ import type {
   CharacterRole,
   EntityKind,
   EntityView,
+  HitReaction,
   HoldStyle,
   ItemShape,
   Vec3,
@@ -52,6 +53,8 @@ export interface Entity {
   holdStyle: HoldStyle;
   /** Characters: health and hit reaction, once a health node registered it. */
   combat?: CombatState;
+  /** Characters: hit-reaction tuning from the character node; unset fields use the combat defaults. */
+  hit?: HitReaction;
   /** Items: damage as a tool / when thrown (unset or 0 = by shape). */
   damage?: number;
   /** Items: id of the character whose throw is still in flight, else unset / null. */

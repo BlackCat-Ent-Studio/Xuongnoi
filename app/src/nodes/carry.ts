@@ -38,6 +38,8 @@ export const carryNode: NodeDef<CarryState> = {
       ],
     },
     { id: 'throwPower', label: 'Sức ném', kind: 'number', default: 8, min: 0, max: 30, step: 1 },
+    { id: 'dropDistance', label: 'Thả cách người bao xa (0 = sát người)', kind: 'number', default: 0, min: 0, max: 5, step: 0.1, advanced: true },
+    { id: 'throwLift', label: 'Độ ném hướng lên (0 = ném thẳng)', kind: 'number', default: 0.5, min: 0, max: 2, step: 0.1, advanced: true },
   ],
   create: () => ({ grab: { prev: false }, drop: { prev: false }, throw: { prev: false } }),
   evaluate(ctx, i, params, s) {
@@ -48,9 +50,9 @@ export const carryNode: NodeDef<CarryState> = {
     if (who !== null) {
       const toggle = strParam(params, 'mode', 'separate') === 'toggle';
       if (toss) {
-        ctx.world.throwHeld(who, numParam(params, 'throwPower', 8));
+        ctx.world.throwHeld(who, numParam(params, 'throwPower', 8), numParam(params, 'throwLift', 0.5));
       } else if (drop || (toggle && grab && ctx.world.heldItem(who) !== null)) {
-        ctx.world.drop(who);
+        ctx.world.drop(who, numParam(params, 'dropDistance', 0));
       } else if (grab) {
         ctx.world.grab(who, GRAB_REACH);
       }
