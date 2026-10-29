@@ -36,6 +36,8 @@ export class VehicleFigure {
     this.floor = -VEHICLE_DIMS[model].height / 2;
     if (model === 'car') this.buildCar();
     else if (model === 'bike') this.buildBike();
+    else if (model === 'locomotive') this.buildLocomotive();
+    else if (model === 'wagon') this.buildWagon();
     else this.buildTruck();
   }
 
@@ -99,6 +101,29 @@ export class VehicleFigure {
     this.part(o, [0.85, 0.4, 1], [-0.55, 0.7, 0], this.mainMat);
     for (const z of [-0.3, 0.3]) this.part(o, [0.05, 0.12, 0.2], [0.97, 0.6, z], this.mat(LIGHT_COLOR));
     for (const x of [-0.65, 0.65]) for (const z of [-0.55, 0.55]) this.wheel(x, z, 0.3, 0.2);
+  }
+
+  private buildLocomotive(): void {
+    const o = this.object;
+    this.part(o, [2.5, 0.2, 1.2], [0, 0.4, 0], this.darkMat);
+    this.part(o, [1.3, 0.62, 1], [0.3, 0.82, 0], this.mainMat);
+    this.part(o, [0.2, 0.6, 0.9], [0.98, 0.82, 0], this.darkMat);
+    this.part(o, [0.85, 0.85, 1.15], [-0.8, 0.92, 0], this.mainMat);
+    this.part(o, [1, 0.08, 1.3], [-0.8, 1.34, 0], this.darkMat);
+    this.part(o, [0.04, 0.3, 0.7], [-0.37, 1.0, 0], this.mat(GLASS_COLOR));
+    this.part(o, [0.22, 0.34, 0.22], [0.85, 1.28, 0], this.darkMat);
+    this.part(o, [0.05, 0.16, 0.22], [1.09, 0.84, 0], this.mat(LIGHT_COLOR));
+    this.part(o, [0.2, 0.26, 1], [1.2, 0.3, 0], this.darkMat);
+    for (const x of [-0.8, 0, 0.8]) for (const z of [-0.6, 0.6]) this.wheel(x, z, 0.32, 0.14);
+  }
+
+  private buildWagon(): void {
+    const o = this.object;
+    this.part(o, [2.3, 0.16, 1.1], [0, 0.36, 0], this.darkMat);
+    this.part(o, [2.1, 0.55, 1.1], [0, 0.72, 0], this.mainMat);
+    this.part(o, [2.2, 0.06, 1.2], [0, 1.02, 0], this.darkMat);
+    for (const x of [-1.1, 1.1]) this.part(o, [0.2, 0.08, 0.12], [x, 0.42, 0], this.darkMat);
+    for (const x of [-0.8, 0.8]) for (const z of [-0.54, 0.54]) this.wheel(x, z, 0.25, 0.12);
   }
 
   setColor(color: string): void {

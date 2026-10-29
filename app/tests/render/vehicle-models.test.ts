@@ -19,7 +19,7 @@ const view = (model: VehicleModel, over: Partial<EntityView> = {}): EntityView =
 
 describe('vehicle figures', () => {
   it('build for every model and stay inside the collision box', () => {
-    for (const model of ['car', 'bike', 'truck'] as const) {
+    for (const model of ['car', 'bike', 'truck', 'locomotive', 'wagon'] as const) {
       const fig = new VehicleFigure(model, '#3b82f6');
       fig.update(view(model));
       const size = vehicleSize(model);

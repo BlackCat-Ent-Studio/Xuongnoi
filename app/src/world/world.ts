@@ -26,6 +26,7 @@ import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
 import { probeAhead } from './probe-ahead';
 import { createVehicleBody, seatPosition } from './vehicles';
+import { prepareTrains } from './vehicle-train';
 
 function pairKey(a: EntityId, b: EntityId): string {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
@@ -510,6 +511,21 @@ export function createWorld(mode: ViewMode): World {
       body.inputY = finiteOr(moveY, 0);
       if (stop !== undefined) body.stop = stop;
     },
+    setVehicleTrack(id: EntityId, pose: { x: number; z: number; heading: number; speed: number }): void {
+      const body = byId.get(id)?.vehicle;
+      if (!body || ![pose.x, pose.z, pose.heading, pose.speed].every(Number.isFinite)) return;
+      body.trackTarget = { x: pose.x, z: pose.z, heading: pose.heading, speed: pose.speed };
+    },
+    setVehicleTow(id: EntityId, leader: EntityId | null, distance = 0): void {
+      const body = byId.get(id)?.vehicle;
+      if (!body) return;
+      const lead = leader !== null && leader !== id ? byId.get(leader) : undefined;
+      if (!lead?.vehicle) {
+        body.tow = undefined;
+        return;
+      }
+      body.tow = { leader: lead.id, distance: Number.isFinite(distance) ? Math.max(0, distance) : 0 };
+    },
     probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null {
       const e = byId.get(id);
       if (!e || !e.visible) return null;
@@ -630,6 +646,7 @@ export function createWorld(mode: ViewMode): World {
         combat.update(list, dt);
         return;
       }
+      prepareTrains(list, byId, dt, mode);
       stepPhysics(list, dt, mode, yaw);
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),

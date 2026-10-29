@@ -7,9 +7,12 @@ import {
   unitToward,
   liveCharacter,
 } from './steering';
+import { buildRail, nearestS, railAt, upcomingPoint, type Rail } from './route-rail';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
-export const ROUTE_MAX_POINTS = 8;
+export const ROUTE_MAX_POINTS = 32;
+/** Points 1..8 as they always were; points 9..32 are folded under "Nâng cao". */
+const CLASSIC_POINTS = 8;
 const ROUTE_MIN_POINTS = 2;
 /** A vehicle counts as "at" a route point inside this planar distance (it never stops there, it just turns for the next one). */
 const VEHICLE_ARRIVE = 1.2;
@@ -26,17 +29,20 @@ interface RouteState {
   idx: number | null;
   /** +1 walking the list forward, -1 back (ping-pong only). */
   dir: 1 | -1;
+  /** Rail mode: the track built from the points, and how far along it the walker is (null until placed). */
+  rail: { key: string; track: Rail } | null;
+  pos: number | null;
 }
+
+/** Rail mode lets go of its place on the track when the body is this far off it (blocked by a wall, say). */
+const RAIL_HOLD_ERROR = 1.5;
 
 const DEFAULT_POINTS: readonly Vec3[] = [
   { x: -6, y: 0.5, z: -6 },
   { x: 6, y: 0.5, z: -6 },
   { x: 6, y: 0.5, z: 6 },
   { x: -6, y: 0.5, z: 6 },
-  { x: 0, y: 0.5, z: 0 },
-  { x: 0, y: 0.5, z: 0 },
-  { x: 0, y: 0.5, z: 0 },
-  { x: 0, y: 0.5, z: 0 },
+  ...Array.from({ length: ROUTE_MAX_POINTS - 4 }, () => ({ x: 0, y: 0.5, z: 0 })),
 ];
 
 const POINT_PARAMS: ParamDef[] = DEFAULT_POINTS.map((p, i) => ({
@@ -44,6 +50,7 @@ const POINT_PARAMS: ParamDef[] = DEFAULT_POINTS.map((p, i) => ({
   label: `Điểm ${i + 1}`,
   kind: 'vec3',
   default: p,
+  ...(i >= CLASSIC_POINTS ? { advanced: true } : {}),
 }));
 
 function readPoints(params: Parameters<typeof numParam>[0]): Vec3[] {
@@ -98,6 +105,91 @@ function throttleSticks(self: EntityView, toward: { ux: number; uz: number }, ma
   };
 }
 
+/** Rail mode for one tick: moves along the track at `speed` and puts the body on it. */
+function railTick(args: {
+  world: WorldApi;
+  self: EntityView;
+  s: RouteState;
+  points: readonly Vec3[];
+  loop: boolean;
+  fillet: number;
+  speed: number;
+  dt: number;
+  halted: boolean;
+}): { reached: boolean; moving: boolean; goal: Vec3 | null } {
+  const { world, self, s, points, loop, fillet, speed, dt, halted } = args;
+  const key = `${loop}|${fillet}|${points.map((p) => `${p.x},${p.z}`).join(';')}`;
+  if (!s.rail || s.rail.key !== key) {
+    s.rail = { key, track: buildRail(points, loop, fillet) };
+    if (s.pos !== null) s.pos = Math.min(s.pos, s.rail.track.total);
+  }
+  const track = s.rail.track;
+  if (track.total <= 0) return { reached: false, moving: false, goal: null };
+  const placing = s.pos === null;
+  if (s.pos === null) {
+    s.pos = nearestS(track, self.position.x, self.position.z);
+    s.idx = null;
+  }
+  const here = railAt(track, s.pos);
+  const err = Math.hypot(self.position.x - here.x, self.position.z - here.z);
+  let moving = false;
+  let reached = false;
+  if (!halted && (placing || err <= RAIL_HOLD_ERROR)) {
+    s.pos += s.dir * speed * dt;
+    moving = true;
+    if (loop) {
+      s.pos = ((s.pos % track.total) + track.total) % track.total;
+    } else if (s.pos >= track.total) {
+      s.pos = 2 * track.total - s.pos;
+      s.dir = -1;
+    } else if (s.pos <= 0) {
+      s.pos = -s.pos;
+      s.dir = 1;
+    }
+    const next = upcomingPoint(track, s.pos, s.dir);
+    if (s.idx !== null && next !== s.idx) reached = true;
+    s.idx = next;
+  } else if (s.idx === null || placing) {
+    s.idx = upcomingPoint(track, s.pos, s.dir);
+  }
+  const pose = railAt(track, s.pos);
+  if (self.kind === 'vehicle') {
+    world.setVehicleTrack(self.id, { x: pose.x, z: pose.z, heading: pose.heading, speed: moving ? s.dir * speed : 0 });
+    return { reached, moving, goal: null };
+  }
+  return { reached, moving, goal: { x: pose.x, y: self.position.y, z: pose.z } };
+}
+
+function railEvaluate(
+  dt: number,
+  world: WorldApi,
+  self: EntityView,
+  params: Parameters<typeof numParam>[0],
+  s: RouteState,
+  points: readonly Vec3[],
+  shown: () => number,
+  stop: boolean,
+): PortValues {
+  const reach = numParam(params, 'lookAhead', 2.5);
+  const blocked = reach > 0 && world.probeAhead(self.id, reach) !== null;
+  const halted = blocked || stop;
+  const speed = clamp(numParam(params, 'speed', 5), 0.5, 30);
+  const loop = strParam(params, 'style', 'loop') !== 'pingpong';
+  const fillet = clamp(numParam(params, 'railCorner', 1.5), 0, 10);
+  const r = railTick({ world, self, s, points, loop, fillet, speed, dt, halted });
+  const out = { jump: false, blocked, reached: r.reached, index: shown() };
+  if (self.kind === 'vehicle') {
+    if (halted) world.setVehicleInput(self.id, 0, 0, true);
+    const top = self.drive?.speed ?? 1;
+    return { ...out, moveX: 0, moveY: r.moving ? clamp(speed / Math.max(top, 1e-6), 0, 1) : 0 };
+  }
+  if (!r.goal || halted) return { ...out, moveX: 0, moveY: 0 };
+  const steer = steerToward(world, self, r.goal);
+  const top = self.drive?.speed ?? 0;
+  const k = top > 0 ? clamp(speed / top, 0.1, 1) : 1;
+  return { ...out, moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump };
+}
+
 const IDLE: Record<string, number | boolean> = { moveX: 0, moveY: 0, jump: false, blocked: false, reached: false, index: 0 };
 
 export const routeFollowNode: NodeDef<RouteState> = {
@@ -120,7 +212,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     { id: 'index', type: 'number', label: 'Điểm hiện tại' },
   ],
   params: [
-    { id: 'count', label: 'Số điểm (2 đến 8)', kind: 'number', default: 4, min: ROUTE_MIN_POINTS, max: ROUTE_MAX_POINTS, step: 1 },
+    { id: 'count', label: 'Số điểm (2 đến 32)', kind: 'number', default: 4, min: ROUTE_MIN_POINTS, max: ROUTE_MAX_POINTS, step: 1 },
     ...POINT_PARAMS,
     {
       id: 'style',
@@ -130,6 +222,16 @@ export const routeFollowNode: NodeDef<RouteState> = {
       options: [
         { value: 'loop', label: 'Vòng lặp (hết điểm cuối quay về điểm 1)' },
         { value: 'pingpong', label: 'Đi rồi quay lại' },
+      ],
+    },
+    {
+      id: 'follow',
+      label: 'Cách chạy',
+      kind: 'select',
+      default: 'steer',
+      options: [
+        { value: 'steer', label: 'Lái tới từng điểm (như cũ)' },
+        { value: 'rail', label: 'Bám ray (chạy đúng đường nối các điểm, mượt ở góc, không trôi lệch)' },
       ],
     },
     { id: 'speed', label: 'Tốc độ', kind: 'number', default: 5, min: 0.5, max: 30, step: 0.5 },
@@ -152,9 +254,10 @@ export const routeFollowNode: NodeDef<RouteState> = {
       step: 0.1,
       advanced: true,
     },
+    { id: 'railCorner', label: 'Độ bo góc khi bám ray (0 = góc nhọn)', kind: 'number', default: 1.5, min: 0, max: 10, step: 0.1, advanced: true },
     { id: 'steerGain', label: 'Độ gắt khi cua (xe lái bằng ga - lái)', kind: 'number', default: 2, min: 0.5, max: 8, step: 0.5, advanced: true },
   ],
-  create: () => ({ idx: null, dir: 1 }),
+  create: () => ({ idx: null, dir: 1, rail: null, pos: null }),
   evaluate(ctx, i, params, s): PortValues {
     const world = ctx.world;
     const self = liveCharacter(world, asObject(i.self));
@@ -165,6 +268,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     if (i.on !== undefined && !asBool(i.on)) return { ...IDLE, index: shown() };
 
     const isVehicle = self.kind === 'vehicle';
+    if (strParam(params, 'follow', 'steer') === 'rail') return railEvaluate(ctx.dt, world, self, params, s, points, shown, asBool(i.stop));
     // 0 = automatic: vehicles use a wide circle (they never stop at a point), walkers a tight one.
     const arriveParam = Math.max(0, numParam(params, 'arriveRadius', 0));
     const arriveRadius = arriveParam > 0 ? arriveParam : isVehicle ? VEHICLE_ARRIVE : WALKER_ARRIVE;

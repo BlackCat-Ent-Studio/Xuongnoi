@@ -1,5 +1,6 @@
 import type { EntityId, Vec3, VehicleModel, VehicleSpec, ViewMode } from '../engine/types';
 import type { Entity } from './entity';
+import type { Trail } from './vehicle-train';
 
 /**
  * Vehicle dynamics. Pure: a vehicle body holds its heading, signed speed and the stick values of this tick;
@@ -24,6 +25,8 @@ export const VEHICLE_DIMS: Readonly<Record<VehicleModel, VehicleDims>> = {
   car: { footprint: 1.5, height: 0.8, turnRate: 2.8, wheelRadius: 0.2, seatFeet: 0.3 },
   bike: { footprint: 1.2, height: 0.8, turnRate: 3.6, wheelRadius: 0.24, seatFeet: 0.5 },
   truck: { footprint: 2, height: 1.2, turnRate: 2, wheelRadius: 0.3, seatFeet: 0.6 },
+  locomotive: { footprint: 2.6, height: 1.4, turnRate: 2, wheelRadius: 0.32, seatFeet: 0.7 },
+  wagon: { footprint: 2.4, height: 1.1, turnRate: 2, wheelRadius: 0.25, seatFeet: 0.5 },
 };
 
 export function vehicleSize(model: VehicleModel): Vec3 {
@@ -52,6 +55,18 @@ export interface VehicleBody {
   hitCooldown: number;
   /** Items per layer on the bed, set by a cargo node (see `normalizeCells`). Omitted = the default layout. */
   cargoCells?: number;
+  /** Pose a node asked for this tick (see `setVehicleTrack`); the train step turns it into `rail`. */
+  trackTarget?: { x: number; z: number; heading: number; speed: number };
+  /** Velocity and nose direction that put the vehicle on its target pose during this tick's move. */
+  rail?: { vx: number; vz: number; heading: number; speed: number };
+  /** Set by `driveVehicle` when the rail drove this tick, so `settleVehicle` keeps the heading. */
+  railDriven?: boolean;
+  /** Coupled behind `leader`: own sticks are ignored. `distance` 0 = automatic. */
+  tow?: { leader: EntityId; distance: number };
+  /** Breadcrumb path of this vehicle, kept while something is coupled behind it. */
+  trail?: Trail;
+  /** Id of the first vehicle of the train this one belongs to; unset when not coupled to anything. */
+  train?: EntityId;
 }
 
 export function createVehicleBody(spec: VehicleSpec): VehicleBody {
@@ -142,8 +157,19 @@ function speedRate(body: VehicleBody, target: number): number {
 export function driveVehicle(body: VehicleBody, dt: number, mode: ViewMode, yaw: number): { x: number; z: number } {
   const { spec } = body;
   const dims = VEHICLE_DIMS[spec.model];
-  const ix = body.stop ? 0 : clamp1(body.inputX);
-  const iy = body.stop ? 0 : clamp1(body.inputY);
+  const rail = body.rail;
+  body.rail = undefined;
+  body.railDriven = rail !== undefined;
+  if (rail) {
+    // Put on the track by a node or by the vehicle ahead: heading and speed are given, not steered.
+    body.heading = rail.heading;
+    body.speed = rail.speed;
+    return { x: rail.vx, z: mode === '2d-side' ? 0 : rail.vz };
+  }
+  // A coupled vehicle without a leader to follow just stops.
+  const held = body.stop || body.tow !== undefined;
+  const ix = held ? 0 : clamp1(body.inputX);
+  const iy = held ? 0 : clamp1(body.inputY);
 
   if (mode === '2d-side') {
     // Left/right only: the stick sets the speed, the nose points where it goes.
@@ -184,6 +210,10 @@ export function settleVehicle(
   dt: number,
   mode: ViewMode,
 ): void {
+  if (body.railDriven) {
+    body.wheelSpin += (vel.x * Math.cos(body.heading) + vel.z * Math.sin(body.heading)) * dt / VEHICLE_DIMS[body.spec.model].wheelRadius;
+    return;
+  }
   const moved = Math.hypot(vel.x, vel.z);
   const intended = Math.hypot(wanted.x, wanted.z);
   if (mode === '2d-side') {

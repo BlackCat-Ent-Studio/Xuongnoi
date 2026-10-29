@@ -1,6 +1,7 @@
 import type { EntityId } from '../engine/types';
 import { colliderBox } from './collider';
 import type { Entity } from './entity';
+import { sameTrain } from './vehicle-train';
 
 /** Ignore things this far above or below the prober's body (the floor it drives on, roofs high overhead). */
 const VERTICAL_MARGIN = 0.1;
@@ -31,6 +32,7 @@ export function probeAhead(entities: readonly Entity[], self: Entity, reach: num
   let best: { id: EntityId; distance: number } | null = null;
   for (const e of entities) {
     if (e === self || !e.visible) continue;
+    if (sameTrain(self, e)) continue;
     if (e.kind === 'block') {
       if (!e.solid || e.zone) continue;
     } else if (e.kind === 'vehicle') {

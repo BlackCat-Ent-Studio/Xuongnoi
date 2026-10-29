@@ -4,6 +4,7 @@ import { boxOverlap, colliderBox, colliderOffset } from './collider';
 import { lockMotion } from './combat';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
+import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
 export const GRAVITY = -30;
@@ -220,7 +221,7 @@ function stepVehicle(
   if (!body) return;
   body.hitCooldown = Math.max(0, body.hitCooldown - dt);
   const rivals: Rivals | undefined =
-    body.spec.collide !== false ? { list: colliders.filter((o) => o !== v), hit: new Set() } : undefined;
+    body.spec.collide !== false ? { list: colliders.filter((o) => o !== v && !sameTrain(v, o)), hit: new Set() } : undefined;
   const flat = driveVehicle(body, dt, mode, yaw);
   const wanted = { x: flat.x, z: flat.z };
   v.vel.x = flat.x;

@@ -84,6 +84,8 @@ export function makeWorld(): FakeWorld {
     solidRevision: () => w.revision,
     cameraYaw: () => 0,
     setVehicleInput: () => undefined,
+    setVehicleTrack: () => undefined,
+    setVehicleTow: () => undefined,
     probeAhead: () => null,
     enterVehicle: () => null,
     exitVehicle: () => null,

@@ -226,8 +226,8 @@ export interface CargoLayout {
 }
 
 /** Look and size class of a vehicle (built from boxes by the renderer). */
-export type VehicleModel = 'car' | 'bike' | 'truck';
-export const VEHICLE_MODELS: readonly VehicleModel[] = ['car', 'bike', 'truck'];
+export type VehicleModel = 'car' | 'bike' | 'truck' | 'locomotive' | 'wagon';
+export const VEHICLE_MODELS: readonly VehicleModel[] = ['car', 'bike', 'truck', 'locomotive', 'wagon'];
 
 /** 'direction' = the vehicle turns toward where the stick points; 'throttle' = stick up/down is gas/brake, left/right steers. */
 export type SteerMode = 'direction' | 'throttle';
@@ -568,6 +568,18 @@ export interface WorldApi {
 
   /** Stick values for a vehicle this tick (-1..1); applied on the next physics step. Ignored for non-vehicles. */
   setVehicleInput(vehicle: EntityId, moveX: number, moveY: number, stop?: boolean): void;
+  /**
+   * Puts a vehicle exactly on `pose` (ground-plane center, nose direction in radians, signed speed in units/s) on the
+   * next physics step, instead of driving it by sticks; walls still block it. Valid for that one step only, so a node
+   * repeats it every tick. A vehicle more than a few units away is moved straight onto the pose. Ignored for non-vehicles.
+   */
+  setVehicleTrack(vehicle: EntityId, pose: { x: number; z: number; heading: number; speed: number }): void;
+  /**
+   * Couples `vehicle` behind `leader` (null = uncouple; idempotent, repeated each tick): it then ignores its own sticks
+   * and follows the trail the leader travelled, `distance` units center to center (0 = from both lengths plus a small gap).
+   * Coupled vehicles never collide with each other. A vehicle whose leader is gone or hidden stops.
+   */
+  setVehicleTow(vehicle: EntityId, leader: EntityId | null, distance?: number): void;
   /**
    * The nearest visible solid block, vehicle or character in front of the entity (along its facing, as wide as the entity)
    * whose gap to the entity is at most `reach`. Items, zones and riders are ignored. Null when the way is clear.

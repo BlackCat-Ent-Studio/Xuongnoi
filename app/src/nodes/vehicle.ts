@@ -2,7 +2,7 @@ import type { EntityId, NodeDef, SteerMode, VehicleModel, VehicleSpec } from '..
 import { VEHICLE_MODELS } from '../engine/types';
 import { vehicleSize } from '../world/vehicles';
 import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
-import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
+import { asBool, asNum, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 function modelParam(raw: string): VehicleModel {
   return VEHICLE_MODELS.find((m) => m === raw) ?? 'car';
@@ -37,11 +37,12 @@ export const vehicleNode: NodeDef<VehicleState> = {
   label: 'Phương tiện',
   category: 'object',
   description:
-    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy".',
+    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy". Tàu: chọn "Đầu máy" kéo bằng mảnh ghép "Chạy theo tuyến" (cách chạy "Bám ray"); nối "Xe" của đầu máy vào "Kéo theo bởi" của một "Toa tàu" để toa chạy theo sau, và nối tiếp toa sau vào toa trước để thành đoàn tàu.',
   inputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
     { id: 'stop', type: 'bool', label: 'Dừng' },
+    { id: 'leader', type: 'object', label: 'Kéo theo bởi' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Xe' },
@@ -62,6 +63,8 @@ export const vehicleNode: NodeDef<VehicleState> = {
         { value: 'car', label: 'Xe hơi' },
         { value: 'bike', label: 'Xe máy' },
         { value: 'truck', label: 'Xe tải nhỏ' },
+        { value: 'locomotive', label: 'Đầu máy (tàu)' },
+        { value: 'wagon', label: 'Toa tàu' },
       ],
     },
     {
@@ -120,6 +123,16 @@ export const vehicleNode: NodeDef<VehicleState> = {
     },
     { id: 'crashSpeed', label: 'Tốc độ tính là đâm', kind: 'number', default: 1.5, min: 0.1, max: 20, step: 0.1, advanced: true },
     { id: 'shove', label: 'Lực hất khi đâm', kind: 'number', default: 0.25, min: 0, max: 2, step: 0.05, advanced: true },
+    {
+      id: 'towDistance',
+      label: 'Khoảng cách toa (tâm tới tâm với xe kéo; 0 = tự tính từ độ dài hai xe + khe nhỏ)',
+      kind: 'number',
+      default: 0,
+      min: 0,
+      max: 30,
+      step: 0.1,
+      advanced: true,
+    },
     ...BODY_PARAMS,
   ],
   createOnly: [
@@ -153,6 +166,8 @@ export const vehicleNode: NodeDef<VehicleState> = {
   evaluate(ctx, i, params, s) {
     const view = ctx.world.getEntity(s.id);
     const driver = view?.vehicle?.driver ?? null;
+    // Coupled behind another vehicle ("Kéo theo bởi"): it follows that vehicle's trail and ignores its own drive input.
+    ctx.world.setVehicleTow(s.id, asObject(i.leader), Math.max(0, numParam(params, 'towDistance', 0)));
     const live = driver !== null || strParam(params, 'control', 'driver') === 'auto';
     ctx.world.setVehicleInput(
       s.id,
