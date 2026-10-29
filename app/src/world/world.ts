@@ -19,6 +19,7 @@ import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms'
 import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
+import { cargoOn, nearestLoadable, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
 import { createVehicleBody, seatPosition } from './vehicles';
 
@@ -135,6 +136,7 @@ export function createWorld(mode: ViewMode): World {
     }
     item.heldBy = null;
     item.inHand = false;
+    delete item.cargoSeq;
     return holder;
   }
 
@@ -219,6 +221,7 @@ export function createWorld(mode: ViewMode): World {
   /** Lets go of the carried and the hand-held item (and of the carrier, for an item) where they are. */
   function letGoOfAll(e: Entity): void {
     if (e.heldBy !== null) release(e);
+    if (e.kind === 'vehicle') for (const cargo of cargoOn(list, e.id)) release(cargo);
     if (e.holding !== null) {
       const held = byId.get(e.holding);
       if (held) release(held);
@@ -379,7 +382,7 @@ export function createWorld(mode: ViewMode): World {
     },
     isHeld(item: EntityId): boolean {
       const e = byId.get(item);
-      return !!e && e.visible && e.heldBy !== null && !e.inHand;
+      return !!e && e.visible && e.heldBy !== null && !e.inHand && e.cargoSeq === undefined;
     },
     interact(character: EntityId, reach: number): EntityId | null {
       const c = liveCharacter(character);
@@ -500,6 +503,33 @@ export function createWorld(mode: ViewMode): World {
       const c = byId.get(character);
       if (!c || c.kind !== 'character' || c.seatedIn === null) return null;
       return leaveSeat(c)?.id ?? null;
+    },
+    loadCargo(vehicle: EntityId, reach: number, capacity: number): EntityId | null {
+      const veh = byId.get(vehicle);
+      if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
+      const onBoard = cargoOn(list, veh.id);
+      if (onBoard.length >= Math.max(0, Math.floor(finiteOr(capacity, 0)))) return null;
+      const item = nearestLoadable(list, veh, Math.max(0, finiteOr(reach, 0)), mode);
+      if (!item) return null;
+      item.heldBy = veh.id;
+      item.cargoSeq = (onBoard.length > 0 ? onBoard[onBoard.length - 1]!.cargoSeq! : 0) + 1;
+      item.vel = { x: 0, y: 0, z: 0 };
+      return item.id;
+    },
+    unloadCargo(vehicle: EntityId): EntityId | null {
+      const veh = byId.get(vehicle);
+      if (!veh || veh.kind !== 'vehicle' || !veh.visible) return null;
+      const top = cargoOn(list, veh.id).pop();
+      if (!top) return null;
+      const spot = unloadSpot(list, veh, top, mode);
+      if (!spot) return null;
+      release(top);
+      top.pos = spot;
+      top.vel = { x: 0, y: 0, z: 0 };
+      return top.id;
+    },
+    cargoOf(vehicle: EntityId): readonly EntityId[] {
+      return cargoOn(list, vehicle).map((e) => e.id);
     },
     setCamera(owner: string, command: PlayCameraCommand | null): void {
       if (command === null) {

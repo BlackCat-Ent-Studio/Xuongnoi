@@ -38,8 +38,10 @@ export interface Entity {
   handHolding: string | null;
   /** Characters: seconds since the current swing began, or -1 when not swinging. */
   swingTime: number;
-  /** Items: id of the carrying character. */
+  /** Items: id of the carrying character (or, for loaded cargo, of the vehicle). */
   heldBy: string | null;
+  /** Items: load order while riding as vehicle cargo (`heldBy` is then the vehicle); unset otherwise. */
+  cargoSeq?: number;
   /** Items: true when `heldBy` carries it in hand rather than above the head. */
   inHand: boolean;
   /** Items: false = never picked up. */

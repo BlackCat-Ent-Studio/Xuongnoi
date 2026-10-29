@@ -32,6 +32,7 @@ import { randomNode } from './random';
 import { latchNode } from './latch';
 import { mapRangeNode } from './map-range';
 import { zoneSensorNode } from './zone-sensor';
+import { cargoNode } from './cargo';
 import { distanceNode } from './distance';
 import { cameraNode } from './camera';
 import { teleportNode } from './teleport';
@@ -89,6 +90,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   fightNode,
   vehicleNode,
   enterExitNode,
+  cargoNode,
   randomNode,
   latchNode,
   mapRangeNode,

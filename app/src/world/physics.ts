@@ -1,4 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
+import { cargoPositions } from './cargo';
 import { lockMotion } from './combat';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
@@ -220,11 +221,14 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   }
 
   const byId = new Map(entities.map((e) => [e.id, e]));
+  const cargo = cargoPositions(entities, mode);
   for (const item of entities) {
     if (item.kind !== 'item' || !item.visible || item.bullet) continue;
     const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
     if (holder) {
-      Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : holdPosition(holder, item, mode));
+      const slot = cargo.get(item.id);
+      if (slot) Object.assign(item.pos, slot);
+      else Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : holdPosition(holder, item, mode));
       item.vel.x = 0;
       item.vel.y = 0;
       item.vel.z = 0;

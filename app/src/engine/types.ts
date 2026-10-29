@@ -474,6 +474,15 @@ export interface WorldApi {
   enterVehicle(character: EntityId, reach: number): EntityId | null;
   /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */
   exitVehicle(character: EntityId): EntityId | null;
+  /**
+   * Loads the nearest free carryable item within `reach` of the vehicle's edge onto its bed, unless it already
+   * carries `capacity` items. Loaded items follow the vehicle and cannot be grabbed. Returns the item or null.
+   */
+  loadCargo(vehicle: EntityId, reach: number, capacity: number): EntityId | null;
+  /** Puts the most recently loaded item down beside the vehicle (clear of solids). Null when empty or no room. */
+  unloadCargo(vehicle: EntityId): EntityId | null;
+  /** Items riding on the vehicle, oldest first. */
+  cargoOf(vehicle: EntityId): readonly EntityId[];
 
   // ---- sensors and randomness ----
 
