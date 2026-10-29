@@ -128,7 +128,9 @@ export function mountEditor(root: HTMLElement): void {
   }
 
   const sceneMount = createMount(DOCK_SCENE_ID, SHELL_TEXT.scenePlaceholder);
-  mountSceneTree(sceneMount, state);
+  mountSceneTree(sceneMount, state, (nodeId) => {
+    if (isShown(canvas.el)) canvas.centerOn(nodeId);
+  });
   const leftDock = createDock({
     className: 'dock-left',
     ariaLabel: SHELL_TEXT.dockLeftAria,

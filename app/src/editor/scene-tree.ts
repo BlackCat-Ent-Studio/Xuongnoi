@@ -15,7 +15,7 @@ export interface SceneTree {
  * ARIA tree of scene objects, rebuilt from the board graph on every change.
  * Selecting an item selects that node in the editor state. The wiring canvas has no public pan API, so no pan.
  */
-export function mountSceneTree(host: HTMLElement, state: EditorState): SceneTree {
+export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?: (nodeId: string) => void): SceneTree {
   const collapsed = new Set<string>(); // group keys the user collapsed; survive rebuilds
   let focusKey: string | null = null;
 
@@ -46,8 +46,10 @@ export function mountSceneTree(host: HTMLElement, state: EditorState): SceneTree
 
   function activate(li: HTMLElement): void {
     const id = li.dataset.nodeId;
-    if (id) state.select({ kind: 'node', id });
-    else toggleGroup(li, li.getAttribute('aria-expanded') !== 'true');
+    if (id) {
+      state.select({ kind: 'node', id });
+      onReveal?.(id);
+    } else toggleGroup(li, li.getAttribute('aria-expanded') !== 'true');
   }
 
   function groupRow(key: string, label: string, count: number, children: HTMLElement[]): HTMLElement {
