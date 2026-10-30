@@ -1,166 +1,161 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-29 15:00
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-31 01:20
 
 ## 1. Goal
-An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes, wire ports and press Chơi to play a 2D or 3D game.
+An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
 - Claude writes all the code; the user only playtests and decides.
-- It is NOT a clone of Game Builder Garage. The user asked for "98% giống" early on and was declined. Never read `D:\gbg\` and never mirror its nodes, UI, lessons or text. Generic genre mechanics are fine.
+- It is NOT a clone of Game Builder Garage. Never read `D:\gbg\` and never mirror its nodes, UI, lessons or text. Generic genre mechanics are fine.
 
-## 2. Current state (main = a840e3e + this handoff, 654 tests green)
-- **Run:** `cd app; npm install; npm run dev` → http://localhost:5173.
-- **Gates:** `npx vitest run`, `npx tsc --noEmit -p .` and `npm run build` must all pass.
-- **Stack:** Vite 8, TypeScript 7 strict (noUncheckedIndexedAccess, noUnused*), three 0.186, vitest 5, plain DOM (no UI framework).
-- **Engine:** typed ports bool/number/object, a fixed 60 Hz tick, back-edges read the previous tick, and one 3D world with 3 view modes: 2d-side, 2d-top and 3d.
-- **41 node kinds in 7 categories** (`app/src/nodes/index.ts`):
-  - input: key, stick, on-start
-  - logic: and/or/not, compare, latch, zone, distance, touch
+## 2. Current state (main = 2ee0799, 1470 tests green, tsc clean, build OK)
+- **Run:** `cd app; npm install; npm run dev` → http://localhost:5173 (strict port 5173).
+- **Gates (in app/):** `npx vitest run --testTimeout 120000` (~4–7 min; slow when agents run), `npx tsc --noEmit -p .`, `npm run build`.
+- **Stack:** Vite 8, TypeScript strict (noUncheckedIndexedAccess, noUnused*), three.js, vitest (node env, no DOM tests), plain DOM, no UI framework.
+- **Engine:** typed ports bool/number/object, fixed 60 Hz tick, one world with 3 view modes (2d-side, 2d-top, 3d). `Runtime.takeRisen()` reports bool outputs that rose since the last read (used by the wire effect).
+- **50 node kinds in 7 categories** (registry `app/src/nodes/index.ts`, count asserted in `tests/nodes/step-1-nodes.test.ts`):
+  - input: key, stick, on-start, ui-button, ui-pick, ui-dialog, ui-start
+  - logic: and, or, not, compare, touch, select-number, latch, zone, distance
   - math: const, math, counter, timer, random, map-range
-  - object: character (6 looks plus role player/bot), block, item (10+ shapes, holdStyle head/hand, damage, carryable), vehicle, moving/rotating platform, spawner, portal
-  - action: carry, interact, hand-tool, enter-exit, shooter, teleport, health
-  - brain: patrol, go-to, chase/flee, sequence, fight (A* pathfinding with a path-finding on/off param)
-  - output: win-lose, show-number, show-text, camera
-- **Editor:**
-  - palette, wiring canvas, properties panel with a look picker
-  - resizable splitters and a maximize button
-  - edit-mode pan/zoom with 🎯 reset
-  - undo/redo, multi-select copy/paste/duplicate (Ctrl+C/V/D), sticky notes
-  - a floating status toast and an autosave/JSON file
-- **14 samples:** side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot, arena, race, dice-zones, portal-camera, dodge-shoot.
-- **14 lessons:**
-  - 1–3 basics
-  - 4 carry
-  - 5 tools
-  - 6 make-bot
-  - 7 chores (sequence)
-  - 8 combat
-  - 9 vehicles
-  - 10 bot-driver
-  - 11 chance-zones
-  - 12 platforms-shooting
-  - 13 camera-portals
-  - 14 editor-tools
-  - Each lesson is its own file `app/src/tutorial/lessons-*.ts`, registered in `lessons.ts` → `LESSONS`.
+  - object: character, block, item, vehicle, portal, moving-platform, rotating-platform
+  - output: win-lose, show-number, show-text, guide-arrow, ui-meter
+  - action: carry, interact, hand-tool, health, enter-exit, cargo, camera, teleport, shooter, spawner
+  - brain: patrol, go-to, route-follow, chase, sequence, fight
+- **Open params ("Nâng cao").** `ParamDef.advanced: true` folds a param under "Nâng cao ▸" in the properties panel. Defaults always equal the old constants, so old boards behave the same. Examples:
+  - Every body (Hộp, Đồ vật, Nhân vật, Xe): collider size/offset (`world/collider.ts`) and gravity scale; Đồ vật also has friction and bounce.
+  - Character hit reaction; carry drop distance and throw lift; fight backoff.
+  - Vehicle brake, reverse, crash speed and shove; cargo gap and cells per layer; route arrive radius and steer gain.
+  - Chase catch and flee distances, slow radius.
+  - Sensors:
+    - zone: rotate with follower, goods filter, rule edge/center/inside, min count
+    - touch: grow, rule, hold time, "Vừa thôi chạm" output
+- **Big features added this period:**
+  - **UI nodes** (button, pick, meter, dialog, start screen).
+  - **"Kho game của tôi":** a localStorage library (Tệp menu).
+  - **Node groups:** Ctrl+G groups, Ctrl+Shift+G ungroups, double-click enters, Esc leaves, Ctrl+D duplicates; saved as `graph.groups`.
+  - **Block styles:** 16 "Kiểu dáng", including Băng chuyền and Đường ray.
+  - **Traffic:** route-follow, vehicle collision, guide arrows, cargo by goods type.
+  - **Conveyor belts:** Hộp params plus "Chạy băng"/"Đảo chiều" inputs; riders stand on moving vehicles.
+  - **Trains:** route-follow "Cách chạy: Bám ray" with 32 points; Đầu máy and Toa tàu models; "Kéo theo bởi" coupling (`world/vehicle-train.ts`).
+- **16 samples** (`app/src/io/samples.ts`):
+  - side-stars, top-collect, 3d-hop, key-door, pickaxe-rock, guard-patrol, cleaner-bot, maze-chase, platform-bot, arena, race, dice-zones, portal-camera, dodge-shoot
+  - city-delivery (2D)
+  - city-delivery-3d: 687 nodes, 32 groups, generated by `app/scripts/gen-city-delivery-3d.mjs`. Its `SIZES` table must cover `estimateNodeSize`.
+- **Course: 30 lessons in 9 chapters.**
+  - `app/src/tutorial/course.ts` holds the `COURSE` chapters. `arrangeCourse` orders `LESSONS` and renumbers the titles.
+  - New lessons register through `course-pack-{a,b,c,d}.ts` (`createCoursePackX(kit)`).
+  - The menu is grouped by chapter. Progress is stored by lesson id, so reordering keeps the ✓ marks.
+  - `tests/tutorial/course-coverage.test.ts` fails if any node kind is not used by some lesson.
+- **Sổ tay mảnh ghép** (Trợ giúp → Sổ tay mảnh ghép, or "?" on palette items and in the properties header):
+  - `app/src/handbook/`: one page per node kind, with purpose, when to use, every port, every param, example, tips, lesson link and a "Thử ngay" tryBoard.
+  - Levels Cấp 1–5 come from the lesson's chapter.
+  - `tests/handbook/handbook-coverage.test.ts` fails if a node kind has no page.
+- **Board look:**
+  - Node cards use the "C · Khối đồ chơi" look (`editor/graph/node-cards.css`) at the OLD footprint (min 168 px, 26 px rows, inputs then outputs). Pins sit inside the card.
+  - Wire "dòng điện" (`editor/graph/wire-energy.ts/.css`), toggled with Xem → Hiệu ứng dòng điện:
+    - play: lit, dim, sparks
+    - edit: stepped flowing dots
+    - no CSS filters (they dropped FPS to 4)
+  - `editor-state.loadBoard` runs `spreadOverlaps` (graph-geometry.ts), which pushes overlapping cards down per scope.
+- **Approved preview artifacts:**
+  - Node style + electricity: https://claude.ai/artifact/LK9fmQK5QZGmug49tPxZ9d (local copy `plans/ui-mockups/node-style-preview/index.html`)
+  - Group demo: https://claude.ai/artifact/4U1nFMPX9o7pDvNSVVTqaf
 
-## 3. NEXT: UI/UX redesign (waiting for the user's choice)
-- **Audit:** `plans/reports/ui-ux-designer-261029-1440-editor-ux-audit-report.md` (15 problems). The top ones:
-  - narrow node cards cut off Vietnamese labels
-  - nodes overlap when added
-  - busy boards are unreadable (no zoom buttons, fit or minimap)
-  - "Khối" means two things (all nodes, and the box object)
-  - the palette has no search or icons
-  - category colours fail contrast and clash with wire colours
-  - Chơi turns into "Sửa" instead of "Dừng" plus "Chơi lại"
-  - hints cover the game view
-  - the top bar wraps at 1280px
-- **Three mockups** (private artifacts; local copies in `plans/ui-mockups/*/index.html` + `preview.png`; each has its own report `plans/reports/ui-ux-designer-261029-1440-mockup-*-report.md`):
-
-  | Mockup | Artifact | Notes |
-  |---|---|---|
-  | A Studio tối (dark, amber accent) | https://claude.ai/artifact/KNSN9o6woKHZku7qZBzjcA | Most interactive: real wire drag, wrong-type port shake, "Nối giúp tôi". About 4–6 dev days |
-  | B Sáng thân thiện (warm light, pastel) | https://claude.ai/artifact/UieGR5Z6c9X5ntby13QNJ4 | Stacked ports (labels never clip), tutorial card docked under the palette, "Thiếu 1 dây" badge |
-  | C Kính mờ hiện đại (glass bento) | https://claude.ai/artifact/1HP4DBh5pgSKYnqvreBAwm | Ctrl+K that ignores diacritics, flowing wires in play, solid fallbacks |
-
-- **Recommendation already given to the user:** B as the base, plus A's wire interactions and "Nối giúp tôi", plus C's Ctrl+K. A dark-mode toggle can come later.
-- **Five questions are pending; ask them again as plain numbered text:**
-  1. Which mockup?
-  2. Rename the box object "Khối" to "Hộp" or "Vật cản"? Keep the internal kind `block` so saves still load.
-  3. Change category colours so green/blue/orange mean port type only?
-  4. Add a `required` flag to port defs to drive the "Thiếu dây" badge?
-  5. Tablet/touch in scope? The recommendation is no.
-- **After approval:** brainstorm report → plan phases (tokens/CSS, top bar, palette with search and icons, node cards with smart placement, canvas zoom/fit/minimap, properties, game view and toast, tutorial card, rename and colours, required ports) → split into parallel worktrees by file ownership → merge → browser sweep.
-
-## 3b. UPDATE 2026-10-29 15:45: a second round of mockups (D/E/F, pro game-engine style)
-- **The user's request.** Make more mockups in a professional, modern game-engine editor style (Unity/Unreal genre, without their names or logos). Use these 3 skill kits as read-only guidance, plus https://21st.dev/community/components for visual inspiration only.
-- **Skill kits.** All three were checked by hand and scanned with Windows Defender, and none had threats. Do not install them: their hooks would clash with ClaudeKit.
-  - `D:\skill\taste-skill-main`
-  - `D:\skill\impeccable-main`: its `impeccable.cmd` downloads an exe from GitHub, so never run it.
-  - `E:\ux-ui-agent-skills-main`: the user wants it kept on drive E, not drive C.
-- **Three ui-ux-designer agents** were launched in the background. Each writes `plans/ui-mockups/<dir>/index.html` + `preview.png` and a report `plans/reports/ui-ux-designer-261029-1520-mockup-<x>-report.md`:
-  - **D `d-pro-docked`**: 4 docked panels. **DONE, published at https://claude.ai/artifact/NcZBP7Gy3Ysx2CUfFsTMjD.** Fit zoom is 65% at 1280. Porting is estimated at 13–17 days.
-  - **E `e-graph-focus`**: the graph fills the screen, with presets Nối dây/Chơi thử/Cân bằng and a floating PiP game. **DONE, published at https://claude.ai/artifact/4CxnpFqtjZ2qhg4X6RgCtZ.** It passed the checks at 1280 and 1440. Concerns:
-    - the fit zoom is only 57% at 1280
-    - it renames nodes to "Mảnh ghép" and the box to "Hộp"
-    - play mode allows live editing
-    - porting is estimated at 11–14 dev days
-  - **F `f-split-live`**: a 50/50 game/graph split, wires show live values during play, plus Ctrl+K. **DONE, published at https://claude.ai/artifact/H2sAgUkXkV9ERYRbKzWXCa.** Fit zoom is 65% at 1280. Porting is estimated at 16–18 days. All 3 are done; the next step is asking the user to choose.
-  - **2026-10-29 16:48: the user tentatively chose D (Xưởng Pro) as the base.** Parts of E/F will be picked later. Still waiting on questions 2–7 (renaming Khối, "Mảnh ghép", live editing during play, colours, required ports, touch).
-  - **2026-10-29 16:50: decisions locked** (2a Hộp, 3a Mảnh ghép, 4a, 5a, 6a, 7a). Report: `plans/reports/brainstorm-261029-1648-ui-redesign-pro-docked-report.md`. Next: /ck:plan (P1 Shell first, then P2–P6 in parallel). Note: the engine has no pause/step yet.
-  - **2026-10-29 16:58: wave 1 is running** (5 worktrees: feat/ui-shell, feat/engine-pause, feat/ui-graph, feat/ui-panels, feat/ui-naming). Plan: `plans/261029-1653-ui-redesign-pro-docked/plan.md`. Merge each as it finishes; wave 2 (play state + console, scene tree, lessons dock) runs after.
-  - **2026-10-29 17:08: wave 1 is merged into main (eb191cf, 693 tests green).** Wave 2 is running: feat/ui-play-console (F), feat/ui-scene-tree (G), feat/ui-lessons-dock (H). Lesson learned: the naming agent rewrote whole nodes/*.ts files (EOL changes), so merges conflict over the whole file. Fix: `git checkout --ours` plus `git apply --ignore-whitespace` of the other branch's diff.
-  - **2026-10-29 17:27: wave 2 is merged into main (cd3f6dc, 707 tests green)**: play/pause/step + live edit + Bảng tin, the scene tree, the lessons dock + launchpad. Wave 3 is running on feat/ui-polish: a browser sweep of every sample, mode and viewport, plus leftovers (dead CSS, bottom dock height, "Chỉ cho tôi" switching tab, migrating old browser scripts). Old worktree folders that fail to delete ("Invalid argument") were locked by agent dev servers. Fix: stop ports 5174–5180, then rm -rf and git worktree prune.
-  - **2026-10-29 18:02: wave 3 is merged. The mockup D redesign is DONE.** main has 708 tests green; 14 samples × 3 viewports pass with 0 console errors; lessons 1, 3, 11 and 14 pass end to end. Browser scripts are migrated to the dock selectors (plans/browser-scripts, PORT env var). Open questions for the user: (1) add a status bar like the mockup? (2) wrap palette descriptions to 2 lines? (3) re-lay out lesson boards (lesson 11 has 4 Hộp overlapping about 10px; needs a re-run of all lessons)? (4) pick E/F extras: Nối giúp tôi, live wire values, Chuyện vừa xảy ra. Not verified: real GPU, Firefox/Safari, 3D in only 1 sample, lessons 10/12/13 scripts not re-run.
-  - **2026-10-29 18:20: round 4 is running (from the user's screenshots).** feat/ui-game-pip: floating "Xem game" PiP on Bảng nối (decision 1a, always shown, can be minimised) plus dragging the Màn chơi tab out. feat/ui-topbar-menus: a 2D ngang/2D trên/3D segmented control in the top bar (decision 2a, locked while playing) plus mockup F-style menus. feat/ui-graph-corner: the bottom-left zoom rail + minimap + legend in mockup E style, avoiding covering nodes, with an inset API for the PiP.
-  - **2026-10-29 19:06: round 4 is merged (main has 723 tests green).** It brings the PiP "Xem game", dragging the tab out, the 2D/3D segmented control, mockup F-style menus, the mockup E-style graph corner, and fixes (dropped nodes stay inside the view so lesson 1 works again; sticky notes avoid the PiP; the launchpad hides the corner). Lessons 1, 3, 10, 11 and 14 pass end to end. Pause: the simulation is frozen, but idle animation and the camera keep rendering (intended). Known: at 1024 the "Hướng dẫn"/"Bố cục" labels are clipped; lessons 2, 4–9, 12 and 13 were not re-run; 3D was not tested in the PiP.
-- **Next steps:**
-  1. When D and F finish (if those agents are gone, check whether the files exist and re-run any missing mockup), eyeball each preview.png.
-  2. Publish each with `mcp__claude-artifacts__publish_files` (files: index.html as index.html, title "Xưởng Nối – Mẫu D/E/F …", icon "layout").
-  3. Give the user the links.
-  4. Ask, batched as plain numbered text:
-     - which of A–F
-     - the Khối rename (Hộp / Vật cản / Mảnh ghép)
-     - category colours only for port types
-     - a required-port flag
-     - live editing during play vs locking
-     - a collapsed palette at 1280
-     - tablet out of scope
-- **Note:** Playwright is NOT in `app/package.json`. Agents used an install from an old scratchpad, so add it as a devDependency or reuse `plans/browser-scripts`.
+## 3. Open items / waiting on the user
+- The user is test-learning the course at http://localhost:5173 and will report confusing steps.
+- **Proposed, not approved:**
+  1. Màn hình bắt đầu should pause the whole game until Start; today only timers wait.
+  2. Spawner should get "Loại hàng".
+  3. The zone "Chỉ tính loại hàng" filter should trim spaces.
+  4. The train should not wait 3 s at start.
+  5. A step-up ("bậc leo") mechanic for characters, which does not exist yet.
+  6. Cargo "Giao vào điểm" and character "Đặt vào": an unload into a target, discussed but parked.
+- **City 3D game:** the user wants it to live in their Kho game for long-term editing. It was parked ("để tạm"); it is still only a sample. Kho game is in the user's browser localStorage, so Claude cannot write it from the terminal.
+- **Not verified by a human:**
+  - playing all 30 lessons by hand
+  - try-boards that need key or mouse input
+  - real-GPU FPS
+  - Firefox/Safari
 
 ## 4. Workflow that works (keep doing this)
-1. **Requests.** The user writes short Vietnamese requests, usually through `/brainstorm`. Reply in simple Vietnamese with tables.
-   - Present the options and a recommendation first.
-   - Ask plain-text numbered questions (`1a 2b`), never AskUserQuestion popups.
-   - Batch every open question into one message when the user asks for that.
-2. **Scale.** For each approved feature write a short brainstorm report in `plans/reports/brainstorm-<date>-<slug>-report.md`, then spawn `fullstack-developer` agents.
-   - The user wants max parallelism ("mở hết agent").
-3. **Parallelism means git worktrees.**
-   - Create them yourself: `git worktree add -b feat/x ../GameBuilder-x HEAD`. The Agent tool's `isolation: worktree` failed here.
-   - Each agent runs `npm install`, uses its own dev port (5174+), commits on its branch and writes a report in `plans/reports/`.
-4. **Merging.** Merge as each agent finishes with `git merge --no-edit feat/x`. Conflicts are almost always append points:
-   - `nodes/index.ts` (imports and the node list)
-   - the `types.ts` WorldApi tail
-   - the `io/samples.ts` list
-   - the `tests/io/samples.test.ts` id/mode arrays and idle exclusions
-   - the node count in `tests/nodes/step-1-nodes.test.ts`
-   - the `fake-world.ts` stubs
-   - the `LESSONS` array and imports in `tutorial/lessons.ts`
-   - `scene-view.ts`
-5. **Resolving.** Use a small node script that does union merging (HEAD + theirs) and preserves CRLF/LF per file.
-   - Watch for methods landing inside the wrong interface (e.g. after `PortalLink`), and for a missing `},` between union-merged object methods in `world.ts`.
-   - Big multi-file semantic conflicts (combat vs vehicles) go to a resolver agent.
-6. **Verifying.** After each merge run tsc and vitest, then commit, `git worktree remove --force` and `git branch -d`. After a batch, run a tester agent browser sweep of every sample and key lessons.
-7. **Wrapping up.** Update this file and commit after every batch. Give the user `http://localhost:5173`; start the dev server in the background if it is down.
-8. **Mockups.** Write the files and publish them with `mcp__claude-artifacts__publish_files`; they are private by default. Read `guide(pages)` once per session.
+1. **Requests.** The user writes short Vietnamese requests via `/brainstorm`.
+   - Scout the code first, then reply in simple Vietnamese with tables: findings → options → ⭐ recommendation.
+   - Ask plain-text numbered questions (`1a 2b`) and never popups. Unanswered questions take the ⭐ default; say so.
+   - Visual decisions: build a quick artifact preview first (load the `artifact-design` skill, write HTML to the scratchpad, take one Playwright screenshot, publish with the `Artifact` tool), then implement after the user picks. To show it to the user, `Artifact action:open` or PowerShell `Start-Process <url>`.
+2. **Decision record.** Write a short `plans/reports/brainstorm-<yymmdd-hhmm>-<slug>-report.md` before spawning agents. `plans/**` is gitignored, so reports stay local.
+3. **Shared contract first, then parallel agents.** Before fanning out, commit the shared contract yourself so agents never edit the same file:
+   - `ParamDef.advanced` + panel fold
+   - `course.ts` + per-agent `course-pack-x.ts`
+   - `handbook/types.ts` + per-agent `content-*.ts`
+   - the agreed DOM hooks between agents (`data-live`, `is-hot`)
+4. **Worktrees (manual):**
+   - `git worktree add -b feat/x ../GameBuilder-x HEAD`.
+   - Create the dependency junction YOURSELF with PowerShell: `New-Item -ItemType Junction -Path <wt>\app\node_modules -Target D:\workspace\GameBuilder\app\node_modules`. Some agents (fullstack-developer) have no PowerShell tool and get BLOCKED.
+   - Give each agent a dev port (5201+), an explicit file-ownership list and the "do not touch" list of its siblings.
+   - Agents use `subagent_type: fullstack-developer` with no `isolation` param (`isolation: worktree` fails here).
+5. **Merge as each finishes:**
+   - `git merge --no-edit feat/x`, then tsc + vitest (focused first, full at the end of a batch).
+   - Clean up:
+     1. Remove the junction with PowerShell `(Get-Item $j -Force)` after checking `LinkType -eq 'Junction'`, then `.Delete()`. Never a recursive delete through a junction.
+     2. `git worktree remove --force ../GameBuilder-x; git branch -d feat/x; git worktree prune`.
+6. **Verify yourself after merging:**
+   - Run a combined Playwright check against :5173 (scripts in `plans/browser-scripts/`, e.g. `handbook-check.mjs`, `board-combined.mjs`).
+   - LOOK at the screenshots.
+   - Many real bugs were only caught this way: grey headers, overlapping cards, wrong search order.
+7. **Wrap up.** Report to the user: what changed, how to open it, what was verified and what was NOT. Update this file.
 
 ## 5. Lessons learned, bugs and fixes
-- **The status toast shifted the layout.** It made the top bar wrap, so the canvas jumped 33 px and wire drags missed (the lesson 3 "flake").
-  - Fix: `.status` is absolutely positioned with `pointer-events:none`.
-  - Lesson: intermittent UI script failures can be REAL bugs; probe element rects per action.
-- **Perf and determinism tests flake when 4+ agents run at once.** The A* budget was raised to 6 s. Re-run on an idle machine before calling it a bug; 5/5 green when idle.
-- **Tutorial gotchas:**
-  - Step checks must be tolerant: match by node kind + port, never by id or exact position.
-  - Lessons hard-coding "is the last lesson" break when lessons are appended; use `toContain`.
-  - A node cannot be wired to itself (`same-node`), so timer loops need an extra node.
-- **Samples:** a solid car means `go-to` must have stopDistance ≥ 1.5 to "arrive". Bots treat moving/turning blocks as empty space in A*.
-- **Bash hook:** it blocks commands containing the words "node_modules" or "dist", which affects Bash heredocs that mention them. Write files with the Write tool.
-- **Git:** the identity is repo-local (user "trong"). Commit `app/`, HANDOFF and plans as needed; `plans/**` is gitignored except templates, so reports stay local only. The zip/dump, ClaudeKit and `.agents` are ignored.
-- **Scratchpad:** session scratchpads are lost between sessions. Useful Playwright scripts are copied to `plans/browser-scripts/*.mjs` (tut-run/tut-common, sweep, lessons 11–14). Point them at port 5173.
-- **Known open issues:**
-  - characters and vehicles pass through each other
-  - 3D vehicle visuals, portals in top/3D and camera shake checked only in unit tests
-  - lessons 11–13 are long (24–28 steps)
-  - no sound
-  - no mouse, touch or gamepad input
-  - no online sharing
+- **Agent hand-off claims can be wrong; check before acting.** Example: "Quay lại sửa highlights the wrong button" was false, because `controller.playAware` already swaps play→stop while playing.
+- **The new card CSS overrode the category colour.**
+  - Cause: `.wc .wc-node { --cc: grey }` loaded after `.wc .cat-* { --cc }` at the same specificity.
+  - Fix: put the default on low-specificity `.wc-node`.
+- **The bigger cards broke every saved layout.**
+  - The first C-style cards were wider and taller than `estimateNodeSize`, so old boards overlapped.
+  - Fix: keep the old footprint, keep `estimateNodeSize` = old formula, and add `spreadOverlaps` on load.
+  - Lesson: any card-size change must keep saved boards readable.
+- **Adding inputs to a node grows its card.** Hộp got "Chạy băng"/"Đảo chiều", so sample layouts overlapped and the city sample overlap tests failed. Fix: respace samples (the 3D one by regenerating with matching `SIZES`); `spreadOverlaps` now also covers user boards.
+- **Wire effects and FPS.** CSS `filter: blur/drop-shadow` on SVG wires took the city board from 60 to 4 FPS, and a continuous dash animation did the same. Use plain wide translucent strokes and `steps()` animations.
+- **One-tick pulses.** Pulses are invisible if the UI samples every 100 ms, so `Runtime.takeRisen()` records rising edges between reads.
+- **Search ranking.** Grouping search results by section hid the best match. While searching, show one flat list in score order.
+- **Sensor "chạm mép" is too loose for delivery pads.** Hence the rule options (center inside / fully inside) and hold time.
+- **Delivery dropped goods on the road.** Cargo unload only places items beside the truck. The discussed fix is "Giao vào", which is parked.
+- **Tutorial:**
+  - Never assert lesson positions or numbered titles in tests; use `lessonName()` and `chapterOf()`.
+  - LESSONS items are copies made by `arrangeCourse`, so compare by id, not identity.
+  - Step checks match by kind + port, never by id or position.
+  - A node cannot wire to itself; timer loops need an extra Hoặc.
+- **Merge conflicts:**
+  - The usual spots are `nodes/index.ts`, the `types.ts` WorldApi tail, `fake-world.ts` stubs, `world.ts` step order, and the `vehicle.ts`/`character.ts` params + `createOnly`.
+  - Resolve by keeping both sides.
+  - `pathfind` must stay the LAST param where present (a test checks it).
+- **Line endings.**
+  - Many files are CRLF or mixed. Edit with a Python script that detects `\r\n` and writes bytes back.
+  - `sed -i` on CRLF files is fine for single-line substitutions.
+  - Check that `git diff --stat` stays small.
+- **Tooling quirks:**
+  - The Bash hook blocks commands containing the words "node_modules" or "dist".
+  - Bash heredocs that contain Python with `'\r\n'` or nested quotes sometimes fail with "unexpected EOF". Write the script with the Write tool and run it.
+  - PowerShell has no `git` on PATH; run git from Bash.
+  - The dev server must be started in the background (`npm run dev -- --port 5173 --strictPort`).
+- **Stray worktree folders.** A stray vitest run from an agent can keep a worktree folder locked ("Permission denied"). Wait for the agent's "finished" notification, then remove the folder after checking it contains no junctions.
+- **Tests.** Full vitest takes 4–7 min while agents run, so always pass `--testTimeout 120000`; city sample sims are slow. vitest has a node env only, so DOM behaviour is checked with Playwright from `plans/browser-scripts` (Playwright is imported by absolute path from an old scratchpad `.../091c5a2d-.../scratchpad/smoke/`; it is not in package.json).
+- **Known engine limits:**
+  - head-on route cars deadlock
+  - houses always face +Z
+  - the start screen does not pause the sim
+  - Spawner has no goods tag
+  - zone goods match is exact
+  - wagons fold back on ping-pong routes
+  - no character step-up
 
 ## 6. Backlog ideas (not approved yet)
-- sound and music
-- mouse, touch and gamepad input
-- character–character collision
-- shorter lessons 11–13
-- character accessories
-- 2D-top/3D basics lessons
-- arrow keys on WASD samples
-- dark mode
+- Sound and music.
+- Gamepad and touch input.
+- Online sharing.
+- Character accessories.
+- Importing 3D models (.glb).
+- Free "thử thách" lessons (task-only, checked by result).
+- Dark/light theme toggle.
+- A Playwright devDependency in app/.
 
 ## 7. Gotchas
-- The user is a non-coder. Explain plainly, give links, and say what was not verified in the browser.
-- Report honestly: list unverified items and deviations from the approved design.
+- The user is a non-coder. Explain plainly, give links (http://localhost:5173, artifact URLs), and say what was not verified in the browser.
+- Report honestly: unverified items, deviations from the approved design, and when tests were not re-run in full.
+- Security: never read `D:\gbg\`. The skill kits (`D:\skill\taste-skill-main`, `D:\skill\impeccable-main`, `E:\ux-ui-agent-skills-main`) are read-only references; never install their hooks or run impeccable's launcher. Use the user's email only for identification.
