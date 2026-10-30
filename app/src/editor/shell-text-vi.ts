@@ -39,6 +39,7 @@ export const SHELL_TEXT = {
   viewMaximize: 'Phóng to màn chơi',
   viewLayout: 'Bố cục',
   viewLeftDock: 'Hiện dock trái',
+  viewWireEnergy: 'Hiệu ứng dòng điện',
 
   // Trợ giúp
   helpLessons: 'Bài học',

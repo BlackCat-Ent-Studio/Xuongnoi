@@ -79,6 +79,7 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     if (n.def.create) n.state = n.def.create(makeCtx(id, 0, emptyInput), n.params);
   }
 
+  let risen = new Set<string>();
   let tickIndex = 0;
   let lastInput: InputSnapshot = emptyInput;
 
@@ -99,7 +100,11 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
         }
         const result = n.def.evaluate(makeCtx(id, tickIndex, input), inputs, n.params, n.state);
         const outs: PortValues = {};
-        for (const p of n.def.outputs) outs[p.id] = result?.[p.id] ?? portDefault(p);
+        for (const p of n.def.outputs) {
+          const v = result?.[p.id] ?? portDefault(p);
+          outs[p.id] = v;
+          if (p.type === 'bool' && v === true && prev.get(id)?.[p.id] !== true) risen.add(`${id}|${p.id}`);
+        }
         curr.set(id, outs);
       }
       tickIndex++;
@@ -112,6 +117,11 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     },
     getWireValue(wire) {
       return rt.getOutput(wire.from.node, wire.from.port);
+    },
+    takeRisen() {
+      const out = risen;
+      risen = new Set<string>();
+      return out;
     },
     applyNodeParams(nodeId, patch) {
       const n = nodes.get(nodeId);

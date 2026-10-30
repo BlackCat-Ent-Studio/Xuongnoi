@@ -20,6 +20,7 @@ import {
   takeAutosaveProblem,
 } from '../io';
 import { createGameView } from '../render/game-view';
+import { isEnergyEnabled, setEnergyEnabled } from './graph/wire-energy';
 import { CONSOLE_TEXT } from './console/console-text-vi';
 import { mountConsoleDock, type ConsoleDock, type LogKind } from './console-dock';
 import { h, isTypingTarget } from './dom';
@@ -395,6 +396,7 @@ export function mountEditor(root: HTMLElement): void {
           })),
           { type: 'separator' },
           { type: 'item', label: SHELL_TEXT.viewLeftDock, icon: 'tree', checked: !layout.leftCollapsed(), onSelect: () => layout.setLeftCollapsed(!layout.leftCollapsed()) },
+          { type: 'item', label: SHELL_TEXT.viewWireEnergy, checked: isEnergyEnabled(), onSelect: () => setEnergyEnabled(!isEnergyEnabled()) },
         ];
       },
     },

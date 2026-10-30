@@ -209,6 +209,11 @@ export interface Runtime {
   /** Value currently travelling on a wire (= its source output). */
   getWireValue(wire: Wire): PortValue;
   /**
+   * Bool outputs (`${node}|${port}`) that went false -> true on any tick since the last call, even if they
+   * fell back before it. Lets the editor show one-tick pulses. Clears on read.
+   */
+  takeRisen?(): ReadonlySet<string>;
+  /**
    * Changes params of a running node. Applies every key it can; returns true only when all
    * of them took effect in the running game (false = unknown node / param, or needs a restart).
    */

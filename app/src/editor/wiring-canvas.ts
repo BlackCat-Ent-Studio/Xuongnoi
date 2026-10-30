@@ -18,6 +18,8 @@ import type { PortDir } from './graph/port-compat';
 import { attachPointer } from './graph/canvas-pointer';
 import { createNodeActions } from './graph/node-actions';
 import { createWireDrag } from './graph/wire-drag';
+import './graph/wire-energy.css';
+import { createWireEnergy, isEnergyEnabled, onEnergySettingChange } from './graph/wire-energy';
 import { TEXT_VI, formatWireValue } from './text-vi';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -84,6 +86,9 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
   const wirePaths = new Map<string, SVGPathElement>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
+  const energy = createWireEnergy(wireLayer);
+  let energyRaf = 0;
+  let energyLast = 0;
   let stubSpots: StubSpot[] = [];
   const seenNodes = new Set(state.getGraph().nodes.map((n) => n.id));
 
@@ -267,6 +272,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function drawWires(): void {
     wireLayer.replaceChildren();
+    energy.reset();
     wirePaths.clear();
     badgeLayer.replaceChildren();
     badgeEls.clear();
@@ -284,6 +290,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       path.setAttribute('d', d);
       wireLayer.append(path, hit);
       wirePaths.set(wire.id, path);
+      if (isEnergyEnabled()) energy.addWire(wire, type, path, portEls.get(portKey(wire.from.node, wire.from.port, 'out')), portEls.get(portKey(wire.to.node, wire.to.port, 'in')), playing);
       if (playing) {
         const badge = h('div', `wc-badge type-${type}`);
         badge.style.left = `${(a.x + b.x) / 2}px`;
@@ -294,6 +301,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     }
     applySelection();
     refreshBadges();
+    syncEnergyLoop();
     minimap.redraw();
   }
 
@@ -329,6 +337,38 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       if (badge.textContent !== text) badge.textContent = text;
     }
   }
+
+  /** Wire current: one animation frame at a time while playing, nothing when idle or switched off. */
+  function energyFrame(now: number): void {
+    energyRaf = 0;
+    const rt = getRuntime();
+    if (!state.isPlaying() || !isEnergyEnabled()) return;
+    const dt = Math.min(50, now - energyLast);
+    energyLast = now;
+    if (rt) {
+      try {
+        energy.update(dt, now, (w) => rt.getWireValue(w), () => rt.takeRisen?.());
+      } catch {
+        // A bad frame must never break the board; the next frame tries again.
+      }
+    }
+    energyRaf = requestAnimationFrame(energyFrame);
+  }
+
+  function syncEnergyLoop(): void {
+    if (state.isPlaying() && isEnergyEnabled()) {
+      if (!energyRaf) {
+        energyLast = performance.now();
+        energyRaf = requestAnimationFrame(energyFrame);
+      }
+      return;
+    }
+    if (energyRaf) cancelAnimationFrame(energyRaf);
+    energyRaf = 0;
+    energy.clear();
+  }
+
+  onEnergySettingChange(() => drawWires());
 
   // ---------- placement, arrange, pulse ----------
 

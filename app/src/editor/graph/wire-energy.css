@@ -1,0 +1,30 @@
+/* Live current on wires. Hooks: .is-live/.is-dim on wires, data-live="on" on ports, .is-hot on nodes. */
+.wc .wc-wire { transition: opacity .25s; }
+.wc .wc-wire.is-dim { opacity: .35; }
+.wc .wc-wire.is-live { opacity: 1; }
+
+.wc .wc-wire-glow { fill: none; stroke: var(--pc); stroke-width: 7; stroke-linecap: round; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.wc .wc-wire-glow.is-live { opacity: .28; }
+.wc .wc-wire-glow.type-object.is-live { opacity: .14; }
+
+/* Halo is a translucent stroke, not a filter: filters re-rasterize the whole wire layer every frame. */
+.wc .wc-spark { fill: var(--pc); stroke: var(--pc); stroke-opacity: .35; stroke-width: 6; pointer-events: none; }
+
+/* Edit mode: slow dots drifting output -> input. Stepped (about 5 repaints a second) to keep many wires cheap. */
+.wc .wc-wire-flow {
+  fill: none;
+  stroke: color-mix(in srgb, var(--pc) 35%, #fff);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-dasharray: 2 14;
+  opacity: .5;
+  pointer-events: none;
+  animation: wc-flow 2.4s steps(12) infinite;
+}
+.wc.lowzoom .wc-wire-flow { display: none; }
+@keyframes wc-flow { to { stroke-dashoffset: -16; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .wc .wc-wire-flow { display: none; }
+  .wc .wc-wire, .wc .wc-wire-glow { transition: none; }
+}
