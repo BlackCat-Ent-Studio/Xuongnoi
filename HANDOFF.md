@@ -55,7 +55,7 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
     - no CSS filters (they dropped FPS to 4)
   - `editor-state.loadBoard` runs `spreadOverlaps` (graph-geometry.ts), which pushes overlapping cards down per scope.
 - **3D model pack "MEGA PACK WORLD"** (Mnostva Art, licensed Unity Asset Store pack the user owns):
-  - Source `D:sset\hieu333.unitypackage` → extracted + converted to coloured GLB in `D:sset\hieu333_extracted\` (tools in `_tools\`, preview `MEGA_PACK_WORLD\Preview\index.html`).
+  - Source `D:\asset\hieu333.unitypackage` → extracted + converted to coloured GLB in `D:\asset\hieu333_extracted\` (tools in `_tools\`, preview `MEGA_PACK_WORLD\Preview\index.html`).
   - All 2142 GLB copied to `app/public/models/mega-pack-world/` (570 MB, **gitignored**, not redistributable). Worktrees need a junction for this folder, same as node_modules. `npm run build` copies it into dist.
   - `render/pack-models.ts` (loader, ONE shared Lambert material, PackSlot, placements footprint/stand/inside/tile, tiled copies baked into one mesh) + `render/pack-model-table.ts` (style/vehicle/item → model pools).
   - Replaced by models (old code builders DELETED): block styles house, shop, stall, factory, tree, lamppost, trafficlight (+lamp overlay), road (orange), sidewalk, field, rock, fence; vehicles car, truck, bike; items crate, veggie, ore, bucket, ball, key.
