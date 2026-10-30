@@ -1,0 +1,56 @@
+/* Node cards on the wiring board: "toy block" look.
+   Category-coloured header band, dark body, solid bottom shadow. Inputs sit left, outputs right,
+   and every pin lives inside the card edge so nothing pokes out of the frame. */
+.wc .wc-node {
+  --cc: var(--text2, #aab2bd);
+  --card: #222832;
+  position: absolute; width: max-content; min-width: 200px; box-sizing: border-box; white-space: nowrap; user-select: none; cursor: default;
+  background: var(--card); color: var(--text, #e7e9ec);
+  border: 2px solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 18px;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 14px 22px -12px rgba(0, 0, 0, .8);
+  transition: box-shadow .25s, border-color .25s;
+}
+.wc .wc-node.selected {
+  border-color: var(--accent, #3ecf8e);
+  box-shadow: 0 0 0 2px var(--accent, #3ecf8e), 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 14px 22px -12px rgba(0, 0, 0, .8);
+}
+/* Emits an active output during play. No transform, so wires stay attached to their pins. */
+.wc .wc-node.is-hot {
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 0 28px -4px var(--cc);
+}
+.wc .wc-node.is-hot.selected {
+  box-shadow: 0 0 0 2px var(--accent, #3ecf8e), 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 0 28px -4px var(--cc);
+}
+
+/* header band */
+.wc .wc-node-head { display: flex; align-items: center; gap: 9px; padding: 10px 12px; background: var(--cc); color: #10151b; border-radius: 15px 15px 0 0; cursor: move; }
+.wc .wc-node .wc-tile { width: 26px; height: 26px; border-radius: 50%; background: rgba(255, 255, 255, .35); color: #10151b; }
+.wc .wc-node .wc-tile svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; }
+.wc .wc-name { font-weight: 800; font-size: 15px; }
+.wc .wc-sub { font-size: 12px; font-weight: 600; color: rgba(16, 21, 27, .72); }
+.wc .wc-miss-badge { margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #10151b; color: var(--warn, #f2b33d); font-size: 12px; font-weight: 700; }
+
+/* ports: inputs left column, outputs right column */
+.wc .wc-ports-body { display: grid; grid-template-columns: auto auto; justify-content: space-between; gap: 0 22px; padding: 8px 0 10px; }
+.wc .wc-ports.ins { grid-column: 1; }
+.wc .wc-ports.outs { grid-column: 2; }
+.wc .wc-port { position: relative; display: flex; align-items: center; gap: 7px; height: 28px; padding: 0 12px; font-size: 12.5px; font-weight: 600; cursor: crosshair; }
+.wc .wc-port.out { flex-direction: row-reverse; }
+.wc .wc-port:hover { background: rgba(255, 255, 255, .07); }
+
+/* pins sit in the flow, fully inside the card edge */
+.wc .wc-node .wc-dot { position: static; flex: none; width: 12px; height: 12px; margin: 0; border: 0; box-sizing: border-box; background: var(--pc); }
+.wc .wc-node .wc-port.missing .wc-dot { background: var(--card); box-shadow: inset 0 0 0 2px var(--warn, #f2b33d); }
+.wc .wc-node .wc-need { font-size: 12px; font-weight: 700; color: var(--warn, #f2b33d); }
+
+/* live: the value is active during play */
+.wc .wc-port[data-live="on"] .wc-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 30%, transparent), 0 0 12px var(--pc); }
+.wc .wc-port-val { padding: 1px 6px; border-radius: 999px; font: 700 11px var(--font-mono, ui-monospace, Consolas, monospace); color: var(--pc); background: color-mix(in srgb, var(--pc) 16%, transparent); }
+
+/* group blocks: same family, header in the group colour */
+.wc .wc-group { --gc: var(--accent, #3ecf8e); --cc: var(--gc); min-width: 220px; }
+.wc .wc-group .wc-tile { background: rgba(255, 255, 255, .35); border: 0; color: #10151b; }
+.wc .wc-group .wc-name { font-size: 15px; }
+.wc .wc-group-hint { padding: 0 14px 9px; font-size: 12px; color: var(--text3, #8f98a4); }
+.wc .wc-node-head + .wc-group-hint { padding-top: 8px; }

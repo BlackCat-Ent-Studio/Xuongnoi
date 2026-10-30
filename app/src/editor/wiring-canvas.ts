@@ -5,6 +5,7 @@ import type { EditorState } from './editor-state';
 import { CORNER_GAP, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
 import { createGraphToolbar } from './graph/graph-toolbar';
 import './graph/graph.css';
+import './graph/node-cards.css';
 import './graph/group.css';
 import { createGroupCrumb } from './graph/group-crumb';
 import { buildGroupView, buildStub, layoutStubs, stubBox, type StubSpot } from './graph/group-view';

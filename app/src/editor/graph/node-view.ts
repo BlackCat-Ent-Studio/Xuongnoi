@@ -1,4 +1,5 @@
 import { getNodeDef } from '../../engine/registry';
+import { NODE_CATEGORY_LABELS } from '../../nodes';
 import type { GraphNode, NodeCategory, PortDef } from '../../engine/types';
 import { h } from '../dom';
 import { GRAPH_TEXT, missingBadge } from './graph-text-vi';
@@ -58,6 +59,7 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   const box = h('div', 'wc-node');
   box.dataset.id = node.id;
   box.dataset.kind = node.kind;
+  if (def) box.classList.add(`cat-${def.category}`);
   box.style.left = `${node.pos.x}px`;
   box.style.top = `${node.pos.y}px`;
 
@@ -67,7 +69,8 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   tile.append(glyph(def?.category));
   const title = h('span', 'wc-title');
   title.append(h('b', 'wc-name', def?.label ?? GRAPH_TEXT.unknownNode));
-  const sub = instanceName(node);
+  // Small line under the title: the name typed for this piece, else its category.
+  const sub = instanceName(node) || (def ? NODE_CATEGORY_LABELS[def.category] : '');
   if (sub) title.append(h('small', 'wc-sub', sub));
   head.append(tile, title);
   const missing = def ? def.inputs.filter((p) => missingPorts.has(p.id)).length : 0;
@@ -75,21 +78,23 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   box.append(head);
 
   const dots = new Map<string, HTMLElement>();
-  if (def) {
+  if (def && def.inputs.length + def.outputs.length > 0) {
+    // Inputs left, outputs right; both columns always exist so outputs never slide left.
+    const body = h('div', 'wc-ports-body');
     const sections: [PortDir, PortDef[]][] = [
       ['in', def.inputs],
       ['out', def.outputs],
     ];
     for (const [dir, ports] of sections) {
-      if (ports.length === 0) continue;
       const list = h('div', `wc-ports ${dir}s`);
       for (const p of ports) {
         const { row, dot } = portRow(node, dir, p, dir === 'in' && missingPorts.has(p.id));
         dots.set(`${dir}|${p.id}`, dot);
         list.append(row);
       }
-      box.append(list);
+      body.append(list);
     }
+    box.append(body);
   }
   return { box, dots };
 }
