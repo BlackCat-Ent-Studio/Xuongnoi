@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { Vec3 } from '../engine/types';
 
 /**
@@ -236,10 +237,45 @@ export function clonePack(t: PackTemplate): THREE.Group {
   return t.scene.clone(true);
 }
 
+/** Boxes thinner than this (roads, pavements) do not cast shadows: nothing to see, and it halves their draw cost. */
+export const FLAT_NO_SHADOW = 0.25;
+
+const mergedCache = new Map<string, THREE.Mesh | null>();
+
+/**
+ * All copies of a tiled box baked into ONE mesh (one draw call instead of one per tile), shared by every box of the
+ * same model and size. Null when the template has no mesh.
+ */
+function mergedTiles(path: string, t: PackTemplate, placements: readonly Placement[], key: string): THREE.Mesh | null {
+  const cacheKey = `${path}|${key}`;
+  if (mergedCache.has(cacheKey)) return mergedCache.get(cacheKey) ?? null;
+  const parts: THREE.BufferGeometry[] = [];
+  let material: THREE.Material | null = null;
+  let name = '';
+  const holder = new THREE.Object3D();
+  for (const p of placements) {
+    applyPlacement(holder, p);
+    holder.updateMatrix();
+    t.scene.traverse((o) => {
+      if (!(o instanceof THREE.Mesh)) return;
+      material ??= o.material as THREE.Material;
+      name ||= o.name;
+      parts.push(o.geometry.clone().applyMatrix4(new THREE.Matrix4().multiplyMatrices(holder.matrix, o.matrixWorld)));
+    });
+  }
+  const geometry = parts.length > 0 ? mergeGeometries(parts) : null;
+  for (const g of parts) g.dispose();
+  const mesh = geometry && material ? new THREE.Mesh(geometry, material) : null;
+  if (mesh) mesh.name = name;
+  mergedCache.set(cacheKey, mesh);
+  return mesh;
+}
+
 /** Tests only: register a template without loading a file. Pass null to clear all templates. */
 export function setPackTemplateForTests(path: string | null, scene?: THREE.Group): void {
   if (path === null) {
     templates.clear();
+    mergedCache.clear();
     pending.clear();
     failed.clear();
     return;
@@ -294,12 +330,28 @@ export class PackSlot {
       this.placeholder = null;
     }
     this.copies.clear();
-    for (const p of placementsFor(this.pool, t.bounds, box)) {
-      const copy = clonePack(t);
-      applyPlacement(copy, p);
-      if (this.owner !== undefined) copy.traverse((o) => (o.userData.ownerNodeId = this.owner));
-      this.copies.add(copy);
+    const placements = placementsFor(this.pool, t.bounds, box);
+    const merged = placements.length > 1 ? mergedTiles(this.path, t, placements, key) : null;
+    if (merged) {
+      // Shares the cached geometry; only the mesh object (owner id, shadow flags) is per box.
+      const mesh = new THREE.Mesh(merged.geometry, merged.material);
+      mesh.name = merged.name;
+      this.copies.add(mesh);
+    } else {
+      for (const p of placements) {
+        const copy = clonePack(t);
+        applyPlacement(copy, p);
+        this.copies.add(copy);
+      }
     }
+    const shadows = box.y >= FLAT_NO_SHADOW;
+    this.copies.traverse((o) => {
+      if (this.owner !== undefined) o.userData.ownerNodeId = this.owner;
+      if (o instanceof THREE.Mesh) {
+        o.castShadow = shadows;
+        o.receiveShadow = true;
+      }
+    });
     this.object.updateMatrixWorld(true);
   }
 

@@ -151,7 +151,12 @@ describe('pack looks', () => {
     const pool = BLOCK_PACK.road?.models ?? [];
     for (const p of pool) setPackTemplateForTests(p, fakeModel(6, 0.2, 3));
     const fig = buildBlockLook('road', '#444444', { x: 30, y: 0.2, z: 3 }, '', 'seed');
-    expect(modelsOf(fig).length).toBe(5);
+    // Five road tiles, baked into one mesh that spans the whole block.
+    const meshes = modelsOf(fig);
+    expect(meshes).toHaveLength(1);
+    const geo = meshes[0]?.geometry;
+    geo?.computeBoundingBox();
+    expect((geo?.boundingBox?.max.x ?? 0) - (geo?.boundingBox?.min.x ?? 0)).toBeCloseTo(30, 3);
   });
 
   it('marks every model mesh with the owner node id so clicks pick the block', () => {

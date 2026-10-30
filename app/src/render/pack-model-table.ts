@@ -5,7 +5,8 @@ import type { PackPool } from './pack-models';
 /*
  * Which MEGA PACK WORLD models stand in for each look. Paths are relative to PACK_BASE.
  * Several models in a pool = each entity keeps one of them, picked from its owner node id.
- * Pools were chosen by eye on plans/ui-mockups/model-mapping (approved 2026-10-31).
+ * Pools were chosen by eye on plans/ui-mockups/model-mapping (approved 2026-10-31); models over 20k triangles
+ * were then left out so one building cannot cost as much as a whole street.
  */
 
 /** Block looks ("Kiểu dáng") drawn with pack models. Styles not listed keep their code-drawn look. */
@@ -14,25 +15,16 @@ export const BLOCK_PACK: Readonly<Partial<Record<BlockStyle, PackPool>>> = {
   house: {
     place: 'footprint',
     models: [
-      'Exteriors/City/City_10_House_1.glb',
-      'Exteriors/City/City_11_House_1.glb',
       'Exteriors/City/City_12_House_1.glb',
       'Exteriors/City/City_13_House_1.glb',
       'Exteriors/City/City_14_House_1.glb',
       'Exteriors/City/City_15_House_1.glb',
-      'Exteriors/City/City_16_House_1.glb',
       'Exteriors/City/City_17_House_1.glb',
       'Exteriors/City/City_18_House_1.glb',
       'Exteriors/City/City_19_House_1.glb',
       'Exteriors/City/City_1_House_1.glb',
-      'Exteriors/City/City_20_House_1.glb',
-      'Exteriors/City/City_2_House_1.glb',
-      'Exteriors/City/City_3_House_1.glb',
       'Exteriors/City/City_4_House_1.glb',
-      'Exteriors/City/City_5_House_1.glb',
       'Exteriors/City/City_6_House_1.glb',
-      'Exteriors/City/City_8_House_1.glb',
-      'Exteriors/City/City_9_House_1.glb',
       'Exteriors/Town/Town_10_House_1.glb',
       'Exteriors/Town/Town_11_House_1.glb',
       'Exteriors/Town/Town_12_House_1.glb',
@@ -59,7 +51,6 @@ export const BLOCK_PACK: Readonly<Partial<Record<BlockStyle, PackPool>>> = {
     place: 'footprint',
     models: [
       'Exteriors/Store/Store_10_Greengrocery_Shop_1.glb',
-      'Exteriors/Store/Store_11_Pet_Store_1.glb',
       'Exteriors/Store/Store_12_Hot_Dog_Shop_1.glb',
       'Exteriors/Store/Store_13_Music_Store_1.glb',
       'Exteriors/Store/Store_14_Donuts_Shop_1.glb',
@@ -75,7 +66,6 @@ export const BLOCK_PACK: Readonly<Partial<Record<BlockStyle, PackPool>>> = {
       'Exteriors/Store/Store_5_Cafe_1.glb',
       'Exteriors/Store/Store_6_Flowers_Shop_1.glb',
       'Exteriors/Store/Store_7_Book_Shop_1.glb',
-      'Exteriors/Store/Store_8_Candy_shop_1.glb',
       'Exteriors/Store/Store_9_Toy_Shop_1.glb',
       'Exteriors/Public/Public_13_Laundry_1.glb',
       'Exteriors/Public/Public_15_Hair_Salon_1.glb',
@@ -236,8 +226,6 @@ export const BLOCK_PACK: Readonly<Partial<Record<BlockStyle, PackPool>>> = {
     models: [
       'Exteriors/Farm/Farm_6_Fence_1.glb',
       'Exteriors/Farm/Farm_7_Fence_1.glb',
-      'Exteriors/Farm/Farm_14_Fence_1.glb',
-      'Exteriors/City/City_4_Fence_1.glb',
     ],
   },
 };

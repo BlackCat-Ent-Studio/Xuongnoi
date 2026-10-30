@@ -116,6 +116,9 @@ export class SceneView {
   /** Create / update / remove objects so they match the entity list. `dt` drives character animation. */
   sync(entities: readonly EntityView[], dt = 0): void {
     const seen = new Set<string>();
+    // Car and truck models have closed cabs: a seated driver would poke through the roof, so it is hidden. Bikes stay open.
+    const closedCabs = new Set<string>();
+    for (const e of entities) if (e.kind === 'vehicle' && (e.vehicle?.model === 'car' || e.vehicle?.model === 'truck')) closedCabs.add(e.id);
     for (const e of entities) {
       // A tool in hand is drawn on its holder's figure, not as a separate object.
       if (!e.visible || e.inHand) continue;
@@ -152,6 +155,7 @@ export class SceneView {
       }
       if (entry.type === 'character') {
         entry.figure.setSeated(e.seatedIn !== undefined);
+        entry.figure.object.visible = e.seatedIn === undefined || !closedCabs.has(e.seatedIn);
         entry.figure.update(e.seatedIn !== undefined ? seatedView(e) : e, dt);
         continue;
       }

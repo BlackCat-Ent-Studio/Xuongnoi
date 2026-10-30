@@ -136,7 +136,11 @@ describe('PackSlot', () => {
         expect(o.userData.ownerNodeId).toBe('n-1');
       }
     });
-    expect(meshes).toBe(5);
+    // Five tiles baked into one mesh that still spans the whole box.
+    expect(meshes).toBe(1);
+    const span = new THREE.Box3().setFromObject(slot.object);
+    expect(span.max.z - span.min.z).toBeCloseTo(10);
+    expect(span.max.x - span.min.x).toBeCloseTo(2);
     slot.dispose();
   });
 });

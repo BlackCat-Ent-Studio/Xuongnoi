@@ -205,9 +205,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     params: {
       position: 'Vị trí tâm của hộp (ngang, cao, sâu).',
       size: 'Kích thước (rộng, cao, sâu). Mặt đất thường là hộp rất rộng và cao 1.',
-      color: 'Màu của hộp. Đổi được ngay khi đang chơi.',
+      color: 'Màu của hộp. Đổi được ngay khi đang chơi. Kiểu dáng là mô hình có sẵn màu (nhà, cây, đường, hàng rào...) thì không đổi theo màu này; riêng Đèn giao thông dùng màu để chọn đèn nào sáng.',
       type: '"Rắn" thì đứng lên được và chặn đường. "Vật nhặt" thì đi xuyên qua, dùng cho sao, xu để nhặt.',
-      style: 'Hình dạng đẹp thay cho hộp trơn: nhà, cây, đèn giao thông, hàng rào, băng chuyền, đường ray... Đường ray chỉ để trang trí.',
+      style: 'Hình dạng đẹp thay cho hộp trơn: nhà, cây, đèn giao thông, hàng rào, băng chuyền, đường ray... Đường ray chỉ để trang trí. Nhà, cửa hàng, cây, xe... có nhiều mẫu: mỗi hộp tự giữ một mẫu, lần chơi nào cũng giống nhau.',
       signText: 'Chữ ghi trên biển. Chỉ hiện khi "Kiểu dáng" là Biển tên.',
       color1: 'Màu thứ nhất của Đèn giao thông (mặc định đỏ). Chọn bằng cổng "Đổi màu" = 1.',
       color2: 'Màu thứ hai (mặc định vàng). Chọn bằng cổng "Đổi màu" = 2.',
@@ -222,7 +222,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     tips: [
       'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Hộp) "Vừa chạm" → "Ẩn đi" của chính hộp đó.',
       'Băng chuyền: chọn kiểu "Băng chuyền" là chạy ngay, hoặc để kiểu thường và đặt "Tốc độ băng chuyền" khác 0 trong mục Nâng cao.',
-      'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay.',
+      'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',
       'Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
     ],
     lessonId: 'walk-jump',
@@ -245,7 +245,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     params: {
       position: 'Chỗ món đồ xuất hiện lúc bắt đầu chơi.',
       size: 'Kích thước (rộng, cao, sâu). Mặc định nhỏ, 0.6.',
-      color: 'Màu của món đồ. Đổi được ngay khi đang chơi.',
+      color: 'Màu của món đồ. Đổi được ngay khi đang chơi. Thùng, bó rau, cục quặng, xô nước, quả bóng và chìa khoá là mô hình có sẵn màu nên không đổi theo.',
       shape: 'Hình dạng: hộp, chìa khoá, quả bóng, thùng, kiếm, cuốc, búa, đuốc, gậy phép, xô nước, ổ khoá, bó rau, cục quặng.',
       carryable: '"Cầm được" thì nhân vật nhấc lên được. "Cố định" thì nằm yên, chỉ để bấm "Tương tác" (ví dụ ổ khoá).',
       holdStyle: '"Khiêng trên đầu" cho thùng hàng. "Cầm trên tay" cho dụng cụ như kiếm, cuốc, dùng với mảnh ghép Cầm tay.',
@@ -288,7 +288,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       steerMode: '"Theo hướng": bấm hướng nào xe quay hướng đó. "Ga - Lái": lên là ga, xuống là lùi, trái/phải là đánh lái, giống lái xe thật.',
       maxSpeed: 'Tốc độ tối đa. Mặc định 9.',
       accel: 'Độ tăng tốc: càng lớn xe càng mau đạt tốc độ tối đa.',
-      color: 'Màu thân xe. Đổi được ngay khi đang chơi.',
+      color: 'Màu thân đầu máy và toa tàu. Đổi được ngay khi đang chơi. Xe hơi, xe máy, xe tải là mô hình có sẵn màu: mỗi xe tự giữ một mẫu và không đổi theo màu này.',
       solid: '"Có" thì người đi bộ không đi xuyên qua xe.',
       control: '"Người ngồi trên xe": chỉ chạy khi có người ngồi (dùng mảnh ghép Lên / Xuống xe). "Tự chạy": xe chạy theo lệnh lái luôn, không cần người ngồi.',
       collide: '"Có" thì xe đụng nhau, không đi xuyên qua nhau. "Không" thì xe đi xuyên qua xe khác.',
