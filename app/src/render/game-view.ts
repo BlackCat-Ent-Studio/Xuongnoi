@@ -19,6 +19,7 @@ import { createAccumulator, createSimPacer } from './game-loop';
 import { floatingLabels } from './floating-labels';
 import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
+import { onPackLoaded } from './pack-models';
 import { SceneView } from './scene-view';
 import { TEXT_VI } from './text-vi';
 import { UiInputBuffer, createClickTracker, pickEntities } from './ui-input';
@@ -86,6 +87,16 @@ export function createGameView(): GameView {
     rig.snap();
     draw(0, false);
   }
+
+  // Pack models load after the first draw; redraw the still editing scene (at most once a frame) as they arrive.
+  let packRedraw = 0;
+  onPackLoaded(() => {
+    if (playing || packRedraw) return;
+    packRedraw = requestAnimationFrame(() => {
+      packRedraw = 0;
+      if (!playing) draw(0, false);
+    });
+  });
 
   function showError(): void {
     hud?.showError(TEXT_VI.previewError);

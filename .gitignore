@@ -104,3 +104,6 @@ ClaudeKit/
 .agents/
 release-manifest.json
 !app/package-lock.json
+
+# Licensed 3D model pack (MEGA PACK WORLD, ~570 MB); copied from D:sset\hieu333_extracted, not versioned
+app/public/models/
