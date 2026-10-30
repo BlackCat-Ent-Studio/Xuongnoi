@@ -31,6 +31,8 @@ import { createGamePip } from './game-pip';
 import { mountIconSprite } from './icons';
 import { GROUP_VI } from './groups/group-text-vi';
 import { createKeyboardInput } from './keyboard-input';
+import { createHandbookDialog } from '../handbook/handbook-dialog';
+import { HANDBOOK_OPEN_EVENT } from '../handbook/handbook-request';
 import { createLibraryDialog } from './library-dialog';
 import { LIBRARY_TEXT } from './library-text-vi';
 import { LAYOUT_PRESETS } from './layout-model';
@@ -409,6 +411,7 @@ export function mountEditor(root: HTMLElement): void {
             layout.ensureBottomOpen();
           },
         },
+        { type: 'item', label: SHELL_TEXT.helpHandbook, icon: 'book', onSelect: () => handbook.open() },
         { type: 'item', label: SHELL_TEXT.helpShortcuts, icon: 'keyboard', hint: '?', onSelect: openHelp },
       ],
     },
@@ -492,6 +495,14 @@ export function mountEditor(root: HTMLElement): void {
     },
   });
   topBar.addControl(tutorial.el);
+  const handbook = createHandbookDialog({
+    openBoard: (b) => loadBoard(structuredClone(b)),
+    startLesson: (id) => tutorial.startLesson(id),
+  });
+  document.addEventListener(HANDBOOK_OPEN_EVENT, (e) => {
+    topBar.closeMenus();
+    handbook.open((e as CustomEvent<string>).detail);
+  });
   bottomDock.el.querySelector(`#${DOCK_LESSONS_ID}`)?.append(tutorial.dock);
 
   const launchpad = mountLaunchpad({

@@ -1,6 +1,7 @@
 import { getNodeDef } from '../engine/registry';
 import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
+import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { h } from './dom';
 import { renderGroupInspector, renderMultiSelect } from './groups/group-inspector';
 import { createLookPicker, type LookPicker } from './look-picker';
@@ -350,7 +351,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
         const head = h('div', `pn-ihead cat-${def.category}`);
         const names = h('div', 'pn-inames');
         names.append(h('div', 'prop-node-name pn-iname', def.label), h('div', 'pn-icat', P.categoryOf(NODE_CATEGORY_LABELS[def.category])));
-        head.append(categoryTile(def.category, true), names);
+        head.append(categoryTile(def.category, true), names, createHandbookHelpButton(def.kind, def.label));
         el.append(head);
         if (playing) el.append(h('div', 'prop-locked pn-live-note', P.liveNote));
         el.append(h('p', 'pn-desc', def.description));

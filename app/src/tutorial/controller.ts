@@ -43,6 +43,8 @@ export interface Tutorial {
   dock: HTMLElement;
   /** Start the first lesson. */
   startFirst(): void;
+  /** Start the lesson with this id; false when there is none. */
+  startLesson(id: string): boolean;
   isActive(): boolean;
   /** Leave the lesson (if any) and give the learner's own board back. */
   exit(): void;
@@ -337,6 +339,12 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
     startFirst() {
       const first = LESSONS[0];
       if (first) start(first);
+    },
+    startLesson(id) {
+      const lesson = LESSONS.find((l) => l.id === id);
+      if (!lesson) return false;
+      start(lesson);
+      return true;
     },
     isActive: () => runner !== null,
     exit,
