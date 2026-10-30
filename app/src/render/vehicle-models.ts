@@ -2,10 +2,14 @@ import * as THREE from 'three';
 import type { EntityView, VehicleModel } from '../engine/types';
 import { VEHICLE_DIMS } from '../world/vehicles';
 import { shade } from './item-shapes';
+import { applyPlacement, clonePack, fitPlacement, packTemplate, pickVariant } from './pack-models';
+import { VEHICLE_PACK } from './pack-model-table';
 
 /**
- * Vehicles drawn from plain boxes: a body in the entity color, dark trim, and wheels that turn with the
- * distance travelled. Built in real units around the entity center (floor at -height/2, nose toward +x),
+ * Cars, trucks and bikes are MEGA PACK WORLD models (colors baked in, one mesh, so no wheel turning), picked
+ * from the pool by owner node id on the first update; a plain box in the entity color stands in while loading.
+ * Trains are plain boxes: a body in the entity color, dark trim, and wheels that turn with the distance
+ * travelled. Built in real units around the entity center (floor at -height/2, nose toward +x),
  * so the scene only moves and turns the group; it is never scaled.
  */
 
@@ -27,6 +31,9 @@ export class VehicleFigure {
   private readonly wheels: THREE.Group[] = [];
   private readonly floor: number;
   private colorHex: string;
+  private placeholder: THREE.Object3D | null = null;
+  private packPath: string | null = null;
+  private packAttached = false;
 
   constructor(model: VehicleModel, color: string) {
     this.model = model;
@@ -34,11 +41,9 @@ export class VehicleFigure {
     this.mainMat = this.mat(color);
     this.darkMat = this.mat(shade(color));
     this.floor = -VEHICLE_DIMS[model].height / 2;
-    if (model === 'car') this.buildCar();
-    else if (model === 'bike') this.buildBike();
+    if (VEHICLE_PACK[model]) this.buildPlaceholder();
     else if (model === 'locomotive') this.buildLocomotive();
-    else if (model === 'wagon') this.buildWagon();
-    else this.buildTruck();
+    else this.buildWagon();
   }
 
   private mat(color: string): THREE.MeshLambertMaterial {
@@ -71,36 +76,15 @@ export class VehicleFigure {
     this.wheels.push(group);
   }
 
-  private buildCar(): void {
-    const o = this.object;
-    this.part(o, [1.44, 0.3, 0.9], [0, 0.35, 0], this.mainMat);
-    this.part(o, [0.45, 0.14, 0.86], [0.45, 0.57, 0], this.mainMat);
-    this.part(o, [0.12, 0.3, 0.86], [-0.55, 0.65, 0], this.darkMat);
-    for (const z of [-0.3, 0.3]) this.part(o, [0.05, 0.1, 0.18], [0.71, 0.45, z], this.mat(LIGHT_COLOR));
-    this.part(o, [0.05, 0.26, 0.8], [0.22, 0.68, 0], this.mat(GLASS_COLOR));
-    for (const x of [-0.48, 0.48]) for (const z of [-0.5, 0.5]) this.wheel(x, z, 0.2, 0.16);
-  }
-
-  private buildBike(): void {
-    const o = this.object;
-    this.part(o, [0.7, 0.12, 0.14], [0, 0.36, 0], this.darkMat);
-    this.part(o, [0.3, 0.1, 0.22], [-0.12, 0.5, 0], this.darkMat);
-    this.part(o, [0.26, 0.17, 0.2], [0.14, 0.5, 0], this.mainMat);
-    this.part(o, [0.06, 0.32, 0.06], [0.36, 0.52, 0], this.darkMat);
-    this.part(o, [0.06, 0.06, 0.5], [0.36, 0.72, 0], this.darkMat);
-    this.part(o, [0.05, 0.1, 0.14], [0.4, 0.62, 0], this.mat(LIGHT_COLOR));
-    for (const x of [-0.36, 0.36]) this.wheel(x, 0, 0.24, 0.12);
-  }
-
-  private buildTruck(): void {
-    const o = this.object;
-    this.part(o, [1.9, 0.2, 1], [0, 0.4, 0], this.darkMat);
-    this.part(o, [0.55, 0.5, 1], [0.7, 0.75, 0], this.mainMat);
-    this.part(o, [0.05, 0.3, 0.84], [0.45, 0.95, 0], this.mat(GLASS_COLOR));
-    this.part(o, [0.1, 0.55, 0.9], [-0.18, 0.78, 0], this.darkMat);
-    this.part(o, [0.85, 0.4, 1], [-0.55, 0.7, 0], this.mainMat);
-    for (const z of [-0.3, 0.3]) this.part(o, [0.05, 0.12, 0.2], [0.97, 0.6, z], this.mat(LIGHT_COLOR));
-    for (const x of [-0.65, 0.65]) for (const z of [-0.55, 0.55]) this.wheel(x, z, 0.3, 0.2);
+  /** Stand-in body in the entity color while a pack model loads. */
+  private buildPlaceholder(): void {
+    const d = VEHICLE_DIMS[this.model];
+    this.placeholder = this.part(
+      this.object,
+      [d.footprint * 0.9, d.height * 0.5, d.footprint * 0.6],
+      [0, d.height * 0.35, 0],
+      this.mainMat,
+    );
   }
 
   private buildLocomotive(): void {
@@ -133,6 +117,32 @@ export class VehicleFigure {
     this.darkMat.color.set(shade(color));
   }
 
+  /** Swap the placeholder for the pack model once it is loaded: nose to +x, length = footprint, on the floor. */
+  private attachPack(owner: string): void {
+    const pool = VEHICLE_PACK[this.model];
+    if (!pool) return;
+    this.packPath ??= pickVariant(pool.models, owner);
+    const t = packTemplate(this.packPath);
+    if (!t) return;
+    // Most pack models face +z (a quarter turn puts the nose on +x); bicycles lie along x facing -x (a half turn).
+    // Turned bounds follow the yaw: quarter turn x' = z, z' = -x; half turn x' = -x, z' = -z.
+    const { min, max } = t.bounds;
+    const alongX = max.x - min.x > max.z - min.z;
+    const turned = alongX
+      ? { min: { x: -max.x, y: min.y, z: -max.z }, max: { x: -min.x, y: max.y, z: -min.z } }
+      : { min: { x: min.z, y: min.y, z: -max.x }, max: { x: max.z, y: max.y, z: -min.x } };
+    const d = VEHICLE_DIMS[this.model];
+    const copy = clonePack(t);
+    applyPlacement(copy, fitPlacement(turned, { x: d.footprint, y: d.height, z: d.footprint }, 'footprint'));
+    copy.rotation.y = alongX ? Math.PI : Math.PI / 2;
+    this.object.add(copy);
+    if (this.placeholder) {
+      this.object.remove(this.placeholder);
+      this.placeholder = null;
+    }
+    this.packAttached = true;
+  }
+
   /** Follow the entity: position, nose direction, wheel turning, color, owner (for clicking in the game view). */
   update(view: EntityView): void {
     const p = view.position;
@@ -141,6 +151,7 @@ export class VehicleFigure {
     const spin = view.vehicle?.wheelSpin ?? 0;
     for (const w of this.wheels) w.rotation.z = -spin;
     this.setColor(view.color);
+    if (!this.packAttached) this.attachPack(view.ownerNodeId);
     this.object.traverse((o) => {
       o.userData.ownerNodeId = view.ownerNodeId;
     });
