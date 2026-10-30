@@ -13,6 +13,8 @@ export interface Snapshot {
   notes?: readonly Note[];
   /** True right after an undo, until something new is done. */
   canRedo?: boolean;
+  /** Id of the group the canvas is inside, or null on the main board. */
+  scope?: string | null;
 }
 
 /**

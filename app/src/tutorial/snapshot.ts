@@ -12,5 +12,6 @@ export function takeSnapshot(state: EditorState, ended: GameResult | null): Snap
     selectedIds: [...state.getMulti()],
     notes: state.getNotes(),
     canRedo: state.canRedo(),
+    scope: state.getScope(),
   };
 }
