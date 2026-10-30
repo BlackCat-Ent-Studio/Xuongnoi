@@ -27,6 +27,7 @@ import {
   withGroups,
   type GroupFail,
 } from './groups/group-model';
+import { spreadOverlaps } from './graph/graph-geometry';
 import { createHistory } from './history';
 import { nextNodeId } from './node-ids';
 
@@ -376,7 +377,9 @@ export function createEditorState(initial: Board): EditorState {
       return () => listeners.delete(fn);
     },
     loadBoard(next) {
-      board = next;
+      // Boards laid out before a node grew new ports can have cards on top of each other.
+      const graph = spreadOverlaps(next.graph);
+      board = graph === next.graph ? next : { ...next, graph };
       selection = null;
       multi = new Set();
       scope = null;

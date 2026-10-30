@@ -1,6 +1,5 @@
 import { getNodeDef } from '../../engine/registry';
-import type { GraphNode } from '../../engine/types';
-import { NODE_CATEGORY_LABELS } from '../../nodes';
+import type { Graph, GraphNode } from '../../engine/types';
 
 export const MIN_ZOOM = 0.3;
 export const MAX_ZOOM = 2;
@@ -61,15 +60,45 @@ export const boxesOverlap = (a: Box, b: Box, margin = 0): boolean =>
 /** Rough on-canvas size of a node before it has been measured in the DOM. */
 export function estimateNodeSize(node: GraphNode): Size {
   const def = getNodeDef(node.kind);
-  if (!def) return { w: 200, h: 70 };
-  // Card metrics (node-cards.css): 2px border, header band ~54px, 28px port rows, 18px body padding, 6px toy shadow.
-  const column = (labels: readonly string[]): number => (labels.length === 0 ? 0 : Math.max(...labels.map((l) => l.length)) * 7.2 + 43);
-  const body = column(def.inputs.map((p) => p.label)) + 22 + column(def.outputs.map((p) => p.label));
-  const sub = NODE_CATEGORY_LABELS[def.category].length;
-  const head = 4 + 24 + 26 + 9 + Math.max(def.label.length * 9, sub * 6.6);
-  const rows = Math.max(def.inputs.length, def.outputs.length);
-  const hasPorts = rows > 0;
-  return { w: Math.ceil(Math.max(200, head, body + 4)), h: 4 + 54 + (hasPorts ? 18 + rows * 28 : 0) + 6 };
+  if (!def) return { w: 168, h: 70 };
+  // Card metrics (node-cards.css): ~40px header band, then one 26px row per input and per output.
+  const longest = Math.max(def.label.length, ...def.inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
+  const rows = def.inputs.length + def.outputs.length;
+  return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
+}
+
+/** Gap left between a node pushed down and the node it overlapped. */
+const SPREAD_GAP = 16;
+
+/**
+ * Pushes overlapping nodes down until no two node cards overlap, keeping each node's column.
+ * Nodes are spread within their own scope: the main board, or the inside of one group.
+ * Returns the same graph object when nothing overlapped.
+ */
+export function spreadOverlaps(graph: Graph): Graph {
+  const groupOf = new Map<string, string>();
+  for (const g of graph.groups ?? []) for (const id of g.nodeIds) groupOf.set(id, g.id);
+  const moved = new Map<string, Point>();
+  const scopes = new Map<string, GraphNode[]>();
+  for (const n of graph.nodes) {
+    const key = groupOf.get(n.id) ?? '';
+    const list = scopes.get(key);
+    if (list) list.push(n);
+    else scopes.set(key, [n]);
+  }
+  for (const nodes of scopes.values()) {
+    const placed: Box[] = [];
+    for (const n of [...nodes].sort((a, b) => a.pos.y - b.pos.y || a.pos.x - b.pos.x)) {
+      const box: Box = { x: n.pos.x, y: n.pos.y, ...estimateNodeSize(n) };
+      for (let hit = placed.find((p) => boxesOverlap(box, p)); hit; hit = placed.find((p) => boxesOverlap(box, p))) {
+        box.y = hit.y + hit.h + SPREAD_GAP;
+      }
+      if (box.y !== n.pos.y) moved.set(n.id, { x: n.pos.x, y: box.y });
+      placed.push(box);
+    }
+  }
+  if (moved.size === 0) return graph;
+  return { ...graph, nodes: graph.nodes.map((n) => (moved.has(n.id) ? { ...n, pos: moved.get(n.id)! } : n)) };
 }
 
 /** Bounding box that holds every box, or null when there are none. */
