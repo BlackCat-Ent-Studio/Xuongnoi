@@ -3,6 +3,7 @@ import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type PortRef } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
+import { lessonName } from '../../src/tutorial/course';
 import { findLesson } from '../../src/tutorial/lessons';
 import { createRunner } from '../../src/tutorial/runner';
 import type { Snapshot } from '../../src/tutorial/types';
@@ -45,7 +46,7 @@ function session() {
 describe('lesson 14: camera and portals', () => {
   it('starts side-view with a ready-wired hero, a gap and a flag, and no step done', () => {
     const lesson = findLesson('camera-portals')!;
-    expect(lesson.title).toBe('14. Máy quay và cổng');
+    expect(lessonName(lesson.title)).toBe('Máy quay và cổng');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
     expect(board.graph.nodes.filter((n) => n.kind === 'portal')).toHaveLength(0);
