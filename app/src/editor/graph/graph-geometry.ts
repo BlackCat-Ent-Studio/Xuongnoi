@@ -1,5 +1,6 @@
 import { getNodeDef } from '../../engine/registry';
 import type { GraphNode } from '../../engine/types';
+import { NODE_CATEGORY_LABELS } from '../../nodes';
 
 export const MIN_ZOOM = 0.3;
 export const MAX_ZOOM = 2;
@@ -60,10 +61,15 @@ export const boxesOverlap = (a: Box, b: Box, margin = 0): boolean =>
 /** Rough on-canvas size of a node before it has been measured in the DOM. */
 export function estimateNodeSize(node: GraphNode): Size {
   const def = getNodeDef(node.kind);
-  if (!def) return { w: 168, h: 70 };
-  const longest = Math.max(def.label.length, ...def.inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
-  const rows = def.inputs.length + def.outputs.length;
-  return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
+  if (!def) return { w: 200, h: 70 };
+  // Card metrics (node-cards.css): 2px border, header band ~54px, 28px port rows, 18px body padding, 6px toy shadow.
+  const column = (labels: readonly string[]): number => (labels.length === 0 ? 0 : Math.max(...labels.map((l) => l.length)) * 7.2 + 43);
+  const body = column(def.inputs.map((p) => p.label)) + 22 + column(def.outputs.map((p) => p.label));
+  const sub = NODE_CATEGORY_LABELS[def.category].length;
+  const head = 4 + 24 + 26 + 9 + Math.max(def.label.length * 9, sub * 6.6);
+  const rows = Math.max(def.inputs.length, def.outputs.length);
+  const hasPorts = rows > 0;
+  return { w: Math.ceil(Math.max(200, head, body + 4)), h: 4 + 54 + (hasPorts ? 18 + rows * 28 : 0) + 6 };
 }
 
 /** Bounding box that holds every box, or null when there are none. */

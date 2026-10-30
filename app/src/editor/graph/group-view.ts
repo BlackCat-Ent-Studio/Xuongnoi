@@ -65,16 +65,18 @@ export function buildGroupView(group: NodeGroup, ports: readonly GroupPort[], mi
   box.append(head);
 
   const dots: GroupDot[] = [];
-  for (const dir of ['in', 'out'] as const) {
-    const mine = ports.filter((p) => p.dir === dir);
-    if (mine.length === 0) continue;
-    const list = h('div', `wc-ports ${dir}s`);
-    for (const p of mine) {
-      const { row, dot } = portRow(p, false);
-      dots.push({ node: p.node, port: p.port, dir, dot });
-      list.append(row);
+  if (ports.length > 0) {
+    const body = h('div', 'wc-ports-body');
+    for (const dir of ['in', 'out'] as const) {
+      const list = h('div', `wc-ports ${dir}s`);
+      for (const p of ports.filter((x) => x.dir === dir)) {
+        const { row, dot } = portRow(p, false);
+        dots.push({ node: p.node, port: p.port, dir, dot });
+        list.append(row);
+      }
+      body.append(list);
     }
-    box.append(list);
+    box.append(body);
   }
   if (ports.length === 0) box.append(h('div', 'wc-group-hint', GROUP_TEXT.noPorts));
   box.append(h('div', 'wc-group-hint', GROUP_TEXT.openHint));
