@@ -1,0 +1,65 @@
+/* "Sổ tay mảnh ghép" dialog; overlay and base box come from .modal-overlay / .modal in style.css. */
+.modal.hb-modal { width: min(1040px, 96vw); height: min(760px, 90vh); max-height: 90vh; padding: 0; display: grid; grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); overflow: hidden; }
+.hb-head { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border-bottom: 1px solid var(--line); }
+.hb-head .modal-title { margin: 0; font-size: 17px; }
+.hb-side { display: flex; flex-direction: column; gap: 8px; min-height: 0; padding: 12px; border-right: 1px solid var(--line); background: var(--panel); }
+.hb-search { width: 100%; box-sizing: border-box; height: 32px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 6px; background: var(--bg); color: var(--text); font: inherit; font-size: 13px; }
+.hb-search:focus-visible { outline: none; border-color: var(--accent); }
+.hb-mode { display: flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--text2); }
+.hb-mode span { margin-right: 4px; }
+.hb-mode-btn { height: 26px; padding: 0 10px; border: 1px solid var(--line2); border-radius: 6px; background: none; color: var(--text2); font: inherit; font-size: 12.5px; cursor: pointer; }
+.hb-mode-btn:hover { background: var(--raise); color: var(--text); }
+.hb-mode-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+.hb-list { flex: 1; min-height: 0; overflow-y: auto; margin: 0 -4px; padding: 0 4px; }
+.hb-sec { margin-bottom: 10px; }
+.hb-sec-h { position: sticky; top: 0; z-index: 1; margin: 0; padding: 6px 4px; background: var(--panel); color: var(--text2); font-size: 11.5px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.hb-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 6px 8px; border: 0; border-left: 3px solid var(--cat, var(--line2)); border-radius: 5px; background: none; color: var(--text); font: inherit; font-size: 13px; text-align: left; cursor: pointer; }
+.hb-row:hover { background: var(--panel2); }
+.hb-row.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1px rgba(62, 207, 142, .45); }
+.hb-row:focus-visible, .hb-mode-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.hb-row-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hb-tag { flex: none; padding: 1px 8px; border-radius: 999px; background: var(--raise); color: var(--text2); font-size: 11px; font-weight: 600; }
+.hb-level { padding: 1px 8px; border-radius: 999px; background: var(--accent-soft); color: var(--accent); font-size: 11px; font-weight: 700; box-shadow: inset 0 0 0 1px rgba(62, 207, 142, .4); }
+.hb-empty, .hb-muted { color: var(--text2); font-size: 13px; line-height: 1.5; }
+.hb-page { min-height: 0; overflow-y: auto; padding: 16px 22px 22px; font-size: 13.5px; line-height: 1.55; }
+.hb-pick { padding: 40px 0; text-align: center; }
+.hb-title { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.hb-node-name { margin: 0 0 4px; font-size: 20px; }
+.hb-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.hb-block { margin-bottom: 16px; }
+.hb-block h3 { margin: 0 0 6px; font-size: 12.5px; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: .03em; }
+.hb-block p { margin: 0; }
+.hb-note { margin: 0 0 14px; padding: 8px 10px; border-radius: 6px; background: color-mix(in srgb, var(--warn) 12%, transparent); border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent); color: var(--text); font-size: 13px; }
+.hb-example { padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--panel); border-radius: 0 6px 6px 0; }
+.hb-tips { margin: 0; padding-left: 20px; }
+.hb-tips li { margin-bottom: 4px; }
+.hb-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.hb-table th { padding: 5px 8px; border-bottom: 1px solid var(--line2); color: var(--text2); font-size: 11.5px; font-weight: 600; text-align: left; }
+.hb-table td { padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.hb-table td:nth-child(1) { white-space: nowrap; }
+.hb-table td:nth-child(2) { white-space: nowrap; }
+.hb-req { margin-left: 6px; color: var(--warn); font-size: 11px; font-style: normal; }
+.hb-default { color: var(--text2); }
+.hb-type { display: inline-flex; align-items: center; gap: 6px; }
+.hb-type.type-bool { --pc: var(--t-bool, #f7d046); }
+.hb-type.type-number { --pc: var(--t-num, #5aa9ff); }
+.hb-type.type-object { --pc: var(--t-obj, #f27ad0); }
+.hb-shape { width: 9px; height: 9px; display: block; background: var(--pc); }
+.hb-type.type-bool .hb-shape { border-radius: 50%; }
+.hb-type.type-number .hb-shape { transform: rotate(45deg) scale(.86); }
+.hb-adv { margin-top: 8px; }
+.hb-adv summary { cursor: pointer; color: var(--text2); font-size: 12.5px; padding: 4px 0; }
+.hb-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px; }
+.hb-actions .btn { height: 32px; }
+
+/* "?" opener on palette items and in the properties header. */
+.hb-help { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 20px; height: 20px; border: 1px solid var(--line2); border-radius: 50%; background: var(--panel2); color: var(--text2); font-size: 12px; font-weight: 700; line-height: 1; cursor: pointer; user-select: none; }
+.hb-help:hover { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+.hb-help:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.palette-item .hb-help { margin-left: auto; align-self: center; }
+.pn-ihead .hb-help { margin-left: auto; align-self: center; }
+
+@media (max-width: 760px) {
+  .modal.hb-modal { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 38%) minmax(0, 1fr); }
+  .hb-side { border-right: 0; border-bottom: 1px solid var(--line); }
+}

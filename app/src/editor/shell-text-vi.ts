@@ -43,6 +43,7 @@ export const SHELL_TEXT = {
   // Trợ giúp
   helpLessons: 'Bài học',
   helpShortcuts: 'Phím tắt',
+  helpHandbook: 'Sổ tay mảnh ghép',
 
   // View-mode segmented control
   modeGroupAria: 'Góc nhìn của game',

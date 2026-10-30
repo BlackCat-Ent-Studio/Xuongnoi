@@ -1,6 +1,7 @@
 import { listNodeDefs } from '../engine/registry';
 import type { NodeCategory } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
+import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
 import { categoryTile, panelIcon } from './panels/panel-icons';
@@ -78,7 +79,7 @@ export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): Palette
     item.title = `${entry.description} ${P.addTip}`;
     const txt = h('span', 'pn-item-text');
     txt.append(h('b', '', entry.title), h('small', '', entry.description));
-    item.append(categoryTile(entry.category), txt);
+    item.append(categoryTile(entry.category), txt, createHandbookHelpButton(entry.kind, entry.title));
     attachDrag(item, entry);
     return item;
   }
