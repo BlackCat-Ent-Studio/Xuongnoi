@@ -148,6 +148,14 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
       list.replaceChildren(h('p', 'hb-empty', T.noResults(search.value.trim())));
       return;
     }
+    if (search.value.trim()) {
+      // While searching, one flat list in match order so the best match sits on top.
+      const sec = h('section', 'hb-sec');
+      sec.dataset.section = 'results';
+      sec.append(h('h3', 'hb-sec-h', T.searchResults(found.length)), ...found.map(rowButton));
+      list.replaceChildren(sec);
+      return;
+    }
     const sections = mode === 'level' ? sectionsByLevel(found) : sectionsByCategory(found, CATEGORY_ORDER);
     const nodes: HTMLElement[] = [];
     for (const s of sections) {

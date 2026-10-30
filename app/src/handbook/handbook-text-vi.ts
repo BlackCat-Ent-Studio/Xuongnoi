@@ -5,6 +5,7 @@ export const HANDBOOK_TEXT = {
   close: 'Đóng',
   searchLabel: 'Tìm mảnh ghép',
   searchPlaceholder: 'Tìm mảnh ghép…',
+  searchResults: (n: number): string => `Kết quả tìm (${n})`,
   groupByLabel: 'Xếp theo:',
   groupByLevel: 'Cấp độ',
   groupByCategory: 'Nhóm',
