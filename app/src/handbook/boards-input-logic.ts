@@ -1,0 +1,218 @@
+import { createNode } from '../editor/editor-state';
+import { addWire } from '../engine/wiring';
+import type { Board, Graph, Note, Params } from '../engine/types';
+
+type NodeSpec = { alias: string; kind: string; x: number; y: number; params?: Params };
+type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: string];
+
+/** Builds a small side-view board from aliased nodes and wires, with one sticky note explaining what to try. */
+function build(label: string, note: string, nodes: NodeSpec[], wires: WireSpec[]): Board {
+  let graph: Graph = { nodes: [], wires: [] };
+  const ids = new Map<string, string>();
+  for (const spec of nodes) {
+    const node = createNode(graph, spec.kind, { x: spec.x, y: spec.y });
+    if (!node) throw new Error(`Unknown node kind in handbook board: ${spec.kind}`);
+    node.params = { ...node.params, ...spec.params };
+    ids.set(spec.alias, node.id);
+    graph = { ...graph, nodes: [...graph.nodes, node] };
+  }
+  for (const [fa, fp, ta, tp] of wires) {
+    const from = ids.get(fa);
+    const to = ids.get(ta);
+    if (!from || !to) throw new Error(`Unknown alias in handbook wire: ${fa} -> ${ta}`);
+    const res = addWire(graph, { node: from, port: fp }, { node: to, port: tp });
+    if (!('nodes' in res)) throw new Error(`Cannot wire ${fa}.${fp} -> ${ta}.${tp}: ${res.reason}`);
+    graph = res;
+  }
+  const notes: Note[] = [{ id: 'note-1', text: note, color: 'yellow', pos: { x: 20, y: 420 }, size: { w: 300, h: 130 } }];
+  return { name: `Thử: ${label}`, mode: '2d-side', graph, notes };
+}
+
+const text = (alias: string, x: number, y: number, t: string, corner = 'top-left'): NodeSpec => ({
+  alias,
+  kind: 'show-text',
+  x,
+  y,
+  params: { text: t, corner },
+});
+const keyNode = (alias: string, y: number, code: string): NodeSpec => ({ alias, kind: 'key', x: 20, y, params: { key: code } });
+
+/** Hero on a floor, walking with the arrow keys: the base of the boards that need two objects. */
+const WALKER: NodeSpec[] = [
+  { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+  { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 } } },
+  { alias: 'floor', kind: 'block', x: 300, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
+];
+const WALKER_WIRES: WireSpec[] = [['stick', 'x', 'hero', 'moveX']];
+
+export const tryKey = (): Board =>
+  build(
+    'Phím bấm',
+    'Bấm Chơi, rồi giữ phím Cách (Space). Chữ trên hiện khi giữ; chữ dưới hiện và ở lại sau lần bấm đầu tiên.',
+    [keyNode('key', 20, 'Space'), { alias: 'latch', kind: 'latch', x: 300, y: 200 }, text('held', 300, 20, 'Đang giữ phím Cách'), text('seen', 600, 200, 'Bạn đã bấm phím Cách rồi!', 'bottom-left')],
+    [['key', 'held', 'held', 'show'], ['key', 'pressed', 'latch', 'set'], ['latch', 'on', 'seen', 'show']],
+  );
+
+export const tryStick = (): Board =>
+  build(
+    'Cần điều khiển',
+    'Bấm Chơi, rồi bấm các phím mũi tên. Số Ngang đổi giữa -1, 0 và 1; số Dọc cũng vậy.',
+    [
+      { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+      { alias: 'nx', kind: 'show-number', x: 300, y: 20, params: { label: 'Ngang', corner: 'top-left' } },
+      { alias: 'ny', kind: 'show-number', x: 300, y: 200, params: { label: 'Dọc', corner: 'top-right' } },
+    ],
+    [['stick', 'x', 'nx', 'value'], ['stick', 'y', 'ny', 'value']],
+  );
+
+export const tryOnStart = (): Board =>
+  build(
+    'Khi bắt đầu',
+    'Bấm Chơi: dòng chữ hiện ngay lập tức, vì mảnh ghép Khi bắt đầu bật một nhịp rồi Công tắc nhớ giữ lại.',
+    [{ alias: 'start', kind: 'on-start', x: 20, y: 20 }, { alias: 'latch', kind: 'latch', x: 300, y: 20 }, text('hi', 600, 20, 'Game đã bắt đầu!')],
+    [['start', 'fired', 'latch', 'set'], ['latch', 'on', 'hi', 'show']],
+  );
+
+export const tryUiButton = (): Board =>
+  build(
+    'Nút trên màn hình',
+    'Bấm Chơi, rồi bấm nút ở góc dưới phải. Mỗi lần bấm, dòng chữ hiện hoặc ẩn đi.',
+    [{ alias: 'btn', kind: 'ui-button', x: 20, y: 20, params: { text: 'Bật / tắt chữ' } }, { alias: 'latch', kind: 'latch', x: 300, y: 20 }, text('hi', 600, 20, 'Bạn vừa bấm nút!')],
+    [['btn', 'pressed', 'latch', 'toggle'], ['latch', 'on', 'hi', 'show']],
+  );
+
+export const tryUiPick = (): Board =>
+  build(
+    'Bấm vào vật',
+    'Bấm Chơi, rồi bấm chuột vào hộp cam ở giữa màn hình. Mỗi lần bấm trúng, dòng chữ hiện hoặc ẩn đi.',
+    [
+      { alias: 'box', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: 2, z: 0 }, size: { x: 2, y: 2, z: 1 }, color: '#f97316' } },
+      { alias: 'pick', kind: 'ui-pick', x: 300, y: 20 },
+      { alias: 'latch', kind: 'latch', x: 560, y: 20 },
+      text('hi', 840, 20, 'Bạn đã bấm trúng hộp!'),
+    ],
+    [['box', 'self', 'pick', 'target'], ['pick', 'pressed', 'latch', 'toggle'], ['latch', 'on', 'hi', 'show']],
+  );
+
+export const tryUiDialog = (): Board =>
+  build(
+    'Hộp hỏi',
+    'Bấm Chơi: hộp hỏi hiện ra ngay. Chọn "Có" hoặc "Không" và xem dòng chữ thay đổi.',
+    [
+      { alias: 'start', kind: 'on-start', x: 20, y: 20 },
+      { alias: 'ask', kind: 'ui-dialog', x: 300, y: 20, params: { question: 'Bạn thích kẹo không?' } },
+      { alias: 'yes', kind: 'latch', x: 620, y: 20 },
+      { alias: 'no', kind: 'latch', x: 620, y: 200 },
+      text('yesT', 900, 20, 'Bạn chọn: Có'),
+      text('noT', 900, 200, 'Bạn chọn: Không', 'top-right'),
+    ],
+    [['start', 'fired', 'ask', 'ask'], ['ask', 'a1', 'yes', 'set'], ['ask', 'a2', 'no', 'set'], ['yes', 'on', 'yesT', 'show'], ['no', 'on', 'noT', 'show']],
+  );
+
+export const tryUiStart = (): Board =>
+  build(
+    'Màn hình bắt đầu',
+    'Bấm Chơi: màn hình mở đầu hiện ra. Bấm nút "Bấm để chơi" thì dòng chữ mới xuất hiện. Thử nhấn Esc để mở menu tạm dừng.',
+    [{ alias: 'start', kind: 'ui-start', x: 20, y: 20 }, text('hi', 300, 20, 'Game đang chạy!')],
+    [['start', 'started', 'hi', 'show']],
+  );
+
+export const tryAnd = (): Board =>
+  build(
+    'Và',
+    'Bấm Chơi. Giữ phím Cách thì chưa đủ, giữ thêm phím E cùng lúc thì chữ mới hiện.',
+    [keyNode('a', 20, 'Space'), keyNode('b', 190, 'KeyE'), { alias: 'and', kind: 'and', x: 300, y: 100 }, text('hi', 560, 100, 'Cả hai phím đang được giữ!')],
+    [['a', 'held', 'and', 'a'], ['b', 'held', 'and', 'b'], ['and', 'out', 'hi', 'show']],
+  );
+
+export const tryOr = (): Board =>
+  build(
+    'Hoặc',
+    'Bấm Chơi. Giữ phím Cách, hoặc phím E, hoặc cả hai: chữ hiện khi có ít nhất một phím đang giữ.',
+    [keyNode('a', 20, 'Space'), keyNode('b', 190, 'KeyE'), { alias: 'or', kind: 'or', x: 300, y: 100 }, text('hi', 560, 100, 'Có ít nhất một phím đang giữ!')],
+    [['a', 'held', 'or', 'a'], ['b', 'held', 'or', 'b'], ['or', 'out', 'hi', 'show']],
+  );
+
+export const tryNot = (): Board =>
+  build(
+    'Không',
+    'Bấm Chơi. Chữ hiện sẵn; giữ phím Cách thì chữ biến mất, thả ra thì hiện lại.',
+    [keyNode('key', 20, 'Space'), { alias: 'not', kind: 'not', x: 300, y: 20 }, text('hi', 560, 20, 'Bạn không giữ phím Cách')],
+    [['key', 'held', 'not', 'in'], ['not', 'out', 'hi', 'show']],
+  );
+
+export const tryCompare = (): Board =>
+  build(
+    'So sánh',
+    'Bấm Chơi, rồi bấm mũi tên phải. Số Ngang lớn hơn 0 thì chữ hiện. Thử đổi "Kiểu so sánh" trong Thuộc tính.',
+    [
+      { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+      { alias: 'zero', kind: 'const', x: 20, y: 200, params: { value: 0 } },
+      { alias: 'cmp', kind: 'compare', x: 300, y: 100, params: { op: 'gt' } },
+      { alias: 'num', kind: 'show-number', x: 300, y: 300, params: { label: 'Ngang', corner: 'top-right' } },
+      text('hi', 560, 100, 'Đang đi sang phải!'),
+    ],
+    [['stick', 'x', 'cmp', 'a'], ['zero', 'value', 'cmp', 'b'], ['stick', 'x', 'num', 'value'], ['cmp', 'out', 'hi', 'show']],
+  );
+
+export const tryTouch = (): Board =>
+  build(
+    'Cảm biến chạm',
+    'Bấm Chơi, rồi bấm mũi tên phải để nhân vật đi tới bức tường đỏ. Chạm tới thì chữ hiện.',
+    [
+      ...WALKER,
+      { alias: 'wall', kind: 'block', x: 300, y: 500, params: { position: { x: 3, y: 1.5, z: 0 }, size: { x: 1, y: 2, z: 1 }, color: '#dc2626' } },
+      { alias: 'touch', kind: 'touch', x: 600, y: 20, params: { grow: 0.3 } },
+      text('hi', 900, 20, 'Chạm rồi!'),
+    ],
+    [...WALKER_WIRES, ['hero', 'self', 'touch', 'a'], ['wall', 'self', 'touch', 'b'], ['touch', 'touching', 'hi', 'show']],
+  );
+
+export const trySelectNumber = (): Board =>
+  build(
+    'Chọn theo số',
+    'Bấm Chơi: chỉ một dòng chữ hiện, ứng với số 2. Dừng game, đổi "Giá trị" của mảnh Số thành 1 hoặc 3 rồi Chơi lại.',
+    [
+      { alias: 'num', kind: 'const', x: 20, y: 20, params: { value: 2 } },
+      { alias: 'sel', kind: 'select-number', x: 300, y: 20 },
+      text('t1', 620, 20, 'Đây là lựa chọn 1', 'top-left'),
+      text('t2', 620, 200, 'Đây là lựa chọn 2', 'top-right'),
+      text('t3', 620, 380, 'Đây là lựa chọn 3', 'bottom-left'),
+    ],
+    [['num', 'value', 'sel', 'value'], ['sel', 'is1', 't1', 'show'], ['sel', 'is2', 't2', 'show'], ['sel', 'is3', 't3', 'show']],
+  );
+
+export const tryLatch = (): Board =>
+  build(
+    'Công tắc nhớ',
+    'Bấm Chơi. Bấm phím Cách một lần để bật chữ lên (thả tay vẫn còn). Bấm phím R để tắt.',
+    [keyNode('on', 20, 'Space'), keyNode('off', 190, 'KeyR'), { alias: 'latch', kind: 'latch', x: 300, y: 100 }, text('hi', 560, 100, 'Công tắc đang bật')],
+    [['on', 'pressed', 'latch', 'set'], ['off', 'pressed', 'latch', 'reset'], ['latch', 'on', 'hi', 'show']],
+  );
+
+export const tryZone = (): Board =>
+  build(
+    'Cảm biến vùng',
+    'Bấm Chơi, rồi bấm mũi tên phải. Vùng vô hình nằm quanh chỗ x = 4: nhân vật bước vào thì chữ hiện và số lượng thành 1.',
+    [
+      ...WALKER,
+      { alias: 'zone', kind: 'zone', x: 600, y: 20, params: { center: { x: 4, y: 1, z: 0 }, size: { x: 6, y: 3, z: 3 } } },
+      text('hi', 900, 20, 'Bạn đang trong vùng!'),
+      { alias: 'count', kind: 'show-number', x: 900, y: 200, params: { label: 'Trong vùng', corner: 'top-right' } },
+    ],
+    [...WALKER_WIRES, ['zone', 'inside', 'hi', 'show'], ['zone', 'count', 'count', 'value']],
+  );
+
+export const tryDistance = (): Board =>
+  build(
+    'Khoảng cách',
+    'Bấm Chơi, rồi bấm mũi tên phải. Con số giảm dần khi nhân vật đến gần cờ xanh; còn 3 ô trở xuống thì chữ hiện.',
+    [
+      ...WALKER,
+      { alias: 'flag', kind: 'block', x: 300, y: 500, params: { type: 'pickup', position: { x: 6, y: 1, z: 0 }, size: { x: 1, y: 1, z: 1 }, color: '#2563eb' } },
+      { alias: 'dist', kind: 'distance', x: 600, y: 20 },
+      { alias: 'num', kind: 'show-number', x: 900, y: 20, params: { label: 'Cách cờ', corner: 'top-right' } },
+      text('hi', 900, 200, 'Đã đủ gần cờ!'),
+    ],
+    [...WALKER_WIRES, ['hero', 'self', 'dist', 'a'], ['flag', 'self', 'dist', 'b'], ['dist', 'distance', 'num', 'value'], ['dist', 'within', 'hi', 'show']],
+  );
