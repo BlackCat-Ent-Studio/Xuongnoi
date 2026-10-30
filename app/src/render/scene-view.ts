@@ -169,6 +169,7 @@ export class SceneView {
           entry.figure.setColor(e.color);
           entry.color = e.color;
         }
+        entry.figure.update?.(e);
         entry.pose.updateMatrixWorld(true);
         continue;
       }
@@ -215,7 +216,7 @@ export class SceneView {
     }
     if (e.kind === 'item') {
       const shape = e.shape ?? 'box';
-      const figure = buildItem(shape, e.color);
+      const figure = buildItem(shape, e.color, `${e.ownerNodeId}|${e.id}`);
       figure.object.traverse((o) => {
         o.userData.ownerNodeId = e.ownerNodeId;
         if (o instanceof THREE.Mesh) o.castShadow = true;

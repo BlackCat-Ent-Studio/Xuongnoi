@@ -1,8 +1,10 @@
 import * as THREE from 'three';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { ITEM_SHAPES, type EntityView, type HudItem, type ItemShape } from '../../src/engine/types';
 import { floatingLabels } from '../../src/render/floating-labels';
 import { IN_HAND_SCALE, buildItem, liesFlat } from '../../src/render/item-shapes';
+import { ITEM_PACK } from '../../src/render/pack-model-table';
+import { pickVariant, setPackTemplateForTests } from '../../src/render/pack-models';
 import { SceneView } from '../../src/render/scene-view';
 
 function item(shape: ItemShape, y = 0.3, size = 0.6): EntityView {
@@ -61,6 +63,81 @@ describe('tools on the ground', () => {
     expect(box.min.y).toBeCloseTo(0, 1);
     expect(box.getSize(new THREE.Vector3()).y).toBeGreaterThan(0.55);
     view.dispose();
+  });
+});
+
+/** A stand-in pack model: x:y:z = 2:1:1, bottom on y=0. */
+function fakeModel(): THREE.Group {
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(new THREE.BoxGeometry(2, 1, 1), new THREE.MeshBasicMaterial());
+  m.position.y = 0.5;
+  g.add(m);
+  return g;
+}
+
+describe('pack items', () => {
+  afterEach(() => setPackTemplateForTests(null));
+  const packShapes = Object.keys(ITEM_PACK) as ItemShape[];
+  const worldBox = (shape: ItemShape, size: { x: number; y: number; z: number }): THREE.Box3 => {
+    const view = new SceneView();
+    view.sync([{ ...item(shape, 0.5), size }]);
+    view.sync([{ ...item(shape, 0.5), size }]);
+    const box = bounds(view);
+    view.dispose();
+    return box;
+  };
+
+  it('covers every shape that has a pool and keeps the tools out of it', () => {
+    expect(packShapes.sort()).toEqual(['ball', 'bucket', 'crate', 'key', 'ore', 'veggie']);
+    for (const tool of ['sword', 'pickaxe', 'hammer', 'torch', 'wand', 'lock', 'box'] as const) expect(ITEM_PACK[tool]).toBeUndefined();
+  });
+
+  it('shows a box in the entity colour until the model is loaded', () => {
+    const view = new SceneView();
+    view.sync([{ ...item('crate', 0.5, 1), size: { x: 1, y: 1, z: 1 } }]);
+    const box = bounds(view);
+    expect(box.getSize(new THREE.Vector3()).x).toBeCloseTo(1, 5);
+    view.dispose();
+  });
+
+  it('uses the model picked from the pool for the seed', () => {
+    const pool = ITEM_PACK.crate!;
+    const seed = 'n1|i1';
+    const chosen = pickVariant(pool.models, `crate|${seed}`);
+    setPackTemplateForTests(chosen, fakeModel());
+    const box = worldBox('crate', { x: 1, y: 1, z: 1 });
+    // The injected model is 2:1:1; a fit inside a unit box makes it 1 wide, 0.5 tall.
+    expect(box.getSize(new THREE.Vector3()).y).toBeCloseTo(0.5, 5);
+    expect(box.getSize(new THREE.Vector3()).x).toBeCloseTo(1, 5);
+  });
+
+  it('keeps proportions and rests on the floor for a non-cubic entity size', () => {
+    for (const path of ITEM_PACK.crate!.models) setPackTemplateForTests(path, fakeModel());
+    const box = worldBox('crate', { x: 0.6, y: 1.2, z: 0.4 });
+    const s = box.getSize(new THREE.Vector3());
+    expect(s.x / s.y).toBeCloseTo(2, 4);
+    expect(s.z / s.y).toBeCloseTo(1, 4);
+    expect(s.x).toBeLessThanOrEqual(0.6 + 1e-6);
+    expect(s.z).toBeLessThanOrEqual(0.4 + 1e-6);
+    expect(box.min.y).toBeCloseTo(0.5 - 0.6, 5); // entity bottom
+  });
+
+  it('builds in the unit cube for a hand and swaps in the model when it arrives', () => {
+    const path = pickVariant(ITEM_PACK.bucket!.models, 'bucket|');
+    const fig = buildItem('bucket', '#888888');
+    fig.object.updateMatrixWorld(true);
+    expect(new THREE.Box3().setFromObject(fig.object).getSize(new THREE.Vector3()).y).toBeCloseTo(1, 5);
+    setPackTemplateForTests(path, fakeModel());
+    fig.object.updateMatrixWorld(true);
+    const size = new THREE.Box3().setFromObject(fig.object).getSize(new THREE.Vector3());
+    expect(size.x).toBeCloseTo(1, 5);
+    expect(size.y).toBeCloseTo(0.5, 5);
+    fig.dispose();
+  });
+
+  it('leaves code-drawn tools without a layout hook', () => {
+    expect(buildItem('sword', '#ff8800').update).toBeUndefined();
+    expect(buildItem('crate', '#ff8800').update).toBeTypeOf('function');
   });
 });
 

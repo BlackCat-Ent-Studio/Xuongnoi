@@ -126,7 +126,7 @@ describe('new item shapes', () => {
   it('builds the vegetable bunch and the ore chunk', () => {
     for (const shape of ['veggie', 'ore'] as const) {
       const fig = buildItem(shape, '#44aa44');
-      expect(fig.object.children.length).toBeGreaterThan(2);
+      expect(fig.object.children.length).toBeGreaterThan(0);
       fig.object.updateMatrixWorld(true);
       const box = new THREE.Box3().setFromObject(fig.object);
       expect(box.max.y - box.min.y).toBeGreaterThan(0.5);

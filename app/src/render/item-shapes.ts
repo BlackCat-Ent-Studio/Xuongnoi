@@ -1,12 +1,16 @@
 import * as THREE from 'three';
-import type { ItemShape } from '../engine/types';
+import type { EntityView, ItemShape } from '../engine/types';
 import { PartKit } from './character-styles/kit';
+import { PackSlot, pickVariant, type PackPool } from './pack-models';
+import { ITEM_PACK } from './pack-model-table';
 
 /** A built item figure: fills the unit cube (-0.5..0.5); the scene scales it to the entity size. */
 export interface ItemFigure {
   readonly object: THREE.Group;
   setColor(color: string): void;
   dispose(): void;
+  /** Pack models only: lay the model into the entity's real size so it keeps its proportions. Absent for code-drawn shapes. */
+  update?(view: Pick<EntityView, 'size'>): void;
 }
 
 /** Same hue, darker, for frames and teeth. */
@@ -14,8 +18,49 @@ export function shade(color: string, factor = 0.6): string {
   return `#${new THREE.Color(color).multiplyScalar(factor).getHexString()}`;
 }
 
-/** Builds the item out of boxes only. The main box material follows the entity color. */
-export function buildItem(shape: ItemShape, color: string): ItemFigure {
+/**
+ * A MEGA PACK WORLD model fitted inside the unit cube (what a hand holds), with a plain box in the entity color
+ * until the model is loaded. In the world, `update` re-lays it into the entity's real size, undoing the scene's
+ * non-uniform scale so the model is never stretched.
+ */
+function buildPackItem(pool: PackPool, shape: ItemShape, color: string, seed: string): ItemFigure {
+  const placeholderMat = new THREE.MeshLambertMaterial({ color });
+  const placeholder = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), placeholderMat);
+  placeholder.castShadow = true;
+  const slot = new PackSlot(pickVariant(pool.models, `${shape}|${seed}`), pool, placeholder);
+  const inner = new THREE.Group();
+  inner.add(slot.object);
+  slot.layout({ x: 1, y: 1, z: 1 });
+  const object = new THREE.Group();
+  object.add(inner);
+  return {
+    object,
+    setColor(c) {
+      // Pack models carry their own colours; only the loading box follows the entity.
+      placeholderMat.color.set(c);
+    },
+    update(view) {
+      const { x, y, z } = view.size;
+      // The placeholder fills the scaled box as it is; a laid model must be un-stretched.
+      if (slot.ready) inner.scale.set(1 / Math.max(x, 1e-6), 1 / Math.max(y, 1e-6), 1 / Math.max(z, 1e-6));
+      else inner.scale.set(1, 1, 1);
+      slot.layout(view.size);
+    },
+    dispose() {
+      slot.dispose();
+      placeholder.geometry.dispose();
+      placeholderMat.dispose();
+    },
+  };
+}
+
+/**
+ * Builds the item. Shapes with a pack pool use pack models (`seed` picks the variant); the rest are built out of
+ * boxes, with the main box material following the entity color.
+ */
+export function buildItem(shape: ItemShape, color: string, seed = ''): ItemFigure {
+  const pool = ITEM_PACK[shape];
+  if (pool) return buildPackItem(pool, shape, color, seed);
   const kit = new PartKit(color);
   const object = new THREE.Group();
   let dark = kit.mat(shade(color));
@@ -27,58 +72,6 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
     kit.box(object, mat, size, pos);
 
   switch (shape) {
-    case 'key': {
-      // Ring head on the left, long shaft, two teeth hanging down on the right.
-      part(main, [0.34, 0.1, 0.3], [-0.33, 0.17, 0]);
-      part(main, [0.34, 0.1, 0.3], [-0.33, -0.17, 0]);
-      part(main, [0.1, 0.34, 0.3], [-0.45, 0, 0]);
-      part(main, [0.1, 0.34, 0.3], [-0.21, 0, 0]);
-      part(main, [0.62, 0.12, 0.2], [0.17, 0, 0]);
-      darkParts.push(part(dark, [0.1, 0.24, 0.2], [0.2, -0.16, 0]));
-      darkParts.push(part(dark, [0.1, 0.18, 0.2], [0.38, -0.13, 0]));
-      break;
-    }
-    case 'ball': {
-      // A cube with all edges and corners shaved, so it reads as round at block scale.
-      part(main, [0.78, 0.78, 0.78], [0, 0, 0]);
-      part(main, [1, 0.6, 0.6], [0, 0, 0]);
-      part(main, [0.6, 1, 0.6], [0, 0, 0]);
-      part(main, [0.6, 0.6, 1], [0, 0, 0]);
-      darkParts.push(part(dark, [0.12, 0.12, 0.12], [-0.2, 0.36, 0.34]));
-      break;
-    }
-    case 'crate': {
-      // Body plus four darker planks on each side face.
-      part(main, [1, 1, 1], [0, 0, 0]);
-      for (const y of [-0.38, 0.38]) darkParts.push(part(dark, [1.04, 0.2, 1.04], [0, y, 0]));
-      for (const x of [-0.38, 0.38]) darkParts.push(part(dark, [0.2, 1.04, 1.04], [x, 0, 0]));
-      break;
-    }
-    case 'veggie': {
-      // A bunch of leafy greens tied with a band: three stalks fanning out of a dark tie.
-      const stem = kit.mat('#a7d86a');
-      for (const [x, tilt] of [[-0.2, 0.28], [0, 0], [0.2, -0.28]] as const) {
-        const s = part(stem, [0.1, 0.5, 0.1], [x * 0.55, -0.2, 0]);
-        s.rotation.z = tilt;
-      }
-      darkParts.push(part(dark, [0.36, 0.1, 0.2], [0, -0.28, 0]));
-      for (const [x, y, w] of [[-0.27, 0.12, 0.34], [0, 0.22, 0.42], [0.27, 0.12, 0.34]] as const) {
-        part(main, [w, 0.34, 0.36], [x, y, 0]);
-      }
-      part(main, [0.2, 0.12, 0.2], [0, 0.42, 0]);
-      break;
-    }
-    case 'ore': {
-      // A rough rock with ore crystals poking out.
-      part(kit.mat('#7b8089'), [0.84, 0.5, 0.74], [0, -0.25, 0]);
-      part(kit.mat('#666b74'), [0.6, 0.34, 0.56], [0.05, 0.08, 0]).rotation.y = 0.4;
-      for (const [x, y, z, s] of [[-0.22, 0.2, 0.1, 0.26], [0.24, 0.12, -0.12, 0.22], [0.06, 0.34, 0.06, 0.2]] as const) {
-        const c = part(main, [s, s * 1.3, s], [x, y, z]);
-        c.rotation.set(0.5, 0.6, 0.3);
-      }
-      part(kit.glow('#fff3a8'), [0.08, 0.08, 0.08], [-0.22, 0.34, 0.14]);
-      break;
-    }
     // Hand tools are drawn upright: grip at the bottom, working end at the top.
     case 'sword': {
       part(wood, [0.1, 0.26, 0.1], [0, -0.37, 0]);
@@ -113,14 +106,6 @@ export function buildItem(shape: ItemShape, color: string): ItemFigure {
       part(main, [0.22, 0.22, 0.22], [0, 0.38, 0]);
       part(kit.glow('#fff3a8'), [0.36, 0.07, 0.07], [0, 0.38, 0]);
       part(kit.glow('#fff3a8'), [0.07, 0.36, 0.07], [0, 0.38, 0]);
-      break;
-    }
-    case 'bucket': {
-      darkParts.push(part(dark, [0.5, 0.08, 0.5], [0, -0.4, 0]));
-      part(main, [0.64, 0.5, 0.64], [0, -0.11, 0]);
-      part(kit.mat('#4aa8ff'), [0.52, 0.04, 0.52], [0, 0.13, 0]);
-      for (const x of [-0.32, 0.32]) darkParts.push(part(dark, [0.05, 0.3, 0.05], [x, 0.25, 0]));
-      darkParts.push(part(dark, [0.69, 0.05, 0.05], [0, 0.4, 0]));
       break;
     }
     case 'lock': {
