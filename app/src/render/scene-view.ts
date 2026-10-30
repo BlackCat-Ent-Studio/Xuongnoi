@@ -236,7 +236,7 @@ export class SceneView {
     }
     const style = styleOf(e);
     if (style !== 'box') {
-      const figure = buildBlockLook(blockStyleOf(style), e.color, e.size, e.label ?? '');
+      const figure = buildBlockLook(blockStyleOf(style), e.color, e.size, e.label ?? '', e.ownerNodeId);
       figure.object.traverse((o) => {
         o.userData.ownerNodeId = e.ownerNodeId;
       });

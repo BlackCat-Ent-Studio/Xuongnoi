@@ -1,12 +1,17 @@
 import * as THREE from 'three';
 import { TRAFFIC_COLORS, type BlockStyle } from '../engine/block-styles';
 import type { EntityView, Vec3 } from '../engine/types';
+import { BLOCK_PACK } from './pack-model-table';
+import { PackSlot, applyPlacement, fitPlacement, onPackLoaded, packTemplate, pickVariant, type PackPool } from './pack-models';
 
 /**
- * Low-poly looks for blocks ("Kiểu dáng"). Every look is built inside the unit cube (-0.5..0.5) and the scene
+ * Looks for blocks ("Kiểu dáng"). Every look is built inside the unit cube (-0.5..0.5) and the scene
  * scales it to the block size, so collision (the block's own box) always matches the footprint.
  *
- * Speed: a look is baked into at most two merged geometries (one tinted by the block colour through a cached
+ * Styles with a pool in BLOCK_PACK are drawn with MEGA PACK WORLD models instead (see buildPackLook); the rest
+ * (box, sign, conveyor, rail) are code-drawn.
+ *
+ * Speed: a code-drawn look is baked into at most two merged geometries (one tinted by the block colour through a cached
  * material, one with fixed vertex colours), shared by every block of that look. 200 houses = 400 draw calls
  * and zero per-block geometry.
  */
@@ -20,7 +25,7 @@ export interface BlockLookFigure {
   dispose(): void;
 }
 
-type Tpl = 'box' | 'cyl' | 'cylx' | 'cylz' | 'pyr' | 'cone6' | 'ico0' | 'ico1';
+type Tpl = 'box' | 'cylx' | 'cylz';
 type V3 = [number, number, number];
 
 export interface LookPart {
@@ -70,164 +75,6 @@ const clampInt = (v: number, lo: number, hi: number): number => Math.min(hi, Mat
 
 // ---------------------------------------------------------------- recipes (pure data)
 
-function house(): LookPart[] {
-  const parts: LookPart[] = [
-    tinted('box', [0, -0.225, 0], [0.86, 0.55, 0.8]),
-    fixed('pyr', [0, 0.275, 0], [1, 0.45, 0.96], '#b5533c'),
-    fixed('box', [0, -0.34, 0.405], [0.18, 0.32, 0.02], '#6b3f1d'),
-    fixed('box', [0, -0.48, 0.45], [0.3, 0.04, 0.1], '#cfcfcf'),
-    fixed('box', [0.25, 0.37, -0.12], [0.1, 0.2, 0.1], '#7a7a7a'),
-  ];
-  for (const x of [-0.27, 0.27]) parts.push(fixed('box', [x, -0.18, 0.405], [0.16, 0.14, 0.02], '#bfe3ff'));
-  for (const x of [-0.435, 0.435]) parts.push(fixed('box', [x, -0.18, 0], [0.02, 0.14, 0.16], '#bfe3ff'));
-  return parts;
-}
-
-function shop(): LookPart[] {
-  const parts: LookPart[] = [
-    tinted('box', [0, -0.19, 0], [0.96, 0.62, 0.8]),
-    tinted('box', [0, 0.16, 0], [1, 0.08, 0.9], 0.7),
-    fixed('box', [0, 0.3, 0.38], [0.64, 0.2, 0.05], '#fafafa'),
-    tinted('box', [0, 0.3, 0.4], [0.56, 0.1, 0.05]),
-    fixed('box', [-0.15, -0.27, 0.405], [0.5, 0.26, 0.02], '#bfe3ff'),
-    fixed('box', [0.34, -0.33, 0.405], [0.16, 0.34, 0.02], '#6b3f1d'),
-  ];
-  const n = 6;
-  for (let i = 0; i < n; i++) {
-    parts.push(fixed('box', [-0.48 + (i + 0.5) * (0.96 / n), -0.02, 0.45], [0.96 / n, 0.05, 0.12], i % 2 ? '#fafafa' : '#e04848'));
-  }
-  return parts;
-}
-
-function stall(): LookPart[] {
-  const parts: LookPart[] = [
-    tinted('box', [0, -0.35, 0.1], [0.84, 0.3, 0.5], 0.8),
-    fixed('box', [0, -0.19, 0.1], [0.88, 0.05, 0.54], '#b07a43'),
-  ];
-  for (const x of [-0.42, 0.42]) for (const z of [-0.4, 0.4]) parts.push(fixed('box', [x, -0.05, z], [0.06, 0.9, 0.06], '#8a5a2b'));
-  ['#e53935', '#43a047', '#fdd835', '#fb8c00'].forEach((c, i) => parts.push(fixed('box', [-0.3 + i * 0.2, -0.12, 0.1], [0.15, 0.1, 0.15], c)));
-  const n = 7;
-  for (let i = 0; i < n; i++) {
-    const x = -0.48 + (i + 0.5) * (0.96 / n);
-    const make = (pos: V3, size: V3): LookPart => (i % 2 ? fixed('box', pos, size, '#fafafa') : tinted('box', pos, size));
-    parts.push(make([x, 0.42, 0], [0.96 / n, 0.06, 1]));
-    parts.push(make([x, 0.36, 0.46], [0.96 / n, 0.08, 0.06]));
-  }
-  return parts;
-}
-
-function factory(): LookPart[] {
-  const parts: LookPart[] = [
-    tinted('box', [0, -0.225, 0], [0.96, 0.55, 0.9], 0.95),
-    tinted('box', [0, 0.07, 0], [1, 0.06, 0.96], 0.6),
-    fixed('box', [0, -0.32, 0.455], [0.34, 0.36, 0.02], '#555f6b'),
-    fixed('cyl', [0.33, 0.22, -0.28], [0.16, 0.56, 0.16], '#6b6b6b'),
-    fixed('cyl', [0.33, 0.475, -0.28], [0.21, 0.05, 0.21], '#3a3f47'),
-  ];
-  for (const x of [-0.33, 0, 0.33]) {
-    parts.push(tinted('box', [x, 0.19, 0], [0.3, 0.2, 0.9], 0.7));
-    parts.push(fixed('box', [x, 0.2, 0.455], [0.24, 0.1, 0.02], '#bfe3ff'));
-  }
-  for (const x of [-0.3, 0.3]) parts.push(fixed('box', [x, -0.2, 0.455], [0.2, 0.12, 0.02], '#bfe3ff'));
-  return parts;
-}
-
-function tree(): LookPart[] {
-  return [
-    fixed('cyl', [0, -0.275, 0], [0.16, 0.45, 0.16], '#7a4e2a'),
-    tinted('ico1', [0, -0.02, 0], [0.92, 0.66, 0.92], 0.85),
-    tinted('ico1', [0.02, 0.26, 0], [0.62, 0.48, 0.62], 1),
-  ];
-}
-
-function lamppost(): LookPart[] {
-  return [
-    fixed('cyl', [-0.2, -0.47, 0], [0.4, 0.06, 0.4], '#3a3f47'),
-    tinted('cyl', [-0.2, -0.04, 0], [0.16, 0.92, 0.16], 0.9),
-    tinted('box', [0.05, 0.42, 0], [0.5, 0.05, 0.1], 0.9),
-    tinted('box', [0.3, 0.46, 0], [0.34, 0.05, 0.34], 0.6),
-    fixed('box', [0.3, 0.41, 0], [0.26, 0.07, 0.26], '#fff2a8'),
-  ];
-}
-
-function trafficLightBody(): LookPart[] {
-  return [
-    fixed('cyl', [0, -0.47, 0], [0.5, 0.06, 0.5], '#3a3f47'),
-    fixed('cyl', [0, -0.18, 0], [0.16, 0.64, 0.16], '#4b5563'),
-    fixed('box', [0, 0.3, 0], [0.8, 0.34, 0.8], '#2b2f36'),
-  ];
-}
-const TRAFFIC_LAMP_Y = [0.39, 0.3, 0.21] as const;
-
-function road(size: Vec3): LookPart[] {
-  const f = new Frame(size);
-  const parts: LookPart[] = [tinted('box', [0, 0, 0], [1, 1, 1])];
-  const thick = f.Y(0.03);
-  const yy = 0.5 + thick / 2;
-  if (f.short >= 1.2) {
-    const n = clampInt(f.long / (f.short * 1.3), 2, 30);
-    for (let i = 0; i < n; i++) {
-      parts.push(fixed('box', f.pos(-0.5 + (i + 0.5) / n, yy, 0), f.sz(0.5 / n, thick, f.V(0.14)), '#f5f5f5'));
-    }
-  }
-  if (f.short >= 3) {
-    for (const v of [-0.5 + f.V(0.35), 0.5 - f.V(0.35)]) parts.push(fixed('box', f.pos(0, yy, v), f.sz(0.98, thick, f.V(0.1)), '#f5f5f5'));
-  }
-  return parts;
-}
-
-function sidewalk(size: Vec3): LookPart[] {
-  const f = new Frame(size);
-  const parts: LookPart[] = [tinted('box', [0, -0.06, 0], [1, 0.88, 1], 0.75), tinted('box', [0, 0.44, 0], [0.95, 0.12, 0.95], 1)];
-  const thick = f.Y(0.02);
-  const yy = 0.5 + thick / 2;
-  const nu = clampInt(f.long, 1, 20);
-  const nv = clampInt(f.short, 1, 20);
-  for (let i = 1; i < nu; i++) parts.push(tinted('box', f.pos(-0.5 + i / nu, yy, 0), f.sz(f.U(0.05), thick, 0.95), 0.7));
-  for (let i = 1; i < nv; i++) parts.push(tinted('box', f.pos(0, yy, -0.5 + i / nv), f.sz(0.95, thick, f.V(0.05)), 0.7));
-  return parts;
-}
-
-function field(size: Vec3): LookPart[] {
-  const f = new Frame(size);
-  const parts: LookPart[] = [tinted('box', [0, 0, 0], [1, 1, 1], 0.9)];
-  const rows = clampInt(f.short / 0.9, 2, 14);
-  const perRow = clampInt(f.long / 0.7, 2, 30);
-  const greens = ['#4caf50', '#66bb6a', '#81c784'];
-  const ridge = f.Y(0.14);
-  const plant = f.Y(0.32);
-  for (let r = 0; r < rows; r++) {
-    const v = -0.5 + (r + 0.5) / rows;
-    parts.push(tinted('box', f.pos(0, 0.5 + ridge / 2, v), f.sz(0.98, ridge, 0.5 / rows), 0.7));
-    for (let k = 0; k < perRow; k++) {
-      const u = -0.5 + (k + 0.5) / perRow;
-      parts.push(fixed('ico0', f.pos(u, 0.5 + ridge + plant * 0.3, v), f.sz(0.75 / perRow, plant, 0.62 / rows), greens[(r + k) % 3] ?? '#4caf50'));
-    }
-  }
-  return parts;
-}
-
-function rock(): LookPart[] {
-  return [
-    tinted('cone6', [-0.05, -0.05, 0], [1, 0.9, 1], 0.85),
-    tinted('cone6', [0.22, -0.175, 0.18], [0.55, 0.65, 0.55], 0.7),
-    tinted('ico0', [-0.3, -0.39, 0.3], [0.3, 0.22, 0.3], 0.6),
-    fixed('cone6', [-0.05, 0.26, 0], [0.34, 0.3, 0.34], '#f4f7fa'),
-  ];
-}
-
-function fence(size: Vec3): LookPart[] {
-  const f = new Frame(size);
-  const n = clampInt(f.long / 0.9 + 1, 2, 40);
-  const parts: LookPart[] = [];
-  for (const y of [0.2, -0.12]) parts.push(tinted('box', f.pos(0, y, 0), f.sz(1, 0.12, 0.4), 1));
-  const w = f.U(0.12);
-  for (let i = 0; i < n; i++) {
-    parts.push(tinted('box', f.pos(-0.5 + w / 2 + (i / (n - 1)) * (1 - w), -0.03, 0), f.sz(w, 0.94, 0.6), 0.8));
-  }
-  return parts;
-}
-
 function sign(): LookPart[] {
   const parts: LookPart[] = [tinted('box', [0, 0.25, 0], [1, 0.5, 0.1])];
   for (const x of [-0.36, 0.36]) parts.push(fixed('box', [x, -0.25, 0], [0.08, 0.5, 0.08], '#8a5a2b'));
@@ -271,25 +118,14 @@ function rail(size: Vec3): LookPart[] {
   return parts;
 }
 
-/** Parts of a look; `size` only matters for looks laid out along the block (road, fence, ...). */
+/** Parts of a code-drawn look; `size` only matters for looks laid out along the block (belt, rail). Pack looks have none. */
 export function blockLookParts(style: BlockStyle, size: Vec3): LookPart[] {
   switch (style) {
-    case 'house': return house();
-    case 'shop': return shop();
-    case 'stall': return stall();
-    case 'factory': return factory();
-    case 'tree': return tree();
-    case 'lamppost': return lamppost();
-    case 'trafficlight': return trafficLightBody();
-    case 'road': return road(size);
-    case 'sidewalk': return sidewalk(size);
-    case 'field': return field(size);
-    case 'rock': return rock();
-    case 'fence': return fence(size);
     case 'sign': return sign();
     case 'conveyor': return conveyor(size);
     case 'rail': return rail(size);
     case 'box': return [tinted('box', [0, 0, 0], [1, 1, 1])];
+    default: return [];
   }
 }
 
@@ -301,14 +137,8 @@ function template(tpl: Tpl): THREE.BufferGeometry {
   if (g) return g;
   switch (tpl) {
     case 'box': g = new THREE.BoxGeometry(1, 1, 1); break;
-    case 'cyl': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10); break;
     case 'cylx': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10).rotateZ(Math.PI / 2); break;
     case 'cylz': g = new THREE.CylinderGeometry(0.5, 0.5, 1, 10).rotateX(Math.PI / 2); break;
-    // Square pyramid whose base exactly fills the unit square.
-    case 'pyr': g = new THREE.ConeGeometry(Math.SQRT1_2, 1, 4).rotateY(Math.PI / 4); break;
-    case 'cone6': g = new THREE.ConeGeometry(0.5, 1, 6); break;
-    case 'ico0': g = new THREE.IcosahedronGeometry(0.5, 0); break;
-    case 'ico1': g = new THREE.IcosahedronGeometry(0.5, 1); break;
   }
   g = g.index ? g.toNonIndexed() : g;
   g.deleteAttribute('uv');
@@ -356,10 +186,6 @@ const bakedCache = new Map<string, Baked>();
 
 function cacheKey(style: BlockStyle, size: Vec3): string {
   switch (style) {
-    case 'road':
-    case 'sidewalk':
-    case 'field':
-    case 'fence':
     case 'conveyor':
     case 'rail': {
       // Layout depends on the proportions, so blocks of nearly the same size share one bake.
@@ -507,9 +333,111 @@ function beltStripes(parent: THREE.Group): (view: EntityView) => void {
   };
 }
 
+// ---------------------------------------------------------------- pack looks
+
+const placeholderMaterials = new Map<string, THREE.MeshLambertMaterial>();
+function placeholderMaterial(color: string): THREE.MeshLambertMaterial {
+  const key = new THREE.Color(color).getHexString();
+  let m = placeholderMaterials.get(key);
+  if (!m) {
+    m = new THREE.MeshLambertMaterial({ color: `#${key}` });
+    placeholderMaterials.set(key, m);
+  }
+  return m;
+}
+
+/**
+ * Lenses of the pack traffic light (City_7_Traffic_Light_1, metres): heights as a share of the model height from the
+ * top lamp (red) down, the lens face's distance in front of the model centre, and the lens width and thickness.
+ * Our own lamps sit over the model's painted ones so the lit one is the only bright one.
+ */
+const PACK_LAMP_Y = [0.85, 0.703, 0.558] as const;
+const PACK_LAMP_FRONT = 0.52;
+const PACK_LAMP_WIDTH = 0.52;
+const PACK_LAMP_THICK = 0.12;
+const LAMP_GEOMETRY = new THREE.CylinderGeometry(0.5, 0.5, 1, 16).rotateX(Math.PI / 2);
+
+/**
+ * A block drawn with models from the pack. The slot sits in an inner group scaled by 1/size, so models are laid out
+ * in world units while the scene still scales the whole look to the block size. Until the model has loaded a unit box
+ * in the block colour stands in. A traffic light gets three lamps on its pole; the block colour picks the lit one.
+ */
+function buildPackLook(style: BlockStyle, pool: PackPool, color: string, size: Vec3, seed: string): BlockLookFigure {
+  const object = new THREE.Group();
+  const inner = new THREE.Group();
+  object.add(inner);
+  const placeholder = new THREE.Mesh(BOX_GEOMETRY, placeholderMaterial(color));
+  placeholder.receiveShadow = true;
+  const path = pickVariant(pool.models, seed);
+  const slot = new PackSlot(path, pool, placeholder, seed);
+  inner.add(slot.object);
+
+  let lamps: THREE.Mesh[] = [];
+  const lampGroup = new THREE.Group();
+  if (style === 'trafficlight') {
+    lamps = PACK_LAMP_Y.map(() => {
+      const lamp = new THREE.Mesh(LAMP_GEOMETRY, lampMaterial(dim(TRAFFIC_COLORS[0])));
+      lamp.userData.ownerNodeId = seed;
+      lampGroup.add(lamp);
+      return lamp;
+    });
+    slot.object.add(lampGroup);
+  }
+
+  let box: Vec3 = { ...size };
+  let current = color;
+  const lightLamps = (): void => {
+    const lit = trafficLampIndex(current);
+    lamps.forEach((lamp, i) => {
+      const base = TRAFFIC_COLORS[i] ?? TRAFFIC_COLORS[0];
+      lamp.material = lampMaterial(i === lit ? base : dim(base));
+    });
+  };
+  const layout = (): void => {
+    inner.scale.set(1 / Math.max(box.x, 0.01), 1 / Math.max(box.y, 0.01), 1 / Math.max(box.z, 0.01));
+    placeholder.scale.set(box.x, box.y, box.z);
+    slot.layout(box);
+    const t = lamps.length > 0 ? packTemplate(path) : null;
+    lampGroup.visible = t !== null;
+    if (!t) return;
+    // Lamps live in model space, so they follow the pole's own scale and position.
+    applyPlacement(lampGroup, fitPlacement(t.bounds, box, 'stand'));
+    const { min, max } = t.bounds;
+    const h = max.y - min.y;
+    lamps.forEach((lamp, i) => {
+      lamp.position.set((min.x + max.x) / 2, min.y + h * (PACK_LAMP_Y[i] ?? 0.85), (min.z + max.z) / 2 + PACK_LAMP_FRONT);
+      lamp.scale.set(PACK_LAMP_WIDTH, PACK_LAMP_WIDTH, PACK_LAMP_THICK);
+    });
+  };
+  // PackSlot lays its copies out itself when the model arrives; the lamps need the same moment.
+  const unsubscribe = onPackLoaded(layout);
+  layout();
+  lightLamps();
+
+  return {
+    object,
+    update(view) {
+      box = { ...view.size };
+      layout();
+    },
+    setColor(c) {
+      current = c;
+      placeholder.material = placeholderMaterial(c);
+      lightLamps();
+    },
+    dispose() {
+      unsubscribe();
+      slot.dispose();
+    },
+  };
+}
+
 // ---------------------------------------------------------------- figure
 
-export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, label = ''): BlockLookFigure {
+/** `seed` (the owner node id) picks which model of a pool a block gets, so it keeps its look. */
+export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, label = '', seed = ''): BlockLookFigure {
+  const pool = BLOCK_PACK[style];
+  if (pool) return buildPackLook(style, pool, color, size, seed);
   const object = new THREE.Group();
   const baked = bake(style, size);
   let tintedMesh: THREE.Mesh | null = null;
@@ -521,27 +449,7 @@ export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, lab
 
   let recolor: (c: string) => void = () => undefined;
   let animate: ((view: EntityView) => void) | undefined;
-  if (style === 'trafficlight') {
-    const lamps = TRAFFIC_LAMP_Y.map((y) => {
-      const lamp = new THREE.Mesh(BOX_GEOMETRY, lampMaterial(dim(TRAFFIC_COLORS[0])));
-      lamp.position.set(0, y, 0);
-      lamp.scale.set(0.5, 0.07, 0.86);
-      object.add(lamp);
-      return lamp;
-    });
-    const cap = new THREE.Mesh(BOX_GEOMETRY, lampMaterial(color));
-    cap.position.set(0, 0.48, 0);
-    cap.scale.set(0.5, 0.025, 0.5);
-    object.add(cap);
-    recolor = (c) => {
-      const lit = trafficLampIndex(c);
-      lamps.forEach((lamp, i) => {
-        const base = TRAFFIC_COLORS[i] ?? TRAFFIC_COLORS[0];
-        lamp.material = lampMaterial(i === lit ? base : dim(base));
-      });
-      cap.material = lampMaterial(c);
-    };
-  } else if (style === 'conveyor') {
+  if (style === 'conveyor') {
     animate = beltStripes(object);
   } else if (style === 'sign' && label) {
     const aspect = Math.min(8, Math.max(0.5, (size.x * 0.92) / Math.max(size.y * 0.42, 0.05)));
