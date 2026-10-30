@@ -1,11 +1,11 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-31 01:20
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-31 03:10
 
 ## 1. Goal
 An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
 - Claude writes all the code; the user only playtests and decides.
 - It is NOT a clone of Game Builder Garage. Never read `D:\gbg\` and never mirror its nodes, UI, lessons or text. Generic genre mechanics are fine.
 
-## 2. Current state (main = 2ee0799, 1470 tests green, tsc clean, build OK)
+## 2. Current state (main = 2f223eb, 1496 tests green, tsc clean, build OK)
 - **Run:** `cd app; npm install; npm run dev` → http://localhost:5173 (strict port 5173).
 - **Gates (in app/):** `npx vitest run --testTimeout 120000` (~4–7 min; slow when agents run), `npx tsc --noEmit -p .`, `npm run build`.
 - **Stack:** Vite 8, TypeScript strict (noUncheckedIndexedAccess, noUnused*), three.js, vitest (node env, no DOM tests), plain DOM, no UI framework.
@@ -54,6 +54,14 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
     - edit: stepped flowing dots
     - no CSS filters (they dropped FPS to 4)
   - `editor-state.loadBoard` runs `spreadOverlaps` (graph-geometry.ts), which pushes overlapping cards down per scope.
+- **3D model pack "MEGA PACK WORLD"** (Mnostva Art, licensed Unity Asset Store pack the user owns):
+  - Source `D:sset\hieu333.unitypackage` → extracted + converted to coloured GLB in `D:sset\hieu333_extracted\` (tools in `_tools\`, preview `MEGA_PACK_WORLD\Preview\index.html`).
+  - All 2142 GLB copied to `app/public/models/mega-pack-world/` (570 MB, **gitignored**, not redistributable). Worktrees need a junction for this folder, same as node_modules. `npm run build` copies it into dist.
+  - `render/pack-models.ts` (loader, ONE shared Lambert material, PackSlot, placements footprint/stand/inside/tile, tiled copies baked into one mesh) + `render/pack-model-table.ts` (style/vehicle/item → model pools).
+  - Replaced by models (old code builders DELETED): block styles house, shop, stall, factory, tree, lamppost, trafficlight (+lamp overlay), road (orange), sidewalk, field, rock, fence; vehicles car, truck, bike; items crate, veggie, ore, bucket, ball, key.
+  - Still code-drawn: box, sign, conveyor, rail, locomotive, wagon, all characters, tools (sword, pickaxe, hammer, torch, wand, lock, box item).
+  - Variant per entity = `pickVariant(pool, ownerNodeId)` (items: ownerNodeId|entityId). Model colours are baked: "Màu" no longer tints replaced looks (handbook updated); traffic light colour still picks the lit lamp. Drivers are hidden inside car/truck models.
+  - Mapping preview `plans/ui-mockups/model-mapping/index.html` (+ `build-mapping-preview.py`, `mapping.json`). Pools later trimmed: models > 20k triangles and the City_4/Farm_14 fences removed.
 - **Approved preview artifacts:**
   - Node style + electricity: https://claude.ai/artifact/LK9fmQK5QZGmug49tPxZ9d (local copy `plans/ui-mockups/node-style-preview/index.html`)
   - Group demo: https://claude.ai/artifact/4U1nFMPX9o7pDvNSVVTqaf
@@ -68,6 +76,8 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   5. A step-up ("bậc leo") mechanic for characters, which does not exist yet.
   6. Cargo "Giao vào điểm" and character "Đặt vào": an unload into a target, discussed but parked.
 - **City 3D game:** the user wants it to live in their Kho game for long-term editing. It was parked ("để tạm"); it is still only a sample. Kho game is in the user's browser localStorage, so Claude cannot write it from the terminal.
+- **Pack models — not verified on real hardware:** city 3D draws ~400k triangles per frame while playing (was ~9k). Software GL (SwiftShader): play 13 FPS vs 27 before; edit 60 both. Needs a check in the user's real Chrome. Next levers if slow: simplify meshes, fewer traffic-light triangles (16 × 6.7k), shadow casters.
+- **Pack models — known gaps:** held item may show a different variant than on the ground (EntityView.tool has no seed); pack wheels don't spin; key model small in its cube; race sample not checked in 3D.
 - **Not verified by a human:**
   - playing all 30 lessons by hand
   - try-boards that need key or mouse input
@@ -145,12 +155,18 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   - wagons fold back on ping-pong routes
   - no character step-up
 
+- **Pack model lessons:**
+  - FBX from Unity: texture path points at the author's PC; vertex colours must be dropped (Unity ignores them, glTF multiplies them → a black pizzeria); units are cm (scale 0.01); mergeVertices shrinks GLB ~3×.
+  - Give all GLBs one shared material/texture, otherwise every model uploads its own copy of the palette.
+  - Triangles, not draw calls, were the cost: measure with `renderer.info` (temporarily expose it) before optimising. Square/corner models tile into dozens of copies — keep tile pools to long thin pieces.
+  - `sed -i` on a CRLF file rewrote all line endings (game-view.ts): restore with `git checkout -- file` and use the Python byte-safe edit.
+
 ## 6. Backlog ideas (not approved yet)
 - Sound and music.
 - Gamepad and touch input.
 - Online sharing.
 - Character accessories.
-- Importing 3D models (.glb).
+- A "Mô hình" param on Hộp to pick any of the 2142 pack models (needs a model browser in the editor).
 - Free "thử thách" lessons (task-only, checked by result).
 - Dark/light theme toggle.
 - A Playwright devDependency in app/.
