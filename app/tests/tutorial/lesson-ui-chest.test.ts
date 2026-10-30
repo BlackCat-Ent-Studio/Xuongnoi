@@ -1,9 +1,10 @@
+import { chapterOf, lessonName } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type GameResult, type Graph, type PortRef } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
-import { LESSONS, findLesson } from '../../src/tutorial/lessons';
+import { findLesson } from '../../src/tutorial/lessons';
 import { createRunner } from '../../src/tutorial/runner';
 import type { Snapshot } from '../../src/tutorial/types';
 import { createWorld } from '../../src/world/world';
@@ -72,8 +73,8 @@ function finishedGame() {
 describe('lesson 17: secret chest', () => {
   it('is the last registered lesson with a stable id and a starter board', () => {
     const lesson = findLesson('ui-chest')!;
-    expect(LESSONS[LESSONS.length - 1]).toBe(lesson);
-    expect(lesson.title).toBe('17. Rương bí mật');
+    expect(chapterOf(lesson.id)?.id).toBe('items');
+    expect(lessonName(lesson.title)).toBe('Rương bí mật');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
     expect(board.graph.nodes.map((n) => n.kind).sort()).toEqual(['block', 'block', 'character', 'stick']);

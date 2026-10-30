@@ -24,6 +24,11 @@ import { createVehicleLesson } from './lessons-vehicles';
 import { createUiChestLesson } from './lesson-ui-chest';
 import { platformsShootingLesson } from './lessons-platforms-shooting';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
+import { arrangeCourse } from './course';
+import { createCoursePackA } from './course-pack-a';
+import { createCoursePackB } from './course-pack-b';
+import { createCoursePackC } from './course-pack-c';
+import { createCoursePackD } from './course-pack-d';
 
 // ---------- target helpers ----------
 
@@ -1211,10 +1216,16 @@ const lessonBotDriver = createBotDriverLesson({ buildBoard, addStep, wireStep, p
 const lessonChanceZones = createChanceZonesLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonCameraPortals = createCameraPortalsLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
 const lessonEditorTools = createEditorToolsLesson({ buildBoard });
-const lessonBotTool = createBotToolLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
-const lessonUiChest = createUiChestLesson({ buildBoard, addStep, wireStep, playButton: PLAY_BTN });
+const KIT = { buildBoard, addStep, wireStep, playButton: PLAY_BTN };
+const lessonBotTool = createBotToolLesson(KIT);
+const lessonUiChest = createUiChestLesson(KIT);
 
-export const LESSONS: readonly Lesson[] = [lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, combatLesson, lessonVehicles, lessonBotDriver, lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools, lessonBotTool, lessonUiChest];
+/** Every lesson in course order (see course.ts), titles numbered by that order. */
+export const LESSONS: readonly Lesson[] = arrangeCourse([
+  lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, combatLesson, lessonVehicles, lessonBotDriver,
+  lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools, lessonBotTool, lessonUiChest,
+  ...createCoursePackA(KIT), ...createCoursePackB(KIT), ...createCoursePackC(KIT), ...createCoursePackD(KIT),
+]);
 
 export function findLesson(id: string): Lesson | undefined {
   return LESSONS.find((l) => l.id === id);

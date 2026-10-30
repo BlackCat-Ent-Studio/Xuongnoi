@@ -1,3 +1,4 @@
+import { lessonName } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { registerAllNodes } from '../../src/nodes';
@@ -36,7 +37,7 @@ describe('lesson 15: board tools', () => {
   it('is registered with a stable id and a starter board', () => {
     const lesson = findLesson('editor-tools')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('15. Công cụ bảng nối');
+    expect(lessonName(lesson.title)).toBe('Công cụ bảng nối');
     const board = lesson.createBoard();
     expect(board.graph.nodes.map((n) => n.kind).sort()).toEqual(['block', 'character', 'key']);
     expect(board.graph.wires).toHaveLength(1);

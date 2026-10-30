@@ -1,3 +1,4 @@
+import { chapterOf } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
@@ -14,7 +15,7 @@ const p = (node: string, port: string): PortRef => ({ node, port });
 
 describe('lesson 9: combat', () => {
   it('is the lesson after the hand-tool and bot lessons', () => {
-    expect(findLesson('combat')?.title).toMatch(/^9[.]/);
+    expect(chapterOf('combat')?.id).toBe('fighting');
   });
 
   it('walks through health, win on dead, fight brain and attack wiring, and the finished board plays', () => {

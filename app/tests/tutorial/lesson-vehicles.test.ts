@@ -1,3 +1,4 @@
+import { lessonName } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
@@ -53,7 +54,7 @@ describe('lesson 10: drive a vehicle', () => {
   it('is the ninth-or-later lesson and only uses known nodes and ports', () => {
     const lesson = findLesson('vehicles')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('10. Lái xe');
+    expect(lessonName(lesson.title)).toBe('Lái xe');
     expect(lesson.createBoard().mode).toBe('2d-side');
   });
 

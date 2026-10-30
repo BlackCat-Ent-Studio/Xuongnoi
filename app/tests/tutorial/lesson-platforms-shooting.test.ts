@@ -1,3 +1,4 @@
+import { chapterOf } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
@@ -124,7 +125,7 @@ function build() {
 describe('lesson 13: platforms and shooting', () => {
   it('is registered as lesson 13 with a 2d-side board', () => {
     const lesson = findLesson('platforms-shooting')!;
-    expect(lesson.title).toMatch(/^13[.]/);
+    expect(chapterOf(lesson.id)?.id).toBe('fighting');
     expect(lesson.createBoard().mode).toBe('2d-side');
     expect(lesson.steps.length).toBeGreaterThanOrEqual(18);
     expect(lesson.steps.length).toBeLessThanOrEqual(26);

@@ -6,6 +6,7 @@ import { DOCK_TEXT as D } from './dock-text-vi';
 import { createHighlighter } from './highlight';
 import { paletteKinds, pointsAtCanvas } from './palette-targets';
 import './lessons-dock.css';
+import { chapterOf, type Chapter } from './course';
 import { LESSONS } from './lessons';
 import { createStepPanel } from './panel';
 import { createRunner, type Runner } from './runner';
@@ -257,7 +258,18 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
     progress.append(bar, h('span', 'tut-menu-count', `${doneCount}/${LESSONS.length}`));
     head.append(headText, progress);
     const list = h('div', 'tut-menu-list');
+    let chapter: Chapter | undefined;
     for (const lesson of LESSONS) {
+      const ch = chapterOf(lesson.id);
+      if (ch && ch !== chapter) {
+        // One heading per chapter, with how many of its lessons are done.
+        chapter = ch;
+        const ids = LESSONS.filter((l) => chapterOf(l.id) === ch).map((l) => l.id);
+        const sec = h('div', 'tut-chapter');
+        sec.dataset.chapter = ch.id;
+        sec.append(h('span', 'tut-chapter-title', ch.title), h('span', 'tut-chapter-count', `${ids.filter((id) => done.has(id)).length}/${ids.length}`));
+        list.append(sec);
+      }
       // Titles carry their number ("3. Thắng và thua"); show it as a badge instead.
       const match = /^(\d+)\.\s*(.*)$/.exec(lesson.title);
       const isDone = done.has(lesson.id);

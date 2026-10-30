@@ -1,3 +1,4 @@
+import { chapterOf } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState, type EditorState } from '../../src/editor/editor-state';
 import { getNodeDef } from '../../src/engine/registry';
@@ -561,10 +562,11 @@ describe('lesson 8: bot places the crate', () => {
     expect(s.stepId()).toBe('done');
   });
 
-  it('is registered right after lesson 7 and the titles count 1 to 17', () => {
-    expect(LESSONS.map((l) => l.id).slice(6, 9)).toEqual(['chores', 'chores-place', 'combat']);
-    expect(LESSONS).toHaveLength(17);
-    expect(LESSONS.map((l) => Number.parseInt(l.title, 10))).toEqual(Array.from({ length: 17 }, (_, i) => i + 1));
+  it('follows the throw lesson inside the bot chapter, and titles count 1, 2, 3... in course order', () => {
+    const ids = LESSONS.map((l) => l.id);
+    expect(ids.indexOf('chores-place')).toBe(ids.indexOf('chores') + 1);
+    expect(chapterOf('chores-place')?.id).toBe('bots');
+    expect(LESSONS.map((l) => Number.parseInt(l.title, 10))).toEqual(LESSONS.map((_, i) => i + 1));
   });
 
   it('with Ném the crate flies off the pad and the game never wins', () => {

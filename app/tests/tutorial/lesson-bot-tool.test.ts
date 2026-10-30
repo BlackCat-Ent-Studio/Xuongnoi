@@ -1,10 +1,11 @@
+import { chapterOf, lessonName } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type EntitySpec, type PortRef, type ViewMode } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { handToolNode } from '../../src/nodes/hand-tool';
-import { LESSONS, findLesson } from '../../src/tutorial/lessons';
+import { findLesson } from '../../src/tutorial/lessons';
 import { createRunner } from '../../src/tutorial/runner';
 import type { Snapshot } from '../../src/tutorial/types';
 import { createWorld } from '../../src/world/world';
@@ -152,8 +153,8 @@ describe('lesson 16: a bot that holds a pickaxe', () => {
 
   it('is registered as lesson 16 and starts as a side-view board with a robot bot, a hand tool and a rock', () => {
     const lesson = findLesson('bot-pickaxe')!;
-    expect(LESSONS[15]).toBe(lesson);
-    expect(lesson.title).toBe('16. Bot cầm cuốc');
+    expect(chapterOf(lesson.id)?.id).toBe('bots');
+    expect(lessonName(lesson.title)).toBe('Bot cầm cuốc');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
     const bot = board.graph.nodes.find((n) => n.kind === 'character')!;

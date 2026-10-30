@@ -1,3 +1,4 @@
+import { lessonName } from '../../src/tutorial/course';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { createEditorState } from '../../src/editor/editor-state';
 import { createRuntime } from '../../src/engine/runtime';
@@ -48,7 +49,7 @@ describe('lesson 11: a bot that drives', () => {
   it('is a lesson that starts in top view with a bot, a car and a flag', () => {
     const lesson = findLesson('bot-driver')!;
     expect(LESSONS).toContain(lesson);
-    expect(lesson.title).toBe('11. Bot lái xe');
+    expect(lessonName(lesson.title)).toBe('Bot lái xe');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-top');
     const kinds = board.graph.nodes.map((n) => n.kind);
