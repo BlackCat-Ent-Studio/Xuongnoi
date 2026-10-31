@@ -1,4 +1,4 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-10-31 03:10
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-11-01 03:10
 
 ## 1. Goal
 An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
@@ -66,6 +66,21 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   - Node style + electricity: https://claude.ai/artifact/LK9fmQK5QZGmug49tPxZ9d (local copy `plans/ui-mockups/node-style-preview/index.html`)
   - Group demo: https://claude.ai/artifact/4U1nFMPX9o7pDvNSVVTqaf
 
+## 2b. Design previews (NOT in the game yet) — 2026-11-01
+Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only from code primitives + toon material, no files). Local copies under `plans/ui-mockups/` (gitignored); published as private artifacts. Each page has orbit view, motion/expression buttons, a tuning panel and "Sao chép thông số" (copy JSON).
+
+| Artifact | Link | Local file | State |
+|---|---|---|---|
+| Xưởng Bot giải đố (puzzle mode mockup, landscape phone) | https://claude.ai/artifact/HZCcLSsT1PytkJ8YddedtV | `plans/ui-mockups/puzzle-phone/bot-workshop-puzzle.html` | Level "Cửa kho" playable: tap-port-then-tap-port wiring, CHẠY, stars. User has NOT answered the 3 follow-up questions (style ok? 5 levels ok? 2D vs 3D stage) |
+| Robot Bánh Xe (one wheel) | https://claude.ai/artifact/MqQoHLu1wjjhpJFMJ8UR9V | `plans/ui-mockups/cozy-robot/robot-wheel.html` | Done, ~5.3k tris. User has not picked a robot |
+| Robot Chân Ngắn (two legs) | https://claude.ai/artifact/Seb1v2hHj6boPhF5qcwLDk | `plans/ui-mockups/cozy-robot/robot-legs.html` | Done (face screen fixed), ~5.7k tris |
+| Mèo Mun Chibi (team mascot, 2 legs) | https://claude.ai/artifact/2cHfjMpvTusonbpu1d7iQH | `plans/ui-mockups/black-cat/cat-chibi.html` | Plain smooth, no cheeks/belly lumps/fur, ~8.5k tris. Collar still the OLD style (no collar sliders) |
+| Mèo Mun Bốn Chân (team mascot, 4 legs) | https://claude.ai/artifact/E7Rr1PS7FgwPzBPE71yz7r | `plans/ui-mockups/black-cat/cat-quad.html` | Plain smooth, no fur, ~7.6k tris. Circular collar with 6 "Vòng cổ" sliders; user defaults 0.90 / 0.085 / 0.17 / 0.00 / -6° / 0.92; X pendant hangs BELOW the ring |
+
+- Puzzle mode design (agreed so far): stays inside Xưởng Nối; separate game-like landscape phone screen; level = task text + locked pre-placed objects + a tray with only the needed pieces + hidden result checker; stars ⭐ solved · ⭐⭐ no hint · ⭐⭐⭐ fewest pieces; 1 tutorial + 4 main levels (Bot đầu tiên, Nhặt sao, Cửa kho, Đủ ba thùng, Né lính gác). Decision record: `plans/reports/` (brainstorm-261101-*).
+- Mascot source: `D:\asset\Black cat` = the user's own team mascot as a Live2D/VTube Studio model (ava.png, 2× 8192 atlases, 8 expressions: ANGRY, BIG EYE, BLUSH, box, CRY, logo, sleepy, suprise). Rebuilt in 3D cozy style; reference copies in `plans/ui-mockups/black-cat/ref/`. All 9 expressions + 4 motions exist in both cat pages.
+- Screenshot scripts per page: `shot-*.mjs` next to each HTML (Playwright by absolute path).
+
 ## 3. Open items / waiting on the user
 - The user is test-learning the course at http://localhost:5173 and will report confusing steps.
 - **Proposed, not approved:**
@@ -78,6 +93,11 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
 - **City 3D game:** the user wants it to live in their Kho game for long-term editing. It was parked ("để tạm"); it is still only a sample. Kho game is in the user's browser localStorage, so Claude cannot write it from the terminal.
 - **Pack models — not verified on real hardware:** city 3D draws ~400k triangles per frame while playing (was ~9k). Software GL (SwiftShader): play 13 FPS vs 27 before; edit 60 both. Needs a check in the user's real Chrome. Next levers if slow: simplify meshes, fewer traffic-light triangles (16 × 6.7k), shadow casters.
 - **Pack models — known gaps:** held item may show a different variant than on the ground (EntityView.tool has no seed); pack wheels don't spin; key model small in its cube; race sample not checked in 3D.
+- **Design previews — waiting on the user:**
+  - which robot (Bánh Xe / Chân Ngắn / both) and which cat (Chibi / Bốn chân / both) become game characters;
+  - port the collar sliders + hanging X to the Chibi cat? (offered, not answered);
+  - puzzle mockup follow-ups (style ok, 5 levels ok, 2D vs 3D stage) not answered;
+  - after the fur removal, expressions other than the default were not re-shot on either cat.
 - **Not verified by a human:**
   - playing all 30 lessons by hand
   - try-boards that need key or mouse input
@@ -110,6 +130,14 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
    - LOOK at the screenshots.
    - Many real bugs were only caught this way: grey headers, overlapping cards, wrong search order.
 7. **Wrap up.** Report to the user: what changed, how to open it, what was verified and what was NOT. Update this file.
+8. **Design-preview loop (characters, mockups):**
+   - One standalone HTML page per variant, written by one agent each (fullstack-developer, no worktree needed: different files in `plans/ui-mockups/<topic>/`). Give a shared style brief (palette hexes, face rules, "everything rounded", three.js pinned via importmap) so siblings match.
+   - Agent must screenshot every state with its own `shot-*.mjs` and Read the PNGs. Then YOU look (contact sheet with PIL) before publishing.
+   - Publish with the `Artifact` tool (same file path = same URL, new version). Also open locally with PowerShell `Start-Process <file>` when the user says "mở local".
+   - Iterate by `SendMessage` to the SAME agent (it keeps the code in context) — much faster than a new agent. Paste the user's screenshot path; tell it exactly what to remove/move.
+   - The user circles problems in red on screenshots (`c:\Users\trong\OneDrive\Pictures\Screenshots\...`). Read them; act on exactly what is circled.
+   - For fine-tuning, add sliders + "Sao chép thông số"; when the user sends values, make them the defaults (and what "Đặt lại" restores).
+9. **"Mở web local"** means the app at http://localhost:5173: start it in the background (`npm run dev -- --port 5173 --strictPort` in app/) if `curl` gets no 200, then `Start-Process http://localhost:5173`.
 
 ## 5. Lessons learned, bugs and fixes
 - **Agent hand-off claims can be wrong; check before acting.** Example: "Quay lại sửa highlights the wrong button" was false, because `controller.playAware` already swaps play→stop while playing.
@@ -160,6 +188,13 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   - Give all GLBs one shared material/texture, otherwise every model uploads its own copy of the palette.
   - Triangles, not draw calls, were the cost: measure with `renderer.info` (temporarily expose it) before optimising. Square/corner models tile into dozens of copies — keep tile pools to long thin pieces.
   - `sed -i` on a CRLF file rewrote all line endings (game-view.ts): restore with `git checkout -- file` and use the Python byte-safe edit.
+
+- **Character art: do only what the user asked.** Self-added details were rejected every time on 2026-11-01: cheek puffs, round fur clumps ("popcorn"), pointed fur spikes, then shell fur (soft but 5–8× triangles: 40–66k vs 8k). All reverted to plain smooth shapes. Offer extras only as an optional toggle or a question.
+- **Jagged face edge** (robot legs): the cream face was a second sphere intersecting the head → noisy seam. Fix: a separate flattened ellipsoid sitting just in FRONT of the head surface; never coplanar/intersecting shapes.
+- **Collar iterations (cat-quad):** a ring "computed to hug body+head" became an oversized float tube around the back; a short-neck tiny collar hid under the head; the final answer was a plain circular torus at the neck + user sliders + the X pendant placed each frame at the ring's lowest-front point hanging straight down (otherwise the chin hides it).
+- **Tail rendered pale** (chibi): inside-out geometry winding. Fix the winding, don't paint over it.
+- **Shell fur pitfalls (if ever retried):** a square-grid strand mask shows a dotted grid and dark specks on white; use jittered cells + a rotated second octave, keep the lowest ~30% of layers solid, very light root darkening on white.
+- **Tooling:** the `claude-artifacts` MCP server can be down; the built-in `Artifact` tool still publishes. Preview pages need internet (three.js + Google Fonts from CDN). Agents' dev servers/Playwright can keep worktree folders locked; stop them (`Get-NetTCPConnection -LocalPort ...` → `Stop-Process`) before deleting.
 
 ## 6. Backlog ideas (not approved yet)
 - Sound and music.
