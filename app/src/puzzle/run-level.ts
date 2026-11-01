@@ -19,10 +19,14 @@ export function piecesUsed(answer: PuzzleAnswer): number {
   return answer.nodes.length;
 }
 
-/** Stars for a finished win: 1 solved, +1 without the hint, +1 within par pieces and without the hint. */
-export function starsFor(level: PuzzleLevel, answer: PuzzleAnswer, hintUsed: boolean): 1 | 2 | 3 {
-  if (hintUsed) return 1;
-  return piecesUsed(answer) <= level.par ? 3 : 2;
+/**
+ * Stars for a finished win: 3 within par pieces, else 2; then each "?" press beyond the level's
+ * free hints costs one star, never below 1.
+ */
+export function starsFor(level: PuzzleLevel, answer: PuzzleAnswer, hintsUsed: number): 1 | 2 | 3 {
+  const base = piecesUsed(answer) <= level.par ? 3 : 2;
+  const over = Math.max(0, hintsUsed - level.freeHints);
+  return Math.max(1, base - over) as 1 | 2 | 3;
 }
 
 /**

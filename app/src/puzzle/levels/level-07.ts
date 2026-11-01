@@ -54,6 +54,7 @@ export const level07: PuzzleLevel = {
   ],
   editable: [{ kind: 'timer', paramId: 'seconds' }],
   par: 3,
+  freeHints: 3,
   timeLimit: 40,
   solution: {
     nodes: [

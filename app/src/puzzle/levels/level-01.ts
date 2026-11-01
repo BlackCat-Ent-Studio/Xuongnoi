@@ -53,6 +53,7 @@ export const level01: PuzzleLevel | null = {
   },
   tray: [{ kind: 'go-to', count: 1 }],
   par: 1,
+  freeHints: 0,
   timeLimit: 15,
   solution: {
     nodes: [{ id: 'p-goto', kind: 'go-to', params: {}, pos: { x: 400, y: 150 } }],

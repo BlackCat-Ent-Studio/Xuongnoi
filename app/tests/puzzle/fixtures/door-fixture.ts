@@ -53,6 +53,7 @@ export const doorFixture: PuzzleLevel = {
     { kind: 'touch', paramId: 'mode' },
   ],
   par: 2,
+  freeHints: 1,
   timeLimit: 20,
   solution: {
     nodes: [

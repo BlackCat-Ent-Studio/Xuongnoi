@@ -51,6 +51,7 @@ export const level05: PuzzleLevel = {
     { kind: 'counter', count: 1 },
   ],
   par: 2,
+  freeHints: 2,
   timeLimit: 90,
   solution: {
     nodes: [

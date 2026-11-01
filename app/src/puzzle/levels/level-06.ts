@@ -54,6 +54,7 @@ export const level06: PuzzleLevel = {
   ],
   editable: [{ kind: 'distance', paramId: 'threshold' }],
   par: 2,
+  freeHints: 3,
   timeLimit: 60,
   solution: {
     nodes: [

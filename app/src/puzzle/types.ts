@@ -32,6 +32,8 @@ export interface PuzzleLevel {
   editable?: EditableParam[];
   /** Fewest tray pieces that solve the level; using at most this many (without the hint) gives 3 stars. */
   par: number;
+  /** Times "?" may be pressed without losing a star (each press beyond costs one star, never below 1). */
+  freeHints: number;
   /** Seconds of play before an unfinished run counts as failed. */
   timeLimit: number;
   /** Reference answer, used by tests (and by nobody in the UI). Node ids must not clash with `base`. */

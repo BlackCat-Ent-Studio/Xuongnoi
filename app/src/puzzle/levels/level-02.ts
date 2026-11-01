@@ -79,6 +79,7 @@ export const level02: PuzzleLevel | null = {
     { kind: 'latch', count: 1 },
   ],
   par: 2,
+  freeHints: 1,
   timeLimit: 25,
   solution: {
     nodes: [

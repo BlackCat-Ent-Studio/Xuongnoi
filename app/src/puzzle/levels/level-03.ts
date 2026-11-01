@@ -113,6 +113,7 @@ export const level03: PuzzleLevel | null = {
   ],
   editable: [{ kind: 'const', paramId: 'value' }],
   par: 5,
+  freeHints: 2,
   timeLimit: 30,
   solution: {
     nodes: [

@@ -213,7 +213,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       return;
     }
     const answer = toAnswer(board.state());
-    const stars = starsFor(level, answer, hintUsed);
+    const stars = starsFor(level, answer, hintUsed ? level.freeHints + 2 : 0);
     ctx.saveProgress(withBest(ctx.progress(), level.id, stars));
     hudStars.replaceWith(starsEl(starsOf(ctx.progress(), level.id), 'pz-stars'));
     guide?.celebrate();

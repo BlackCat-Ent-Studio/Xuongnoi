@@ -122,6 +122,7 @@ export const level04: PuzzleLevel | null = {
     { kind: 'or', count: 1 },
   ],
   par: 3,
+  freeHints: 2,
   timeLimit: 40,
   solution: {
     nodes: [
