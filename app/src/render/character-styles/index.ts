@@ -1,10 +1,14 @@
 import { catStyle } from './cat';
+import { catChibiStyle } from './cat-chibi';
+import { catQuadStyle } from './cat-quad';
 import { chickStyle } from './chick';
 import { dinoStyle } from './dino';
 import { humanStyle } from './human';
 import { jellyStyle } from './jelly';
 import type { StyleDef } from './kit';
 import { robotStyle } from './robot';
+import { robotLegsStyle } from './robot-legs';
+import { robotWheelStyle } from './robot-wheel';
 
 export { PartKit, localYRange, type StyleDef, type StyleRig } from './kit';
 
@@ -18,6 +22,10 @@ export const CHARACTER_STYLES: Readonly<Record<string, StyleDef>> = {
   chick: chickStyle,
   jelly: jellyStyle,
   dino: dinoStyle,
+  'robot-wheel': robotWheelStyle,
+  'robot-legs': robotLegsStyle,
+  'cat-chibi': catChibiStyle,
+  'cat-quad': catQuadStyle,
 };
 
 /** Unknown or missing looks (old boards, hand-edited files) fall back to the default human. */

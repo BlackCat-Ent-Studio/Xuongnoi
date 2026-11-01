@@ -171,7 +171,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       speed: 'Tốc độ chạy. Mặc định 5.',
       jumpPower: 'Sức nhảy: càng lớn nhảy càng cao. Mặc định 10.',
       color: 'Màu của nhân vật. Đổi được ngay khi đang chơi.',
-      look: 'Kiểu dáng: người khối, rô-bốt, mèo, gà con, thạch nhún, khủng long nhỏ. Chỉ là hình dáng, không đổi cách chơi.',
+      look: 'Kiểu dáng: người khối, rô-bốt, mèo, gà con, thạch nhún, khủng long nhỏ, rô-bốt bánh xe, rô-bốt chân ngắn, Mèo Mun chibi, Mèo Mun bốn chân. Chỉ là hình dáng, không đổi cách chơi. Hai Mèo Mun luôn màu đen nên ô "Màu" không đổi được màu lông.',
       role: 'Người chơi: camera đi theo nhân vật này. Bot: nhân vật do mảnh ghép Bộ não điều khiển, camera không theo.',
       invulnSeconds: 'Nâng cao. Sau khi trúng đòn, nhân vật được bất tử bao nhiêu giây để không bị đánh liên tục.',
       knockSpeed: 'Nâng cao. Lực bị đẩy lùi ra xa khi trúng đòn.',

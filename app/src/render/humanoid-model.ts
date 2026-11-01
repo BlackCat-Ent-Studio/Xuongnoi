@@ -121,7 +121,7 @@ export class Humanoid {
     this.time += dt;
     this.phase += dt * walkPhaseRate(speed);
     this.yaw = smoothAngle(this.yaw, facingTarget(this.mode, this.vx, this.vz, this.yaw), dt);
-    this.rig.update(motionOf(speed, airborne, this.phase, this.time), dt);
+    this.rig.update(motionOf(speed, airborne, this.phase, this.time, this.seated ? 0 : this.vy), dt);
     this.applyYaw();
   }
 
@@ -184,6 +184,7 @@ export class Humanoid {
    */
   private fitToFloor(): void {
     const root = this.rig.root;
+    if (this.rig.selfFitting) return;
     const { min, max } = localYRange(root);
     const lift = Math.max(0, FLOOR - min);
     const k = Math.min(1, FIGURE_HEIGHT / (max - FLOOR + lift));

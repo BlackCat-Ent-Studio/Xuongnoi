@@ -17,7 +17,7 @@ export const level07: PuzzleLevel = {
       { id: 'water-look', kind: 'block', params: { position: { x: 0, y: -2, z: 0 }, size: { x: 30, y: 0.2, z: 12 }, color: '#38bdf8', type: 'pickup' }, pos: { x: 220, y: 500 } },
       { id: 'goal', kind: 'block', params: { position: { x: 9, y: 0.5, z: 0 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 220, y: 440 } },
       { id: 'bridge', kind: 'block', params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 4, y: 1, z: 8 }, color: '#b45309', type: 'solid' }, pos: { x: 640, y: 20 } },
-      { id: 'robot', kind: 'character', params: { position: { x: -3.5, y: 1, z: 0 }, speed: 4, color: '#f97316', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 20 } },
+      { id: 'robot', kind: 'character', params: { position: { x: -3.5, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 20 } },
       { id: 'begin', kind: 'on-start', params: {}, pos: { x: 220, y: 200 } },
       { id: 'hide-or', kind: 'or', params: {}, pos: { x: 440, y: 160 } },
       { id: 'walk', kind: 'go-to', params: { stopDistance: 0.5, pathfind: 'off' }, pos: { x: 220, y: 20 } },
