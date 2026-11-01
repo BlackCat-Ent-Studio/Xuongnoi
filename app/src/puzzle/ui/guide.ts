@@ -3,7 +3,7 @@ import type { PortRef } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import type { BoardState, PortEnd } from './board-state';
 import type { BoardView } from './board-view';
-import { buildGuideSteps, currentStepIndex, isStepDone, resolveSolutionNode, solutionSteps, winLine, type GuideStep } from './guide-script';
+import { buildGuideSteps, currentStepIndex, hintLineOf, isStepDone, nextHintStep, resolveSolutionNode, winLine, type GuideStep } from './guide-script';
 import { createMascot, type Mascot } from './mascot';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
 
@@ -17,8 +17,11 @@ import './guide.css';
  */
 
 const POLL_MS = 120;
-const HINT_SHOW_MS = 4500;
+const HINT_SHOW_MS = 7000;
+/** While the player is mid-way through a hinted step (port picked, editor open) the help stays this much longer. */
+const HINT_BUSY_MS = 3500;
 const BYE_SHOW_MS = 4500;
+const TIP_SHOW_MS = 4000;
 /** Smallest ring (px) so the target stays a comfortable finger size. */
 const MIN_RING = 44;
 
@@ -36,12 +39,17 @@ export interface GuideOptions {
 }
 
 export interface Guide {
-  /** Starts (or restarts) the guide from its first line. The caller resets the board first when replaying. */
-  start(): void;
+  /** Starts (or restarts) the guide from its first line. The caller resets the board first when replaying. `skippable` false hides "Bỏ qua". */
+  start(skippable: boolean): void;
   /** True while the guide is leading (even when briefly hidden during a run). */
   readonly active: boolean;
-  /** "?": shows the next missing piece or wire. Costs the star (the caller marks it). */
-  hint(): void;
+  /**
+   * "?": the cat, ring and hand show the first step not done yet (and its dotted wire). Returns true when a
+   * step was revealed (the caller counts it), false when everything is joined or the guide is leading.
+   */
+  hint(): boolean;
+  /** The cat pops up with each line in turn (no ring, no hand), each for a few seconds or until tapped. */
+  tips(lines: readonly string[]): void;
   /** Re-reads the game phase right away (the guide hides during a run). */
   refresh(): void;
   /** The level was won: the cat cheers if the guide was leading. */
@@ -54,7 +62,6 @@ type Mode = 'off' | 'guide' | 'bye';
 export function createGuide(opts: GuideOptions): Guide {
   const { level, screen, board, runBtn, isEditing } = opts;
   const steps = buildGuideSteps(level);
-  const hintSteps = solutionSteps(level);
 
   // ----- DOM -----
   const root = h('div', 'pz-guide');
@@ -98,13 +105,13 @@ export function createGuide(opts: GuideOptions): Guide {
   const state = (): BoardState => board.state();
 
   let shownKey = '';
-  function setShown(on: boolean, flags: { hinting?: boolean; bye?: boolean } = {}): void {
+  function setShown(on: boolean, flags: { hinting?: boolean; bye?: boolean; tip?: boolean } = {}): void {
     root.classList.toggle('on', on);
     root.classList.toggle('hinting', !!flags.hinting);
-    root.classList.toggle('bye', !!flags.bye);
-    const catOn = on && !flags.hinting;
-    const key = String(catOn);
-    if (key !== shownKey) mascot.setVisible(catOn);
+    root.classList.toggle('bye', !!flags.bye || !!flags.tip);
+    root.classList.toggle('tip', !!flags.tip);
+    const key = String(on);
+    if (key !== shownKey) mascot.setVisible(on);
     shownKey = key;
   }
 
@@ -234,9 +241,16 @@ export function createGuide(opts: GuideOptions): Guide {
     }
   }
 
+  /** The help goes away when its step is done, after a few seconds, or when the cat is tapped. */
   function updateHint(): void {
     if (!hintStep) return;
     if (!isEditing() || isStepDone(hintStep, level, state(), false)) {
+      clearHint();
+      return;
+    }
+    const busy = hintStep.type === 'wire' ? board.pickedEnd() !== null : hintStep.type === 'param' ? board.popoverEl() !== null : false;
+    if (busy) hintUntil = Math.max(hintUntil, Date.now() + HINT_BUSY_MS);
+    if (Date.now() > hintUntil) {
       clearHint();
       return;
     }
@@ -244,12 +258,30 @@ export function createGuide(opts: GuideOptions): Guide {
       const t = targetOf(hintGhost);
       board.setGhost(t.ghost?.from ?? null, t.ghost?.to);
     }
-    if (Date.now() > hintUntil) {
-      root.classList.remove('on');
-      if (!hintGhost) clearHint();
+    aim(targetOf(hintStep).el);
+  }
+
+  // ----- new-piece tips -----
+
+  let tipQueue: string[] = [];
+  let tipTimer = 0;
+
+  function clearTips(): void {
+    window.clearTimeout(tipTimer);
+    tipQueue = [];
+    if (root.classList.contains('tip') && mode === 'off') setShown(false);
+  }
+
+  function nextTip(): void {
+    window.clearTimeout(tipTimer);
+    const line = tipQueue.shift();
+    if (line === undefined || mode !== 'off' || hintStep || !isEditing()) {
+      clearTips();
       return;
     }
-    aim(targetOf(hintStep).el);
+    setShown(true, { tip: true });
+    speak(line);
+    tipTimer = window.setTimeout(nextTip, TIP_SHOW_MS);
   }
 
   // ----- timer -----
@@ -257,6 +289,7 @@ export function createGuide(opts: GuideOptions): Guide {
   function tick(): void {
     if (mode === 'guide') updateGuide();
     else if (hintStep) updateHint();
+    else if (mode === 'off' && !isEditing() && root.classList.contains('tip')) clearTips();
   }
   const timer = window.setInterval(tick, POLL_MS);
   const onResize = (): void => tick();
@@ -278,17 +311,22 @@ export function createGuide(opts: GuideOptions): Guide {
     tick();
   });
   bubble.addEventListener('click', (e) => {
-    if (!(e.target instanceof Element) || !e.target.closest('button')) mascot.finish();
+    if (e.target instanceof Element && e.target.closest('button')) return;
+    if (mode === 'off' && hintStep) clearHint(); // tapping the cat dismisses a "?" step
+    else if (mode === 'off' && (tipQueue.length > 0 || root.classList.contains('tip'))) nextTip(); // next tip, or none
+    else mascot.finish();
   });
 
   return {
     get active() {
       return mode === 'guide';
     },
-    start() {
+    start(skippable) {
       if (steps.length === 0) return;
       window.clearTimeout(byeTimer);
       clearHint();
+      clearTips();
+      skipBtn.hidden = !skippable;
       mode = 'guide';
       introDone = false;
       shownIdx = -1;
@@ -296,27 +334,28 @@ export function createGuide(opts: GuideOptions): Guide {
       updateGuide();
     },
     hint() {
-      if (!isEditing() || mode === 'guide') return;
-      const step = hintSteps.find((s) => !isStepDone(s, level, state(), false));
+      if (!isEditing() || mode !== 'off') return false;
+      clearTips();
+      const step = nextHintStep(level, state());
       hintGhost = null;
       board.setGhost(null);
+      hintUntil = Date.now() + HINT_SHOW_MS;
       if (!step) {
-        board.toast(T.hintAllJoined);
-        hintStep = { type: 'run', text: '' };
-        hintUntil = Date.now() + HINT_SHOW_MS;
+        hintStep = { type: 'run', text: T.hintAllJoined };
       } else {
         hintStep = step;
-        hintUntil = Date.now() + HINT_SHOW_MS;
-        if (step.type === 'wire') {
-          hintGhost = step;
-          board.toast(T.hintFollowDots);
-        } else {
-          board.toast(step.type === 'piece' ? T.hintTakePiece : T.hintSetParam);
-        }
+        if (step.type === 'wire') hintGhost = step;
       }
       setShown(true, { hinting: true });
       setGuiding(false);
+      speak(step ? hintLineOf(step) : T.hintAllJoined);
       updateHint();
+      return step !== null;
+    },
+    tips(lines) {
+      if (mode !== 'off' || hintStep || lines.length === 0) return;
+      tipQueue = [...lines];
+      nextTip();
     },
     refresh: tick,
     celebrate() {
@@ -330,6 +369,7 @@ export function createGuide(opts: GuideOptions): Guide {
     dispose() {
       window.clearInterval(timer);
       window.clearTimeout(byeTimer);
+      window.clearTimeout(tipTimer);
       window.removeEventListener('resize', onResize);
       mascot.dispose();
       root.remove();

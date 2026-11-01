@@ -7,7 +7,8 @@ import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
 import { createGuide, type Guide } from './guide';
-import { hasGuide, hasSeenGuide, markGuideSeen } from './guide-script';
+import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, newPieceIntros } from './guide-script';
+import { extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
 
@@ -57,7 +58,8 @@ function starsEl(count: 0 | 1 | 2 | 3, className: string): HTMLElement {
 export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): () => void {
   const { level, stage } = ctx;
   let phase: Phase = 'edit';
-  let hintUsed = false;
+  /** "?" presses that revealed a step; the free ones are `level.freeHints`. */
+  let hintsUsed = 0;
   let previewTimer = 0;
   let loseTimer = 0;
   let watchRaf = 0;
@@ -97,9 +99,11 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   viewBtn.type = 'button';
   viewBtn.hidden = heroId === null;
   const guided = hasGuide(level);
+  /** Level 1's first visit: the guide leads and cannot be skipped. */
+  const forcedGuide = isGuideForced(level);
   const replayBtn = h('button', 'pz-replay', T.guideReplay);
   replayBtn.type = 'button';
-  replayBtn.hidden = !guided;
+  replayBtn.hidden = !guided || forcedGuide;
   replayBtn.setAttribute('aria-label', T.guideReplayAria);
   stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
 
@@ -142,10 +146,20 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const trayEl = h('div', 'pz-tray');
   trayEl.setAttribute('role', 'group');
   trayEl.setAttribute('aria-label', T.trayAria);
-  const hintBtn = h('button', 'pz-btn small', '?');
+  const hintBtn = h('button', 'pz-btn small pz-hint-btn', '?');
   hintBtn.type = 'button';
-  hintBtn.setAttribute('aria-label', T.hint);
-  hintBtn.title = T.hint;
+  const hintCount = h('span', 'pz-hint-badge');
+  hintBtn.append(hintCount);
+  /** Shows the free hints left; red with a crossed star once the next press costs a star. */
+  function syncHintBadge(): void {
+    const badgeState = hintBadge(level, hintsUsed);
+    hintBtn.classList.toggle('costly', badgeState.costly);
+    hintCount.textContent = badgeState.costly ? '★' : String(badgeState.left);
+    const label = badgeState.costly ? T.hintCostly : T.hintFree(badgeState.left);
+    hintBtn.setAttribute('aria-label', label);
+    hintBtn.title = label;
+  }
+  syncHintBadge();
   const resetBtn = h('button', 'pz-btn small', '↺');
   resetBtn.type = 'button';
   resetBtn.setAttribute('aria-label', T.reset);
@@ -213,7 +227,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       return;
     }
     const answer = toAnswer(board.state());
-    const stars = starsFor(level, answer, hintUsed ? level.freeHints + 2 : 0);
+    const stars = starsFor(level, answer, hintsUsed);
+    if (forcedGuide) markGuideSeen(level.id); // the first guided win ends the mandatory guide
     ctx.saveProgress(withBest(ctx.progress(), level.id, stars));
     hudStars.replaceWith(starsEl(starsOf(ctx.progress(), level.id), 'pz-stars'));
     guide?.celebrate();
@@ -222,7 +237,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
 
   function showWin(stars: 1 | 2 | 3): void {
     const card = h('div', 'pz-win-card');
-    card.append(h('h3', '', T.winTitle), starsEl(stars, 'pz-stars big'), h('p', '', T.winNote(stars, hintUsed)));
+    card.append(h('h3', '', T.winTitle), starsEl(stars, 'pz-stars big'), h('p', '', T.winNote(stars, extraHints(level, hintsUsed))));
     const row = h('div', 'pz-win-row');
     const retry = h('button', 'pz-btn ghost', T.winRetry);
     retry.type = 'button';
@@ -290,23 +305,24 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     if (phase !== 'edit') return;
     board?.reset();
   });
-  // "?" shows the next missing piece or wire as a dotted line. While the guide leads it already shows that, so
-  // the cat just nods at the hand and the hint (and its star) is not spent.
+  // "?" reveals exactly one next step (cat, ring, hand, dotted wire). While the guide leads it already shows
+  // that, so the cat just nods at the hand and nothing is counted.
   hintBtn.addEventListener('click', () => {
     if (phase !== 'edit' || !guide) return;
     if (guide.active) {
       board?.toast(T.guideFollow);
       return;
     }
-    hintUsed = true;
-    guide.hint();
+    if (guide.hint()) {
+      hintsUsed++;
+      syncHintBadge();
+    }
   });
   replayBtn.addEventListener('click', () => {
     if (!guide) return;
     if (phase !== 'edit') backToEdit();
     board?.reset();
-    markGuideSeen(level.id);
-    guide.start();
+    guide.start(true);
   });
   back.addEventListener('click', () => ctx.go('#/'));
 
@@ -317,10 +333,16 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     showPreview();
   });
   showPreview();
-  // The guide shows by itself the first time a level is opened; "↻ Hướng dẫn" brings it back.
-  if (guided && !hasSeenGuide(level.id)) {
-    markGuideSeen(level.id);
-    guide.start();
+  // Level 1 leads the first visit with the guide (no skip); "↻ Hướng dẫn" brings it back later.
+  // Other levels introduce each piece the player has not met yet, once per level.
+  if (forcedGuide) {
+    guide.start(false);
+  } else if (!guided && !hasSeenIntro(level.id)) {
+    const lines = newPieceIntros(level);
+    if (lines.length > 0) {
+      markIntroSeen(level.id);
+      guide.tips(lines);
+    }
   }
 
   return () => {
