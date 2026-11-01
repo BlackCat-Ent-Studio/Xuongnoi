@@ -11,6 +11,15 @@ export const MIN_PITCH = 0.1;
 export const MAX_PITCH = 1.45;
 const DEFAULT_DISTANCE = 14;
 const FAR = 200;
+const FIT_PAD = 2.5;
+const FIT_MIN_HEIGHT = 8;
+
+/** Fractions of the canvas height covered at the top (HUD) and bottom (task box); `pitch` = fixed 3D tilt. */
+export interface StageFit {
+  top: number;
+  bottom: number;
+  pitch?: number;
+}
 
 export function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -104,6 +113,34 @@ export function entityBounds(entities: readonly EntityView[]): Bounds | null {
   return any ? { min, max } : null;
 }
 
+const GROUND_MIN_SPAN = 12;
+const GROUND_MAX_THICKNESS = 1.2;
+const GROUND_MARGIN = 3;
+
+/**
+ * Scene box for the puzzle stage. A wide, flat block is ground: it only widens the box by a margin around
+ * the other objects (so a 30-unit floor does not shrink everything), but its height still counts.
+ */
+export function stageBounds(entities: readonly EntityView[]): Bounds | null {
+  const isGround = (e: EntityView): boolean =>
+    e.kind === 'block' && e.size.y <= GROUND_MAX_THICKNESS && e.size.x >= GROUND_MIN_SPAN;
+  const core = entityBounds(entities.filter((e) => !isGround(e)));
+  const ground = entityBounds(entities.filter(isGround));
+  if (!core || !ground) return entityBounds(entities);
+  const m = (lo: number, hi: number): number => Math.max(GROUND_MARGIN, (hi - lo) * 0.1);
+  const mx = m(core.min.x, core.max.x);
+  const mz = m(core.min.z, core.max.z);
+  const min = core.min.clone();
+  const max = core.max.clone();
+  min.x = Math.max(ground.min.x, min.x - mx);
+  max.x = Math.min(ground.max.x, max.x + mx);
+  min.z = Math.max(ground.min.z, min.z - mz);
+  max.z = Math.min(ground.max.z, max.z + mz);
+  min.y = Math.min(min.y, ground.min.y);
+  max.y = Math.max(max.y, ground.max.y);
+  return { min, max };
+}
+
 /** The character the play camera follows: the first visible player, else the first visible character (bots only). */
 export function pickFollowTarget(entities: readonly EntityView[]): EntityView | undefined {
   const characters = entities.filter((e) => e.kind === 'character' && e.visible);
@@ -142,6 +179,9 @@ export class CameraRig {
   private target = new THREE.Vector3();
   private snapNext = true;
   private readonly director = new CameraDirector();
+  /** Puzzle stage: frame the whole scene inside the part of the canvas left uncovered by the HUD and task box. */
+  private fit: StageFit | null = null;
+  private fitDirty = true;
 
   constructor(mode: ViewMode) {
     this.mode = mode;
@@ -185,6 +225,22 @@ export class CameraRig {
   /** Next update jumps to the target instead of smoothing. */
   snap(): void {
     this.snapNext = true;
+    this.fitDirty = true;
+  }
+
+  /** Switches the fixed "fit the scene" framing on (with the covered fractions of the canvas) or off. */
+  setFit(fit: StageFit | null): void {
+    if (JSON.stringify(fit) === JSON.stringify(this.fit)) return;
+    this.fit = fit;
+    this.fitDirty = true;
+    this.following = false;
+    if (fit && this.mode === '3d' && fit.pitch !== undefined) this.pitch = clampPitch(fit.pitch);
+    this.applySize();
+  }
+
+  /** Share of the canvas height that stays visible when `fit` is on. */
+  private get visibleFrac(): number {
+    return this.fit ? Math.max(0.2, 1 - this.fit.top - this.fit.bottom) : 1;
   }
 
   /** Back to the default framing of the current content. */
@@ -197,7 +253,7 @@ export class CameraRig {
   }
 
   rotate(dx: number, dy: number): void {
-    if (this.mode !== '3d') return;
+    if (this.mode !== '3d' || this.fit) return;
     this.yaw -= dx * 0.005;
     this.pitch = clampPitch(this.pitch + dy * 0.005);
   }
@@ -207,6 +263,7 @@ export class CameraRig {
    * the cursor fixed. While following, the centre stays on the character.
    */
   zoom(deltaY: number, ndc: { x: number; y: number } = { x: 0, y: 0 }): void {
+    if (this.fit) return;
     const v = this.view;
     const oldSize = this.size;
     v.mag = zoomAfterWheel(v.mag, deltaY);
@@ -222,7 +279,7 @@ export class CameraRig {
 
   /** Drag-pan by screen pixels (edit camera only). */
   pan(dx: number, dy: number): void {
-    if (this.following) return;
+    if (this.following || this.fit) return;
     const t = this.view.target;
     if (this.mode === '3d') {
       const d = panGroundDelta(this.yaw, dx, dy, this.size * 0.0016);
@@ -237,6 +294,10 @@ export class CameraRig {
   }
 
   update(entities: readonly EntityView[], dt: number, follow: boolean, playCamera: PlayCameraCommand | null = null): void {
+    if (this.fit) {
+      this.updateFit(entities);
+      return;
+    }
     this.syncFollow(follow);
     const cmd = follow ? playCamera : null;
     this.director.update(cmd, dt, this.snapNext || !follow);
@@ -272,6 +333,51 @@ export class CameraRig {
     this.snapNext = false;
     this.applySize();
     this.place();
+  }
+
+  /** Fixed framing of the whole scene: same view before and during play, recomputed on snap() only. */
+  private updateFit(entities: readonly EntityView[]): void {
+    const bounds = this.fitDirty ? stageBounds(entities) : null;
+    if (this.fitDirty && bounds) {
+      this.fitDirty = false;
+      const centre = bounds.min.clone().add(bounds.max).multiplyScalar(0.5);
+      const w = bounds.max.x - bounds.min.x;
+      const virtAspect = this.aspect / this.visibleFrac;
+      this.view.mag = 1;
+      if (this.mode === '3d') {
+        this.view.target.set(centre.x, centre.y - 1, centre.z);
+        this.view.homeSize = this.fitDistance(bounds, centre, virtAspect);
+      } else {
+        const side = this.mode === '2d-side';
+        const h = side ? bounds.max.y - bounds.min.y : bounds.max.z - bounds.min.z;
+        this.view.target.set(centre.x, side ? centre.y : 0, side ? 0 : centre.z);
+        this.view.homeSize = Math.max(FIT_MIN_HEIGHT, h + FIT_PAD, (w + FIT_PAD) / virtAspect);
+      }
+    }
+    this.target.copy(this.view.target);
+    this.snapNext = false;
+    this.applySize();
+    this.place();
+  }
+
+  /** Orbit distance at which all eight corners of the scene box fit the (virtual) frame. */
+  private fitDistance(b: Bounds, centre: THREE.Vector3, aspect: number): number {
+    const fwd = orbitOffset(this.yaw, this.pitch, 1).negate();
+    const right = new THREE.Vector3().crossVectors(fwd, new THREE.Vector3(0, 1, 0)).normalize();
+    const up = new THREE.Vector3().crossVectors(right, fwd).normalize();
+    const tanV = Math.tan(THREE.MathUtils.degToRad(25));
+    const tanH = tanV * aspect;
+    let d = 0;
+    for (const x of [b.min.x, b.max.x]) {
+      for (const y of [b.min.y, b.max.y]) {
+        for (const z of [b.min.z, b.max.z]) {
+          const rel = new THREE.Vector3(x, y, z).sub(centre);
+          const along = rel.dot(fwd);
+          d = Math.max(d, Math.abs(rel.dot(right)) / tanH - along, Math.abs(rel.dot(up)) / tanV - along);
+        }
+      }
+    }
+    return clamp(d * 1.06, 6, FAR * 0.8);
   }
 
   /** Entering play swaps in a default follow view; leaving restores the edit camera. */
@@ -329,14 +435,23 @@ export class CameraRig {
 
   private applySize(): void {
     const cam = this.camera;
+    // With a stage fit the frame is virtually taller than the canvas, then shifted so the canvas
+    // shows only the uncovered part of it.
+    const a = this.aspect / this.visibleFrac;
     if (cam instanceof THREE.PerspectiveCamera) {
-      cam.aspect = this.aspect;
+      cam.aspect = a;
     } else {
       const h = this.size / 2;
-      cam.left = -h * this.aspect;
-      cam.right = h * this.aspect;
+      cam.left = -h * a;
+      cam.right = h * a;
       cam.top = h;
       cam.bottom = -h;
+    }
+    if (this.fit) {
+      const full = 1000;
+      cam.setViewOffset(full, full / a, 0, (-this.fit.top * full) / this.aspect, full, full / this.aspect);
+    } else {
+      cam.clearViewOffset();
     }
     cam.updateProjectionMatrix();
   }

@@ -14,6 +14,7 @@ import {
   connect,
   editableParamIds,
   findFreeSpot,
+  separateBoxes,
   isPortShown,
   isSceneryNode,
   paramValue,
@@ -36,7 +37,8 @@ const SVG_NS = 'http://www.w3.org/2000/svg';
 /** Levels are laid out on a board this big (logical px); cards that stick out widen it. */
 const BOARD_W = 1000;
 const BOARD_H = 560;
-const EDGE_PAD = 12;
+/** Smallest card scale; at 12px base text this keeps phone text at about 9px. */
+const MIN_CARD_SCALE = 0.78;
 /** A tap this close (screen px) to a pin counts as a tap on it, so small cards stay easy to wire. */
 const PORT_REACH = 26;
 const WIRE_REACH = 12;
@@ -108,10 +110,14 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let state: BoardState = EMPTY_BOARD;
   let picked: PortEnd | null = null;
   let running = false;
-  let scale = 1;
-  let originX = 0;
-  let originY = 0;
+  /** Cards keep a readable size; only their positions follow the board size. */
+  let cardScale = 1;
+  /** Board area (screen px) above the bottom bar, where cards live. */
   let area = { w: BOARD_W, h: BOARD_H };
+  /** Where each card sits on screen after layout (top-left, px). */
+  const placedAt = new Map<string, { x: number; y: number }>();
+  const spreadX = (): number => area.w / BOARD_W;
+  const spreadY = (): number => area.h / BOARD_H;
   const positions = new Map<string, { x: number; y: number }>();
   const ports = new Map<string, PortEntry>();
   const cards = new Map<string, HTMLElement>();
@@ -153,29 +159,42 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   // ---------- layout ----------
 
-  function fit(): void {
-    let ax = BOARD_W;
-    let ay = BOARD_H;
-    for (const [id, box] of cards) {
-      const p = positions.get(id);
-      if (!p) continue;
-      ax = Math.max(ax, p.x + box.offsetWidth + EDGE_PAD);
-      ay = Math.max(ay, p.y + box.offsetHeight + EDGE_PAD);
-    }
-    area = { w: ax, h: ay };
-    const bw = board.clientWidth;
+  /**
+   * Level positions (1000x560 logical space) are stretched to the board; cards stay near full size
+   * (a little smaller on a small board) and are pushed apart where they would overlap.
+   */
+  function layout(): void {
+    const bw = Math.max(1, board.clientWidth);
     const bh = Math.max(1, board.clientHeight - bottomEl.offsetHeight - 10);
-    scale = Math.max(0.05, Math.min(1, bw / ax, bh / ay));
-    originX = Math.max(0, (bw - ax * scale) / 2);
-    originY = Math.max(0, (bh - ay * scale) / 2);
-    world.style.transform = `translate(${originX}px, ${originY}px) scale(${scale})`;
+    area = { w: bw, h: bh };
+    const c0 = Math.max(MIN_CARD_SCALE, Math.min(1, bw / 700));
+    const natural = [...cards].map(([id, box]) => {
+      const p = positions.get(id) ?? { x: 0, y: 0 };
+      return { id, x: p.x * spreadX(), y: p.y * spreadY(), w: box.offsetWidth, h: box.offsetHeight };
+    });
+    let result = separateBoxes([], area);
+    cardScale = c0;
+    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8]) {
+      cardScale = c;
+      result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8);
+      if (result.fits) break;
+    }
+    for (const [id, box] of cards) {
+      const p = result.pos.get(id);
+      if (!p) continue;
+      placedAt.set(id, p);
+      box.style.left = `${Math.round(p.x)}px`;
+      box.style.top = `${Math.round(p.y)}px`;
+      box.style.transformOrigin = '0 0';
+      box.style.transform = `scale(${cardScale})`;
+    }
   }
 
-  /** Centre of a pin in board (logical) coordinates. */
+  /** Centre of a pin in board coordinates. */
   function dotCenter(dot: Element): { x: number; y: number } {
     const r = dot.getBoundingClientRect();
     const w = world.getBoundingClientRect();
-    return { x: (r.left + r.width / 2 - w.left) / scale, y: (r.top + r.height / 2 - w.top) / scale };
+    return { x: r.left + r.width / 2 - w.left, y: r.top + r.height / 2 - w.top };
   }
 
   // ---------- nodes ----------
@@ -315,13 +334,15 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     if (!probe || !placed) return;
     const taken: Box[] = [];
     for (const [id, box] of cards) {
-      const p = positions.get(id);
-      if (p) taken.push({ x: p.x, y: p.y, w: box.offsetWidth, h: box.offsetHeight });
+      const p = placedAt.get(id);
+      if (p) taken.push({ x: p.x, y: p.y, w: box.offsetWidth * cardScale, h: box.offsetHeight * cardScale });
     }
-    const size = estimateNodeSize(placed.node);
-    const spot = findFreeSpot(taken, size, area);
-    positions.set(placed.node.id, spot);
-    state = { ...probe, placed: probe.placed.map((p) => (p === placed ? { ...p, node: { ...p.node, pos: spot } } : p)) };
+    const est = estimateNodeSize(placed.node);
+    const spot = findFreeSpot(taken, { w: est.w * cardScale, h: est.h * cardScale }, area, 8);
+    // Stored in level space so the card keeps its place when the board is resized.
+    const logical = { x: Math.round(spot.x / spreadX()), y: Math.round(spot.y / spreadY()) };
+    positions.set(placed.node.id, logical);
+    state = { ...probe, placed: probe.placed.map((p) => (p === placed ? { ...p, node: { ...p.node, pos: logical } } : p)) };
     picked = null;
     closePopover();
     changed();
@@ -421,16 +442,16 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const head = t.closest<HTMLElement>('.wc-node-head');
     const box = head?.closest<HTMLElement>('.wc-node');
     const id = box?.dataset.id;
-    const start = id ? positions.get(id) : undefined;
+    const start = id ? placedAt.get(id) : undefined;
     if (!head || !box || !id || !start) return;
     const startX = e.clientX;
     const startY = e.clientY;
     head.setPointerCapture(e.pointerId);
     box.classList.add('pz-dragging');
     const move = (ev: PointerEvent): void => {
-      const x = Math.min(Math.max(0, start.x + (ev.clientX - startX) / scale), Math.max(0, area.w - box.offsetWidth));
-      const y = Math.min(Math.max(0, start.y + (ev.clientY - startY) / scale), Math.max(0, area.h - box.offsetHeight));
-      positions.set(id, { x: Math.round(x), y: Math.round(y) });
+      const x = Math.min(Math.max(0, start.x + ev.clientX - startX), Math.max(0, area.w - box.offsetWidth * cardScale));
+      const y = Math.min(Math.max(0, start.y + ev.clientY - startY), Math.max(0, area.h - box.offsetHeight * cardScale));
+      positions.set(id, { x: x / spreadX(), y: y / spreadY() });
       box.style.left = `${Math.round(x)}px`;
       box.style.top = `${Math.round(y)}px`;
       drawWires();
@@ -440,6 +461,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       head.removeEventListener('pointerup', end);
       head.removeEventListener('pointercancel', end);
       box.classList.remove('pz-dragging');
+      // Dropped on another card: the layout nudges the cards apart.
+      layout();
+      drawWires();
     };
     head.addEventListener('pointermove', move);
     head.addEventListener('pointerup', end);
@@ -495,7 +519,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       state = setParam(level, state, node.id, pd.id, v);
       refill();
       renderNodes();
-      fit();
+      layout();
       drawWires();
       applyPick();
       onChange(state);
@@ -540,13 +564,16 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   function render(): void {
     renderNodes();
-    fit();
+    layout();
     drawWires();
     renderTray();
     applyPick();
   }
 
-  const ro = new ResizeObserver(() => fit());
+  const ro = new ResizeObserver(() => {
+    layout();
+    drawWires();
+  });
   ro.observe(board);
   ro.observe(bottomEl);
   render();
@@ -579,7 +606,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     },
     freezeEnergy: stopEnergyLoop,
     refit() {
-      fit();
+      layout();
+      drawWires();
     },
     toast,
     destroy() {

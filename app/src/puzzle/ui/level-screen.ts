@@ -1,6 +1,7 @@
 import type { GameView } from '../../app-contracts';
 import { TICK_DT, type GameResult } from '../../engine/types';
 import { h } from '../../editor/dom';
+import { viewPitch } from '../../nodes/camera';
 import { starsFor } from '../run-level';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
@@ -65,8 +66,32 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const hud = h('div', 'pz-hud');
   hud.append(back, badge, hudStars);
   const task = h('div', 'pz-task');
-  task.append(h('b', '', T.task), document.createTextNode(level.task));
+  const taskHead = h('button', 'pz-task-head');
+  taskHead.type = 'button';
+  taskHead.append(h('b', '', T.task), h('span', 'pz-task-caret', '▾'));
+  taskHead.setAttribute('aria-expanded', 'true');
+  const taskBody = h('p', 'pz-task-body', level.task);
+  task.append(taskHead, taskBody);
+  function setTaskOpen(open: boolean): void {
+    task.classList.toggle('is-closed', !open);
+    taskHead.setAttribute('aria-expanded', String(open));
+  }
+  taskHead.addEventListener('click', () => setTaskOpen(task.classList.contains('is-closed')));
   stageSec.append(stage.el, hud, task);
+
+  /** Tells the game view which part of the stage is free of the HUD and task box, so the scene fills that part. */
+  function frameStage(): void {
+    const H = stageSec.clientHeight;
+    if (H <= 0) return;
+    const top = Math.min(0.4, (hud.offsetTop + hud.offsetHeight + 8) / H);
+    const bottom = Math.min(0.55, (H - task.offsetTop + 8) / H);
+    const camera = level.base.nodes.find((n) => n.kind === 'camera');
+    const pitch = level.mode === '3d' && camera ? viewPitch(String(camera.params.view ?? 'free')).pitch : undefined;
+    stage.view.setStageFit({ top, bottom, ...(pitch !== undefined ? { pitch } : {}) });
+  }
+  const stageObserver = new ResizeObserver(frameStage);
+  stageObserver.observe(stageSec);
+  stageObserver.observe(task);
 
   // ----- board (right) -----
   const boardEl = h('section', 'pz-board-host');
@@ -128,6 +153,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     board?.setRunning(false);
     root.querySelector('.pz-win')?.remove();
     setPhase('edit');
+    setTaskOpen(true);
     showPreview();
   }
 
@@ -203,6 +229,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       return;
     }
     setPhase('run');
+    setTaskOpen(false);
     board.setRunning(true, () => stage.view.getRuntime());
     watchRaf = requestAnimationFrame(watchTime);
   }
@@ -232,6 +259,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
 
   // The stage canvas was sized while it sat elsewhere; fit it to its new home, then draw the first scene.
   requestAnimationFrame(() => {
+    frameStage();
     stage.view.resize();
     showPreview();
   });
@@ -241,6 +269,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     window.clearTimeout(previewTimer);
     window.clearTimeout(loseTimer);
     stopWatch();
+    stageObserver.disconnect();
     stage.onEnd = null;
     stage.view.stop();
     board?.destroy();
