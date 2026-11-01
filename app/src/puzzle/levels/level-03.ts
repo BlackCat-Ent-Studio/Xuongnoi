@@ -3,9 +3,9 @@ import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
 
 const STARS = [
-  { id: 'star-1', x: -4, z: -3 },
-  { id: 'star-2', x: 0, z: 3 },
-  { id: 'star-3', x: 4, z: -3 },
+  { id: 'star-1', x: -4 },
+  { id: 'star-2', x: 0 },
+  { id: 'star-3', x: 4 },
 ] as const;
 
 /** Each locked star has its own locked touch sensor: when the cat touches it, the star hides. */
@@ -13,7 +13,7 @@ const starNodes: GraphNode[] = STARS.flatMap((s, k): GraphNode[] => [
   {
     id: s.id,
     kind: 'block',
-    params: { name: `Ngôi sao ${k + 1}`, position: { x: s.x, y: 0.5, z: s.z }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
+    params: { name: `Ngôi sao ${k + 1}`, position: { x: s.x, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
     pos: { x: 30, y: 20 + k * 100 },
   },
   { id: `touch-${s.id}`, kind: 'touch', params: {}, pos: { x: 230, y: 20 + k * 130 } },
@@ -26,7 +26,7 @@ const starWires: Wire[] = STARS.flatMap((s, k): Wire[] => [
 ]);
 
 /**
- * Level 3 (nhat-sao): count three star pickups, then open the gate. Stars are blocks of type "pickup" so the cat
+ * Level 3 (nhat-sao): count three star pickups, then open the gate (side view, the same wooden door as level 2). Stars are blocks of type "pickup" so the cat
  * walks through them. The gate's "Ẩn khi bật" follows the compare signal (it closes again when the signal drops)
  * and the compare is "bằng", so only the exact number 3 keeps it open for good; the tray constant starts at 5.
  */
@@ -36,14 +36,14 @@ export const level03: PuzzleLevel | null = {
   title: 'Nhặt sao',
   task: 'Mèo tự đi qua 3 ngôi sao rồi tới cổng. Cổng chỉ mở khi mèo đã nhặt đủ 3 sao. Hãy đếm sao và đặt số là 3.',
   hint: 'Gom 3 tín hiệu "Vừa chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Hằng số 3, rồi nối vào "Ẩn khi bật" của cổng.',
-  mode: '2d-top',
+  mode: '2d-side',
   cast: [PUZZLE_LOOKS.catChibi],
   base: {
     nodes: [
       {
         id: 'cat',
         kind: 'character',
-        params: { name: 'Mèo nhỏ', position: { x: -8, y: 0.5, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
+        params: { name: 'Mèo nhỏ', position: { x: -8, y: 1, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
         pos: { x: 30, y: 400 },
       },
       {
@@ -51,9 +51,9 @@ export const level03: PuzzleLevel | null = {
         kind: 'route-follow',
         params: {
           count: 4,
-          p1: { x: -4, y: 0.5, z: -3 },
-          p2: { x: 0, y: 0.5, z: 3 },
-          p3: { x: 4, y: 0.5, z: -3 },
+          p1: { x: -4, y: 0.5, z: 0 },
+          p2: { x: 0, y: 0.5, z: 0 },
+          p3: { x: 4, y: 0.5, z: 0 },
           p4: { x: 11, y: 0.5, z: 0 },
           speed: 4,
           lookAhead: 0,
@@ -64,16 +64,22 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'gate',
         kind: 'block',
-        params: { name: 'Cổng', position: { x: 8, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 14 }, color: '#92400e', type: 'solid' },
+        params: { name: 'Cổng', position: { x: 8, y: 4, z: 0 }, size: { x: 0.8, y: 8, z: 1 }, color: '#92400e', type: 'solid' },
         pos: { x: 800, y: 30 },
       },
       {
         id: 'goal',
         kind: 'block',
-        params: { name: 'Cờ đích', position: { x: 11, y: 0.5, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, color: '#22c55e', type: 'pickup' },
+        params: { name: 'Cờ đích', position: { x: 11, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#22c55e', type: 'pickup' },
         pos: { x: 430, y: 400 },
       },
       { id: 'touch-goal', kind: 'touch', params: {}, pos: { x: 620, y: 400 } },
+      {
+        id: 'ground',
+        kind: 'block',
+        params: { name: 'Mặt đất', position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d', type: 'solid' },
+        pos: { x: 430, y: 500 },
+      },
       {
         id: 'end',
         kind: 'win-lose',
@@ -103,6 +109,7 @@ export const level03: PuzzleLevel | null = {
     gate: { in: ['hiddenWhile'], out: [] },
     goal: { in: [], out: [] },
     'touch-goal': { in: [], out: [] },
+    ground: { in: [], out: [] },
     end: { in: [], out: [] },
   },
   tray: [

@@ -19,6 +19,10 @@ export interface StageFit {
   top: number;
   bottom: number;
   pitch?: number;
+  /** 2D side view only: tilts the camera down by this many radians so the floor top shows. */
+  sidePitch?: number;
+  /** How much bigger than its box the followed character is drawn (default 1). */
+  heroScale?: number;
   /** Owner node id of the character to close in on; absent / null = whole-scene overview. */
   follow?: string | null;
 }
@@ -32,6 +36,10 @@ interface OverviewFrame {
 /** Followed character fills about this share of the visible stage height. */
 const FOLLOW_FRACTION = 0.3;
 const FOLLOW_MIN_DISTANCE = 3.5;
+/** Same, for figures drawn bigger than their box (the stage look). */
+const FOLLOW_FRACTION_BIG_3D = 0.57;
+const FOLLOW_FRACTION_BIG_SIDE = 0.85;
+const FOLLOW_MIN_DISTANCE_BIG = 2;
 const FIT_EASE = 5;
 
 export function clamp(v: number, lo: number, hi: number): number {
@@ -195,6 +203,7 @@ export class CameraRig {
   /** Puzzle stage: frame the whole scene inside the part of the canvas left uncovered by the HUD and task box. */
   private fit: StageFit | null = null;
   private fitDirty = true;
+  private sidePitch = 0;
   private overview: OverviewFrame | null = null;
   private cur: { target: THREE.Vector3; size: number } | null = null;
 
@@ -250,6 +259,7 @@ export class CameraRig {
     this.fitDirty = true;
     this.following = false;
     if (fit && this.mode === '3d' && fit.pitch !== undefined) this.pitch = clampPitch(fit.pitch);
+    this.sidePitch = fit && this.mode === '2d-side' ? clamp(fit.sidePitch ?? 0, 0, 0.6) : 0;
     this.applySize();
   }
 
@@ -400,18 +410,24 @@ export class CameraRig {
     const b = ov.bounds;
     const virtAspect = this.aspect / this.visibleFrac;
     const hero = Math.max(e.size.y, e.size.x, e.size.z, 1);
+    // A figure drawn bigger than its box (the stage look) fills a larger share of the frame, framed a little closer.
+    const bigger = (this.fit?.heroScale ?? 1) > 1;
+    const heroSeen = hero * (this.fit?.heroScale ?? 1);
+    const fraction = bigger ? (this.mode === '3d' ? FOLLOW_FRACTION_BIG_3D : FOLLOW_FRACTION_BIG_SIDE) : FOLLOW_FRACTION;
     const clampTo = (v: number, lo: number, hi: number, half: number): number => (hi - lo <= 2 * half ? (lo + hi) / 2 : clamp(v, lo + half, hi - half));
     if (this.mode === '3d') {
       const tanV = Math.tan(THREE.MathUtils.degToRad(25));
-      const size = clamp(hero / (2 * tanV * FOLLOW_FRACTION), FOLLOW_MIN_DISTANCE, ov.size);
+      const size = clamp(heroSeen / (2 * tanV * fraction), bigger ? FOLLOW_MIN_DISTANCE_BIG : FOLLOW_MIN_DISTANCE, ov.size);
       // Visible ground half-extent is about the distance times the frame's tangent; keep that inside the box.
       const halfX = size * tanV * virtAspect * 0.8;
       const halfZ = size * tanV * 0.8;
-      const t = new THREE.Vector3(clampTo(e.position.x, b.min.x, b.max.x, halfX), ov.target.y, clampTo(e.position.z, b.min.z, b.max.z, halfZ));
+      // The stage look circles the figure itself; the overview height can sit far below the floor (water, pits).
+      const y = bigger ? e.position.y - 1 : ov.target.y;
+      const t = new THREE.Vector3(clampTo(e.position.x, b.min.x, b.max.x, halfX), y, clampTo(e.position.z, b.min.z, b.max.z, halfZ));
       return { target: t, size };
     }
     const side = this.mode === '2d-side';
-    const size = clamp(hero / FOLLOW_FRACTION, FIT_MIN_HEIGHT * 0.5, ov.size);
+    const size = clamp(heroSeen / fraction, bigger ? FIT_MIN_HEIGHT * 0.2 : FIT_MIN_HEIGHT * 0.5, ov.size);
     const halfX = (size * virtAspect) / 2;
     const half = size / 2;
     const x = clampTo(e.position.x, b.min.x, b.max.x, halfX);
@@ -470,7 +486,7 @@ export class CameraRig {
     const t = this.target;
     const cam = this.camera;
     if (this.mode === '2d-side') {
-      cam.position.set(t.x, t.y, 50);
+      cam.position.set(t.x, t.y + 50 * Math.sin(this.sidePitch), 50 * Math.cos(this.sidePitch));
       cam.up.set(0, 1, 0);
       cam.lookAt(t.x, t.y, 0);
     } else if (this.mode === '2d-top') {

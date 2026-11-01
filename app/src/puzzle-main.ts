@@ -3,6 +3,7 @@ import { registerAllNodes } from './nodes';
 import { h } from './editor/dom';
 import { PUZZLE_LEVELS } from './puzzle/levels';
 import type { PuzzleLevel } from './puzzle/types';
+import { createCozyStage } from './puzzle/stage/cozy-stage';
 import { mountEndingScreen } from './puzzle/ui/ending-screen';
 import { GUIDE_SEEN_KEY } from './puzzle/ui/guide-script';
 import { mountLevelScreen, type StageHost } from './puzzle/ui/level-screen';
@@ -46,7 +47,7 @@ function ensureStage(): StageHost {
   if (stage) return stage;
   const el = h('div', 'pz-stage-host');
   // Transparent canvas: the stage shows its themed backdrop (or the plain mint stage colour) around the scene.
-  const view = createGameView({ transparentStage: true });
+  const view = createGameView({ transparentStage: true, stage: createCozyStage() });
   view.mount(el);
   const host: StageHost = { el, view, onEnd: null };
   view.onGameEnd((result, message) => host.onEnd?.(result, message));

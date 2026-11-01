@@ -3,6 +3,7 @@ import { TICK_DT, type GameResult } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { viewPitch } from '../../nodes/camera';
 import { starsFor } from '../run-level';
+import { STAGE_CHARACTER_SCALE } from '../stage/cozy-stage';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
@@ -49,6 +50,8 @@ export function mainCharacterId(level: PuzzleLevel): string | null {
   return hero?.id ?? null;
 }
 
+/** The side-view stage looks down a little (radians) so the planks of the floor show. */
+const SIDE_TILT = 0.2;
 const NO_KEYS = { keysDown: new Set<string>() };
 const RESET_AFTER_LOSE_MS = 1700;
 
@@ -122,7 +125,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
 
   /** What the camera does now: the player's remembered choice, else the whole scene (also while the game runs). */
   function effectiveView(): StageView {
-    return rememberedView ?? 'overview';
+    return rememberedView ?? 'follow';
   }
   function syncViewButton(): void {
     const following = effectiveView() === 'follow';
@@ -146,7 +149,14 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     const camera = level.base.nodes.find((n) => n.kind === 'camera');
     const pitch = level.mode === '3d' && camera ? viewPitch(String(camera.params.view ?? 'free')).pitch : undefined;
     const follow = heroId !== null && effectiveView() === 'follow' ? heroId : null;
-    stage.view.setStageFit({ top, bottom, follow, ...(pitch !== undefined ? { pitch } : {}) });
+    stage.view.setStageFit({
+      top,
+      bottom,
+      follow,
+      heroScale: STAGE_CHARACTER_SCALE,
+      ...(pitch !== undefined ? { pitch } : {}),
+      ...(level.mode === '2d-side' ? { sidePitch: SIDE_TILT } : {}),
+    });
   }
   const stageObserver = new ResizeObserver(frameStage);
   stageObserver.observe(stageSec);

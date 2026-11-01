@@ -48,6 +48,13 @@ export class Humanoid {
   private vy = 0;
   private vz = 0;
   private flash = 0;
+  /** Visual size factor (the puzzle stage draws characters bigger than their collision box); 1 = exactly the box. */
+  private visualScale = 1;
+  /** Feet stay on the box floor when the figure is drawn larger. */
+  private lift = 0;
+  /** The scene wants the arms-forward carry pose while an item is carried. */
+  private carryPose = false;
+  private carrying = false;
 
   constructor(color: string, mode: ViewMode, look?: string) {
     this.colorHex = color;
@@ -69,6 +76,12 @@ export class Humanoid {
     this.seated = seated;
   }
 
+  /** Stage look: draw the figure `scale` times its box size (feet on the floor) and, optionally, with the carry pose. */
+  setStageLook(scale: number, carryPose: boolean): void {
+    this.visualScale = scale;
+    this.carryPose = carryPose;
+  }
+
   setMode(mode: ViewMode): void {
     if (mode === this.mode) return;
     this.mode = mode;
@@ -86,7 +99,10 @@ export class Humanoid {
     this.object.position.set(p.x, p.y, p.z);
     // Uniform horizontal scale keeps the figure inside the box under any yaw.
     const h = Math.min(view.size.x, view.size.z);
-    this.body.scale.set(h, view.size.y, h);
+    const k = this.visualScale;
+    this.body.scale.set(h * k, view.size.y * k, h * k);
+    this.lift = ((k - 1) * view.size.y) / 2;
+    this.carrying = this.carryPose && view.carriedHeight !== undefined;
     this.syncTool(view.tool);
     this.object.traverse((o) => {
       o.userData.ownerNodeId = view.ownerNodeId;
@@ -121,7 +137,9 @@ export class Humanoid {
     this.time += dt;
     this.phase += dt * walkPhaseRate(speed);
     this.yaw = smoothAngle(this.yaw, facingTarget(this.mode, this.vx, this.vz, this.yaw), dt);
-    this.rig.update(motionOf(speed, airborne, this.phase, this.time, this.seated ? 0 : this.vy), dt);
+    const motion = motionOf(speed, airborne, this.phase, this.time, this.seated ? 0 : this.vy);
+    if (this.carrying) motion.carrying = true;
+    this.rig.update(motion, dt);
     this.applyYaw();
   }
 
@@ -170,7 +188,7 @@ export class Humanoid {
   private applyFall(progress: number | undefined): void {
     const p = progress ?? 0;
     this.body.rotation.z = p * (Math.PI / 2);
-    this.body.position.y = -p * 0.32 * this.body.scale.y;
+    this.body.position.y = this.lift - p * 0.32 * this.body.scale.y;
   }
 
   private applyYaw(): void {

@@ -9,6 +9,7 @@ import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
+import type { StageFigure, StageTheme } from './stage-theme';
 
 const SUN_WITH_SHADOWS = 2;
 const SKY_WITH_SHADOWS = 0.8;
@@ -32,7 +33,8 @@ type Entry =
       color: string;
     }
   | { type: 'vehicle'; figure: VehicleFigure; model: string }
-  | { type: 'portal'; figure: PortalFigure };
+  | { type: 'portal'; figure: PortalFigure }
+  | { type: 'stage'; figure: StageFigure; role: string };
 
 /** Length along x, head along z, resting on its side: yaw a quarter turn, then lay the long axis down. */
 const LYING_POSE = new THREE.Quaternion()
@@ -52,6 +54,7 @@ function styleOf(e: EntityView): string {
 
 /** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
+  if (entry.type === 'stage') return false; // decided by the role, see sync
   if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
   if (entry.type === 'block') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === 'box';
   if (entry.type === 'look') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === entry.style;
@@ -87,8 +90,14 @@ export class SceneView {
   private readonly raycaster = new THREE.Raycaster();
   private mode: ViewMode = '2d-side';
 
-  constructor() {
+  /** `stage` dresses the scene with a themed look (the puzzle game); without it the scene is the plain editor look. */
+  constructor(private readonly stage: StageTheme | null = null) {
     this.scene.background = new THREE.Color(0xe6e8ec);
+    if (stage) {
+      this.sky.color.set(stage.light.sky);
+      this.sky.groundColor.set(stage.light.ground);
+      this.sun.color.set(stage.light.sun);
+    }
     this.scene.add(this.sky);
     const { sun } = this;
     sun.position.set(6, 12, 8);
@@ -115,8 +124,38 @@ export class SceneView {
     for (const entry of this.entries.values()) {
       if (entry.type === 'character') entry.figure.setMode(mode);
     }
-    // Portals are drawn differently per view; they are rebuilt on the next sync.
-    for (const [id, entry] of [...this.entries]) if (entry.type === 'portal') this.removeEntry(id, entry);
+    // Portals and stage props are drawn differently per view; they are rebuilt on the next sync.
+    for (const [id, entry] of [...this.entries]) if (entry.type === 'portal' || entry.type === 'stage') this.removeEntry(id, entry);
+  }
+
+  /** Items riding on a character, by item id: the stage draws them at the figure's scale instead of the box position. */
+  private findCarried(entities: readonly EntityView[]): Map<string, EntityView> {
+    const out = new Map<string, EntityView>();
+    for (const holder of entities) {
+      if (holder.kind !== 'character' || !holder.visible || holder.carriedHeight === undefined) continue;
+      const topY = holder.position.y + holder.size.y / 2 + holder.carriedHeight / 2 + 0.025;
+      for (const it of entities) {
+        if (it.kind !== 'item' || !it.visible || it.inHand) continue;
+        const near = Math.abs(it.position.x - holder.position.x) < 0.02 && Math.abs(it.position.z - holder.position.z) < 0.02;
+        if (near && Math.abs(it.position.y - topY) < 0.05) out.set(it.id, holder);
+      }
+    }
+    return out;
+  }
+
+  /** A carried item as the stage draws it: lifted with the bigger figure, or held out front by the legs robot. */
+  private carriedView(item: EntityView, holder: EntityView): EntityView {
+    const k = this.stage?.characterScale ?? 1;
+    const offset = this.stage?.carryOffset ?? { reach: 0, height: 0 };
+    const floor = holder.position.y - holder.size.y / 2;
+    if (resolveLook(holder.look) !== 'robot-legs') {
+      return { ...item, position: { ...item.position, y: item.position.y + (k - 1) * holder.size.y } };
+    }
+    const f = holder.facing ?? { x: 1, z: 0 };
+    return {
+      ...item,
+      position: { x: holder.position.x + f.x * offset.reach, y: floor + offset.height + item.size.y / 2, z: holder.position.z + f.z * offset.reach },
+    };
   }
 
   /** Create / update / remove objects so they match the entity list. `dt` drives character animation. */
@@ -125,18 +164,29 @@ export class SceneView {
     // Car and truck models have closed cabs: a seated driver would poke through the roof, so it is hidden. Bikes stay open.
     const closedCabs = new Set<string>();
     for (const e of entities) if (e.kind === 'vehicle' && (e.vehicle?.model === 'car' || e.vehicle?.model === 'truck')) closedCabs.add(e.id);
+    const stage = this.stage;
+    stage?.observe(entities);
+    const carried = stage ? this.findCarried(entities) : null;
+    const hidden = new Set<string>();
     for (const e of entities) {
+      if (!e.visible) hidden.add(e.id);
       // A tool in hand is drawn on its holder's figure, not as a separate object.
       if (!e.visible || e.inHand) continue;
       seen.add(e.id);
+      const role = stage ? stage.roleOf(e, this.mode) : null;
       let entry = this.entries.get(e.id);
-      if (entry && !matches(entry, e)) {
+      if (entry && (entry.type === 'stage' ? entry.role !== role : role !== null || !matches(entry, e))) {
         this.removeEntry(e.id, entry);
         entry = undefined;
       }
       if (!entry) {
-        entry = this.createEntry(e);
+        entry = this.createEntry(e, role, entities);
         this.entries.set(e.id, entry);
+      }
+      if (entry.type === 'stage') {
+        const holder = carried?.get(e.id);
+        entry.figure.update(holder ? this.carriedView(e, holder) : e, dt);
+        continue;
       }
       if (entry.type === 'vehicle') {
         entry.figure.update(e);
@@ -196,7 +246,13 @@ export class SceneView {
       mesh.updateMatrixWorld();
     }
     for (const [id, entry] of this.entries) {
-      if (!seen.has(id)) this.removeEntry(id, entry);
+      if (seen.has(id)) continue;
+      // A hidden door or star finishes its exit animation before it goes.
+      if (entry.type === 'stage' && entry.figure.fadeOut && hidden.has(id)) {
+        if (entry.figure.fadeOut(dt)) this.removeEntry(id, entry);
+      } else {
+        this.removeEntry(id, entry);
+      }
     }
     this.healthBars.sync(entities);
   }
@@ -211,7 +267,17 @@ export class SceneView {
     return this.colliderFrames.shown;
   }
 
-  private createEntry(e: EntityView): Entry {
+  private createEntry(e: EntityView, role: string | null, all: readonly EntityView[]): Entry {
+    if (role !== null && this.stage) {
+      const figure = this.stage.create(role, e, all, this.mode);
+      if (figure) {
+        figure.object.traverse((o) => {
+          o.userData.ownerNodeId = e.ownerNodeId;
+        });
+        this.group.add(figure.object);
+        return { type: 'stage', figure, role };
+      }
+    }
     if (e.kind === 'vehicle') {
       const figure = new VehicleFigure(e.vehicle?.model ?? 'car', e.color);
       castShadows(figure.object);
@@ -220,6 +286,7 @@ export class SceneView {
     }
     if (e.kind === 'character') {
       const figure = new Humanoid(e.color, this.mode, e.look);
+      if (this.stage) figure.setStageLook(this.stage.characterScale, true);
       castShadows(figure.object);
       this.group.add(figure.object);
       return { type: 'character', figure, look: figure.look };
@@ -263,7 +330,10 @@ export class SceneView {
   }
 
   private removeEntry(id: string, entry: Entry): void {
-    if (entry.type === 'portal') {
+    if (entry.type === 'stage') {
+      this.group.remove(entry.figure.object);
+      entry.figure.dispose();
+    } else if (entry.type === 'portal') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'vehicle') {
