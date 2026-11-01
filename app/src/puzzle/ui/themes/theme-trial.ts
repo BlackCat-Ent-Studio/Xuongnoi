@@ -1,7 +1,6 @@
 /**
- * TEMPORARY THEME TRIAL. Lets the user compare three candidate looks (A, B, C) on the real levels.
- * Remove this file, the floating switcher, `themes/` and the two hook-up lines in puzzle-main.ts / level-screen.ts
- * once one look is chosen. With nothing chosen ("—") the page keeps its original look.
+ * Puzzle page looks. The user chose A "Xưởng gỗ ấm áp" as the default (2026-11-01) and asked to keep B and C
+ * available. The floating A·B·C switcher stays until a settings screen offers the choice.
  */
 import { h } from '../../../editor/dom';
 import { buildBackdrop, THEME_IDS, type ThemeId } from './backdrops';
@@ -10,6 +9,8 @@ import './theme-trial.css';
 export type { ThemeId } from './backdrops';
 
 const STORAGE_KEY = 'xuongnoi.puzzle.themeTrial';
+/** The look used when the player has not picked one. */
+export const DEFAULT_THEME: ThemeId = 'a';
 const NAMES: Record<ThemeId, string> = { a: 'Xưởng gỗ ấm áp', b: 'Đồi cỏ trời xanh', c: 'Đêm sao dịu' };
 
 let current: ThemeId | null = null;
@@ -23,9 +24,9 @@ function asTheme(value: string | null | undefined): ThemeId | null {
 
 function readStored(): ThemeId | null {
   try {
-    return asTheme(localStorage.getItem(STORAGE_KEY));
+    return asTheme(localStorage.getItem(STORAGE_KEY)) ?? DEFAULT_THEME;
   } catch {
-    return null; // storage blocked: behave like nothing chosen
+    return DEFAULT_THEME; // storage blocked: use the default look
   }
 }
 
@@ -68,17 +69,17 @@ export function initThemeTrial(): void {
   const param = new URLSearchParams(location.search).get('theme');
   const fromUrl = asTheme(param);
   if (fromUrl) store(fromUrl);
-  else if (param !== null) store(null); // ?theme=none (or anything else) goes back to the original look
-  apply(fromUrl ?? (param !== null ? null : readStored()));
+  apply(fromUrl ?? readStored());
 
   const bar = h('div', 'pz-theme-switch');
   bar.setAttribute('role', 'radiogroup');
   bar.setAttribute('aria-label', 'Thử giao diện (tạm thời)');
   const buttons = new Map<ThemeId | null, HTMLButtonElement>();
-  const options: Array<[ThemeId | null, string, string]> = [
-    [null, '—', 'Giao diện gốc'],
-    ...THEME_IDS.map((id): [ThemeId, string, string] => [id, id.toUpperCase(), `${id.toUpperCase()}: ${NAMES[id]}`]),
-  ];
+  const options: Array<[ThemeId, string, string]> = THEME_IDS.map((id): [ThemeId, string, string] => [
+    id,
+    id.toUpperCase(),
+    `${id.toUpperCase()}: ${NAMES[id]}`,
+  ]);
   for (const [id, label, title] of options) {
     const btn = h('button', 'pz-theme-opt', label);
     btn.type = 'button';
