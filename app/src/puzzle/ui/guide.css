@@ -37,7 +37,7 @@
 .pz-guide.bye.tip .pz-bubble { pointer-events: auto; cursor: pointer; }
 
 /* the task box makes room for the cat while the guide leads; calls to the cat stay above the dim */
-.pz-screen.guiding .pz-task { visibility: hidden; }
+.pz-screen.guiding .pz-task, .pz-screen.mascot-on .pz-task { visibility: hidden; }
 .pz-screen.guiding .pz-toast { z-index: 13; }
 
 /* "↻ Hướng dẫn" under the HUD, opposite the view toggle */

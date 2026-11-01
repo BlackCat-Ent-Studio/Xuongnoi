@@ -110,6 +110,8 @@ export function createGuide(opts: GuideOptions): Guide {
     root.classList.toggle('hinting', !!flags.hinting);
     root.classList.toggle('bye', !!flags.bye || !!flags.tip);
     root.classList.toggle('tip', !!flags.tip);
+    // The cat's bubble sits where the task box is: hide the task while the cat talks (hint, tip, guide).
+    screen.classList.toggle('mascot-on', on);
     const key = String(on);
     if (key !== shownKey) mascot.setVisible(on);
     shownKey = key;
