@@ -1,4 +1,4 @@
-/* Theme B "Đồi cỏ trời xanh": blue sky, pastel hills, cream panels, sunny buttons (temporary theme trial).
+/* Theme B "Đồi cỏ trời xanh": blue sky, pastel hills, cream panels, sunny buttons.
    The board stays a deep leaf green (not the preview's pale green) so the yellow and pink wires keep their contrast. */
 .pz-bg-b { background: linear-gradient(#8fd0f7 0%, #c4e9fb 42%, #f4fbf0 82%); --span: 130; }
 .pz-bg-stage.pz-bg-b { --span: 64; }

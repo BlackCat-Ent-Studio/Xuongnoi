@@ -1,4 +1,4 @@
-/* Theme A "Xưởng gỗ ấm áp": warm wood, cream panels, honey buttons, sage accents (temporary theme trial).
+/* Theme A "Xưởng gỗ ấm áp": warm wood, cream panels, honey buttons, sage accents.
    Backdrop layers first, then the page and level chrome. */
 .pz-bg-a { background: #3a2417; }
 .a-wall { inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(var(--u) * 11.9), rgba(25, 12, 5, .3) calc(var(--u) * 11.9) calc(var(--u) * 12.1)), linear-gradient(#7d5230, #55351e 70%, #3f2616); }
@@ -28,21 +28,8 @@
   --a-cream: #fff1d0; --a-cream-2: #f3dcaa; --a-cream-3: #d9bd84; --a-amber: #a85c0c; --a-sage: #93b58c;
   background: radial-gradient(120% 60% at 50% 0, #4a2e1b, #241510 70%);
 }
-.pz-theme-a .pz-list-head h1 { color: var(--a-cream); text-shadow: 0 3px 0 #5a3418; }
-.pz-theme-a .pz-lede { color: var(--a-cream-3); }
 .pz-theme-a .pz-link { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 4px 0 var(--a-wood-0), inset 0 0 0 2px var(--a-wood-4); }
 .pz-theme-a .pz-link:hover { background: var(--a-wood-4); }
-.pz-theme-a .pz-card { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: 3px solid var(--a-wood-4); box-shadow: 0 5px 0 var(--a-wood-1), 0 10px 14px -8px rgba(0, 0, 0, .6); }
-.pz-theme-a a.pz-card:hover { background: linear-gradient(#fff8e0, #f8e6b8); }
-.pz-theme-a a.pz-card:active { box-shadow: 0 2px 0 var(--a-wood-1); }
-.pz-theme-a .pz-card.is-locked { opacity: .85; background: linear-gradient(#cdb592, #b79e78); }
-.pz-theme-a .pz-num { background: var(--a-sage); color: var(--a-wood-1); border: 3px solid #4a2d1a; box-shadow: 0 3px 0 #2d1a0e, inset 0 2px 0 rgba(255, 255, 255, .35); }
-.pz-theme-a .is-locked .pz-num { background: #8b7358; color: #3a2a1c; }
-.pz-theme-a .pz-view { color: #7a5a3a; }
-.pz-theme-a .pz-list-page .pz-stars i { background: rgba(59, 35, 20, .22); }
-.pz-theme-a .pz-list-page .pz-stars i.on { background: #e8891a; }
-.pz-theme-a .pz-empty { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: 3px solid var(--a-wood-4); }
-.pz-theme-a .pz-empty p { color: #7a5a3a; }
 
 .pz-theme-a .pz-phone { background: #1a0f09; }
 @media (min-width: 1000px) and (min-height: 560px) { .pz-theme-a .pz-phone { box-shadow: 0 2cqw 5cqw -1cqw rgba(0, 0, 0, .7), inset 0 0 0 .3cqw #4a2e1b; } }

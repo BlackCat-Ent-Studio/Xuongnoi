@@ -1,4 +1,4 @@
-/* Theme C "Đêm sao dịu": indigo-to-plum night, glowing moon, lamp-yellow buttons (temporary theme trial). */
+/* Theme C "Đêm sao dịu": indigo-to-plum night, glowing moon, lamp-yellow buttons. */
 .pz-bg-c { background: linear-gradient(180deg, #14103f 0%, #2a1b5e 48%, #5a2f7c 82%, #a8508f 100%); }
 .c-sky { inset: 0; }
 .c-moon { right: calc(var(--u) * 8); top: 12%; width: calc(var(--u) * 13); aspect-ratio: 1; border-radius: 50%; background: radial-gradient(circle at 36% 38%, rgba(214, 190, 140, .55) 0 4%, transparent 4.5%), radial-gradient(circle at 62% 60%, rgba(214, 190, 140, .5) 0 6%, transparent 6.5%), radial-gradient(circle at 58% 26%, rgba(214, 190, 140, .4) 0 3%, transparent 3.5%), radial-gradient(circle at 40% 36%, #fffbe6 0, #fff2c7 55%, #f5d98c 100%); }
