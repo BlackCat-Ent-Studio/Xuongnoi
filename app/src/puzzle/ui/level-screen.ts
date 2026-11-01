@@ -11,9 +11,10 @@ import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, ne
 import { countHint, extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
+import { ICONS, roundButton } from './shell-kit';
 import { playSfx } from './sound';
-import { buildBackdrop } from './themes/backdrops'; // TEMPORARY theme trial
-import { currentTheme, onThemeChange, type ThemeId } from './themes/theme-trial';
+import { buildBackdrop } from './themes/theme';
+import { showWinCard } from './win-card';
 
 /** The one game view of the page. It is created once and moved into whichever level screen is open. */
 export interface StageHost {
@@ -25,12 +26,14 @@ export interface StageHost {
 
 export interface LevelScreenContext {
   level: PuzzleLevel;
-  /** The next level when there is one (opens after a win). */
+  /** The next level when there is one (opens after a win); null after the last level, where the win leads to the ending. */
   next: PuzzleLevel | null;
   stage: StageHost;
   progress: () => ProgressMap;
   saveProgress(map: ProgressMap): void;
   go(hash: string): void;
+  /** Opens the settings dialog on top of `host`. */
+  openSettings(host: HTMLElement): void;
 }
 
 type Phase = 'edit' | 'run' | 'ended';
@@ -80,12 +83,15 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   stageSec.setAttribute('aria-label', T.stageAria);
   const back = h('button', 'pz-back', '‹');
   back.type = 'button';
-  back.setAttribute('aria-label', T.backToList);
-  back.title = T.backToList;
+  back.setAttribute('aria-label', T.backToMap);
+  back.title = T.backToMap;
   const badge = h('span', 'pz-badge', T.levelBadge(level.order, level.title));
+  badge.title = badge.textContent ?? '';
   const hudStars = starsEl(starsOf(ctx.progress(), level.id), 'pz-stars');
   const hud = h('div', 'pz-hud');
-  hud.append(back, badge, hudStars);
+  const gear = roundButton(ICONS.gear, T.settingsAria, () => ctx.openSettings(screen));
+  gear.classList.add('pz-hud-gear');
+  hud.append(back, badge, hudStars, gear);
   const task = h('div', 'pz-task');
   const taskHead = h('button', 'pz-task-head');
   taskHead.type = 'button';
@@ -111,15 +117,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   replayBtn.hidden = !guided || forcedGuide;
   replayBtn.setAttribute('aria-label', T.guideReplayAria);
   stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
-  // TEMPORARY theme trial: the chosen theme's animated backdrop sits behind the transparent stage canvas.
-  let stageBackdrop: HTMLElement | null = null;
-  function syncStageBackdrop(theme: ThemeId | null): void {
-    stageBackdrop?.remove();
-    stageBackdrop = theme ? buildBackdrop(theme, 'stage') : null;
-    if (stageBackdrop) stageSec.prepend(stageBackdrop);
-  }
-  syncStageBackdrop(currentTheme());
-  const offTheme = onThemeChange(syncStageBackdrop);
+  // The look's animated backdrop sits behind the transparent stage canvas.
+  stageSec.prepend(buildBackdrop('stage'));
 
   /** What the camera does now: the player's remembered choice, else the whole scene (also while the game runs). */
   function effectiveView(): StageView {
@@ -236,6 +235,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     board.freezeEnergy();
     setPhase('ended');
     if (result !== 'win') {
+      playSfx('lose');
       board.toast(message || T.loseDefault);
       loseTimer = window.setTimeout(backToEdit, RESET_AFTER_LOSE_MS);
       return;
@@ -246,31 +246,19 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     ctx.saveProgress(withBest(ctx.progress(), level.id, stars));
     hudStars.replaceWith(starsEl(starsOf(ctx.progress(), level.id), 'pz-stars'));
     guide?.celebrate();
+    playSfx('win');
     showWin(stars);
   }
 
   function showWin(stars: 1 | 2 | 3): void {
-    const card = h('div', 'pz-win-card');
-    card.append(h('h3', '', T.winTitle), starsEl(stars, 'pz-stars big'), h('p', '', T.winNote(stars, extraHints(level, hintsUsed))));
-    const row = h('div', 'pz-win-row');
-    const retry = h('button', 'pz-btn ghost', T.winRetry);
-    retry.type = 'button';
-    retry.addEventListener('click', backToEdit);
-    const list = h('button', 'pz-btn ghost', T.winList);
-    list.type = 'button';
-    list.addEventListener('click', () => ctx.go('#/'));
-    row.append(retry);
-    if (ctx.next) row.append(list);
-    const nextBtn = h('button', 'pz-btn run', ctx.next ? T.winNext : T.winList);
-    nextBtn.type = 'button';
-    nextBtn.addEventListener('click', () => ctx.go(ctx.next ? `#/level/${ctx.next.id}` : '#/'));
-    card.append(nextBtn, row);
-    const overlay = h('div', 'pz-win');
-    overlay.setAttribute('role', 'dialog');
-    overlay.setAttribute('aria-label', T.winTitle);
-    overlay.append(card);
-    screen.append(overlay);
-    nextBtn.focus();
+    showWinCard({
+      screen,
+      stars,
+      note: T.winNote(stars, extraHints(level, hintsUsed)),
+      onNext: () => ctx.go(ctx.next ? `#/level/${ctx.next.id}` : '#/end'),
+      onRetry: backToEdit,
+      onMap: () => ctx.go('#/map'),
+    });
   }
 
   /** Ends a run that went past the level's time limit (counted in game time, so a paused game does not run out). */
@@ -282,6 +270,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       stage.view.stop();
       board?.freezeEnergy();
       setPhase('ended');
+      playSfx('lose');
       board?.toast(T.timeout);
       loseTimer = window.setTimeout(backToEdit, RESET_AFTER_LOSE_MS);
       return;
@@ -314,7 +303,11 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit' });
 
   // ----- buttons -----
-  runBtn.addEventListener('click', () => (phase === 'edit' ? run() : backToEdit()));
+  runBtn.addEventListener('click', () => {
+    playSfx(phase === 'edit' ? 'run' : 'stop');
+    if (phase === 'edit') run();
+    else backToEdit();
+  });
   resetBtn.addEventListener('click', () => {
     if (phase !== 'edit') return;
     board?.reset();
@@ -339,7 +332,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     board?.reset();
     guide.start(true);
   });
-  back.addEventListener('click', () => ctx.go('#/'));
+  back.addEventListener('click', () => ctx.go('#/map'));
 
   // The stage canvas was sized while it sat elsewhere; fit it to its new home, then draw the first scene.
   requestAnimationFrame(() => {
@@ -361,7 +354,6 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   }
 
   return () => {
-    offTheme();
     guide?.dispose();
     guide = null;
     window.clearTimeout(previewTimer);

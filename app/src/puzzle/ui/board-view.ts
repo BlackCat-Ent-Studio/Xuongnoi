@@ -28,6 +28,7 @@ import {
   type PortEnd,
 } from './board-state';
 import { PUZZLE_UI_TEXT } from './puzzle-text';
+import { playSfx } from './sound';
 
 import '../../editor/graph/graph.css';
 import '../../editor/graph/node-cards.css';
@@ -230,6 +231,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
         if (running) return;
         positions.delete(node.id);
         state = removePiece(state, node.id);
+        playSfx('unwire');
         if (picked?.node === node.id) picked = null;
         closePopover();
         changed();
@@ -376,6 +378,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     state = { ...probe, placed: probe.placed.map((p) => (p === placed ? { ...p, node: { ...p.node, pos: logical } } : p)) };
     picked = null;
     closePopover();
+    playSfx('pick');
     changed();
   }
 
@@ -410,6 +413,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     if (res.ok) {
       state = res.state;
       picked = null;
+      playSfx('wire');
       toast(PUZZLE_TEXT.joined);
       changed();
     } else {
@@ -456,6 +460,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     if (hit?.dataset.wire) {
       if (hit.dataset.locked) return toast(PUZZLE_TEXT.lockedWire);
       state = removeWire(state, hit.dataset.wire);
+      playSfx('unwire');
       toast(PUZZLE_TEXT.removed);
       return changed();
     }

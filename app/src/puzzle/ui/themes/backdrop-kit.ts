@@ -1,4 +1,4 @@
-/** Shared helpers for the themed animated backdrops (temporary theme trial). */
+/** Shared helpers for the themed animated backdrops. */
 
 /** Where a backdrop is shown: behind the whole page (level list, around the phone) or behind the stage canvas. */
 export type BackdropKind = 'page' | 'stage';

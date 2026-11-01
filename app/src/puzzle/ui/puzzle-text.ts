@@ -1,8 +1,11 @@
 import type { ViewMode } from '../../engine/types';
 
+/** Name of the game, shown on the title screen (placeholder until the final name is chosen). */
+export const GAME_NAME = 'Xưởng Bot';
+
 /** Vietnamese strings of the puzzle game. */
 export const PUZZLE_UI_TEXT = {
-  pageTitle: 'Xưởng Bot giải đố',
+  pageTitle: `${GAME_NAME} · giải đố`,
   listTitle: 'Xưởng Bot giải đố',
   listLede: 'Nối dây cho bot làm đúng đề bài. Giải xong một màn thì mở màn tiếp theo.',
   backToEditor: '← Xưởng Nối',
@@ -52,5 +55,36 @@ export const PUZZLE_UI_TEXT = {
   viewToFollow: 'Theo nhân vật',
   rotate: 'Xoay ngang điện thoại để chơi',
   notFound: 'Không tìm thấy màn này',
+  subtitle: 'Nối dây, bot tự chạy!',
+  play: 'Chơi',
+  settings: 'Cài đặt',
+  settingsAria: 'Mở cài đặt',
+  mapTitle: 'Chọn màn',
+  backToTitle: 'Về màn mở đầu',
+  backToMap: 'Về bản đồ',
+  mapAria: 'Bản đồ các màn',
+  starTotalAria: (got: number, max: number): string => `Đã có ${got} trên ${max} sao`,
+  stopAria: (n: number, title: string, state: 'done' | 'next' | 'locked', stars: number): string =>
+    state === 'locked' ? `Màn ${n}: ${title} (đang khoá)` : `Màn ${n}: ${title}, ${stars} trên 3 sao`,
+  nextFlag: 'Chơi!',
+  catSays: 'Nối dây nào!',
+  catName: 'Mèo Mun',
+  settingsTitle: 'Cài đặt',
+  music: 'Nhạc',
+  sfx: 'Tiếng động',
+  resetProgress: 'Xoá tiến độ',
+  resetAsk: 'Xoá hết sao và đóng lại các màn?',
+  resetAskNote: 'Việc này không hoàn lại được.',
+  resetYes: 'Xoá hết',
+  resetNo: 'Thôi',
+  resetDone: 'Đã xoá. Bắt đầu lại từ màn 1.',
+  toEditor: 'Mở Xưởng Nối',
+  closeSettings: 'Đóng',
+  winMap: 'Bản đồ',
+  endTitle: 'Giỏi quá!',
+  endLede: 'Bạn đã giải xong tất cả các màn.',
+  endStars: (got: number, max: number): string => `${got}/${max} sao`,
+  endToMap: 'Về bản đồ',
+  modeTag: { '2d-side': '2D', '2d-top': '2D', '3d': '3D' } satisfies Record<ViewMode, string>,
   viewBadge: { '2d-side': '2D ngang', '2d-top': '2D từ trên', '3d': '3D' } satisfies Record<ViewMode, string>,
 } as const;
