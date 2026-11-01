@@ -10,7 +10,7 @@ import { robotStyle } from './robot';
 import { robotLegsStyle } from './robot-legs';
 import { robotWheelStyle } from './robot-wheel';
 
-export { PartKit, localYRange, type StyleDef, type StyleRig } from './kit';
+export { PartKit, localYRange, type FaceControl, type StyleDef, type StyleRig } from './kit';
 
 export const DEFAULT_LOOK = 'human';
 

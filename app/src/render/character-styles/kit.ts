@@ -19,6 +19,27 @@ export interface StyleRig {
    * the engine skips its per-frame box-corner height fitting. Needed for rounded parts, whose boxes overshoot.
    */
   readonly selfFitting?: boolean;
+  /** Present on looks with an expressive face (talking mouth, forced blink, happy eyes). */
+  readonly face?: FaceControl;
+}
+
+/** Face controls of an expressive look. Values are applied on the next `update`. */
+export interface FaceControl {
+  /** Mouth openness 0 (closed smile) .. 1 (wide round mouth); clamped. */
+  setMouthOpen(v: number): void;
+  /** Force the eye closure 0 (open) .. 1 (shut), or `null` to go back to natural blinking; clamped. */
+  setBlink(v: number | null): void;
+  /** Big sparkling eyes 0 (normal) .. 1 (happy); eased in over a few frames; clamped. */
+  setHappy(v: number): void;
+  /** Extra head rotation in radians (nod = x, turn = y, tilt = z), added to the idle pose. */
+  setHeadPose(x: number, y: number, z: number): void;
+  /** Flick one ear: `side` -1 or 1, `amount` 0..1 (a full flick is a short dip and return). */
+  setEarFlick(side: -1 | 1, amount: number): void;
+  /**
+   * Head-and-chest portrait in figure units (root space): where to look and how tall a slice to show.
+   * Lets a camera frame the face without knowing the model's proportions.
+   */
+  readonly portrait: { readonly y: number; readonly height: number };
 }
 
 /**

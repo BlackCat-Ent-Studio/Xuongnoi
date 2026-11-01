@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { smoothValue } from '../cameras';
 import type { Motion } from '../character-motion';
-import type { PartKit, StyleDef, StyleRig, ToonOptions } from './kit';
+import { createBlinker } from './blink';
+import type { FaceControl, PartKit, StyleDef, StyleRig, ToonOptions } from './kit';
 import { ellipsoid, fitFigure, instance, mixHex, part, scaledHex } from './toon-parts';
 
 /** "Mèo Mun" chibi: black kitten with an oversized head, big blue eyes, a red collar with an X tag; toon shaded. */
@@ -127,6 +128,7 @@ export const catChibiStyle: StyleDef = {
       navy: toon(NAVY, 0.5),
       whisker: toon('#d9d2e3', 0.2),
       mouth: toon('#ff9fb0', 0.1),
+      mouthIn: toon('#7a2a40'),
       vertex: kit.toon('#ffffff', { ramp: RAMP, rim: 0.9, rimColor: RIM, vertexColors: true }),
     };
 
@@ -218,7 +220,7 @@ export const catChibiStyle: StyleDef = {
 
     const outerEar = kit.own(earShape(0.5, 0.82, 0.09, 12));
     const innerEar = kit.own(earShape(0.33, 0.58, 0.06, 10));
-    for (const side of [-1, 1]) {
+    const ears = ([-1, 1] as const).map((side) => {
       const pivot = new THREE.Group();
       pivot.position.set(side * 0.68, 0.6, -0.02);
       pivot.rotation.set(0.1, 0, -side * 0.38);
@@ -228,7 +230,8 @@ export const catChibiStyle: StyleDef = {
       instance(shape, innerEar, M.earPink, [0, 0.08, 0.2]);
       pivot.add(shape);
       head.add(pivot);
-    }
+      return { pivot, side };
+    });
 
     const eyes = ([-1, 1] as const).map((side) => {
       const anchor = new THREE.Group();
@@ -240,9 +243,21 @@ export const catChibiStyle: StyleDef = {
       ellipsoid(kit, ball, M.pupil, [0.115, 0.21, 0.11], [0, 0, 0.045], [9, 6]);
       ellipsoid(kit, ball, M.hi, [0.085, 0.095, 0.05], [-0.09, 0.13, 0.115], [9, 6]);
       ellipsoid(kit, ball, M.hi, [0.04, 0.04, 0.03], [0.09, -0.15, 0.115], [9, 6]);
+      // Extra sparkles, shown only with the happy eyes.
+      const sparkles = (
+        [
+          [0.1, 0.12, 0.035],
+          [-0.12, -0.05, 0.03],
+          [0.02, -0.22, 0.03],
+        ] as const
+      ).map(([x, y, s]) => {
+        const m = ellipsoid(kit, ball, M.hi, [s, s, s * 0.7], [x, y, 0.12], [9, 6]);
+        m.visible = false;
+        return m;
+      });
       anchor.add(ball);
       head.add(anchor);
-      return ball;
+      return { ball, sparkles };
     });
 
     const nose = new THREE.Group();
@@ -252,8 +267,15 @@ export const catChibiStyle: StyleDef = {
     const mouth = new THREE.Group();
     placeOnHead(mouth, 0, -0.43, 0.012);
     const mouthArc = kit.own(new THREE.TorusGeometry(0.075, 0.019, 6, 10, Math.PI));
-    for (const s of [-1, 1]) instance(mouth, mouthArc, M.mouth, [s * 0.075, 0, 0], [0, 0, Math.PI]);
-    part(kit, mouth, new THREE.CapsuleGeometry(0.017, 0.07, 2, 5), M.mouth, [0, 0.1, 0]);
+    const smile = [
+      ...([-1, 1] as const).map((s) => instance(mouth, mouthArc, M.mouth, [s * 0.075, 0, 0], [0, 0, Math.PI])),
+      part(kit, mouth, new THREE.CapsuleGeometry(0.017, 0.07, 2, 5), M.mouth, [0, 0.1, 0]),
+    ];
+    // Round open mouth (ring + dark inside), swapped in for the smile while talking.
+    const oRing = part(kit, mouth, new THREE.TorusGeometry(0.06, 0.02, 6, 12), M.mouth, [0, -0.02, 0]);
+    const oFill = ellipsoid(kit, mouth, M.mouthIn, [0.06, 0.07, 0.02], [0, -0.02, 0], [9, 6]);
+    oRing.visible = false;
+    oFill.visible = false;
     head.add(mouth);
 
     const whiskerGeo = kit.own(new THREE.CylinderGeometry(0.012, 0.01, 0.75, 4));
@@ -272,7 +294,7 @@ export const catChibiStyle: StyleDef = {
       }
     }
 
-    const { squash } = fitFigure(root, model, { headroom: HEADROOM, reachShare: 0.8 });
+    const { squash, scale } = fitFigure(root, model, { headroom: HEADROOM, reachShare: 0.8 });
 
     // Pose state.
     let walk = 0;
@@ -282,8 +304,19 @@ export const catChibiStyle: StyleDef = {
     let land = 0;
     let wasAir = false;
     let tailPhase = 0;
-    let blinkAt = 2;
-    let blinkT = -1;
+    const blinker = createBlinker();
+
+    // Face state (set through `face`, eased and applied in `apply`).
+    let mouthOpen = 0;
+    let forcedBlink: number | null = null;
+    let happyTarget = 0;
+    let happy = 0;
+    let headX = 0;
+    let headY = 0;
+    let headZ = 0;
+    let flickSide = 0;
+    let flick = 0;
+    const clamp01 = (v: number): number => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 
     const apply = (time: number, sw: number, blink: number, tailAngle: number): void => {
       const breath = Math.sin(time * 2.2) * 0.02;
@@ -295,7 +328,7 @@ export const catChibiStyle: StyleDef = {
       squash.scale.set(1 / Math.sqrt(sy), sy, 1 / Math.sqrt(sy));
       torso.scale.set(1, 1 + breath, 1);
       head.position.y = HEAD_Y + breath * 0.84;
-      head.rotation.z = -sw * 0.04 * walk;
+      head.rotation.set(headX, headY, -sw * 0.04 * walk + headZ);
 
       const swing = sw * 0.8 * walk;
       for (const { arm, side } of arms) {
@@ -307,13 +340,58 @@ export const catChibiStyle: StyleDef = {
 
       tail.rotation.y = Math.sin(tailAngle) * (0.3 + 0.05 * walk);
       tail.rotation.x = -0.05;
-      for (const eye of eyes) eye.scale.set(1, Math.max(0.08, 1 - 0.9 * blink), 1);
+      const big = 1 + 0.3 * happy;
+      const lid = Math.max(0.08, 1 - 0.9 * blink);
+      const sparkle = happy > 0.5;
+      for (const { ball, sparkles } of eyes) {
+        ball.scale.set(big, big * lid, big);
+        for (const s of sparkles) s.visible = sparkle;
+      }
+
+      const open = mouthOpen > 0.18;
+      for (const m of smile) m.visible = !open;
+      oRing.visible = open;
+      oFill.visible = open;
+      if (open) {
+        const k = 0.55 + 0.75 * mouthOpen;
+        oRing.scale.setScalar(k);
+        oFill.scale.set(0.06 * k, 0.07 * k, 0.02);
+      }
+
+      for (const { pivot, side } of ears) {
+        const f = side === flickSide ? Math.sin(flick * Math.PI) : 0;
+        pivot.rotation.set(0.1 - f * 0.1, 0, -side * (0.38 + f * 0.14));
+      }
+    };
+    // Model-unit view of the head and chest: look at y 2.12, 3.54 tall (as the approved talking preview).
+    const portrait = { y: -0.5 + scale * (2.12 + model.position.y), height: 3.54 * scale };
+    const face: FaceControl = {
+      setMouthOpen(v) {
+        mouthOpen = clamp01(v);
+      },
+      setBlink(v) {
+        forcedBlink = v === null ? null : clamp01(v);
+      },
+      setHappy(v) {
+        happyTarget = clamp01(v);
+      },
+      setHeadPose(x, y, z) {
+        headX = Number.isFinite(x) ? x : 0;
+        headY = Number.isFinite(y) ? y : 0;
+        headZ = Number.isFinite(z) ? z : 0;
+      },
+      setEarFlick(side, amount) {
+        flickSide = side;
+        flick = clamp01(amount);
+      },
+      portrait,
     };
     apply(0, 0, 0, 0);
 
     return {
       root,
       selfFitting: true,
+      face,
       update(m: Motion, dt: number): void {
         const d = Math.min(dt, 0.05);
         if (wasAir && !m.airborne) land = 1;
@@ -324,18 +402,9 @@ export const catChibiStyle: StyleDef = {
         armUp = smoothValue(armUp, m.airborne ? (m.vy >= 0 ? 0.9 : 0.6) : 0, d, 12);
         sy = smoothValue(sy, 1 - 0.18 * land, d, 16);
 
-        let blink = 0;
-        if (blinkT < 0 && m.time > blinkAt) blinkT = 0;
-        if (blinkT >= 0) {
-          blinkT += d;
-          const q = blinkT / 0.17;
-          if (q >= 1) {
-            blinkT = -1;
-            blinkAt = m.time + 2 + Math.random() * 3;
-          } else {
-            blink = Math.sin(q * Math.PI);
-          }
-        }
+        happy = smoothValue(happy, happyTarget, d, 9);
+        const auto = blinker.step(m.time, d);
+        const blink = forcedBlink ?? auto;
         tailPhase += d * (1.3 + 2.2 * walk);
         apply(m.time, Math.sin(m.phase), blink, tailPhase);
       },
