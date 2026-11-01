@@ -15,7 +15,7 @@ export const level01: PuzzleLevel | null = {
       {
         id: 'bot',
         kind: 'character',
-        params: { position: { x: -9, y: 1, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
+        params: { position: { x: -9, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
         pos: { x: 30, y: 40 },
       },
       {
