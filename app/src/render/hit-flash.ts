@@ -9,7 +9,7 @@ export function applyHitFlash(root: THREE.Object3D, amount: number): void {
     if (!(o instanceof THREE.Mesh)) return;
     const mats: THREE.Material[] = Array.isArray(o.material) ? o.material : [o.material];
     for (const m of mats) {
-      if (m instanceof THREE.MeshLambertMaterial) m.emissive.copy(FLASH_COLOR).multiplyScalar(k * 0.8);
+      if (m instanceof THREE.MeshLambertMaterial || m instanceof THREE.MeshToonMaterial) m.emissive.copy(FLASH_COLOR).multiplyScalar(k * 0.8);
     }
   });
 }

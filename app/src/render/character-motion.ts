@@ -22,13 +22,15 @@ export interface Motion {
   phase: number;
   /** Seconds since the figure appeared; drives idle animation. */
   time: number;
+  /** Smoothed vertical speed in units/s (positive = rising); lets a look tell a jump from a fall. */
+  vy: number;
 }
 
 export function walkPhaseRate(speed: number): number {
   return 6 + Math.max(0, speed) * 1.2;
 }
 
-export function motionOf(speed: number, airborne: boolean, phase: number, time: number): Motion {
+export function motionOf(speed: number, airborne: boolean, phase: number, time: number, vy = 0): Motion {
   return {
     speed,
     amp: clamp(speed / WALK_SPEED_FULL, 0, 1),
@@ -36,6 +38,7 @@ export function motionOf(speed: number, airborne: boolean, phase: number, time: 
     airborne,
     phase,
     time,
+    vy,
   };
 }
 
