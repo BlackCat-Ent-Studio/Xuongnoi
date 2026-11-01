@@ -13,6 +13,7 @@ import {
   placePiece,
   removePiece,
   removeWire,
+  separateBoxes,
   setParam,
   toAnswer,
   trayLeft,
@@ -159,5 +160,30 @@ describe('findFreeSpot', () => {
     const spot = findFreeSpot([{ x: 0, y: 0, w: 400, h: 200 }], { w: 100, h: 60 }, { w: 400, h: 200 });
     expect(spot.x).toBeGreaterThanOrEqual(0);
     expect(spot.y).toBeLessThanOrEqual(140);
+  });
+});
+
+describe('separateBoxes', () => {
+  const area = { w: 400, h: 300 };
+  const overlap = (a: { x: number; y: number }, b: { x: number; y: number }, w: number, h: number) => a.x < b.x + w && b.x < a.x + w && a.y < b.y + h && b.y < a.y + h;
+
+  it('pushes overlapping cards apart and keeps them inside the area', () => {
+    const items = [
+      { id: 'a', x: 10, y: 10, w: 120, h: 80 },
+      { id: 'b', x: 20, y: 30, w: 120, h: 80 },
+      { id: 'c', x: 390, y: 10, w: 120, h: 80 },
+    ];
+    const { pos, fits } = separateBoxes(items, area);
+    expect(fits).toBe(true);
+    const [a, b, c] = [pos.get('a')!, pos.get('b')!, pos.get('c')!];
+    expect(overlap(a, b, 120, 80)).toBe(false);
+    expect(c.x + 120).toBeLessThanOrEqual(area.w);
+  });
+
+  it('keeps cards that do not collide where they are, and reports when there is no room', () => {
+    const { pos } = separateBoxes([{ id: 'a', x: 50, y: 40, w: 100, h: 60 }], area);
+    expect(pos.get('a')).toEqual({ x: 50, y: 40 });
+    const crowded = Array.from({ length: 12 }, (_, i) => ({ id: `n${i}`, x: 0, y: 0, w: 200, h: 120 }));
+    expect(separateBoxes(crowded, area).fits).toBe(false);
   });
 });

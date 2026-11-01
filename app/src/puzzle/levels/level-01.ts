@@ -15,13 +15,13 @@ export const level01: PuzzleLevel | null = {
       {
         id: 'bot',
         kind: 'character',
-        params: { position: { x: -9, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
+        params: { name: 'Bot', position: { x: -9, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
         pos: { x: 30, y: 40 },
       },
       {
         id: 'flag',
         kind: 'block',
-        params: { position: { x: 9, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#ef4444', type: 'pickup' },
+        params: { name: 'Cờ', position: { x: 9, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#ef4444', type: 'pickup' },
         pos: { x: 800, y: 40 },
       },
       { id: 'touch-flag', kind: 'touch', params: {}, pos: { x: 410, y: 380 } },

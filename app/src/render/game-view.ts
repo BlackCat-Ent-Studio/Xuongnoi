@@ -47,6 +47,10 @@ export function createGameView(): GameView {
   let width = 1;
   let height = 1;
 
+  let stageFit: { top: number; bottom: number; pitch?: number } | null = null;
+  const EDITOR_BACKDROP = 0xe6e8ec;
+  const STAGE_BACKDROP = 0xbfeedd;
+
   let mode: ViewMode = '2d-side';
   let world: World | null = null;
   let runtime: Runtime | null = null;
@@ -66,9 +70,12 @@ export function createGameView(): GameView {
 
   function ensureRig(m: ViewMode): void {
     sceneView.setMode(m);
-    if (rig.mode === m) return;
-    rig = new CameraRig(m);
-    rig.resize(width, height);
+    if (rig.mode !== m) {
+      rig = new CameraRig(m);
+      rig.resize(width, height);
+    }
+    rig.setFit(stageFit);
+    sceneView.setBackdrop(stageFit ? STAGE_BACKDROP : EDITOR_BACKDROP);
   }
 
   function draw(dt: number, follow: boolean): void {
@@ -363,7 +370,7 @@ export function createGameView(): GameView {
     showPreview(graph: Graph, m: ViewMode): void {
       resetSession();
       ensureRig(m);
-      sceneView.setGrid(m, true);
+      sceneView.setGrid(m, !stageFit);
       if (resetOnNextPreview) {
         resetOnNextPreview = false;
         rig.resetView();
@@ -403,6 +410,16 @@ export function createGameView(): GameView {
       playing = false;
       runtime = null;
       hud?.hideEnd();
+    },
+
+    setStageFit(fit): void {
+      stageFit = fit;
+      rig.setFit(fit);
+      sceneView.setBackdrop(fit ? STAGE_BACKDROP : EDITOR_BACKDROP);
+      if (!playing) {
+        sceneView.setGrid(mode, !fit);
+        redrawStatic();
+      }
     },
 
     resetCamera(): void {

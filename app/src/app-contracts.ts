@@ -42,6 +42,12 @@ export interface GameView {
   onGameEnd(cb: (result: GameResult, message: string) => void): void;
   /** Fired when the user presses "Chơi lại" on the end overlay. */
   onRestartRequest(cb: () => void): void;
+  /**
+   * Puzzle stage look: no editor grid, mint backdrop, and a fixed camera that frames the whole scene inside the
+   * part of the canvas not covered by overlays (`top` / `bottom` = covered fractions of the height; `pitch` = fixed
+   * 3D tilt). Same framing before and during play. Null returns to the editor look.
+   */
+  setStageFit(fit: { top: number; bottom: number; pitch?: number } | null): void;
   /** Re-fit canvas after layout changes. */
   resize(): void;
 }
