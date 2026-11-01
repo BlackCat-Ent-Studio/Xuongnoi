@@ -66,15 +66,20 @@ body.pz-in-level #puzzle { display: grid; place-items: center; padding: 0; }
 .pz-badge { font-family: var(--display); font-weight: 800; font-size: max(13px, 1.9cqw); background: var(--ink-dark); color: var(--ink); padding: .5cqw 1.3cqw; border-radius: 99px; box-shadow: 0 .4cqw 0 #0e0a26; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .pz-hud .pz-stars { margin-left: auto; gap: .4cqw; flex: none; }
 .pz-hud .pz-stars i { width: max(16px, 2.8cqw); height: max(16px, 2.8cqw); }
-.pz-task { position: absolute; left: 1.6cqw; right: 1.6cqw; bottom: 1.6cqw; max-height: 45%; overflow: auto; background: #fffdf4; color: var(--ink-dark); border-radius: 1.6cqw; padding: 1cqw 1.4cqw; font-size: max(12px, 1.65cqw); line-height: 1.35; box-shadow: 0 .5cqw 0 #c8b98a; }
-.pz-task b { font-family: var(--display); font-size: max(13px, 1.8cqw); display: block; color: #8a5a00; }
+.pz-task { position: absolute; left: 1.6cqw; right: 1.6cqw; bottom: 1.6cqw; max-height: 38%; overflow: auto; background: #fffdf4; color: var(--ink-dark); border-radius: 1.6cqw; padding: .3cqw 1.4cqw .8cqw; font-size: max(12px, 1.5cqw); line-height: 1.3; box-shadow: 0 .5cqw 0 #c8b98a; }
+.pz-task-head { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 40px; padding: 0; border: 0; background: none; cursor: pointer; color: #8a5a00; }
+.pz-task-head b { font-family: var(--display); font-size: max(13px, 1.8cqw); }
+.pz-task-caret { font-size: max(14px, 1.9cqw); transition: transform .15s; }
+.pz-task.is-closed { padding-bottom: .3cqw; }
+.pz-task.is-closed .pz-task-body { display: none; }
+.pz-task.is-closed .pz-task-caret { transform: rotate(180deg); }
+.pz-task-body { margin: 0; }
 
 /* ---------- board ---------- */
 .pz-board-host { position: relative; min-width: 0; }
 .pz-board { --g-bg: var(--board); --g-dot: var(--board-dot); position: relative; cursor: default; background-size: 2.4cqw 2.4cqw; background-image: radial-gradient(var(--board-dot) .18cqw, transparent .2cqw); }
 .pz-board-host.pz-board { overflow: hidden; }
-.pz-board .wc-wire-hit { stroke-width: 26; }
-.pz-board .wc-wire { stroke-width: 3; }
+.pz-board .wc-wire-hit { stroke-width: 22; }
 .pz-board .wc-node .wc-dot { width: 15px; height: 15px; }
 .pz-board.wiring .wc-port.pick .wc-dot { transform: scale(1.5); box-shadow: 0 0 0 3px #fff; }
 .pz-board .wc-node-head { cursor: grab; touch-action: none; }

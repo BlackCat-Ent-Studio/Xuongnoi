@@ -101,6 +101,11 @@ export class SceneView {
     this.scene.add(this.group);
   }
 
+  /** Background colour behind the scene (the editor's light grey, or the puzzle stage's mint). */
+  setBackdrop(color: number): void {
+    this.scene.background = new THREE.Color(color);
+  }
+
   /** View mode decides how characters face; changing it drops existing figures' animation state. */
   setMode(mode: ViewMode): void {
     if (mode === this.mode) return;

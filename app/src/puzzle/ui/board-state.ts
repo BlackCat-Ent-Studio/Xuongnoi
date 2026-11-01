@@ -90,7 +90,10 @@ export function shownPortsOf(level: PuzzleLevel, nodeId: string): { in: Readonly
   return { in: new Set(s.in ?? []), out: new Set(s.out ?? []) };
 }
 
-/** A locked node that lists no ports at all is scenery (win-lose, floor...): it is not drawn. */
+/**
+ * Convention for level authors: a locked node listed in `shownPorts` with no ports (`{}`) is scenery (win-lose,
+ * floor, flag...) and is not drawn on the board; unlisted locked nodes show all their ports.
+ */
 export function isSceneryNode(level: PuzzleLevel, nodeId: string): boolean {
   const s = level.shownPorts?.[nodeId];
   return !!s && (s.in?.length ?? 0) === 0 && (s.out?.length ?? 0) === 0;
@@ -237,12 +240,52 @@ const overlaps = (a: Box, b: Box, gap: number): boolean => a.x < b.x + b.w + gap
  * without touching `taken`. Falls back to a cascade offset when the board is full.
  */
 export function findFreeSpot(taken: readonly Box[], size: { w: number; h: number }, area: { w: number; h: number }, gap = 14, step = 20): { x: number; y: number } {
+  const spot = tryFreeSpot(taken, size, area, gap, step);
+  if (spot) return spot;
+  const n = taken.length % 6;
+  return { x: Math.max(0, Math.min(area.w - size.w, 40 + n * 28)), y: Math.max(0, Math.min(area.h - size.h, 40 + n * 28)) };
+}
+
+/** Same scan as findFreeSpot, but null when nothing fits. */
+export function tryFreeSpot(taken: readonly Box[], size: { w: number; h: number }, area: { w: number; h: number }, gap = 14, step = 20): { x: number; y: number } | null {
   for (let y = gap; y + size.h <= area.h - gap; y += step) {
     for (let x = gap; x + size.w <= area.w - gap; x += step) {
       const box = { x, y, w: size.w, h: size.h };
       if (!taken.some((t) => overlaps(box, t, gap))) return { x, y };
     }
   }
-  const n = taken.length % 6;
-  return { x: Math.max(0, Math.min(area.w - size.w, 40 + n * 28)), y: Math.max(0, Math.min(area.h - size.h, 40 + n * 28)) };
+  return null;
+}
+
+export interface Item extends Box {
+  id: string;
+}
+
+/**
+ * Keeps every card inside `area` and apart from the others. Cards are visited top to bottom; one that lands on
+ * an earlier card slides down below it, and when that leaves the area it takes the first free spot instead.
+ * `fits` is false when some card found no room (the caller then tries smaller cards).
+ */
+export function separateBoxes(items: readonly Item[], area: { w: number; h: number }, gap = 8): { pos: Map<string, { x: number; y: number }>; fits: boolean } {
+  const pos = new Map<string, { x: number; y: number }>();
+  const placed: Box[] = [];
+  let fits = true;
+  const order = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+  for (const it of order) {
+    let x = Math.max(0, Math.min(it.x, area.w - it.w));
+    let y = Math.max(0, Math.min(it.y, area.h - it.h));
+    for (let guard = 0; guard < 40; guard++) {
+      const hit = placed.find((p) => overlaps({ x, y, w: it.w, h: it.h }, p, gap));
+      if (!hit) break;
+      y = hit.y + hit.h + gap;
+    }
+    if (y + it.h > area.h || placed.some((p) => overlaps({ x, y, w: it.w, h: it.h }, p, gap))) {
+      const spot = tryFreeSpot(placed, { w: it.w, h: it.h }, area, gap, 8);
+      if (spot) ({ x, y } = spot);
+      else fits = false;
+    }
+    pos.set(it.id, { x, y });
+    placed.push({ x, y, w: it.w, h: it.h });
+  }
+  return { pos, fits };
 }
