@@ -131,7 +131,7 @@ describe('level 2 (cua-kho)', () => {
       nodes: sol.nodes.filter((n) => n.id === 'p-touch'),
       wires: [
         ...sol.wires.filter((w) => w.id === 's1' || w.id === 's2'),
-        { id: 'x1', from: { node: 'p-touch', port: 'touching' }, to: { node: 'door-in', port: 'a' } },
+        { id: 'x1', from: { node: 'p-touch', port: 'touching' }, to: { node: 'door', port: 'hiddenWhile' } },
       ],
     };
     expect(runLevel(level02!, noLatch).outcome).toBe('timeout');
@@ -164,11 +164,15 @@ describe('level 3 (nhat-sao)', () => {
 
 describe('level 4 (hai-nut-mot-cua)', () => {
   const sol = level04!.solution;
-  it('the "Và" piece needs both sensors: feeding it only one sensor never opens the door', () => {
+  it('one sensor alone is not enough: a robot is left behind', () => {
     expect(runLevel(level04!, without(sol, 's5')).outcome).toBe('timeout');
     expect(runLevel(level04!, without(sol, 's6')).outcome).toBe('timeout');
   });
-  it('both bots end up standing on their own buttons when the door opens', () => {
+  it('both robots are locked with the approved looks', () => {
     expect(level04!.base.nodes.filter((n) => n.kind === 'character').map((n) => n.params.look)).toEqual(['robot-legs', 'robot-wheel']);
+  });
+  it('the door is wired only through its hidden-while input', () => {
+    expect(level04!.shownPorts!.door).toEqual({ in: ['hiddenWhile'], out: [] });
+    expect(sol.wires.some((w) => w.to.node === 'door' && w.to.port === 'hiddenWhile')).toBe(true);
   });
 });

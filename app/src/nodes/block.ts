@@ -32,6 +32,8 @@ interface BlockState {
   pick?: number;
   hide: EdgeState;
   show: EdgeState;
+  /** Last "Ẩn khi bật" value seen; the block only reacts when it changes. */
+  whilePrev?: boolean;
   hidden: boolean;
   /** Signed belt speed from the params, or null when the block is no conveyor. */
   belt?: number | null;
@@ -42,13 +44,14 @@ export const blockNode: NodeDef<BlockState> = {
   label: 'Hộp',
   category: 'object',
   description:
-    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất, bật "Hiện lại" để hộp hiện ra lại (đứng chỗ cũ). "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí.',
+    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất, bật "Hiện lại" để hộp hiện ra lại (đứng chỗ cũ). "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn khi bật" cho hộp ẩn đi khi tín hiệu bật và hiện lại khi tín hiệu tắt (làm cửa mở theo tín hiệu); để trống thì không ảnh hưởng. Lần đổi nào đến sau cùng thì thắng: "Ẩn đi"/"Hiện lại" vẫn dùng được, nhưng khi "Ẩn khi bật" đổi giá trị thì nó quyết định.',
   inputs: [
     { id: 'hide', type: 'bool', label: 'Ẩn đi' },
     { id: 'show', type: 'bool', label: 'Hiện lại' },
     { id: 'pick', type: 'number', label: 'Đổi màu (1, 2 hoặc 3)' },
     { id: 'run', type: 'bool', label: 'Chạy băng', default: true },
     { id: 'reverse', type: 'bool', label: 'Đảo chiều' },
+    { id: 'hiddenWhile', type: 'bool', label: 'Ẩn khi bật' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Hộp' },
@@ -135,7 +138,7 @@ export const blockNode: NodeDef<BlockState> = {
       ...(belt ? { belt: { axis: belt.axis, walls: belt.walls } } : {}),
       ...bodySpec(params),
     });
-    return { id, pick: 0, hide: { prev: false }, show: { prev: false }, hidden: false, belt: belt ? belt.speed : null };
+    return { id, pick: 0, hide: { prev: false }, show: { prev: false }, whilePrev: false, hidden: false, belt: belt ? belt.speed : null };
   },
   evaluate(ctx, i, params, s) {
     const pick = Math.round(asNum(i.pick));
@@ -153,6 +156,19 @@ export const blockNode: NodeDef<BlockState> = {
     if (risingEdge(s.show, asBool(i.show)) && s.hidden) {
       s.hidden = false;
       ctx.world.show(s.id);
+    }
+    // Follows the signal: on hides, off shows again. Acts only when the value changes, so an unwired input does nothing;
+    // evaluated last, so when it changes on the same tick as a pulse, the signal wins.
+    const hiddenWhile = asBool(i.hiddenWhile);
+    if (hiddenWhile !== (s.whilePrev ?? false)) {
+      s.whilePrev = hiddenWhile;
+      if (hiddenWhile && !s.hidden) {
+        s.hidden = true;
+        ctx.world.hide(s.id);
+      } else if (!hiddenWhile && s.hidden) {
+        s.hidden = false;
+        ctx.world.show(s.id);
+      }
     }
     if (s.belt != null) {
       ctx.world.setBeltSpeed(s.id, asBool(i.run) ? (asBool(i.reverse) ? -s.belt : s.belt) : 0);

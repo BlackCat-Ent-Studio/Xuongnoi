@@ -13,7 +13,7 @@ const starNodes: GraphNode[] = STARS.flatMap((s, k): GraphNode[] => [
   {
     id: s.id,
     kind: 'block',
-    params: { position: { x: s.x, y: 0.5, z: s.z }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
+    params: { name: `Ngôi sao ${k + 1}`, position: { x: s.x, y: 0.5, z: s.z }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
     pos: { x: 30, y: 20 + k * 100 },
   },
   { id: `touch-${s.id}`, kind: 'touch', params: {}, pos: { x: 230, y: 20 + k * 130 } },
@@ -27,7 +27,7 @@ const starWires: Wire[] = STARS.flatMap((s, k): Wire[] => [
 
 /**
  * Level 3 (nhat-sao): count three star pickups, then open the gate. Stars are blocks of type "pickup" so the cat
- * walks through them. The gate follows the compare signal (locked "Hoặc"/"Không" pair re-shows it when the signal drops)
+ * walks through them. The gate's "Ẩn khi bật" follows the compare signal (it closes again when the signal drops)
  * and the compare is "bằng", so only the exact number 3 keeps it open for good; the tray constant starts at 5.
  */
 export const level03: PuzzleLevel | null = {
@@ -35,7 +35,7 @@ export const level03: PuzzleLevel | null = {
   order: 3,
   title: 'Nhặt sao',
   task: 'Mèo tự đi qua 3 ngôi sao rồi tới cổng. Cổng chỉ mở khi mèo đã nhặt đủ 3 sao. Hãy đếm sao và đặt số là 3.',
-  hint: 'Gom 3 tín hiệu "Vừa chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Hằng số 3, rồi nối vào "Ẩn đi" của cổng.',
+  hint: 'Gom 3 tín hiệu "Vừa chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Hằng số 3, rồi nối vào "Ẩn khi bật" của cổng.',
   mode: '2d-top',
   cast: [PUZZLE_LOOKS.catChibi],
   base: {
@@ -43,7 +43,7 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'cat',
         kind: 'character',
-        params: { position: { x: -8, y: 0.5, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
+        params: { name: 'Mèo nhỏ', position: { x: -8, y: 0.5, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
         pos: { x: 30, y: 400 },
       },
       {
@@ -64,18 +64,16 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'gate',
         kind: 'block',
-        params: { position: { x: 8, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 14 }, color: '#92400e', type: 'solid' },
+        params: { name: 'Cổng', position: { x: 8, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 14 }, color: '#92400e', type: 'solid' },
         pos: { x: 800, y: 30 },
       },
       {
         id: 'goal',
         kind: 'block',
-        params: { position: { x: 11, y: 0.5, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, color: '#22c55e', type: 'pickup' },
+        params: { name: 'Cờ đích', position: { x: 11, y: 0.5, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, color: '#22c55e', type: 'pickup' },
         pos: { x: 430, y: 400 },
       },
       { id: 'touch-goal', kind: 'touch', params: {}, pos: { x: 620, y: 400 } },
-      { id: 'gate-in', kind: 'or', params: {}, pos: { x: 620, y: 20 } },
-      { id: 'gate-back', kind: 'not', params: {}, pos: { x: 620, y: 150 } },
       {
         id: 'end',
         kind: 'win-lose',
@@ -91,9 +89,6 @@ export const level03: PuzzleLevel | null = {
       { id: 'b4', from: { node: 'cat', port: 'self' }, to: { node: 'touch-goal', port: 'a' } },
       { id: 'b5', from: { node: 'goal', port: 'self' }, to: { node: 'touch-goal', port: 'b' } },
       { id: 'b6', from: { node: 'touch-goal', port: 'touching' }, to: { node: 'end', port: 'win' } },
-      { id: 'b7', from: { node: 'gate-in', port: 'out' }, to: { node: 'gate', port: 'hide' } },
-      { id: 'b8', from: { node: 'gate-in', port: 'out' }, to: { node: 'gate-back', port: 'in' } },
-      { id: 'b9', from: { node: 'gate-back', port: 'out' }, to: { node: 'gate', port: 'show' } },
     ],
   },
   shownPorts: {
@@ -105,9 +100,7 @@ export const level03: PuzzleLevel | null = {
     'touch-star-1': { in: [], out: ['began'] },
     'touch-star-2': { in: [], out: ['began'] },
     'touch-star-3': { in: [], out: ['began'] },
-    gate: { in: [], out: [] },
-    'gate-in': { in: ['a'], out: [] },
-    'gate-back': { in: [], out: [] },
+    gate: { in: ['hiddenWhile'], out: [] },
     goal: { in: [], out: [] },
     'touch-goal': { in: [], out: [] },
     end: { in: [], out: [] },
@@ -137,7 +130,7 @@ export const level03: PuzzleLevel | null = {
       { id: 's5', from: { node: 'p-or2', port: 'out' }, to: { node: 'p-count', port: 'up' } },
       { id: 's6', from: { node: 'p-count', port: 'value' }, to: { node: 'p-cmp', port: 'a' } },
       { id: 's7', from: { node: 'p-const', port: 'value' }, to: { node: 'p-cmp', port: 'b' } },
-      { id: 's8', from: { node: 'p-cmp', port: 'out' }, to: { node: 'gate-in', port: 'a' } },
+      { id: 's8', from: { node: 'p-cmp', port: 'out' }, to: { node: 'gate', port: 'hiddenWhile' } },
     ],
   },
 };
