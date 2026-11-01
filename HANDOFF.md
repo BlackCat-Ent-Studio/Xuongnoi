@@ -1,11 +1,21 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-11-01 03:10
+# HANDOFF — GameBuilder "Xưởng Nối" — 2026-11-01 15:00
 
 ## 1. Goal
 An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
 - Claude writes all the code; the user only playtests and decides.
 - It is NOT a clone of Game Builder Garage. Never read `D:\gbg\` and never mirror its nodes, UI, lessons or text. Generic genre mechanics are fine.
 
-## 2. Current state (main = 2f223eb, 1496 tests green, tsc clean, build OK)
+## 1b. NEW 2026-11-01 afternoon — "Xưởng Bot giải đố" puzzle game (in main)
+- **Open:** http://localhost:5173/giai-do.html (also Xưởng Nối menu Trợ giúp → "Chơi giải đố"). Decision record: `plans/reports/brainstorm-261101-1357-puzzle-game-report.md`; agent reports `plans/reports/fullstack-261101-14*-*.md`.
+- **Runs on the real engine.** A level (`app/src/puzzle/types.ts` PuzzleLevel) = locked `base` graph (must contain a win-lose node; 3D levels lock a camera node) + `shownPorts` (locked node with `{}` = hidden scenery) + `tray` + `editable` params + `par` + `timeLimit` + reference `solution`. `run-level.ts` plays it headless (tests prove every solution wins and wrong answers don't). Node `pos` uses a logical 1000×560 board; cards stay readable, only positions scale.
+- **8 levels** `app/src/puzzle/levels/level-01..08.ts` (one file each, `PUZZLE_LEVELS` in index.ts): 1 Bot đầu tiên, 2 Cửa kho, 3 Nhặt sao (2D ngang/từ trên) · 4 Hai nút một cửa (two robots take turns on buttons → teaches Hoặc) · 5 Đủ ba thùng, 6 Né lính gác, 7 Cầu nhấp nháy, 8 Xưởng tổng hợp (3D). Locked objects carry `params.name` (card subtitle).
+- **UI** `app/src/puzzle/ui/**` + `app/giai-do.html` + `src/puzzle-main.ts` (Vite multi-page): level list with unlock + stars (localStorage `xuongnoi.puzzle.progress`), tap-port-then-tap-port wiring, real board cards + wire energy reused, tray, hint, editable param editor, CHẠY/DỪNG, win overlay. Stage: play look, overview fit before run, camera follows the main character on run, toggle "Toàn cảnh / Theo nhân vật" (`GameView.setStageFit`). Dev fixture only via `?fixture`.
+- **4 new character looks** (render/character-styles): robot-wheel (Chắn bùn mount), robot-legs, cat-chibi, cat-quad; in Nhân vật "Kiểu dáng". Cats are always black (`fixedColor`); robots tint with "Màu" (levels use #7cc4f0).
+- **4 new sensors** (logic, now 54 kinds): speed-sensor, ahead-sensor, vision-sensor (new WorldApi `lineOfSight`, `world/line-of-sight.ts`), color-sensor (matches the block's colour against its Màu 1/2/3). Handbook pages + lesson "Giác quan cho bot" (`course-pack-e.ts`, end of Bot chapter).
+- **Hộp input `hiddenWhile` "Ẩn khi bật"** (last input): level-follow hide/show, acts only on change; unwired = old behaviour.
+- **Not verified:** real phone touch, real GPU FPS, no human has played the 8 levels; vision cone gizmo not drawn in the editor; level 7 still uses the old locked Hoặc/"Hiện lại" bridge trick (could move to "Ẩn khi bật"); 3D characters still small on phone overview.
+
+## 2. Current state before 2026-11-01 afternoon (main was 2f223eb, 1496 tests)
 - **Run:** `cd app; npm install; npm run dev` → http://localhost:5173 (strict port 5173).
 - **Gates (in app/):** `npx vitest run --testTimeout 120000` (~4–7 min; slow when agents run), `npx tsc --noEmit -p .`, `npm run build`.
 - **Stack:** Vite 8, TypeScript strict (noUncheckedIndexedAccess, noUnused*), three.js, vitest (node env, no DOM tests), plain DOM, no UI framework.
@@ -66,7 +76,7 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
   - Node style + electricity: https://claude.ai/artifact/LK9fmQK5QZGmug49tPxZ9d (local copy `plans/ui-mockups/node-style-preview/index.html`)
   - Group demo: https://claude.ai/artifact/4U1nFMPX9o7pDvNSVVTqaf
 
-## 2b. Design previews (NOT in the game yet) — 2026-11-01
+## 2b. Design previews — 2026-11-01 (characters and puzzle mode are now IN the game, see 1b; previews stay as reference)
 Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only from code primitives + toon material, no files). Local copies under `plans/ui-mockups/` (gitignored); published as private artifacts. Each page has orbit view, motion/expression buttons, a tuning panel and "Sao chép thông số" (copy JSON).
 
 | Artifact | Link | Local file | State |
@@ -182,6 +192,9 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
   - zone goods match is exact
   - wagons fold back on ping-pong routes
   - no character step-up
+
+- **Agents flip line endings.** Twice on 2026-11-01 a merge rewrote whole CRLF files to LF (game-view.ts, app-contracts.ts; and my own `sed` on level-05.ts). After every merge compare `git diff HEAD~1 --stat` with `--stat -w`; if they differ, convert back byte-safely with node (`replace(/\r?\n/g,'\r\n')`). Git Bash `sed`/pipes strip `\r`.
+- **Puzzle levels:** block "Ẩn đi" is a one-shot pulse — use "Ẩn khi bật" for doors that follow a signal. Prove every level headless (solution wins, each wire removed fails) before looking at the UI.
 
 - **Pack model lessons:**
   - FBX from Unity: texture path points at the author's PC; vertex colours must be dropped (Unity ignores them, glTF multiplies them → a black pizzeria); units are cm (scale 0.01); mergeVertices shrinks GLB ~3×.
