@@ -13,6 +13,7 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
 - **4 new character looks** (render/character-styles): robot-wheel (Chắn bùn mount), robot-legs, cat-chibi, cat-quad; in Nhân vật "Kiểu dáng". Cats are always black (`fixedColor`); robots tint with "Màu" (levels use #7cc4f0).
 - **4 new sensors** (logic, now 54 kinds): speed-sensor, ahead-sensor, vision-sensor (new WorldApi `lineOfSight`, `world/line-of-sight.ts`), color-sensor (matches the block's colour against its Màu 1/2/3). Handbook pages + lesson "Giác quan cho bot" (`course-pack-e.ts`, end of Bot chapter).
 - **Hộp input `hiddenWhile` "Ẩn khi bật"** (last input): level-follow hide/show, acts only on change; unwired = old behaviour.
+- **Visual tutorial (16:30):** `puzzle/ui/guide.ts` + `guide-script.ts` + `guide.css`: Mèo Mun mascot (`mascot.ts` = engine cat-chibi in a round frame, talks: typing + mouth flap + head nod, natural blinks; face API `rig.face` in cat-chibi.ts, `blink.ts`), spotlight, tapping hand, dotted ghost wire; steps generated from `level.solution`; levels 1–7, auto only on first open (`xuongnoi.puzzle.guideSeen`), "↻ Hướng dẫn" replays; "?" = ghost of next missing wire (costs a star except while the guide leads). Approved preview: https://claude.ai/artifact/3zeovA1nDaLFRd9oY37cgR. In-game chibi blinks naturally. Hẹn giờ has "Tự lặp lại". Level 7 redone (timer repeat → latch toggle → go + Không → bridge Ẩn khi bật); a test now replays every level's solution through the real `canConnect` (self-wires were rejected by the board but not by runLevel). Level 7 can still be won without the bridge wire (bridge stays shown).
 - **Not verified:** real phone touch, real GPU FPS, no human has played the 8 levels; vision cone gizmo not drawn in the editor; level 7 still uses the old locked Hoặc/"Hiện lại" bridge trick (could move to "Ẩn khi bật"); 3D characters still small on phone overview.
 
 ## 2. Current state before 2026-11-01 afternoon (main was 2f223eb, 1496 tests)
@@ -193,6 +194,7 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
   - wagons fold back on ping-pong routes
   - no character step-up
 
+- **Worktree cleanup order (slipped once 2026-11-01):** delete the junctions FIRST, then `git worktree remove`. Git stopped at the junction that time and nothing was lost, but don't rely on it. Also kill leftover agent dev servers (`netstat -ano | grep :52xx`).
 - **Agents flip line endings.** Twice on 2026-11-01 a merge rewrote whole CRLF files to LF (game-view.ts, app-contracts.ts; and my own `sed` on level-05.ts). After every merge compare `git diff HEAD~1 --stat` with `--stat -w`; if they differ, convert back byte-safely with node (`replace(/\r?\n/g,'\r\n')`). Git Bash `sed`/pipes strip `\r`.
 - **Puzzle levels:** block "Ẩn đi" is a one-shot pulse — use "Ẩn khi bật" for doors that follow a signal. Prove every level headless (solution wins, each wire removed fails) before looking at the UI.
 
