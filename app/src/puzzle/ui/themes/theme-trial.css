@@ -1,0 +1,6 @@
+/* TEMPORARY theme-trial switcher: floating "— A B C" control, top-right of the page. Remove with the trial. */
+.pz-theme-switch { position: fixed; top: 8px; right: 8px; z-index: 1000; display: flex; gap: 2px; padding: 3px; border-radius: 99px; background: rgba(20, 16, 40, .82); box-shadow: 0 2px 8px rgba(0, 0, 0, .4); }
+.pz-theme-opt { min-width: 40px; min-height: 40px; padding: 0 10px; border: 0; border-radius: 99px; background: transparent; color: #f6f1ff; font: 800 16px/1 'Baloo 2', system-ui, sans-serif; cursor: pointer; }
+.pz-theme-opt:hover { background: rgba(255, 255, 255, .14); }
+.pz-theme-opt[aria-checked="true"] { background: #ffc93c; color: #241a4a; }
+.pz-theme-opt:focus-visible { outline: 3px solid #fff; outline-offset: 1px; }

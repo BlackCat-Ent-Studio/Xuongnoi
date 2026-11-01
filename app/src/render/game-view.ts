@@ -31,7 +31,12 @@ function ensureNodesRegistered(): void {
   nodesRegistered = true;
 }
 
-export function createGameView(): GameView {
+export interface GameViewOptions {
+  /** Transparent canvas on the stage (puzzle page): whatever sits behind the canvas shows around the scene. The editor leaves this off. */
+  transparentStage?: boolean;
+}
+
+export function createGameView(options: GameViewOptions = {}): GameView {
   const sceneView = new SceneView();
   const pacer = createSimPacer(createAccumulator());
   const pauseCallbacks: Array<(paused: boolean) => void> = [];
@@ -50,6 +55,7 @@ export function createGameView(): GameView {
   let stageFit: { top: number; bottom: number; pitch?: number; follow?: string | null } | null = null;
   const EDITOR_BACKDROP = 0xe6e8ec;
   const STAGE_BACKDROP = 0xbfeedd;
+  const backdropFor = (stage: boolean): number | null => (!stage ? EDITOR_BACKDROP : options.transparentStage ? null : STAGE_BACKDROP);
 
   let mode: ViewMode = '2d-side';
   let world: World | null = null;
@@ -75,7 +81,7 @@ export function createGameView(): GameView {
       rig.resize(width, height);
     }
     rig.setFit(stageFit);
-    sceneView.setBackdrop(stageFit ? STAGE_BACKDROP : EDITOR_BACKDROP);
+    sceneView.setBackdrop(backdropFor(stageFit !== null));
   }
 
   function draw(dt: number, follow: boolean): void {
@@ -327,13 +333,14 @@ export function createGameView(): GameView {
       container = el;
       if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
       try {
-        renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: options.transparentStage === true });
       } catch (err) {
         console.error(err);
         el.textContent = TEXT_VI.previewError;
         container = null;
         return;
       }
+      if (options.transparentStage) renderer.setClearColor(0x000000, 0);
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
       const canvas = renderer.domElement;
@@ -415,7 +422,7 @@ export function createGameView(): GameView {
     setStageFit(fit): void {
       stageFit = fit;
       rig.setFit(fit);
-      sceneView.setBackdrop(fit ? STAGE_BACKDROP : EDITOR_BACKDROP);
+      sceneView.setBackdrop(backdropFor(fit !== null));
       if (!playing) {
         sceneView.setGrid(mode, !fit);
         redrawStatic();

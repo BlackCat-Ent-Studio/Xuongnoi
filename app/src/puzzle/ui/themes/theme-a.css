@@ -1,0 +1,86 @@
+/* Theme A "Xưởng gỗ ấm áp": warm wood, cream panels, honey buttons, sage accents (temporary theme trial).
+   Backdrop layers first, then the page and level chrome. */
+.pz-bg-a { background: #3a2417; }
+.a-wall { inset: 0; background: repeating-linear-gradient(90deg, transparent 0 calc(var(--u) * 11.9), rgba(25, 12, 5, .3) calc(var(--u) * 11.9) calc(var(--u) * 12.1)), linear-gradient(#7d5230, #55351e 70%, #3f2616); }
+.a-far { inset: calc(var(--u) * -2); animation: a-drift 16s ease-in-out infinite alternate; }
+.a-far svg { width: 100%; height: 100%; display: block; }
+.a-shade { inset: 0; background: rgba(35, 18, 8, .28); }
+.a-vig { inset: 0; background: radial-gradient(120% 110% at 50% 45%, transparent 45%, rgba(20, 9, 3, .6)); }
+.a-lamp { top: 0; width: 0; height: 0; transform-origin: 50% 0; animation: a-swing 6.5s ease-in-out infinite alternate; }
+.a-lamp svg { position: absolute; left: calc(var(--u) * -6); top: 0; width: calc(var(--u) * 12); height: calc(var(--u) * 15); overflow: visible; }
+.a-glow { position: absolute; left: calc(var(--u) * -38); top: calc(var(--u) * -4); width: calc(var(--u) * 76); height: calc(var(--u) * 68); background: radial-gradient(closest-side at 50% 28%, rgba(255, 205, 100, .5), rgba(255, 170, 70, .2) 55%, transparent); animation: a-flick 3.8s ease-in-out infinite alternate; }
+.a-mote { left: var(--x); top: var(--y); width: calc(var(--u) * var(--s)); height: calc(var(--u) * var(--s)); border-radius: 50%; background: #ffe2a0; opacity: 0; animation: a-mote var(--d) linear var(--t) infinite; }
+@keyframes a-drift { from { transform: translateX(calc(var(--u) * -.7)); } to { transform: translateX(calc(var(--u) * .7)); } }
+@keyframes a-swing { from { transform: rotate(-3.6deg); } to { transform: rotate(3.6deg); } }
+@keyframes a-flick { from { opacity: .82; } to { opacity: 1; } }
+@keyframes a-mote { 0% { opacity: 0; transform: translate3d(0, 0, 0); } 18% { opacity: .85; } 80% { opacity: .55; } 100% { opacity: 0; transform: translate3d(calc(var(--dx) * var(--u)), calc(var(--dy) * var(--u)), 0); } }
+/* behind the stage the wall is lighter so the level reads clearly */
+.pz-bg-stage.pz-bg-a { background: #d9b373; }
+.pz-bg-stage .a-wall { background: repeating-linear-gradient(90deg, transparent 0 calc(var(--u) * 11.9), rgba(90, 52, 24, .18) calc(var(--u) * 11.9) calc(var(--u) * 12.1)), linear-gradient(#f0d9a4, #dfbc7c 70%, #c99a5c); }
+.pz-bg-stage .a-far { opacity: .42; }
+.pz-bg-stage .a-shade { background: rgba(255, 230, 170, .12); }
+.pz-bg-stage .a-vig { background: radial-gradient(120% 110% at 50% 45%, transparent 55%, rgba(60, 28, 8, .35)); }
+
+.pz-theme-a {
+  --night: #241510; --board: #46301f; --board-dot: rgba(255, 214, 150, .24); --stage: #e9cd94;
+  --ink: #fff1d0; --ink-dark: #3b2314; --sun: #ffb938; --muted: #d9bd84;
+  --a-wood-0: #241510; --a-wood-1: #3a2417; --a-wood-2: #5a3a22; --a-wood-3: #7a4f2e; --a-wood-4: #a06b3c;
+  --a-cream: #fff1d0; --a-cream-2: #f3dcaa; --a-cream-3: #d9bd84; --a-amber: #a85c0c; --a-sage: #93b58c;
+  background: radial-gradient(120% 60% at 50% 0, #4a2e1b, #241510 70%);
+}
+.pz-theme-a .pz-list-head h1 { color: var(--a-cream); text-shadow: 0 3px 0 #5a3418; }
+.pz-theme-a .pz-lede { color: var(--a-cream-3); }
+.pz-theme-a .pz-link { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 4px 0 var(--a-wood-0), inset 0 0 0 2px var(--a-wood-4); }
+.pz-theme-a .pz-link:hover { background: var(--a-wood-4); }
+.pz-theme-a .pz-card { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: 3px solid var(--a-wood-4); box-shadow: 0 5px 0 var(--a-wood-1), 0 10px 14px -8px rgba(0, 0, 0, .6); }
+.pz-theme-a a.pz-card:hover { background: linear-gradient(#fff8e0, #f8e6b8); }
+.pz-theme-a a.pz-card:active { box-shadow: 0 2px 0 var(--a-wood-1); }
+.pz-theme-a .pz-card.is-locked { opacity: .85; background: linear-gradient(#cdb592, #b79e78); }
+.pz-theme-a .pz-num { background: var(--a-sage); color: var(--a-wood-1); border: 3px solid #4a2d1a; box-shadow: 0 3px 0 #2d1a0e, inset 0 2px 0 rgba(255, 255, 255, .35); }
+.pz-theme-a .is-locked .pz-num { background: #8b7358; color: #3a2a1c; }
+.pz-theme-a .pz-view { color: #7a5a3a; }
+.pz-theme-a .pz-list-page .pz-stars i { background: rgba(59, 35, 20, .22); }
+.pz-theme-a .pz-list-page .pz-stars i.on { background: #e8891a; }
+.pz-theme-a .pz-empty { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: 3px solid var(--a-wood-4); }
+.pz-theme-a .pz-empty p { color: #7a5a3a; }
+
+.pz-theme-a .pz-phone { background: #1a0f09; }
+@media (min-width: 1000px) and (min-height: 560px) { .pz-theme-a .pz-phone { box-shadow: 0 2cqw 5cqw -1cqw rgba(0, 0, 0, .7), inset 0 0 0 .3cqw #4a2e1b; } }
+.pz-theme-a .pz-screen { background: var(--a-wood-1); }
+.pz-theme-a .pz-back { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 .5cqw 0 var(--a-wood-0), inset 0 0 0 .3cqw var(--a-wood-4); }
+.pz-theme-a .pz-badge { background: var(--a-wood-1); color: var(--a-cream); border: .25cqw solid var(--a-wood-4); box-shadow: 0 .45cqw 0 var(--a-wood-0); }
+.pz-theme-a .pz-hud .pz-stars { background: rgba(36, 21, 16, .72); padding: .5cqw 1cqw; border-radius: 99px; }
+.pz-theme-a .pz-stars i { background: rgba(255, 241, 208, .22); }
+.pz-theme-a .pz-stars i.on { background: var(--sun); }
+.pz-theme-a .pz-viewtoggle { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 .4cqw 0 var(--a-wood-0), inset 0 0 0 .25cqw var(--a-wood-4); }
+.pz-theme-a .pz-replay { box-shadow: 0 .4cqw 0 var(--a-amber); }
+.pz-theme-a .pz-task, .pz-theme-a .pz-hint, .pz-theme-a .pz-win-card { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: .35cqw solid var(--a-wood-4); box-shadow: 0 .7cqw 0 var(--a-wood-1), 0 1.4cqw 2cqw -1cqw rgba(0, 0, 0, .6); }
+.pz-theme-a .pz-task-head, .pz-theme-a .pz-hint b, .pz-theme-a .pz-win-card h3 { color: var(--a-amber); }
+.pz-theme-a .pz-board { background-color: var(--board); box-shadow: inset .7cqw 0 1.4cqw rgba(0, 0, 0, .4); }
+.pz-theme-a .pz-toast { background: var(--a-wood-0); color: var(--a-cream); border-color: var(--sun); }
+.pz-theme-a .pz-btn.run { background: linear-gradient(#ffc95a, var(--sun)); color: var(--a-wood-1); border-radius: 1.6cqw; box-shadow: 0 .6cqw 0 var(--a-amber), 0 1.2cqw 1.6cqw -.6cqw rgba(0, 0, 0, .5); }
+.pz-theme-a .pz-btn.run.stop { background: #e0553f; color: var(--a-cream); box-shadow: 0 .6cqw 0 #8f2e1f; }
+.pz-theme-a .pz-btn.small { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 .5cqw 0 var(--a-wood-0), inset 0 0 0 .3cqw var(--a-wood-4); }
+.pz-theme-a .pz-btn.ghost { background: var(--a-cream); color: var(--a-wood-1); box-shadow: 0 .45cqw 0 var(--a-cream-3); }
+.pz-theme-a .pz-hint-badge { background: var(--sun); color: var(--a-wood-1); box-shadow: 0 0 0 .25cqw var(--a-wood-1); }
+.pz-theme-a .pz-hint-btn.costly .pz-hint-badge { background: #e0553f; color: #fff; }
+.pz-theme-a .pz-hint-ok, .pz-theme-a .pz-next { background: var(--sun); color: var(--a-wood-1); }
+.pz-theme-a .pz-pop { background: #2e231b; border-color: var(--sun); color: var(--a-cream); }
+.pz-theme-a .pz-step { background: var(--a-wood-3); color: var(--a-cream); }
+.pz-theme-a .pz-pop-opt { background: var(--a-wood-2); color: var(--a-cream); }
+.pz-theme-a .pz-pop-opt.on { background: var(--sun); color: var(--a-wood-1); }
+.pz-theme-a .pz-win { background: rgba(36, 21, 16, .72); }
+.pz-theme-a .pz-rotate { background: var(--a-wood-0); }
+.pz-theme-a .pz-bubble { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: .3cqw solid var(--a-wood-4); box-shadow: 0 .5cqw 0 var(--a-wood-1); }
+.pz-theme-a .pz-bubble::before { border-right-color: var(--a-cream); }
+.pz-theme-a .pz-mascot-frame { border-color: #c8955a; box-shadow: 0 0 0 .4cqw #4a2d1a, 0 .8cqw 0 .4cqw #2d1a0e; }
+.pz-theme-a .pz-dots i { background: var(--a-cream-3); }
+.pz-theme-a .pz-skip { color: #7a5a3a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .a-far, .a-lamp, .a-glow, .a-mote { animation: none; }
+  .a-mote { opacity: .5; }
+}
+/* page: calmer wall behind the level list text; stage: only the lamp's glow, the lamp itself would cover the HUD */
+.pz-bg-page .a-shade { background: rgba(35, 18, 8, .46); }
+.pz-bg-stage .a-lamp svg { display: none; }

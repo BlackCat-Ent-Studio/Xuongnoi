@@ -8,9 +8,11 @@ import { mountListScreen } from './puzzle/ui/list-screen';
 import { loadProgress, saveProgress, type ProgressMap } from './puzzle/ui/progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle/ui/puzzle-text';
 import './puzzle/ui/puzzle.css';
+import { initThemeTrial } from './puzzle/ui/themes/theme-trial'; // TEMPORARY theme trial
 
 registerAllNodes();
 document.title = T.pageTitle;
+initThemeTrial();
 
 const root = document.querySelector<HTMLDivElement>('#puzzle');
 if (!root) throw new Error('Missing #puzzle element');
@@ -32,7 +34,8 @@ let teardown: (() => void) | null = null;
 function ensureStage(): StageHost {
   if (stage) return stage;
   const el = h('div', 'pz-stage-host');
-  const view = createGameView();
+  // Transparent canvas: the stage shows its themed backdrop (or the plain mint stage colour) around the scene.
+  const view = createGameView({ transparentStage: true });
   view.mount(el);
   const host: StageHost = { el, view, onEnd: null };
   view.onGameEnd((result, message) => host.onEnd?.(result, message));

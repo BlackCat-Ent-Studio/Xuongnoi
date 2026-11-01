@@ -1,0 +1,6 @@
+/* Shared base of the themed animated backdrops (temporary theme trial).
+   Layers move with transform/opacity only. `--u` is the length unit: 1cqw behind the stage, 1vw behind the page. */
+.pz-bg { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; --u: 1cqw; contain: layout paint; }
+.pz-bg-page { position: fixed; --u: 1vw; }
+.pz-bg > * { position: absolute; }
+body[class*="pz-theme-"] #puzzle { position: relative; z-index: 1; }

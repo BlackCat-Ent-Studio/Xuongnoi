@@ -102,8 +102,9 @@ export class SceneView {
   }
 
   /** Background colour behind the scene (the editor's light grey, or the puzzle stage's mint). */
-  setBackdrop(color: number): void {
-    this.scene.background = new THREE.Color(color);
+  setBackdrop(color: number | null): void {
+    // null leaves the scene clear so a transparent canvas shows the page behind it
+    this.scene.background = color === null ? null : new THREE.Color(color);
   }
 
   /** View mode decides how characters face; changing it drops existing figures' animation state. */

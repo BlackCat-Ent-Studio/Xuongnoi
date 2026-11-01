@@ -11,6 +11,8 @@ import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, ne
 import { extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
+import { buildBackdrop } from './themes/backdrops'; // TEMPORARY theme trial
+import { currentTheme, onThemeChange, type ThemeId } from './themes/theme-trial';
 
 /** The one game view of the page. It is created once and moved into whichever level screen is open. */
 export interface StageHost {
@@ -106,6 +108,15 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   replayBtn.hidden = !guided || forcedGuide;
   replayBtn.setAttribute('aria-label', T.guideReplayAria);
   stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
+  // TEMPORARY theme trial: the chosen theme's animated backdrop sits behind the transparent stage canvas.
+  let stageBackdrop: HTMLElement | null = null;
+  function syncStageBackdrop(theme: ThemeId | null): void {
+    stageBackdrop?.remove();
+    stageBackdrop = theme ? buildBackdrop(theme, 'stage') : null;
+    if (stageBackdrop) stageSec.prepend(stageBackdrop);
+  }
+  syncStageBackdrop(currentTheme());
+  const offTheme = onThemeChange(syncStageBackdrop);
 
   /** What the camera does now: the player's remembered choice, else the whole scene (also while the game runs). */
   function effectiveView(): StageView {
@@ -346,6 +357,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   }
 
   return () => {
+    offTheme();
     guide?.dispose();
     guide = null;
     window.clearTimeout(previewTimer);
