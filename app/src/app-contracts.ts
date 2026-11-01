@@ -47,7 +47,7 @@ export interface GameView {
    * part of the canvas not covered by overlays (`top` / `bottom` = covered fractions of the height; `pitch` = fixed
    * 3D tilt). Same framing before and during play. Null returns to the editor look.
    */
-  setStageFit(fit: { top: number; bottom: number; pitch?: number } | null): void;
+  setStageFit(fit: { top: number; bottom: number; pitch?: number; follow?: string | null } | null): void;
   /** Re-fit canvas after layout changes. */
   resize(): void;
 }

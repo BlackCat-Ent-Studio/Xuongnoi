@@ -19,7 +19,20 @@ export interface StageFit {
   top: number;
   bottom: number;
   pitch?: number;
+  /** Owner node id of the character to close in on; absent / null = whole-scene overview. */
+  follow?: string | null;
 }
+
+interface OverviewFrame {
+  target: THREE.Vector3;
+  size: number;
+  bounds: Bounds;
+}
+
+/** Followed character fills about this share of the visible stage height. */
+const FOLLOW_FRACTION = 0.3;
+const FOLLOW_MIN_DISTANCE = 3.5;
+const FIT_EASE = 5;
 
 export function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
@@ -182,6 +195,8 @@ export class CameraRig {
   /** Puzzle stage: frame the whole scene inside the part of the canvas left uncovered by the HUD and task box. */
   private fit: StageFit | null = null;
   private fitDirty = true;
+  private overview: OverviewFrame | null = null;
+  private cur: { target: THREE.Vector3; size: number } | null = null;
 
   constructor(mode: ViewMode) {
     this.mode = mode;
@@ -295,7 +310,7 @@ export class CameraRig {
 
   update(entities: readonly EntityView[], dt: number, follow: boolean, playCamera: PlayCameraCommand | null = null): void {
     if (this.fit) {
-      this.updateFit(entities);
+      this.updateFit(entities, dt);
       return;
     }
     this.syncFollow(follow);
@@ -336,7 +351,7 @@ export class CameraRig {
   }
 
   /** Fixed framing of the whole scene: same view before and during play, recomputed on snap() only. */
-  private updateFit(entities: readonly EntityView[]): void {
+  private updateFit(entities: readonly EntityView[], dt: number): void {
     const bounds = this.fitDirty ? stageBounds(entities) : null;
     if (this.fitDirty && bounds) {
       this.fitDirty = false;
@@ -344,20 +359,64 @@ export class CameraRig {
       const w = bounds.max.x - bounds.min.x;
       const virtAspect = this.aspect / this.visibleFrac;
       this.view.mag = 1;
+      let target: THREE.Vector3;
+      let size: number;
       if (this.mode === '3d') {
-        this.view.target.set(centre.x, centre.y - 1, centre.z);
-        this.view.homeSize = this.fitDistance(bounds, centre, virtAspect);
+        target = new THREE.Vector3(centre.x, centre.y - 1, centre.z);
+        size = this.fitDistance(bounds, centre, virtAspect);
       } else {
         const side = this.mode === '2d-side';
         const h = side ? bounds.max.y - bounds.min.y : bounds.max.z - bounds.min.z;
-        this.view.target.set(centre.x, side ? centre.y : 0, side ? 0 : centre.z);
-        this.view.homeSize = Math.max(FIT_MIN_HEIGHT, h + FIT_PAD, (w + FIT_PAD) / virtAspect);
+        target = new THREE.Vector3(centre.x, side ? centre.y : 0, side ? 0 : centre.z);
+        size = Math.max(FIT_MIN_HEIGHT, h + FIT_PAD, (w + FIT_PAD) / virtAspect);
       }
+      this.overview = { target, size, bounds };
+    }
+    const ov = this.overview;
+    if (ov) {
+      const goal = this.followGoal(entities, ov) ?? { target: ov.target, size: ov.size };
+      // dt 0 = a still redraw (preview, resize, toggle): jump. While playing: ease toward the goal.
+      if (!this.cur || dt <= 0) {
+        this.cur = { target: goal.target.clone(), size: goal.size };
+      } else {
+        const k = 1 - Math.exp(-FIT_EASE * Math.min(dt, 0.1));
+        this.cur.target.lerp(goal.target, k);
+        this.cur.size += (goal.size - this.cur.size) * k;
+      }
+      this.view.target.copy(this.cur.target);
+      this.view.homeSize = this.cur.size;
     }
     this.target.copy(this.view.target);
     this.snapNext = false;
     this.applySize();
     this.place();
+  }
+
+  /** Close-up on the followed character, kept inside the scene box; null when not following. */
+  private followGoal(entities: readonly EntityView[], ov: OverviewFrame): { target: THREE.Vector3; size: number } | null {
+    const id = this.fit?.follow;
+    const e = id ? entities.find((x) => x.ownerNodeId === id && x.visible) : undefined;
+    if (!e) return null;
+    const b = ov.bounds;
+    const virtAspect = this.aspect / this.visibleFrac;
+    const hero = Math.max(e.size.y, e.size.x, e.size.z, 1);
+    const clampTo = (v: number, lo: number, hi: number, half: number): number => (hi - lo <= 2 * half ? (lo + hi) / 2 : clamp(v, lo + half, hi - half));
+    if (this.mode === '3d') {
+      const tanV = Math.tan(THREE.MathUtils.degToRad(25));
+      const size = clamp(hero / (2 * tanV * FOLLOW_FRACTION), FOLLOW_MIN_DISTANCE, ov.size);
+      // Visible ground half-extent is about the distance times the frame's tangent; keep that inside the box.
+      const halfX = size * tanV * virtAspect * 0.8;
+      const halfZ = size * tanV * 0.8;
+      const t = new THREE.Vector3(clampTo(e.position.x, b.min.x, b.max.x, halfX), ov.target.y, clampTo(e.position.z, b.min.z, b.max.z, halfZ));
+      return { target: t, size };
+    }
+    const side = this.mode === '2d-side';
+    const size = clamp(hero / FOLLOW_FRACTION, FIT_MIN_HEIGHT * 0.5, ov.size);
+    const halfX = (size * virtAspect) / 2;
+    const half = size / 2;
+    const x = clampTo(e.position.x, b.min.x, b.max.x, halfX);
+    if (side) return { target: new THREE.Vector3(x, clampTo(e.position.y, b.min.y, b.max.y, half), 0), size };
+    return { target: new THREE.Vector3(x, 0, clampTo(e.position.z, b.min.z, b.max.z, half)), size };
   }
 
   /** Orbit distance at which all eight corners of the scene box fit the (virtual) frame. */

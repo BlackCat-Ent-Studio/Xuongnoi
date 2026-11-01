@@ -47,7 +47,7 @@ export function createGameView(): GameView {
   let width = 1;
   let height = 1;
 
-  let stageFit: { top: number; bottom: number; pitch?: number } | null = null;
+  let stageFit: { top: number; bottom: number; pitch?: number; follow?: string | null } | null = null;
   const EDITOR_BACKDROP = 0xe6e8ec;
   const STAGE_BACKDROP = 0xbfeedd;
 

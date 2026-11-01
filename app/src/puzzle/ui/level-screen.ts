@@ -28,6 +28,17 @@ export interface LevelScreenContext {
 }
 
 type Phase = 'edit' | 'run' | 'ended';
+type StageView = 'overview' | 'follow';
+
+/** The player's choice from the "Toàn cảnh / Theo nhân vật" button; kept for the whole visit (all levels). */
+let rememberedView: StageView | null = null;
+
+/** Main character: the first character whose look is the level's first cast look, else the first character. */
+export function mainCharacterId(level: PuzzleLevel): string | null {
+  const chars = level.base.nodes.filter((n) => n.kind === 'character');
+  const hero = chars.find((n) => n.params.look === level.cast[0]) ?? chars[0];
+  return hero?.id ?? null;
+}
 
 const NO_KEYS = { keysDown: new Set<string>() };
 const RESET_AFTER_LOSE_MS = 1700;
@@ -77,17 +88,40 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     taskHead.setAttribute('aria-expanded', String(open));
   }
   taskHead.addEventListener('click', () => setTaskOpen(task.classList.contains('is-closed')));
-  stageSec.append(stage.el, hud, task);
+  // View toggle: whole scene or close-up on the main character.
+  const heroId = mainCharacterId(level);
+  const viewBtn = h('button', 'pz-viewtoggle');
+  viewBtn.type = 'button';
+  viewBtn.hidden = heroId === null;
+  stageSec.append(stage.el, hud, viewBtn, task);
+
+  /** What the camera does now: the player's remembered choice, else overview while editing and follow while the game runs. */
+  function effectiveView(): StageView {
+    return rememberedView ?? (phase === 'edit' ? 'overview' : 'follow');
+  }
+  function syncViewButton(): void {
+    const following = effectiveView() === 'follow';
+    viewBtn.textContent = following ? T.viewFollow : T.viewOverview;
+    viewBtn.setAttribute('aria-label', following ? T.viewToOverview : T.viewToFollow);
+    viewBtn.title = following ? T.viewToOverview : T.viewToFollow;
+  }
+  viewBtn.addEventListener('click', () => {
+    rememberedView = effectiveView() === 'follow' ? 'overview' : 'follow';
+    frameStage();
+  });
 
   /** Tells the game view which part of the stage is free of the HUD and task box, so the scene fills that part. */
   function frameStage(): void {
+    syncViewButton();
     const H = stageSec.clientHeight;
     if (H <= 0) return;
-    const top = Math.min(0.4, (hud.offsetTop + hud.offsetHeight + 8) / H);
+    const topEdge = viewBtn.hidden ? hud.offsetTop + hud.offsetHeight : viewBtn.offsetTop + viewBtn.offsetHeight;
+    const top = Math.min(0.45, (topEdge + 8) / H);
     const bottom = Math.min(0.55, (H - task.offsetTop + 8) / H);
     const camera = level.base.nodes.find((n) => n.kind === 'camera');
     const pitch = level.mode === '3d' && camera ? viewPitch(String(camera.params.view ?? 'free')).pitch : undefined;
-    stage.view.setStageFit({ top, bottom, ...(pitch !== undefined ? { pitch } : {}) });
+    const follow = heroId !== null && effectiveView() === 'follow' ? heroId : null;
+    stage.view.setStageFit({ top, bottom, follow, ...(pitch !== undefined ? { pitch } : {}) });
   }
   const stageObserver = new ResizeObserver(frameStage);
   stageObserver.observe(stageSec);
@@ -138,6 +172,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     runBtn.textContent = next === 'edit' ? T.run : T.stop;
     runBtn.classList.toggle('stop', next !== 'edit');
     resetBtn.disabled = next !== 'edit';
+    frameStage();
   }
 
   function stopWatch(): void {
