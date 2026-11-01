@@ -3,8 +3,11 @@ import { level05 } from '../../src/puzzle/levels/level-05';
 import { level06 } from '../../src/puzzle/levels/level-06';
 import { level07 } from '../../src/puzzle/levels/level-07';
 import { level08 } from '../../src/puzzle/levels/level-08';
+import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
+import { canConnect } from '../../src/engine/wiring';
+import { registerAllNodes } from '../../src/nodes';
 import { piecesUsed, runLevel } from '../../src/puzzle/run-level';
-import type { Params } from '../../src/engine/types';
+import type { Graph, Params } from '../../src/engine/types';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 
 const EMPTY: PuzzleAnswer = { nodes: [], wires: [] };
@@ -25,6 +28,18 @@ function onlyPieces(a: PuzzleAnswer, level: PuzzleLevel, keep: string[]): Puzzle
   const alive = new Set([...level.base.nodes.map((n) => n.id), ...keep]);
   return { nodes: a.nodes.filter((n) => keep.includes(n.id)), wires: a.wires.filter((w) => alive.has(w.from.node) && alive.has(w.to.node)) };
 }
+
+describe.each(PUZZLE_LEVELS)('puzzle level $order $id: real board rules', (level) => {
+  it('every solution wire passes the same connect rule the board uses, wired one by one', () => {
+    registerAllNodes();
+    let graph: Graph = { nodes: [...level.base.nodes, ...level.solution.nodes], wires: [...level.base.wires] };
+    for (const w of level.solution.wires) {
+      const res = canConnect(graph, w.from, w.to);
+      expect(res.ok, `${w.id}: ${res.ok ? '' : res.reason}`).toBe(true);
+      graph = { ...graph, wires: [...graph.wires, w] };
+    }
+  });
+});
 
 describe.each(LEVELS)('puzzle level $order $id', (level) => {
   it('reference solution wins before the time limit', () => {
@@ -140,7 +155,7 @@ describe('level 6: ne-linh-gac', () => {
 describe('level 7: cau-nhap-nhay', () => {
   it('a robot that always rolls falls into the water', () => {
     expect(runLevel(level07, EMPTY).outcome).toBe('lose');
-    expect(runLevel(level07, withoutWires(level07.solution, 'sw6')).outcome).toBe('lose');
+    expect(runLevel(level07, withoutWires(level07.solution, 'sw2')).outcome).toBe('lose');
   });
 
   it('a blink that is too quick drops the robot mid-bridge', () => {
@@ -153,9 +168,18 @@ describe('level 7: cau-nhap-nhay', () => {
     }
   });
 
-  it('a bridge that never shows leaves the robot waiting or falling, never winning', () => {
-    const noShow = withoutWires(level07.solution, 'sw3');
-    expect(runLevel(level07, noShow).outcome).not.toBe('win');
+  it('a bridge that never follows the switch stays hidden, so the robot never wins', () => {
+    const noFollow = withoutWires(level07.solution, 'sw4');
+    expect(runLevel(level07, noFollow).outcome).not.toBe('win');
+  });
+
+  it('a timer that never reaches the switch leaves the robot waiting, never winning', () => {
+    const noTick = withoutWires(level07.solution, 'sw1');
+    expect(runLevel(level07, noTick).outcome).toBe('timeout');
+  });
+
+  it('a timer that does not repeat still crosses once the bridge shows', () => {
+    expect(runLevel(level07, withParams(level07.solution, 'timer', { repeat: 'no' })).outcome).toBe('win');
   });
 });
 
@@ -173,7 +197,7 @@ describe('level 8: xuong-tong-hop', () => {
   });
 
   it('the door needs the crates as well as the button', () => {
-    const noCrates = withoutWires(s, 'sw3', 'sw4', 'sw6');
+    const noCrates = withoutWires(s, 'sw3', 'sw4', 'sw2');
     expect(runLevel(level08, noCrates).outcome).toBe('timeout');
   });
 

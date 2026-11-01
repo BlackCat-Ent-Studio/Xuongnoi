@@ -1,5 +1,5 @@
 import type { NodeDef } from '../engine/types';
-import { asBool, numParam, risingEdge, type EdgeState } from './util';
+import { asBool, numParam, risingEdge, strParam, type EdgeState } from './util';
 
 interface TimerState {
   left: number;
@@ -22,7 +22,19 @@ export const timerNode: NodeDef<TimerState> = {
     { id: 'left', type: 'number', label: 'Giây còn lại' },
     { id: 'done', type: 'bool', label: 'Hết giờ' },
   ],
-  params: [{ id: 'seconds', label: 'Số giây', kind: 'number', default: 30, min: 0, step: 1 }],
+  params: [
+    { id: 'seconds', label: 'Số giây', kind: 'number', default: 30, min: 0, step: 1 },
+    {
+      id: 'repeat',
+      label: 'Tự lặp lại',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có' },
+      ],
+    },
+  ],
   createOnly: ['seconds'],
   liveApply: {
     seconds: (_ctx, p, s, prev) => {
@@ -35,8 +47,11 @@ export const timerNode: NodeDef<TimerState> = {
     reset: { prev: false },
   }),
   evaluate(ctx, i, params, s) {
+    const total = Math.max(0, numParam(params, 'seconds', 30));
+    // Repeat: "Hết giờ" showed for one tick, now start over by itself.
+    if (strParam(params, 'repeat', 'no') === 'yes' && s.left === 0 && total > 0) s.left = total;
     if (risingEdge(s.reset, asBool(i.reset))) {
-      s.left = Math.max(0, numParam(params, 'seconds', 30));
+      s.left = total;
     }
     // The engine resolves an unwired run port to its default (true); treat a missing key the same way.
     const run = i.run === undefined ? true : asBool(i.run);

@@ -89,12 +89,16 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       left: 'Ra: số giây còn lại, giảm dần về 0.',
       done: 'Ra: bật khi đã hết giờ (còn 0 giây) và giữ bật.',
     },
-    params: { seconds: 'Tổng số giây đếm ngược. Mặc định 30. Đổi khi đang chơi thì giữ nguyên phần thời gian đã trôi.' },
+    params: {
+      seconds: 'Tổng số giây đếm ngược. Mặc định 30. Đổi khi đang chơi thì giữ nguyên phần thời gian đã trôi.',
+      repeat: 'Tự lặp lại: Không (mặc định) thì đếm một lần rồi đứng ở 0. Có thì hết giờ, "Hết giờ" bật một nhịp rồi đồng hồ tự đếm lại từ đầu.',
+    },
     example: 'Hẹn giờ 10 giây: "Giây còn lại" → Thanh đo hoặc Hiện số; "Hết giờ" → "Thua" của Thắng/Thua.',
     tips: [
       'Hết giờ rồi, đồng hồ đứng ở 0 và "Hết giờ" cứ bật. Muốn đếm lại thì bật "Đếm lại".',
       'Nối "Chạy" vào một điều kiện để tạm dừng đồng hồ, ví dụ khi đang mở hộp thoại.',
       'Đồng hồ đếm theo thời gian trong game, nên không bị lệch dù máy chậm.',
+      'Bật "Tự lặp lại" rồi nối "Hết giờ" vào "Đảo" của Công tắc nhớ: đèn nhấp nháy hoặc cầu lúc hiện lúc ẩn, cứ mỗi vài giây đổi một lần.',
     ],
     lessonId: 'ui-chest',
     tryBoard: TRY.timer,

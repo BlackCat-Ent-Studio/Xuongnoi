@@ -26,6 +26,9 @@ export interface Mascot {
 /** Turn of the cat toward the bubble on the right, in radians. */
 const TURN = 0.42;
 const FOV = 30;
+/** How much of the portrait height the round frame shows (smaller = closer), and how far its centre sits above the portrait's. */
+const FRAME_SHARE = 0.9;
+const AIM_UP = 0.0;
 const MAX_DT = 0.05;
 const SETTLE_STEPS = 12;
 
@@ -69,9 +72,12 @@ function createStage(frame: HTMLElement): Stage {
 
     const { y, height } = face.portrait;
     const camera = new THREE.PerspectiveCamera(FOV, 1, 0.1, 100);
-    const dist = height / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
-    camera.position.set(0, y + height * 0.12, dist);
-    camera.lookAt(0, y, 0);
+    // Head and upper chest only: the window is a part of the portrait height, centred a little above its middle.
+    const view = height * FRAME_SHARE;
+    const dist = view / 2 / Math.tan(THREE.MathUtils.degToRad(FOV / 2));
+    const aimY = y + height * AIM_UP;
+    camera.position.set(0, aimY + view * 0.12, dist);
+    camera.lookAt(0, aimY, 0);
 
     frame.appendChild(renderer.domElement);
     return {

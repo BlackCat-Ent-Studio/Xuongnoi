@@ -38,9 +38,6 @@ function perform(step: GuideStep, level: (typeof GUIDED)[number], state: BoardSt
       if (!from || !to) throw new Error('piece not placed');
       const res = connect(level, state, { node: from, port: step.wire.from.port, dir: 'out' }, { node: to, port: step.wire.to.port, dir: 'in' });
       if (res.ok) return res.state;
-      // Level 7's reference solution wires the timer to itself, which the board refuses. The steps are still
-      // checked end to end by adding that one wire directly (reported separately as a level problem).
-      if (from === to) return { ...state, wires: [...state.wires, { id: `pw-${state.wires.length + 1}`, from: { node: from, port: step.wire.from.port }, to: { node: to, port: step.wire.to.port } }] };
       throw new Error(res.message);
     }
     default:

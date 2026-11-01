@@ -175,6 +175,22 @@ describe('timer', () => {
     expect(out[60]?.done).toBe(false);
     expect(out[60]?.left).toBeCloseTo(1 - 1 / 60, 9);
   });
+
+  it('repeat off (default) stays done after the countdown', () => {
+    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({})), { seconds: 1 });
+    expect(out[60]?.done).toBe(true);
+    expect(out[120]?.done).toBe(true);
+  });
+
+  it('repeat on: done for one tick, then restarts by itself', () => {
+    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({})), { seconds: 1, repeat: 'yes' });
+    expect(out[58]?.done).toBe(false);
+    expect(out[59]?.done).toBe(true);
+    expect(out[60]?.done).toBe(false);
+    expect(out[60]?.left).toBeCloseTo(1 - 1 / 60, 9);
+    expect(out[119]?.done).toBe(true);
+    expect(out.filter((o) => o.done)).toHaveLength(2);
+  });
 });
 
 describe('character', () => {
