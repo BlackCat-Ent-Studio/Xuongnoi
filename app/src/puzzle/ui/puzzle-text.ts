@@ -36,6 +36,10 @@ export const PUZZLE_UI_TEXT = {
   winRetry: 'Chơi lại',
   winNote: (stars: 1 | 2 | 3, hintUsed: boolean): string =>
     stars === 3 ? 'Gọn nhất có thể. Tuyệt vời!' : hintUsed ? 'Thử lại không xem Gợi ý để lấy thêm sao.' : 'Còn cách dùng ít mảnh hơn đấy.',
+  viewOverview: 'Toàn cảnh',
+  viewFollow: 'Theo nhân vật',
+  viewToOverview: 'Xem toàn cảnh',
+  viewToFollow: 'Theo nhân vật',
   rotate: 'Xoay ngang điện thoại để chơi',
   notFound: 'Không tìm thấy màn này',
   viewBadge: { '2d-side': '2D ngang', '2d-top': '2D từ trên', '3d': '3D' } satisfies Record<ViewMode, string>,
