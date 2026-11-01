@@ -1,5 +1,5 @@
 import { getNodeDef } from '../../engine/registry';
-import type { GraphNode, ParamDef, PortType, Runtime, Wire } from '../../engine/types';
+import type { GraphNode, ParamDef, PortRef, PortType, Runtime, Wire } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { estimateNodeSize, wirePath } from '../../editor/graph/graph-geometry';
 import { buildNodeView } from '../../editor/graph/node-view';
@@ -89,6 +89,20 @@ export interface BoardView {
   refit(): void;
   toast(message: string): void;
   destroy(): void;
+  // ----- hooks for the tutorial guide -----
+  /** The pin of a port on the board, or null when it is not shown. */
+  portEl(end: PortEnd): HTMLElement | null;
+  /** The tray chip of a tray slot. */
+  chipEl(slot: number): HTMLElement | null;
+  /** The editable-param row of a node. */
+  paramEl(nodeId: string, paramId: string): HTMLElement | null;
+  /** The open param editor, if any. */
+  popoverEl(): HTMLElement | null;
+  closePopover(): void;
+  /** The port the player has picked and not yet joined. */
+  pickedEnd(): PortEnd | null;
+  /** Draws a dotted "ghost" wire between two ports (null removes it). It never counts as a wire. */
+  setGhost(from: PortRef | null, to?: PortRef): void;
 }
 
 export function createBoardView(opts: BoardViewOptions): BoardView {
@@ -122,6 +136,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   const ports = new Map<string, PortEntry>();
   const cards = new Map<string, HTMLElement>();
   let popover: HTMLElement | null = null;
+  let ghost: { from: PortRef; to: PortRef } | null = null;
   let toastTimer = 0;
   let energyRaf = 0;
   let energyLast = 0;
@@ -306,6 +321,22 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       wireLayer.append(path, hit);
       if (isEnergyEnabled()) energy.addWire(wire, type, path, out.dot, inn.dot, running);
     }
+    drawGhost();
+  }
+
+  /** The guide's dotted line from where a wire starts to where it ends; the pins are never touched. */
+  function drawGhost(): void {
+    if (!ghost || running) return;
+    const out = ports.get(portKey(ghost.from.node, 'out', ghost.from.port));
+    const inn = ports.get(portKey(ghost.to.node, 'in', ghost.to.port));
+    const type = outputType({ id: 'ghost', from: ghost.from, to: ghost.to });
+    if (!out || !inn || !type) return;
+    const a = dotCenter(out.dot);
+    const b = dotCenter(inn.dot);
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute('class', `pz-ghost-wire type-${type}`);
+    path.setAttribute('d', wirePath(a.x, a.y, b.x, b.y));
+    wireLayer.append(path);
   }
 
   // ---------- tray ----------
@@ -494,6 +525,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
         for (const o of pd.options ?? []) {
           const b = h('button', `pz-pop-opt${o.value === cur ? ' on' : ''}`, o.label);
           b.type = 'button';
+          b.dataset.value = o.value;
           b.addEventListener('click', () => apply(o.value));
           list.append(b);
         }
@@ -610,6 +642,21 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       drawWires();
     },
     toast,
+    portEl: (end) => ports.get(portKey(end.node, end.dir, end.port))?.dot ?? null,
+    chipEl: (slot) => (trayEl.children[slot] as HTMLElement | undefined) ?? null,
+    paramEl: (nodeId, paramId) => {
+      for (const el of nodeLayer.querySelectorAll<HTMLElement>('.pz-param')) {
+        if (el.dataset.node === nodeId && el.dataset.param === paramId) return el;
+      }
+      return null;
+    },
+    popoverEl: () => popover,
+    closePopover,
+    pickedEnd: () => picked,
+    setGhost(from, to) {
+      ghost = from && to ? { from, to } : null;
+      drawWires();
+    },
     destroy() {
       stopEnergyLoop();
       window.clearTimeout(toastTimer);
