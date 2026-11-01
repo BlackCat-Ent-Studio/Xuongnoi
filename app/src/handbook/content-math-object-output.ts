@@ -222,10 +222,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     example: 'Phím Space "Vừa bấm" → "Ẩn đi" của một Hộp đang là bức tường: bấm là tường biến mất cho nhân vật đi qua.',
     tips: [
       'Dùng "Ẩn khi bật" để làm cửa mở theo tín hiệu: nối Cảm biến chạm (hoặc Hoặc/Và) vào đó, cửa mở khi tín hiệu bật và đóng lại khi tín hiệu tắt.',
-      'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Hộp) "Vừa chạm" → "Ẩn đi" của chính hộp đó.',
+      'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Hộp) "Vừa chạm" → "Ẩn đi" của chính hộp đó. Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
       'Băng chuyền: chọn kiểu "Băng chuyền" là chạy ngay, hoặc để kiểu thường và đặt "Tốc độ băng chuyền" khác 0 trong mục Nâng cao.',
       'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',
-      'Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
     ],
     lessonId: 'walk-jump',
     tryBoard: TRY.block,
