@@ -51,6 +51,7 @@ export const level07: PuzzleLevel = {
     { kind: 'timer', count: 1, params: { seconds: 1, repeat: 'yes' } },
     { kind: 'latch', count: 1 },
     { kind: 'not', count: 1 },
+    { kind: 'and', count: 1 },
   ],
   editable: [{ kind: 'timer', paramId: 'seconds' }],
   par: 3,

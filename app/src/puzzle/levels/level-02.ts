@@ -75,7 +75,7 @@ export const level02: PuzzleLevel | null = {
     ground: { in: [], out: [] },
   },
   tray: [
-    { kind: 'touch', count: 1 },
+    { kind: 'touch', count: 2 },
     { kind: 'latch', count: 1 },
   ],
   par: 2,

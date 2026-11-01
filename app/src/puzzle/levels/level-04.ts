@@ -120,6 +120,7 @@ export const level04: PuzzleLevel | null = {
   tray: [
     { kind: 'touch', count: 2 },
     { kind: 'or', count: 1 },
+    { kind: 'and', count: 1 },
   ],
   par: 3,
   freeHints: 2,

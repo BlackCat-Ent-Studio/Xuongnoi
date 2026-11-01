@@ -106,7 +106,7 @@ export const level03: PuzzleLevel | null = {
     end: { in: [], out: [] },
   },
   tray: [
-    { kind: 'or', count: 2 },
+    { kind: 'or', count: 3 },
     { kind: 'counter', count: 1 },
     { kind: 'compare', count: 1, params: { op: 'eq' } },
     { kind: 'const', count: 1, params: { value: 5 } },

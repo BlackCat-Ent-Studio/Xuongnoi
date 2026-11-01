@@ -5,8 +5,8 @@ import { level01 } from '../../src/puzzle/levels/level-01';
 import { level02 } from '../../src/puzzle/levels/level-02';
 import { level03 } from '../../src/puzzle/levels/level-03';
 import { level04 } from '../../src/puzzle/levels/level-04';
-import { runLevel } from '../../src/puzzle/run-level';
-import type { PuzzleAnswer } from '../../src/puzzle/types';
+import { piecesUsed, runLevel, starsFor } from '../../src/puzzle/run-level';
+import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 
 registerAllNodes();
 
@@ -121,6 +121,85 @@ describe.each(LEVELS.map((l) => [l.order, l] as const))('puzzle level %i', (_ord
 describe('level 1 (bot-dau-tien)', () => {
   it('without the wire into the walking input of the bot it stands still', () => {
     expect(runLevel(level01!, without(level01!.solution, 's3')).outcome).toBe('timeout');
+  });
+});
+
+const withDecoy = (a: PuzzleAnswer, kind: string, wires: PuzzleAnswer['wires'] = []): PuzzleAnswer => ({
+  nodes: [...a.nodes, { id: 'p-decoy', kind, params: {}, pos: { x: 100, y: 100 } }],
+  wires: [...a.wires, ...wires],
+});
+
+/** Tray pieces beyond what the reference solution uses, as kinds. */
+const spareKinds = (level: PuzzleLevel): string[] =>
+  level.tray.flatMap((t) => {
+    const spare = t.count - level.solution.nodes.filter((n) => n.kind === t.kind).length;
+    return spare > 0 ? [t.kind] : [];
+  });
+
+const DECOYS: Array<[string, PuzzleLevel, string, PuzzleAnswer['wires']]> = [
+  // [name, level, decoy kind, harmless wires that make the decoy part of an over-built win]
+  [
+    'level 2: second Cảm biến chạm',
+    level02!,
+    'touch',
+    [
+      { id: 'd1', from: { node: 'bot', port: 'self' }, to: { node: 'p-decoy', port: 'a' } },
+      { id: 'd2', from: { node: 'button', port: 'self' }, to: { node: 'p-decoy', port: 'b' } },
+    ],
+  ],
+  [
+    'level 3: third Hoặc',
+    level03!,
+    'or',
+    [
+      { id: 'd1', from: { node: 'p-or2', port: 'out' }, to: { node: 'p-decoy', port: 'a' } },
+      { id: 'd2', from: { node: 'p-decoy', port: 'out' }, to: { node: 'p-count', port: 'up' } },
+    ],
+  ],
+  [
+    'level 4: Và next to Hoặc',
+    level04!,
+    'and',
+    [
+      { id: 'd1', from: { node: 'p-touch-a', port: 'touching' }, to: { node: 'p-decoy', port: 'a' } },
+      { id: 'd2', from: { node: 'p-touch-b', port: 'touching' }, to: { node: 'p-decoy', port: 'b' } },
+    ],
+  ],
+];
+
+describe.each(DECOYS)('decoy tray piece: %s', (_name, level, kind, harmless) => {
+  const sol = level.solution;
+  const overBuilt = (): PuzzleAnswer => {
+    // Level 3 routes the signal through the decoy, so drop the direct or2 -> counter wire.
+    const base = level.id === 'nhat-sao' ? without(sol, 's5') : sol;
+    return withDecoy(base, kind, harmless);
+  };
+
+  it('is a spare tray piece, not needed by the reference solution', () => {
+    expect(spareKinds(level)).toEqual([kind]);
+    expect(sol.nodes.some((n) => n.kind === kind && n.id === 'p-decoy')).toBe(false);
+  });
+  it('an over-built answer still wins but earns only 2 stars without hints, 3 with the solution', () => {
+    const answer = overBuilt();
+    expect(piecesUsed(answer)).toBe(level.par + 1);
+    expect(runLevel(level, answer).outcome).toBe('win');
+    expect(starsFor(level, answer, 0)).toBe(2);
+    expect(starsFor(level, sol, 0)).toBe(3);
+  });
+  it('no answer with fewer than par pieces wins: drop any piece, with or without the decoy as stand-in', () => {
+    for (const n of sol.nodes) {
+      const dropped = withoutNode(sol, n.id);
+      expect(runLevel(level, dropped).outcome, `without ${n.id}`).not.toBe('win');
+      expect(runLevel(level, withDecoy(dropped, kind)).outcome, `decoy unwired instead of ${n.id}`).not.toBe('win');
+      // decoy takes over the dropped piece's wires, keeping its ports where the kinds share them
+      if (n.kind === kind) continue; // same kind: the swap is just the solution again
+      const swapped: PuzzleAnswer = { ...sol, nodes: sol.nodes.map((m) => (m.id === n.id ? { ...m, kind } : m)) };
+      expect(runLevel(level, swapped).outcome, `decoy ${kind} in place of ${n.id}`).not.toBe('win');
+    }
+  });
+  it('the tray stays within the pieces the level teaches (no key/stick) and keeps par and hints', () => {
+    expect(level.tray.every((t) => !CONTROL_KINDS.includes(t.kind))).toBe(true);
+    expect(level.par).toBe(sol.nodes.length);
   });
 });
 

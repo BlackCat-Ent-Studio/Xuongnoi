@@ -6,7 +6,7 @@ import { level08 } from '../../src/puzzle/levels/level-08';
 import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
 import { canConnect } from '../../src/engine/wiring';
 import { registerAllNodes } from '../../src/nodes';
-import { piecesUsed, runLevel } from '../../src/puzzle/run-level';
+import { piecesUsed, runLevel, starsFor } from '../../src/puzzle/run-level';
 import type { Graph, Params } from '../../src/engine/types';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 
@@ -180,6 +180,45 @@ describe('level 7: cau-nhap-nhay', () => {
 
   it('a timer that does not repeat still crosses once the bridge shows', () => {
     expect(runLevel(level07, withParams(level07.solution, 'timer', { repeat: 'no' })).outcome).toBe('win');
+  });
+
+  describe('decoy tray piece: an extra Và', () => {
+    const sol = level07.solution;
+    const decoy = { id: 'p-decoy', kind: 'and', params: {}, pos: { x: 100, y: 100 } };
+    const dropNode = (id: string): PuzzleAnswer => ({
+      nodes: sol.nodes.filter((n) => n.id !== id),
+      wires: sol.wires.filter((w) => w.from.node !== id && w.to.node !== id),
+    });
+
+    it('is a spare tray piece the solution does not use', () => {
+      const spare = level07.tray.filter((t) => t.count > sol.nodes.filter((n) => n.kind === t.kind).length).map((t) => t.kind);
+      expect(spare).toEqual(['and']);
+    });
+
+    it('an over-built answer still wins, 2 stars without hints, solution gets 3', () => {
+      const answer: PuzzleAnswer = {
+        nodes: [...sol.nodes, decoy],
+        wires: [
+          ...sol.wires,
+          { id: 'd1', from: { node: 's-latch', port: 'on' }, to: { node: 'p-decoy', port: 'a' } },
+          { id: 'd2', from: { node: 's-not', port: 'out' }, to: { node: 'p-decoy', port: 'b' } },
+        ],
+      };
+      expect(piecesUsed(answer)).toBe(level07.par + 1);
+      expect(runLevel(level07, answer).outcome).toBe('win');
+      expect(starsFor(level07, answer, 0)).toBe(2);
+      expect(starsFor(level07, sol, 0)).toBe(3);
+    });
+
+    it('no answer with fewer than par pieces wins, even with the decoy standing in for a piece', () => {
+      for (const n of sol.nodes) {
+        const dropped = dropNode(n.id);
+        expect(runLevel(level07, dropped).outcome, `without ${n.id}`).not.toBe('win');
+        expect(runLevel(level07, { ...dropped, nodes: [...dropped.nodes, decoy] }).outcome, `decoy unwired for ${n.id}`).not.toBe('win');
+        const swapped: PuzzleAnswer = { ...sol, nodes: sol.nodes.map((m) => (m.id === n.id ? { ...m, kind: 'and' } : m)) };
+        expect(runLevel(level07, swapped).outcome, `and in place of ${n.id}`).not.toBe('win');
+      }
+    });
   });
 });
 
