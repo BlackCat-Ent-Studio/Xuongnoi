@@ -14,6 +14,11 @@ export interface StyleRig {
   readonly hand?: HandMount;
   /** Advance the pose toward what `motion` asks for and apply it to the parts. */
   update(motion: Motion, dt: number): void;
+  /**
+   * The look keeps every pose inside the unit figure (base on y -0.5, nothing above 0.5) by construction, so
+   * the engine skips its per-frame box-corner height fitting. Needed for rounded parts, whose boxes overshoot.
+   */
+  readonly selfFitting?: boolean;
 }
 
 /**
@@ -31,6 +36,8 @@ export interface HandMount {
 export interface StyleDef {
   id: string;
   build(kit: PartKit): StyleRig;
+  /** The look has its own fixed palette and ignores the entity's color. */
+  fixedColor?: boolean;
 }
 
 /** Numeric pose channels for one style (named, so each style reads as plain properties). */
@@ -76,8 +83,68 @@ export class PartKit {
     this.main = new THREE.MeshLambertMaterial({ color });
   }
 
+  /** Extra geometry/textures created by a style, disposed with the kit. */
+  private readonly owned: { dispose(): void }[] = [];
+  private readonly spheres = new Map<string, THREE.SphereGeometry>();
+  private readonly ramps = new Map<string, THREE.DataTexture>();
+  /** Re-derive every material that follows the main color. */
+  private readonly tints: (() => void)[] = [];
+
   setMainColor(color: string): void {
     this.main.color.set(color);
+    for (const apply of this.tints) apply();
+  }
+
+  /** Registers a geometry or texture so it is disposed with the figure; returns it for chaining. */
+  own<T extends { dispose(): void }>(resource: T): T {
+    this.owned.push(resource);
+    return resource;
+  }
+
+  /** Shared unit-radius sphere; scale a mesh to make an ellipsoid. */
+  sphere(widthSegments: number, heightSegments: number): THREE.SphereGeometry {
+    const key = `${widthSegments}x${heightSegments}`;
+    let g = this.spheres.get(key);
+    if (!g) {
+      g = new THREE.SphereGeometry(1, widthSegments, heightSegments);
+      this.spheres.set(key, g);
+    }
+    return g;
+  }
+
+  /** Stepped light ramp for toon shading (one value per step, 0..255, dark to light). */
+  ramp(steps: readonly number[]): THREE.DataTexture {
+    const key = steps.join(',');
+    let t = this.ramps.get(key);
+    if (!t) {
+      t = new THREE.DataTexture(new Uint8Array(steps), steps.length, 1, THREE.RedFormat);
+      t.minFilter = t.magFilter = THREE.NearestFilter;
+      t.generateMipmaps = false;
+      t.needsUpdate = true;
+      this.ramps.set(key, t);
+    }
+    return t;
+  }
+
+  /** Toon-shaded material with a fixed color (cached per color and options). */
+  toon(color: string, opts: ToonOptions): THREE.MeshToonMaterial {
+    const key = `toon:${color}|${opts.ramp.join(',')}|${opts.rim ?? 0}|${opts.rimColor ?? ''}|${opts.vertexColors ? 'v' : ''}`;
+    let m = this.cache.get(key);
+    if (!m) {
+      m = makeToon(this.ramp(opts.ramp), new THREE.Color(color), opts);
+      this.cache.set(key, m);
+    }
+    return m as THREE.MeshToonMaterial;
+  }
+
+  /** Toon material whose color is derived from the entity's main color and follows it when it changes. */
+  toonTinted(derive: (main: THREE.Color, out: THREE.Color) => void, opts: ToonOptions): THREE.MeshToonMaterial {
+    const m = makeToon(this.ramp(opts.ramp), new THREE.Color(), opts);
+    const apply = (): void => derive(this.main.color, m.color);
+    apply();
+    this.tints.push(apply);
+    this.owned.push(m);
+    return m;
   }
 
   /** Lit fixed-color material (cached per color). */
@@ -122,7 +189,42 @@ export class PartKit {
     this.main.dispose();
     for (const m of this.cache.values()) m.dispose();
     this.cache.clear();
+    for (const g of this.spheres.values()) g.dispose();
+    this.spheres.clear();
+    for (const t of this.ramps.values()) t.dispose();
+    this.ramps.clear();
+    for (const r of this.owned) r.dispose();
+    this.owned.length = 0;
+    this.tints.length = 0;
   }
+}
+
+export interface ToonOptions {
+  /** Light steps, dark to light (see PartKit.ramp). */
+  ramp: readonly number[];
+  /** Strength of a soft fresnel rim glow that keeps dark parts readable; 0 or absent = none. */
+  rim?: number;
+  /** Rim color as hex, used as-is in the shader (no color management); default a soft violet. */
+  rimColor?: string;
+  /** Color comes from a per-vertex `color` attribute (multiplied with the material color). */
+  vertexColors?: boolean;
+}
+
+function makeToon(ramp: THREE.DataTexture, color: THREE.Color, opts: ToonOptions): THREE.MeshToonMaterial {
+  const m = new THREE.MeshToonMaterial({ color, gradientMap: ramp, vertexColors: opts.vertexColors === true });
+  const rim = opts.rim ?? 0;
+  if (rim > 0) {
+    const n = Number.parseInt((opts.rimColor ?? '#9e8cff').slice(1), 16);
+    const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((c) => (c / 255).toFixed(3)).join(', ');
+    m.onBeforeCompile = (shader) => {
+      shader.fragmentShader = shader.fragmentShader.replace(
+        '#include <opaque_fragment>',
+        `outgoingLight += vec3(${rgb}) * pow(1.0 - saturate(dot(normal, normalize(vViewPosition))), 2.4) * ${rim.toFixed(3)};\n#include <opaque_fragment>`,
+      );
+    };
+    m.customProgramCacheKey = () => `toonrim:${rgb}:${rim.toFixed(3)}`;
+  }
+  return m;
 }
 
 const CORNERS: Vec3Tuple[] = [

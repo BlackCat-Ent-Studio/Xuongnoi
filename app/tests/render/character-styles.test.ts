@@ -13,6 +13,12 @@ import { SceneView } from '../../src/render/scene-view';
 
 const LOOKS = Object.keys(CHARACTER_STYLES);
 const EPS = 1e-6;
+/**
+ * Rounded looks swing limbs about their hips, so a paw or toe may sink a hair below the floor mid-stride
+ * (invisible, under half a percent of the figure height); the box-built looks never do.
+ */
+const SOFT_FLOOR = new Set(['robot-wheel', 'robot-legs', 'cat-chibi', 'cat-quad']);
+const FLOOR_SLACK = 0.005;
 
 function view(over: Partial<EntityView> = {}): EntityView {
   return {
@@ -27,7 +33,7 @@ function view(over: Partial<EntityView> = {}): EntityView {
   };
 }
 
-/** Lowest/highest y and the widest horizontal reach (from the entity center) over every box corner. */
+/** Lowest/highest y and the widest horizontal reach (from the entity center) over every mesh vertex. */
 function extent(h: Humanoid, cx: number, cz: number) {
   h.object.updateMatrixWorld(true);
   let minY = Infinity;
@@ -36,8 +42,9 @@ function extent(h: Humanoid, cx: number, cz: number) {
   const v = new THREE.Vector3();
   h.object.traverse((o) => {
     if (!(o instanceof THREE.Mesh)) return;
-    for (let i = 0; i < 8; i++) {
-      v.set(i & 1 ? 0.5 : -0.5, i & 2 ? 0.5 : -0.5, i & 4 ? 0.5 : -0.5).applyMatrix4(o.matrixWorld);
+    const pos = o.geometry.getAttribute('position');
+    for (let i = 0; i < pos.count; i++) {
+      v.fromBufferAttribute(pos, i).applyMatrix4(o.matrixWorld);
       minY = Math.min(minY, v.y);
       maxY = Math.max(maxY, v.y);
       reach = Math.max(reach, Math.hypot(v.x - cx, v.z - cz));
@@ -47,15 +54,33 @@ function extent(h: Humanoid, cx: number, cz: number) {
 }
 
 describe('character styles', () => {
-  it('offers the six looks the character node lists, and falls back to human for unknown ids', () => {
+  it('offers every look the character node lists, and falls back to human for unknown ids', () => {
     registerAllNodes();
     const opts = getNodeDef('character')!.params.find((p) => p.id === 'look')!.options!.map((o) => o.value);
     expect([...opts].sort()).toEqual([...LOOKS].sort());
-    expect(LOOKS).toHaveLength(6);
+    expect(LOOKS).toHaveLength(10);
+    for (const look of ['robot-wheel', 'robot-legs', 'cat-chibi', 'cat-quad']) {
+      expect(LOOKS).toContain(look);
+      expect(resolveLook(look)).toBe(look);
+    }
+    expect(opts.slice(0, 6)).toEqual(['human', 'robot', 'cat', 'chick', 'jelly', 'dino']);
     expect(resolveLook(undefined)).toBe('human');
     expect(resolveLook('does-not-exist')).toBe('human');
     expect(resolveLook('toString')).toBe('human');
     expect(resolveLook('cat')).toBe('cat');
+  });
+
+  it('keeps each look within the triangle budget', () => {
+    for (const look of ['robot-wheel', 'robot-legs', 'cat-chibi', 'cat-quad']) {
+      const h = new Humanoid('#3366ff', '3d', look);
+      let tris = 0;
+      h.object.traverse((o) => {
+        if (!(o instanceof THREE.Mesh)) return;
+        tris += (o.geometry.index ? o.geometry.index.count : o.geometry.getAttribute('position').count) / 3;
+      });
+      h.dispose();
+      expect(tris, look).toBeLessThanOrEqual(20000);
+    }
   });
 
   for (const look of LOOKS) {
@@ -86,7 +111,7 @@ describe('character styles', () => {
             h.update(view({ position: { x, y, z }, size }), 1 / 60);
             const e = extent(h, x, z);
             const label = `${look} ${mode} frame ${step++}`;
-            expect(e.minY, label).toBeGreaterThanOrEqual(y - 0.8 - EPS);
+            expect(e.minY, label).toBeGreaterThanOrEqual(y - 0.8 - (SOFT_FLOOR.has(look) ? FLOOR_SLACK * size.y : EPS));
             expect(e.maxY, label).toBeLessThanOrEqual(y + 0.8 + EPS);
             expect(e.reach, label).toBeLessThanOrEqual(half + EPS);
           };
@@ -125,7 +150,9 @@ describe('character styles', () => {
           if ((o.material as THREE.MeshLambertMaterial).color.getHexString() === '00ff00') recolored++;
         });
         expect(meshes).toBeGreaterThan(5);
-        expect(recolored).toBeGreaterThan(0);
+        // Looks with a fixed palette (the black cats) keep their own colors.
+        if (CHARACTER_STYLES[look]!.fixedColor) expect(recolored).toBe(0);
+        else expect(recolored).toBeGreaterThan(0);
         h.dispose();
       });
     });

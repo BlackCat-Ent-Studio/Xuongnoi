@@ -36,6 +36,10 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
         { value: 'chick', label: 'Gà con' },
         { value: 'jelly', label: 'Thạch nhún' },
         { value: 'dino', label: 'Khủng long nhỏ' },
+        { value: 'robot-wheel', label: 'Rô-bốt bánh xe' },
+        { value: 'robot-legs', label: 'Rô-bốt chân ngắn' },
+        { value: 'cat-chibi', label: 'Mèo Mun chibi' },
+        { value: 'cat-quad', label: 'Mèo Mun bốn chân' },
       ],
     },
     {
