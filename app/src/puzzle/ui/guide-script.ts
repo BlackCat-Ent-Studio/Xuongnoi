@@ -25,6 +25,7 @@ const KIND_PURPOSE: Record<string, string> = {
   zone: 'đếm vật nằm trong một vùng.',
   distance: 'đo hai nhân vật cách nhau bao xa.',
   timer: 'đếm giờ, hết giờ thì báo.',
+  'color-sensor': 'nhìn màu của ô dưới chân bot.',
 };
 
 /** The cat's opening line per level. Levels 1 and 5 (the first 3D level) have the full guide; the others get one step per "?". */
@@ -76,13 +77,12 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     sw3: 'Đủ gần thì đảo ngược bằng Không.',
     sw4: 'Lính gác xa thì mèo được đi.',
   },
-  'cau-nhap-nhay': {
-    sw1: 'Hết giờ thì cho đếm lại.',
-    sw2: 'Mỗi lần hết giờ, đảo công tắc.',
-    sw3: 'Công tắc bật thì cầu hiện.',
-    sw4: 'Công tắc cũng đi qua mảnh Không.',
-    sw5: 'Kết quả của Không vào mảnh Hoặc.',
-    sw6: 'Công tắc bật thì rô-bốt được đi.',
+  'phan-loai-mau': {
+    sw1: 'Cho cảm biến nhìn màu dưới chân rô-bốt.',
+    sw2: 'Thấy màu xanh thì báo cho mảnh Và.',
+    sw3: 'Tay đang cầm thì báo qua mảnh Không.',
+    sw4: 'Không: tay rảnh mới báo cho mảnh Và.',
+    sw5: 'Màu xanh VÀ tay rảnh thì mới cầm!',
   },
 };
 

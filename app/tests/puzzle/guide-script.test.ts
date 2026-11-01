@@ -141,7 +141,7 @@ describe('guide steps', () => {
     const params = (l: typeof level3) => (l ? solutionSteps(l).filter((s) => s.type === 'param') : []);
     expect(params(level3).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['value', 3]]);
     expect(params(level6).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['threshold', 3]]);
-    expect(params(level7).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['seconds', 3]]);
+    expect(params(level7).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['want', 2]]);
     expect(params(GUIDED.find((l) => l.order === 1))).toEqual([]);
   });
 });

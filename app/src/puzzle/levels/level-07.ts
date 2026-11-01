@@ -1,73 +1,128 @@
+import type { GraphNode } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
 
-/** Level 7 (cau-nhap-nhay): a bridge blinks on a timer; the robot may only roll while the bridge is shown. */
+const RED = '#ef4444';
+const BLUE = '#3b82f6';
+const CRATE_SIZE = { x: 0.8, y: 0.8, z: 0.8 };
+
+/** Colour of the crate on each pad, left to right. Three blue ones, three red ones. */
+const PADS: readonly { x: number; color: string }[] = [
+  { x: -6, color: RED },
+  { x: -3, color: BLUE },
+  { x: 0, color: RED },
+  { x: 3, color: BLUE },
+  { x: 6, color: RED },
+  { x: 9, color: BLUE },
+];
+
+/** Hidden locked cards are stacked in columns so none overlap on the 1000x560 board. */
+const slot = (i: number): { x: number; y: number } => ({ x: 20 + Math.floor(i / 12) * 180, y: 20 + (i % 12) * 44 });
+
+let slotIndex = 0;
+const hidden = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: slot(slotIndex++) });
+
+/**
+ * Level 7 (phan-loai-mau): red and blue crates sit on coloured pads in a row. The legs robot walks the row, the
+ * player decides when it grabs: only on a blue pad and only with free hands. Three blue crates in the store win,
+ * a red one in the store loses.
+ */
 export const level07: PuzzleLevel = {
-  id: 'cau-nhap-nhay',
+  id: 'phan-loai-mau',
   order: 7,
-  title: 'Cầu nhấp nháy',
-  task: 'Cây cầu cứ lúc hiện lúc ẩn. Rô-bốt chỉ được lăn khi cầu đang hiện, nếu không sẽ rơi xuống nước! Hãy làm cầu nhấp nháy theo giờ, và cho rô-bốt đi khi cầu hiện.',
-  hint: '"Hẹn giờ" đã được đặt "Tự lặp lại" nên cứ hết giờ là "Hết giờ" bật một nhịp rồi đếm lại. Nối "Hết giờ" vào "Đảo" của "Công tắc nhớ". Khi công tắc bật: rô-bốt "Cho đi". Nối "Đang bật" qua "Không" vào "Ẩn khi bật" của cầu: công tắc bật thì cầu hiện, tắt thì cầu ẩn. Cho đồng hồ đủ giây để rô-bốt qua hết cầu.',
+  title: 'Phân loại thùng màu',
+  task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua!',
+  hint: 'Đặt "Cảm biến màu", nối Rô-bốt vào "Vật" và chỉnh "Màu cần tìm" thành 2 (xanh). Rô-bốt chỉ cầm khi thấy màu xanh VÀ tay đang rảnh: nối "Đang cầm" qua "Không", rồi cùng "Đúng màu" vào "Và". Kết quả của "Và" nối vào "Cầm".',
   mode: '3d',
-  cast: [PUZZLE_LOOKS.robotWheel],
+  cast: [PUZZLE_LOOKS.robotLegs],
   base: {
     nodes: [
-      { id: 'bank-l', kind: 'block', params: { position: { x: -7, y: -0.5, z: 0 }, size: { x: 10, y: 1, z: 8 }, color: '#94a3b8', type: 'solid' }, pos: { x: 20, y: 440 } },
-      { id: 'bank-r', kind: 'block', params: { position: { x: 7, y: -0.5, z: 0 }, size: { x: 10, y: 1, z: 8 }, color: '#94a3b8', type: 'solid' }, pos: { x: 20, y: 500 } },
-      { id: 'water-look', kind: 'block', params: { position: { x: 0, y: -2, z: 0 }, size: { x: 30, y: 0.2, z: 12 }, color: '#38bdf8', type: 'pickup' }, pos: { x: 220, y: 500 } },
-      { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 9, y: 0.5, z: 0 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 220, y: 440 } },
-      { id: 'begin', kind: 'on-start', params: {}, pos: { x: 220, y: 200 } },
-      { id: 'bridge', kind: 'block', params: { name: 'Cầu', position: { x: 0, y: -0.5, z: 0 }, size: { x: 4, y: 1, z: 8 }, color: '#b45309', type: 'solid' }, pos: { x: 640, y: 20 } },
-      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt bánh xe', position: { x: -3.5, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 20 } },
-      { id: 'walk', kind: 'go-to', params: { stopDistance: 0.5, pathfind: 'off' }, pos: { x: 220, y: 20 } },
-      { id: 'water', kind: 'zone', params: { center: { x: 0, y: -4, z: 0 }, size: { x: 30, y: 4, z: 12 }, filter: 'bot', rule: 'center', color: '#38bdf8' }, pos: { x: 640, y: 300 } },
-      { id: 'cam', kind: 'camera', params: { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.9 }, pos: { x: 440, y: 440 } },
-      { id: 'end', kind: 'win-lose', params: { winMessage: 'Rô-bốt qua cầu an toàn!', loseMessage: 'Rô-bốt rơi xuống nước rồi!' }, pos: { x: 830, y: 20 } },
+      hidden('floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 26, y: 1, z: 6 }, color: '#cbd5e1', type: 'solid' }),
+      hidden('store-mark', 'block', { name: 'Kho', position: { x: -10, y: 0.01, z: 0 }, size: { x: 5, y: 0.02, z: 4 }, color: '#22c55e', type: 'pickup' }),
+      ...PADS.map((p, i) =>
+        hidden(`pad-${i + 1}`, 'block', { name: `Ô ${i + 1}`, position: { x: p.x, y: 0.03, z: 0 }, size: { x: 1.9, y: 0.06, z: 1.9 }, color: p.color, type: 'pickup' }),
+      ),
+      ...PADS.map((p, i) =>
+        hidden(`crate-${i + 1}`, 'item', {
+          name: `Thùng ${p.color === BLUE ? 'xanh' : 'đỏ'} ${i + 1}`,
+          position: { x: p.x, y: 0.5, z: 0 },
+          size: CRATE_SIZE,
+          shape: 'crate',
+          color: p.color,
+          tag: p.color === BLUE ? 'xanh' : 'do',
+        }),
+      ),
+      hidden('brain', 'patrol', { pointA: { x: -10, y: 0.5, z: 0 }, pointB: { x: 11, y: 0.5, z: 0 }, wait: 0.5, pathfind: 'off' }),
+      hidden('drop-zone', 'zone', { center: { x: -10, y: 1, z: 0 }, size: { x: 2, y: 3, z: 3 }, filter: 'bot', rule: 'center', color: '#22c55e' }),
+      hidden('blue-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 5, y: 3, z: 4 }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
+      hidden('red-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 5, y: 3, z: 4 }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
+      hidden('need', 'const', { value: 3 }),
+      hidden('enough', 'compare', { op: 'ge' }),
+      hidden('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
+      hidden('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
+      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -10, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 400, y: 20 } },
+      { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 400, y: 120 } },
     ],
     wires: [
-      { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'walk', port: 'self' } },
-      { id: 'b2', from: { node: 'goal', port: 'self' }, to: { node: 'walk', port: 'target' } },
-      { id: 'b3', from: { node: 'walk', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } },
-      { id: 'b4', from: { node: 'walk', port: 'moveY' }, to: { node: 'robot', port: 'moveY' } },
-      { id: 'b5', from: { node: 'walk', port: 'arrived' }, to: { node: 'end', port: 'win' } },
-      { id: 'b7', from: { node: 'begin', port: 'fired' }, to: { node: 'bridge', port: 'hide' } },
-      { id: 'b6', from: { node: 'water', port: 'inside' }, to: { node: 'end', port: 'lose' } },
+      { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'brain', port: 'self' } },
+      { id: 'b2', from: { node: 'brain', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } },
+      { id: 'b3', from: { node: 'brain', port: 'moveY' }, to: { node: 'robot', port: 'moveY' } },
+      { id: 'b4', from: { node: 'robot', port: 'self' }, to: { node: 'hands', port: 'character' } },
+      { id: 'b5', from: { node: 'drop-zone', port: 'inside' }, to: { node: 'hands', port: 'drop' } },
+      { id: 'b6', from: { node: 'blue-store', port: 'count' }, to: { node: 'enough', port: 'a' } },
+      { id: 'b7', from: { node: 'need', port: 'value' }, to: { node: 'enough', port: 'b' } },
+      { id: 'b8', from: { node: 'enough', port: 'out' }, to: { node: 'end', port: 'win' } },
+      { id: 'b9', from: { node: 'red-store', port: 'inside' }, to: { node: 'end', port: 'lose' } },
     ],
   },
   shownPorts: {
-    robot: { in: [], out: [] },
-    walk: { in: ['go'], out: [] },
-    bridge: { in: ['hiddenWhile'], out: [] },
-    begin: { in: [], out: [] },
-    water: { in: [], out: [] },
-    goal: { in: [], out: [] },
-    'bank-l': { in: [], out: [] },
-    'bank-r': { in: [], out: [] },
-    'water-look': { in: [], out: [] },
+    floor: { in: [], out: [] },
+    'store-mark': { in: [], out: [] },
+    'pad-1': { in: [], out: [] },
+    'pad-2': { in: [], out: [] },
+    'pad-3': { in: [], out: [] },
+    'pad-4': { in: [], out: [] },
+    'pad-5': { in: [], out: [] },
+    'pad-6': { in: [], out: [] },
+    'crate-1': { in: [], out: [] },
+    'crate-2': { in: [], out: [] },
+    'crate-3': { in: [], out: [] },
+    'crate-4': { in: [], out: [] },
+    'crate-5': { in: [], out: [] },
+    'crate-6': { in: [], out: [] },
+    brain: { in: [], out: [] },
+    'drop-zone': { in: [], out: [] },
+    'blue-store': { in: [], out: [] },
+    'red-store': { in: [], out: [] },
+    need: { out: [] },
+    enough: { in: [], out: [] },
     cam: { in: [], out: [] },
     end: { in: [] },
+    robot: { in: [], out: ['self'] },
+    hands: { in: ['grab'], out: ['holding'] },
   },
   tray: [
-    { kind: 'timer', count: 1, params: { seconds: 1, repeat: 'yes' } },
-    { kind: 'latch', count: 1 },
+    { kind: 'color-sensor', count: 1, params: { where: 'feet', want: 1, color1: RED, color2: BLUE } },
     { kind: 'not', count: 1 },
     { kind: 'and', count: 1 },
+    { kind: 'or', count: 1 },
   ],
-  editable: [{ kind: 'timer', paramId: 'seconds' }],
+  editable: [{ kind: 'color-sensor', paramId: 'want' }],
   par: 3,
   freeHints: 3,
-  timeLimit: 40,
+  timeLimit: 60,
   solution: {
     nodes: [
-      { id: 's-timer', kind: 'timer', params: { seconds: 3, repeat: 'yes' }, pos: { x: 220, y: 200 } },
-      { id: 's-latch', kind: 'latch', params: {}, pos: { x: 440, y: 200 } },
-      { id: 's-not', kind: 'not', params: {}, pos: { x: 640, y: 200 } },
+      { id: 's-eye', kind: 'color-sensor', params: { where: 'feet', want: 2, color1: RED, color2: BLUE }, pos: { x: 620, y: 40 } },
+      { id: 's-free', kind: 'not', params: {}, pos: { x: 620, y: 300 } },
+      { id: 's-and', kind: 'and', params: {}, pos: { x: 820, y: 170 } },
     ],
     wires: [
-      { id: 'sw1', from: { node: 's-timer', port: 'done' }, to: { node: 's-latch', port: 'toggle' } },
-      { id: 'sw2', from: { node: 's-latch', port: 'on' }, to: { node: 'walk', port: 'go' } },
-      { id: 'sw3', from: { node: 's-latch', port: 'on' }, to: { node: 's-not', port: 'in' } },
-      { id: 'sw4', from: { node: 's-not', port: 'out' }, to: { node: 'bridge', port: 'hiddenWhile' } },
+      { id: 'sw1', from: { node: 'robot', port: 'self' }, to: { node: 's-eye', port: 'who' } },
+      { id: 'sw2', from: { node: 's-eye', port: 'match' }, to: { node: 's-and', port: 'a' } },
+      { id: 'sw3', from: { node: 'hands', port: 'holding' }, to: { node: 's-free', port: 'in' } },
+      { id: 'sw4', from: { node: 's-free', port: 'out' }, to: { node: 's-and', port: 'b' } },
+      { id: 'sw5', from: { node: 's-and', port: 'out' }, to: { node: 'hands', port: 'grab' } },
     ],
   },
 };
