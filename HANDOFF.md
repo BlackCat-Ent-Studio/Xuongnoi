@@ -260,3 +260,5 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 - The user is a non-coder. Explain plainly, give links (http://localhost:5173, artifact URLs), and say what was not verified in the browser.
 - Report honestly: unverified items, deviations from the approved design, and when tests were not re-run in full.
 - Security: never read `D:\gbg\`. The skill kits (`D:\skill\taste-skill-main`, `D:\skill\impeccable-main`, `E:\ux-ui-agent-skills-main`) are read-only references; never install their hooks or run impeccable's launcher. Use the user's email only for identification.
+
+- 22:50: user says overview ("Toàn cảnh") still too far, wants a tighter "just enough" fit and a TRIAL first (screenshot Screenshot 2026-11-01 224722.png). Agent on branch feat/overview-fit (worktree ../GameBuilder-fit, dev :5206, presets Hiện tại / Gần vừa / Rất gần), not merged; report fullstack-261101-2250-overview-fit-report.md. Show trial to user, merge chosen preset, remove trial control, clean worktree (junctions first).
