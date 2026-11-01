@@ -1,4 +1,77 @@
 import type { PuzzleLevel } from '../types';
+import { PUZZLE_LOOKS } from '../types';
 
-/** Level 7 (cau-nhap-nhay). Placeholder until the level is written; null levels are left out of the list. */
-export const level07: PuzzleLevel | null = null;
+/** Level 7 (cau-nhap-nhay): a bridge blinks on a timer; the robot may only roll while the bridge is shown. */
+export const level07: PuzzleLevel = {
+  id: 'cau-nhap-nhay',
+  order: 7,
+  title: 'Cầu nhấp nháy',
+  task: 'Cây cầu cứ lúc hiện lúc ẩn. Rô-bốt chỉ được lăn khi cầu đang hiện, nếu không sẽ rơi xuống nước! Hãy làm cầu nhấp nháy theo giờ, và cho rô-bốt đi khi cầu hiện.',
+  hint: 'Nối "Hết giờ" của "Hẹn giờ" vào chính "Đếm lại" của nó để đồng hồ chạy mãi. Cũng nối "Hết giờ" vào "Đảo" của "Công tắc nhớ". Khi công tắc bật: cầu "Hiện lại" và rô-bốt "Cho đi". Khi công tắc tắt (qua "Không", nối vào ô B của "Hoặc"): cầu bị ẩn đi. Cho đồng hồ đủ giây để rô-bốt qua hết cầu.',
+  mode: '3d',
+  cast: [PUZZLE_LOOKS.robotWheel],
+  base: {
+    nodes: [
+      { id: 'bank-l', kind: 'block', params: { position: { x: -7, y: -0.5, z: 0 }, size: { x: 10, y: 1, z: 8 }, color: '#94a3b8', type: 'solid' }, pos: { x: 20, y: 440 } },
+      { id: 'bank-r', kind: 'block', params: { position: { x: 7, y: -0.5, z: 0 }, size: { x: 10, y: 1, z: 8 }, color: '#94a3b8', type: 'solid' }, pos: { x: 20, y: 500 } },
+      { id: 'water-look', kind: 'block', params: { position: { x: 0, y: -2, z: 0 }, size: { x: 30, y: 0.2, z: 12 }, color: '#38bdf8', type: 'pickup' }, pos: { x: 220, y: 500 } },
+      { id: 'goal', kind: 'block', params: { position: { x: 9, y: 0.5, z: 0 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 220, y: 440 } },
+      { id: 'bridge', kind: 'block', params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 4, y: 1, z: 8 }, color: '#b45309', type: 'solid' }, pos: { x: 640, y: 20 } },
+      { id: 'robot', kind: 'character', params: { position: { x: -3.5, y: 1, z: 0 }, speed: 4, color: '#f97316', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 20 } },
+      { id: 'begin', kind: 'on-start', params: {}, pos: { x: 220, y: 200 } },
+      { id: 'hide-or', kind: 'or', params: {}, pos: { x: 440, y: 160 } },
+      { id: 'walk', kind: 'go-to', params: { stopDistance: 0.5, pathfind: 'off' }, pos: { x: 220, y: 20 } },
+      { id: 'water', kind: 'zone', params: { center: { x: 0, y: -4, z: 0 }, size: { x: 30, y: 4, z: 12 }, filter: 'bot', rule: 'center', color: '#38bdf8' }, pos: { x: 640, y: 300 } },
+      { id: 'cam', kind: 'camera', params: { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.9 }, pos: { x: 440, y: 440 } },
+      { id: 'end', kind: 'win-lose', params: { winMessage: 'Rô-bốt qua cầu an toàn!', loseMessage: 'Rô-bốt rơi xuống nước rồi!' }, pos: { x: 830, y: 20 } },
+    ],
+    wires: [
+      { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'walk', port: 'self' } },
+      { id: 'b2', from: { node: 'goal', port: 'self' }, to: { node: 'walk', port: 'target' } },
+      { id: 'b3', from: { node: 'walk', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } },
+      { id: 'b4', from: { node: 'walk', port: 'moveY' }, to: { node: 'robot', port: 'moveY' } },
+      { id: 'b5', from: { node: 'walk', port: 'arrived' }, to: { node: 'end', port: 'win' } },
+      { id: 'b7', from: { node: 'begin', port: 'fired' }, to: { node: 'hide-or', port: 'a' } },
+      { id: 'b8', from: { node: 'hide-or', port: 'out' }, to: { node: 'bridge', port: 'hide' } },
+      { id: 'b6', from: { node: 'water', port: 'inside' }, to: { node: 'end', port: 'lose' } },
+    ],
+  },
+  shownPorts: {
+    robot: { in: [], out: [] },
+    walk: { in: ['go'], out: [] },
+    bridge: { in: ['show'], out: [] },
+    begin: { in: [], out: [] },
+    'hide-or': { in: ['b'], out: [] },
+    water: { in: [], out: [] },
+    goal: { in: [], out: [] },
+    'bank-l': { in: [], out: [] },
+    'bank-r': { in: [], out: [] },
+    'water-look': { in: [], out: [] },
+    cam: { in: [], out: [] },
+    end: { in: [] },
+  },
+  tray: [
+    { kind: 'timer', count: 1, params: { seconds: 1 } },
+    { kind: 'latch', count: 1 },
+    { kind: 'not', count: 1 },
+    { kind: 'and', count: 1 },
+  ],
+  editable: [{ kind: 'timer', paramId: 'seconds' }],
+  par: 3,
+  timeLimit: 40,
+  solution: {
+    nodes: [
+      { id: 's-timer', kind: 'timer', params: { seconds: 3 }, pos: { x: 220, y: 200 } },
+      { id: 's-latch', kind: 'latch', params: {}, pos: { x: 440, y: 200 } },
+      { id: 's-not', kind: 'not', params: {}, pos: { x: 640, y: 200 } },
+    ],
+    wires: [
+      { id: 'sw1', from: { node: 's-timer', port: 'done' }, to: { node: 's-timer', port: 'reset' } },
+      { id: 'sw2', from: { node: 's-timer', port: 'done' }, to: { node: 's-latch', port: 'toggle' } },
+      { id: 'sw3', from: { node: 's-latch', port: 'on' }, to: { node: 'bridge', port: 'show' } },
+      { id: 'sw4', from: { node: 's-latch', port: 'on' }, to: { node: 's-not', port: 'in' } },
+      { id: 'sw5', from: { node: 's-not', port: 'out' }, to: { node: 'hide-or', port: 'b' } },
+      { id: 'sw6', from: { node: 's-latch', port: 'on' }, to: { node: 'walk', port: 'go' } },
+    ],
+  },
+};
