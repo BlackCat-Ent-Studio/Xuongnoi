@@ -68,7 +68,9 @@ function syncVisibility(): void {
 /** Plays one effect if effects are on. Safe to call before audio is unlocked (it is then silent). */
 export function playSfx(name: SfxName): void {
   try {
-    if (!audio || !getSettings().sfx || audio.ctx.state !== 'running') return;
+    // A context still resuming from the unlocking tap plays the effect once it runs, so the first tap is heard;
+    // while the tab is hidden nothing is queued.
+    if (!audio || !getSettings().sfx || audio.ctx.state === 'closed' || document.hidden) return;
     const t = nowMs();
     if (!allow(name, t)) return;
     let starIndex = 0;
