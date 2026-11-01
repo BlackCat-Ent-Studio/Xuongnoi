@@ -272,3 +272,4 @@ User (client feedback) says STOP the overview-fit work (branch feat/overview-fit
 Asked user (numbered 1a..) — see chat; record answers here. Recommended order: layout (2) + camera (4) first, then logic checker (1), then 3D redo (3) via brainstorm + preview per level.
 
 - 00:25: user said "stop talking, make an artifact to check". Agent building preview plans/ui-mockups/phone-layout/ (layouts A toggle / B picture-in-picture, camera pan+zoom, logic checker V1 on-board / V2 checklist, "Làm sai thử"); will publish via claude-artifacts MCP; report fullstack-261102-0025-phone-layout-preview-report.md. 3D redo not in this preview.
+- 00:43: phone-layout preview PUBLISHED https://claude.ai/artifact/7VYWBcEfNcUfRUop9Df2cQ (slug 34931270-6c14-4f18-a8e6-9a51393ef499). Waiting for user pick: layout A/B/C, checker V1/V2, then 3D redo details.
