@@ -1,0 +1,12 @@
+<!doctype html>
+<!-- Dev-only page (not part of the build): opens the offline renderers so a script can measure levels. -->
+<meta charset="utf-8" />
+<title>sound render check</title>
+<script type="module">
+  import { renderSfx, renderMusic } from './offline-render.ts';
+  import * as sound from '../sound.ts';
+  import { setSettings } from '../settings.ts';
+  window.soundRender = { renderSfx, renderMusic };
+  window.soundApi = { ...sound, setSettings };
+  window.soundReady = true;
+</script>
