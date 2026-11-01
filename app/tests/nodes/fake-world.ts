@@ -87,6 +87,7 @@ export function makeWorld(): FakeWorld {
     setVehicleTrack: () => undefined,
     setVehicleTow: () => undefined,
     probeAhead: () => null,
+    lineOfSight: () => true,
     enterVehicle: () => null,
     exitVehicle: () => null,
     loadCargo: () => null,

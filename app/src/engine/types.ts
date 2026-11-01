@@ -594,6 +594,11 @@ export interface WorldApi {
    * whose gap to the entity is at most `reach`. Items, zones and riders are ignored. Null when the way is clear.
    */
   probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null;
+  /**
+   * True when no visible solid block crosses the straight line between the centres of the two entities (their own
+   * bodies never block). False when either one is unknown or hidden. Flat views ignore the axis they do not show.
+   */
+  lineOfSight(fromId: EntityId, toId: EntityId): boolean;
   /** Seats the character in the nearest free vehicle within `reach` (gap between their boxes). Null when none is near, it is already seated, or it is dead/hidden. */
   enterVehicle(character: EntityId, reach: number): EntityId | null;
   /** Gets the character out beside its vehicle on a spot free of solid blocks. Returns the vehicle left, or null when it was not seated. */

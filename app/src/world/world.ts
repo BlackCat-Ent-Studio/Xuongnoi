@@ -25,6 +25,7 @@ import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, ste
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
+import { lineOfSight } from './line-of-sight';
 import { probeAhead } from './probe-ahead';
 import { createVehicleBody, seatPosition } from './vehicles';
 import { prepareTrains } from './vehicle-train';
@@ -549,6 +550,9 @@ export function createWorld(mode: ViewMode): World {
       const e = byId.get(id);
       if (!e || !e.visible) return null;
       return probeAhead(list, e, finiteOr(reach, 0));
+    },
+    lineOfSight(fromId: EntityId, toId: EntityId): boolean {
+      return lineOfSight(list, mode, byId.get(fromId), byId.get(toId));
     },
     enterVehicle(character: EntityId, reach: number): EntityId | null {
       const c = liveCharacter(character);
