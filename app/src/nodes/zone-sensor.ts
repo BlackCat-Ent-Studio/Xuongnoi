@@ -8,7 +8,7 @@ interface ZoneState {
   wasInside: boolean;
 }
 
-function matchesFilter(e: EntityView, filter: string): boolean {
+export function matchesFilter(e: EntityView, filter: string): boolean {
   switch (filter) {
     case 'player':
       return e.kind === 'character' && (e.role ?? 'player') === 'player';

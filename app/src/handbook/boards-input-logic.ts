@@ -216,3 +216,60 @@ export const tryDistance = (): Board =>
     ],
     [...WALKER_WIRES, ['hero', 'self', 'dist', 'a'], ['flag', 'self', 'dist', 'b'], ['dist', 'distance', 'num', 'value'], ['dist', 'within', 'hi', 'show']],
   );
+
+export const trySpeedSensor = (): Board =>
+  build(
+    'Cảm biến tốc độ',
+    'Bấm Chơi, rồi bấm mũi tên phải. Số tốc độ lên khoảng 5 khi nhân vật chạy; lớn hơn 3 thì chữ hiện, đứng lại thì số về 0.',
+    [
+      ...WALKER,
+      { alias: 'speed', kind: 'speed-sensor', x: 600, y: 20 },
+      { alias: 'num', kind: 'show-number', x: 900, y: 20, params: { label: 'Tốc độ', corner: 'top-right' } },
+      text('hi', 900, 200, 'Đang chạy nhanh!'),
+    ],
+    [...WALKER_WIRES, ['hero', 'self', 'speed', 'who'], ['speed', 'speed', 'num', 'value'], ['speed', 'fast', 'hi', 'show']],
+  );
+
+export const tryAheadSensor = (): Board =>
+  build(
+    'Cảm biến phía trước',
+    'Bấm Chơi, rồi bấm mũi tên phải. Khi cách bức tường còn 3 ô, chữ hiện lên và số khoảng cách giảm dần khi bạn tiến sát.',
+    [
+      ...WALKER,
+      { alias: 'wall', kind: 'block', x: 300, y: 500, params: { position: { x: 0, y: 1.5, z: 0 }, size: { x: 1, y: 2, z: 1 }, color: '#a8a29e' } },
+      { alias: 'ahead', kind: 'ahead-sensor', x: 600, y: 20 },
+      { alias: 'num', kind: 'show-number', x: 900, y: 20, params: { label: 'Còn trống', corner: 'top-right' } },
+      text('hi', 900, 200, 'Có vật cản phía trước!'),
+    ],
+    [...WALKER_WIRES, ['hero', 'self', 'ahead', 'who'], ['ahead', 'distance', 'num', 'value'], ['ahead', 'blocked', 'hi', 'show']],
+  );
+
+export const tryVisionSensor = (): Board =>
+  build(
+    'Cảm biến tầm nhìn',
+    'Bấm Chơi, rồi bấm mũi tên phải. Bot đứng bên trái, quay mặt sang phải: nó thấy bạn lúc đầu, bạn chạy xa quá 6 ô thì mất dấu.',
+    [
+      ...WALKER,
+      { alias: 'bot', kind: 'character', x: 300, y: 500, params: { position: { x: -9, y: 1, z: 0 }, role: 'bot', color: '#ef4444' } },
+      { alias: 'eyes', kind: 'vision-sensor', x: 600, y: 20 },
+      text('hi', 900, 20, 'Bot đang thấy bạn!'),
+      { alias: 'lost', kind: 'show-number', x: 900, y: 200, params: { label: 'Cách bot', corner: 'top-right' } },
+    ],
+    [...WALKER_WIRES, ['bot', 'self', 'eyes', 'viewer'], ['hero', 'self', 'eyes', 'target'], ['eyes', 'seen', 'hi', 'show'], ['eyes', 'distance', 'lost', 'value']],
+  );
+
+export const tryColorSensor = (): Board =>
+  build(
+    'Cảm biến màu',
+    'Bấm Chơi, rồi bấm mũi tên phải. Nhân vật đứng trên ô đỏ nên Số màu là 1; bước sang ô xanh lá thì thành 3. Chỉ ba màu của bảng màu (đỏ, vàng, xanh lá) mới có số; màu khác ra 0.',
+    [
+      { alias: 'stick', kind: 'stick', x: 20, y: 20 },
+      { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 } } },
+      { alias: 'red', kind: 'block', x: 300, y: 330, params: { position: { x: -5, y: 0, z: 0 }, size: { x: 10, y: 1, z: 1 }, color: '#ef4444' } },
+      { alias: 'green', kind: 'block', x: 300, y: 500, params: { position: { x: 5, y: 0, z: 0 }, size: { x: 10, y: 1, z: 1 }, color: '#22c55e' } },
+      { alias: 'eye', kind: 'color-sensor', x: 600, y: 20 },
+      { alias: 'num', kind: 'show-number', x: 900, y: 20, params: { label: 'Số màu', corner: 'top-right' } },
+      text('hi', 900, 200, 'Đang đứng trên màu đỏ!'),
+    ],
+    [['stick', 'x', 'hero', 'moveX'], ['hero', 'self', 'eye', 'who'], ['eye', 'index', 'num', 'value'], ['eye', 'match', 'hi', 'show']],
+  );

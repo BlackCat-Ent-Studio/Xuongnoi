@@ -36,6 +36,10 @@ import { mapRangeNode } from './map-range';
 import { zoneSensorNode } from './zone-sensor';
 import { cargoNode } from './cargo';
 import { distanceNode } from './distance';
+import { speedSensorNode } from './speed-sensor';
+import { aheadSensorNode } from './ahead-sensor';
+import { visionSensorNode } from './vision-sensor';
+import { colorSensorNode } from './color-sensor';
 import { cameraNode } from './camera';
 import { teleportNode } from './teleport';
 import { portalNode } from './portal';
@@ -100,6 +104,10 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   mapRangeNode,
   zoneSensorNode,
   distanceNode,
+  speedSensorNode,
+  aheadSensorNode,
+  visionSensorNode,
+  colorSensorNode,
   cameraNode,
   teleportNode,
   portalNode,
