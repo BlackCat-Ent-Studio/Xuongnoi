@@ -262,3 +262,11 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 - Security: never read `D:\gbg\`. The skill kits (`D:\skill\taste-skill-main`, `D:\skill\impeccable-main`, `E:\ux-ui-agent-skills-main`) are read-only references; never install their hooks or run impeccable's launcher. Use the user's email only for identification.
 
 - 22:50: user says overview ("Toàn cảnh") still too far, wants a tighter "just enough" fit and a TRIAL first (screenshot Screenshot 2026-11-01 224722.png). Agent on branch feat/overview-fit (worktree ../GameBuilder-fit, dev :5206, presets Hiện tại / Gần vừa / Rất gần), not merged; report fullstack-261101-2250-overview-fit-report.md. Show trial to user, merge chosen preset, remove trial control, clean worktree (junctions first).
+
+## 0. NEWEST 2026-11-02 00:17 — BIG CHANGE REQUEST (not started, waiting on answers)
+User (client feedback) says STOP the overview-fit work (branch feat/overview-fit + worktree ../GameBuilder-fit + dev :5206 still exist, NOT merged — park or delete; junctions first) and wants:
+1. A "bộ kiểm tra logic" on the play screen: shows whether the run follows the wired pieces' logic (e.g. live per-piece state / which piece fired / why the level failed).
+2. NO split screen (game left + board right) — on phones it is too small. One side fills the screen (switch Bảng mảnh ghép ⇄ Sân chơi), OR the game view is small/zoomable and grows when needed.
+3. Redo ALL 3D levels (5–8) from scratch.
+4. Player-controlled camera in the game view: pan (drag) + zoom (pinch/wheel).
+Asked user (numbered 1a..) — see chat; record answers here. Recommended order: layout (2) + camera (4) first, then logic checker (1), then 3D redo (3) via brainstorm + preview per level.
