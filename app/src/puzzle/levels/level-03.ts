@@ -13,7 +13,7 @@ const starNodes: GraphNode[] = STARS.flatMap((s, k): GraphNode[] => [
   {
     id: s.id,
     kind: 'block',
-    params: { position: { x: s.x, y: 0.5, z: s.z }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
+    params: { name: `Ngôi sao ${k + 1}`, position: { x: s.x, y: 0.5, z: s.z }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
     pos: { x: 30, y: 20 + k * 100 },
   },
   { id: `touch-${s.id}`, kind: 'touch', params: {}, pos: { x: 230, y: 20 + k * 130 } },
@@ -43,7 +43,7 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'cat',
         kind: 'character',
-        params: { position: { x: -8, y: 0.5, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
+        params: { name: 'Mèo nhỏ', position: { x: -8, y: 0.5, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
         pos: { x: 30, y: 400 },
       },
       {
@@ -64,13 +64,13 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'gate',
         kind: 'block',
-        params: { position: { x: 8, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 14 }, color: '#92400e', type: 'solid' },
+        params: { name: 'Cổng', position: { x: 8, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 14 }, color: '#92400e', type: 'solid' },
         pos: { x: 800, y: 30 },
       },
       {
         id: 'goal',
         kind: 'block',
-        params: { position: { x: 11, y: 0.5, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, color: '#22c55e', type: 'pickup' },
+        params: { name: 'Cờ đích', position: { x: 11, y: 0.5, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, color: '#22c55e', type: 'pickup' },
         pos: { x: 430, y: 400 },
       },
       { id: 'touch-goal', kind: 'touch', params: {}, pos: { x: 620, y: 400 } },

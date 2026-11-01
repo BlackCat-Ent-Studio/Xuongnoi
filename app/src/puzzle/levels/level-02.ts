@@ -18,25 +18,25 @@ export const level02: PuzzleLevel | null = {
       {
         id: 'bot',
         kind: 'character',
-        params: { position: { x: -10, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
+        params: { name: 'Rô-bốt chân ngắn', position: { x: -10, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
         pos: { x: 30, y: 30 },
       },
       {
         id: 'button',
         kind: 'block',
-        params: { position: { x: -5, y: 0.1, z: 0 }, size: { x: 1.6, y: 0.2, z: 1 }, color: '#ef4444', type: 'pickup' },
+        params: { name: 'Nút đỏ', position: { x: -5, y: 0.1, z: 0 }, size: { x: 1.6, y: 0.2, z: 1 }, color: '#ef4444', type: 'pickup' },
         pos: { x: 30, y: 170 },
       },
       {
         id: 'door',
         kind: 'block',
-        params: { position: { x: 3, y: 4, z: 0 }, size: { x: 0.8, y: 8, z: 1 }, color: '#92400e', type: 'solid' },
+        params: { name: 'Cửa kho', position: { x: 3, y: 4, z: 0 }, size: { x: 0.8, y: 8, z: 1 }, color: '#92400e', type: 'solid' },
         pos: { x: 800, y: 30 },
       },
       {
         id: 'flag',
         kind: 'block',
-        params: { position: { x: 10, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#22c55e', type: 'pickup' },
+        params: { name: 'Cờ', position: { x: 10, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#22c55e', type: 'pickup' },
         pos: { x: 30, y: 300 },
       },
       { id: 'go-flag', kind: 'go-to', params: {}, pos: { x: 230, y: 30 } },
@@ -50,7 +50,7 @@ export const level02: PuzzleLevel | null = {
       {
         id: 'ground',
         kind: 'block',
-        params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d', type: 'solid' },
+        params: { name: 'Mặt đất', position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d', type: 'solid' },
         pos: { x: 230, y: 480 },
       },
     ],
