@@ -52,7 +52,7 @@ describe('guide steps', () => {
     if (level8) {
       expect(hasGuide(level8)).toBe(false);
       expect(buildGuideSteps(level8)).toEqual([]);
-      expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1]); // only level 1 has the full guide
+      expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1, 5]); // level 1 and the first 3D level have the full guide
       expect(solutionSteps(level8).length).toBeGreaterThan(0); // the "?" hint still works there
     }
   });
@@ -65,8 +65,8 @@ describe('guide steps', () => {
       { type: 'run', text: 'Bấm CHẠY nhé bạn' },
     ];
 
-    it('level 1 opens with a line and ends with "press run"; every line stays short', () => {
-      if (level.order === 1) {
+    it('guided levels open with a line and end with "press run"; every line stays short', () => {
+      if (level.order === 1 || level.order === 5) {
         const guide = buildGuideSteps(level);
         expect(hasGuide(level)).toBe(true);
         expect(guide[0]?.type).toBe('intro');

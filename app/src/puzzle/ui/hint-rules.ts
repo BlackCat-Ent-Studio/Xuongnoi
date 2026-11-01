@@ -22,3 +22,13 @@ export function hintBadge(level: PuzzleLevel, used: number): HintBadge {
   const left = hintsLeft(level, used);
   return { left, costly: left === 0 };
 }
+
+/**
+ * Records a "?" reveal. A step counts only the first time it is revealed during a visit to the level, so
+ * pressing "?" again on the same step is free. Returns true when this press counts (and adds the key to `revealed`).
+ */
+export function countHint(revealed: Set<string>, key: string | null): boolean {
+  if (key === null || revealed.has(key)) return false;
+  revealed.add(key);
+  return true;
+}

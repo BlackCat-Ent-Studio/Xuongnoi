@@ -173,6 +173,30 @@ describe('level 7: cau-nhap-nhay', () => {
     expect(runLevel(level07, noFollow).outcome).not.toBe('win');
   });
 
+  it('the bridge wire is required: without it the bridge stays hidden and the robot falls', () => {
+    expect(runLevel(level07, withoutWires(level07.solution, 'sw4')).outcome).toBe('lose');
+    expect(runLevel(level07, level07.solution).outcome).toBe('win');
+  });
+
+  it('no small wiring that skips the bridge input ever wins', () => {
+    const sol = level07.solution;
+    const nodes = [...sol.nodes, { id: 'x-and', kind: 'and', params: {}, pos: { x: 0, y: 0 } }];
+    const outs: [string, string][] = [['s-timer', 'done'], ['s-latch', 'on'], ['s-not', 'out'], ['x-and', 'out']];
+    const ins: [string, string][] = [['s-timer', 'run'], ['s-timer', 'reset'], ['s-latch', 'set'], ['s-latch', 'reset'], ['s-latch', 'toggle'], ['s-not', 'in'], ['x-and', 'a'], ['x-and', 'b']];
+    const wire = (a: [string, string], c: [string, string]) => ({ id: `${a[0]}.${a[1]}>${c[0]}.${c[1]}`, from: { node: a[0], port: a[1] }, to: { node: c[0], port: c[1] } });
+    for (const go of outs) {
+      const goWire = wire(go, ['walk', 'go']);
+      expect(runLevel(level07, { nodes, wires: [goWire] }).outcome, goWire.id).not.toBe('win');
+      for (const o of outs) {
+        for (const i of ins) {
+          if (o[0] === i[0]) continue;
+          const answer = { nodes, wires: [goWire, wire(o, i)] };
+          expect(runLevel(level07, answer).outcome, `${goWire.id} + ${wire(o, i).id}`).not.toBe('win');
+        }
+      }
+    }
+  });
+
   it('a timer that never reaches the switch leaves the robot waiting, never winning', () => {
     const noTick = withoutWires(level07.solution, 'sw1');
     expect(runLevel(level07, noTick).outcome).toBe('timeout');
