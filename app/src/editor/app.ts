@@ -415,6 +415,8 @@ export function mountEditor(root: HTMLElement): void {
         },
         { type: 'item', label: SHELL_TEXT.helpHandbook, icon: 'book', onSelect: () => handbook.open() },
         { type: 'item', label: SHELL_TEXT.helpShortcuts, icon: 'keyboard', hint: '?', onSelect: openHelp },
+        { type: 'separator' },
+        { type: 'item', label: 'Chơi giải đố', onSelect: () => void window.open('giai-do.html', '_blank', 'noopener') },
       ],
     },
   ];
