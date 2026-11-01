@@ -107,9 +107,9 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   replayBtn.setAttribute('aria-label', T.guideReplayAria);
   stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
 
-  /** What the camera does now: the player's remembered choice, else overview while editing and follow while the game runs. */
+  /** What the camera does now: the player's remembered choice, else the whole scene (also while the game runs). */
   function effectiveView(): StageView {
-    return rememberedView ?? (phase === 'edit' ? 'overview' : 'follow');
+    return rememberedView ?? 'overview';
   }
   function syncViewButton(): void {
     const following = effectiveView() === 'follow';
