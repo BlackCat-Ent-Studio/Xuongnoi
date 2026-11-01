@@ -1,4 +1,4 @@
-# HANDOFF — GameBuilder "Xưởng Nối" — 2026-11-01 15:00
+# HANDOFF — GameBuilder "Xưởng Nối" + "Xưởng Bot giải đố" — 2026-11-01 18:40 (main = 0118780, 1777+ tests green, tsc clean, build OK)
 
 ## 1. Goal
 An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
@@ -15,8 +15,9 @@ An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. Yo
 - **Hộp input `hiddenWhile` "Ẩn khi bật"** (last input): level-follow hide/show, acts only on change; unwired = old behaviour.
 - **Visual tutorial (16:30):** `puzzle/ui/guide.ts` + `guide-script.ts` + `guide.css`: Mèo Mun mascot (`mascot.ts` = engine cat-chibi in a round frame, talks: typing + mouth flap + head nod, natural blinks; face API `rig.face` in cat-chibi.ts, `blink.ts`), spotlight, tapping hand, dotted ghost wire; steps generated from `level.solution`; levels 1–7, auto only on first open (`xuongnoi.puzzle.guideSeen`), "↻ Hướng dẫn" replays; "?" = ghost of next missing wire (costs a star except while the guide leads). Approved preview: https://claude.ai/artifact/3zeovA1nDaLFRd9oY37cgR. In-game chibi blinks naturally. Hẹn giờ has "Tự lặp lại". Level 7 redone (timer repeat → latch toggle → go + Không → bridge Ẩn khi bật); a test now replays every level's solution through the real `canConnect` (self-wires were rejected by the board but not by runLevel). Level 7 can still be won without the bridge wire (bridge stays shown).
 - **Hints & stars (17:30):** level 1 guide is mandatory on the first visit only (replay button on level 1 only); levels 2–8 have no auto guide — each "?" reveals ONE next step (cat + spotlight + hand + ghost wire). `freeHints` per level (L2 1, L3–5 2, L6–7 3, L8 4); `starsFor(level, answer, hintsUsed)`: 3 if pieces ≤ par else 2, minus 1 per hint beyond free, min 1. "?" badge shows free hints left (red + crossed star when none). New-piece intro: one cat line per unseen kind on first open (`intro:<id>` in guideSeen). Decoy tray pieces in levels 2, 3, 4, 7 (tests prove no cheaper shortcut). The task box hides while the cat talks. Repeat "?" on the same step counts (user may want to change).
-- **Polish + APK track (from 17:50):** decision record plans/reports/brainstorm-261101-1753-cozy-polish-apk-report.md. Android toolchain installed: JDK 21 D:androidjdk-21, SDK D:androidsdk (platform 35, build-tools 35.0.0), activate with D:androidenv.ps1 / env.cmd (old SDK leftovers at D:android root untouched). Style previews A/B/C: https://claude.ai/artifact/Cp51RqEctmLeNhifT7fy8N , QTjjmT3rMqqb2YkzxxBduU , Gg4bamT5XnpHZaWavNuYCk (plans/ui-mockups/cozy-style/). **User chose A "Xưởng gỗ ấm áp" as default and wants B and C kept** (puzzle/ui/themes/, switcher A·B·C, localStorage xuongnoi.puzzle.themeTrial, DEFAULT_THEME=a). Themes never touch node cards, wires or characters (pixel diff 0) — user rule: change the UI, never the characters/cards/wires. Next: part B (themed floors/props per look), C (transitions, sound), D (standalone build + Capacitor APK). App name still not given (placeholder Xưởng Bot).
-- **Not verified:** real phone touch, real GPU FPS, no human has played the 8 levels; vision cone gizmo not drawn in the editor; level 7 still uses the old locked Hoặc/"Hiện lại" bridge trick (could move to "Ẩn khi bật"); 3D characters still small on phone overview.
+- **Polish + APK track (from 17:50):** decision record plans/reports/brainstorm-261101-1753-cozy-polish-apk-report.md. Android toolchain installed: JDK 21 `D:\android\jdk-21`, SDK `D:\android\sdk` (platform 35, build-tools 35.0.0, platform-tools/adb 37.0.1; Google SDK license accepted with the user's approval), activate per shell with `D:\android\env.ps1` / `env.cmd`; user env ANDROID_HOME/ANDROID_SDK_ROOT set; JAVA_HOME and system PATH untouched (Java 8 at D:\Java stays). An older SDK (android-34, jdk17 zip, 2025-09-25) sits at the D:\android root — left alone, user may delete. Style previews A/B/C: https://claude.ai/artifact/Cp51RqEctmLeNhifT7fy8N , QTjjmT3rMqqb2YkzxxBduU , Gg4bamT5XnpHZaWavNuYCk (plans/ui-mockups/cozy-style/). **User chose A "Xưởng gỗ ấm áp" as default and wants B and C kept** (puzzle/ui/themes/, switcher A·B·C, localStorage xuongnoi.puzzle.themeTrial, DEFAULT_THEME=a). Themes never touch node cards, wires or characters (pixel diff 0) — user rule: change the UI, never the characters/cards/wires. Next: part B (themed floors/props per look), C (transitions, sound), D (standalone build + Capacitor APK). App name still not given (placeholder Xưởng Bot).
+- **Theme state (18:30):** A is the default; level floors/blocks/props are still the old flat colours (grey 3D floor, green 2D strip) and clash with the themed backdrops — that is part B. The floating A·B·C switcher overlaps the board corner at 844×390; move the choice into a Settings screen in part C.
+- **Not verified:** real phone touch, real GPU FPS, no human has played the 8 levels; vision cone gizmo not drawn in the editor; level 7 can be won without the bridge wire; 3D characters small in the phone overview; a hash URL reload (`#/level/x`) falls back to the level list; mascot motion (mouth/blink timing) only checked as forced poses.
 
 ## 2. Current state before 2026-11-01 afternoon (main was 2f223eb, 1496 tests)
 - **Run:** `cd app; npm install; npm run dev` → http://localhost:5173 (strict port 5173).
@@ -84,13 +85,15 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 
 | Artifact | Link | Local file | State |
 |---|---|---|---|
-| Xưởng Bot giải đố (puzzle mode mockup, landscape phone) | https://claude.ai/artifact/HZCcLSsT1PytkJ8YddedtV | `plans/ui-mockups/puzzle-phone/bot-workshop-puzzle.html` | Level "Cửa kho" playable: tap-port-then-tap-port wiring, CHẠY, stars. User has NOT answered the 3 follow-up questions (style ok? 5 levels ok? 2D vs 3D stage) |
-| Robot Bánh Xe (one wheel) | https://claude.ai/artifact/MqQoHLu1wjjhpJFMJ8UR9V | `plans/ui-mockups/cozy-robot/robot-wheel.html` | Done, ~5.3k tris. User has not picked a robot |
-| Robot Chân Ngắn (two legs) | https://claude.ai/artifact/Seb1v2hHj6boPhF5qcwLDk | `plans/ui-mockups/cozy-robot/robot-legs.html` | Done (face screen fixed), ~5.7k tris |
-| Mèo Mun Chibi (team mascot, 2 legs) | https://claude.ai/artifact/2cHfjMpvTusonbpu1d7iQH | `plans/ui-mockups/black-cat/cat-chibi.html` | Plain smooth, no cheeks/belly lumps/fur, ~8.5k tris. Collar still the OLD style (no collar sliders) |
-| Mèo Mun Bốn Chân (team mascot, 4 legs) | https://claude.ai/artifact/E7Rr1PS7FgwPzBPE71yz7r | `plans/ui-mockups/black-cat/cat-quad.html` | Plain smooth, no fur, ~7.6k tris. Circular collar with 6 "Vòng cổ" sliders; user defaults 0.90 / 0.085 / 0.17 / 0.00 / -6° / 0.92; X pendant hangs BELOW the ring |
+| Xưởng Bot giải đố (puzzle mockup) | https://claude.ai/artifact/HZCcLSsT1PytkJ8YddedtV | `plans/ui-mockups/puzzle-phone/bot-workshop-puzzle.html` | Approved; real cards + wire energy copied in. Now built for real (§1b) |
+| Hướng dẫn trực quan (talking Mèo Mun guide) | https://claude.ai/artifact/3zeovA1nDaLFRd9oY37cgR | `plans/ui-mockups/puzzle-phone/tutorial-preview.html` | Approved; now in the game |
+| Robot Bánh Xe | https://claude.ai/artifact/MqQoHLu1wjjhpJFMJ8UR9V | `plans/ui-mockups/cozy-robot/robot-wheel.html` | Smoothed (more segments) + wheel mounts A Càng đôi / **B Chắn bùn (used in game)** / C Váy chuông |
+| Robot Chân Ngắn | https://claude.ai/artifact/Seb1v2hHj6boPhF5qcwLDk | `plans/ui-mockups/cozy-robot/robot-legs.html` | In game |
+| Mèo Mun Chibi | https://claude.ai/artifact/2cHfjMpvTusonbpu1d7iQH | `plans/ui-mockups/black-cat/cat-chibi.html` | In game; user kept the OLD collar (7b); page has a "Nói" button + natural blinks |
+| Mèo Mun Bốn Chân | https://claude.ai/artifact/E7Rr1PS7FgwPzBPE71yz7r | `plans/ui-mockups/black-cat/cat-quad.html` | In game (collar defaults 0.90 / 0.085 / 0.17 / 0.00 / -6° / 0.92) |
+| Style A / B / C | Cp51RqEctmLeNhifT7fy8N · QTjjmT3rMqqb2YkzxxBduU · Gg4bamT5XnpHZaWavNuYCk | `plans/ui-mockups/cozy-style/style-{a-workshop,b-meadow,c-night}.html` | A chosen as default, B/C kept. NOTE: preview A redrew cards and a 2D bot — NOT wanted in the game |
 
-- Puzzle mode design (agreed so far): stays inside Xưởng Nối; separate game-like landscape phone screen; level = task text + locked pre-placed objects + a tray with only the needed pieces + hidden result checker; stars ⭐ solved · ⭐⭐ no hint · ⭐⭐⭐ fewest pieces; 1 tutorial + 4 main levels (Bot đầu tiên, Nhặt sao, Cửa kho, Đủ ba thùng, Né lính gác). Decision record: `plans/reports/` (brainstorm-261101-*).
+- Artifact publishing: the built-in `Artifact` tool may be missing; use the `claude-artifacts` MCP `publish_files` (republish needs the UUID slug + base_version — get them from `list_artifacts`, the short URL id is not the slug). Multi-file pages (HTML + PNG) publish fine.
 - Mascot source: `D:\asset\Black cat` = the user's own team mascot as a Live2D/VTube Studio model (ava.png, 2× 8192 atlases, 8 expressions: ANGRY, BIG EYE, BLUSH, box, CRY, logo, sleepy, suprise). Rebuilt in 3D cozy style; reference copies in `plans/ui-mockups/black-cat/ref/`. All 9 expressions + 4 motions exist in both cat pages.
 - Screenshot scripts per page: `shot-*.mjs` next to each HTML (Playwright by absolute path).
 
@@ -106,11 +109,11 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 - **City 3D game:** the user wants it to live in their Kho game for long-term editing. It was parked ("để tạm"); it is still only a sample. Kho game is in the user's browser localStorage, so Claude cannot write it from the terminal.
 - **Pack models — not verified on real hardware:** city 3D draws ~400k triangles per frame while playing (was ~9k). Software GL (SwiftShader): play 13 FPS vs 27 before; edit 60 both. Needs a check in the user's real Chrome. Next levers if slow: simplify meshes, fewer traffic-light triangles (16 × 6.7k), shadow casters.
 - **Pack models — known gaps:** held item may show a different variant than on the ground (EntityView.tool has no seed); pack wheels don't spin; key model small in its cube; race sample not checked in 3D.
-- **Design previews — waiting on the user:**
-  - which robot (Bánh Xe / Chân Ngắn / both) and which cat (Chibi / Bốn chân / both) become game characters;
-  - port the collar sliders + hanging X to the Chibi cat? (offered, not answered);
-  - puzzle mockup follow-ups (style ok, 5 levels ok, 2D vs 3D stage) not answered;
-  - after the fur removal, expressions other than the default were not re-shot on either cat.
+- **Puzzle game — waiting on the user (2026-11-01 18:40):**
+  - **App name** for the APK (user picked "another name" but has not typed it; placeholder "Xưởng Bot", one constant).
+  - **Next part:** B themed floors/props (⭐ recommended) vs C feel (title screen, map, transitions, sound) vs D APK first.
+  - Repeat "?" presses on the same step: count each (now) or only when the step changes (⭐ offered, unanswered).
+- **Puzzle polish plan (agreed):** A style + animated backdrop ✅ → B floors/props per theme (preview first) → C title screen with 3D characters, level map, Settings (theme choice, sound), transitions, confetti, music/SFX (code-made or royalty-free, credited) → D standalone build without the editor, offline, only used pack models, Capacitor APK, icon = Mèo Mun, landscape lock, self-signed keystore, install via adb.
 - **Not verified by a human:**
   - playing all 30 lessons by hand
   - try-boards that need key or mouse input
@@ -150,7 +153,15 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
    - Iterate by `SendMessage` to the SAME agent (it keeps the code in context) — much faster than a new agent. Paste the user's screenshot path; tell it exactly what to remove/move.
    - The user circles problems in red on screenshots (`c:\Users\trong\OneDrive\Pictures\Screenshots\...`). Read them; act on exactly what is circled.
    - For fine-tuning, add sliders + "Sao chép thông số"; when the user sends values, make them the defaults (and what "Đặt lại" restores).
-9. **"Mở web local"** means the app at http://localhost:5173: start it in the background (`npm run dev -- --port 5173 --strictPort` in app/) if `curl` gets no 200, then `Start-Process http://localhost:5173`.
+9. **"Mở web local"** means the app at http://localhost:5173: start it in the background (`npm run dev -- --port 5173 --strictPort` in app/) if `curl` gets no 200, then `Start-Process http://localhost:5173`. Puzzle game: http://localhost:5173/giai-do.html. "Mở trên Chrome" = `Start-Process "C:\Program Files\Google\Chrome\Application\chrome.exe" <url...>` (several URLs = several tabs).
+10. **Puzzle level workflow (proven 2026-11-01):**
+   - Contract first (types.ts, run-level.ts, one stub file per level + index), then one agent per group of levels.
+   - Every level needs headless tests: reference solution wins; empty answer fails; removing each solution wire/piece fails; tray counts; shown ports only; no key/stick; locked cards don't overlap in 1000×560; **every solution wire passes the real board `canConnect`** (runLevel alone bypasses it).
+   - Then look at it in the browser: unlock levels with localStorage `xuongnoi.puzzle.progress` (Record<id,{stars}>) and `xuongnoi.puzzle.guideSeen` (array of ids + `intro:<id>`), open a level by clicking its card (a hash reload returns to the list), click pulsing ports with `{force:true}`.
+   - Scripts: `plans/browser-scripts/puzzle-levels-check.mjs` (all 8 levels × desktop/phone), `puzzle-hint-overlap-check.mjs`, `puzzle-run-overview-check.mjs`, `puzzle-default-theme-check.mjs`.
+11. **Compare looks on the REAL game, not only mockups.** When the user wants to "see the levels in each style", add a temporary switcher (`?theme=` + floating control + localStorage) on the real page and screenshot all levels per option + one contact sheet each. It caught issues mockups hid (flat floors clash, moon behind a door pillar).
+12. **Agent briefs for UI work must list what is untouchable**: node cards, wires/wire energy, characters, level data. Ask for a pixel diff of one card per variant (it was 0/9480 for A/B/C).
+13. **When the user answers only some questions**, apply ⭐ defaults for the rest and say which defaults were used; re-ask only the ones that block the next step (app name).
 
 ## 5. Lessons learned, bugs and fixes
 - **Agent hand-off claims can be wrong; check before acting.** Example: "Quay lại sửa highlights the wrong button" was false, because `controller.playAware` already swaps play→stop while playing.
@@ -199,6 +210,18 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 - **Worktree cleanup order (slipped once 2026-11-01):** delete the junctions FIRST, then `git worktree remove`. Git stopped at the junction that time and nothing was lost, but don't rely on it. Also kill leftover agent dev servers (`netstat -ano | grep :52xx`).
 - **Agents flip line endings.** Twice on 2026-11-01 a merge rewrote whole CRLF files to LF (game-view.ts, app-contracts.ts; and my own `sed` on level-05.ts). After every merge compare `git diff HEAD~1 --stat` with `--stat -w`; if they differ, convert back byte-safely with node (`replace(/\r?\n/g,'\r\n')`). Git Bash `sed`/pipes strip `\r`.
 - **Puzzle levels:** block "Ẩn đi" is a one-shot pulse — use "Ẩn khi bật" for doors that follow a signal. Prove every level headless (solution wins, each wire removed fails) before looking at the UI.
+- **Puzzle bugs found and fixed on 2026-11-01:**
+  - *Level 7 unplayable*: its solution wired the timer's "Hết giờ" into its own "Đếm lại"; the board forbids self-wires but `runLevel` didn't care, so tests passed while players and the guide got stuck. Fix: Hẹn giờ "Tự lặp lại" param + level redesign + a test replaying every solution through `canConnect`.
+  - *Level 4 AND bypass*: one sensor straight to the door also won. Fix (user picked 4b): both robots must pass, each holds the door for the other → the level teaches Hoặc.
+  - *3★ was automatic*: trays held exactly the solution pieces. Fix: decoy pieces (L2 extra touch, L3 extra Hoặc, L4 Và, L7 Và). A decoy "Không" was rejected: an unwired Không outputs true and opened the door with 1 piece.
+  - *Stage looked like the editor* (grid, tiny scene) → play look + fit the scene to the visible stage; characters tiny → follow toggle; the user then disliked auto-zoom on run → overview by default.
+  - *Cards unreadable on phones* (whole card scaled to the 1000×560 fit) → scale positions only, cards ~1.0 desktop / ~0.78 phone, spread overlaps.
+  - *Mascot bubble overlapped the task box* → `.pz-screen.mascot-on .pz-task { visibility:hidden }`.
+  - *Mascot cat too small in its frame* → tighter portrait framing (FRAME_SHARE 0.9).
+  - *Number editor closed after each +/−* (made "set the number" hint steps unusable) → fixed in board-view.ts.
+- **Reading the user (2026-11-01):** "thô" on the wheel robot meant the body sat bare on the wheel (wanted a connector/decoration), not faceted geometry — ask or show both when a word is ambiguous. "Lấy y chang" = copy the look AND the effects (wire energy). "Biểu cảm mới" after the talking preview = put talking/blinking on the cat itself. "Thay giao diện" = never the characters, cards or wires.
+- **My own slips today:** removed a worktree before its junctions (nothing lost; order now in §4); left an agent dev server on :5207 (kill with Stop-Process); `node -e` with nested quotes/backticks broke twice — use the Edit tool or a script file; a `sed` on a CRLF level file flipped endings — use node byte-safe edits; inline Playwright imports in Bash are blocked by the hook (path contains "node_modules") — write the script to a file first.
+- **Preview-page pitfalls:** a guide variable named `step` clashed with the simulation's `step()`; `page.setContent` can't load `file://` images (navigate to the image instead); pulsing ports are "not stable" for Playwright clicks (`force:true`).
 
 - **Pack model lessons:**
   - FBX from Unity: texture path points at the author's PC; vertex colours must be dropped (Unity ignores them, glTF multiplies them → a black pizzeria); units are cm (scale 0.01); mergeVertices shrinks GLB ~3×.
