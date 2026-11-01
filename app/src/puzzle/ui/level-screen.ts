@@ -6,6 +6,8 @@ import { starsFor } from '../run-level';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
+import { createGuide, type Guide } from './guide';
+import { hasGuide, hasSeenGuide, markGuideSeen } from './guide-script';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
 
@@ -60,6 +62,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   let loseTimer = 0;
   let watchRaf = 0;
   let board: BoardView | null = null;
+  let guide: Guide | null = null;
 
   const phone = h('div', 'pz-phone');
   const screen = h('div', 'pz-screen');
@@ -93,7 +96,12 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const viewBtn = h('button', 'pz-viewtoggle');
   viewBtn.type = 'button';
   viewBtn.hidden = heroId === null;
-  stageSec.append(stage.el, hud, viewBtn, task);
+  const guided = hasGuide(level);
+  const replayBtn = h('button', 'pz-replay', T.guideReplay);
+  replayBtn.type = 'button';
+  replayBtn.hidden = !guided;
+  replayBtn.setAttribute('aria-label', T.guideReplayAria);
+  stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
 
   /** What the camera does now: the player's remembered choice, else overview while editing and follow while the game runs. */
   function effectiveView(): StageView {
@@ -173,6 +181,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     runBtn.classList.toggle('stop', next !== 'edit');
     resetBtn.disabled = next !== 'edit';
     frameStage();
+    guide?.refresh();
   }
 
   function stopWatch(): void {
@@ -207,6 +216,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     const stars = starsFor(level, answer, hintUsed);
     ctx.saveProgress(withBest(ctx.progress(), level.id, stars));
     hudStars.replaceWith(starsEl(starsOf(ctx.progress(), level.id), 'pz-stars'));
+    guide?.celebrate();
     showWin(stars);
   }
 
@@ -272,6 +282,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   stage.onEnd = finish;
 
   board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview });
+  guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit' });
 
   // ----- buttons -----
   runBtn.addEventListener('click', () => (phase === 'edit' ? run() : backToEdit()));
@@ -279,16 +290,23 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     if (phase !== 'edit') return;
     board?.reset();
   });
+  // "?" shows the next missing piece or wire as a dotted line. While the guide leads it already shows that, so
+  // the cat just nods at the hand and the hint (and its star) is not spent.
   hintBtn.addEventListener('click', () => {
+    if (phase !== 'edit' || !guide) return;
+    if (guide.active) {
+      board?.toast(T.guideFollow);
+      return;
+    }
     hintUsed = true;
-    boardEl.querySelector('.pz-hint')?.remove();
-    const box = h('div', 'pz-hint');
-    box.setAttribute('role', 'note');
-    const ok = h('button', 'pz-hint-ok', T.hintClose);
-    ok.type = 'button';
-    ok.addEventListener('click', () => box.remove());
-    box.append(h('b', '', T.hint), h('p', '', level.hint), ok);
-    boardEl.append(box);
+    guide.hint();
+  });
+  replayBtn.addEventListener('click', () => {
+    if (!guide) return;
+    if (phase !== 'edit') backToEdit();
+    board?.reset();
+    markGuideSeen(level.id);
+    guide.start();
   });
   back.addEventListener('click', () => ctx.go('#/'));
 
@@ -299,8 +317,15 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     showPreview();
   });
   showPreview();
+  // The guide shows by itself the first time a level is opened; "↻ Hướng dẫn" brings it back.
+  if (guided && !hasSeenGuide(level.id)) {
+    markGuideSeen(level.id);
+    guide.start();
+  }
 
   return () => {
+    guide?.dispose();
+    guide = null;
     window.clearTimeout(previewTimer);
     window.clearTimeout(loseTimer);
     stopWatch();

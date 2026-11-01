@@ -1,0 +1,298 @@
+import { getNodeDef } from '../../engine/registry';
+import type { GraphNode, ParamValue, Wire } from '../../engine/types';
+import { PUZZLE_LEVELS } from '../levels';
+import type { PuzzleLevel } from '../types';
+import { defaultParams, paramValue, type BoardState } from './board-state';
+
+/**
+ * The tutorial guide's script: what Mèo Mun says, and the ordered steps generated from a level's reference
+ * solution. Pure data and logic (no DOM) so the steps can be tested for every level.
+ */
+
+// ---------- words ----------
+
+/** What each piece is for, finishing "<name>: ...". Lines stay short because the cat says them one at a time. */
+const KIND_PURPOSE: Record<string, string> = {
+  'go-to': 'cho bot tự đi tới đích.',
+  touch: 'biết khi hai vật chạm nhau.',
+  latch: 'nhớ mãi một tín hiệu.',
+  or: 'bật khi một trong hai bật.',
+  and: 'chỉ bật khi cả hai bật.',
+  not: 'đảo bật thành tắt.',
+  counter: 'đếm số lần có tín hiệu.',
+  compare: 'so hai số với nhau.',
+  const: 'giữ một con số cố định.',
+  zone: 'đếm vật nằm trong một vùng.',
+  distance: 'đo hai nhân vật cách nhau bao xa.',
+  timer: 'đếm giờ, hết giờ thì báo.',
+};
+
+/** The cat's opening line per level. Levels without one (level 8) get no guide: the player solves them alone. */
+const LEVEL_INTRO: Record<string, string> = {
+  'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
+  'nhat-sao': 'Mình sẽ chỉ cách đếm sao. Đi nào!',
+  'cua-kho': 'Cửa kho đang đóng. Nút đỏ sẽ mở nó!',
+  'hai-nut-mot-cua': 'Hai bot, hai nút, một cửa. Nối thôi!',
+  'du-ba-thung': 'Đếm thùng trong kho, đủ là thắng!',
+  'ne-linh-gac': 'Lính gác ở gần thì mèo phải chờ!',
+  'cau-nhap-nhay': 'Cầu lúc hiện lúc ẩn. Hẹn giờ sẽ giúp!',
+};
+
+/** Friendly lines for the wires, keyed by level id then solution wire id. Other wires get a generated line. */
+const WIRE_LINES: Record<string, Record<string, string>> = {
+  'bot-dau-tien': {
+    s1: 'Nối Bot với mảnh Đi tới.',
+    s2: 'Giờ nối Cờ làm chỗ cần tới.',
+    s3: 'Cho mảnh Đi tới lái bot!',
+  },
+  'cua-kho': {
+    s1: 'Nối Bot vào cảm biến chạm.',
+    s2: 'Nối Nút đỏ vào cảm biến luôn.',
+    s3: 'Bot dẫm nút thì bật công tắc.',
+    s4: 'Công tắc bật thì cửa ẩn đi.',
+  },
+  'hai-nut-mot-cua': {
+    s1: 'Bot đầu nối vào cảm biến thứ nhất.',
+    s2: 'Nút 1 cũng nối vào cảm biến đó.',
+    s3: 'Bot thứ hai nối vào cảm biến thứ hai.',
+    s4: 'Nút 2 nối vào cảm biến thứ hai.',
+    s5: 'Cảm biến đầu vào mảnh Hoặc.',
+    s6: 'Cảm biến hai vào mảnh Hoặc nữa.',
+    s7: 'Hoặc bật thì cửa mở!',
+  },
+  'nhat-sao': {
+    s1: 'Sao 1 chạm thì vào mảnh Hoặc.',
+    s2: 'Sao 2 cũng vào mảnh Hoặc.',
+    s3: 'Gom tiếp sang mảnh Hoặc thứ hai.',
+    s4: 'Sao 3 vào mảnh Hoặc thứ hai.',
+    s5: 'Nhặt sao nào, bộ đếm cộng 1.',
+    s6: 'Đưa số đếm sang So sánh.',
+    s7: 'Nối con số 3 vào So sánh.',
+    s8: 'Đủ 3 sao thì cổng ẩn đi!',
+  },
+  'du-ba-thung': {
+    sw1: 'Số thùng trong kho vào Số A.',
+    sw2: 'Số thùng cần có vào Số B.',
+    sw3: 'Đủ thùng thì thắng!',
+  },
+  'ne-linh-gac': {
+    sw1: 'Mèo nhỏ vào mảnh Khoảng cách.',
+    sw2: 'Mèo lính gác cũng vào đó.',
+    sw3: 'Đủ gần thì đảo ngược bằng Không.',
+    sw4: 'Lính gác xa thì mèo được đi.',
+  },
+  'cau-nhap-nhay': {
+    sw1: 'Hết giờ thì cho đếm lại.',
+    sw2: 'Mỗi lần hết giờ, đảo công tắc.',
+    sw3: 'Công tắc bật thì cầu hiện.',
+    sw4: 'Công tắc cũng đi qua mảnh Không.',
+    sw5: 'Kết quả của Không vào mảnh Hoặc.',
+    sw6: 'Công tắc bật thì rô-bốt được đi.',
+  },
+};
+
+export const GUIDE_TEXT = {
+  newPiece: 'Mảnh mới!',
+  tapToTake: 'Chạm để lấy.',
+  takePiece: (name: string): string => `Lấy mảnh ${name} ra bàn.`,
+  join: (a: string, b: string): string => `Nối ${a} với ${b}.`,
+  setParam: (label: string, value: ParamValue): string => `Chạm ô, chỉnh ${label} thành ${String(value)}.`,
+  run: 'Xong rồi! Bấm CHẠY xem bot đi nào!',
+  win: 'Giỏi lắm! Mình biết bạn làm được mà!',
+} as const;
+
+/** Level-specific cheer after the win, else the generic one. */
+const WIN_LINES: Record<string, string> = {
+  'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
+  'cua-kho': 'Giỏi lắm! Cửa sẽ mở mãi luôn!',
+  'nhat-sao': 'Đủ 3 sao rồi! Cổng đã mở!',
+};
+
+export const winLine = (level: PuzzleLevel): string => WIN_LINES[level.id] ?? GUIDE_TEXT.win;
+
+// ---------- steps ----------
+
+export type GuideStep =
+  | { type: 'intro'; text: string }
+  | { type: 'piece'; text: string; solNode: string; kind: string; slot: number; ordinal: number; isNew: boolean }
+  | { type: 'param'; text: string; solNode: string; paramId: string; value: ParamValue }
+  | { type: 'wire'; text: string; wire: Wire }
+  | { type: 'run'; text: string };
+
+/** Does this level have a guide? (Level 8 and any level without an opening line do not.) */
+export const hasGuide = (level: PuzzleLevel): boolean => level.id in LEVEL_INTRO;
+
+function kindName(kind: string): string {
+  return getNodeDef(kind)?.label ?? kind;
+}
+
+function kindOfNode(level: PuzzleLevel, nodeId: string, solKinds: Map<string, string>): string {
+  return level.base.nodes.find((n) => n.id === nodeId)?.kind ?? solKinds.get(nodeId) ?? '';
+}
+
+/** Name of a node as the player sees it: a locked object's own name, else the piece's label. */
+function nodeName(level: PuzzleLevel, nodeId: string, kindOf: Map<string, string>): string {
+  const base = level.base.nodes.find((n) => n.id === nodeId);
+  const own = base?.params.name;
+  if (typeof own === 'string' && own) return own;
+  return kindName(kindOfNode(level, nodeId, kindOf));
+}
+
+function portLabel(kind: string, port: string, dir: 'in' | 'out'): string {
+  const def = getNodeDef(kind);
+  const list = dir === 'in' ? def?.inputs : def?.outputs;
+  return list?.find((p) => p.id === port)?.label ?? port;
+}
+
+/** Tray kinds that no earlier level offers: the pieces this level teaches. */
+export function newKindsOf(level: PuzzleLevel, levels: readonly PuzzleLevel[] = PUZZLE_LEVELS): Set<string> {
+  const seen = new Set<string>();
+  for (const l of levels) {
+    if (l.order >= level.order) continue;
+    for (const t of l.tray) seen.add(t.kind);
+  }
+  return new Set(level.tray.map((t) => t.kind).filter((k) => !seen.has(k)));
+}
+
+/** Value a tray piece starts with for a param (tray params over the node's defaults). */
+function startValue(level: PuzzleLevel, kind: string, paramId: string): ParamValue | undefined {
+  const piece = level.tray.find((t) => t.kind === kind);
+  return { ...defaultParams(getNodeDef(kind)), ...(piece?.params ?? {}) }[paramId];
+}
+
+/** Params of a solution piece the player must change from the tray's starting value. */
+function paramsToSet(level: PuzzleLevel, node: GraphNode): { paramId: string; value: ParamValue }[] {
+  const out: { paramId: string; value: ParamValue }[] = [];
+  for (const e of level.editable ?? []) {
+    if (e.nodeId !== undefined || e.kind !== node.kind) continue;
+    const want = node.params[e.paramId];
+    if (want === undefined || out.some((o) => o.paramId === e.paramId)) continue;
+    if (JSON.stringify(want) !== JSON.stringify(startValue(level, node.kind, e.paramId))) out.push({ paramId: e.paramId, value: want });
+  }
+  return out;
+}
+
+/**
+ * Steps that rebuild the level's reference solution, no intro and no run step: for each wire in turn,
+ * first take the pieces it needs from the tray (and set their numbers), then join it.
+ */
+export function solutionSteps(level: PuzzleLevel, levels: readonly PuzzleLevel[] = PUZZLE_LEVELS): GuideStep[] {
+  const fresh = newKindsOf(level, levels);
+  const sol = level.solution.nodes;
+  const kindOf = new Map(sol.map((n) => [n.id, n.kind]));
+  const steps: GuideStep[] = [];
+  const taken = new Set<string>();
+
+  const take = (nodeId: string): void => {
+    const node = sol.find((n) => n.id === nodeId);
+    if (!node || taken.has(nodeId)) return;
+    taken.add(nodeId);
+    const ordinal = sol.filter((n) => n.kind === node.kind).indexOf(node);
+    const isNew = fresh.has(node.kind) && ordinal === 0;
+    const name = kindName(node.kind);
+    const purpose = KIND_PURPOSE[node.kind];
+    const text = isNew && purpose ? `${GUIDE_TEXT.newPiece} ${name}: ${purpose} ${GUIDE_TEXT.tapToTake}` : GUIDE_TEXT.takePiece(name);
+    steps.push({ type: 'piece', text, solNode: nodeId, kind: node.kind, slot: Math.max(0, level.tray.findIndex((t) => t.kind === node.kind)), ordinal, isNew });
+    const def = getNodeDef(node.kind);
+    for (const p of paramsToSet(level, node)) {
+      const label = def?.params.find((d) => d.id === p.paramId)?.label ?? p.paramId;
+      steps.push({ type: 'param', text: GUIDE_TEXT.setParam(`"${label}"`, p.value), solNode: nodeId, paramId: p.paramId, value: p.value });
+    }
+  };
+
+  for (const wire of level.solution.wires) {
+    take(wire.from.node);
+    take(wire.to.node);
+    const end = (node: string, port: string, dir: 'in' | 'out'): string =>
+      `${nodeName(level, node, kindOf)} (${portLabel(kindOfNode(level, node, kindOf), port, dir)})`;
+    const text = WIRE_LINES[level.id]?.[wire.id] ?? GUIDE_TEXT.join(end(wire.from.node, wire.from.port, 'out'), end(wire.to.node, wire.to.port, 'in'));
+    steps.push({ type: 'wire', text, wire });
+  }
+  for (const n of sol) take(n.id);
+  return steps;
+}
+
+/** The guide: an opening line, the solution steps, then "press RUN". Empty for levels without a guide. */
+export function buildGuideSteps(level: PuzzleLevel, levels: readonly PuzzleLevel[] = PUZZLE_LEVELS): GuideStep[] {
+  const intro = LEVEL_INTRO[level.id];
+  if (!intro) return [];
+  return [{ type: 'intro', text: intro }, ...solutionSteps(level, levels), { type: 'run', text: GUIDE_TEXT.run }];
+}
+
+// ---------- progress through the steps ----------
+
+/** Maps a solution node id to the node on the board (locked nodes map to themselves; the n-th piece of a kind to the n-th placed one). */
+export function resolveSolutionNode(level: PuzzleLevel, state: BoardState, solNodeId: string): string | null {
+  const sol = level.solution.nodes.find((n) => n.id === solNodeId);
+  if (!sol) return level.base.nodes.some((n) => n.id === solNodeId) ? solNodeId : null;
+  const ordinal = level.solution.nodes.filter((n) => n.kind === sol.kind).indexOf(sol);
+  return state.placed.filter((p) => p.node.kind === sol.kind)[ordinal]?.node.id ?? null;
+}
+
+/** Has the player done this step? `running` is true once the game has started. */
+export function isStepDone(step: GuideStep, level: PuzzleLevel, state: BoardState, running: boolean): boolean {
+  switch (step.type) {
+    case 'intro':
+      return false; // done by the "Tiếp" tap, tracked by the guide
+    case 'run':
+      return running;
+    case 'piece':
+      return resolveSolutionNode(level, state, step.solNode) !== null;
+    case 'param': {
+      const id = resolveSolutionNode(level, state, step.solNode);
+      const node = state.placed.find((p) => p.node.id === id)?.node;
+      return !!node && paramValue(state, node, step.paramId) === step.value;
+    }
+    case 'wire': {
+      const from = resolveSolutionNode(level, state, step.wire.from.node);
+      const to = resolveSolutionNode(level, state, step.wire.to.node);
+      if (!from || !to) return false;
+      return state.wires.some((w) => w.from.node === from && w.from.port === step.wire.from.port && w.to.node === to && w.to.port === step.wire.to.port);
+    }
+  }
+}
+
+/** Index of the first step still to do (steps.length when everything is done). The intro counts as done once `introDone`. */
+export function currentStepIndex(steps: readonly GuideStep[], level: PuzzleLevel, state: BoardState, running: boolean, introDone: boolean): number {
+  const i = steps.findIndex((s) => !(s.type === 'intro' ? introDone : isStepDone(s, level, state, running)));
+  return i < 0 ? steps.length : i;
+}
+
+// ---------- "seen" memory ----------
+
+export const GUIDE_SEEN_KEY = 'xuongnoi.puzzle.guideSeen';
+
+type StorageLike = Pick<Storage, 'getItem' | 'setItem'>;
+
+function defaultStorage(): StorageLike | null {
+  try {
+    return typeof localStorage === 'undefined' ? null : localStorage;
+  } catch {
+    return null; // storage blocked
+  }
+}
+
+/** Level ids whose guide has already been shown. Anything that is not a list of strings is ignored. */
+export function loadGuideSeen(storage: StorageLike | null = defaultStorage()): Set<string> {
+  if (!storage) return new Set();
+  try {
+    const data: unknown = JSON.parse(storage.getItem(GUIDE_SEEN_KEY) ?? 'null');
+    return new Set(Array.isArray(data) ? data.filter((v): v is string => typeof v === 'string') : []);
+  } catch {
+    return new Set();
+  }
+}
+
+export const hasSeenGuide = (levelId: string, storage?: StorageLike | null): boolean => loadGuideSeen(storage).has(levelId);
+
+export function markGuideSeen(levelId: string, storage: StorageLike | null = defaultStorage()): boolean {
+  if (!storage) return false;
+  try {
+    const seen = loadGuideSeen(storage);
+    seen.add(levelId);
+    storage.setItem(GUIDE_SEEN_KEY, JSON.stringify([...seen]));
+    return true;
+  } catch {
+    return false; // full or blocked: the guide then shows again next visit
+  }
+}

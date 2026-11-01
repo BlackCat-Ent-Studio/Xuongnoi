@@ -1,0 +1,57 @@
+/* Tutorial guide: Mèo Mun + dim spotlight ring + tapping hand + dotted "ghost" wire.
+   The overlay never takes taps, so the player always taps the real piece underneath. */
+.pz-guide { position: absolute; inset: 0; z-index: 12; pointer-events: none; display: none; }
+.pz-guide.on { display: block; }
+.pz-guide.bye { z-index: 25; }
+.pz-guide [hidden] { display: none !important; }
+
+/* ---------- spotlight ring and hand ---------- */
+.pz-spot { position: absolute; border-radius: max(10px, 1.6cqw); box-shadow: 0 0 0 200vmax rgba(14, 10, 40, .5), 0 0 0 max(3px, .35cqw) #fff, 0 0 2cqw .5cqw rgba(255, 201, 60, .9); transition: left .35s, top .35s, width .35s, height .35s; animation: pz-spot-pulse 1.2s ease-in-out infinite; }
+.pz-guide.hinting .pz-spot { box-shadow: 0 0 0 max(3px, .35cqw) #fff, 0 0 2cqw .5cqw rgba(255, 201, 60, .9); }
+.pz-guide.bye .pz-spot, .pz-guide.bye .pz-hand, .pz-guide.no-target .pz-spot, .pz-guide.no-target .pz-hand { display: none; }
+@keyframes pz-spot-pulse { 50% { box-shadow: 0 0 0 200vmax rgba(14, 10, 40, .5), 0 0 0 max(5px, .55cqw) #fff, 0 0 3cqw 1cqw rgba(255, 201, 60, .9); } }
+.pz-guide.hinting .pz-spot { animation-name: pz-spot-pulse-hint; }
+@keyframes pz-spot-pulse-hint { 50% { box-shadow: 0 0 0 max(5px, .55cqw) #fff, 0 0 3cqw 1cqw rgba(255, 201, 60, .9); } }
+
+.pz-hand { position: absolute; width: max(38px, 5.2cqw); height: max(38px, 5.2cqw); margin: 0; transform-origin: 30% 10%; filter: drop-shadow(0 .4cqw .3cqw rgba(0, 0, 0, .45)); transition: left .35s, top .35s; animation: pz-tap 1s ease-in-out infinite; }
+@keyframes pz-tap { 0%, 100% { transform: translate(-28%, 10%) scale(1); } 45% { transform: translate(-28%, -6%) scale(.88); } }
+
+/* ---------- Mèo Mun and the speech bubble ---------- */
+.pz-mascot { position: absolute; left: 1.4cqw; bottom: 1.4cqw; display: flex; align-items: flex-end; gap: .8cqw; max-width: 41%; pointer-events: none; }
+.pz-guide.hinting .pz-mascot { display: none; }
+.pz-mascot-frame { position: relative; flex: none; width: max(64px, 9cqw); height: max(64px, 9cqw); border-radius: 50%; overflow: hidden; border: max(3px, .35cqw) solid #fffdf4; box-shadow: 0 .5cqw 0 #c8b98a; background: #241a4a; pointer-events: auto; }
+.pz-mascot-frame canvas, .pz-mascot-frame img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pz-bubble { position: relative; min-width: 0; background: #fffdf4; color: var(--ink-dark); border-radius: max(10px, 1.6cqw); padding: .9cqw 1.2cqw 1cqw; font: 700 max(13px, 1.75cqw)/1.3 var(--display); box-shadow: 0 .5cqw 0 #c8b98a; display: grid; gap: .5cqw; pointer-events: auto; }
+.pz-bubble::before { content: ''; position: absolute; left: -1.1cqw; bottom: 2cqw; border: .7cqw solid transparent; border-right-color: #fffdf4; }
+/* the full line sits invisible under the typed text so the bubble keeps its size while the cat types */
+.pz-say { display: grid; }
+.pz-say > span { grid-area: 1 / 1; }
+.pz-say-ghost { color: transparent; user-select: none; }
+.pz-dots { display: flex; flex-wrap: wrap; gap: .4cqw; }
+.pz-dots i { width: max(6px, .9cqw); height: max(6px, .9cqw); border-radius: 50%; background: #d9cfa8; }
+.pz-dots i.on { background: var(--sun); }
+.pz-bubble-btns { display: flex; justify-content: flex-end; gap: 1cqw; }
+.pz-guide-btn { min-height: 40px; min-width: 40px; border: 0; cursor: pointer; font: 700 max(12px, 1.3cqw) var(--body); padding: 0 12px; border-radius: 99px; }
+.pz-skip { background: none; color: #8a7f5a; text-decoration: underline; }
+.pz-next { background: var(--sun); color: var(--ink-dark); font-family: var(--display); font-weight: 800; box-shadow: 0 .35cqw 0 rgba(0, 0, 0, .25); }
+.pz-guide.bye .pz-bubble-btns, .pz-guide.bye .pz-dots { display: none; }
+.pz-guide.bye .pz-bubble, .pz-guide.bye .pz-mascot-frame { pointer-events: none; }
+
+/* the task box makes room for the cat while the guide leads; calls to the cat stay above the dim */
+.pz-screen.guiding .pz-task { visibility: hidden; }
+.pz-screen.guiding .pz-toast { z-index: 13; }
+
+/* "↻ Hướng dẫn" under the HUD, opposite the view toggle */
+.pz-replay { position: absolute; left: 1.6cqw; top: calc(1.4cqw + max(40px, 4.4cqw) + .6cqw); min-height: 40px; padding: 0 max(12px, 1.4cqw); border: 0; border-radius: 99px; background: var(--sun); color: var(--ink-dark); font: 800 max(12px, 1.4cqw) var(--display); cursor: pointer; box-shadow: 0 .4cqw 0 #b88a10; white-space: nowrap; }
+.pz-replay[hidden] { display: none; }
+.pz-replay:active { transform: translateY(.3cqw); box-shadow: 0 .1cqw 0 #b88a10; }
+
+/* ---------- the dotted ghost wire (drawn inside the board's wire layer) ---------- */
+.pz-board .pz-ghost-wire { fill: none; stroke: var(--pc); stroke-width: 5; stroke-linecap: round; stroke-dasharray: 0.1 11; opacity: .95; pointer-events: none; animation: pz-ghost-flow 1.2s linear infinite; }
+@keyframes pz-ghost-flow { to { stroke-dashoffset: -20; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .pz-guide .pz-spot, .pz-guide.hinting .pz-spot, .pz-hand, .pz-board .pz-ghost-wire { animation: none; }
+  .pz-spot, .pz-hand { transition: none; }
+  .pz-hand { transform: translate(-28%, 10%); }
+}
