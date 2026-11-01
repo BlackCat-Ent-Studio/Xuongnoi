@@ -442,7 +442,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     if (running) return;
     const t = e.target;
     if (!(t instanceof Element)) return;
-    if (popover && !t.closest('.pz-pop')) {
+    // composedPath still lists the popover when the tapped − / + button was just replaced by the refill.
+    if (popover && !e.composedPath().includes(popover)) {
       closePopover();
       return;
     }
@@ -518,7 +519,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     popover = pop;
     board.append(pop);
     const refill = (): void => {
-      const cur = paramValue(state, node, pd.id);
+      // A placed piece is replaced by a new object on every change, so read the current one.
+      const cur = paramValue(state, state.placed.find((p) => p.node.id === node.id)?.node ?? node, pd.id);
       pop.replaceChildren(h('div', 'pz-pop-title', pd.label));
       if (pd.kind === 'select') {
         const list = h('div', 'pz-pop-options');

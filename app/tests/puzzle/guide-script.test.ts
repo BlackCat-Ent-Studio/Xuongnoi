@@ -52,17 +52,26 @@ describe('guide steps', () => {
     if (level8) {
       expect(hasGuide(level8)).toBe(false);
       expect(buildGuideSteps(level8)).toEqual([]);
+      expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1]); // only level 1 has the full guide
       expect(solutionSteps(level8).length).toBeGreaterThan(0); // the "?" hint still works there
     }
   });
 
   describe.each(GUIDED.map((l) => [l.order, l] as const))('level %i', (_order, level) => {
-    const steps = buildGuideSteps(level);
+    // The same steps the guide (level 1) and the "?" hint (every level) are built from.
+    const steps: GuideStep[] = [
+      { type: 'intro', text: 'Chào bạn nhé bạn' },
+      ...solutionSteps(level),
+      { type: 'run', text: 'Bấm CHẠY nhé bạn' },
+    ];
 
-    it('opens with a line, ends with "press run", and keeps lines short', () => {
-      expect(hasGuide(level)).toBe(true);
-      expect(steps[0]?.type).toBe('intro');
-      expect(steps[steps.length - 1]?.type).toBe('run');
+    it('level 1 opens with a line and ends with "press run"; every line stays short', () => {
+      if (level.order === 1) {
+        const guide = buildGuideSteps(level);
+        expect(hasGuide(level)).toBe(true);
+        expect(guide[0]?.type).toBe('intro');
+        expect(guide[guide.length - 1]?.type).toBe('run');
+      }
       for (const s of steps) {
         const words = s.text.trim().split(/\s+/).length;
         expect(words, s.text).toBeGreaterThanOrEqual(3);

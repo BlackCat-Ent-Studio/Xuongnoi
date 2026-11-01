@@ -27,15 +27,9 @@ const KIND_PURPOSE: Record<string, string> = {
   timer: 'đếm giờ, hết giờ thì báo.',
 };
 
-/** The cat's opening line per level. Levels without one (level 8) get no guide: the player solves them alone. */
+/** The cat's opening line per level. Only the first level has the full guide; the others get one step per "?". */
 const LEVEL_INTRO: Record<string, string> = {
   'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
-  'nhat-sao': 'Mình sẽ chỉ cách đếm sao. Đi nào!',
-  'cua-kho': 'Cửa kho đang đóng. Nút đỏ sẽ mở nó!',
-  'hai-nut-mot-cua': 'Hai bot, hai nút, một cửa. Nối thôi!',
-  'du-ba-thung': 'Đếm thùng trong kho, đủ là thắng!',
-  'ne-linh-gac': 'Lính gác ở gần thì mèo phải chờ!',
-  'cau-nhap-nhay': 'Cầu lúc hiện lúc ẩn. Hẹn giờ sẽ giúp!',
 };
 
 /** Friendly lines for the wires, keyed by level id then solution wire id. Other wires get a generated line. */
@@ -104,8 +98,6 @@ export const GUIDE_TEXT = {
 /** Level-specific cheer after the win, else the generic one. */
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
-  'cua-kho': 'Giỏi lắm! Cửa sẽ mở mãi luôn!',
-  'nhat-sao': 'Đủ 3 sao rồi! Cổng đã mở!',
 };
 
 export const winLine = (level: PuzzleLevel): string => WIN_LINES[level.id] ?? GUIDE_TEXT.win;
@@ -119,8 +111,36 @@ export type GuideStep =
   | { type: 'wire'; text: string; wire: Wire }
   | { type: 'run'; text: string };
 
-/** Does this level have a guide? (Level 8 and any level without an opening line do not.) */
+/** Does this level have the full guide? Only level 1 does; the other levels give one step per "?". */
 export const hasGuide = (level: PuzzleLevel): boolean => level.id in LEVEL_INTRO;
+
+/** The short line the cat says for a "?" step (the long "new piece" line is for the guide). */
+export function hintLineOf(step: GuideStep): string {
+  return step.type === 'piece' ? GUIDE_TEXT.takePiece(kindName(step.kind)) : step.text;
+}
+
+/** The step a "?" reveals: the first solution step the player has not done yet, or null when all are done. */
+export function nextHintStep(level: PuzzleLevel, state: BoardState, levels: readonly PuzzleLevel[] = PUZZLE_LEVELS): GuideStep | null {
+  return solutionSteps(level, levels).find((s) => !isStepDone(s, level, state, false)) ?? null;
+}
+
+/**
+ * One short line per tray piece the player has not met in an earlier level (levels 2 and up), in tray order:
+ * "<name>: <what it does>". Pieces without a known purpose line are left out.
+ */
+export function newPieceIntros(level: PuzzleLevel, levels: readonly PuzzleLevel[] = PUZZLE_LEVELS): string[] {
+  if (level.order < 2) return [];
+  const fresh = newKindsOf(level, levels);
+  const lines: string[] = [];
+  const done = new Set<string>();
+  for (const t of level.tray) {
+    const purpose = KIND_PURPOSE[t.kind];
+    if (!fresh.has(t.kind) || done.has(t.kind) || !purpose) continue;
+    done.add(t.kind);
+    lines.push(`${kindName(t.kind)}: ${purpose}`);
+  }
+  return lines;
+}
 
 function kindName(kind: string): string {
   return getNodeDef(kind)?.label ?? kind;
@@ -271,6 +291,14 @@ function defaultStorage(): StorageLike | null {
     return null; // storage blocked
   }
 }
+
+/** Level 1's guide is mandatory until the player has finished it once (it is marked seen on the first win). */
+export const isGuideForced = (level: PuzzleLevel, storage?: StorageLike | null): boolean => hasGuide(level) && !hasSeenGuide(level.id, storage);
+
+const INTRO_PREFIX = 'intro:';
+/** The new-piece intros of a level are remembered in the same list, as `intro:<level id>`. */
+export const hasSeenIntro = (levelId: string, storage?: StorageLike | null): boolean => hasSeenGuide(INTRO_PREFIX + levelId, storage);
+export const markIntroSeen = (levelId: string, storage?: StorageLike | null): boolean => markGuideSeen(INTRO_PREFIX + levelId, storage);
 
 /** Level ids whose guide has already been shown. Anything that is not a list of strings is ignored. */
 export function loadGuideSeen(storage: StorageLike | null = defaultStorage()): Set<string> {

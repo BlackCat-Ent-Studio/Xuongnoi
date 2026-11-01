@@ -114,6 +114,10 @@ body.pz-in-level #puzzle { display: grid; place-items: center; padding: 0; }
 .pz-btn.run { background: var(--sun); color: var(--ink-dark); font-size: max(16px, 2.6cqw); padding: .8cqw 2.6cqw; }
 .pz-btn.run.stop { background: #ff8fb1; }
 .pz-btn.small { background: #3a4a92; color: var(--ink); font-size: max(16px, 1.9cqw); width: max(40px, 4.4cqw); height: max(40px, 4.4cqw); padding: 0; border-radius: 50%; }
+.pz-hint-btn { position: relative; }
+.pz-hint-badge { position: absolute; right: -.5cqw; top: -.6cqw; min-width: max(18px, 2cqw); height: max(18px, 2cqw); padding: 0 3px; box-sizing: border-box; display: grid; place-items: center; border-radius: 99px; background: var(--sun); color: var(--ink-dark); font: 800 max(11px, 1.3cqw)/1 var(--display); pointer-events: none; }
+.pz-hint-btn.costly .pz-hint-badge { background: #e5484d; color: #fff; }
+.pz-hint-btn.costly .pz-hint-badge::after { content: ''; position: absolute; left: 12%; right: 12%; top: 50%; border-top: max(2px, .25cqw) solid #fff; transform: rotate(-35deg); }
 .pz-btn.ghost { background: #e9e1c4; color: var(--ink-dark); font-size: max(13px, 1.6cqw); padding: .6cqw 1.6cqw; box-shadow: 0 .4cqw 0 #c8b98a; }
 .pz-btn:disabled { opacity: .4; cursor: default; }
 .pz-btn:active:not(:disabled), .pz-chip:active:not(:disabled) { transform: translateY(.3cqw); box-shadow: 0 .25cqw 0 rgba(0, 0, 0, .4); }
