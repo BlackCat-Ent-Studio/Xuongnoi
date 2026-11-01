@@ -27,9 +27,10 @@ const KIND_PURPOSE: Record<string, string> = {
   timer: 'đếm giờ, hết giờ thì báo.',
 };
 
-/** The cat's opening line per level. Only the first level has the full guide; the others get one step per "?". */
+/** The cat's opening line per level. Levels 1 and 5 (the first 3D level) have the full guide; the others get one step per "?". */
 const LEVEL_INTRO: Record<string, string> = {
   'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
+  'du-ba-thung': 'Ôi, màn này là 3D! Camera nhìn từ trên cao, hơi nghiêng. Mình cùng làm nhé!',
 };
 
 /** Friendly lines for the wires, keyed by level id then solution wire id. Other wires get a generated line. */
@@ -111,8 +112,22 @@ export type GuideStep =
   | { type: 'wire'; text: string; wire: Wire }
   | { type: 'run'; text: string };
 
-/** Does this level have the full guide? Only level 1 does; the other levels give one step per "?". */
+/** Does this level have the full guide? Levels 1 and 5 do; the other levels give one step per "?". */
 export const hasGuide = (level: PuzzleLevel): boolean => level.id in LEVEL_INTRO;
+
+/** Stable identity of a solution step (not tied to positions), used to count each "?" reveal once. Null for steps that are not solution work. */
+export function stepKey(step: GuideStep): string | null {
+  switch (step.type) {
+    case 'piece':
+      return `piece:${step.solNode}`;
+    case 'param':
+      return `param:${step.solNode}:${step.paramId}`;
+    case 'wire':
+      return `wire:${step.wire.id}`;
+    default:
+      return null;
+  }
+}
 
 /** The short line the cat says for a "?" step (the long "new piece" line is for the guide). */
 export function hintLineOf(step: GuideStep): string {
@@ -292,7 +307,7 @@ function defaultStorage(): StorageLike | null {
   }
 }
 
-/** Level 1's guide is mandatory until the player has finished it once (it is marked seen on the first win). */
+/** A guided level's guide is mandatory until the player has finished it once (it is marked seen on the first win). */
 export const isGuideForced = (level: PuzzleLevel, storage?: StorageLike | null): boolean => hasGuide(level) && !hasSeenGuide(level.id, storage);
 
 const INTRO_PREFIX = 'intro:';

@@ -3,7 +3,7 @@ import type { PortRef } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import type { BoardState, PortEnd } from './board-state';
 import type { BoardView } from './board-view';
-import { buildGuideSteps, currentStepIndex, hintLineOf, isStepDone, nextHintStep, resolveSolutionNode, winLine, type GuideStep } from './guide-script';
+import { buildGuideSteps, currentStepIndex, hintLineOf, isStepDone, nextHintStep, resolveSolutionNode, stepKey, winLine, type GuideStep } from './guide-script';
 import { createMascot, type Mascot } from './mascot';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
 
@@ -44,10 +44,10 @@ export interface Guide {
   /** True while the guide is leading (even when briefly hidden during a run). */
   readonly active: boolean;
   /**
-   * "?": the cat, ring and hand show the first step not done yet (and its dotted wire). Returns true when a
-   * step was revealed (the caller counts it), false when everything is joined or the guide is leading.
+   * "?": the cat, ring and hand show the first step not done yet (and its dotted wire). Returns the revealed
+   * step's stable key (the caller counts each key once), or null when everything is joined or the guide is leading.
    */
-  hint(): boolean;
+  hint(): string | null;
   /** The cat pops up with each line in turn (no ring, no hand), each for a few seconds or until tapped. */
   tips(lines: readonly string[]): void;
   /** Re-reads the game phase right away (the guide hides during a run). */
@@ -336,7 +336,7 @@ export function createGuide(opts: GuideOptions): Guide {
       updateGuide();
     },
     hint() {
-      if (!isEditing() || mode !== 'off') return false;
+      if (!isEditing() || mode !== 'off') return null;
       clearTips();
       const step = nextHintStep(level, state());
       hintGhost = null;
@@ -352,7 +352,7 @@ export function createGuide(opts: GuideOptions): Guide {
       setGuiding(false);
       speak(step ? hintLineOf(step) : T.hintAllJoined);
       updateHint();
-      return step !== null;
+      return step ? stepKey(step) : null;
     },
     tips(lines) {
       if (mode !== 'off' || hintStep || lines.length === 0) return;

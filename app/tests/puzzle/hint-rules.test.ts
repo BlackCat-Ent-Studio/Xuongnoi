@@ -10,11 +10,13 @@ import {
   isGuideForced,
   markGuideSeen,
   markIntroSeen,
+  buildGuideSteps,
   newPieceIntros,
   nextHintStep,
   solutionSteps,
+  stepKey,
 } from '../../src/puzzle/ui/guide-script';
-import { extraHints, hintBadge, hintsLeft } from '../../src/puzzle/ui/hint-rules';
+import { countHint, extraHints, hintBadge, hintsLeft } from '../../src/puzzle/ui/hint-rules';
 
 registerAllNodes();
 
@@ -48,6 +50,43 @@ describe('hint counter and badge', () => {
   it('three presses on level 3 leave 2 stars for a par solution; no hints on level 6 keep 3', () => {
     expect(starsFor(lv(3), lv(3).solution, 3)).toBe(2);
     expect(starsFor(lv(6), lv(6).solution, 0)).toBe(3);
+  });
+});
+
+describe('counting each revealed step once', () => {
+  it('counts a step the first time only, and ignores "nothing revealed"', () => {
+    const seen = new Set<string>();
+    expect(countHint(seen, 'wire:s1')).toBe(true);
+    expect(countHint(seen, 'wire:s1')).toBe(false);
+    expect(countHint(seen, 'wire:s2')).toBe(true);
+    expect(countHint(seen, null)).toBe(false);
+    expect(seen.size).toBe(2);
+  });
+
+  it('a repeated press on the same step keeps the badge where it was', () => {
+    const l = lv(3); // 2 free hints
+    const seen = new Set<string>();
+    let used = 0;
+    const press = (key: string | null): void => {
+      if (countHint(seen, key)) used++;
+    };
+    press('piece:a');
+    press('piece:a');
+    press('piece:a');
+    expect(hintBadge(l, used)).toEqual({ left: 1, costly: false });
+    press('piece:b');
+    expect(hintBadge(l, used).costly).toBe(true);
+  });
+
+  it('gives every solution step its own key, stable across board states', () => {
+    for (const level of PUZZLE_LEVELS) {
+      const keys = solutionSteps(level).map(stepKey);
+      expect(keys.every((k) => typeof k === 'string')).toBe(true);
+      expect(new Set(keys).size).toBe(keys.length);
+    }
+    const first = nextHintStep(lv(2), EMPTY_BOARD);
+    expect(first && stepKey(first)).toBe(first && stepKey({ ...first }));
+    expect(stepKey({ type: 'run', text: 'x' })).toBeNull();
   });
 });
 
@@ -102,12 +141,25 @@ describe('new-piece intros', () => {
   });
 });
 
-describe('level 1 forced guide', () => {
-  it('is forced until the guide is marked seen, and only on level 1', () => {
+describe('level 1 and level 5 forced guide', () => {
+  it('is forced until the guide is marked seen, and only on levels 1 and 5', () => {
     const s = memory();
     expect(isGuideForced(lv(1), s)).toBe(true);
+    expect(isGuideForced(lv(5), s)).toBe(true);
     expect(isGuideForced(lv(2), s)).toBe(false);
     markGuideSeen(lv(1).id, s);
     expect(isGuideForced(lv(1), s)).toBe(false);
+    expect(isGuideForced(lv(5), s)).toBe(true);
+    markGuideSeen(lv(5).id, s);
+    expect(isGuideForced(lv(5), s)).toBe(false);
+  });
+
+  it('level 5 has the cat intro and a friendly line per solution wire, and no tips on top of the guide', () => {
+    const steps = buildGuideSteps(lv(5));
+    expect(steps[0]?.type).toBe('intro');
+    expect(steps[0]?.text).toMatch(/3D/);
+    const wires = steps.filter((x) => x.type === 'wire');
+    expect(wires).toHaveLength(lv(5).solution.wires.length);
+    for (const w of wires) expect(w.text).not.toContain('('); // hand-written lines, not the generated "A (port) with B (port)" form
   });
 });

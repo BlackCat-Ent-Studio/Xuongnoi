@@ -8,9 +8,10 @@ import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
 import { createGuide, type Guide } from './guide';
 import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, newPieceIntros } from './guide-script';
-import { extraHints, hintBadge } from './hint-rules';
+import { countHint, extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
+import { playSfx } from './sound';
 import { buildBackdrop } from './themes/backdrops'; // TEMPORARY theme trial
 import { currentTheme, onThemeChange, type ThemeId } from './themes/theme-trial';
 
@@ -62,6 +63,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   let phase: Phase = 'edit';
   /** "?" presses that revealed a step; the free ones are `level.freeHints`. */
   let hintsUsed = 0;
+  /** Solution steps already revealed by "?" this visit: pressing "?" again on one of them is not counted. */
+  const revealedHints = new Set<string>();
   let previewTimer = 0;
   let loseTimer = 0;
   let watchRaf = 0;
@@ -101,7 +104,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   viewBtn.type = 'button';
   viewBtn.hidden = heroId === null;
   const guided = hasGuide(level);
-  /** Level 1's first visit: the guide leads and cannot be skipped. */
+  /** Level 1's and level 5's first visit: the guide leads and cannot be skipped. */
   const forcedGuide = isGuideForced(level);
   const replayBtn = h('button', 'pz-replay', T.guideReplay);
   replayBtn.type = 'button';
@@ -324,7 +327,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       board?.toast(T.guideFollow);
       return;
     }
-    if (guide.hint()) {
+    playSfx('hint');
+    if (countHint(revealedHints, guide.hint())) {
       hintsUsed++;
       syncHintBadge();
     }
@@ -344,7 +348,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     showPreview();
   });
   showPreview();
-  // Level 1 leads the first visit with the guide (no skip); "↻ Hướng dẫn" brings it back later.
+  // Levels 1 and 5 lead the first visit with the guide (no skip); "↻ Hướng dẫn" brings it back later.
   // Other levels introduce each piece the player has not met yet, once per level.
   if (forcedGuide) {
     guide.start(false);
