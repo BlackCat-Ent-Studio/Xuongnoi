@@ -270,3 +270,5 @@ User (client feedback) says STOP the overview-fit work (branch feat/overview-fit
 3. Redo ALL 3D levels (5–8) from scratch.
 4. Player-controlled camera in the game view: pan (drag) + zoom (pinch/wheel).
 Asked user (numbered 1a..) — see chat; record answers here. Recommended order: layout (2) + camera (4) first, then logic checker (1), then 3D redo (3) via brainstorm + preview per level.
+
+- 00:25: user said "stop talking, make an artifact to check". Agent building preview plans/ui-mockups/phone-layout/ (layouts A toggle / B picture-in-picture, camera pan+zoom, logic checker V1 on-board / V2 checklist, "Làm sai thử"); will publish via claude-artifacts MCP; report fullstack-261102-0025-phone-layout-preview-report.md. 3D redo not in this preview.
