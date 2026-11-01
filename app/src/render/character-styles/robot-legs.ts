@@ -131,6 +131,7 @@ export const robotLegsStyle: StyleDef = {
     let walk = 0;
     let air = 0;
     let sy = 1;
+    let carry = 0;
     let land = 0;
     let wasAir = false;
     let antZ = 0;
@@ -170,8 +171,9 @@ export const robotLegsStyle: StyleDef = {
 
       const raise = 0.55 * air;
       for (const { arm, side } of arms) {
-        arm.rotation.z = side * (0.32 + raise * 2.2);
-        arm.rotation.x = side * sw * 0.9 * walk;
+        // Carrying: both arms reach forward to hold the load out front.
+        arm.rotation.z = (1 - carry) * side * (0.32 + raise * 2.2) + carry * side * 0.28;
+        arm.rotation.x = (1 - carry) * side * sw * 0.9 * walk - carry * 1.35;
       }
 
       const open = 1 - 0.92 * blink;
@@ -202,6 +204,7 @@ export const robotLegsStyle: StyleDef = {
         walk = smoothValue(walk, m.walking && !m.airborne ? 1 : 0, d, 7);
         air = smoothValue(air, m.airborne ? 1 : 0, d, 12);
         sy = smoothValue(sy, 1 - 0.28 * land, d, 16);
+        carry = smoothValue(carry, m.carrying === true && !m.airborne ? 1 : 0, d, 14);
 
         let blink = 0;
         if (blinkT < 0 && m.time > blinkAt) blinkT = 0;

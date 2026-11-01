@@ -21,6 +21,7 @@ import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
 import { onPackLoaded } from './pack-models';
 import { SceneView } from './scene-view';
+import type { StageTheme } from './stage-theme';
 import { TEXT_VI } from './text-vi';
 import { UiInputBuffer, createClickTracker, pickEntities } from './ui-input';
 
@@ -34,10 +35,12 @@ function ensureNodesRegistered(): void {
 export interface GameViewOptions {
   /** Transparent canvas on the stage (puzzle page): whatever sits behind the canvas shows around the scene. The editor leaves this off. */
   transparentStage?: boolean;
+  /** Themed look of the scene (floors, props, bigger characters). The editor leaves this off. */
+  stage?: StageTheme;
 }
 
 export function createGameView(options: GameViewOptions = {}): GameView {
-  const sceneView = new SceneView();
+  const sceneView = new SceneView(options.stage ?? null);
   const pacer = createSimPacer(createAccumulator());
   const pauseCallbacks: Array<(paused: boolean) => void> = [];
   const endCallbacks: Array<(result: GameResult, message: string) => void> = [];
@@ -341,6 +344,8 @@ export function createGameView(options: GameViewOptions = {}): GameView {
         return;
       }
       if (options.transparentStage) renderer.setClearColor(0x000000, 0);
+      // Development only: lets browser checks read the triangle count of the last frame.
+      if (import.meta.env.DEV && options.stage) (window as unknown as { __pzRenderInfo?: THREE.WebGLInfo }).__pzRenderInfo = renderer.info;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
       const canvas = renderer.domElement;

@@ -24,6 +24,8 @@ export interface Motion {
   time: number;
   /** Smoothed vertical speed in units/s (positive = rising); lets a look tell a jump from a fall. */
   vy: number;
+  /** Holding something out front (the stage's carry pose); only some looks react, and only when the scene asks for it. */
+  carrying?: boolean;
 }
 
 export function walkPhaseRate(speed: number): number {
