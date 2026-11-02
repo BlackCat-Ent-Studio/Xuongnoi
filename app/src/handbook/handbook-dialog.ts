@@ -2,6 +2,7 @@ import { getNodeDef, listNodeDefs } from '../engine/registry';
 import type { Board, NodeCategory, NodeDef, ParamDef, ParamValue, PortDef } from '../engine/types';
 import { h } from '../editor/dom';
 import { categoryTile } from '../editor/panels/panel-icons';
+import { normalizeText } from '../editor/panels/palette-search';
 import { keyLabel } from '../editor/text-vi';
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { chapterOf } from '../tutorial/course';
@@ -9,6 +10,7 @@ import { findLesson } from '../tutorial/lessons';
 import { handbookEntry, type HandbookEntry } from './index';
 import { buildRows, filterRows, levelOf, sectionsByCategory, sectionsByLevel, type HandbookRow } from './handbook-model';
 import { HANDBOOK_TEXT as T } from './handbook-text-vi';
+import { SOLID_BODIES_PAGE, SOLID_BODIES_TOPIC } from './topic-solid-bodies';
 import './handbook-dialog.css';
 
 export interface HandbookDialogDeps {
@@ -138,14 +140,33 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
     return b;
   }
 
+  /** The "Va chạm thật" topic sits above the node lists; while searching it shows only when the words match. */
+  function topicSection(): HTMLElement | null {
+    const q = normalizeText(search.value);
+    if (q !== '' && !normalizeText(SOLID_BODIES_PAGE.title).includes(q)) return null;
+    const sec = h('section', 'hb-sec');
+    sec.dataset.section = 'topics';
+    const on = selected === SOLID_BODIES_TOPIC;
+    const b = h('button', 'hb-row hb-topic' + (on ? ' selected' : ''));
+    b.type = 'button';
+    b.dataset.kind = SOLID_BODIES_TOPIC;
+    b.setAttribute('role', 'option');
+    b.setAttribute('aria-selected', String(on));
+    b.append(h('span', 'hb-row-label', SOLID_BODIES_PAGE.title), h('span', 'hb-tag', T.topicTag));
+    b.addEventListener('click', () => select(SOLID_BODIES_TOPIC));
+    sec.append(h('h3', 'hb-sec-h', T.topicsHeading), b);
+    return sec;
+  }
+
   function renderList(): void {
     for (const [id, b] of modeBtns) {
       b.classList.toggle('on', id === mode);
       b.setAttribute('aria-pressed', String(id === mode));
     }
     const found = filterRows(rows, search.value);
+    const topic = topicSection();
     if (found.length === 0) {
-      list.replaceChildren(h('p', 'hb-empty', T.noResults(search.value.trim())));
+      list.replaceChildren(...(topic ? [topic] : [h('p', 'hb-empty', T.noResults(search.value.trim()))]));
       return;
     }
     if (search.value.trim()) {
@@ -153,11 +174,11 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
       const sec = h('section', 'hb-sec');
       sec.dataset.section = 'results';
       sec.append(h('h3', 'hb-sec-h', T.searchResults(found.length)), ...found.map(rowButton));
-      list.replaceChildren(sec);
+      list.replaceChildren(...(topic ? [topic] : []), sec);
       return;
     }
     const sections = mode === 'level' ? sectionsByLevel(found) : sectionsByCategory(found, CATEGORY_ORDER);
-    const nodes: HTMLElement[] = [];
+    const nodes: HTMLElement[] = topic ? [topic] : [];
     for (const s of sections) {
       const title = typeof s.key === 'number' ? T.levelTitles[s.key] ?? T.levelBadge(s.key) : NODE_CATEGORY_LABELS[s.key];
       const sec = h('section', 'hb-sec');
@@ -227,7 +248,26 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
     return bar;
   }
 
+  function renderTopic(): void {
+    const title = h('div', 'hb-title');
+    const names = h('div', 'hb-names');
+    names.append(h('h3', 'hb-node-name', SOLID_BODIES_PAGE.title), h('div', 'hb-meta', T.topicTag));
+    title.append(names);
+    const nodes: HTMLElement[] = [title, h('p', '', SOLID_BODIES_PAGE.intro)];
+    for (const block of SOLID_BODIES_PAGE.blocks) {
+      const ul = h('ul', 'hb-tips');
+      for (const item of block.items) ul.append(h('li', '', item));
+      nodes.push(section(block.heading, ul));
+    }
+    page.replaceChildren(...nodes);
+    page.scrollTop = 0;
+  }
+
   function renderPage(): void {
+    if (selected === SOLID_BODIES_TOPIC) {
+      renderTopic();
+      return;
+    }
     const def: NodeDef | undefined = getNodeDef(selected);
     if (!def) {
       page.replaceChildren(h('p', 'hb-muted hb-pick', T.pickOne));
@@ -278,8 +318,8 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
   function open(kind?: string): void {
     loadRows();
     search.value = '';
-    if (kind && getNodeDef(kind)) selected = kind;
-    else if (!selected || !getNodeDef(selected)) selected = rows[0]?.kind ?? '';
+    if (kind && (kind === SOLID_BODIES_TOPIC || getNodeDef(kind))) selected = kind;
+    else if (!selected || (selected !== SOLID_BODIES_TOPIC && !getNodeDef(selected))) selected = rows[0]?.kind ?? '';
     renderList();
     renderPage();
     overlay.hidden = false;

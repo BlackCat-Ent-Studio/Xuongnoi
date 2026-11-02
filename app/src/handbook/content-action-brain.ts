@@ -44,13 +44,13 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     params: {
       mode: '"2 phím riêng" thì Cầm và Thả là hai nút khác nhau. "1 phím cầm-thả" thì một nút cầm, bấm lần nữa là thả.',
       throwPower: 'Ném mạnh hay yếu. Số càng lớn đồ bay càng xa.',
-      dropDistance: 'Nâng cao: thả cách người bao xa. 0 nghĩa là thả sát người.',
+      dropDistance: 'Nâng cao: thả cách người bao xa. 0 nghĩa là thả sát người. Game 3D bật "Va chạm thật" thì món đồ rơi ngay chỗ tay giữ và số này không dùng.',
       throwLift: 'Nâng cao: độ ném hướng lên. 0 là ném thẳng, số lớn thì đồ bay vòng cao hơn.',
     },
     example: 'Phím E "Vừa bấm" → "Cầm" của Cầm / Thả; phím Q "Vừa bấm" → "Thả"; "Nhân vật" của Nhân vật → "Nhân vật" của Cầm / Thả.',
     tips: [
-      'Chỉ đồ vật có "Cầm được không" = Cầm được mới nhặt được; món đặt "Cố định" thì không.',
-      'Phải đứng đủ gần món đồ (chừng một bước chân) mới cầm được. Đứng xa bấm E không có gì xảy ra.',
+      'Chỉ đồ vật có "Cầm được không" = Cầm được mới nhặt được; món đặt "Cố định" thì không. Phải đứng đủ gần (chừng một bước chân), đứng xa bấm E không có gì xảy ra.',
+      'Bật "Va chạm thật" (Tệp, Cài đặt game), game 3D: Thả cho đồ rơi ngay chỗ tay giữ; chỗ đó có tường, thùng hay người thì không thả được và nhân vật vẫn cầm; thả lên thùng khác thì xếp chồng. Xem trang "Va chạm thật" ở đầu Sổ tay.',
       'Nên dùng "Vừa bấm" của Phím bấm, không dùng "Đang giữ": Cầm / Thả chỉ tính mỗi lần tín hiệu bật lên là một lần bấm.',
       'Dụng cụ để đánh (kiếm, cuốc) thì dùng mảnh ghép Cầm tay, không phải Cầm / Thả.',
     ],

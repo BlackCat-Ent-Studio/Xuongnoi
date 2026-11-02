@@ -44,6 +44,7 @@ import { createNewGameDialog } from './new-game-dialog';
 import { findFreeNoteSpot } from './note-placement';
 import { createPalette } from './palette';
 import { createPropertiesPanel } from './properties-panel';
+import { PANELS_TEXT_VI } from './panels/panels-text-vi';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { TEXT_VI } from './text-vi';
 import { createTopBar } from './top-bar';
@@ -339,6 +340,15 @@ export function mountEditor(root: HTMLElement): void {
           { type: 'separator' },
           { type: 'item', label: SHELL_TEXT.fileSave, icon: 'save', hint: 'Ctrl S', onSelect: saveLocal },
           { type: 'item', label: SHELL_TEXT.fileExport, icon: 'download', onSelect: saveToFile },
+          { type: 'separator' },
+          { type: 'heading', label: SHELL_TEXT.fileGameSettings },
+          {
+            type: 'item',
+            label: PANELS_TEXT_VI.solidBodiesLabel,
+            checked: state.getSolidBodies(),
+            disabled: state.isPlaying(),
+            onSelect: () => state.setSolidBodies(!state.getSolidBodies()),
+          },
         ];
       },
     },

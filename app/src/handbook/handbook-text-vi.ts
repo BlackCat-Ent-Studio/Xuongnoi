@@ -11,6 +11,8 @@ export const HANDBOOK_TEXT = {
   groupByCategory: 'Nhóm',
   noResults: (q: string) => `Không có mảnh ghép nào khớp với "${q}".`,
   listLabel: 'Danh sách mảnh ghép',
+  topicsHeading: 'Cài đặt game',
+  topicTag: 'Công tắc',
   levelTitles: {
     1: 'Cấp 1 · Cơ bản',
     2: 'Cấp 2 · Nhân vật và đối thủ',

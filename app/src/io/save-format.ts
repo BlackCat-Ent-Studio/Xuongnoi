@@ -26,7 +26,8 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
 
 export function createEmptyBoard(mode: ViewMode): Board {
-  return { name: IO_TEXT.newBoardName, mode, graph: { nodes: [], wires: [] } };
+  // A brand-new game starts with real collisions; older boards and the samples keep the plain rules.
+  return { name: IO_TEXT.newBoardName, mode, graph: { nodes: [], wires: [], settings: { solidBodies: true } } };
 }
 
 export function serializeBoard(board: Board): string {
@@ -218,6 +219,8 @@ export function parseBoard(text: string): ParseResult {
   }
 
   graph = withGroups(graph, parseGroups(rawGraph.groups, nodes));
+  // Only an explicit `true` switches a setting on; anything else reads as the old behaviour.
+  if (isRecord(rawGraph.settings) && rawGraph.settings.solidBodies === true) graph = { ...graph, settings: { solidBodies: true } };
 
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };

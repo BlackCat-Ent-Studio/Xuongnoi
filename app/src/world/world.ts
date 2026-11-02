@@ -730,7 +730,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       for (const e of list) if (e.belt) syncWalls(e);
       advanceBelts(list, dt);
       stepPhysics(list, dt, mode, yaw, rules);
-      if (rules) respawnFallen();
+      if (rules?.respawnFallen) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),
         hide: (id) => api.hide(id),

@@ -160,11 +160,19 @@ export interface NodeGroup {
   y: number;
 }
 
+/** Per-game switches saved with the board. A missing field (or a missing `settings`) means the old behaviour. */
+export interface GraphSettings {
+  /** "Va chạm thật": characters and loose items are solid bodies (see world/world-options.ts). Only ever stored as `true`. */
+  solidBodies?: boolean;
+}
+
 export interface Graph {
   nodes: GraphNode[];
   wires: Wire[];
   /** Optional groups (absent in older files and whenever there are none). */
   groups?: NodeGroup[];
+  /** Optional game settings (absent in older files and whenever every switch is off). */
+  settings?: GraphSettings;
 }
 
 /** A saved board = one game. */

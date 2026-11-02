@@ -161,6 +161,10 @@ export interface EditorState {
   loadBoard(board: Board): void;
   setName(name: string): void;
   setMode(mode: ViewMode): void;
+  /** "Va chạm thật" of this game. */
+  getSolidBodies(): boolean;
+  /** Switches "Va chạm thật" for the next play. Ignored while playing; the field is dropped when off so old files round-trip unchanged. */
+  setSolidBodies(on: boolean): void;
   setPlaying(playing: boolean): void;
   select(sel: Selection): void;
   /** Shift+click: add or remove one node/note from the selection. */
@@ -394,6 +398,12 @@ export function createEditorState(initial: Board): EditorState {
     setMode(mode) {
       if (mode === board.mode) return;
       commit({ ...board, mode }, ['mode']);
+    },
+    getSolidBodies: () => board.graph.settings?.solidBodies === true,
+    setSolidBodies(on) {
+      if (playing || on === (board.graph.settings?.solidBodies === true)) return;
+      const { settings: _old, ...rest } = board.graph;
+      commit({ ...board, graph: on ? { ...rest, settings: { solidBodies: true } } : rest }, ['graph']);
     },
     setPlaying(p) {
       if (p === playing) return;
