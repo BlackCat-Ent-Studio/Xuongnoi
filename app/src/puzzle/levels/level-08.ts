@@ -2,6 +2,7 @@ import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
 
 const CRATE = { size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' };
+const WALL_COLOR = '#a8a29e';
 
 /**
  * Level 8 (xuong-tong-hop): final workshop. Wheel robot ferries crates into the bay, leg robot paces over a button pad,
@@ -18,11 +19,11 @@ export const level08: PuzzleLevel = {
   base: {
     nodes: [
       { id: 'floor', kind: 'block', params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 34, y: 1, z: 16 }, color: '#cbd5e1', type: 'solid' }, pos: { x: 20, y: 20 } },
-      { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 12, y: 0.5, z: -4 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 64 } },
+      { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 12, y: 0.1, z: -4 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 64 } },
       { id: 'pad', kind: 'block', params: { name: 'Nút đỏ', position: { x: 2, y: 0.1, z: 3 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#ef4444', type: 'pickup' }, pos: { x: 20, y: 108 } },
-      { id: 'crate-1', kind: 'item', params: { name: 'Thùng 1', ...CRATE, position: { x: -12.3, y: 1, z: 2.7 } }, pos: { x: 20, y: 176 } },
-      { id: 'crate-2', kind: 'item', params: { name: 'Thùng 2', ...CRATE, position: { x: -12, y: 1, z: 3.3 } }, pos: { x: 20, y: 220 } },
-      { id: 'crate-3', kind: 'item', params: { name: 'Thùng 3', ...CRATE, position: { x: -11.7, y: 1, z: 3 } }, pos: { x: 20, y: 264 } },
+      { id: 'crate-1', kind: 'item', params: { name: 'Thùng 1', ...CRATE, position: { x: -12.95, y: 0.3, z: 3 } }, pos: { x: 20, y: 176 } },
+      { id: 'crate-2', kind: 'item', params: { name: 'Thùng 2', ...CRATE, position: { x: -12, y: 0.3, z: 4 } }, pos: { x: 20, y: 220 } },
+      { id: 'crate-3', kind: 'item', params: { name: 'Thùng 3', ...CRATE, position: { x: -12, y: 0.3, z: 2 } }, pos: { x: 20, y: 264 } },
       { id: 'hero', kind: 'character', params: { name: 'Mèo nhỏ', position: { x: -12, y: 1, z: -4 }, speed: 4, color: '#f9a8d4', look: PUZZLE_LOOKS.catChibi, role: 'bot' }, pos: { x: 20, y: 308 } },
       { id: 'guard', kind: 'character', params: { name: 'Mèo lính gác', position: { x: 7, y: 1, z: -7 }, speed: 2, color: '#64748b', look: PUZZLE_LOOKS.catQuad, role: 'bot' }, pos: { x: 20, y: 376 } },
       { id: 'wheel', kind: 'character', params: { name: 'Rô-bốt bánh xe', position: { x: -7, y: 1, z: 3 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 444 } },
@@ -35,6 +36,8 @@ export const level08: PuzzleLevel = {
       { id: 'bay', kind: 'zone', params: { center: { x: -7, y: 1, z: 3 }, size: { x: 3, y: 3, z: 3 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 210, y: 266 } },
       { id: 'need', kind: 'const', params: { value: 2 }, pos: { x: 210, y: 336 } },
       { id: 'door', kind: 'block', params: { name: 'Cửa', position: { x: -4, y: 1, z: -4 }, size: { x: 1, y: 2, z: 7 }, color: '#92400e', type: 'solid' }, pos: { x: 210, y: 406 } },
+      { id: 'wall-north', kind: 'block', params: { position: { x: -4, y: 0.9, z: -7.75 }, size: { x: 1, y: 1.8, z: 0.5 }, color: WALL_COLOR, type: 'solid' }, pos: { x: 410, y: 100 } },
+      { id: 'wall-south', kind: 'block', params: { position: { x: -4, y: 0.9, z: 3.75 }, size: { x: 1, y: 1.8, z: 8.5 }, color: WALL_COLOR, type: 'solid' }, pos: { x: 410, y: 160 } },
       { id: 'caught', kind: 'touch', params: {}, pos: { x: 210, y: 476 } },
       { id: 'cam', kind: 'camera', params: { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.8 }, pos: { x: 210, y: 520 } },
       { id: 'end', kind: 'win-lose', params: { winMessage: 'Cả xưởng cùng làm việc, mèo nhỏ ra tới đích!', loseMessage: 'Lính gác bắt được mèo nhỏ rồi!' }, pos: { x: 410, y: 20 } },
@@ -80,6 +83,8 @@ export const level08: PuzzleLevel = {
     bay: { in: [], out: ['count'] },
     need: { out: ['value'] },
     door: { in: ['hide'], out: [] },
+    'wall-north': { in: [], out: [] },
+    'wall-south': { in: [], out: [] },
     caught: { in: [], out: [] },
     cam: { in: [], out: [] },
     end: { in: [] },

@@ -4,7 +4,11 @@ import { PUZZLE_LOOKS } from '../types';
 
 const RED = '#ef4444';
 const BLUE = '#3b82f6';
-const CRATE_SIZE = { x: 0.8, y: 0.8, z: 0.8 };
+const CRATE_SIZE = { x: 0.7, y: 0.7, z: 0.7 };
+/** The crates wait in a lane beside the walking line (z = 0); the robot reads the coloured tile on the line and takes the crate from the side. */
+const CRATE_Z = 1.02;
+/** A crate is set down this far to the side of the robot: out of reach of the crate lane, so a dropped crate is not picked up again by the next tile. */
+const DROP_DISTANCE = 2;
 
 /** Colour of the crate on each pad, left to right. Three blue ones, three red ones. */
 const PADS: readonly { x: number; color: string }[] = [
@@ -37,15 +41,15 @@ export const level07: PuzzleLevel = {
   cast: [PUZZLE_LOOKS.robotLegs],
   base: {
     nodes: [
-      hidden('floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 26, y: 1, z: 6 }, color: '#cbd5e1', type: 'solid' }),
-      hidden('store-mark', 'block', { name: 'Kho', position: { x: -10, y: 0.01, z: 0 }, size: { x: 5, y: 0.02, z: 4 }, color: '#22c55e', type: 'pickup' }),
+      hidden('floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 28, y: 1, z: 8 }, color: '#cbd5e1', type: 'solid' }),
+      hidden('store-mark', 'block', { name: 'Kho', position: { x: -10, y: 0.01, z: 0 }, size: { x: 6, y: 0.02, z: 5 }, color: '#22c55e', type: 'pickup' }),
       ...PADS.map((p, i) =>
-        hidden(`pad-${i + 1}`, 'block', { name: `Ô ${i + 1}`, position: { x: p.x, y: 0.03, z: 0 }, size: { x: 1.9, y: 0.06, z: 1.9 }, color: p.color, type: 'pickup' }),
+        hidden(`pad-${i + 1}`, 'block', { name: `Ô ${i + 1}`, position: { x: p.x, y: 0.02, z: 0 }, size: { x: 1, y: 0.04, z: 1 }, color: p.color, type: 'pickup' }),
       ),
       ...PADS.map((p, i) =>
         hidden(`crate-${i + 1}`, 'item', {
           name: `Thùng ${p.color === BLUE ? 'xanh' : 'đỏ'} ${i + 1}`,
-          position: { x: p.x, y: 0.5, z: 0 },
+          position: { x: p.x, y: 0.5, z: CRATE_Z },
           size: CRATE_SIZE,
           shape: 'crate',
           color: p.color,
@@ -53,15 +57,15 @@ export const level07: PuzzleLevel = {
         }),
       ),
       hidden('brain', 'patrol', { pointA: { x: -10, y: 0.5, z: 0 }, pointB: { x: 11, y: 0.5, z: 0 }, wait: 0.5, pathfind: 'off' }),
-      hidden('drop-zone', 'zone', { center: { x: -10, y: 1, z: 0 }, size: { x: 2, y: 3, z: 3 }, filter: 'bot', rule: 'center', color: '#22c55e' }),
-      hidden('blue-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 5, y: 3, z: 4 }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
-      hidden('red-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 5, y: 3, z: 4 }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
+      hidden('drop-zone', 'zone', { center: { x: -9, y: 1, z: 0 }, size: { x: 3, y: 3, z: 3 }, filter: 'bot', rule: 'center', color: '#22c55e' }),
+      hidden('blue-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 6, y: 3, z: 5 }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
+      hidden('red-store', 'zone', { center: { x: -10, y: 0.5, z: 0 }, size: { x: 6, y: 3, z: 5 }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
       hidden('need', 'const', { value: 3 }),
       hidden('enough', 'compare', { op: 'ge' }),
       hidden('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
       hidden('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
       { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -10, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 400, y: 20 } },
-      { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 400, y: 120 } },
+      { id: 'hands', kind: 'carry', params: { mode: 'toggle', dropDistance: DROP_DISTANCE }, pos: { x: 400, y: 120 } },
     ],
     wires: [
       { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'brain', port: 'self' } },

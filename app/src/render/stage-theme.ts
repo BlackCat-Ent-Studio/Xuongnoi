@@ -1,5 +1,6 @@
 import type * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
+import type { WorldOptions } from '../world/world-options';
 
 /** One dressed-up object of the stage (a door, a button, a crate...) that replaces the plain box of an entity. */
 export interface StageFigure {
@@ -23,6 +24,8 @@ export interface StageTheme {
   readonly characterScale: number;
   /** Where a crate held out front by the legs robot is drawn: distance ahead of the figure and height of its base. */
   readonly carryOffset: { reach: number; height: number };
+  /** World rules this look needs so the collision boxes and carry spots match what is drawn (undefined = the plain rules). */
+  worldOptions?(mode: ViewMode): WorldOptions | undefined;
   /** Warm light colours for the scene. */
   readonly light: { sky: number; ground: number; sun: number };
   /** Role of an entity for this view mode, or null to keep the default drawing. Cheap and pure. */

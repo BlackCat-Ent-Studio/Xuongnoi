@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../../engine/types';
 import type { StageFigure, StageTheme } from '../../render/stage-theme';
 import { PORTAL_LOOK } from '../../render/portal-model';
+import { LEGS_FRONT_CARRY, PUZZLE_CHARACTER_SCALE, puzzleWorldOptions } from '../world-options';
 import { clamp, disposeTree, paint, ringShape, rrShape, sm01, toonOwn } from './stage-kit';
 import { approach, makeButton, makeCrate, makeDoor, makeFlag, makeGoalPad, makeStar, makeZonePad } from './stage-props';
 import { makeSideRoom, makeTray } from './stage-scenery';
@@ -12,7 +13,7 @@ import { makeSideRoom, makeTray } from './stage-scenery';
  */
 
 /** Visual-only size of characters (collision boxes stay as they are). */
-export const STAGE_CHARACTER_SCALE = 1.6;
+export const STAGE_CHARACTER_SCALE = PUZZLE_CHARACTER_SCALE;
 
 /**
  * The props were designed around a robot 2.9 units tall; in the game a character is 1 unit tall and drawn 1.6 times
@@ -262,7 +263,8 @@ export function createCozyStage(): StageTheme {
   let characters: readonly EntityView[] = [];
   return {
     characterScale: STAGE_CHARACTER_SCALE,
-    carryOffset: { reach: 1.19 * STAGE_UNIT, height: 0.55 * STAGE_UNIT },
+    carryOffset: LEGS_FRONT_CARRY,
+    worldOptions: puzzleWorldOptions,
     light: { sky: 0xfff3dc, ground: 0xa7753f, sun: 0xffe2b8 },
     roleOf: stageRoleOf,
     observe(entities) {

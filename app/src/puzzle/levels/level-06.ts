@@ -13,7 +13,7 @@ export const level06: PuzzleLevel = {
   base: {
     nodes: [
       { id: 'floor', kind: 'block', params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 14 }, color: '#a7c4a0', type: 'solid' }, pos: { x: 20, y: 470 } },
-      { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 10, y: 0.5, z: 0 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 400 } },
+      { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 10, y: 0.1, z: 0 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 400 } },
       { id: 'hero', kind: 'character', params: { name: 'Mèo nhỏ', position: { x: -10, y: 1, z: 0 }, speed: 4, color: '#f9a8d4', look: PUZZLE_LOOKS.catChibi, role: 'bot' }, pos: { x: 20, y: 20 } },
       { id: 'guard', kind: 'character', params: { name: 'Mèo lính gác', position: { x: 0, y: 1, z: -5 }, speed: 2, color: '#64748b', look: PUZZLE_LOOKS.catQuad, role: 'bot' }, pos: { x: 20, y: 200 } },
       { id: 'walk', kind: 'go-to', params: { stopDistance: 0.5 }, pos: { x: 230, y: 20 } },

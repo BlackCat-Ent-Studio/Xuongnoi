@@ -19,9 +19,12 @@ import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
 import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
-import { handPosition, holdPosition, overlapsSolid, stepPhysics, touching } from './physics';
+import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
+import { RESPAWN_BELOW, bodyRules, isSolidBody, solidDropSpot } from './solid-bodies';
+import type { WorldOptions } from './world-options';
+import { createPhysicsWatch } from '../dev/physics-watch';
 import { bodyTuning } from './body-tuning';
-import { colliderBox } from './collider';
+import { colliderBox, normalizeCollider } from './collider';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
@@ -50,7 +53,9 @@ function finiteOr(n: number, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
-export function createWorld(mode: ViewMode): World {
+export function createWorld(mode: ViewMode, options?: WorldOptions): World {
+  const rules = bodyRules(options);
+  const watcher = import.meta.env.DEV && import.meta.env.MODE !== 'test' && rules ? createPhysicsWatch() : null;
   const list: Entity[] = [];
   const byId = new Map<EntityId, Entity>();
   const hud = new Map<string, HudItem>();
@@ -162,6 +167,7 @@ export function createWorld(mode: ViewMode): World {
   function viewOf(e: Entity): EntityView {
     const v = toView(e);
     if (e.kind === 'vehicle' && e.vehicle) return { ...v, drive: { speed: e.vehicle.spec.maxSpeed, jumpPower: 0 } };
+    if (rules && e.kind === 'item' && e.heldBy !== null && !e.inHand && e.cargoSeq === undefined) return { ...v, carried: true };
     if (e.kind !== 'character') return v;
     const tool = e.handHolding !== null ? byId.get(e.handHolding) : undefined;
     const carried = e.holding !== null && mode !== '2d-top' ? byId.get(e.holding) : undefined;
@@ -217,6 +223,11 @@ export function createWorld(mode: ViewMode): World {
   /** A resting spot in front of (else behind, else at, else above) the character that is clear of solids. */
   function dropSpot(c: Entity, item: Entity, distance?: number): Vec3 {
     const solids = list.filter((e) => e.visible && e.solid && e.kind === 'block');
+    if (rules && mode === '3d') {
+      // Solid bodies: beside the carrier, clear of walls and of every other crate and character.
+      const spot = solidDropSpot(c, item, distance, [...solids, ...list.filter((e) => e !== item && isSolidBody(e))]);
+      return spot ?? carryAt(c, item, mode, rules);
+    }
     const y = mode === '2d-top' ? c.pos.y : c.pos.y - c.size.y / 2 + item.size.y / 2;
     const autoGap = Math.max(c.size.x, c.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + 0.05;
     const gap = distance !== undefined && Number.isFinite(distance) && distance > 0 ? distance : autoGap;
@@ -229,7 +240,19 @@ export function createWorld(mode: ViewMode): World {
       if (mode === '2d-side') spot.z = 0;
       if (!overlapsSolid({ ...item, pos: spot }, solids)) return spot;
     }
-    return holdPosition(c, item, mode);
+    return carryAt(c, item, mode, null);
+  }
+
+  /** Solid bodies: anything that fell off the tray goes back to where it started (a carried crate follows its carrier). */
+  function respawnFallen(): void {
+    for (const e of list) {
+      if (!e.home || !e.visible || e.pos.y >= RESPAWN_BELOW) continue;
+      if (e.kind === 'item' && e.heldBy !== null) continue;
+      letGoOfAll(e);
+      e.pos = { ...e.home };
+      e.vel = { x: 0, y: 0, z: 0 };
+      e.onGround = false;
+    }
   }
 
   /** Lets go of the carried and the hand-held item (and of the carrier, for an item) where they are. */
@@ -312,6 +335,15 @@ export function createWorld(mode: ViewMode): World {
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
+      if (rules && (e.kind === 'character' || e.kind === 'item')) {
+        e.home = { ...e.pos };
+        // Solid bodies: the collision box covers the figure that is drawn, unless the node asked for its own.
+        const box = options?.characterBox;
+        if (e.kind === 'character' && box && !e.collider) {
+          const collider = normalizeCollider(box.size, box.offset);
+          if (collider) e.collider = collider;
+        }
+      }
       list.push(e);
       byId.set(id, e);
       if (e.kind === 'block' && e.solid) solidRev++;
@@ -388,7 +420,7 @@ export function createWorld(mode: ViewMode): World {
       if (!item) return null;
       item.heldBy = c.id;
       c.holding = item.id;
-      Object.assign(item.pos, holdPosition(c, item, mode));
+      Object.assign(item.pos, carryAt(c, item, mode, rules));
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
@@ -408,7 +440,7 @@ export function createWorld(mode: ViewMode): World {
       const p = Math.max(0, finiteOr(power, 0));
       release(item);
       item.thrownBy = c.id;
-      Object.assign(item.pos, holdPosition(c, item, mode));
+      Object.assign(item.pos, carryAt(c, item, mode, rules));
       item.vel = {
         x: c.facing.x * p,
         y: mode === '2d-top' ? 0 : p * (lift !== undefined && Number.isFinite(lift) ? Math.max(0, lift) : THROW_LIFT),
@@ -677,7 +709,8 @@ export function createWorld(mode: ViewMode): World {
       prepareTrains(list, byId, dt, mode);
       for (const e of list) if (e.belt) syncWalls(e);
       advanceBelts(list, dt);
-      stepPhysics(list, dt, mode, yaw);
+      stepPhysics(list, dt, mode, yaw, rules);
+      if (rules) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),
         hide: (id) => api.hide(id),
@@ -686,6 +719,7 @@ export function createWorld(mode: ViewMode): World {
       teleporter.step(dt);
       combat.update(list, dt);
       dropDisposed();
+      if (import.meta.env.DEV && watcher) watcher.check(api);
       interacted = pendingInteract;
       pendingInteract = new Set();
       usedOn = pendingUsed;
@@ -711,26 +745,29 @@ export function createWorld(mode: ViewMode): World {
     setCameraYaw(rad: number): void {
       yaw = Number.isFinite(rad) ? rad : 0;
     },
-    debugBodies(): readonly BodySnapshot[] {
-      return list.map((e) => {
-        const b = colliderBox(e);
-        return {
-          id: e.id,
-          kind: e.kind,
-          owner: e.ownerNodeId,
-          visible: e.visible,
-          solid: e.solid,
-          zone: e.zone === true,
-          box: { pos: { ...b.pos }, size: { ...b.size } },
-          pos: { ...e.pos },
-          size: { ...e.size },
-          carried: e.kind === 'item' && e.heldBy !== null,
-          holder: e.heldBy,
-          seated: e.seatedIn !== null,
-          tag: e.tag ?? '',
-        };
-      });
-    },
+    // Development and tests only: the snapshot the physics checks read. Production builds leave it out.
+    ...(import.meta.env.DEV ? { debugBodies: (): readonly BodySnapshot[] => debugSnapshot() } : {}),
   };
   return api;
+
+  function debugSnapshot(): readonly BodySnapshot[] {
+    return list.map((e) => {
+      const b = colliderBox(e);
+      return {
+        id: e.id,
+        kind: e.kind,
+        owner: e.ownerNodeId,
+        visible: e.visible,
+        solid: e.solid,
+        zone: e.zone === true,
+        box: { pos: { ...b.pos }, size: { ...b.size } },
+        pos: { ...e.pos },
+        size: { ...e.size },
+        carried: e.kind === 'item' && e.heldBy !== null,
+        holder: e.heldBy,
+        seated: e.seatedIn !== null,
+        tag: e.tag ?? '',
+      };
+    });
+  }
 }

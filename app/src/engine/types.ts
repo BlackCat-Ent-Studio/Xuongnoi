@@ -409,6 +409,8 @@ export interface EntityView {
   holdStyle?: HoldStyle;
   /** Items only; true while the item is in a character's hand (the renderer draws it on the figure). */
   inHand?: boolean;
+  /** Items only; true while a character carries it, in worlds with solid bodies (puzzle 3D levels). Stores do not count it. */
+  carried?: boolean;
   /** Characters only; the tool currently in hand. */
   tool?: { shape: ItemShape; color: string };
   /** Characters only; height of the item carried above the head (side and 3D views), absent when nothing rides there. */

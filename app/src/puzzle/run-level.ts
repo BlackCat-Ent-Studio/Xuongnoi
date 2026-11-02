@@ -2,6 +2,7 @@ import { createRuntime } from '../engine/runtime';
 import { TICK_DT, type Graph, type InputSnapshot, type World } from '../engine/types';
 import { registerAllNodes } from '../nodes';
 import { createWorld } from '../world/world';
+import { puzzleWorldOptions } from './world-options';
 import type { PuzzleAnswer, PuzzleLevel, PuzzleRunResult } from './types';
 
 const NO_KEYS: InputSnapshot = { keysDown: new Set<string>() };
@@ -40,7 +41,7 @@ export function runLevel(
   onTick?: (world: World, tick: number) => void,
 ): PuzzleRunResult {
   registerAllNodes();
-  const world = createWorld(level.mode);
+  const world = createWorld(level.mode, puzzleWorldOptions(level.mode));
   const rt = createRuntime(buildPlayGraph(level, answer), world, level.mode);
   const maxTicks = Math.ceil(timeLimit / TICK_DT);
   let ticks = 0;
