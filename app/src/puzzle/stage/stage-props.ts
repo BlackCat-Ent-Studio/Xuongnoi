@@ -240,6 +240,14 @@ export function makeZonePad(w: number): THREE.Group {
   return g;
 }
 
+/** Painted store mat for a store with marked slots: sage paint and a cream border only (the slots are drawn on top). */
+export function makeSlotMat(w: number, d: number): THREE.Group {
+  const g = new THREE.Group();
+  g.add(paint(rrShape(w, d, 0.34), 0.05, '#9cc194', 0));
+  g.add(paint(ringShape(w - 0.3, d - 0.3, 0.26, 0.1), 0.02, PAL.cream, 0.05));
+  return g;
+}
+
 /** Round goal pad: sage disc, cream ring, honey star. About 2 units across. */
 export function makeGoalPad(): THREE.Group {
   const g = new THREE.Group();

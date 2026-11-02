@@ -1,4 +1,5 @@
 import type { Graph, GraphNode, Params, ViewMode, Wire } from '../engine/types';
+import type { StoreSlotsDef } from './store-slots';
 
 /**
  * One puzzle level ("Xưởng Bot giải đố"). A level is a real Xưởng Nối board: the locked part lives in
@@ -26,6 +27,8 @@ export interface PuzzleLevel {
    * Only ports listed here can be wired by the player on that node.
    */
   shownPorts?: Record<string, { in?: string[]; out?: string[] }>;
+  /** Marked slots on the store pad: the delivering robot sets one crate in each, filling them in order. Level-side, never wired by the player. */
+  storeSlots?: StoreSlotsDef;
   /** Pieces the player may place. Each placed copy becomes a node of `kind` with these params. */
   tray: TrayPiece[];
   /** Params the player may change (12b). Kept short: only where the puzzle needs it. */

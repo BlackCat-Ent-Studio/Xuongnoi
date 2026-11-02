@@ -1,8 +1,12 @@
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
+import { slotBrainParams, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
 
 const CRATE = { size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' };
 const WALL_COLOR = '#a8a29e';
+/** The bay has two marked slots in a row beside the wall, filled far end first; the third crate stays outside. */
+const STORE: StoreSlotsDef = { pickup: { x: -12, y: 0.5, z: 3 }, first: { x: -5.4, z: 3 }, step: { x: -1.8, z: 0 }, count: 2 };
+const SLOT_CARDS = [{ x: 410, y: 220 }, { x: 410, y: 280 }];
 
 /**
  * Level 8 (xuong-tong-hop): final workshop. Wheel robot ferries crates into the bay, leg robot paces over a button pad,
@@ -15,25 +19,28 @@ export const level08: PuzzleLevel = {
   task: 'Mèo nhỏ muốn ra ô xanh. Cửa chỉ mở khi rô-bốt chân bước lên nút VÀ rô-bốt bánh xe đã chở đủ 2 thùng vào kho. Ra cửa rồi còn mèo lính gác đi tuần: đừng để chạm! Tự nghĩ cách của bạn.',
   hint: 'Cửa: "Cảm biến chạm" giữa rô-bốt chân và nút, "So sánh" số thùng trong kho với "Số cần", rồi "Và" hai tin đó lại nối vào "Ẩn đi" của cửa. Mèo nhỏ: "Khoảng cách" tới lính gác, qua "Không", nối vào "Cho đi". Có thể thêm "Công tắc nhớ" để cửa nhớ nút đã bấm.',
   mode: '3d',
+  storeSlots: STORE,
   cast: [PUZZLE_LOOKS.robotWheel, PUZZLE_LOOKS.robotLegs, PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.catQuad],
   base: {
     nodes: [
       { id: 'floor', kind: 'block', params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 34, y: 1, z: 16 }, color: '#cbd5e1', type: 'solid' }, pos: { x: 20, y: 20 } },
       { id: 'goal', kind: 'block', params: { name: 'Ô xanh', position: { x: 12, y: 0.1, z: -4 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 64 } },
       { id: 'pad', kind: 'block', params: { name: 'Nút đỏ', position: { x: 2, y: 0.1, z: 3 }, size: { x: 1.6, y: 0.2, z: 1.6 }, color: '#ef4444', type: 'pickup' }, pos: { x: 20, y: 108 } },
+      { id: 'store-pad', kind: 'block', params: { name: 'Kho', position: { x: -6.4, y: 0.01, z: 3 }, size: { x: 3.6, y: 0.02, z: 2 }, color: '#22c55e', type: 'pickup' }, pos: { x: 410, y: 340 } },
+      ...slotMarkNodes(STORE, (i) => SLOT_CARDS[i]!),
       { id: 'crate-1', kind: 'item', params: { name: 'Thùng 1', ...CRATE, position: { x: -12.95, y: 0.3, z: 3 } }, pos: { x: 20, y: 176 } },
       { id: 'crate-2', kind: 'item', params: { name: 'Thùng 2', ...CRATE, position: { x: -12, y: 0.3, z: 4 } }, pos: { x: 20, y: 220 } },
       { id: 'crate-3', kind: 'item', params: { name: 'Thùng 3', ...CRATE, position: { x: -12, y: 0.3, z: 2 } }, pos: { x: 20, y: 264 } },
       { id: 'hero', kind: 'character', params: { name: 'Mèo nhỏ', position: { x: -12, y: 1, z: -4 }, speed: 4, color: '#f9a8d4', look: PUZZLE_LOOKS.catChibi, role: 'bot' }, pos: { x: 20, y: 308 } },
       { id: 'guard', kind: 'character', params: { name: 'Mèo lính gác', position: { x: 7, y: 1, z: -7 }, speed: 2, color: '#64748b', look: PUZZLE_LOOKS.catQuad, role: 'bot' }, pos: { x: 20, y: 376 } },
-      { id: 'wheel', kind: 'character', params: { name: 'Rô-bốt bánh xe', position: { x: -7, y: 1, z: 3 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 444 } },
+      { id: 'wheel', kind: 'character', params: { name: 'Rô-bốt bánh xe', position: { x: -9.5, y: 1, z: 3 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotWheel, role: 'bot' }, pos: { x: 20, y: 444 } },
       { id: 'legs', kind: 'character', params: { name: 'Rô-bốt chân ngắn', position: { x: 0, y: 1, z: 3 }, speed: 3, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 20, y: 488 } },
       { id: 'walk', kind: 'go-to', params: { stopDistance: 0.5, pathfind: 'off' }, pos: { x: 210, y: 20 } },
       { id: 'guard-brain', kind: 'patrol', params: { pointA: { x: 7, y: 0.5, z: -7 }, pointB: { x: 7, y: 0.5, z: 0 }, wait: 0.5, pathfind: 'off' }, pos: { x: 210, y: 90 } },
-      { id: 'wheel-brain', kind: 'patrol', params: { pointA: { x: -12, y: 0.5, z: 3 }, pointB: { x: -7, y: 0.5, z: 3 }, wait: 0.5, pathfind: 'off' }, pos: { x: 210, y: 134 } },
+      { id: 'wheel-brain', kind: 'slot-patrol', params: slotBrainParams(STORE, 2), pos: { x: 210, y: 134 } },
       { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 210, y: 178 } },
       { id: 'legs-brain', kind: 'patrol', params: { pointA: { x: -1, y: 0.5, z: 3 }, pointB: { x: 5, y: 0.5, z: 3 }, wait: 1, pathfind: 'off' }, pos: { x: 210, y: 222 } },
-      { id: 'bay', kind: 'zone', params: { center: { x: -6.6, y: 1, z: 3 }, size: { x: 3, y: 3, z: 3 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 210, y: 266 } },
+      { id: 'bay', kind: 'zone', params: { center: { x: -6.4, y: 1, z: 3 }, size: { x: 3.6, y: 3, z: 2 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 210, y: 266 } },
       { id: 'need', kind: 'const', params: { value: 2 }, pos: { x: 210, y: 336 } },
       { id: 'door', kind: 'block', params: { name: 'Cửa', position: { x: -4, y: 1, z: -4 }, size: { x: 1, y: 2, z: 7 }, color: '#92400e', type: 'solid' }, pos: { x: 210, y: 406 } },
       { id: 'wall-north', kind: 'block', params: { position: { x: -4, y: 0.9, z: -7.75 }, size: { x: 1, y: 1.8, z: 0.5 }, color: WALL_COLOR, type: 'solid' }, pos: { x: 410, y: 100 } },
@@ -68,6 +75,9 @@ export const level08: PuzzleLevel = {
     floor: { in: [], out: [] },
     goal: { in: [], out: [] },
     pad: { in: [], out: ['self'] },
+    'store-pad': { in: [], out: [] },
+    'slot-1': { in: [], out: [] },
+    'slot-2': { in: [], out: [] },
     'crate-1': { in: [], out: [] },
     'crate-2': { in: [], out: [] },
     'crate-3': { in: [], out: [] },

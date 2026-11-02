@@ -2,9 +2,10 @@ import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../../engine/types';
 import type { StageFigure, StageTheme } from '../../render/stage-theme';
 import { PORTAL_LOOK } from '../../render/portal-model';
+import { SLOT_COLOR, slotIsTaken } from '../store-slots';
 import { LEGS_FRONT_CARRY, PUZZLE_CHARACTER_SCALE, puzzleWorldOptions } from '../world-options';
-import { clamp, disposeTree, paint, ringShape, rrShape, sm01, toonOwn } from './stage-kit';
-import { approach, makeButton, makeCrate, makeDoor, makeFlag, makeGoalPad, makeStar, makeZonePad } from './stage-props';
+import { PAL, clamp, disposeTree, paint, ringShape, rrShape, sm01, toonOwn } from './stage-kit';
+import { approach, makeButton, makeCrate, makeDoor, makeFlag, makeGoalPad, makeSlotMat, makeStar, makeZonePad } from './stage-props';
 import { makeSideRoom, makeTray } from './stage-scenery';
 
 /**
@@ -22,6 +23,8 @@ export const STAGE_CHARACTER_SCALE = PUZZLE_CHARACTER_SCALE;
 export const STAGE_UNIT = STAGE_CHARACTER_SCALE / 2.9;
 
 const FLAT = 0.25;
+const SLOT_EMPTY_FILL = 0.1;
+const SLOT_FILLED_FILL = 0.5;
 const FLOOR_MAX_THICKNESS = 1.2;
 
 type Tone = 'red' | 'green' | 'yellow' | 'other';
@@ -47,6 +50,8 @@ export function stageRoleOf(e: EntityView, mode: ViewMode): string | null {
   if (e.kind === 'block' && e.zone) return side ? null : 'zone-mark';
   if (e.kind === 'item') return e.shape === 'crate' ? 'crate' : null;
   if (e.kind !== 'block' || e.look === PORTAL_LOOK) return null;
+  // A flat block in the slot colour is one marked place on a store pad (3D only).
+  if (!side && e.color.toLowerCase() === SLOT_COLOR && e.size.y <= FLAT) return 'slot';
   if (e.blockStyle !== undefined && e.blockStyle !== 'box') return null;
   const { x, y, z } = e.size;
   if (y > FLAT && y <= FLOOR_MAX_THICKNESS) {
@@ -215,6 +220,34 @@ function zoneMarkFigure(e: EntityView): StageFigure {
   };
 }
 
+/** One marked slot on a store pad: a honey outline that fills in softly while a crate rests in it. */
+function slotFigure(e: EntityView, crates: () => readonly EntityView[]): StageFigure {
+  const group = new THREE.Group();
+  const ring = toonOwn(PAL.honey);
+  const fill = toonOwn(PAL.honey, { transparent: true, opacity: SLOT_EMPTY_FILL, depthWrite: false });
+  group.add(paint(ringShape(1, 1, 0.16, 0.07), 0.03, ring, 0.05));
+  group.add(paint(rrShape(0.9, 0.9, 0.12), 0.01, fill, 0.055));
+  const from = new THREE.Color(PAL.honey);
+  const to = new THREE.Color(PAL.amber);
+  const rect = { x: e.position.x, z: e.position.z, size: Math.max(e.size.x, e.size.z) };
+  let filled = 0;
+  return {
+    object: group,
+    update(view, dt) {
+      group.scale.set(view.size.x, 1, view.size.z);
+      group.position.set(view.position.x, 0, view.position.z);
+      filled = approach(filled, slotIsTaken(rect, crates()) ? 1 : 0, dt, 0.35);
+      ring.color.copy(from).lerp(to, filled);
+      fill.opacity = SLOT_EMPTY_FILL + (SLOT_FILLED_FILL - SLOT_EMPTY_FILL) * filled;
+    },
+    dispose() {
+      ring.dispose();
+      fill.dispose();
+      disposeTree(group);
+    },
+  };
+}
+
 function padFigure(group: THREE.Group, scale: number): StageFigure {
   group.scale.setScalar(scale);
   markShadows(group, false);
@@ -261,6 +294,7 @@ function trayFigure(e: EntityView, all: readonly EntityView[], walls: boolean): 
 
 export function createCozyStage(): StageTheme {
   let characters: readonly EntityView[] = [];
+  let crates: readonly EntityView[] = [];
   return {
     characterScale: STAGE_CHARACTER_SCALE,
     carryOffset: LEGS_FRONT_CARRY,
@@ -269,6 +303,7 @@ export function createCozyStage(): StageTheme {
     roleOf: stageRoleOf,
     observe(entities) {
       characters = entities.filter((x) => x.kind === 'character');
+      crates = entities.filter((x) => x.kind === 'item');
     },
     create(role, e, all, mode) {
       switch (role) {
@@ -290,7 +325,13 @@ export function createCozyStage(): StageTheme {
           return crateFigure(e);
         case 'zone-mark':
           return zoneMarkFigure(e);
+        case 'slot':
+          return slotFigure(e, () => crates);
         case 'zone':
+          // A store pad with marked slots on it gets a plain mat; the slots carry the markings.
+          if (all.some((o) => o.visible && o.color.toLowerCase() === SLOT_COLOR && Math.abs(o.position.x - e.position.x) <= e.size.x / 2 && Math.abs(o.position.z - e.position.z) <= e.size.z / 2)) {
+            return padFigure(makeSlotMat(e.size.x, e.size.z), 1);
+          }
           return padFigure(makeZonePad(e.size.x), 1);
         case 'goal':
           return padFigure(makeGoalPad(), clamp(e.size.x / 1.8, 0.6, 1.4));

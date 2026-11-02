@@ -1,6 +1,7 @@
 import type { GraphNode } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
+import { slotBrainParams, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
 
 const RED = '#ef4444';
 const BLUE = '#3b82f6';
@@ -18,11 +19,20 @@ const PADS: readonly { x: number; color: string }[] = [
   { x: 9, color: BLUE },
 ];
 
+/**
+ * The blue store at the left end has three marked slots in a row, filled far end first. The crates are 0.7, so the
+ * slots sit 1.9 apart (a little more than the usual spacing).
+ */
+const STORE: StoreSlotsDef = { pickup: { x: 11, y: 0.5, z: 0 }, first: { x: -12.6, z: 0 }, step: { x: 1.9, z: 0 }, count: 3 };
+const STORE_CENTER = { x: -10.7, z: 0 };
+const STORE_SIZE = { x: 5.6, z: 2 };
+
 /** Hidden locked cards are stacked in columns so none overlap on the 1000x560 board. */
 const slot = (i: number): { x: number; y: number } => ({ x: 20 + Math.floor(i / 12) * 180, y: 20 + (i % 12) * 44 });
 
 let slotIndex = 0;
-const hidden = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: slot(slotIndex++) });
+const nextCard = (): { x: number; y: number } => slot(slotIndex++);
+const hidden = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: nextCard() });
 
 /**
  * Level 7 (phan-loai-mau): red and blue crates sit on coloured pads in a row. The legs robot walks the row, the
@@ -37,10 +47,12 @@ export const level07: PuzzleLevel = {
   hint: 'Đặt "Cảm biến màu", nối Rô-bốt vào "Vật" và chỉnh "Màu cần tìm" thành 2 (xanh). Rô-bốt chỉ cầm khi thấy màu xanh VÀ tay đang rảnh: nối "Đang cầm" qua "Không", rồi cùng "Đúng màu" vào "Và". Kết quả của "Và" nối vào "Cầm".',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
+  storeSlots: STORE,
   base: {
     nodes: [
       hidden('floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 28, y: 1, z: 8 }, color: '#cbd5e1', type: 'solid' }),
-      hidden('store-mark', 'block', { name: 'Kho', position: { x: -10.5, y: 0.01, z: 0 }, size: { x: 6, y: 0.02, z: 5 }, color: '#22c55e', type: 'pickup' }),
+      hidden('store-mark', 'block', { name: 'Kho', position: { x: STORE_CENTER.x, y: 0.01, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 0.02, z: STORE_SIZE.z }, color: '#22c55e', type: 'pickup' }),
+      ...slotMarkNodes(STORE, nextCard),
       ...PADS.map((p, i) =>
         hidden(`pad-${i + 1}`, 'block', { name: `Ô ${i + 1}`, position: { x: p.x, y: 0.02, z: 0 }, size: { x: 1, y: 0.04, z: 1 }, color: p.color, type: 'pickup' }),
       ),
@@ -54,15 +66,14 @@ export const level07: PuzzleLevel = {
           tag: p.color === BLUE ? 'xanh' : 'do',
         }),
       ),
-      hidden('brain', 'patrol', { pointA: { x: -9.7, y: 0.5, z: 0 }, pointB: { x: 11, y: 0.5, z: 0 }, wait: 0.5, pathfind: 'off' }),
-      hidden('drop-zone', 'zone', { center: { x: -9.6, y: 1, z: 0 }, size: { x: 0.2, y: 3, z: 3 }, filter: 'bot', rule: 'center', color: '#22c55e' }),
-      hidden('blue-store', 'zone', { center: { x: -10.5, y: 0.5, z: 0 }, size: { x: 6, y: 3, z: 5 }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
-      hidden('red-store', 'zone', { center: { x: -10.5, y: 0.5, z: 0 }, size: { x: 6, y: 3, z: 5 }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
+      hidden('brain', 'slot-patrol', slotBrainParams(STORE, 0.5)),
+      hidden('blue-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
+      hidden('red-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
       hidden('need', 'const', { value: 3 }),
       hidden('enough', 'compare', { op: 'ge' }),
       hidden('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
       hidden('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
-      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -9.7, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 400, y: 20 } },
+      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -7.6, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 400, y: 20 } },
       { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 400, y: 120 } },
     ],
     wires: [
@@ -70,7 +81,7 @@ export const level07: PuzzleLevel = {
       { id: 'b2', from: { node: 'brain', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } },
       { id: 'b3', from: { node: 'brain', port: 'moveY' }, to: { node: 'robot', port: 'moveY' } },
       { id: 'b4', from: { node: 'robot', port: 'self' }, to: { node: 'hands', port: 'character' } },
-      { id: 'b5', from: { node: 'drop-zone', port: 'inside' }, to: { node: 'hands', port: 'drop' } },
+      { id: 'b5', from: { node: 'brain', port: 'atStore' }, to: { node: 'hands', port: 'drop' } },
       { id: 'b6', from: { node: 'blue-store', port: 'count' }, to: { node: 'enough', port: 'a' } },
       { id: 'b7', from: { node: 'need', port: 'value' }, to: { node: 'enough', port: 'b' } },
       { id: 'b8', from: { node: 'enough', port: 'out' }, to: { node: 'end', port: 'win' } },
@@ -93,7 +104,9 @@ export const level07: PuzzleLevel = {
     'crate-5': { in: [], out: [] },
     'crate-6': { in: [], out: [] },
     brain: { in: [], out: [] },
-    'drop-zone': { in: [], out: [] },
+    'slot-1': { in: [], out: [] },
+    'slot-2': { in: [], out: [] },
+    'slot-3': { in: [], out: [] },
     'blue-store': { in: [], out: [] },
     'red-store': { in: [], out: [] },
     need: { out: [] },
