@@ -1,4 +1,39 @@
-# HANDOFF — GameBuilder "Xưởng Nối" + "Xưởng Bot giải đố" — 2026-11-01 18:40 (main = 0118780, 1777+ tests green, tsc clean, build OK)
+# HANDOFF — GameBuilder "Xưởng Nối" + "Xưởng Bot giải đố" — 2026-11-02 23:10 (main ≈ 597bbc8+, 2296 tests green, tsc clean, build OK)
+
+> **Read order:** §00 (current state) → §4 (workflow) → §5 (lessons). §0z is the raw decision log of 2026-11-02; §1a–§3 are older history.
+
+## 00. CURRENT STATE — 2026-11-02 23:10 (READ FIRST)
+**Run:** `cd app; npm run dev -- --port 5173 --strictPort` (background) → Xưởng Nối http://localhost:5173 · Xưởng Bot http://localhost:5173/giai-do.html. No agents running, no extra worktrees (`git worktree list` = main only).
+
+**What is in main now (all merged, all verified by full vitest):**
+| Area | State | Key files / report |
+|---|---|---|
+| Puzzle shell | Style A permanent; title `#/`, map `#/map`, level `#/level/<id>` (reload OK), ending `#/end`, settings (music/sfx/reset), confetti win card; B/C themes dev-only `?theme=b|c` | puzzle/ui/title-screen, map-screen, shell.css · fullstack-261101-2040-shell |
+| Buttons | Press no longer shifts sideways (centering uses CSS `translate`, press uses `transform`) | shell.css · fullstack-261102-1205-title-fix |
+| Sound | Code-made WebAudio sfx + 2 music loops, respects settings; never heard by a human | puzzle/ui/sound.ts + sound/ |
+| Layout B | Board full-screen + stage PiP bottom-right; CHẠY/tap swaps (stage full, board mini); DỪNG/tap mini swaps back; top bar with "Đề bài" button | level-screen.ts, stage-camera-input.ts · fullstack-261102-1145-layout-b |
+| Camera | Drag pan, wheel/pinch zoom 1–4×, double-tap/⟳ reset; edit = overview fit, run = follow (FOLLOW_CONTEXT_ZOOM floors in cameras.ts) | render/cameras.ts |
+| Smooth motion | Render interpolation between last two 60 Hz ticks (sim untouched) | render/tick-blend.ts · debug-261102-1402-smooth-motion |
+| Physics | `WorldOptions.solidBodies` (+ `frontCarryAll`, `respawnFallen`): characters/items/crates solid, carried crate blocked by walls, drop at hands + falls straight, refused drop keeps holding, stacking, zones ignore carried items, 1.6× collider in puzzle. ON for ALL 8 puzzle levels (2D + 3D) | world/physics.ts, puzzle/world-options.ts · fullstack-261102-1215-physics3d, -1430-carry-place, -2232-levels-audit |
+| Hidden physics check | Headless invariant suite over every level each tick (overlaps, shut/open doors, win/lose proof, no-stuck, crate jump limits) + DEV-only watcher (stripped from prod) | tests/puzzle/physics-invariants.test.ts, src/dev/physics-watch.ts, world/physics-check.ts |
+| Store slots | L5 3 slots, L7 blue store 3, L8 2; robot fills next empty slot, crate centred | puzzle/store-slots.ts, slot-patrol.ts · fullstack-261102-1508-store-slots |
+| Level 5 | Legs robot; 3 crates at 3 spots, `fetch-store` brain fetches each into a distinct slot; mandatory guide on first visit | puzzle/fetch-store.ts · fullstack-261102-2115-l5-scatter |
+| Level 4 | Redesigned so nobody passes through anyone (A btn1 → B through door to btn2 → A past door → B leaves to flag → A follows); A ends just behind the flag | level-04.ts · levels-audit report |
+| Level 7 | "Phân loại thùng màu" (colour pad under feet + Và); old "Cầu nhấp nháy" in levels/archive | level-07.ts |
+| Editor "Va chạm thật" | `graph.settings.solidBodies` per game; new boards ON; all 16 samples, 31 lessons, 54 handbook try-boards OFF and hash-identical to before. Only `cleaner-bot` breaks if turned ON. No sample flipped | fullstack-261102-1500-editor-solid |
+| Node names | 54 kinds renamed (Vietnamese + small English `labelEn`), ports too; old names are search aliases; `block` = **Vật thể · Object** | src/nodes/node-names.ts · -1600-rename, -2205-object-naming |
+| Object cards | Both workshops: title = kind (Vật thể / Nhân vật / Đồ vật), subtitle = instance name (Cờ, Bot…), normal category icon, no thumbnails | node-view.ts cardSubtitle |
+| Two-way highlight | Tap card → object's silhouette OUTLINE glows (mask + edge shader); tap object → its card glows (mini board too) | render/object-highlight.ts · -2115-outline-icons |
+| Doors | 2D side doors = thin post + edge-on leaf that swings (never sinks); swing 0.25 s to match the collider | puzzle/stage/cozy-stage.ts |
+
+**Open / waiting on the user:**
+1. Level 4: A stops behind the flag, not on it — widen flag area? (asked, unanswered)
+2. Thin objects (door) outline glow looks too thick (my own observation, not raised by user yet).
+3. Bố cục B for Xưởng Nối editor — not started, ask before doing.
+4. Turning "Va chạm thật" ON for samples: user decides per sample; `cleaner-bot` needs a re-layout first.
+5. "Làm lại 3D cho đẹp/hay hơn" — still undefined; ask what to change.
+6. App name (placeholder "Xưởng Bot" = `GAME_NAME`), APK (part D), real phone/GPU/touch/sound test — none done.
+7. Phone: long card names truncate ("Rô-bốt chân n…"); robot looks small in 2D overview on 844×390.
 
 ## 1. Goal
 An ORIGINAL browser node-wiring game builder for a Vietnamese non-coder user. You drag nodes ("mảnh ghép"), wire ports and press Chơi to play a 2D or 3D game.
@@ -172,6 +207,12 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 11. **Compare looks on the REAL game, not only mockups.** When the user wants to "see the levels in each style", add a temporary switcher (`?theme=` + floating control + localStorage) on the real page and screenshot all levels per option + one contact sheet each. It caught issues mockups hid (flat floors clash, moon behind a door pillar).
 12. **Agent briefs for UI work must list what is untouchable**: node cards, wires/wire energy, characters, level data. Ask for a pixel diff of one card per variant (it was 0/9480 for A/B/C).
 13. **When the user answers only some questions**, apply ⭐ defaults for the rest and say which defaults were used; re-ask only the ones that block the next step (app name).
+14. **(11-02) Loop that worked all day:** user request → I scout + restate in simple Vietnamese (ASCII sketch for anything visual) → user "ok/A" → append one line to §0z → `git worktree add -b <fix|feat>/<x> ../GameBuilder-<x> HEAD` + 2 junctions (node_modules, public/models) → one agent per independent area with its own dev port (52xx), explicit file ownership and "do not touch" list of the parallel agent → merge as each finishes → check `git diff HEAD~1 --stat` vs `--stat -w` (fix CRLF flips with a byte-safe node script, see scratchpad `to-crlf.mjs` pattern) → tsc + full vitest → LOOK at 1–2 shots myself → kill the agent's dev port, delete junctions, remove worktree, delete branch → §0z line → short Vietnamese report with "chưa kiểm" list.
+15. **Restate before building.** The user's words are short and often mean something else than the first reading (see §5 "Reading the user 11-02"). For every visual/behaviour request, first reply with "Mình hiểu là…" + an ASCII before/after sketch and 2 options; build only after "ok". This saved several wrong builds (door edge-on, outline glow, Layout B swap).
+16. **Physics/logic rule:** any change touching movement, carry, doors or levels must keep `tests/puzzle/physics-invariants.test.ts` green; new mechanics add an invariant first (red), then the fix (green). Never ship a level whose win can happen for the wrong reason.
+17. **"Tắt/dừng agent"** from the user = pause while they are away (use TaskStop; worktrees keep the work). When they return and say "tiếp tục", resume the SAME agents with SendMessage, not new ones. It is not a permanent ban on agents.
+18. **Previews:** agents cannot publish artifacts (no claude-artifacts tools in subagents) — they build the HTML, I publish with `mcp__claude-artifacts__publish_files` (republish = same slug + `base_version` from the last publish result) and open it with `Start-Process <url>`.
+19. **Editor stability first.** Anything that also touches Xưởng Nối goes behind a per-game setting (default OFF for shipped boards) and must prove "OFF = byte/trajectory-identical" over all samples + lessons + handbook boards before merge.
 
 ## 5. Lessons learned, bugs and fixes
 - **Agent hand-off claims can be wrong; check before acting.** Example: "Quay lại sửa highlights the wrong button" was false, because `controller.playAware` already swaps play→stop while playing.
@@ -246,6 +287,29 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 - **Shell fur pitfalls (if ever retried):** a square-grid strand mask shows a dotted grid and dark specks on white; use jittered cells + a rotated second octave, keep the lowest ~30% of layers solid, very light root darkening on white.
 - **Tooling:** the `claude-artifacts` MCP server can be down; the built-in `Artifact` tool still publishes. Preview pages need internet (three.js + Google Fonts from CDN). Agents' dev servers/Playwright can keep worktree folders locked; stop them (`Get-NetTCPConnection -LocalPort ...` → `Stop-Process`) before deleting.
 
+### Lessons, bugs and fixes — 2026-11-02
+- **Characters walked through crates / each other (3D, then 2D level 4).** Cause: only `block` bodies collided (physics.ts); puzzle 2D had no solid option at all. Fix: `WorldOptions.solidBodies` (character↔character, character↔item, item↔item, carried item ↔ walls). Lesson: when physics changes, audit EVERY level and EVERY mode, not just the one reported — the same bug existed in 2D.
+- **Level designs that only worked because of pass-through.** L5/L7/L8 robots stood inside crate piles; L4 needed A to pass B. Solid physics exposed them. Fix: re-lay levels + brains (`fetch-store`, slot routes, L4 sequence). Lesson: when you make the world stricter, expect level data to break and re-run every solution headless.
+- **Crate "flew" to its final spot.** Cause: drop chose a free spot sideways + render blend smoothed the jump. Fix: drop exactly at the hands, fall straight down, refuse drop if blocked; invariant "release shift ≤ 0.02, no jump > 0.3/tick".
+- **Win while still carrying the 3rd crate.** Zone counted carried items. Fix: `EntityView.carried`, zones skip it; invariant "win proof" checks the reason for every win/lose.
+- **Visual vs collider mismatch.** Characters drawn 1.6× with 1× box (overlap before "caught"); legs robot drew the crate low while physics held it overhead; door leaf animated 0.8 s while its collider vanished instantly (robot stood "inside" a closed-looking door). Fix: collider 1.3×1.6×1.3, shared hold point constants, door swing 0.25 s. Lesson: every visual animation of a blocking thing must match its collider timing.
+- **Jerky movement.** Cause: 60 Hz sim drawn raw per frame (0/1/2 ticks per frame). Fix: render interpolation (tick-blend.ts). Measured first, then fixed; camera was a victim, not the cause.
+- **Buttons slid right when pressed.** `.pz-btn:active { transform }` overrode `transform: translateX(-50%)` centering. Fix: center with the CSS `translate` property, press with `transform`. Lesson: never use `transform` for both layout and feedback.
+- **Agents flip CRLF→LF** (again: store-slots.test.ts). Always compare `--stat` vs `--stat -w` after each merge.
+- **Vite through a node_modules junction** can serve a blank page from stale optimized deps — restart with `--force`.
+- **Dev server dies between sessions.** Check `curl :5173` first; restart in background before telling the user to open it.
+- **Agents' dev ports and worktrees**: always kill the port (Get-NetTCPConnection → Stop-Process) and delete junctions BEFORE `git worktree remove`.
+
+### Reading the user — 2026-11-02
+- "Bộ kiểm tra logic" first meant an on-screen checker → really meant **a physics/collision engine** ("tương tác giữa người và đồ vật") + a **hidden** physics test that never shows in the game.
+- "Không chia hai màn hình" → Layout B **swap** (board full + stage PiP; run swaps them), chosen from an artifact preview, not from text.
+- "Cửa mở ra" in 2D → thin post + **edge-on** leaf that swings; never a framed door, never sinking.
+- "Phát sáng" → only the **silhouette outline** glows; object colours untouched.
+- "Mảnh ghép vật phẩm để là hộp" → the problem was the KIND name "Hộp"; standard = kind on top (Vật thể / Nhân vật / Đồ vật), instance name below; no thumbnails, normal icons.
+- "Đặt thùng vào 3 ô" → robot must walk to each slot and set the crate down there; "3 hộp ở 3 nơi" → crates start scattered.
+- "Simple" names (client) was ambiguous; user clarified it was about object cards, not node vocabulary.
+- When the user circles something in a screenshot, Read the screenshot first; their sentence alone is usually not enough.
+
 ## 6. Backlog ideas (not approved yet)
 - Sound and music.
 - Gamepad and touch input.
@@ -263,7 +327,8 @@ Standalone HTML pages (three.js 0.160 from jsDelivr via importmap, built only fr
 
 - 22:50: user says overview ("Toàn cảnh") still too far, wants a tighter "just enough" fit and a TRIAL first (screenshot Screenshot 2026-11-01 224722.png). Agent on branch feat/overview-fit (worktree ../GameBuilder-fit, dev :5206, presets Hiện tại / Gần vừa / Rất gần), not merged; report fullstack-261101-2250-overview-fit-report.md. Show trial to user, merge chosen preset, remove trial control, clean worktree (junctions first).
 
-## 0. NEWEST 2026-11-02 00:17 — BIG CHANGE REQUEST (not started, waiting on answers)
+## 0z. Decision log 2026-11-02 (raw, chronological — §00 is the summary)
+### 00:17 — client's big change request (all now resolved, see §00)
 User (client feedback) says STOP the overview-fit work (branch feat/overview-fit + worktree ../GameBuilder-fit + dev :5206 still exist, NOT merged — park or delete; junctions first) and wants:
 1. A "bộ kiểm tra logic" on the play screen: shows whether the run follows the wired pieces' logic (e.g. live per-piece state / which piece fired / why the level failed).
 2. NO split screen (game left + board right) — on phones it is too small. One side fills the screen (switch Bảng mảnh ghép ⇄ Sân chơi), OR the game view is small/zoomable and grows when needed.
