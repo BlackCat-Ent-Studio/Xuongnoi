@@ -6,14 +6,14 @@ const DEFAULT_COLOR = '#2b6cff';
 
 export const uiButtonNode: NodeDef<null> = {
   kind: 'ui-button',
-  label: 'Nút trên màn hình',
+  label: 'Nút bấm',
   category: 'input',
   description:
-    'Hiện một nút bấm trên màn hình game. "Vừa bấm" bật một nhịp mỗi lần người chơi bấm nút, "Đang giữ" bật khi còn giữ chuột. Nối "Hiện" để bật tắt nút.',
+    'Hiện một nút bấm trên màn hình game. "Vừa bấm" bật một nhịp mỗi lần người chơi bấm nút, "Đang giữ chuột" bật khi còn giữ chuột. Nối "Hiện" để bật tắt nút.',
   inputs: [{ id: 'show', type: 'bool', label: 'Hiện', default: true }],
   outputs: [
     { id: 'pressed', type: 'bool', label: 'Vừa bấm' },
-    { id: 'held', type: 'bool', label: 'Đang giữ' },
+    { id: 'held', type: 'bool', label: 'Đang giữ chuột' },
   ],
   params: [
     { id: 'text', label: 'Chữ trên nút', kind: 'text', default: 'Bấm vào đây' },

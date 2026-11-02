@@ -142,7 +142,7 @@ describe('level 6: ne-linh-gac', () => {
     }
   });
 
-  it('forgetting the "Không" (hero waits when the guard is far) never arrives', () => {
+  it('forgetting the "Đảo ngược" (hero waits when the guard is far) never arrives', () => {
     const notBack = withoutWires(level06.solution, 'sw3', 'sw4');
     const direct: PuzzleAnswer = {
       ...notBack,

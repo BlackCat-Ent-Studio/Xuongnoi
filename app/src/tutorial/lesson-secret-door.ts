@@ -5,7 +5,7 @@ import type { Lesson } from './types';
 
 /**
  * "Cửa bí mật": a door opens when the game starts (Khi bắt đầu) and slams shut once the player has left the room
- * (Không of "Có ai trong vùng"). Reaching the flag wins.
+ * (Đảo ngược of "Có ai trong vùng"). Reaching the flag wins.
  */
 
 type BuildArgs = Parameters<LessonKit['buildBoard']>;

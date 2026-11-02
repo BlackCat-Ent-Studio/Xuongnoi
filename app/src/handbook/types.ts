@@ -15,7 +15,7 @@ export interface HandbookEntry {
   ports: Record<string, string>;
   /** Explanation per param id (NodeDef.params), advanced ones included. */
   params: Record<string, string>;
-  /** A short wiring example in words, e.g. Phím bấm "Đang giữ" → "Nhảy" của Nhân vật. */
+  /** A short wiring example in words, e.g. Phím bấm "Đang giữ phím" → "Nhảy" của Nhân vật. */
   example: string;
   /** Tips and common mistakes. */
   tips: string[];

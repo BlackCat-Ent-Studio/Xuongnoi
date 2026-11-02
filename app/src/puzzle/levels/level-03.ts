@@ -27,7 +27,7 @@ const starWires: Wire[] = STARS.flatMap((s, k): Wire[] => [
 
 /**
  * Level 3 (nhat-sao): count three star pickups, then open the gate (side view, the same wooden door as level 2). Stars are blocks of type "pickup" so the cat
- * walks through them. The gate's "Ẩn khi bật" follows the compare signal (it closes again when the signal drops)
+ * walks through them. The gate's "Ẩn suốt lúc bật" follows the compare signal (it closes again when the signal drops)
  * and the compare is "bằng", so only the exact number 3 keeps it open for good; the tray constant starts at 5.
  */
 export const level03: PuzzleLevel | null = {
@@ -35,7 +35,7 @@ export const level03: PuzzleLevel | null = {
   order: 3,
   title: 'Nhặt sao',
   task: 'Mèo tự đi qua 3 ngôi sao rồi tới cổng. Cổng chỉ mở khi mèo đã nhặt đủ 3 sao. Hãy đếm sao và đặt số là 3.',
-  hint: 'Gom 3 tín hiệu "Vừa chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Hằng số 3, rồi nối vào "Ẩn khi bật" của cổng.',
+  hint: 'Gom 3 tín hiệu "Mới chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Số cố định 3, rồi nối vào "Ẩn suốt lúc bật" của cổng.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.catChibi],
   base: {

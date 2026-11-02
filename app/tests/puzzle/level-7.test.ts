@@ -66,7 +66,7 @@ describe('level 7: phan-loai-mau', () => {
     expect(runLevel(level07, blueOnly).outcome).not.toBe('win');
   });
 
-  it('the "Không" left unwired (always true) is the same as blue alone', () => {
+  it('the "Đảo ngược" left unwired (always true) is the same as blue alone', () => {
     const noNotWire: PuzzleAnswer = { ...sol, wires: sol.wires.filter((w) => w.id !== 'sw3') };
     expect(runLevel(level07, noNotWire).outcome).not.toBe('win');
   });
@@ -120,7 +120,7 @@ describe('level 7: phan-loai-mau', () => {
           }
           const grabs = cand.filter((w) => w.to.node === 'hands');
           const others = cand.filter((w) => w.to.node !== 'hands');
-          // One wire into "Cầm", up to two more anywhere.
+          // One wire into "Nhấc lên", up to two more anywhere.
           for (const g of grabs) {
             for (let a = -1; a < others.length; a++) {
               for (let b = a; b < others.length; b++) {

@@ -58,13 +58,13 @@ function sideBase(opts: { jump: boolean; startX?: number; look?: string }): { sp
 function tryConst(): Board {
   const b = sideBase({ jump: false });
   return build(
-    'Thử: Hằng số',
+    'Thử: Số cố định',
     '2d-side',
-    'Hằng số đặt là 1 được nối vào "Đi ngang" của Nhân vật, nên nhân vật tự đi sang phải. Đổi "Giá trị" thành 0.3 để đi chậm, thành -1 để đi lùi.',
+    'Số cố định đặt là 1 được nối vào "Đi ngang" của Nhân vật, nên nhân vật tự đi sang phải. Đổi "Giá trị" thành 0.3 để đi chậm, thành -1 để đi lùi.',
     [
       ...b.specs.filter((s) => s.id !== 'stick'),
       { id: 'const', kind: 'const', col: 0, row: 0, params: { value: 1 } },
-      { id: 'show', kind: 'show-number', col: 2, row: 0, params: { label: 'Hằng số' } },
+      { id: 'show', kind: 'show-number', col: 2, row: 0, params: { label: 'Số cố định' } },
     ],
     [['const', 'value', 'character', 'moveX'], ['const', 'value', 'show', 'value']],
   );
@@ -75,7 +75,7 @@ function tryMath(): Board {
   return build(
     'Thử: Phép tính',
     '2d-side',
-    'Mũi tên trái/phải đưa số -1..1 vào "Số A", Hằng số 0.5 vào "Số B", phép Nhân ra nửa tốc độ. Bấm mũi tên để đi chậm. Thử đổi sang phép Cộng.',
+    'Mũi tên trái/phải đưa số -1..1 vào "Số A", Số cố định 0.5 vào "Số B", phép Nhân ra nửa tốc độ. Bấm mũi tên để đi chậm. Thử đổi sang phép Cộng.',
     [
       ...b.specs,
       { id: 'half', kind: 'const', col: 0, row: 1, params: { value: 0.5 } },
@@ -91,7 +91,7 @@ function tryCounter(): Board {
   return build(
     'Thử: Bộ đếm',
     '2d-side',
-    'Bấm Space vài lần: mỗi lần "Vừa bấm" làm Bộ đếm +1 và con số hiện lên góc màn hình. Đếm tới 3 là "Đã đủ" bật và bạn thắng. Bấm phím R để đưa về 0.',
+    'Bấm Space vài lần: mỗi lần "Vừa nhấn" làm Bộ đếm +1 và con số hiện lên góc màn hình. Đếm tới 3 là "Đã đủ" bật và bạn thắng. Bấm phím R để đưa về 0.',
     [
       ...b.specs,
       { id: 'press', kind: 'key', col: 0, row: 1, params: { key: 'Space' } },
@@ -205,7 +205,7 @@ function tryItem(): Board {
 
 function tryVehicle(): Board {
   return build(
-    'Thử: Phương tiện',
+    'Thử: Xe',
     '2d-top',
     'Nhìn từ trên xuống. Mũi tên lái chiếc xe (đã chọn "Tự chạy" nên không cần người ngồi). Lái xe vào cái hộp xám để đâm: số lần đâm tăng lên.',
     [
@@ -279,7 +279,7 @@ function tryRotatingPlatform(): Board {
 function tryWinLose(): Board {
   const b = sideBase({ jump: false });
   return build(
-    'Thử: Thắng/Thua',
+    'Thử: Thắng / Thua',
     '2d-side',
     'Bấm Space để thắng, bấm L để thua. Màn hình báo kết quả bằng đúng lời bạn gõ ở "Lời khi thắng" / "Lời khi thua".',
     [

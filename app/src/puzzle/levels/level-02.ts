@@ -2,7 +2,7 @@ import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
 
 /**
- * Level 2 (cua-kho): a door that must stay open. The door's "Ẩn khi bật" follows its signal and closes again as soon
+ * Level 2 (cua-kho): a door that must stay open. The door's "Ẩn suốt lúc bật" follows its signal and closes again as soon
  * as the signal drops, so a plain touch signal is not enough: the bot steps off the button, so the signal needs a latch.
  */
 export const level02: PuzzleLevel | null = {
@@ -10,7 +10,7 @@ export const level02: PuzzleLevel | null = {
   order: 2,
   title: 'Cửa kho',
   task: 'Bot đang tự đi tới cờ nhưng cửa kho đóng. Hãy nối sao cho bot dẫm nút đỏ thì cửa mở và mở mãi.',
-  hint: 'Cảm biến chạm báo khi bot dẫm nút. Cửa mở khi "Ẩn khi bật" bật, nên cần Công tắc nhớ giữ tín hiệu dù bot đã đi khỏi nút.',
+  hint: 'Chạm nhau báo khi bot dẫm nút. Cửa mở khi "Ẩn suốt lúc bật" bật, nên cần Công tắc nhớ giữ tín hiệu dù bot đã đi khỏi nút.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.robotLegs],
   base: {

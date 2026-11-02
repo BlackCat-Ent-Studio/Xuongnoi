@@ -12,15 +12,15 @@ const STILL_BELOW = 0.05;
 
 export const speedSensorNode: NodeDef<SpeedState> = {
   kind: 'speed-sensor',
-  label: 'Cảm biến tốc độ',
+  label: 'Đo tốc độ',
   category: 'logic',
   description:
-    'Đo vật đang chạy nhanh cỡ nào, tính bằng ô mỗi giây, từ việc vật đổi chỗ giữa hai nhịp. "Đang đứng yên" bật khi gần như không nhúc nhích; "Nhanh hơn ngưỡng" bật khi tốc độ lớn hơn "Ngưỡng". Nhịp đầu tiên, hoặc khi chưa nối vật, tốc độ là 0. Mặc định chỉ tính chuyển động ngang nên nhảy lên xuống tại chỗ vẫn là đứng yên; mục Nâng cao cho tính cả lên xuống.',
+    'Đo vật đang chạy nhanh cỡ nào, tính bằng ô mỗi giây, từ việc vật đổi chỗ giữa hai nhịp. "Đứng yên" bật khi gần như không nhúc nhích; "Nhanh quá mức" bật khi tốc độ lớn hơn "Ngưỡng". Nhịp đầu tiên, hoặc khi chưa nối vật, tốc độ là 0. Mặc định chỉ tính chuyển động ngang nên nhảy lên xuống tại chỗ vẫn là đứng yên; mục Nâng cao cho tính cả lên xuống.',
   inputs: [{ id: 'who', type: 'object', label: 'Vật', required: true }],
   outputs: [
     { id: 'speed', type: 'number', label: 'Tốc độ' },
-    { id: 'still', type: 'bool', label: 'Đang đứng yên' },
-    { id: 'fast', type: 'bool', label: 'Nhanh hơn ngưỡng' },
+    { id: 'still', type: 'bool', label: 'Đứng yên' },
+    { id: 'fast', type: 'bool', label: 'Nhanh quá mức' },
   ],
   params: [
     { id: 'threshold', label: 'Ngưỡng (ô/giây)', kind: 'number', default: 3, min: 0, step: 0.5 },

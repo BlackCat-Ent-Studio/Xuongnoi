@@ -56,7 +56,7 @@ const T = {
   },
   wireFire: {
     title: 'Bấm J để bắn',
-    text: 'Nối cổng "Đang giữ" của mảnh ghép Phím bấm (phím J, đặt sẵn trên bảng) sang cổng "Bắn" của mảnh ghép Bắn đạn.',
+    text: 'Nối cổng "Đang giữ phím" của mảnh ghép Phím bấm (phím J, đặt sẵn trên bảng) sang cổng "Bắn" của mảnh ghép Bắn đạn.',
     explain: 'Muốn đổi phím khác, chọn mảnh ghép Phím bấm rồi đổi ô "Phím".',
   },
   playShoot: {
@@ -69,22 +69,22 @@ const T = {
     explain: 'Muốn đạn mạnh hơn hay bay xa hơn, chỉnh "Sát thương" và "Bay bao lâu" trong mảnh ghép Bắn đạn.',
   },
   addSpawner: {
-    title: 'Thêm mảnh ghép Sinh vật thể',
-    text: 'Kéo mảnh ghép "Sinh vật thể" (nhóm Hành động) vào bảng.',
-    explain: 'Mỗi lần "Sinh ra" bật, nó tạo thêm một đồ vật (ở đây là hòn đá). Mỗi hòn chỉ tồn tại một lúc rồi biến mất.',
+    title: 'Thêm mảnh ghép Tạo vật mới',
+    text: 'Kéo mảnh ghép "Tạo vật mới" (nhóm Hành động) vào bảng.',
+    explain: 'Mỗi lần "Tạo ra" bật, nó tạo thêm một đồ vật (ở đây là hòn đá). Mỗi hòn chỉ tồn tại một lúc rồi biến mất.',
   },
   spawnerSetup: {
     title: 'Cho đá rơi trên đường tới cổng',
-    text: 'Chọn mảnh ghép Sinh vật thể: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
+    text: 'Chọn mảnh ghép Tạo vật mới: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
     explain: 'Hòn đá có sẵn dáng tròn. Ai chạm vào đá khi nó đang rơi thì thua.',
   },
   wireToucher: {
     title: 'Ai bị đá làm hại?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Ai chạm" của mảnh ghép Sinh vật thể.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Vật thử chạm" của mảnh ghép Tạo vật mới.',
   },
   wireLose: {
     title: 'Chạm đá là thua',
-    text: 'Nối cổng "Đang chạm" của mảnh ghép Sinh vật thể sang cổng còn trống của mảnh ghép Hoặc (cổng B).',
+    text: 'Nối cổng "Đang chạm" của mảnh ghép Tạo vật mới sang cổng còn trống của mảnh ghép Hoặc (cổng B).',
     explain: 'Mảnh ghép Hoặc đã có sẵn: rơi xuống hố hoặc chạm đá, một trong hai là thua.',
   },
   addTimer: {
@@ -94,7 +94,7 @@ const T = {
   },
   wireSpawn: {
     title: 'Hết giờ là thả đá',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Sinh ra" của mảnh ghép Sinh vật thể.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo ra" của mảnh ghép Tạo vật mới.',
   },
   addLoopOr: {
     title: 'Thêm một mảnh ghép Hoặc để lặp',
@@ -131,11 +131,11 @@ const T = {
   win: {
     title: 'Tới cờ rồi!',
     text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Dừng" rồi "Chơi" thử lại.',
-    explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Sinh vật thể kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
+    explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Tạo vật mới kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
   },
   done: {
     title: 'Bạn đã biết làm màn nhảy bắn!',
-    text: 'Bạn đã dùng Bệ di chuyển, Bắn đạn, Sinh vật thể và Bệ xoay. Thử mở game mẫu "Né và bắn" để xem một màn tương tự.',
+    text: 'Bạn đã dùng Bệ di chuyển, Bắn đạn, Tạo vật mới và Bệ xoay. Thử mở game mẫu "Né và bắn" để xem một màn tương tự.',
   },
 } as const;
 

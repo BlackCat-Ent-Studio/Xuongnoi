@@ -91,7 +91,7 @@ describe('conveyor surface', () => {
     expect(pos(g.world, car).x).toBeCloseTo(-2, 1);
   });
 
-  it('reverses with Đảo chiều and stops with Chạy băng off', () => {
+  it('reverses with Đảo chiều and stops with Chạy băng chuyền off', () => {
     const g = sim('2d-side', [floor2, belt(), ['kr', 'key', { key: 'KeyR' }], ['kg', 'key', { key: 'KeyG' }]], [
       ['kr', 'held', 'belt', 'reverse'],
       ['kg', 'held', 'belt', 'run'],
@@ -105,7 +105,7 @@ describe('conveyor surface', () => {
     expect(pos(g.world, c).x).toBeCloseTo(0, 1);
   });
 
-  it('does nothing while hidden and again after Hiện lại', () => {
+  it('does nothing while hidden and again after Hiện lại (1 nhịp)', () => {
     const g = sim('2d-side', [floor2, belt(), ['kh', 'key', { key: 'KeyH' }], ['ks', 'key', { key: 'KeyS' }]], [
       ['kh', 'pressed', 'belt', 'hide'],
       ['ks', 'pressed', 'belt', 'show'],

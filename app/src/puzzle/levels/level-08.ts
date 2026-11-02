@@ -17,7 +17,7 @@ export const level08: PuzzleLevel = {
   order: 8,
   title: 'Xưởng tổng hợp',
   task: 'Mèo nhỏ muốn ra ô xanh. Cửa chỉ mở khi rô-bốt chân bước lên nút VÀ rô-bốt bánh xe đã chở đủ 2 thùng vào kho. Ra cửa rồi còn mèo lính gác đi tuần: đừng để chạm! Tự nghĩ cách của bạn.',
-  hint: 'Cửa: "Cảm biến chạm" giữa rô-bốt chân và nút, "So sánh" số thùng trong kho với "Số cần", rồi "Và" hai tin đó lại nối vào "Ẩn đi" của cửa. Mèo nhỏ: "Khoảng cách" tới lính gác, qua "Không", nối vào "Cho đi". Có thể thêm "Công tắc nhớ" để cửa nhớ nút đã bấm.',
+  hint: 'Cửa: "Chạm nhau" giữa rô-bốt chân và nút, "So sánh" số thùng trong kho với "Số cần", rồi "Và" hai tin đó lại nối vào "Ẩn đi (1 nhịp)" của cửa. Mèo nhỏ: "Đo khoảng cách" tới lính gác, qua "Đảo ngược", nối vào "Cho đi". Có thể thêm "Công tắc nhớ" để cửa nhớ nút đã bấm.',
   mode: '3d',
   storeSlots: STORE,
   cast: [PUZZLE_LOOKS.robotWheel, PUZZLE_LOOKS.robotLegs, PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.catQuad],

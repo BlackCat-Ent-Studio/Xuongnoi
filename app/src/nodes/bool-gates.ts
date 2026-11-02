@@ -31,7 +31,7 @@ export const orNode: NodeDef<null> = {
 
 export const notNode: NodeDef<null> = {
   kind: 'not',
-  label: 'Không',
+  label: 'Đảo ngược',
   category: 'logic',
   description: 'Đảo ngược: đang bật thì thành tắt, đang tắt thì thành bật.',
   inputs: [{ id: 'in', type: 'bool', label: 'Vào' }],

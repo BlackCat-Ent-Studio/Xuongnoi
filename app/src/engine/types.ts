@@ -38,6 +38,8 @@ export interface PortDef {
   type: PortType;
   /** Vietnamese label shown on the port. */
   label: string;
+  /** Small standard English term shown next to the label (tooltip on cards). Optional. */
+  labelEn?: string;
   /** Value used when the input port has no wire. Falls back to PORT_DEFAULTS[type]. */
   default?: PortValue;
   /** Input only: the node does nothing useful until this port is wired. The editor flags it when empty. */
@@ -99,6 +101,8 @@ export type PortValues = Record<string, PortValue>;
 export interface NodeDef<S = unknown> {
   kind: string;
   label: string;
+  /** Small standard English term shown under the Vietnamese name on cards, palette and handbook. */
+  labelEn?: string;
   category: NodeCategory;
   /** Short Vietnamese help text for the palette tooltip. */
   description: string;

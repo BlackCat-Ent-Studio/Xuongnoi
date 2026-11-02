@@ -13,20 +13,20 @@ const MAX_ALIVE_LIMIT = 50;
 
 export const spawnerNode: NodeDef<SpawnerState> = {
   kind: 'spawner',
-  label: 'Sinh vật thể',
+  label: 'Tạo vật mới',
   category: 'action',
   description:
-    'Mỗi lần "Sinh ra" bật, tạo thêm một hộp hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Cảm biến chạm); hoặc nối nhân vật vào "Ai chạm" để biết có bản nào đang chạm người đó.',
+    'Mỗi lần "Tạo ra" bật, tạo thêm một hộp hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Chạm nhau); hoặc nối nhân vật vào "Vật thử chạm" để biết có bản nào đang chạm người đó.',
   inputs: [
-    { id: 'spawn', type: 'bool', label: 'Sinh ra', required: true },
+    { id: 'spawn', type: 'bool', label: 'Tạo ra', required: true },
     { id: 'at', type: 'object', label: 'Tại vật' },
-    { id: 'toucher', type: 'object', label: 'Ai chạm' },
+    { id: 'toucher', type: 'object', label: 'Vật thử chạm' },
   ],
   outputs: [
     { id: 'lastSpawned', type: 'object', label: 'Vật mới nhất' },
     { id: 'count', type: 'number', label: 'Đang có' },
-    { id: 'spawned', type: 'bool', label: 'Vừa sinh' },
-    { id: 'touched', type: 'bool', label: 'Đang chạm "Ai chạm"' },
+    { id: 'spawned', type: 'bool', label: 'Vừa tạo' },
+    { id: 'touched', type: 'bool', label: 'Đang chạm vật thử' },
   ],
   params: [
     {

@@ -9,7 +9,7 @@ interface CargoState {
 
 export const cargoNode: NodeDef<CargoState> = {
   kind: 'cargo',
-  label: 'Chất / Dỡ hàng',
+  label: 'Chở hàng',
   category: 'action',
   description:
     'Chất đồ vật lên thùng xe rồi dỡ xuống. Mỗi lần "Chất" bật lên một nhịp, xe nhận món đồ gần nhất (không ai đang cầm) trong tầm với. Hàng nằm trên thùng xe và chạy theo xe, người khác không cầm đi được. "Dỡ" đặt món trên cùng xuống cạnh xe (ưu tiên phía sau), "Dỡ hết" dỡ tất cả. Xe đầy (hết "Sức chứa") thì không chất thêm. Ẩn xe thì hàng rơi xuống tại chỗ. Điền "Loại cần dỡ" thì "Dỡ" chỉ lấy món trên cùng thuộc loại đó ("Số hàng loại này" đếm đúng loại ấy); điền "Loại cần chất" thì "Chất" chỉ nhận hàng loại đó. Để trống thì loại nào cũng được.',

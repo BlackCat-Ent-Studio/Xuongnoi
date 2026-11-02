@@ -4,7 +4,7 @@ import { PUZZLE_LOOKS } from '../types';
 /**
  * Level 4 (hai-nut-mot-cua): OR. One door, two buttons, two robots that must both get through. Robot A walks onto
  * button 1 (before the door) and waits there, which holds the door open for robot B. B walks through and stands on
- * button 2 (after the door); only then does A walk on through and reach the flag. The door's "Ẩn khi bật" follows the
+ * button 2 (after the door); only then does A walk on through and reach the flag. The door's "Ẩn suốt lúc bật" follows the
  * player's answer: touch(A, nút 1) or touch(B, nút 2). Each button alone is not enough for both robots.
  */
 export const level04: PuzzleLevel | null = {
@@ -12,7 +12,7 @@ export const level04: PuzzleLevel | null = {
   order: 4,
   title: 'Hai nút một cửa',
   task: 'Hai bot đều phải qua cửa để tới cờ. Bot đầu tiên đứng trên nút 1 để bot kia qua, rồi bot kia đứng trên nút 2 để bot đầu tiên qua. Hãy nối để cửa mở khi một trong hai nút đang được đè.',
-  hint: 'Mỗi bot cần một Cảm biến chạm với nút của nó. Mảnh "Hoặc" bật khi có ít nhất một cảm biến bật. Nối kết quả vào "Ẩn khi bật" của cửa.',
+  hint: 'Mỗi bot cần một Chạm nhau với nút của nó. Mảnh "Hoặc" bật khi có ít nhất một cảm biến bật. Nối kết quả vào "Ẩn suốt lúc bật" của cửa.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.robotLegs, PUZZLE_LOOKS.robotWheel],
   base: {

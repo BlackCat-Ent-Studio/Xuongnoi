@@ -12,9 +12,9 @@ import type { Lesson, Snapshot, Step, TargetList } from './types';
 // ---------- Vietnamese text ----------
 
 const T = {
-  title: '9. Đánh nhau',
+  title: '9. Đánh địch',
   summary: 'Cho bot có máu, đánh bại nó, rồi dạy nó đánh lại bạn.',
-  boardName: 'Bài 9 - Đánh nhau',
+  boardName: 'Bài 9 - Đánh địch',
   intro: {
     title: 'Đánh nhau trong game',
     text: 'Bảng này có sẵn bạn (xanh), một con bot đỏ đứng im, một thanh kiếm dưới sàn, và mảnh ghép Máu của bạn. Ta sẽ cho bot có máu để bạn đánh bại nó.',
@@ -31,7 +31,7 @@ const T = {
   },
   wireWin: {
     title: 'Hết máu là thắng',
-    text: 'Nối cổng "Hết máu" của mảnh ghép Máu mới sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Hết máu" của mảnh ghép Máu mới sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
     explain: 'Khi máu về 0, nhân vật ngã xuống rồi biến mất, và cổng "Hết máu" bật lên.',
   },
   playWin: {
@@ -49,25 +49,25 @@ const T = {
   },
   addFight: {
     title: 'Thêm bộ não đánh nhau',
-    text: 'Kéo mảnh ghép "Đánh nhau" (nhóm Bộ não) vào bảng.',
+    text: 'Kéo mảnh ghép "Đánh địch" (nhóm Bộ não) vào bảng.',
     explain: 'Bot tự tìm đường tới mục tiêu và ra đòn khi đủ gần. Đánh xong nó lùi lại một chút rồi vào tiếp.',
   },
   wireBot: {
     title: 'Bộ não điều khiển bot',
-    text: 'Nối cổng "Nhân vật" của bot đỏ sang cổng "Bot" của mảnh ghép Đánh nhau.',
+    text: 'Nối cổng "Nhân vật" của bot đỏ sang cổng "Bot" của mảnh ghép Đánh địch.',
   },
   wireTarget: {
     title: 'Mục tiêu là bạn',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của mảnh ghép Đánh nhau.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của mảnh ghép Đánh địch.',
   },
   wireMove: {
     title: 'Nối hướng đi',
-    text: 'Nối cổng "Đi ngang" của mảnh ghép Đánh nhau sang cổng "Đi ngang" của bot đỏ.',
+    text: 'Nối cổng "Đi ngang" của mảnh ghép Đánh địch sang cổng "Đi ngang" của bot đỏ.',
   },
   wireAttack: {
     title: 'Nối cú đánh',
-    text: 'Nối cổng "Ra đòn" của mảnh ghép Đánh nhau sang cổng "Dùng" của mảnh ghép Cầm tay còn trống (của bot).',
-    explain: 'Cổng "Ra đòn" bật lên một nhịp khi bot đủ gần. Mảnh ghép Cầm tay biến nhịp đó thành cú vung tay.',
+    text: 'Nối cổng "Ra đòn" của mảnh ghép Đánh địch sang cổng "Dùng" của mảnh ghép Cầm dụng cụ còn trống (của bot).',
+    explain: 'Cổng "Ra đòn" bật lên một nhịp khi bot đủ gần. Mảnh ghép Cầm dụng cụ biến nhịp đó thành cú vung tay.',
   },
   playFight: {
     title: 'Đánh thử với bot',
@@ -80,7 +80,7 @@ const T = {
   },
   done: {
     title: 'Bạn đã biết đánh nhau!',
-    text: 'Bạn đã biết mảnh ghép Máu, đòn đánh bằng tay hoặc dụng cụ, và bộ não Đánh nhau cho bot. Thử mở game mẫu "Võ đài".',
+    text: 'Bạn đã biết mảnh ghép Máu, đòn đánh bằng tay hoặc dụng cụ, và bộ não Đánh địch cho bot. Thử mở game mẫu "Võ đài".',
   },
 } as const;
 

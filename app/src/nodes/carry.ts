@@ -12,19 +12,19 @@ interface CarryState {
 
 export const carryNode: NodeDef<CarryState> = {
   kind: 'carry',
-  label: 'Cầm / Thả',
+  label: 'Khiêng đồ',
   category: 'action',
   description:
     'Cho nhân vật cầm đồ vật ở gần, thả xuống hoặc ném đi. Mỗi lần bật một tín hiệu mới tính một lần bấm. Mỗi nhân vật chỉ cầm được một món.',
   inputs: [
     { id: 'character', type: 'object', label: 'Nhân vật', required: true },
-    { id: 'grab', type: 'bool', label: 'Cầm' },
+    { id: 'grab', type: 'bool', label: 'Nhấc lên' },
     { id: 'drop', type: 'bool', label: 'Thả' },
     { id: 'throw', type: 'bool', label: 'Ném' },
   ],
   outputs: [
-    { id: 'holding', type: 'bool', label: 'Đang cầm' },
-    { id: 'heldItem', type: 'object', label: 'Món đang cầm' },
+    { id: 'holding', type: 'bool', label: 'Đang khiêng' },
+    { id: 'heldItem', type: 'object', label: 'Món đang khiêng' },
   ],
   params: [
     {

@@ -34,7 +34,7 @@ export const SOLID_BODIES_PAGE: HandbookTopic = {
       ],
     },
     {
-      heading: 'Cầm / Thả khi bật (game 3D)',
+      heading: 'Khiêng đồ khi bật (game 3D)',
       items: [
         'Món đồ được cầm thấp ở phía trước người (không còn đội trên đầu), để lúc thả nó không rơi lên đầu chính nhân vật.',
         'Cầm: nhân vật quay mặt về phía món đồ, món đồ bay lên tay. Thùng đang bị thùng khác đè lên thì chưa cầm được.',
@@ -44,7 +44,7 @@ export const SOLID_BODIES_PAGE: HandbookTopic = {
       ],
     },
     {
-      heading: 'Cầm / Thả khi bật (game 2D)',
+      heading: 'Khiêng đồ khi bật (game 2D)',
       items: [
         'Đồ đang cầm vẫn bị tường chặn, và đồ nằm dưới sàn vẫn không chui vào nhau.',
         'Thả vẫn đặt món đồ cạnh người như trước (theo "Khoảng cách thả"). Chưa có thả-tại-tay và xếp chồng như bản 3D.',

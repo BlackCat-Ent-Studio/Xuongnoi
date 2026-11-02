@@ -22,71 +22,71 @@ const T = {
   },
   vision: {
     title: 'Đôi mắt cho bot',
-    text: 'Kéo mảnh ghép "Cảm biến tầm nhìn" (nhóm Logic) vào bảng.',
+    text: 'Kéo mảnh ghép "Tầm nhìn" (nhóm Logic) vào bảng.',
     explain: 'Nó thấy vật nằm trong hình quạt phía trước mặt, trong tầm xa, và bị tường chắn thì không thấy.',
   },
   viewer: {
     title: 'Ai đang nhìn?',
-    text: 'Nối cổng "Nhân vật" của Bot (nhân vật màu đỏ) sang cổng "Người nhìn" của Cảm biến tầm nhìn.',
+    text: 'Nối cổng "Nhân vật" của Bot (nhân vật màu đỏ) sang cổng "Người nhìn" của Tầm nhìn.',
   },
   target: {
     title: 'Bot canh ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (người chơi) sang cổng "Mục tiêu" của Cảm biến tầm nhìn.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh (người chơi) sang cổng "Mục tiêu" của Tầm nhìn.',
     explain: 'Nối "Mục tiêu" thì bot chỉ canh đúng người đó. Để trống thì bot canh mọi vật thuộc loại đã chọn.',
   },
   speed: {
     title: 'Đo tốc độ',
-    text: 'Kéo mảnh ghép "Cảm biến tốc độ" (nhóm Logic) vào bảng.',
-    explain: 'Nó đo vật chạy nhanh bao nhiêu ô mỗi giây. Vượt quá "Ngưỡng" (mặc định 3) thì "Nhanh hơn ngưỡng" bật.',
+    text: 'Kéo mảnh ghép "Đo tốc độ" (nhóm Logic) vào bảng.',
+    explain: 'Nó đo vật chạy nhanh bao nhiêu ô mỗi giây. Vượt quá "Ngưỡng" (mặc định 3) thì "Nhanh quá mức" bật.',
   },
   speedWho: {
     title: 'Đo ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Cảm biến tốc độ.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Đo tốc độ.',
   },
   seenFast: {
     title: 'Thấy VÀ chạy nhanh',
-    text: 'Mảnh "Và" đã có sẵn. Nối "Thấy" của Cảm biến tầm nhìn vào cổng "A", và "Nhanh hơn ngưỡng" của Cảm biến tốc độ vào cổng "B".',
+    text: 'Mảnh "Và" đã có sẵn. Nối "Đang thấy" của Tầm nhìn vào cổng "A", và "Nhanh quá mức" của Đo tốc độ vào cổng "B".',
     explain: 'Mảnh "Và" chỉ bật khi cả hai cùng bật: bot thấy bạn và bạn đang chạy nhanh.',
   },
   lose: {
     title: 'Thua khi bị bắt gặp',
-    text: 'Nối "Kết quả" của mảnh "Và" sang cổng "Thua" của mảnh Thắng/Thua.',
+    text: 'Nối "Kết quả" của mảnh "Và" sang cổng "Thua" của mảnh Thắng / Thua.',
   },
   ahead: {
     title: 'Nhìn phía trước',
-    text: 'Kéo mảnh ghép "Cảm biến phía trước" (nhóm Logic) vào bảng.',
+    text: 'Kéo mảnh ghép "Dò phía trước" (nhóm Logic) vào bảng.',
     explain: 'Nó nhìn thẳng theo hướng nhân vật quay mặt và báo khi có tường hay vật cản trong "Tầm xa".',
   },
   aheadWho: {
     title: 'Ai nhìn phía trước?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Cảm biến phía trước.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật nhìn" của Dò phía trước.',
   },
   aheadText: {
     title: 'Báo có tường',
-    text: 'Nối "Có vật cản" của Cảm biến phía trước sang cổng "Hiện" của mảnh Hiện chữ. Chữ "Có tường, nhảy lên!" sẽ chỉ hiện khi có tường chắn trước mặt.',
+    text: 'Nối "Bị chặn" của Dò phía trước sang cổng "Hiện" của mảnh Hiện chữ. Chữ "Có tường, nhảy lên!" sẽ chỉ hiện khi có tường chắn trước mặt.',
     explain: 'Hiện chữ có cổng "Hiện" mặc định là bật. Nối vào thì chữ chỉ hiện khi tín hiệu bật.',
   },
   color: {
     title: 'Đọc màu sàn',
-    text: 'Kéo mảnh ghép "Cảm biến màu" (nhóm Logic) vào bảng.',
+    text: 'Kéo mảnh ghép "Đọc màu" (nhóm Logic) vào bảng.',
     explain: 'Nó đọc màu hộp dưới chân và cho ra số 1 (đỏ), 2 (vàng) hoặc 3 (xanh lá). Màu khác thì ra 0.',
   },
   colorWho: {
     title: 'Đọc màu dưới chân ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Cảm biến màu.',
+    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Đọc màu.',
   },
   want: {
     title: 'Màu cần tìm là xanh lá',
-    text: 'Chọn Cảm biến màu, trong Thuộc tính đặt "Màu cần tìm" thành 3 (xanh lá).',
+    text: 'Chọn Đọc màu, trong Thuộc tính đặt "Màu cần tìm" thành 3 (xanh lá).',
   },
   win: {
     title: 'Thắng khi đứng trên dải xanh',
-    text: 'Nối "Đúng màu" của Cảm biến màu sang cổng "Thắng" của mảnh Thắng/Thua.',
+    text: 'Nối "Đúng màu" của Đọc màu sang cổng "Thắng" của mảnh Thắng / Thua.',
   },
   sneak: {
     title: 'Đi rón rén',
     text: 'Chọn nhân vật xanh, trong Thuộc tính đặt "Tốc độ chạy" thành 2 hoặc nhỏ hơn. Chạy nhanh 5 ô mỗi giây thì sẽ bị bot bắt gặp.',
-    explain: 'Ngưỡng của Cảm biến tốc độ là 3, nên đi với tốc độ 2 thì không bị tính là chạy nhanh.',
+    explain: 'Ngưỡng của Đo tốc độ là 3, nên đi với tốc độ 2 thì không bị tính là chạy nhanh.',
   },
   play: {
     title: 'Chơi thử',
@@ -95,7 +95,7 @@ const T = {
   won: { title: 'Thắng!', text: 'Bạn đã lẻn qua bot gác. Hãy thử lại với "Tốc độ chạy" bằng 5 để xem bot bắt gặp bạn.' },
   done: {
     title: 'Xong rồi!',
-    text: 'Bạn đã dùng cả bốn cảm biến: tầm nhìn, tốc độ, phía trước và màu. Bạn có thể tìm hiểu kỹ từng mảnh trong Sổ tay.',
+    text: 'Bạn đã dùng cả bốn mảnh cảm nhận: Tầm nhìn, Đo tốc độ, Dò phía trước và Đọc màu. Bạn có thể tìm hiểu kỹ từng mảnh trong Sổ tay.',
   },
 };
 

@@ -51,7 +51,7 @@ describe('a robot bot holding a tool (world)', () => {
       expect(w.handItem(bot)).toBeNull();
     });
 
-    it('the Cầm tay brick drives a bot: take, then use pulses the rock', () => {
+    it('the Cầm dụng cụ brick drives a bot: take, then use pulses the rock', () => {
       const { w, bot } = scene();
       const pick = w.spawn(spec({ kind: 'item', ownerNodeId: 'p', position: { x: 0.6, y, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, solid: false, shape: 'pickaxe', holdStyle: 'hand' }));
       const rock = w.spawn(spec({ ownerNodeId: 'rock', position: { x: 1.4, y, z: 0 } }));
@@ -168,7 +168,7 @@ describe('lesson 16: a bot that holds a pickaxe', () => {
     expect(s.stepId()).toBe('done');
   });
 
-  it('without the Cầm tay wiring the bot never breaks the rock', () => {
+  it('without the Cầm dụng cụ wiring the bot never breaks the rock', () => {
     const board = findLesson('bot-pickaxe')!.createBoard();
     const world = createWorld('2d-side');
     const rt = createRuntime(board.graph, world, '2d-side');

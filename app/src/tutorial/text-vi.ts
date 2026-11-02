@@ -75,8 +75,8 @@ export const LESSON_TEXT = {
     },
     wireKey: {
       title: 'Nối để nhảy',
-      text: 'Nối cổng "Đang giữ" của Phím bấm sang cổng "Nhảy" của nhân vật.',
-      explain: 'Cổng "Đang giữ" bật lên khi bạn giữ phím. Lúc đó nhân vật sẽ nhảy.',
+      text: 'Nối cổng "Đang giữ phím" của Phím bấm sang cổng "Nhảy" của nhân vật.',
+      explain: 'Cổng "Đang giữ phím" bật lên khi bạn giữ phím. Lúc đó nhân vật sẽ nhảy.',
     },
     playMove: {
       title: 'Chơi thử nào',
@@ -112,22 +112,22 @@ export const LESSON_TEXT = {
       explain: 'Bạn cũng có thể kéo vật thể ngay trong khung game để đặt.',
     },
     touch: {
-      title: 'Thêm cảm biến chạm',
-      text: 'Kéo mảnh ghép "Cảm biến chạm" vào bảng.',
+      title: 'Thêm Chạm nhau',
+      text: 'Kéo mảnh ghép "Chạm nhau" vào bảng.',
       explain: 'Mảnh ghép này biết hai vật có đang chạm nhau không.',
     },
     wireA: {
-      title: 'Nối nhân vật vào cảm biến',
-      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Vật A" của Cảm biến chạm.',
+      title: 'Nối nhân vật vào Chạm nhau',
+      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Vật chính" của Chạm nhau.',
       explain: 'Cổng màu cam là cổng "vật thể". Nó đại diện cho cả cái vật đó.',
     },
     wireB: {
-      title: 'Nối ngôi sao vào cảm biến',
-      text: 'Nối cổng "Hộp" của ngôi sao sang cổng "Vật B".',
+      title: 'Nối ngôi sao vào Chạm nhau',
+      text: 'Nối cổng "Hộp" của ngôi sao sang cổng "Vật kia".',
     },
     hide: {
       title: 'Nhặt xong thì biến mất',
-      text: 'Nối cổng "Đang chạm" của cảm biến sang cổng "Ẩn đi" của ngôi sao.',
+      text: 'Nối cổng "Đang chạm" của Chạm nhau sang cổng "Ẩn đi (1 nhịp)" của ngôi sao.',
       explain: 'Khi nhân vật chạm, ngôi sao được lệnh "ẩn đi" và biến mất như đã nhặt.',
     },
     counter: {
@@ -137,8 +137,8 @@ export const LESSON_TEXT = {
     },
     wireCount: {
       title: 'Mỗi lần chạm, cộng một',
-      text: 'Nối cổng "Vừa chạm" của cảm biến sang cổng "Cộng 1" của bộ đếm.',
-      explain: '"Vừa chạm" chỉ bật đúng một lần lúc bắt đầu chạm, nên mỗi sao chỉ tính một điểm.',
+      text: 'Nối cổng "Mới chạm" của Chạm nhau sang cổng "Cộng 1" của bộ đếm.',
+      explain: '"Mới chạm" chỉ bật đúng một lần lúc bắt đầu chạm, nên mỗi sao chỉ tính một điểm.',
     },
     show: {
       title: 'Hiện điểm lên màn hình',
@@ -174,7 +174,7 @@ export const LESSON_TEXT = {
     },
     end: {
       title: 'Thêm mảnh ghép kết thúc',
-      text: 'Kéo mảnh ghép "Thắng/Thua" vào bảng.',
+      text: 'Kéo mảnh ghép "Thắng / Thua" vào bảng.',
       explain: 'Khi cổng "Thắng" bật, game báo thắng. Khi cổng "Thua" bật, game báo thua.',
     },
     wireWin: {
@@ -197,16 +197,16 @@ export const LESSON_TEXT = {
     },
     constant: {
       title: 'Thêm một con số cố định',
-      text: 'Kéo mảnh ghép "Hằng số" vào bảng.',
-      explain: 'Hằng số là một con số không đổi. Ở đây nó là mức "quá thấp".',
+      text: 'Kéo mảnh ghép "Số cố định" vào bảng.',
+      explain: 'Số cố định là một con số không đổi. Ở đây nó là mức "quá thấp".',
     },
     constValue: {
       title: 'Đặt mức quá thấp',
-      text: 'Chọn Hằng số, đổi "Giá trị" thành -5.',
+      text: 'Chọn Số cố định, đổi "Giá trị" thành -5.',
     },
     wireLimit: {
       title: 'Nối mức quá thấp',
-      text: 'Nối cổng "Số" của Hằng số sang cổng "Số B" của So sánh.',
+      text: 'Nối cổng "Số" của Số cố định sang cổng "Số B" của So sánh.',
     },
     wireLose: {
       title: 'Rơi quá thấp thì thua',
@@ -248,12 +248,12 @@ export const LESSON_TEXT = {
     },
     carry: {
       title: 'Thêm mảnh ghép cầm / thả',
-      text: 'Kéo mảnh ghép "Cầm / Thả" vào bảng.',
+      text: 'Kéo mảnh ghép "Khiêng đồ" vào bảng.',
       explain: 'Mảnh ghép này cho nhân vật cầm món đồ ở gần. Mỗi nhân vật chỉ cầm được một món.',
     },
     wireCarry: {
       title: 'Nói ai sẽ cầm',
-      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của mảnh ghép Cầm / Thả.',
+      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của mảnh ghép Khiêng đồ.',
     },
     keyE: {
       title: 'Thêm phím để cầm',
@@ -266,8 +266,8 @@ export const LESSON_TEXT = {
     },
     wireGrab: {
       title: 'Bấm E để cầm',
-      text: 'Nối cổng "Vừa bấm" của phím E sang cổng "Cầm" của mảnh ghép Cầm / Thả.',
-      explain: '"Vừa bấm" chỉ bật một nhịp lúc nhấn xuống, nên mỗi lần bấm chỉ cầm một lần.',
+      text: 'Nối cổng "Vừa nhấn" của phím E sang cổng "Nhấc lên" của mảnh ghép Khiêng đồ.',
+      explain: '"Vừa nhấn" chỉ bật một nhịp lúc nhấn xuống, nên mỗi lần bấm chỉ cầm một lần.',
     },
     playCarry: {
       title: 'Thử cầm chìa',
@@ -280,7 +280,7 @@ export const LESSON_TEXT = {
     interact: {
       title: 'Thêm mảnh ghép tương tác',
       text: 'Kéo mảnh ghép "Tương tác" vào bảng.',
-      explain: 'Khi bấm, nhân vật "dùng" món đồ gần nhất. Món đồ đó sẽ báo "Vừa được tương tác".',
+      explain: 'Khi bấm, nhân vật "dùng" món đồ gần nhất. Món đồ đó sẽ báo "Vừa được dùng".',
     },
     wireInteract: {
       title: 'Nói ai sẽ tương tác',
@@ -296,7 +296,7 @@ export const LESSON_TEXT = {
     },
     wirePress: {
       title: 'Bấm F để dùng',
-      text: 'Nối cổng "Vừa bấm" của phím F sang cổng "Bấm" của mảnh ghép Tương tác.',
+      text: 'Nối cổng "Vừa nhấn" của phím F sang cổng "Bấm" của mảnh ghép Tương tác.',
     },
     and: {
       title: 'Chỉ mở khi có chìa',
@@ -305,16 +305,16 @@ export const LESSON_TEXT = {
     },
     wireLock: {
       title: 'Ổ khoá vừa được dùng',
-      text: 'Nối cổng "Vừa được tương tác" của cái thùng tím (ổ khoá) sang cổng "A" của mảnh ghép Và.',
+      text: 'Nối cổng "Vừa được dùng" của cái thùng tím (ổ khoá) sang cổng "A" của mảnh ghép Và.',
       explain: 'Thùng tím là đồ vật "Cố định": không cầm được, chỉ để bấm F vào.',
     },
     wireHolding: {
       title: 'Đang cầm chìa',
-      text: 'Nối cổng "Đang cầm" của mảnh ghép Cầm / Thả sang cổng "B" của mảnh ghép Và.',
+      text: 'Nối cổng "Đang khiêng" của mảnh ghép Khiêng đồ sang cổng "B" của mảnh ghép Và.',
     },
     wireOpen: {
       title: 'Mở cửa',
-      text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi" của cánh cửa (mảnh ghép cao màu nâu).',
+      text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của cánh cửa (mảnh ghép cao màu nâu).',
       explain: 'Cửa bị "ẩn đi" thì biến mất, nhân vật đi qua được.',
     },
     play: {
@@ -324,7 +324,7 @@ export const LESSON_TEXT = {
     win: {
       title: 'Đi tới đích',
       text: 'Khi cửa biến mất, chạy sang phải tới ô xanh để thắng.',
-      explain: 'Muốn thả chìa, đổi "Cách dùng" của mảnh ghép Cầm / Thả thành "1 phím cầm-thả". Muốn ném, nối thêm một phím vào cổng "Ném".',
+      explain: 'Muốn thả chìa, đổi "Cách dùng" của mảnh ghép Khiêng đồ thành "1 phím cầm-thả". Muốn ném, nối thêm một phím vào cổng "Ném".',
     },
     done: {
       title: 'Bạn mở được cửa rồi!',
@@ -352,16 +352,16 @@ export const LESSON_TEXT = {
     hold: {
       title: 'Cho cầm trên tay',
       text: 'Vẫn ở đồ vật đó, đổi "Cách cầm" thành "Cầm trên tay".',
-      explain: 'Món "Khiêng trên đầu" dùng với mảnh ghép Cầm / Thả. Món "Cầm trên tay" dùng với mảnh ghép Cầm tay, hai bên không lẫn vào nhau.',
+      explain: 'Món "Khiêng trên đầu" dùng với mảnh ghép Khiêng đồ. Món "Cầm trên tay" dùng với mảnh ghép Cầm dụng cụ, hai bên không lẫn vào nhau.',
     },
     tool: {
-      title: 'Thêm mảnh ghép cầm tay',
-      text: 'Kéo mảnh ghép "Cầm tay" vào bảng.',
+      title: 'Thêm mảnh ghép Cầm dụng cụ',
+      text: 'Kéo mảnh ghép "Cầm dụng cụ" vào bảng.',
       explain: 'Mảnh ghép này cho nhân vật nhặt dụng cụ, cất xuống, và vung dụng cụ vào thứ ở phía trước.',
     },
     wireTool: {
       title: 'Nói ai sẽ cầm',
-      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của mảnh ghép Cầm tay.',
+      text: 'Nối cổng "Nhân vật" (bên phải nhân vật) sang cổng "Nhân vật" của mảnh ghép Cầm dụng cụ.',
     },
     keyE: {
       title: 'Thêm phím để cầm',
@@ -373,7 +373,7 @@ export const LESSON_TEXT = {
     },
     wireEquip: {
       title: 'Bấm E để cầm hoặc cất',
-      text: 'Nối cổng "Vừa bấm" của phím E sang cổng "Cầm/Cất" của mảnh ghép Cầm tay.',
+      text: 'Nối cổng "Vừa nhấn" của phím E sang cổng "Cầm / Cất" của mảnh ghép Cầm dụng cụ.',
       explain: 'Bấm lần một thì nhặt dụng cụ gần nhất lên tay, bấm lần nữa thì đặt xuống.',
     },
     keyF: {
@@ -386,7 +386,7 @@ export const LESSON_TEXT = {
     },
     wireUse: {
       title: 'Bấm F để vung',
-      text: 'Nối cổng "Vừa bấm" của phím F sang cổng "Dùng" của mảnh ghép Cầm tay.',
+      text: 'Nối cổng "Vừa nhấn" của phím F sang cổng "Dùng" của mảnh ghép Cầm dụng cụ.',
       explain: 'Mỗi lần vung mất khoảng một phần ba giây, vung xong mới vung tiếp được.',
     },
     playTool: {
@@ -400,19 +400,19 @@ export const LESSON_TEXT = {
     and: {
       title: 'Chỉ cuốc mới đập được đá',
       text: 'Kéo mảnh ghép "Và" vào bảng.',
-      explain: 'Vung dụng cụ nào trúng đá thì đá cũng báo "Vừa bị dùng lên". Mảnh ghép "Và" giúp đòi thêm điều kiện: phải đang cầm cuốc.',
+      explain: 'Vung dụng cụ nào trúng đá thì đá cũng báo "Bị dùng lên". Mảnh ghép "Và" giúp đòi thêm điều kiện: phải đang cầm cuốc.',
     },
     wireRock: {
       title: 'Đá vừa bị dùng lên',
-      text: 'Nối cổng "Vừa bị dùng lên" của tảng đá (mảnh ghép cao màu xám) sang cổng "A" của mảnh ghép Và.',
+      text: 'Nối cổng "Bị dùng lên" của tảng đá (mảnh ghép cao màu xám) sang cổng "A" của mảnh ghép Và.',
     },
     wireInHand: {
       title: 'Cuốc đang ở trên tay',
-      text: 'Nối cổng "Đang ở trên tay" của chiếc cuốc sang cổng "B" của mảnh ghép Và.',
+      text: 'Nối cổng "Đang cầm tay" của chiếc cuốc sang cổng "B" của mảnh ghép Và.',
     },
     wireBreak: {
       title: 'Đập vỡ đá',
-      text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi" của tảng đá.',
+      text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của tảng đá.',
       explain: 'Đá bị "ẩn đi" thì biến mất, nhân vật đi qua được.',
     },
     play: {
@@ -472,23 +472,23 @@ export const LESSON_TEXT = {
     },
     touch: {
       title: 'Chạm bot là thua',
-      text: 'Kéo mảnh ghép "Cảm biến chạm" vào bảng.',
+      text: 'Kéo mảnh ghép "Chạm nhau" vào bảng.',
     },
     wireA: {
       title: 'Vật A là bạn',
-      text: 'Nối cổng "Nhân vật" của nhân vật bạn điều khiển (mảnh ghép có sẵn) sang cổng "Vật A" của cảm biến.',
+      text: 'Nối cổng "Nhân vật" của nhân vật bạn điều khiển (mảnh ghép có sẵn) sang cổng "Vật chính" của Chạm nhau.',
     },
     wireB: {
       title: 'Vật B là bot',
-      text: 'Nối cổng "Nhân vật" của bot sang cổng "Vật B" của cảm biến.',
+      text: 'Nối cổng "Nhân vật" của bot sang cổng "Vật kia" của Chạm nhau.',
     },
     end: {
       title: 'Thêm mảnh ghép kết thúc',
-      text: 'Kéo mảnh ghép "Thắng/Thua" vào bảng.',
+      text: 'Kéo mảnh ghép "Thắng / Thua" vào bảng.',
     },
     wireLose: {
       title: 'Chạm là thua',
-      text: 'Nối cổng "Đang chạm" của cảm biến sang cổng "Thua" của mảnh ghép Thắng/Thua.',
+      text: 'Nối cổng "Đang chạm" của Chạm nhau sang cổng "Thua" của mảnh ghép Thắng / Thua.',
     },
     play: {
       title: 'Để bot bắt thử',
@@ -497,11 +497,11 @@ export const LESSON_TEXT = {
     caught: {
       title: 'Bị bắt rồi!',
       text: 'Khi bot chạm vào bạn thì game báo thua. Vậy là lính gác của bạn đã làm việc.',
-      explain: 'Muốn bot đuổi theo bạn, dùng mảnh ghép "Đuổi theo / Tránh xa". Muốn bot đi lấy đồ, dùng "Đi tới" cùng "Chuỗi việc".',
+      explain: 'Muốn bot đuổi theo bạn, dùng mảnh ghép "Đuổi / Trốn". Muốn bot đi lấy đồ, dùng "Đi tới" cùng "Chuỗi việc".',
     },
     done: {
       title: 'Bạn tạo được bot rồi!',
-      text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng cảm biến chạm để thua khi bị bắt. Hãy thử hai game mẫu "Lính gác" và "Bot dọn dẹp" để xem các bộ não khác nhé.',
+      text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng Chạm nhau để thua khi bị bắt. Hãy thử hai game mẫu "Lính gác" và "Bot dọn dẹp" để xem các bộ não khác nhé.',
     },
   },
   l7: {
@@ -560,26 +560,26 @@ export const LESSON_TEXT = {
     },
     carry: {
       title: 'Dạy bot cầm đồ',
-      text: 'Kéo mảnh ghép "Cầm / Thả" vào bảng.',
-      explain: 'Bot cũng dùng được mảnh ghép Cầm / Thả như người chơi, chỉ khác là tín hiệu đến từ các mảnh ghép bộ não thay vì phím bấm.',
+      text: 'Kéo mảnh ghép "Khiêng đồ" vào bảng.',
+      explain: 'Bot cũng dùng được mảnh ghép Khiêng đồ như người chơi, chỉ khác là tín hiệu đến từ các mảnh ghép bộ não thay vì phím bấm.',
     },
     wireCarry: {
       title: 'Nói ai cầm',
-      text: 'Nối cổng "Nhân vật" của bot (mảnh ghép Nhân vật màu cam) sang cổng "Nhân vật" của mảnh ghép Cầm / Thả.',
+      text: 'Nối cổng "Nhân vật" của bot (mảnh ghép Nhân vật màu cam) sang cổng "Nhân vật" của mảnh ghép Khiêng đồ.',
     },
     wireGrab: {
       title: 'Tới thùng thì cầm',
-      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ nhất (đích là thùng) sang cổng "Cầm" của mảnh ghép Cầm / Thả.',
+      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ nhất (đích là thùng) sang cổng "Nhấc lên" của mảnh ghép Khiêng đồ.',
       explain: '"Vừa tới" chỉ bật một nhịp đúng lúc bot tới nơi, rất hợp để bấm "nút" cầm.',
     },
     wireDrop: {
       title: 'Tới bệ thì quăng',
-      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Ném" của mảnh ghép Cầm / Thả.',
+      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Ném" của mảnh ghép Khiêng đồ.',
       explain: '"Ném" làm bot quăng thùng bay đi thật xa, nên thùng sẽ rơi qua khỏi bệ xanh. Bài sau ta sẽ học cách đặt thùng nhẹ nhàng xuống bệ.',
     },
     wireFinished: {
       title: 'Làm xong hết thì thắng',
-      text: 'Kéo thêm dây từ cổng "Đã xong hết" của Chuỗi việc sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+      text: 'Kéo thêm dây từ cổng "Đã xong hết" của Chuỗi việc sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
       explain: 'Khi cả ba việc xong, Chuỗi việc báo "Đã xong hết". Ta dùng tín hiệu đó để kết thúc game.',
     },
     play: {
@@ -593,7 +593,7 @@ export const LESSON_TEXT = {
     },
     done: {
       title: 'Bạn biết giao nhiều việc cho bot rồi!',
-      text: 'Bạn đã dùng Chuỗi việc để xếp thứ tự, Đi tới để bot tự tìm đường và Cầm / Thả để bot cầm và quăng đồ. Thử đổi sang 4 việc hoặc cho bot lặp lại xem sao.',
+      text: 'Bạn đã dùng Chuỗi việc để xếp thứ tự, Đi tới để bot tự tìm đường và Khiêng đồ để bot cầm và quăng đồ. Thử đổi sang 4 việc hoặc cho bot lặp lại xem sao.',
     },
   },
   l8: {
@@ -608,7 +608,7 @@ export const LESSON_TEXT = {
     watchThrow: {
       title: 'Xem thùng bay đi',
       text: 'Bấm "Chơi". Nhìn thùng bay qua khỏi bệ xanh và game không báo thắng.',
-      explain: 'Bot làm xong cả ba việc nhưng thùng không nằm trên bệ, nên cảm biến chạm không bật. Mảnh ghép "Và" cần cả hai tín hiệu cùng bật mới cho thắng.',
+      explain: 'Bot làm xong cả ba việc nhưng thùng không nằm trên bệ, nên Chạm nhau không bật. Mảnh ghép "Và" cần cả hai tín hiệu cùng bật mới cho thắng.',
     },
     edit: {
       title: 'Quay lại sửa',
@@ -621,7 +621,7 @@ export const LESSON_TEXT = {
     },
     wireDrop: {
       title: 'Tới bệ thì thả',
-      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Thả" của mảnh ghép Cầm / Thả.',
+      text: 'Nối cổng "Vừa tới" của mảnh ghép Đi tới thứ hai (đích là bệ xanh) sang cổng "Thả" của mảnh ghép Khiêng đồ.',
     },
     play: {
       title: 'Xem bot đặt thùng',
@@ -630,7 +630,7 @@ export const LESSON_TEXT = {
     win: {
       title: 'Thùng nằm trên bệ rồi!',
       text: 'Thùng nằm yên trên bệ xanh, bot đã về chỗ cũ và game báo thắng.',
-      explain: 'Cảm biến chạm báo thùng đang chạm bệ, mảnh ghép "Và" gộp với tín hiệu "Đã xong hết" nên mới cho thắng.',
+      explain: 'Chạm nhau báo thùng đang chạm bệ, mảnh ghép "Và" gộp với tín hiệu "Đã xong hết" nên mới cho thắng.',
     },
     done: {
       title: 'Bạn biết bảo bot đặt đồ rồi!',

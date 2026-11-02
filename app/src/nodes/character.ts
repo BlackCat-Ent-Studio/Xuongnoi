@@ -14,7 +14,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Nhân vật' },
-    { id: 'onGround', type: 'bool', label: 'Đang chạm đất' },
+    { id: 'onGround', type: 'bool', label: 'Đang đứng đất' },
     { id: 'x', type: 'number', label: 'Vị trí X' },
     { id: 'y', type: 'number', label: 'Vị trí Y' },
     { id: 'z', type: 'number', label: 'Vị trí Z' },

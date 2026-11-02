@@ -44,7 +44,7 @@ export const level07: PuzzleLevel = {
   order: 7,
   title: 'Phân loại thùng màu',
   task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua!',
-  hint: 'Đặt "Cảm biến màu", nối Rô-bốt vào "Vật" và chỉnh "Màu cần tìm" thành 2 (xanh). Rô-bốt chỉ cầm khi thấy màu xanh VÀ tay đang rảnh: nối "Đang cầm" qua "Không", rồi cùng "Đúng màu" vào "Và". Kết quả của "Và" nối vào "Cầm".',
+  hint: 'Đặt "Đọc màu", nối Rô-bốt vào "Vật" và chỉnh "Màu cần tìm" thành 2 (xanh). Rô-bốt chỉ cầm khi thấy màu xanh VÀ tay đang rảnh: nối "Đang khiêng" qua "Đảo ngược", rồi cùng "Đúng màu" vào "Và". Kết quả của "Và" nối vào "Nhấc lên".',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,

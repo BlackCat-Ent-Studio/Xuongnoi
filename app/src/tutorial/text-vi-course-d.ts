@@ -63,23 +63,23 @@ export const FACTORY_TEXT = {
     explain: 'Đây là bài khó nhất: bạn dùng lại những mảnh ghép đã học. Cứ làm từng bước, bước nào cũng có chỉ dẫn.',
   },
   start: {
-    title: 'Thêm màn hình bắt đầu',
-    text: 'Kéo mảnh ghép "Màn hình bắt đầu" (nhóm Đầu vào) vào bảng.',
+    title: 'Thêm Màn hình mở đầu',
+    text: 'Kéo mảnh ghép "Màn hình mở đầu" (nhóm Đầu vào) vào bảng.',
     explain: 'Game chỉ chạy sau khi người chơi bấm nút "Bấm để chơi".',
   },
   startTimer: {
     title: 'Chờ bấm nút mới chạy',
-    text: 'Nối cổng "Đã bắt đầu" của Màn hình bắt đầu sang cổng "Chạy" của mảnh ghép Hẹn giờ.',
+    text: 'Nối cổng "Đã bắt đầu" của Màn hình mở đầu sang cổng "Chạy" của mảnh ghép Hẹn giờ.',
     explain: 'Hẹn giờ này cứ 2 giây lại bật một nhịp để nhả một hộp. Giờ nó chỉ đếm khi game đã bắt đầu.',
   },
   timerSpawn: {
     title: 'Hẹn giờ nhả hộp',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Sinh ra" của mảnh ghép Sinh vật thể.',
-    explain: 'Mỗi lần Hẹn giờ kêu, Sinh vật thể tạo thêm một hộp (tối đa 3 hộp).',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo ra" của mảnh ghép Tạo vật mới.',
+    explain: 'Mỗi lần Hẹn giờ kêu, Tạo vật mới tạo thêm một hộp (tối đa 3 hộp).',
   },
   beltAt: {
     title: 'Nhả hộp lên băng chuyền',
-    text: 'Nối cổng "Hộp" của băng chuyền sang cổng "Tại vật" của Sinh vật thể.',
+    text: 'Nối cổng "Hộp" của băng chuyền sang cổng "Tại vật" của Tạo vật mới.',
     explain: 'Hộp mới sẽ xuất hiện ngay trên băng chuyền rồi chạy sang phải, tới kho cuối băng.',
   },
   next: {
@@ -89,17 +89,17 @@ export const FACTORY_TEXT = {
   },
   grab: {
     title: 'Tới nơi thì cầm / thả',
-    text: 'Nối cùng cổng "Kết quả" của Hoặc sang cổng "Cầm" của mảnh ghép Cầm / Thả.',
-    explain: 'Mảnh ghép Cầm / Thả này dùng một nút cho cả hai việc: lần đầu tới thùng thì cầm, lần tới vùng thì thả.',
+    text: 'Nối cùng cổng "Kết quả" của Hoặc sang cổng "Nhấc lên" của mảnh ghép Khiêng đồ.',
+    explain: 'Mảnh ghép Khiêng đồ này dùng một nút cho cả hai việc: lần đầu tới thùng thì cầm, lần tới vùng thì thả.',
   },
   goodsRed: {
     title: 'Vùng đỏ chỉ nhận hàng đỏ',
-    text: 'Chọn mảnh ghép Cảm biến vùng màu đỏ (vùng bên trái). Ở Thuộc tính, ô "Chỉ tính loại hàng" gõ đúng chữ: đỏ (không thêm dấu cách)',
+    text: 'Chọn mảnh ghép Vùng kích hoạt màu đỏ (vùng bên trái). Ở Thuộc tính, ô "Chỉ tính loại hàng" gõ đúng chữ: đỏ (không thêm dấu cách)',
     explain: 'Thùng hàng có "Loại hàng" ghi sẵn. Vùng chỉ đếm hàng đúng loại, hàng khác đặt vào cũng không tính.',
   },
   goodsBlue: {
     title: 'Vùng xanh chỉ nhận hàng xanh',
-    text: 'Chọn mảnh ghép Cảm biến vùng màu xanh (vùng bên phải). Ở ô "Chỉ tính loại hàng" gõ đúng chữ: xanh (không thêm dấu cách)',
+    text: 'Chọn mảnh ghép Vùng kích hoạt màu xanh (vùng bên phải). Ở ô "Chỉ tính loại hàng" gõ đúng chữ: xanh (không thêm dấu cách)',
   },
   counter: {
     title: 'Thêm bộ đếm hàng đã đóng gói',
@@ -134,11 +134,11 @@ export const FACTORY_TEXT = {
   },
   end: {
     title: 'Thêm mảnh ghép kết thúc',
-    text: 'Kéo mảnh ghép "Thắng/Thua" vào bảng.',
+    text: 'Kéo mảnh ghép "Thắng / Thua" vào bảng.',
   },
   win: {
     title: 'Đủ việc thì thắng',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Thắng" của Thắng/Thua.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Thắng" của Thắng / Thua.',
   },
   play: {
     title: 'Mở cửa xưởng',
@@ -151,6 +151,6 @@ export const FACTORY_TEXT = {
   },
   done: {
     title: 'Xưởng của bạn chạy rồi!',
-    text: 'Bạn đã dùng màn hình bắt đầu, hẹn giờ, sinh vật thể, băng chuyền, chuỗi việc, bot, cầm thả, cảm biến vùng, bộ đếm, thanh đo và thắng thua trong một game. Chúc mừng, bạn đã làm xong cả khóa!',
+    text: 'Bạn đã dùng Màn hình mở đầu, Hẹn giờ, Tạo vật mới, băng chuyền, Chuỗi việc, bot, Khiêng đồ, Vùng kích hoạt, Bộ đếm, Thanh đo và Thắng / Thua trong một game. Chúc mừng, bạn đã làm xong cả khóa!',
   },
 } as const;

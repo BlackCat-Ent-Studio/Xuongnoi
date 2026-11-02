@@ -57,12 +57,32 @@ export function nearestWithin<T extends Point>(candidates: readonly T[], p: Poin
 export const boxesOverlap = (a: Box, b: Box, margin = 0): boolean =>
   a.x < b.x + b.w + margin && a.x + a.w + margin > b.x && a.y < b.y + b.h + margin && a.y + a.h + margin > b.y;
 
+/**
+ * Longest label (characters) of these kinds before the nodes were renamed. The estimate below must give the same width
+ * as before, or a board laid out earlier would be spread differently when it loads.
+ */
+const LEGACY_LONGEST_LABEL: Readonly<Record<string, number>> = {
+  'ahead-sensor': 19,
+  block: 21,
+  camera: 27,
+  carry: 12,
+  chase: 20,
+  item: 18,
+  'moving-platform': 15,
+  patrol: 11,
+  spawner: 19,
+  'speed-sensor': 16,
+  'ui-button': 17,
+  'ui-start': 16,
+  'vision-sensor': 17,
+};
+
 /** Rough on-canvas size of a node before it has been measured in the DOM. */
 export function estimateNodeSize(node: GraphNode): Size {
   const def = getNodeDef(node.kind);
   if (!def) return { w: 168, h: 70 };
   // Card metrics (node-cards.css): ~40px header band, then one 26px row per input and per output.
-  const longest = Math.max(def.label.length, ...def.inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
+  const longest = LEGACY_LONGEST_LABEL[def.kind] ?? Math.max(def.label.length, ...def.inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
   const rows = def.inputs.length + def.outputs.length;
   return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
 }

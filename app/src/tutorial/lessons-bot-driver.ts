@@ -37,7 +37,7 @@ const T = {
   },
   goto1Who: {
     title: 'Nói ai đi, đi đâu',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Bot" của mảnh ghép Đi tới. Rồi nối cổng "Xe" của mảnh ghép Phương tiện sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Bot" của mảnh ghép Đi tới. Rồi nối cổng "Xe" của mảnh ghép Xe sang cổng "Đích (vật)".',
   },
   goto1Move: {
     title: 'Cho bot bước đi',
@@ -75,7 +75,7 @@ const T = {
   },
   goto2Who: {
     title: 'Xe đi tới cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Hộp" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Hộp" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
   },
   step2: {
     title: 'Việc 2: lái xe tới cờ',
@@ -83,24 +83,24 @@ const T = {
   },
   goto2Move: {
     title: 'Cho xe chạy',
-    text: 'Nối "Đi ngang" của mảnh ghép Đi tới mới sang "Đi ngang" của mảnh ghép Phương tiện, và "Đi dọc" sang "Đi dọc".',
+    text: 'Nối "Đi ngang" của mảnh ghép Đi tới mới sang "Đi ngang" của mảnh ghép Xe, và "Đi dọc" sang "Đi dọc".',
     explain: 'Xe được lái bằng đúng hai cổng này, giống như cần điều khiển lái xe.',
   },
   touch: {
-    title: 'Thêm Cảm biến chạm',
-    text: 'Kéo mảnh ghép "Cảm biến chạm" (nhóm Logic) vào bảng.',
+    title: 'Thêm Chạm nhau',
+    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) vào bảng.',
   },
   touchWho: {
     title: 'Xe chạm cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện sang "Vật A" và cổng "Hộp" của lá cờ sang "Vật B" của Cảm biến chạm.',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe sang "Vật chính" và cổng "Hộp" của lá cờ sang "Vật kia" của Chạm nhau.',
   },
   end: {
-    title: 'Thêm mảnh ghép Thắng/Thua',
-    text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép Thắng / Thua',
+    text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   win: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Đang chạm" của Cảm biến chạm sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối "Đang chạm" của Chạm nhau sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Chạy thử',

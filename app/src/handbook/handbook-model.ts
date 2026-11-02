@@ -1,5 +1,6 @@
 import type { NodeCategory, NodeDef } from '../engine/types';
 import { normalizeText } from '../editor/panels/palette-search';
+import { nodeSearchAliases } from '../nodes/node-names';
 import { chapterOf } from '../tutorial/course';
 import { LESSONS } from '../tutorial/lessons';
 import type { HandbookEntry } from './types';
@@ -36,6 +37,9 @@ export function lessonPosition(entry: Pick<HandbookEntry, 'lessonId'> | undefine
 export interface HandbookRow {
   kind: string;
   label: string;
+  labelEn?: string;
+  /** English term and the name before the rename, for search. */
+  aliases?: string[];
   category: NodeCategory;
   description: string;
   level: number;
@@ -49,12 +53,12 @@ export interface HandbookSection {
   rows: HandbookRow[];
 }
 
-type DefLike = Pick<NodeDef, 'kind' | 'label' | 'category' | 'description'>;
+type DefLike = Pick<NodeDef, 'kind' | 'label' | 'category' | 'description'> & { labelEn?: string };
 
 export function buildRows(defs: readonly DefLike[], entryOf: (kind: string) => HandbookEntry | undefined): HandbookRow[] {
   return defs.map((d) => {
     const e = entryOf(d.kind);
-    return { kind: d.kind, label: d.label, category: d.category, description: d.description, level: levelOf(e), position: lessonPosition(e) };
+    return { kind: d.kind, label: d.label, labelEn: d.labelEn ?? '', aliases: nodeSearchAliases(d.kind), category: d.category, description: d.description, level: levelOf(e), position: lessonPosition(e) };
   });
 }
 
@@ -66,7 +70,7 @@ export function filterRows(rows: readonly HandbookRow[], query: string): Handboo
   const scored: { row: HandbookRow; score: number }[] = [];
   for (const row of rows) {
     const label = normalizeText(row.label);
-    const all = `${label} ${normalizeText(row.description)} ${row.kind}`;
+    const all = `${label} ${normalizeText(row.description)} ${normalizeText((row.aliases ?? []).join(' '))} ${row.kind}`;
     if (!words.every((w) => all.includes(w))) continue;
     scored.push({ row, score: label.startsWith(q) ? 3 : label.includes(q) ? 2 : words.every((w) => label.includes(w)) ? 1.5 : 1 });
   }

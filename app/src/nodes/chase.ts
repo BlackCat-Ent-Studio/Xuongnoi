@@ -26,7 +26,7 @@ const CATCH_DISTANCE = 0.4;
 
 export const chaseNode: NodeDef<ChaseState> = {
   kind: 'chase',
-  label: 'Đuổi theo / Tránh xa',
+  label: 'Đuổi / Trốn',
   category: 'brain',
   description:
     'Bot để mắt tới một vật: thấy trong tầm nhìn thì đuổi theo (hoặc chạy trốn), ra xa quá tầm bỏ cuộc thì thôi. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',

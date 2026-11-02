@@ -51,18 +51,18 @@ const T = {
     text: 'Bấm nút "Dừng" để thêm máy quay.',
   },
   distance: {
-    title: 'Thêm mảnh ghép Khoảng cách',
-    text: 'Kéo mảnh ghép "Khoảng cách" (nhóm Logic) vào bảng.',
-    explain: 'Mảnh ghép này đo xem hai vật cách nhau bao xa, và bật "Đủ gần" khi chúng lại gần nhau. Ta dùng nó để biết nhân vật đã gần lá cờ.',
+    title: 'Thêm mảnh ghép Đo khoảng cách',
+    text: 'Kéo mảnh ghép "Đo khoảng cách" (nhóm Logic) vào bảng.',
+    explain: 'Mảnh ghép này đo xem hai vật cách nhau bao xa, và bật "Trong tầm" khi chúng lại gần nhau. Ta dùng nó để biết nhân vật đã gần lá cờ.',
   },
   distanceWho: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật A", và cổng "Hộp" của lá cờ xanh (hộp nhặt được) sang "Vật B" của mảnh ghép Khoảng cách.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Hộp" của lá cờ xanh (hộp nhặt được) sang "Vật 2" của mảnh ghép Đo khoảng cách.',
   },
   threshold: {
     title: 'Gần là bao nhiêu?',
-    text: 'Chọn mảnh ghép Khoảng cách. Ở Thuộc tính, đổi "Ngưỡng đủ gần" thành 8.',
-    explain: 'Cách cờ không quá 8 mảnh ghép thì "Đủ gần" bật. Vừa sang đảo là đã đủ gần rồi.',
+    text: 'Chọn mảnh ghép Đo khoảng cách. Ở Thuộc tính, đổi "Ngưỡng đủ gần" thành 8.',
+    explain: 'Cách cờ không quá 8 mảnh ghép thì "Trong tầm" bật. Vừa sang đảo là đã đủ gần rồi.',
   },
   camera: {
     title: 'Thêm Máy quay',
@@ -71,7 +71,7 @@ const T = {
   },
   cameraOn: {
     title: 'Gần cờ thì bật máy quay',
-    text: 'Nối "Đủ gần" của mảnh ghép Khoảng cách sang cổng "Bật" của Máy quay.',
+    text: 'Nối "Trong tầm" của mảnh ghép Đo khoảng cách sang cổng "Bật" của Máy quay.',
     explain: 'Xa cờ thì máy quay tắt, bạn thấy cảnh bình thường. Tới gần cờ thì máy quay bật.',
   },
   zoom: {
@@ -95,8 +95,8 @@ const T = {
   },
   teleportWire: {
     title: 'Bấm R để về nhà',
-    text: 'Nối "Nhân vật" của nhân vật sang "Ai" của mảnh ghép Dịch chuyển. Rồi nối "Vừa bấm" của phím R sang "Đi".',
-    explain: '"Vừa bấm" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn R là dịch chuyển một lần.',
+    text: 'Nối "Nhân vật" của nhân vật sang "Ai" của mảnh ghép Dịch chuyển. Rồi nối "Vừa nhấn" của phím R sang "Đi".',
+    explain: '"Vừa nhấn" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn R là dịch chuyển một lần.',
   },
   home: {
     title: 'Chọn nơi về',
@@ -105,11 +105,11 @@ const T = {
   },
   winNodes: {
     title: 'Thêm mảnh ghép thắng',
-    text: 'Kéo mảnh ghép "Cảm biến chạm" (nhóm Logic) và mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) và mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   winWire: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Nhân vật" của nhân vật sang "Vật A" và "Hộp" của lá cờ sang "Vật B" của Cảm biến chạm. Rồi nối "Đang chạm" sang "Thắng".',
+    text: 'Nối "Nhân vật" của nhân vật sang "Vật chính" và "Hộp" của lá cờ sang "Vật kia" của Chạm nhau. Rồi nối "Đang chạm" sang "Thắng".',
   },
   play: {
     title: 'Chạy thử',
