@@ -37,6 +37,8 @@ export interface Entity {
   facing: Vec3;
   /** Characters: id of the item carried above the head. */
   holding: string | null;
+  /** Characters (solid-body worlds): lowest height the carried item may ride at, so it clears what lies below the hands. */
+  carryFloor?: number;
   /** Characters: id of the tool in hand. */
   handHolding: string | null;
   /** Characters: seconds since the current swing began, or -1 when not swinging. */

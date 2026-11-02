@@ -45,14 +45,79 @@ export function overlapsBox(a: Entity, b: Entity): boolean {
 export function solidCarryPosition(holder: Entity, item: Entity, rules: BodyRules): Vec3 {
   if (holder.look !== undefined && rules.frontLooks.has(holder.look)) {
     const feet = holder.pos.y - holder.size.y / 2;
+    // Held just clear of the carrier's own box, so letting go leaves the item standing in front, not inside it.
+    const body = colliderBox(holder);
+    const clear = Math.max(body.size.x, body.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + DROP_MARGIN;
+    const reach = Math.max(rules.frontCarry.reach, clear);
     return {
-      x: holder.pos.x + holder.facing.x * rules.frontCarry.reach,
-      y: feet + rules.frontCarry.height + item.size.y / 2,
-      z: holder.pos.z + holder.facing.z * rules.frontCarry.reach,
+      x: holder.pos.x + holder.facing.x * reach,
+      y: Math.max(feet + rules.frontCarry.height, holder.carryFloor ?? -Infinity) + item.size.y / 2,
+      z: holder.pos.z + holder.facing.z * reach,
     };
   }
   const box = colliderBox(holder);
   return { x: holder.pos.x, y: box.pos.y + box.size.y / 2 + DROP_MARGIN + item.size.y / 2, z: holder.pos.z };
+}
+
+/** How far ahead of the hands an item counts as "in the way" and gets lifted over (and how far to each side). */
+const LIFT_LOOKAHEAD = 1;
+const LIFT_SIDE = 0.1;
+
+/** True when another loose item rests on top of this one (so it cannot be picked up from underneath). */
+export function isCovered(item: Entity, entities: readonly Entity[]): boolean {
+  const top = item.pos.y + item.size.y / 2;
+  return entities.some(
+    (o) =>
+      o !== item &&
+      o.kind === 'item' &&
+      isSolidBody(o) &&
+      o.pos.y - o.size.y / 2 >= top - 0.05 &&
+      o.pos.y - o.size.y / 2 <= top + 0.3 &&
+      boxOverlap(o, item, 'x') > 1e-6 &&
+      boxOverlap(o, item, 'z') > 1e-6,
+  );
+}
+
+/**
+ * Works out, for every character carrying an item in front of it, how high the hands must be to clear the items lying
+ * where the carried one is about to go (so a third crate is lifted over the two already stacked there).
+ */
+export function updateCarryFloors(entities: readonly Entity[], rules: BodyRules, carryAt: (holder: Entity, item: Entity) => Vec3): void {
+  const loose = entities.filter((e) => e.kind === 'item' && isSolidBody(e));
+  for (const c of entities) {
+    if (c.kind !== 'character') continue;
+    delete c.carryFloor;
+    const item = c.holding !== null ? entities.find((e) => e.id === c.holding) : undefined;
+    if (!item || item.inHand || item.heldBy !== c.id || c.look === undefined || !rules.frontLooks.has(c.look)) continue;
+    const at = carryAt(c, item);
+    const bottom = at.y - item.size.y / 2;
+    let top = -Infinity;
+    const half = (o: Entity): number => (Math.max(o.size.x, o.size.z) + Math.max(item.size.x, item.size.z)) / 2;
+    for (const o of loose) {
+      if (o === item) continue;
+      const dx = o.pos.x - at.x;
+      const dz = o.pos.z - at.z;
+      const ahead = dx * c.facing.x + dz * c.facing.z;
+      const side = dx * c.facing.z - dz * c.facing.x;
+      if (Math.abs(side) >= half(o) + LIFT_SIDE || ahead <= -half(o) || ahead >= half(o) + LIFT_LOOKAHEAD) continue;
+      top = Math.max(top, o.pos.y + o.size.y / 2);
+    }
+    if (top + DROP_MARGIN > bottom) c.carryFloor = top + DROP_MARGIN;
+  }
+}
+
+/** Speed (units/s) at which a grabbed item rises into the hands. */
+export const LIFT_SPEED = 9;
+
+/** Moves `from` toward `to` by at most `step`; lands exactly on `to` when it is that close. */
+export function approach(from: Vec3, to: Vec3, step: number): Vec3 {
+  const dx = to.x - from.x;
+  const dy = to.y - from.y;
+  const dz = to.z - from.z;
+  const dist = Math.hypot(dx, dy, dz);
+  if (dist <= step) return { ...to };
+  const k = step / dist;
+  return { x: from.x + dx * k, y: from.y + dy * k, z: from.z + dz * k };
 }
 
 /**

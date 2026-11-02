@@ -4,8 +4,10 @@ import { smoothValue } from './cameras';
 import {
   AIRBORNE_SPEED_MIN,
   TELEPORT_DISTANCE,
+  WALK_SPEED_MIN,
   defaultYaw,
   facingTarget,
+  yawToward,
   motionOf,
   smoothAngle,
   swingAngle,
@@ -55,6 +57,8 @@ export class Humanoid {
   /** The scene wants the arms-forward carry pose while an item is carried. */
   private carryPose = false;
   private carrying = false;
+  /** The simulation's facing; a carrier standing still turns to it (it turned to look at what it picked up). */
+  private facing: { x: number; z: number } | undefined;
 
   constructor(color: string, mode: ViewMode, look?: string) {
     this.colorHex = color;
@@ -103,6 +107,7 @@ export class Humanoid {
     this.body.scale.set(h * k, view.size.y * k, h * k);
     this.lift = ((k - 1) * view.size.y) / 2;
     this.carrying = this.carryPose && view.carriedHeight !== undefined;
+    this.facing = view.facing;
     this.syncTool(view.tool);
     this.object.traverse((o) => {
       o.userData.ownerNodeId = view.ownerNodeId;
@@ -136,7 +141,9 @@ export class Humanoid {
     const airborne = !this.seated && Math.abs(this.vy) > AIRBORNE_SPEED_MIN;
     this.time += dt;
     this.phase += dt * walkPhaseRate(speed);
-    this.yaw = smoothAngle(this.yaw, facingTarget(this.mode, this.vx, this.vz, this.yaw), dt);
+    const still = this.mode === '3d' && this.carrying && this.facing !== undefined && Math.hypot(this.vx, this.vz) < WALK_SPEED_MIN;
+    const target = still && this.facing ? yawToward(this.facing.x, this.facing.z) : facingTarget(this.mode, this.vx, this.vz, this.yaw);
+    this.yaw = smoothAngle(this.yaw, target, dt);
     const motion = motionOf(speed, airborne, this.phase, this.time, this.seated ? 0 : this.vy);
     if (this.carrying) motion.carrying = true;
     this.rig.update(motion, dt);

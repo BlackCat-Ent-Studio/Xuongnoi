@@ -25,7 +25,7 @@ export function puzzleWorldOptions(mode: ViewMode): WorldOptions | undefined {
     solidBodies: true,
     // Base body is 1x1x1 centred on the position: keep the feet where they are and grow upward.
     characterBox: { size: { x: BOX_WIDTH, y: height, z: BOX_WIDTH }, offset: { x: 0, y: (height - 1) / 2, z: 0 } },
-    frontCarryLooks: [PUZZLE_LOOKS.robotLegs],
+    frontCarryLooks: [PUZZLE_LOOKS.robotLegs, PUZZLE_LOOKS.robotWheel],
     frontCarry: LEGS_FRONT_CARRY,
   };
 }
