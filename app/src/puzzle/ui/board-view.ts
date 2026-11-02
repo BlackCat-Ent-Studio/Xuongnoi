@@ -84,8 +84,6 @@ export interface BoardViewOptions {
   keepClear?: () => Box | null;
   /** Where the toast goes (default: the board). The level screen passes itself so a toast stays readable while the board is shrunk. */
   toastHost?: HTMLElement;
-  /** Pictures of the stage objects, by node id. Called once, after the first draw, so the board never waits for it. */
-  thumbnails?: (nodeIds: string[]) => ReadonlyMap<string, string>;
   /** The player tapped an object card (id) or tapped away from it / tapped it again (null). The stage glows that object. */
   onCardPick?: (nodeId: string | null) => void;
 }
@@ -141,8 +139,6 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let picked: PortEnd | null = null;
   /** The object card that is lit (tapped on the board, or its object tapped on the stage). */
   let pickedCard: string | null = null;
-  let thumbUrls: ReadonlyMap<string, string> = new Map();
-  let thumbRaf = 0;
   let running = false;
   /** Cards keep a readable size; only their positions follow the board size. */
   let cardScale = 1;
@@ -287,53 +283,19 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return String(value ?? '');
   }
 
-  /** An object card is titled with the object's own name and a picture of it; the generic kind word is dropped. */
+  /** An object card is titled with the object's own name (the category icon stays); the generic kind word is dropped. */
   function nameCard(box: HTMLElement, head: Element, node: GraphNode): void {
     const title = head.querySelector('.wc-title');
     const name = title?.querySelector('.wc-name');
     if (!title || !name) return;
     name.textContent = objectName(node);
     for (const extra of Array.from(title.children)) if (extra !== name) extra.remove();
-    head.querySelector('.wc-tile')?.classList.add('pz-thumb');
     // The "Hộp" / "Đồ vật" word on the object's own pin is the same generic word; the pin keeps the object's name as its tip only.
     for (const row of Array.from(box.querySelectorAll<HTMLElement>('.wc-port.out[data-port="self"]'))) {
       row.querySelector('.wc-pl')?.replaceChildren();
       row.title = objectName(node);
     }
     box.classList.add('pz-object');
-    const url = thumbUrls.get(node.id);
-    if (url) putThumb(box, url);
-  }
-
-  function putThumb(box: HTMLElement, url: string): void {
-    const tile = box.querySelector('.pz-thumb');
-    if (!tile || tile.querySelector('img')) return;
-    const img = h('img', 'pz-thumb-img');
-    img.alt = '';
-    img.draggable = false;
-    img.src = url;
-    tile.append(img);
-    tile.classList.add('has-img');
-  }
-
-  /** Draws the pictures after the board is on screen, so opening a level never waits for them. */
-  function scheduleThumbs(): void {
-    if (!opts.thumbnails || thumbRaf) return;
-    thumbRaf = requestAnimationFrame(() => {
-      thumbRaf = 0;
-      const ids = [...cards.entries()].filter(([, box]) => box.classList.contains('pz-object')).map(([id]) => id);
-      if (ids.length === 0 || !opts.thumbnails) return;
-      try {
-        thumbUrls = opts.thumbnails(ids);
-      } catch (err) {
-        console.error(err);
-        return;
-      }
-      for (const [id, box] of cards) {
-        const url = thumbUrls.get(id);
-        if (url) putThumb(box, url);
-      }
-    });
   }
 
   // ---------- picked object card ----------
@@ -726,7 +688,6 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   ro.observe(board);
   ro.observe(bottomEl);
   render();
-  scheduleThumbs();
 
   return {
     state: () => state,
@@ -782,7 +743,6 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     },
     destroy() {
       stopEnergyLoop();
-      if (thumbRaf) cancelAnimationFrame(thumbRaf);
       window.clearTimeout(toastTimer);
       ro.disconnect();
     },

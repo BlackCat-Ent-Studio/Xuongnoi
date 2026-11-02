@@ -24,9 +24,9 @@ describe('SceneView highlight', () => {
   it('frames only the visible objects of the chosen nodes', () => {
     const view = new SceneView();
     view.sync(scene, 0);
-    view.syncHighlight(scene, new Set(['node-a']), 1, 800, 400);
+    view.syncHighlight(scene, new Set(['node-a']), 1);
     expect(view.highlightCount).toBe(1);
-    view.syncHighlight(scene, new Set(['node-a', 'node-b']), 1, 800, 400);
+    view.syncHighlight(scene, new Set(['node-a', 'node-b']), 1);
     expect(view.highlightCount).toBe(2);
     view.dispose();
   });
@@ -34,10 +34,10 @@ describe('SceneView highlight', () => {
   it('shows nothing for a node that owns no object (a logic card) or an empty set', () => {
     const view = new SceneView();
     view.sync(scene, 0);
-    view.syncHighlight(scene, new Set(['and-gate']), 1, 800, 400);
+    view.syncHighlight(scene, new Set(['and-gate']), 1);
     expect(view.highlightCount).toBe(0);
-    view.syncHighlight(scene, new Set(['node-a']), 1, 800, 400);
-    view.syncHighlight(scene, new Set(), 1, 800, 400);
+    view.syncHighlight(scene, new Set(['node-a']), 1);
+    view.syncHighlight(scene, new Set(), 1);
     expect(view.highlightCount).toBe(0);
     view.dispose();
   });
@@ -45,7 +45,7 @@ describe('SceneView highlight', () => {
   it('carries no owner id, so picking never lands on a frame', () => {
     const view = new SceneView();
     view.sync(scene, 0);
-    view.syncHighlight(scene, new Set(['node-a']), 1, 800, 400);
+    view.syncHighlight(scene, new Set(['node-a']), 1);
     const owners = new Set<string>();
     view.scene.traverse((o) => {
       if (typeof o.userData.ownerNodeId === 'string') owners.add(o.userData.ownerNodeId);

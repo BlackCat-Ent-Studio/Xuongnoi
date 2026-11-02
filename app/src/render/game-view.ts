@@ -102,10 +102,11 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     const entities = shown ?? (world ? world.entities() : []);
     sceneView.sync(entities, dt);
     sceneView.syncColliderFrames(entities, playing ? new Set() : selectedOwners);
-    sceneView.syncHighlight(entities, glowOwners, pulseStrength((performance.now() - glowSince) / 1000), width, height);
+    sceneView.syncHighlight(entities, glowOwners, pulseStrength((performance.now() - glowSince) / 1000));
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
     if (rig.mode === '3d') sceneView.focusSun(rig.focus, rig.size);
     renderer.render(sceneView.scene, rig.camera);
+    sceneView.renderHighlight(renderer, rig.camera);
   }
 
   /** Redraw the static (non-playing) scene, e.g. after orbit or resize. */
