@@ -264,11 +264,11 @@ export interface Item extends Box {
 /**
  * Keeps every card inside `area` and apart from the others. Cards are visited top to bottom; one that lands on
  * an earlier card slides down below it, and when that leaves the area it takes the first free spot instead.
- * `fits` is false when some card found no room (the caller then tries smaller cards).
+ * `fits` is false when some card found no room (the caller then tries smaller cards). `blocked` are areas no card may touch.
  */
-export function separateBoxes(items: readonly Item[], area: { w: number; h: number }, gap = 8): { pos: Map<string, { x: number; y: number }>; fits: boolean } {
+export function separateBoxes(items: readonly Item[], area: { w: number; h: number }, gap = 8, blocked: readonly Box[] = []): { pos: Map<string, { x: number; y: number }>; fits: boolean } {
   const pos = new Map<string, { x: number; y: number }>();
-  const placed: Box[] = [];
+  const placed: Box[] = [...blocked];
   let fits = true;
   const order = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
   for (const it of order) {

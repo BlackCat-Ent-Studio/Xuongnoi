@@ -9,6 +9,10 @@ export const ICONS = {
   play: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z"/></svg>',
   gear: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1"/></svg>',
   back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 5.5L8 12l6.5 6.5"/></svg>',
+  zoomIn: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+  zoomOut: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>',
+  recenter: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12a7 7 0 1 1-2.2-5.1"/><path d="M19.5 4.5v4.6h-4.6"/></svg>',
+  shrink: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 9.5h4.5V5M19 9.5h-4.5V5M5 14.5h4.5V19M19 14.5h-4.5V19"/></svg>',
   lock: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="#3a2a1c" stroke-width="2.6" stroke-linecap="round"/><rect x="4.5" y="10.5" width="15" height="11" rx="3" fill="#d9bd84" stroke="#3a2a1c" stroke-width="2"/><circle cx="12" cy="15.5" r="1.6" fill="#3a2a1c"/></svg>',
 } as const;
 

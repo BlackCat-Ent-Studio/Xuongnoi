@@ -48,6 +48,17 @@ export interface GameView {
    * 3D tilt). Same framing before and during play. Null returns to the editor look.
    */
   setStageFit(fit: { top: number; bottom: number; pitch?: number; sidePitch?: number; heroScale?: number; follow?: string | null } | null): void;
+  /**
+   * Puzzle stage player camera (view only, never touches the rules). Only works while a stage fit is set.
+   * `panCamera`: drag by screen pixels; the camera stops following the character. `zoomCamera`: multiplies the
+   * zoom around a screen point (clamped to the level and to 4x the default). `resetCamera` returns to the default
+   * framing (follow while playing, whole scene while editing), easing there unless `animate` is false.
+   */
+  panCamera(dxPx: number, dyPx: number): void;
+  zoomCamera(factor: number, clientX: number, clientY: number): void;
+  resetStageCamera(animate?: boolean): void;
+  /** Zoom of the player camera relative to the default framing, and whether it differs from the default. */
+  cameraState(): { zoom: number; custom: boolean };
   /** Re-fit canvas after layout changes. */
   resize(): void;
 }

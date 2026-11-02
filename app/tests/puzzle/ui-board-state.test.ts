@@ -186,4 +186,18 @@ describe('separateBoxes', () => {
     const crowded = Array.from({ length: 12 }, (_, i) => ({ id: `n${i}`, x: 0, y: 0, w: 200, h: 120 }));
     expect(separateBoxes(crowded, area).fits).toBe(false);
   });
+
+  it('keeps cards out of a blocked corner (the picture-in-picture window)', () => {
+    const corner = { x: 250, y: 200, w: 150, h: 100 };
+    const items = [
+      { id: 'a', x: 280, y: 220, w: 100, h: 60 },
+      { id: 'b', x: 10, y: 10, w: 100, h: 60 },
+    ];
+    const { pos, fits } = separateBoxes(items, area, 8, [corner]);
+    expect(fits).toBe(true);
+    const a = pos.get('a')!;
+    const hitsCorner = a.x < corner.x + corner.w && a.x + 100 > corner.x && a.y < corner.y + corner.h && a.y + 60 > corner.y;
+    expect(hitsCorner).toBe(false);
+    expect(pos.get('b')).toEqual({ x: 10, y: 10 });
+  });
 });

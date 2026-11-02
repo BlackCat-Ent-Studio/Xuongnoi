@@ -39,10 +39,10 @@
 .pz-theme-a .pz-hud .pz-stars { background: rgba(36, 21, 16, .72); padding: .5cqw 1cqw; border-radius: 99px; }
 .pz-theme-a .pz-stars i { background: rgba(255, 241, 208, .22); }
 .pz-theme-a .pz-stars i.on { background: var(--sun); }
-.pz-theme-a .pz-viewtoggle { background: var(--a-wood-3); color: var(--a-cream); box-shadow: 0 .4cqw 0 var(--a-wood-0), inset 0 0 0 .25cqw var(--a-wood-4); }
+.pz-theme-a .pz-task-btn { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-amber); border: .3cqw solid var(--a-wood-4); box-shadow: 0 .45cqw 0 var(--a-wood-1); }
 .pz-theme-a .pz-replay { box-shadow: 0 .4cqw 0 var(--a-amber); }
 .pz-theme-a .pz-task, .pz-theme-a .pz-hint, .pz-theme-a .pz-win-card { background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); border: .35cqw solid var(--a-wood-4); box-shadow: 0 .7cqw 0 var(--a-wood-1), 0 1.4cqw 2cqw -1cqw rgba(0, 0, 0, .6); }
-.pz-theme-a .pz-task-head, .pz-theme-a .pz-hint b, .pz-theme-a .pz-win-card h3 { color: var(--a-amber); }
+.pz-theme-a .pz-hint b, .pz-theme-a .pz-win-card h3 { color: var(--a-amber); }
 .pz-theme-a .pz-board { background-color: var(--board); box-shadow: inset .7cqw 0 1.4cqw rgba(0, 0, 0, .4); }
 .pz-theme-a .pz-toast { background: var(--a-wood-0); color: var(--a-cream); border-color: var(--sun); }
 .pz-theme-a .pz-btn.run { background: linear-gradient(#ffc95a, var(--sun)); color: var(--a-wood-1); border-radius: 1.6cqw; box-shadow: 0 .6cqw 0 var(--a-amber), 0 1.2cqw 1.6cqw -.6cqw rgba(0, 0, 0, .5); }

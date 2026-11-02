@@ -36,6 +36,8 @@ export interface GuideOptions {
   runBtn: HTMLElement;
   /** True while the player is editing (not running or looking at a result). */
   isEditing(): boolean;
+  /** Brings the full-size board forward (the stage may be the big view); called whenever help needs to point at the board. */
+  showBoard(): void;
 }
 
 export interface Guide {
@@ -60,7 +62,7 @@ export interface Guide {
 type Mode = 'off' | 'guide' | 'bye';
 
 export function createGuide(opts: GuideOptions): Guide {
-  const { level, screen, board, runBtn, isEditing } = opts;
+  const { level, screen, board, runBtn, isEditing, showBoard } = opts;
   const steps = buildGuideSteps(level);
 
   // ----- DOM -----
@@ -174,10 +176,12 @@ export function createGuide(opts: GuideOptions): Guide {
     const r = el?.isConnected ? el.getBoundingClientRect() : null;
     if (!r || r.width === 0 || r.height === 0) {
       root.classList.add('no-target');
+      root.classList.remove('mascot-low');
       return;
     }
     root.classList.remove('no-target');
     const S = screen.getBoundingClientRect();
+    root.classList.toggle('mascot-low', r.top + r.height / 2 - S.top < S.height * 0.45);
     const pad = Math.max(10, Math.min(r.width, r.height) * 0.25);
     const w = Math.max(MIN_RING, r.width + pad * 2);
     const hh = Math.max(MIN_RING, r.height + pad * 2);
@@ -222,6 +226,7 @@ export function createGuide(opts: GuideOptions): Guide {
     const idx = currentStepIndex(steps, level, state(), false, introDone);
     const step = steps[idx];
     if (!step) return;
+    showBoard();
     setShown(true);
     setGuiding(true);
     if (idx !== shownIdx) showStep(idx);
@@ -281,6 +286,7 @@ export function createGuide(opts: GuideOptions): Guide {
       clearTips();
       return;
     }
+    showBoard();
     setShown(true, { tip: true });
     speak(line);
     tipTimer = window.setTimeout(nextTip, TIP_SHOW_MS);
@@ -312,12 +318,14 @@ export function createGuide(opts: GuideOptions): Guide {
     introDone = true;
     tick();
   });
-  bubble.addEventListener('click', (e) => {
+  const onCatTap = (e: Event): void => {
     if (e.target instanceof Element && e.target.closest('button')) return;
     if (mode === 'off' && hintStep) clearHint(); // tapping the cat dismisses a "?" step
     else if (mode === 'off' && (tipQueue.length > 0 || root.classList.contains('tip'))) nextTip(); // next tip, or none
     else mascot.finish();
-  });
+  };
+  bubble.addEventListener('click', onCatTap);
+  mascot.el.addEventListener('click', onCatTap);
 
   return {
     get active() {
@@ -338,6 +346,7 @@ export function createGuide(opts: GuideOptions): Guide {
     hint() {
       if (!isEditing() || mode !== 'off') return null;
       clearTips();
+      showBoard();
       const step = nextHintStep(level, state());
       hintGhost = null;
       board.setGhost(null);

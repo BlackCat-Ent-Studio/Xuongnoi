@@ -17,9 +17,11 @@
 @keyframes pz-tap { 0%, 100% { transform: translate(-28%, 10%) scale(1); } 45% { transform: translate(-28%, -6%) scale(.88); } }
 
 /* ---------- Mèo Mun and the speech bubble ---------- */
-.pz-mascot { position: absolute; left: 1.4cqw; bottom: 1.4cqw; display: flex; align-items: flex-end; gap: .8cqw; max-width: 41%; pointer-events: none; }
+.pz-mascot { position: absolute; left: 1.4cqw; top: calc(1.4cqw + max(40px, 4.4cqw) + .8cqw); display: flex; align-items: flex-end; gap: .8cqw; max-width: 41%; pointer-events: none; }
+/* the cat sits under the top bar, and drops to the bottom when the thing she points at is in the top half */
+.pz-guide.mascot-low .pz-mascot { top: auto; bottom: 1.4cqw; }
 .pz-guide.hinting .pz-bubble-btns, .pz-guide.hinting .pz-dots { display: none; }
-.pz-bubble { position: relative; min-width: 0; background: #fffdf4; color: var(--ink-dark); border-radius: max(10px, 1.6cqw); padding: .9cqw 1.2cqw 1cqw; font: 700 max(13px, 1.75cqw)/1.3 var(--display); box-shadow: 0 .5cqw 0 #c8b98a; display: grid; gap: .5cqw; pointer-events: auto; }
+.pz-bubble { position: relative; min-width: 0; background: #fffdf4; color: var(--ink-dark); border-radius: max(10px, 1.6cqw); padding: .9cqw 1.2cqw 1cqw; font: 700 max(13px, 1.75cqw)/1.3 var(--display); box-shadow: 0 .5cqw 0 #c8b98a; display: grid; gap: .5cqw; pointer-events: none; }
 .pz-bubble::before { content: ''; position: absolute; left: -1.1cqw; bottom: 2cqw; border: .7cqw solid transparent; border-right-color: #fffdf4; }
 /* the full line sits invisible under the typed text so the bubble keeps its size while the cat types */
 .pz-say { display: grid; }
@@ -29,12 +31,13 @@
 .pz-dots i { width: max(6px, .9cqw); height: max(6px, .9cqw); border-radius: 50%; background: #d9cfa8; }
 .pz-dots i.on { background: var(--sun); }
 .pz-bubble-btns { display: flex; justify-content: flex-end; gap: 1cqw; }
-.pz-guide-btn { min-height: 40px; min-width: 40px; border: 0; cursor: pointer; font: 700 max(12px, 1.3cqw) var(--body); padding: 0 12px; border-radius: 99px; }
+.pz-guide-btn { pointer-events: auto; min-height: 40px; min-width: 40px; border: 0; cursor: pointer; font: 700 max(12px, 1.3cqw) var(--body); padding: 0 12px; border-radius: 99px; }
 .pz-skip { background: none; color: #8a7f5a; text-decoration: underline; }
 .pz-next { background: var(--sun); color: var(--ink-dark); font-family: var(--display); font-weight: 800; box-shadow: 0 .35cqw 0 rgba(0, 0, 0, .25); }
 .pz-guide.bye .pz-bubble-btns, .pz-guide.bye .pz-dots { display: none; }
-.pz-guide.bye .pz-bubble, .pz-guide.bye .pz-mascot-frame { pointer-events: none; }
-.pz-guide.bye.tip .pz-bubble { pointer-events: auto; cursor: pointer; }
+/* the text never takes taps (cards sit under it); the cat's face does, to move on or dismiss */
+.pz-guide.bye:not(.tip) .pz-mascot-frame { pointer-events: none; }
+.pz-guide.tip .pz-mascot-frame, .pz-guide.hinting .pz-mascot-frame { cursor: pointer; }
 
 /* the task box makes room for the cat while the guide leads; calls to the cat stay above the dim */
 .pz-screen.guiding .pz-task, .pz-screen.mascot-on .pz-task { visibility: hidden; }
