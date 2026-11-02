@@ -2,7 +2,11 @@ import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
 import { slotBrainParams, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
 
-/** The store pad has three marked slots in a row, filled far end first; the robot walks to the next empty one. */
+/**
+ * The store pad has three marked slots in a row, filled far end first. The three crates lie far apart on the floor
+ * (top, middle, bottom of the west side); the robot fetches them one by one into the next empty slot.
+ * `pickup` is only the middle of the crate field (the fetching brain finds the crates itself).
+ */
 const STORE: StoreSlotsDef = { pickup: { x: -8, y: 0.5, z: 0 }, first: { x: 10.3, z: 0 }, step: { x: -1.8, z: 0 }, count: 3 };
 const SLOT_CARDS = [{ x: 620, y: 500 }, { x: 820, y: 500 }, { x: 820, y: 440 }];
 
@@ -22,11 +26,11 @@ export const level05: PuzzleLevel = {
       { id: 'store-pad', kind: 'block', params: { name: 'Kho', position: { x: 8.5, y: 0.01, z: 0 }, size: { x: 5.6, y: 0.02, z: 2 }, color: '#22c55e', type: 'pickup' }, pos: { x: 20, y: 500 } },
       ...slotMarkNodes(STORE, (i) => SLOT_CARDS[i]!),
       { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: 8, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 20, y: 20 } },
-      // The pile waits at the robot's pick-up end (x = -8): one crate straight ahead of it, one on each side, none touching.
-      { id: 'crate-1', kind: 'item', params: { name: 'Thùng 1', position: { x: -8.8, y: 0.3, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 220, y: 440 } },
-      { id: 'crate-2', kind: 'item', params: { name: 'Thùng 2', position: { x: -8, y: 0.3, z: 1 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 220, y: 500 } },
-      { id: 'crate-3', kind: 'item', params: { name: 'Thùng 3', position: { x: -8, y: 0.3, z: -1 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 420, y: 500 } },
-      { id: 'brain', kind: 'slot-patrol', params: slotBrainParams(STORE, 0.5), pos: { x: 220, y: 20 } },
+      // Three crates spread over the west side of the floor, 4.5 apart, nothing between a crate and the store.
+      { id: 'crate-1', kind: 'item', params: { name: 'Thùng 1', position: { x: -9, y: 0.3, z: -4.5 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 220, y: 440 } },
+      { id: 'crate-2', kind: 'item', params: { name: 'Thùng 2', position: { x: -7.5, y: 0.3, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 220, y: 500 } },
+      { id: 'crate-3', kind: 'item', params: { name: 'Thùng 3', position: { x: -9, y: 0.3, z: 4.5 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' }, pos: { x: 420, y: 500 } },
+      { id: 'brain', kind: 'fetch-store', params: slotBrainParams(STORE, 0.5), pos: { x: 220, y: 20 } },
       { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 420, y: 20 } },
       { id: 'need', kind: 'const', params: { value: 3 }, pos: { x: 620, y: 20 } },
       { id: 'cam', kind: 'camera', params: { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.9 }, pos: { x: 620, y: 440 } },

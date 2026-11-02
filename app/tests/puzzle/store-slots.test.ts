@@ -69,7 +69,7 @@ describe('store slots: level data', () => {
 
   it.each(STORES)('level $order: the brain reads back the same slots the marks are drawn at', ({ order }) => {
     const level = levelOf(order);
-    const brain = level.base.nodes.find((n) => n.kind === 'slot-patrol')!;
+    const brain = level.base.nodes.find((n) => n.kind === 'slot-patrol' || n.kind === 'fetch-store')!;
     expect(brain).toBeDefined();
     expect(readSlotParams(brain.params).slots).toEqual(slotRects(level.storeSlots!));
   });
