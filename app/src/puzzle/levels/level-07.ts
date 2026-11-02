@@ -66,7 +66,7 @@ export const level07: PuzzleLevel = {
           tag: p.color === BLUE ? 'xanh' : 'do',
         }),
       ),
-      hidden('brain', 'slot-patrol', slotBrainParams(STORE, 0.5)),
+      hidden('brain', 'pad-patrol', slotBrainParams(STORE, 0.5)),
       hidden('blue-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
       hidden('red-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
       hidden('need', 'const', { value: 3 }),
@@ -74,7 +74,7 @@ export const level07: PuzzleLevel = {
       hidden('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
       hidden('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
       { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -7.6, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 400, y: 20 } },
-      { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 400, y: 120 } },
+      { id: 'hands', kind: 'pad-carry', params: { mode: 'toggle' }, pos: { x: 400, y: 120 } },
     ],
     wires: [
       { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'brain', port: 'self' } },
