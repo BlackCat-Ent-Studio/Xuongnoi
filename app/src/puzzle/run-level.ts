@@ -1,7 +1,8 @@
 import { createRuntime } from '../engine/runtime';
-import { TICK_DT, type Graph, type InputSnapshot } from '../engine/types';
+import { TICK_DT, type Graph, type InputSnapshot, type World } from '../engine/types';
 import { registerAllNodes } from '../nodes';
 import { createWorld } from '../world/world';
+import { puzzleWorldOptions } from './world-options';
 import type { PuzzleAnswer, PuzzleLevel, PuzzleRunResult } from './types';
 
 const NO_KEYS: InputSnapshot = { keysDown: new Set<string>() };
@@ -33,15 +34,21 @@ export function starsFor(level: PuzzleLevel, answer: PuzzleAnswer, hintsUsed: nu
  * Plays the level headlessly with the same engine and world the game uses, no rendering.
  * Used by tests to prove each level is solvable and has no shortcut.
  */
-export function runLevel(level: PuzzleLevel, answer: PuzzleAnswer, timeLimit = level.timeLimit): PuzzleRunResult {
+export function runLevel(
+  level: PuzzleLevel,
+  answer: PuzzleAnswer,
+  timeLimit = level.timeLimit,
+  onTick?: (world: World, tick: number) => void,
+): PuzzleRunResult {
   registerAllNodes();
-  const world = createWorld(level.mode);
+  const world = createWorld(level.mode, puzzleWorldOptions(level.mode));
   const rt = createRuntime(buildPlayGraph(level, answer), world, level.mode);
   const maxTicks = Math.ceil(timeLimit / TICK_DT);
   let ticks = 0;
   for (; ticks < maxTicks && !world.ended; ticks++) {
     rt.tick(NO_KEYS);
     world.step(TICK_DT);
+    onTick?.(world, ticks);
   }
   const ended = world.ended;
   if (!ended) return { outcome: 'timeout', seconds: ticks * TICK_DT, message: '' };

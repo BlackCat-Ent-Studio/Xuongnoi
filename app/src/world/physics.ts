@@ -5,6 +5,7 @@ import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
+import { solidCarryPosition, isSolidBody, overlapsBox, type BodyRules } from './solid-bodies';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
@@ -62,17 +63,50 @@ export function touching(a: Entity, b: Entity): boolean {
   );
 }
 
+/** Solid bodies only: other bodies that stop the mover, and the item it carries (which is stopped, and stops it, too). */
+interface Extras {
+  soft: readonly Entity[];
+  carried?: { item: Entity; at: (holder: Entity) => Vec3 };
+}
+
 /** Move along one axis by `delta`, pushing out of solid blocks. Returns true if blocked. */
-function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[], rivals?: Rivals): boolean {
+function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[], rivals?: Rivals, extras?: Extras): boolean {
   if (delta === 0) return false;
   // Vehicles already overlapping (spawned or teleported onto each other) may drive apart instead of being snapped through.
   const free = rivals && rivals.list.length > 0 ? rivals.list.filter((r) => !overlapsAll(c, r)) : null;
+  // Bodies that already overlap the mover (a spawn, a drop that found no room) may part instead of being snapped through.
+  const soft = extras && extras.soft.length > 0 ? extras.soft.filter((b) => !overlapsAll(c, b)) : null;
+  const carried = extras?.carried;
+  let proxy: Entity | null = null;
+  let carriedAgainst: Entity[] | null = null;
+  if (carried && extras) {
+    const p0: Entity = { ...carried.item, pos: carried.at(c) };
+    proxy = p0;
+    carriedAgainst = [...solids, ...extras.soft].filter((b) => b !== carried.item && b !== c && !overlapsAll(p0, b));
+  }
   c.pos[axis] += delta;
   let blocked = false;
   for (const b of solids) {
     if (!overlapsAll(c, b)) continue;
     pushOut(c, b, axis, delta);
     blocked = true;
+  }
+  if (soft) {
+    for (const b of soft) {
+      if (!overlapsAll(c, b)) continue;
+      pushOut(c, b, axis, delta);
+      blocked = true;
+    }
+  }
+  if (proxy && carriedAgainst && carried) {
+    proxy.pos = carried.at(c);
+    for (const b of carriedAgainst) {
+      if (!overlapsAll(proxy, b)) continue;
+      const before = proxy.pos[axis];
+      pushOut(proxy, b, axis, delta);
+      c.pos[axis] += proxy.pos[axis] - before;
+      blocked = true;
+    }
   }
   if (rivals && free) {
     for (const r of free) {
@@ -128,21 +162,21 @@ function applyIntent(c: Entity, mode: ViewMode, yaw: number): void {
 }
 
 /** Moves a body by its velocity in substeps, stopping at solids. Returns true when it ended resting on something. */
-function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], rivals?: Rivals): boolean {
+function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], rivals?: Rivals, extras?: Extras): boolean {
   const maxDist = Math.max(Math.abs(c.vel.x), Math.abs(c.vel.y), Math.abs(c.vel.z)) * dt;
   const n = Math.max(1, Math.ceil(maxDist / MAX_SUBSTEP_DISTANCE));
   const sub = dt / n;
   let grounded = false;
   for (let i = 0; i < n; i++) {
-    if (moveAxis(c, 'x', c.vel.x * sub, solids, rivals)) c.vel.x = 0;
+    if (moveAxis(c, 'x', c.vel.x * sub, solids, rivals, extras)) c.vel.x = 0;
     if (mode !== '2d-top') {
       const dy = c.vel.y * sub;
-      if (moveAxis(c, 'y', dy, solids)) {
+      if (moveAxis(c, 'y', dy, solids, undefined, extras)) {
         if (dy < 0) grounded = true;
         c.vel.y = 0;
       }
     }
-    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids, rivals)) c.vel.z = 0;
+    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids, rivals, extras)) c.vel.z = 0;
   }
   return grounded;
 }
@@ -157,7 +191,7 @@ export const DEFAULT_ITEM_FRICTION = ITEM_FRICTION;
 /** A fall slower than this does not bounce, so a bouncing item eventually settles. */
 const BOUNCE_MIN_SPEED = 1.5;
 
-function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): void {
+function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], extras?: Extras): void {
   if (mode === '2d-top') item.vel.y = 0;
   else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + gravityOf(item) * dt);
   if (mode === '2d-side') {
@@ -165,7 +199,7 @@ function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly
     item.vel.z = 0;
   }
   const fallSpeed = item.vel.y;
-  item.onGround = integrate(item, dt, mode, solids);
+  item.onGround = integrate(item, dt, mode, solids, undefined, extras);
   if (item.onGround && item.bounce && fallSpeed < -BOUNCE_MIN_SPEED) {
     item.vel.y = -fallSpeed * item.bounce;
     item.onGround = false;
@@ -207,6 +241,30 @@ export function handPosition(holder: Entity, item: Entity, mode: ViewMode): Vec3
     y: mode === '2d-top' ? holder.pos.y : holder.pos.y - holder.size.y * 0.1,
     z: mode === '2d-side' ? 0 : holder.pos.z + holder.facing.z * reach,
   };
+}
+
+/** Where a carried item rides: the plain spot above the head, or the solid-body spot that matches the drawing. */
+export function carryAt(holder: Entity, item: Entity, mode: ViewMode, rules: BodyRules | null): Vec3 {
+  return rules && mode === '3d' ? solidCarryPosition(holder, item, rules) : holdPosition(holder, item, mode);
+}
+
+/** After a move or a turn, backs the carrier out of whatever its carried item has ended up inside. */
+function settleCarried(c: Entity, item: Entity, obstacles: readonly Entity[], rules: BodyRules, mode: ViewMode): void {
+  for (let pass = 0; pass < 4; pass++) {
+    const proxy: Entity = { ...item, pos: carryAt(c, item, mode, rules) };
+    let moved = false;
+    for (const b of obstacles) {
+      if (b === item || b === c || !overlapsBox(proxy, b)) continue;
+      const bb = colliderBox(b);
+      const ox = overlapOn(proxy, b, 'x');
+      const oz = overlapOn(proxy, b, 'z');
+      if (ox <= oz) c.pos.x += proxy.pos.x < bb.pos.x ? -ox : ox;
+      else c.pos.z += proxy.pos.z < bb.pos.z ? -oz : oz;
+      moved = true;
+      break;
+    }
+    if (!moved) return;
+  }
 }
 
 /** One tick of a vehicle: stick -> speed and heading -> velocity, then the usual fall and collision against blocks. */
@@ -275,7 +333,8 @@ function crashInto(
 }
 
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
-export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number): void {
+export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number, rules: BodyRules | null = null): void {
+  const byId = new Map(entities.map((e) => [e.id, e]));
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
   // Solid vehicles stop people on foot (but not the vehicles themselves, which only hit blocks).
@@ -287,6 +346,17 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   const carry = (e: Entity, axis: Axis, d: number, against: readonly Entity[]): void => void moveAxis(e, axis, d, against);
   carryOnBelts(entities, dt, mode, carry, solidsFor);
   const rides = vehicleRides(entities, mode);
+
+  // Solid bodies (puzzle levels): characters and loose items stop each other, and what a character carries goes with it.
+  const bodies = rules ? entities.filter(isSolidBody) : [];
+  const extrasFor = (e: Entity): Extras | undefined => {
+    if (!rules) return undefined;
+    const soft = bodies.filter((b) => b !== e && b.heldBy !== e.id);
+    const heldId = e.kind === 'character' ? e.holding : null;
+    const held = heldId !== null ? byId.get(heldId) : undefined;
+    if (!held || held.inHand || held.heldBy !== e.id) return { soft };
+    return { soft, carried: { item: held, at: (h) => carryAt(h, held, mode, rules) } };
+  };
 
   const colliders = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.vehicle?.spec.collide !== false);
   for (const c of entities) {
@@ -313,10 +383,11 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     }
     if (mode === '2d-side') c.pos.z = 0;
 
-    c.onGround = integrate(c, dt, mode, walkSolids);
+    const extras = extrasFor(c);
+    c.onGround = integrate(c, dt, mode, walkSolids, undefined, extras);
+    if (rules && extras?.carried) settleCarried(c, extras.carried.item, [...walkSolids, ...extras.soft], rules, mode);
   }
 
-  const byId = new Map(entities.map((e) => [e.id, e]));
   const cargo = cargoPositions(entities, mode);
   for (const item of entities) {
     if (item.kind !== 'item' || !item.visible || item.bullet) continue;
@@ -324,13 +395,13 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (holder) {
       const slot = cargo.get(item.id);
       if (slot) Object.assign(item.pos, slot);
-      else Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : holdPosition(holder, item, mode));
+      else Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : carryAt(holder, item, mode, rules));
       item.vel.x = 0;
       item.vel.y = 0;
       item.vel.z = 0;
       item.onGround = false;
     } else {
-      stepFreeItem(item, dt, mode, solids);
+      stepFreeItem(item, dt, mode, solids, extrasFor(item));
     }
   }
 }

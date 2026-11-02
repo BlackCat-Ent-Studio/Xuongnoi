@@ -78,6 +78,8 @@ export interface Entity {
   label?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
+  /** Solid-body worlds: where this character or item started; a fall off the tray brings it back here. */
+  home?: Vec3;
 
   // ---- collision and body tuning; unset = plain visual box and normal physics ----
   collider?: ColliderSpec;

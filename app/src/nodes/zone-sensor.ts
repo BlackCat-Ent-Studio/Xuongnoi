@@ -139,7 +139,7 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     let count = 0;
     let first: EntityId | null = null;
     for (const e of ctx.world.listEntities()) {
-      if (!e.visible || e.seatedIn !== undefined || e.inHand || !matchesFilter(e, filter)) continue;
+      if (!e.visible || e.seatedIn !== undefined || e.inHand || e.carried || !matchesFilter(e, filter)) continue;
       if (goods !== '' && ctx.world.tagOf(e.id) !== goods) continue;
       // Entity centre in the zone's own frame, and its box extent along the zone's axes.
       const dx = e.position.x - c.x;

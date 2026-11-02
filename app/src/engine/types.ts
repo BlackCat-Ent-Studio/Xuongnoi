@@ -409,6 +409,8 @@ export interface EntityView {
   holdStyle?: HoldStyle;
   /** Items only; true while the item is in a character's hand (the renderer draws it on the figure). */
   inHand?: boolean;
+  /** Items only; true while a character carries it, in worlds with solid bodies (puzzle 3D levels). Stores do not count it. */
+  carried?: boolean;
   /** Characters only; the tool currently in hand. */
   tool?: { shape: ItemShape; color: string };
   /** Characters only; height of the item carried above the head (side and 3D views), absent when nothing rides there. */
@@ -693,6 +695,34 @@ export interface World extends WorldApi {
   setCameraYaw(rad: number): void;
   /** The play-camera request that applies right now (most recently activated camera node), or null. */
   cameraCommand(): PlayCameraCommand | null;
+  /** Collision-level snapshot of every body for the physics checks (tests and the dev watcher); not used by the game. */
+  debugBodies?(): readonly BodySnapshot[];
+}
+
+/** What the physics checks need to know about one body: its real collision box and whether it is being carried. */
+export interface BodySnapshot {
+  id: EntityId;
+  kind: EntityKind;
+  /** Level object name: the owner node's id. */
+  owner: string;
+  visible: boolean;
+  /** Blocks: blocks movement. */
+  solid: boolean;
+  /** Blocks: a sensor marker, never an obstacle. */
+  zone: boolean;
+  /** The box that blocks others (position = centre). */
+  box: { pos: Vec3; size: Vec3 };
+  /** Entity position and base size (the box above may be bigger or offset). */
+  pos: Vec3;
+  size: Vec3;
+  /** Items: riding above the head / in front of a character, or in a hand. */
+  carried: boolean;
+  /** Items: who carries it (character, or vehicle for loaded cargo). */
+  holder: EntityId | null;
+  /** A character sitting in a vehicle. */
+  seated: boolean;
+  /** Spawn tag of an item (goods type), else empty. */
+  tag: string;
 }
 
 export const TICK_DT = 1 / 60;
