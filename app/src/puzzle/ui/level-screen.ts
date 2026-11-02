@@ -3,8 +3,7 @@ import { TICK_DT, type GameResult } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { viewPitch } from '../../nodes/camera';
 import { starsFor } from '../run-level';
-import { renderObjectThumbnails } from '../../render/object-thumbnails';
-import { STAGE_CHARACTER_SCALE, createCozyStage } from '../stage/cozy-stage';
+import { STAGE_CHARACTER_SCALE } from '../stage/cozy-stage';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
@@ -432,7 +431,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
 
   stage.onEnd = finish;
 
-  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview, toastHost: screen, onCardPick: lightObject, thumbnails: (ids) => renderObjectThumbnails(level.base, level.mode, createCozyStage(), ids), keepClear: () => ({ x: pipRect.x - PIP_CLEAR_PX, y: pipRect.y - PIP_CLEAR_PX, w: pipRect.w + 2 * PIP_CLEAR_PX, h: pipRect.h + 2 * PIP_CLEAR_PX }) });
+  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview, toastHost: screen, onCardPick: lightObject, keepClear: () => ({ x: pipRect.x - PIP_CLEAR_PX, y: pipRect.y - PIP_CLEAR_PX, w: pipRect.w + 2 * PIP_CLEAR_PX, h: pipRect.h + 2 * PIP_CLEAR_PX }) });
   guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit', showBoard: () => setFocus('board') });
 
   // ----- buttons -----

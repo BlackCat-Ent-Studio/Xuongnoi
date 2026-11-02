@@ -87,7 +87,7 @@ export class SceneView {
   private readonly entries = new Map<string, Entry>();
   private readonly healthBars = new HealthBarLayer(this.group);
   private readonly colliderFrames = new ColliderFrames(this.group);
-  private readonly highlight = new ObjectHighlight(this.group);
+  private readonly highlight = new ObjectHighlight();
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
   private mode: ViewMode = '2d-side';
@@ -265,21 +265,24 @@ export class SceneView {
   }
 
   /**
-   * Pulsing frames around the visible entities owned by `owners` (empty set = none). The frame follows the drawn figure
-   * (its real bounds, not the collision box). `strength` 0..1 is the pulse; `width`/`height` the canvas size in px.
+   * Glowing outline around the visible entities owned by `owners` (empty set = none). It follows the drawn figure's silhouette.
+   * `strength` 0..1 is the pulse. Call `renderHighlight` after the frame is drawn.
    */
-  syncHighlight(entities: readonly EntityView[], owners: ReadonlySet<string>, strength: number, width: number, height: number): void {
-    const boxes: THREE.Box3[] = [];
+  syncHighlight(entities: readonly EntityView[], owners: ReadonlySet<string>, strength: number): void {
+    const roots: THREE.Object3D[] = [];
     if (owners.size > 0) {
       for (const e of entities) {
         if (!e.visible || e.inHand || !owners.has(e.ownerNodeId)) continue;
         const root = this.rootOf(this.entries.get(e.id));
-        if (!root) continue;
-        root.updateWorldMatrix(true, true);
-        boxes.push(new THREE.Box3().setFromObject(root));
+        if (root) roots.push(root);
       }
     }
-    this.highlight.sync(boxes, strength, width, height);
+    this.highlight.sync(roots, strength);
+  }
+
+  /** Draws the outline over the frame the renderer just finished. */
+  renderHighlight(renderer: THREE.WebGLRenderer, camera: THREE.Camera): void {
+    this.highlight.render(renderer, this.scene, camera);
   }
 
   /** How many highlight frames are visible (for tests and checks). */
