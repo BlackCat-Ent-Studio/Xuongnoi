@@ -61,7 +61,7 @@ export const BOT_TOOL_TEXT = {
   },
   rockUsed: {
     title: 'Đá vừa bị dùng lên',
-    text: 'Nối cổng "Bị dùng lên" của Hộp tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
+    text: 'Nối cổng "Bị dùng lên" của Vật thể tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
   },
   inHand: {
     title: 'Cuốc đang ở trên tay',
@@ -69,7 +69,7 @@ export const BOT_TOOL_TEXT = {
   },
   rockHide: {
     title: 'Đá bị đập thì vỡ',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của Hộp tảng đá.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của Vật thể tảng đá.',
     explain: 'Đá bị "ẩn đi" thì biến mất, đường được thông.',
   },
   end: {

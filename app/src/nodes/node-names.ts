@@ -15,6 +15,8 @@ interface NodeNames {
   en: string;
   /** Names the node had before the rename; the palette still finds the node by them. */
   was?: string;
+  /** Old English term, kept as a search alias. */
+  wasEn?: string;
   ports: PortNames;
 }
 
@@ -36,8 +38,10 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'block': {
-    vi: 'Hộp',
-    en: 'Block',
+    vi: 'Vật thể',
+    en: 'Object',
+    was: 'Hộp',
+    wasEn: 'Block',
     ports: {
       in: {
         'hide': ['Ẩn đi (1 nhịp)', 'Hide'],
@@ -48,7 +52,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'hiddenWhile': ['Ẩn suốt lúc bật', 'Hide while ON'],
       },
       out: {
-        'self': ['Hộp', 'Self'],
+        'self': ['Vật thể', 'Self'],
         'usedOn': ['Bị dùng lên', 'Used on'],
       },
     },
@@ -813,7 +817,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */
 export function nodeSearchAliases(kind: string): string[] {
   const n = NODE_NAMES[kind];
-  return n ? [n.en, ...(n.was ? [n.was] : [])] : [];
+  return n ? [n.en, ...(n.was ? [n.was] : []), ...(n.wasEn ? [n.wasEn] : [])] : [];
 }
 
 /** Extra choice / step ports (4-6) that the review table does not list; they follow the same pattern as 1-3. */

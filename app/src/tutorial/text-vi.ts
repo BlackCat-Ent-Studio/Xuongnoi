@@ -37,7 +37,7 @@ export const LESSON_TEXT = {
     floor: {
       title: 'Làm sàn nhà',
       text: 'Kéo mảnh ghép "Mảnh ghép" từ cột bên trái thả vào bảng ở giữa.',
-      explain: 'Hộp là một cục vuông đứng yên trong game. Ta dùng nó làm sàn.',
+      explain: 'Vật thể là một cục vuông đứng yên trong game. Ta dùng nó làm sàn.',
     },
     size: {
       title: 'Kéo dài sàn',
@@ -99,7 +99,7 @@ export const LESSON_TEXT = {
     star: {
       title: 'Thêm một mảnh ghép nữa',
       text: 'Kéo thêm một mảnh ghép "Mảnh ghép" vào bảng. Đây sẽ là ngôi sao.',
-      explain: 'Hộp nào cũng giống nhau lúc đầu. Ta đổi thuộc tính để nó thành sàn hay thành sao.',
+      explain: 'Vật thể nào cũng giống nhau lúc đầu. Ta đổi thuộc tính để nó thành sàn hay thành sao.',
     },
     type: {
       title: 'Biến nó thành vật nhặt',
@@ -123,7 +123,7 @@ export const LESSON_TEXT = {
     },
     wireB: {
       title: 'Nối ngôi sao vào Chạm nhau',
-      text: 'Nối cổng "Hộp" của ngôi sao sang cổng "Vật kia".',
+      text: 'Nối cổng "Vật thể" của ngôi sao sang cổng "Vật kia".',
     },
     hide: {
       title: 'Nhặt xong thì biến mất',

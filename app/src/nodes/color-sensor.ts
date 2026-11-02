@@ -33,7 +33,7 @@ export const colorSensorNode: NodeDef<undefined> = {
   label: 'Đọc màu',
   category: 'logic',
   description:
-    'Đọc màu của hộp mà vật đang đứng trên hoặc đang nhìn thấy ngay phía trước. "Số màu" là 1, 2 hoặc 3 nếu hộp đang mang đúng Màu 1, 2 hay 3 (là màu hộp được đổi bằng cổng "Đổi màu" của mảnh Hộp, mặc định đỏ, vàng, xanh); hộp mang màu khác, chưa được đổi màu, hoặc không có hộp thì ra 0. "Đúng màu" bật khi "Số màu" trùng "Màu cần tìm". Nếu bạn đã đổi Màu 1, 2, 3 trong mảnh Hộp, hãy đặt cùng màu đó ở mục Nâng cao của cảm biến này.',
+    'Đọc màu của hộp mà vật đang đứng trên hoặc đang nhìn thấy ngay phía trước. "Số màu" là 1, 2 hoặc 3 nếu hộp đang mang đúng Màu 1, 2 hay 3 (là màu hộp được đổi bằng cổng "Đổi màu" của mảnh Vật thể, mặc định đỏ, vàng, xanh); hộp mang màu khác, chưa được đổi màu, hoặc không có hộp thì ra 0. "Đúng màu" bật khi "Số màu" trùng "Màu cần tìm". Nếu bạn đã đổi Màu 1, 2, 3 trong mảnh Vật thể, hãy đặt cùng màu đó ở mục Nâng cao của cảm biến này.',
   inputs: [{ id: 'who', type: 'object', label: 'Vật', required: true }],
   outputs: [
     { id: 'index', type: 'number', label: 'Số màu' },

@@ -84,7 +84,7 @@ export const HEALTH_COLOR_TEXT = {
   },
   done: {
     title: 'Bạn biết đổi số thành hình rồi!',
-    text: 'Đổi thang số biến máu thành thanh đo, Chọn theo số biến máu thành các mức để làm việc khác nhau. Thử thêm mảnh ghép "Hộp" và nối "Là 1/2/3" để đổi màu đèn báo.',
+    text: 'Đổi thang số biến máu thành thanh đo, Chọn theo số biến máu thành các mức để làm việc khác nhau. Thử thêm mảnh ghép "Vật thể" và nối "Là 1/2/3" để đổi màu đèn báo.',
   },
 } as const;
 
@@ -117,7 +117,7 @@ export const START_SCREEN_TEXT = {
   },
   wireDoor: {
     title: 'Bấm nút để mở cửa',
-    text: 'Nối cổng "Vừa bấm" của Nút bấm sang cổng "Ẩn đi (1 nhịp)" của Hộp màu nâu (cánh cửa).',
+    text: 'Nối cổng "Vừa bấm" của Nút bấm sang cổng "Ẩn đi (1 nhịp)" của Vật thể màu nâu (cánh cửa).',
   },
   addTimer: {
     title: 'Thêm đồng hồ',
@@ -184,7 +184,7 @@ export const ASK_DIALOG_TEXT = {
   },
   wireOpen: {
     title: 'Chọn 1 mở cổng',
-    text: 'Nối cổng "Chọn 1" của Hộp hỏi sang cổng "Ẩn đi (1 nhịp)" của Hộp màu nâu (cổng gỗ cao).',
+    text: 'Nối cổng "Chọn 1" của Hộp hỏi sang cổng "Ẩn đi (1 nhịp)" của Vật thể màu nâu (cổng gỗ cao).',
     explain: 'Câu trả lời thứ nhất là câu đúng, nên đường mở ra.',
   },
   wireTrap: {

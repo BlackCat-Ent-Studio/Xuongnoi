@@ -184,7 +184,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     },
     example: 'Cần điều khiển "Ngang" → "Đi ngang"; Phím Space "Đang giữ phím" → "Nhảy"; "Vị trí X" → Hiện số để xem mình đang ở đâu.',
     tips: [
-      'Nhân vật rơi mãi xuống vực thì chưa có Hộp rắn làm đất dưới chân. Thêm một Hộp.',
+      'Nhân vật rơi mãi xuống vực thì chưa có Vật thể rắn làm đất dưới chân. Thêm một Vật thể.',
       'Chỉ "Màu" và "Kiểu dáng" đổi được ngay khi đang chơi; các ô khác như vị trí, vai trò phải chơi lại mới có tác dụng.',
       'Game nhìn ngang bỏ qua "Đi dọc"; chỉ game nhìn từ trên và 3D mới dùng.',
       'Một game nên có đúng một nhân vật vai "Người chơi" để camera biết theo ai.',
@@ -223,10 +223,10 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       beltWalls: 'Nâng cao. Kiểu "Băng chuyền" có thành chắn hai bên hay không.',
       ...BODY_PARAM_TEXT,
     },
-    example: 'Phím Space "Vừa nhấn" → "Ẩn đi (1 nhịp)" của một Hộp đang là bức tường: bấm là tường biến mất cho nhân vật đi qua.',
+    example: 'Phím Space "Vừa nhấn" → "Ẩn đi (1 nhịp)" của một Vật thể đang là bức tường: bấm là tường biến mất cho nhân vật đi qua.',
     tips: [
       'Dùng "Ẩn suốt lúc bật" để làm cửa mở theo tín hiệu: nối Chạm nhau (hoặc Hoặc/Và) vào đó, cửa mở khi tín hiệu bật và đóng lại khi tín hiệu tắt.',
-      'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Hộp) "Mới chạm" → "Ẩn đi (1 nhịp)" của chính hộp đó. Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
+      'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Vật thể) "Mới chạm" → "Ẩn đi (1 nhịp)" của chính hộp đó. Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
       'Băng chuyền: chọn kiểu "Băng chuyền" là chạy ngay, hoặc để kiểu thường và đặt "Tốc độ băng chuyền" khác 0 trong mục Nâng cao.',
       'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',
     ],
@@ -260,9 +260,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       bounce: 'Nâng cao. Độ nảy: 0 là không nảy, 1 là nảy lại gần hết sức.',
       ...BODY_PARAM_TEXT,
     },
-    example: 'Đồ vật hình Ổ khoá (đặt "Cố định"): "Vừa được dùng" → "Ẩn đi (1 nhịp)" của cánh cửa Hộp để mở cửa.',
+    example: 'Đồ vật hình Ổ khoá (đặt "Cố định"): "Vừa được dùng" → "Ẩn đi (1 nhịp)" của cánh cửa Vật thể để mở cửa.',
     tips: [
-      'Đồ vật không chặn đường người; nó rơi xuống đất và nằm đó. Muốn bức tường thì dùng Hộp.',
+      'Đồ vật không chặn đường người; nó rơi xuống đất và nằm đó. Muốn bức tường thì dùng Vật thể.',
       'Dụng cụ cầm tay (kiếm, cuốc): chọn "Cách cầm" là "Cầm trên tay" rồi nối với mảnh ghép Cầm dụng cụ.',
       'Hình dạng, kích thước, độ nảy... chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại. Riêng "Màu" đổi được ngay.',
       'Tự nó không nhấc lên được: nhân vật cần các mảnh ghép như Khiêng đồ / Tương tác thì mới cầm được.',
@@ -479,7 +479,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       color: 'Màu mũi tên.',
       showDistance: 'Chọn "Có" thì ghi thêm số khoảng cách cạnh mũi tên.',
     },
-    example: '"Nhân vật" → "Từ"; một Hộp là đích → "Tới"; "Khoảng cách" → Hiện số.',
+    example: '"Nhân vật" → "Từ"; một Vật thể là đích → "Tới"; "Khoảng cách" → Hiện số.',
     tips: [
       'Mũi tên tự ẩn khi đã đến rất gần đích (dưới 1,5 đơn vị), nên không cần tự tắt nó.',
       'Khoảng cách tính trên mặt phẳng nằm ngang, bỏ qua độ cao. Trong game nhìn ngang thì chỉ tính khoảng ngang.',

@@ -41,10 +41,10 @@ interface BlockState {
 
 export const blockNode: NodeDef<BlockState> = {
   kind: 'block',
-  label: 'Hộp',
+  label: 'Vật thể',
   category: 'object',
   description:
-    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi (1 nhịp)" để làm hộp biến mất, bật "Hiện lại (1 nhịp)" để hộp hiện ra lại (đứng chỗ cũ). "Bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng chuyền" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn suốt lúc bật" cho hộp ẩn đi khi tín hiệu bật và hiện lại khi tín hiệu tắt (làm cửa mở theo tín hiệu); để trống thì không ảnh hưởng. Lần đổi nào đến sau cùng thì thắng: "Ẩn đi (1 nhịp)"/"Hiện lại (1 nhịp)" vẫn dùng được, nhưng khi "Ẩn suốt lúc bật" đổi giá trị thì nó quyết định.',
+    'Một vật thể đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi (1 nhịp)" để làm hộp biến mất, bật "Hiện lại (1 nhịp)" để hộp hiện ra lại (đứng chỗ cũ). "Bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng chuyền" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn suốt lúc bật" cho hộp ẩn đi khi tín hiệu bật và hiện lại khi tín hiệu tắt (làm cửa mở theo tín hiệu); để trống thì không ảnh hưởng. Lần đổi nào đến sau cùng thì thắng: "Ẩn đi (1 nhịp)"/"Hiện lại (1 nhịp)" vẫn dùng được, nhưng khi "Ẩn suốt lúc bật" đổi giá trị thì nó quyết định.',
   inputs: [
     { id: 'hide', type: 'bool', label: 'Ẩn đi (1 nhịp)' },
     { id: 'show', type: 'bool', label: 'Hiện lại (1 nhịp)' },
@@ -54,7 +54,7 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'hiddenWhile', type: 'bool', label: 'Ẩn suốt lúc bật' },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Hộp' },
+    { id: 'self', type: 'object', label: 'Vật thể' },
     { id: 'usedOn', type: 'bool', label: 'Bị dùng lên' },
   ],
   params: [

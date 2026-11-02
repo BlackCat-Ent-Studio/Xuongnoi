@@ -35,7 +35,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
       kind: 'select',
       default: 'item',
       options: [
-        { value: 'block', label: 'Hộp' },
+        { value: 'block', label: 'Vật thể' },
         { value: 'item', label: 'Đồ vật (rơi xuống đất)' },
       ],
     },
@@ -51,7 +51,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     },
     {
       id: 'solid',
-      label: 'Hộp rắn không',
+      label: 'Vật thể rắn không',
       kind: 'select',
       default: 'solid',
       options: [

@@ -6,17 +6,6 @@ export function isObjectKind(kind: string): boolean {
   return getNodeDef(kind)?.category === 'object' || kind === 'zone';
 }
 
-/** The name the level gave the object ("Cờ", "Cửa kho"), or '' when it has none. */
-export function objectName(node: GraphNode): string {
-  const v = node.params.name;
-  return typeof v === 'string' ? v.trim() : '';
-}
-
-/** Object cards that show their own name as the title (plus a picture): the object kinds, not the zone sensor (it is a logic piece). */
-export function hasNamedTitle(node: GraphNode): boolean {
-  return getNodeDef(node.kind)?.category === 'object' && objectName(node) !== '';
-}
-
 const FLOOR_LENGTH = 12;
 const FLOOR_THICKNESS = 1.5;
 

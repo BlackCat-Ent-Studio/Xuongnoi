@@ -38,8 +38,8 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   color: {
     title: 'Số đếm đổi màu đèn',
-    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Đổi màu (1, 2 hoặc 3)" của Hộp đèn giao thông (cây đèn cao).',
-    explain: 'Hộp kiểu "Đèn giao thông" sáng đèn đỏ lúc đầu. Khi nhận số 1, nó đổi sang "Màu 1" mà ta đã đặt là xanh lá. Số 2 là "Màu 2", số 3 là "Màu 3".',
+    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Đổi màu (1, 2 hoặc 3)" của Vật thể đèn giao thông (cây đèn cao).',
+    explain: 'Vật thể kiểu "Đèn giao thông" sáng đèn đỏ lúc đầu. Khi nhận số 1, nó đổi sang "Màu 1" mà ta đã đặt là xanh lá. Số 2 là "Màu 2", số 3 là "Màu 3".',
   },
   zone: {
     title: 'Thêm Vùng kích hoạt',
@@ -310,7 +310,7 @@ export const GUIDE_TEXT = {
   },
   to: {
     title: 'Mũi tên chỉ về cờ vàng',
-    text: 'Nối cổng "Hộp" của lá cờ vàng sang cổng "Tới" của Mũi tên chỉ đường.',
+    text: 'Nối cổng "Vật thể" của lá cờ vàng sang cổng "Tới" của Mũi tên chỉ đường.',
     explain: 'Cờ vàng là lá gần nhân vật hơn, nằm bên trái cờ đỏ.',
   },
   watch: {
@@ -331,7 +331,7 @@ export const GUIDE_TEXT = {
   },
   to2: {
     title: 'Mũi tên 2 chỉ về cờ đỏ',
-    text: 'Nối cổng "Hộp" của lá cờ đỏ sang cổng "Tới" của mũi tên thứ hai.',
+    text: 'Nối cổng "Vật thể" của lá cờ đỏ sang cổng "Tới" của mũi tên thứ hai.',
   },
   counter: {
     title: 'Thêm Bộ đếm để nhớ đang đi cờ nào',

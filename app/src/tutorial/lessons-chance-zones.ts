@@ -89,7 +89,7 @@ const T = {
   },
   distanceWire: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Hộp" của lá cờ đỏ sang "Vật 2" của Đo khoảng cách.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Vật thể" của lá cờ đỏ sang "Vật 2" của Đo khoảng cách.',
   },
   show2: { title: 'Thêm Hiện số thứ hai', text: 'Kéo thêm một mảnh ghép "Hiện số" nữa vào bảng.' },
   show2Wire: {

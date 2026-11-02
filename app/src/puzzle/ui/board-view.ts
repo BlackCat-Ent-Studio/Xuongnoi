@@ -27,7 +27,7 @@ import {
   type Box,
   type PortEnd,
 } from './board-state';
-import { hasNamedTitle, isObjectKind, objectName } from './object-cards';
+import { isObjectKind } from './object-cards';
 import { PUZZLE_UI_TEXT } from './puzzle-text';
 import { playSfx } from './sound';
 
@@ -239,7 +239,6 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const head = box.querySelector('.wc-node-head');
     if (!head) return;
     box.classList.toggle('pz-locked', locked);
-    if (hasNamedTitle(node)) nameCard(box, head, node);
     if (locked) {
       head.append(lockIcon());
     } else {
@@ -281,21 +280,6 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   function paramText(pd: ParamDef, value: unknown): string {
     if (pd.kind === 'select') return pd.options?.find((o) => o.value === value)?.label ?? String(value ?? '');
     return String(value ?? '');
-  }
-
-  /** An object card is titled with the object's own name (the category icon stays); the generic kind word is dropped. */
-  function nameCard(box: HTMLElement, head: Element, node: GraphNode): void {
-    const title = head.querySelector('.wc-title');
-    const name = title?.querySelector('.wc-name');
-    if (!title || !name) return;
-    name.textContent = objectName(node);
-    for (const extra of Array.from(title.children)) if (extra !== name) extra.remove();
-    // The "Hộp" / "Đồ vật" word on the object's own pin is the same generic word; the pin keeps the object's name as its tip only.
-    for (const row of Array.from(box.querySelectorAll<HTMLElement>('.wc-port.out[data-port="self"]'))) {
-      row.querySelector('.wc-pl')?.replaceChildren();
-      row.title = objectName(node);
-    }
-    box.classList.add('pz-object');
   }
 
   // ---------- picked object card ----------

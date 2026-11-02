@@ -65,6 +65,17 @@ describe('finding a renamed node by its old or English name', () => {
     expect(filterRows(rows, 'Cảm biến chạm').map((r) => r.kind)).toContain('touch');
     expect(filterRows(rows, 'collision').map((r) => r.kind)).toContain('touch');
   });
+
+  it('the block kind is Vật thể / Object and is still found by Hộp and Block', () => {
+    const d = listNodeDefs('2d-side').find((x) => x.kind === 'block');
+    expect(d?.label).toBe('Vật thể');
+    expect(d?.labelEn).toBe('Object');
+    expect(d?.outputs.find((p) => p.id === 'self')?.label).toBe('Vật thể');
+    expect(searchItems(items(), 'Hộp').map((i) => i.kind)).toContain('block');
+    expect(searchItems(items(), 'Block').map((i) => i.kind)).toContain('block');
+    const rows = buildRows(listNodeDefs('2d-side'), () => undefined);
+    expect(filterRows(rows, 'Hộp').map((r) => r.kind)).toContain('block');
+  });
 });
 
 describe('card subtitle', () => {
@@ -73,6 +84,12 @@ describe('card subtitle', () => {
 
   it('shows the English term on the line the card always had', () => {
     expect(cardSubtitle(node('touch'), def('touch'))).toBe('Collision / Touch');
+  });
+
+  it('puts the kind on top and the typed name below for object cards', () => {
+    expect(def('block')?.label).toBe('Vật thể');
+    expect(cardSubtitle(node('block', { name: 'Cờ' }), def('block'))).toBe('Cờ');
+    expect(cardSubtitle(node('block'), def('block'))).toBe('Object');
   });
 
   it('lets the name typed for the piece take that line', () => {

@@ -75,7 +75,7 @@ const T = {
   },
   goto2Who: {
     title: 'Xe đi tới cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Hộp" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Vật thể" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
   },
   step2: {
     title: 'Việc 2: lái xe tới cờ',
@@ -92,7 +92,7 @@ const T = {
   },
   touchWho: {
     title: 'Xe chạm cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe sang "Vật chính" và cổng "Hộp" của lá cờ sang "Vật kia" của Chạm nhau.',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe sang "Vật chính" và cổng "Vật thể" của lá cờ sang "Vật kia" của Chạm nhau.',
   },
   end: {
     title: 'Thêm mảnh ghép Thắng / Thua',

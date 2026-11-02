@@ -16,7 +16,7 @@ export const SECRET_DOOR_TEXT = {
   },
   open: {
     title: 'Cửa mở lúc bắt đầu',
-    text: 'Nối "Vừa bắt đầu" của Khi bắt đầu sang cổng "Ẩn đi (1 nhịp)" của Hộp cánh cửa (hộp nâu cao).',
+    text: 'Nối "Vừa bắt đầu" của Khi bắt đầu sang cổng "Ẩn đi (1 nhịp)" của Vật thể cánh cửa (hộp nâu cao).',
     explain: 'Hộp bị "ẩn đi" thì biến mất và không còn chắn đường. Chỉ một nhịp ngắn là đủ để cửa mở.',
   },
   not: {
@@ -31,7 +31,7 @@ export const SECRET_DOOR_TEXT = {
   },
   close: {
     title: 'Đi ra thì cửa đóng lại',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Hiện lại (1 nhịp)" của Hộp cánh cửa.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Hiện lại (1 nhịp)" của Vật thể cánh cửa.',
     explain: '"Hiện lại (1 nhịp)" cho cánh cửa hiện ra ở chỗ cũ. Cửa sập lại ngay sau lưng bạn, không quay đầu được nữa!',
   },
   play: {
@@ -115,7 +115,7 @@ export const COLLIDER_GRAVITY_TEXT = {
   },
   touchWires: {
     title: 'Thùng và bệ',
-    text: 'Nối cổng "Đồ vật" của cái thùng sang "Vật chính", và cổng "Hộp" của bệ xanh sang "Vật kia" của Chạm nhau.',
+    text: 'Nối cổng "Đồ vật" của cái thùng sang "Vật chính", và cổng "Vật thể" của bệ xanh sang "Vật kia" của Chạm nhau.',
   },
   win: {
     title: 'Chạm là thắng',
@@ -171,7 +171,7 @@ export const CONVEYOR_TEXT = {
   },
   style: {
     title: 'Biến bục thành băng chuyền',
-    text: 'Chọn cái bục (Hộp dài thấp ở giữa). Ở Thuộc tính, đổi "Kiểu dáng" thành "Băng chuyền".',
+    text: 'Chọn cái bục (Vật thể dài thấp ở giữa). Ở Thuộc tính, đổi "Kiểu dáng" thành "Băng chuyền".',
     explain: 'Kiểu Băng chuyền tự chạy với tốc độ vừa phải dọc theo cạnh dài của hộp.',
   },
   direction: {

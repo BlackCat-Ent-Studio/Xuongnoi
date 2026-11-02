@@ -79,7 +79,7 @@ export const FACTORY_TEXT = {
   },
   beltAt: {
     title: 'Nhả hộp lên băng chuyền',
-    text: 'Nối cổng "Hộp" của băng chuyền sang cổng "Tại vật" của Tạo vật mới.',
+    text: 'Nối cổng "Vật thể" của băng chuyền sang cổng "Tại vật" của Tạo vật mới.',
     explain: 'Hộp mới sẽ xuất hiện ngay trên băng chuyền rồi chạy sang phải, tới kho cuối băng.',
   },
   next: {

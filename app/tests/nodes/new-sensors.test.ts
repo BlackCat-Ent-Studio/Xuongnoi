@@ -330,7 +330,7 @@ describe('color sensor', () => {
     expect(drive(colorSensorNode, w, 1, { who: stand(w, 0) }, { color1: '#EF4444' })[0]!.index).toBe(1);
   });
 
-  it('a block that was recoloured by the Hộp node is read by its new colour', () => {
+  it('a block that was recoloured by the Vật thể node is read by its new colour', () => {
     const w = floorWorld();
     const pad = w.spawn(block(v(20, 0), v(4, 1, 1), '#cccccc'));
     const who = stand(w, 20);

@@ -57,7 +57,7 @@ const T = {
   },
   distanceWho: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Hộp" của lá cờ xanh (hộp nhặt được) sang "Vật 2" của mảnh ghép Đo khoảng cách.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Vật thể" của lá cờ xanh (hộp nhặt được) sang "Vật 2" của mảnh ghép Đo khoảng cách.',
   },
   threshold: {
     title: 'Gần là bao nhiêu?',
@@ -109,7 +109,7 @@ const T = {
   },
   winWire: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Nhân vật" của nhân vật sang "Vật chính" và "Hộp" của lá cờ sang "Vật kia" của Chạm nhau. Rồi nối "Đang chạm" sang "Thắng".',
+    text: 'Nối "Nhân vật" của nhân vật sang "Vật chính" và "Vật thể" của lá cờ sang "Vật kia" của Chạm nhau. Rồi nối "Đang chạm" sang "Thắng".',
   },
   play: {
     title: 'Chạy thử',

@@ -15,7 +15,7 @@ export const UI_CHEST_TEXT = {
   },
   wireChest: {
     title: 'Nói vật nào bấm được',
-    text: 'Nối cổng "Hộp" của mảnh ghép Hộp có màu nâu (cái rương) sang cổng "Vật cần bấm" của mảnh ghép Bấm vào vật.',
+    text: 'Nối cổng "Vật thể" của mảnh ghép Vật thể có màu nâu (cái rương) sang cổng "Vật cần bấm" của mảnh ghép Bấm vào vật.',
   },
   winLose: {
     title: 'Thêm mảnh ghép Thắng / Thua',

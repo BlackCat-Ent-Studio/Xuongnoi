@@ -174,9 +174,9 @@ function tryCharacter(): Board {
 function tryBlock(): Board {
   const b = sideBase({ jump: false });
   return build(
-    'Thử: Hộp',
+    'Thử: Vật thể',
     '2d-side',
-    'Hộp đỏ là bức tường chặn đường. Bấm Space để ẩn hộp (đi qua được), bấm R để hiện lại. Hộp rắn chặn nhân vật, còn "Vật nhặt" thì đi xuyên qua.',
+    'Vật thể đỏ là bức tường chặn đường. Bấm Space để ẩn hộp (đi qua được), bấm R để hiện lại. Vật thể rắn chặn nhân vật, còn "Vật nhặt" thì đi xuyên qua.',
     [
       ...b.specs,
       { id: 'hide-key', kind: 'key', col: 0, row: 1, params: { key: 'Space' } },
