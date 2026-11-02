@@ -5,7 +5,7 @@ import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
-import { solidCarryPosition, isSolidBody, overlapsBox, type BodyRules } from './solid-bodies';
+import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
@@ -349,6 +349,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
 
   // Solid bodies (puzzle levels): characters and loose items stop each other, and what a character carries goes with it.
   const bodies = rules ? entities.filter(isSolidBody) : [];
+  if (rules && mode === '3d') updateCarryFloors(entities, rules, (h, it) => carryAt(h, it, mode, rules));
   const extrasFor = (e: Entity): Extras | undefined => {
     if (!rules) return undefined;
     const soft = bodies.filter((b) => b !== e && b.heldBy !== e.id);
@@ -395,7 +396,9 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (holder) {
       const slot = cargo.get(item.id);
       if (slot) Object.assign(item.pos, slot);
-      else Object.assign(item.pos, item.inHand ? handPosition(holder, item, mode) : carryAt(holder, item, mode, rules));
+      else if (item.inHand) Object.assign(item.pos, handPosition(holder, item, mode));
+      else if (rules) Object.assign(item.pos, approach(item.pos, carryAt(holder, item, mode, rules), LIFT_SPEED * dt));
+      else Object.assign(item.pos, carryAt(holder, item, mode, rules));
       item.vel.x = 0;
       item.vel.y = 0;
       item.vel.z = 0;

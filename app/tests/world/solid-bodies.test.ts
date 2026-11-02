@@ -118,7 +118,7 @@ describe('solid bodies: carrying', () => {
     const w = createWorld('3d', OPTS);
     w.spawn(floor());
     w.spawn(wall(5, 0, 3));
-    const c = w.spawn(bot(0, 0, 'robot-wheel'));
+    const c = w.spawn(bot(0, 0, 'cat-chibi'));
     const k = w.spawn(crate(1.1));
     run(w, 5, () => w.setCharacterIntent(c, intent({ moveX: 1 })));
     expect(w.grab(c, 1.2)).toBe(k);
@@ -148,36 +148,60 @@ describe('solid bodies: carrying', () => {
     expect(it.minY).toBeLessThan(0.5);
   });
 
-  it('drops land beside the carrier and never inside another crate', () => {
+  it('a drop lets go right where the hands are: the crate only falls, in front of the robot and clear of it', () => {
     const w = createWorld('3d', OPTS);
     w.spawn(floor());
     const c = w.spawn(bot(0, 0, 'robot-legs'));
-    const ids = [w.spawn(crate(1.1, 0, 'a')), w.spawn(crate(-1.1, 0, 'b')), w.spawn(crate(0, 1.1, 'c'))];
+    const k = w.spawn(crate(1.1));
     run(w, 5);
-    for (const id of ids) {
-      const held = w.grab(c, 1.5);
-      expect(held, `grab ${id}`).not.toBeNull();
-      w.drop(c);
-      run(w, 40);
-      expect(w.getEntity(held!)!.carried).not.toBe(true);
-      expect(w.heldItem(c)).toBeNull();
-    }
-    const all = w.debugBodies!().filter((b) => b.kind === 'item');
-    for (let i = 0; i < all.length; i++) {
-      for (let j = i + 1; j < all.length; j++) {
-        const a = box(w, all[i]!.id);
-        const b = box(w, all[j]!.id);
-        const apart = a.maxX <= b.minX + 1e-3 || b.maxX <= a.minX + 1e-3 || a.maxZ <= b.minZ + 1e-3 || b.maxZ <= a.minZ + 1e-3;
-        expect(apart, `${all[i]!.owner} vs ${all[j]!.owner}`).toBe(true);
-      }
-    }
-    // None of them sits inside the robot either.
+    expect(w.grab(c, 1.5)).toBe(k);
+    run(w, 40);
+    const before = box(w, k);
+    expect(w.drop(c)).toBe(k);
+    run(w, 1);
+    const first = box(w, k);
+    expect(Math.hypot(first.x - before.x, first.z - before.z)).toBeLessThan(0.01);
+    run(w, 60);
+    const rest = box(w, k);
+    expect(Math.hypot(rest.x - before.x, rest.z - before.z)).toBeLessThan(0.01);
+    expect(rest.minY).toBeCloseTo(0, 2);
+    expect(w.heldItem(c)).toBeNull();
     const me = box(w, c);
-    for (const b of all) {
-      const it = box(w, b.id);
-      const apart = it.maxX <= me.minX + 1e-3 || me.maxX <= it.minX + 1e-3 || it.maxZ <= me.minZ + 1e-3 || me.maxZ <= it.minZ + 1e-3;
-      expect(apart, b.owner).toBe(true);
-    }
+    expect(rest.minX).toBeGreaterThanOrEqual(me.maxX - 1e-3);
+  });
+
+  it('a crate is set down on the ones already there: the hands lift it over them', () => {
+    const w = createWorld('3d', OPTS);
+    w.spawn(floor());
+    const c = w.spawn(bot(0, 0, 'robot-legs'));
+    const k = w.spawn(crate(1.0, 0, 'carried'));
+    run(w, 5);
+    expect(w.grab(c, 1.5)).toBe(k);
+    run(w, 30);
+    const low = w.spawn(crate(3.5, 0, 'low'));
+    run(w, 5);
+    run(w, 120, () => w.setCharacterIntent(c, intent({ moveX: 1 })));
+    // The robot walked on up to the crate on the floor; the carried one rides above it.
+    expect(box(w, c).x).toBeGreaterThan(1.8);
+    expect(box(w, k).minY).toBeGreaterThanOrEqual(box(w, low).maxY - 1e-3);
+    expect(w.drop(c)).toBe(k);
+    run(w, 60);
+    expect(box(w, k).minY).toBeCloseTo(box(w, low).maxY, 1);
+  });
+
+  it('with no room in front the drop fails and the robot keeps hold', () => {
+    const w = createWorld('3d', OPTS);
+    w.spawn(floor());
+    const c = w.spawn(bot(0, 0, 'robot-legs'));
+    const k = w.spawn(crate(1.1));
+    run(w, 5);
+    expect(w.grab(c, 1.5)).toBe(k);
+    run(w, 40);
+    const at = box(w, k);
+    // A post appears right at the hands: letting go would put the crate inside it.
+    w.spawn({ kind: 'block', ownerNodeId: 'post', position: { x: at.x, y: 0.5, z: at.z }, size: { x: 0.2, y: 0.2, z: 0.2 }, color: '#999', solid: true });
+    expect(w.drop(c)).toBeNull();
+    expect(w.heldItem(c)).toBe(k);
   });
 
   it('a zone counts a crate lying in it but not one a robot still carries', () => {

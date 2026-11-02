@@ -33,7 +33,7 @@ export const level08: PuzzleLevel = {
       { id: 'wheel-brain', kind: 'patrol', params: { pointA: { x: -12, y: 0.5, z: 3 }, pointB: { x: -7, y: 0.5, z: 3 }, wait: 0.5, pathfind: 'off' }, pos: { x: 210, y: 134 } },
       { id: 'hands', kind: 'carry', params: { mode: 'toggle' }, pos: { x: 210, y: 178 } },
       { id: 'legs-brain', kind: 'patrol', params: { pointA: { x: -1, y: 0.5, z: 3 }, pointB: { x: 5, y: 0.5, z: 3 }, wait: 1, pathfind: 'off' }, pos: { x: 210, y: 222 } },
-      { id: 'bay', kind: 'zone', params: { center: { x: -7, y: 1, z: 3 }, size: { x: 3, y: 3, z: 3 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 210, y: 266 } },
+      { id: 'bay', kind: 'zone', params: { center: { x: -6.6, y: 1, z: 3 }, size: { x: 3, y: 3, z: 3 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 210, y: 266 } },
       { id: 'need', kind: 'const', params: { value: 2 }, pos: { x: 210, y: 336 } },
       { id: 'door', kind: 'block', params: { name: 'Cửa', position: { x: -4, y: 1, z: -4 }, size: { x: 1, y: 2, z: 7 }, color: '#92400e', type: 'solid' }, pos: { x: 210, y: 406 } },
       { id: 'wall-north', kind: 'block', params: { position: { x: -4, y: 0.9, z: -7.75 }, size: { x: 1, y: 1.8, z: 0.5 }, color: WALL_COLOR, type: 'solid' }, pos: { x: 410, y: 100 } },

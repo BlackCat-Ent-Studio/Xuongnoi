@@ -146,3 +146,42 @@ describe('physics invariants: the checker itself', () => {
     expect(checkColliderMatchesDrawing(body({}), 1.6).length).toBeGreaterThan(0);
   });
 });
+
+describe('physics invariants: crates are set down and lifted, never teleported', () => {
+  /** Plays the reference solution and watches every item tick by tick. */
+  function watchItems(level: PuzzleLevel): { releases: number; grabs: number; worstReleaseShift: number; worstStep: number; worstGrabStep: number } {
+    const last = new Map<string, { x: number; y: number; z: number; carried: boolean }>();
+    const out = { releases: 0, grabs: 0, worstReleaseShift: 0, worstStep: 0, worstGrabStep: 0 };
+    runLevel(level, level.solution, level.timeLimit, (world) => {
+      for (const b of world.debugBodies?.() ?? []) {
+        if (b.kind !== 'item') continue;
+        const prev = last.get(b.owner);
+        if (prev) {
+          const flat = Math.hypot(b.pos.x - prev.x, b.pos.z - prev.z);
+          const full = Math.hypot(flat, b.pos.y - prev.y);
+          out.worstStep = Math.max(out.worstStep, full);
+          if (prev.carried && !b.carried) {
+            out.releases++;
+            out.worstReleaseShift = Math.max(out.worstReleaseShift, flat);
+          }
+          if (!prev.carried && b.carried) {
+            out.grabs++;
+            out.worstGrabStep = Math.max(out.worstGrabStep, full);
+          }
+        }
+        last.set(b.owner, { x: b.pos.x, y: b.pos.y, z: b.pos.z, carried: !!b.carried });
+      }
+    });
+    return out;
+  }
+
+  it.each(LEVELS.filter((l) => l.mode === '3d' && l.order !== 6))('level $order $id: a released crate stays where the hands were, and no crate jumps', (level) => {
+    const r = watchItems(level);
+    expect(r.releases).toBeGreaterThan(0);
+    // The crate is let go in place (it only falls); a hair of slack for the tick it is released on.
+    expect(r.worstReleaseShift).toBeLessThan(0.02);
+    // The lift into the hands and the fall are both gradual: no crate moves more than a third of a unit in one tick.
+    expect(r.worstStep).toBeLessThan(0.3);
+    expect(r.worstGrabStep).toBeLessThan(0.3);
+  });
+});

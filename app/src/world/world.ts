@@ -20,7 +20,7 @@ import { toView, type Entity } from './entity';
 import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
-import { RESPAWN_BELOW, bodyRules, isSolidBody, solidDropSpot } from './solid-bodies';
+import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDropSpot } from './solid-bodies';
 import type { WorldOptions } from './world-options';
 import { createPhysicsWatch } from '../dev/physics-watch';
 import { bodyTuning } from './body-tuning';
@@ -220,6 +220,22 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     return best;
   }
 
+  /** Solid bodies: a grabbing character turns to face what it picks up, so the item comes to its hands from the front. */
+  function turnToward(c: Entity, item: Entity): void {
+    const dx = item.pos.x - c.pos.x;
+    const dz = item.pos.z - c.pos.z;
+    const flat = Math.hypot(dx, dz);
+    if (flat < 1e-6 || (dx * c.facing.x + dz * c.facing.z) / flat >= 0.5) return;
+    c.facing = { ...c.facing, x: dx / flat, z: dz / flat };
+  }
+
+  /** Solid bodies: true when the item can be let go where it is (not inside a wall, a crate or a character). */
+  function roomToLetGo(c: Entity, item: Entity): boolean {
+    const probe: Entity = { ...item, heldBy: null, inHand: false };
+    if (list.some((e) => e.visible && e.solid && e.kind === 'block' && overlapsBox(probe, e))) return false;
+    return !list.some((e) => e !== item && e !== c && isSolidBody(e) && overlapsBox(probe, e));
+  }
+
   /** A resting spot in front of (else behind, else at, else above) the character that is clear of solids. */
   function dropSpot(c: Entity, item: Entity, distance?: number): Vec3 {
     const solids = list.filter((e) => e.visible && e.solid && e.kind === 'block');
@@ -416,11 +432,12 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     grab(character: EntityId, reach: number): EntityId | null {
       const c = liveCharacter(character);
       if (!c || c.holding !== null) return null;
-      const item = nearestItem(c, reach, (it) => it.carryable && it.heldBy === null && it.holdStyle === 'head');
+      const item = nearestItem(c, reach, (it) => it.carryable && it.heldBy === null && it.holdStyle === 'head' && !(rules && isCovered(it, list)));
       if (!item) return null;
       item.heldBy = c.id;
       c.holding = item.id;
-      Object.assign(item.pos, carryAt(c, item, mode, rules));
+      if (rules) turnToward(c, item);
+      else Object.assign(item.pos, carryAt(c, item, mode, rules));
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
@@ -428,8 +445,11 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const c = liveCharacter(character);
       const item = c && c.holding !== null ? byId.get(c.holding) : undefined;
       if (!c || !item) return null;
+      // Solid bodies: let go right where the hands are and let it fall; no room there means the hands keep hold.
+      const inPlace = rules !== null && mode === '3d';
+      if (inPlace && !roomToLetGo(c, item)) return null;
       release(item);
-      item.pos = dropSpot(c, item, distance);
+      if (!inPlace) item.pos = dropSpot(c, item, distance);
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
