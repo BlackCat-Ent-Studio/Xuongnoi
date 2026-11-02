@@ -12,8 +12,9 @@ import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, ne
 import { countHint, extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
-import { ICONS, roundButton } from './shell-kit';
+import { ICONS, roundButton, svg } from './shell-kit';
 import { playSfx } from './sound';
+import { attachStageCameraInput } from './stage-camera-input';
 import { buildBackdrop } from './themes/theme';
 import { showWinCard } from './win-card';
 
@@ -38,10 +39,8 @@ export interface LevelScreenContext {
 }
 
 type Phase = 'edit' | 'run' | 'ended';
-type StageView = 'overview' | 'follow';
-
-/** The player's choice from the "Toàn cảnh / Theo nhân vật" button; kept for the whole visit (all levels). */
-let rememberedView: StageView | null = null;
+/** Which layer is full screen; the other one is the live picture-in-picture window in the bottom-right corner. */
+type Focus = 'board' | 'stage';
 
 /** Main character: the first character whose look is the level's first cast look, else the first character. */
 export function mainCharacterId(level: PuzzleLevel): string | null {
@@ -54,6 +53,19 @@ export function mainCharacterId(level: PuzzleLevel): string | null {
 const SIDE_TILT = 0.2;
 const NO_KEYS = { keysDown: new Set<string>() };
 const RESET_AFTER_LOSE_MS = 1700;
+/** The corner window is this share of the screen width (kept between these pixel sizes). */
+const PIP_SHARE = 0.21;
+const PIP_MIN_PX = 150;
+const PIP_MAX_PX = 340;
+/** Gap between the corner window and the screen edge, as a share of the screen width. */
+const PIP_GAP_SHARE = 0.014;
+/** Stage space under the bottom edge that stays free of the scene (the corner board sits there). */
+const STAGE_BOTTOM_COVER = 0.03;
+const ZOOM_STEP = 1.4;
+/** The task text opened at the start of a level stays this long unless the player puts it away first. */
+const TASK_SHOWN_MS = 12000;
+/** Cards stay this many px away from the corner window. */
+const PIP_CLEAR_PX = 6;
 
 function starsEl(count: 0 | 1 | 2 | 3, className: string): HTMLElement {
   const el = h('span', className);
@@ -74,6 +86,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   let previewTimer = 0;
   let loseTimer = 0;
   let watchRaf = 0;
+  /** Puts the opening task text away after a while, so it never stays over the cards or the stage. */
+  let taskTimer = 0;
   let board: BoardView | null = null;
   let guide: Guide | null = null;
 
@@ -81,9 +95,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const screen = h('div', 'pz-screen');
   phone.append(screen);
 
-  // ----- stage (left) -----
-  const stageSec = h('section', 'pz-stage');
-  stageSec.setAttribute('aria-label', T.stageAria);
+  // ----- top bar: back, level, task, stars, settings, and the board's buttons -----
   const back = h('button', 'pz-back', '‹');
   back.type = 'button';
   back.setAttribute('aria-label', T.backToMap);
@@ -94,24 +106,23 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const hud = h('div', 'pz-hud');
   const gear = roundButton(ICONS.gear, T.settingsAria, () => ctx.openSettings(screen));
   gear.classList.add('pz-hud-gear');
-  hud.append(back, badge, hudStars, gear);
+  const taskBtn = h('button', 'pz-task-btn');
+  taskBtn.type = 'button';
+  taskBtn.append(h('span', '', T.task), h('span', 'pz-task-caret', '▾'));
+  taskBtn.setAttribute('aria-expanded', 'true');
   const task = h('div', 'pz-task');
-  const taskHead = h('button', 'pz-task-head');
-  taskHead.type = 'button';
-  taskHead.append(h('b', '', T.task), h('span', 'pz-task-caret', '▾'));
-  taskHead.setAttribute('aria-expanded', 'true');
-  const taskBody = h('p', 'pz-task-body', level.task);
-  task.append(taskHead, taskBody);
+  task.id = 'pz-task-text';
+  taskBtn.setAttribute('aria-controls', task.id);
+  task.append(h('p', 'pz-task-body', level.task));
   function setTaskOpen(open: boolean): void {
     task.classList.toggle('is-closed', !open);
-    taskHead.setAttribute('aria-expanded', String(open));
+    taskBtn.setAttribute('aria-expanded', String(open));
   }
-  taskHead.addEventListener('click', () => setTaskOpen(task.classList.contains('is-closed')));
-  // View toggle: whole scene or close-up on the main character.
+  taskBtn.addEventListener('click', () => {
+    window.clearTimeout(taskTimer);
+    setTaskOpen(task.classList.contains('is-closed'));
+  });
   const heroId = mainCharacterId(level);
-  const viewBtn = h('button', 'pz-viewtoggle');
-  viewBtn.type = 'button';
-  viewBtn.hidden = heroId === null;
   const guided = hasGuide(level);
   /** Level 1's and level 5's first visit: the guide leads and cannot be skipped. */
   const forcedGuide = isGuideForced(level);
@@ -119,56 +130,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   replayBtn.type = 'button';
   replayBtn.hidden = !guided || forcedGuide;
   replayBtn.setAttribute('aria-label', T.guideReplayAria);
-  stageSec.append(stage.el, hud, viewBtn, replayBtn, task);
-  // The look's animated backdrop sits behind the transparent stage canvas.
-  stageSec.prepend(buildBackdrop('stage'));
 
-  /** What the camera does now: the player's remembered choice, else the whole scene (also while the game runs). */
-  function effectiveView(): StageView {
-    return rememberedView ?? 'follow';
-  }
-  function syncViewButton(): void {
-    const following = effectiveView() === 'follow';
-    viewBtn.textContent = following ? T.viewFollow : T.viewOverview;
-    viewBtn.setAttribute('aria-label', following ? T.viewToOverview : T.viewToFollow);
-    viewBtn.title = following ? T.viewToOverview : T.viewToFollow;
-  }
-  viewBtn.addEventListener('click', () => {
-    rememberedView = effectiveView() === 'follow' ? 'overview' : 'follow';
-    frameStage();
-  });
-
-  /** Tells the game view which part of the stage is free of the HUD and task box, so the scene fills that part. */
-  function frameStage(): void {
-    syncViewButton();
-    const H = stageSec.clientHeight;
-    if (H <= 0) return;
-    const topEdge = viewBtn.hidden ? hud.offsetTop + hud.offsetHeight : viewBtn.offsetTop + viewBtn.offsetHeight;
-    const top = Math.min(0.45, (topEdge + 8) / H);
-    const bottom = Math.min(0.55, (H - task.offsetTop + 8) / H);
-    const camera = level.base.nodes.find((n) => n.kind === 'camera');
-    const pitch = level.mode === '3d' && camera ? viewPitch(String(camera.params.view ?? 'free')).pitch : undefined;
-    const follow = heroId !== null && effectiveView() === 'follow' ? heroId : null;
-    stage.view.setStageFit({
-      top,
-      bottom,
-      follow,
-      heroScale: STAGE_CHARACTER_SCALE,
-      ...(pitch !== undefined ? { pitch } : {}),
-      ...(level.mode === '2d-side' ? { sidePitch: SIDE_TILT } : {}),
-    });
-  }
-  const stageObserver = new ResizeObserver(frameStage);
-  stageObserver.observe(stageSec);
-  stageObserver.observe(task);
-
-  // ----- board (right) -----
-  const boardEl = h('section', 'pz-board-host');
-  boardEl.setAttribute('aria-label', T.boardAria);
-  const bottom = h('div', 'pz-bottom');
-  const trayEl = h('div', 'pz-tray');
-  trayEl.setAttribute('role', 'group');
-  trayEl.setAttribute('aria-label', T.trayAria);
   const hintBtn = h('button', 'pz-btn small pz-hint-btn', '?');
   hintBtn.type = 'button';
   const hintCount = h('span', 'pz-hint-badge');
@@ -191,12 +153,151 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   runBtn.type = 'button';
   const actions = h('div', 'pz-actions');
   actions.append(hintBtn, resetBtn, runBtn);
-  bottom.append(trayEl, actions);
+  hud.append(back, badge, taskBtn, hudStars, gear, actions);
+
+  // ----- stage layer -----
+  const stageSec = h('section', 'pz-stage');
+  stageSec.setAttribute('aria-label', T.stageAria);
+  stageSec.append(stage.el);
+  // The look's animated backdrop sits behind the transparent stage canvas.
+  stageSec.prepend(buildBackdrop('stage'));
+
+  // ----- board layer -----
+  const boardEl = h('section', 'pz-board-host');
+  boardEl.setAttribute('aria-label', T.boardAria);
+  const bottom = h('div', 'pz-bottom');
+  const trayEl = h('div', 'pz-tray');
+  trayEl.setAttribute('role', 'group');
+  trayEl.setAttribute('aria-label', T.trayAria);
+  bottom.append(trayEl);
   boardEl.append(bottom);
 
+  // ----- swap controls -----
+  const pipHit = h('button', 'pz-pip-hit');
+  pipHit.type = 'button';
+  const camBar = h('div', 'pz-cam');
+  camBar.setAttribute('role', 'group');
+  camBar.setAttribute('aria-label', T.camTools);
+  const camButton = (icon: string, label: string, onClick: () => void): HTMLButtonElement => {
+    const btn = h('button', 'pz-btn small');
+    btn.type = 'button';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    btn.append(svg(icon));
+    btn.addEventListener('click', onClick);
+    return btn;
+  };
+  const zoomChip = h('span', 'pz-zoomchip');
+  zoomChip.hidden = true;
+  camBar.append(
+    camButton(ICONS.zoomIn, T.camZoomIn, () => zoomStep(ZOOM_STEP)),
+    camButton(ICONS.zoomOut, T.camZoomOut, () => zoomStep(1 / ZOOM_STEP)),
+    camButton(ICONS.recenter, T.camReset, () => resetCamera()),
+    camButton(ICONS.shrink, T.camBackToBoard, () => setFocus('board')),
+    zoomChip,
+  );
+
   const rotate = h('div', 'pz-rotate', T.rotate);
-  screen.append(stageSec, boardEl, rotate);
+  screen.classList.add('pz-noanim');
+  screen.dataset.focus = 'board';
+  screen.append(boardEl, stageSec, hud, task, replayBtn, camBar, pipHit, rotate);
   root.replaceChildren(phone);
+
+  // ----- picture-in-picture swap -----
+  let focus: Focus = 'board';
+  /** Share of the stage height the top bar covers (set by frameStage). */
+  let fitTop = 0;
+  /** The corner window on screen (also board px: both layers fill the screen); cards keep clear of it. */
+  let pipRect = { x: 0, y: 0, w: 0, h: 0 };
+
+  /** Sizes the corner window from the real screen; both layers keep their full layout size and are only scaled. */
+  function placePip(): void {
+    const W = screen.clientWidth;
+    const H = screen.clientHeight;
+    if (W <= 0 || H <= 0) return;
+    const gap = Math.round(W * PIP_GAP_SHARE);
+    const pw = Math.round(Math.min(PIP_MAX_PX, Math.max(PIP_MIN_PX, W * PIP_SHARE)));
+    const k = pw / W;
+    const ph = Math.round(H * k);
+    const set = (name: string, value: string): void => screen.style.setProperty(name, value);
+    set('--pip-k', String(k));
+    set('--pip-w', `${pw}px`);
+    set('--pip-h', `${ph}px`);
+    set('--pip-gap', `${gap}px`);
+    set('--pip-x', `${W - pw - gap}px`);
+    set('--pip-y', `${H - ph - gap}px`);
+    pipRect = { x: W - pw - gap, y: H - ph - gap, w: pw, h: ph };
+  }
+
+  function syncCamera(): void {
+    const st = stage.view.cameraState();
+    zoomChip.hidden = !st.custom;
+    zoomChip.textContent = `${st.zoom.toFixed(1)}×`;
+  }
+
+  /** The stage's own camera: drag, wheel, pinch and double tap, only while the stage is the big view. */
+  const cameraInput = attachStageCameraInput(stageSec, stage.view, () => focus === 'stage', syncCamera);
+
+  function zoomStep(factor: number): void {
+    const r = stageSec.getBoundingClientRect();
+    // The middle of the part of the stage the top bar leaves free.
+    const mid = fitTop + (1 - fitTop - STAGE_BOTTOM_COVER) / 2;
+    stage.view.zoomCamera(factor, r.left + r.width / 2, r.top + r.height * mid);
+    syncCamera();
+  }
+
+  function resetCamera(): void {
+    stage.view.resetStageCamera(true);
+    syncCamera();
+  }
+
+  /** Brings one layer full screen; the other shrinks into the corner window. */
+  function setFocus(next: Focus): void {
+    if (next === focus) return;
+    focus = next;
+    screen.dataset.focus = next;
+    stageSec.inert = next === 'board';
+    boardEl.inert = next === 'stage';
+    pipHit.setAttribute('aria-label', next === 'board' ? T.pipOpenStage : T.pipOpenBoard);
+    pipHit.title = pipHit.getAttribute('aria-label') ?? '';
+    board?.closePopover();
+    if (next === 'stage') setTaskOpen(false);
+    // The corner window always shows the default framing (it follows the character while the game runs).
+    if (next === 'board') resetCamera();
+    else syncCamera();
+  }
+  stageSec.inert = true;
+  pipHit.setAttribute('aria-label', T.pipOpenStage);
+  pipHit.title = T.pipOpenStage;
+  placePip();
+  // Start without the swap animation so the first frame is already in place.
+  requestAnimationFrame(() => requestAnimationFrame(() => screen.classList.remove('pz-noanim')));
+
+  /** Tells the game view which part of the stage the top bar covers, and whether to follow the character. */
+  function frameStage(): void {
+    const H = stageSec.clientHeight;
+    if (H <= 0) return;
+    const top = Math.min(0.45, (hud.offsetTop + hud.offsetHeight + 8) / H);
+    fitTop = top;
+    const camera = level.base.nodes.find((n) => n.kind === 'camera');
+    const pitch = level.mode === '3d' && camera ? viewPitch(String(camera.params.view ?? 'free')).pitch : undefined;
+    // Editing shows the whole scene; a running game follows the character (the player can pan and zoom from there).
+    const follow = heroId !== null && phase !== 'edit' ? heroId : null;
+    stage.view.setStageFit({
+      top,
+      bottom: STAGE_BOTTOM_COVER,
+      follow,
+      heroScale: STAGE_CHARACTER_SCALE,
+      ...(pitch !== undefined ? { pitch } : {}),
+      ...(level.mode === '2d-side' ? { sidePitch: SIDE_TILT } : {}),
+    });
+    syncCamera();
+  }
+  const screenObserver = new ResizeObserver(() => {
+    placePip();
+    frameStage();
+  });
+  screenObserver.observe(screen);
 
   // ----- stage helpers -----
   function showPreview(): void {
@@ -234,7 +335,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     board?.setRunning(false);
     root.querySelector('.pz-win')?.remove();
     setPhase('edit');
-    setTaskOpen(true);
+    setFocus('board');
     showPreview();
   }
 
@@ -303,14 +404,15 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     }
     setPhase('run');
     setTaskOpen(false);
+    setFocus('stage');
     board.setRunning(true, () => stage.view.getRuntime());
     watchRaf = requestAnimationFrame(watchTime);
   }
 
   stage.onEnd = finish;
 
-  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview });
-  guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit' });
+  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview, toastHost: screen, keepClear: () => ({ x: pipRect.x - PIP_CLEAR_PX, y: pipRect.y - PIP_CLEAR_PX, w: pipRect.w + 2 * PIP_CLEAR_PX, h: pipRect.h + 2 * PIP_CLEAR_PX }) });
+  guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit', showBoard: () => setFocus('board') });
 
   // ----- buttons -----
   runBtn.addEventListener('click', () => {
@@ -318,6 +420,14 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     if (phase === 'edit') run();
     else backToEdit();
   });
+  pipHit.addEventListener('click', () => {
+    // While the guide leads, the board stays in front: the cat points at it.
+    if (phase === 'edit' && guide?.active) return;
+    setFocus(focus === 'board' ? 'stage' : 'board');
+  });
+  // Touching the board puts the task text away.
+  boardEl.addEventListener('pointerdown', () => setTaskOpen(false), true);
+  taskTimer = window.setTimeout(() => setTaskOpen(false), TASK_SHOWN_MS);
   resetBtn.addEventListener('click', () => {
     if (phase !== 'edit') return;
     board?.reset();
@@ -368,8 +478,10 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     guide = null;
     window.clearTimeout(previewTimer);
     window.clearTimeout(loseTimer);
+    window.clearTimeout(taskTimer);
     stopWatch();
-    stageObserver.disconnect();
+    screenObserver.disconnect();
+    cameraInput.dispose();
     stage.onEnd = null;
     stage.view.stop();
     board?.destroy();

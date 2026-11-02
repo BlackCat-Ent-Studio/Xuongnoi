@@ -40,11 +40,23 @@ const FOLLOW_MIN_DISTANCE = 3.5;
 const FOLLOW_FRACTION_BIG_3D = 0.57;
 const FOLLOW_FRACTION_BIG_SIDE = 0.85;
 const FOLLOW_MIN_DISTANCE_BIG = 2;
+/** The 2D follow view never closes in past this many times the whole-scene view, so the door, button and flag around the character stay in sight. */
+const FOLLOW_CONTEXT_ZOOM = 3.2;
+/** Same idea for the 3D follow view (a distance, so a smaller factor looks as close). */
+const FOLLOW_CONTEXT_ZOOM_3D = 2.6;
 const FIT_EASE = 5;
 
 export function clamp(v: number, lo: number, hi: number): number {
   return Math.min(hi, Math.max(lo, v));
 }
+
+/** Keeps a view centre `v` so a view of half-size `half` stays inside [lo, hi]; a view bigger than the span centres on it. */
+export function clampCenter(v: number, lo: number, hi: number, half: number): number {
+  return hi - lo <= 2 * half ? (lo + hi) / 2 : clamp(v, lo + half, hi - half);
+}
+
+/** The player's own zoom on the stage camera, relative to the default framing (never past this). */
+export const USER_ZOOM_MAX = 4;
 
 export function clampPitch(p: number): number {
   return clamp(p, MIN_PITCH, MAX_PITCH);
@@ -206,6 +218,9 @@ export class CameraRig {
   private sidePitch = 0;
   private overview: OverviewFrame | null = null;
   private cur: { target: THREE.Vector3; size: number } | null = null;
+  /** Player camera on top of the stage framing: zoom multiplier (1 = default) and a free look-at point (null = follow the default). */
+  private userZoom = 1;
+  private userTarget: THREE.Vector3 | null = null;
 
   constructor(mode: ViewMode) {
     this.mode = mode;
@@ -255,6 +270,8 @@ export class CameraRig {
   /** Switches the fixed "fit the scene" framing on (with the covered fractions of the canvas) or off. */
   setFit(fit: StageFit | null): void {
     if (JSON.stringify(fit) === JSON.stringify(this.fit)) return;
+    // Starting or ending a follow hands the camera back to the default framing.
+    if ((fit?.follow ?? null) !== (this.fit?.follow ?? null)) this.resetUserCamera(true);
     this.fit = fit;
     this.fitDirty = true;
     this.following = false;
@@ -393,8 +410,11 @@ export class CameraRig {
         this.cur.target.lerp(goal.target, k);
         this.cur.size += (goal.size - this.cur.size) * k;
       }
-      this.view.target.copy(this.cur.target);
-      this.view.homeSize = this.cur.size;
+      const size = this.cur.size / this.userZoom;
+      const target = this.clampToScene(this.userTarget ?? this.cur.target, size, ov);
+      if (this.userTarget) this.userTarget.copy(target);
+      this.view.target.copy(target);
+      this.view.homeSize = size;
     }
     this.target.copy(this.view.target);
     this.snapNext = false;
@@ -414,10 +434,14 @@ export class CameraRig {
     const bigger = (this.fit?.heroScale ?? 1) > 1;
     const heroSeen = hero * (this.fit?.heroScale ?? 1);
     const fraction = bigger ? (this.mode === '3d' ? FOLLOW_FRACTION_BIG_3D : FOLLOW_FRACTION_BIG_SIDE) : FOLLOW_FRACTION;
-    const clampTo = (v: number, lo: number, hi: number, half: number): number => (hi - lo <= 2 * half ? (lo + hi) / 2 : clamp(v, lo + half, hi - half));
+    const clampTo = clampCenter;
     if (this.mode === '3d') {
       const tanV = Math.tan(THREE.MathUtils.degToRad(25));
-      const size = clamp(heroSeen / (2 * tanV * fraction), bigger ? FOLLOW_MIN_DISTANCE_BIG : FOLLOW_MIN_DISTANCE, ov.size);
+      const size = clamp(
+        Math.max(heroSeen / (2 * tanV * fraction), ov.size / FOLLOW_CONTEXT_ZOOM_3D),
+        bigger ? FOLLOW_MIN_DISTANCE_BIG : FOLLOW_MIN_DISTANCE,
+        ov.size,
+      );
       // Visible ground half-extent is about the distance times the frame's tangent; keep that inside the box.
       const halfX = size * tanV * virtAspect * 0.8;
       const halfZ = size * tanV * 0.8;
@@ -427,12 +451,99 @@ export class CameraRig {
       return { target: t, size };
     }
     const side = this.mode === '2d-side';
-    const size = clamp(heroSeen / fraction, bigger ? FIT_MIN_HEIGHT * 0.2 : FIT_MIN_HEIGHT * 0.5, ov.size);
+    const size = clamp(Math.max(heroSeen / fraction, ov.size / FOLLOW_CONTEXT_ZOOM), bigger ? FIT_MIN_HEIGHT * 0.2 : FIT_MIN_HEIGHT * 0.5, ov.size);
     const halfX = (size * virtAspect) / 2;
     const half = size / 2;
     const x = clampTo(e.position.x, b.min.x, b.max.x, halfX);
     if (side) return { target: new THREE.Vector3(x, clampTo(e.position.y, b.min.y, b.max.y, half), 0), size };
     return { target: new THREE.Vector3(x, 0, clampTo(e.position.z, b.min.z, b.max.z, half)), size };
+  }
+
+  /** The default framing the player's zoom is relative to (follow close-up or whole-scene fit). */
+  private defaultFrame(): { size: number; min: number } | null {
+    if (!this.cur || !this.overview) return null;
+    return { size: this.cur.size, min: Math.min(1, this.cur.size / this.overview.size) };
+  }
+
+  /** Keeps the view of the given size inside the scene box, so the level never leaves the picture. */
+  private clampToScene(t: THREE.Vector3, size: number, ov: OverviewFrame): THREE.Vector3 {
+    const b = ov.bounds;
+    const virtAspect = this.aspect / this.visibleFrac;
+    if (this.mode === '3d') {
+      const tanV = Math.tan(THREE.MathUtils.degToRad(25));
+      return new THREE.Vector3(
+        clampCenter(t.x, b.min.x, b.max.x, size * tanV * virtAspect * 0.8),
+        t.y,
+        clampCenter(t.z, b.min.z, b.max.z, size * tanV * 0.8),
+      );
+    }
+    const x = clampCenter(t.x, b.min.x, b.max.x, (size * virtAspect) / 2);
+    if (this.mode === '2d-side') return new THREE.Vector3(x, clampCenter(t.y, b.min.y, b.max.y, size / 2), 0);
+    return new THREE.Vector3(x, 0, clampCenter(t.z, b.min.z, b.max.z, size / 2));
+  }
+
+  /** Zoom of the player's camera relative to the default framing, and whether it differs from the default. */
+  get userCamera(): { zoom: number; custom: boolean } {
+    return { zoom: this.userZoom, custom: this.userZoom !== 1 || this.userTarget !== null };
+  }
+
+  /**
+   * Stage fit only. Multiplies the zoom by `factor` (clamped); `ndc` = pointer in -1..1 canvas coords. In 2D the
+   * world point under the pointer stays still, except while following a character: then the zoom stays on it.
+   */
+  userZoomBy(factor: number, ndc: { x: number; y: number } = { x: 0, y: 0 }): void {
+    const def = this.defaultFrame();
+    if (!this.fit || !def || !this.overview || !(factor > 0)) return;
+    const oldSize = def.size / this.userZoom;
+    this.userZoom = clamp(this.userZoom * factor, def.min, USER_ZOOM_MAX);
+    const newSize = def.size / this.userZoom;
+    const following = this.fit.follow != null && this.userTarget === null;
+    if (this.mode !== '3d' && !following) {
+      // The canvas shows the frame only between the covered top and bottom strips.
+      const fy = (1 - ndc.y) / 2;
+      const frameY = 1 - 2 * ((fy - this.fit.top) / this.visibleFrac);
+      const side = this.mode === '2d-side';
+      const t = this.userTarget ?? (this.userTarget = this.view.target.clone());
+      const c = zoomCenter({ u: t.x, v: side ? t.y : -t.z }, { x: ndc.x, y: frameY }, this.aspect / this.visibleFrac, oldSize, newSize);
+      t.x = c.u;
+      if (side) t.y = c.v;
+      else t.z = -c.v;
+    }
+    // Back at the default zoom of the whole-scene view the camera is simply the default again.
+    if (this.userZoom === 1 && !this.fit.follow) this.userTarget = null;
+  }
+
+  /** Stage fit only. Drag-pan by screen pixels; the camera stops following the character until reset. */
+  userPanBy(dx: number, dy: number): void {
+    const ov = this.overview;
+    if (!this.fit || !ov) return;
+    const free = this.userTarget ?? this.view.target.clone();
+    const size = this.view.homeSize;
+    const pxH = this.canvasHeight * this.visibleFrac;
+    if (this.mode === '3d') {
+      const tanV = Math.tan(THREE.MathUtils.degToRad(25));
+      const d = panGroundDelta(this.yaw, dx, dy / Math.max(0.3, Math.sin(this.pitch)), (2 * tanV * size) / Math.max(pxH, 1));
+      free.x += d.x;
+      free.z += d.z;
+    } else {
+      const d = panOrthoDelta(dx, dy, size, pxH);
+      free.x += d.u;
+      if (this.mode === '2d-side') free.y += d.v;
+      else free.z -= d.v;
+    }
+    this.userTarget = this.clampToScene(free, size, ov);
+  }
+
+  /** Back to the default framing (follow or whole scene). With `animate` the view eases there, else it jumps. */
+  resetUserCamera(animate: boolean): void {
+    if (this.cur && animate) {
+      this.cur.target.copy(this.view.target);
+      this.cur.size = this.view.homeSize;
+    } else {
+      this.cur = null;
+    }
+    this.userZoom = 1;
+    this.userTarget = null;
   }
 
   /** Orbit distance at which all eight corners of the scene box fit the (virtual) frame. */

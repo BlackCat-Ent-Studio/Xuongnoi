@@ -77,6 +77,10 @@ export interface BoardViewOptions {
   bottomEl: HTMLElement;
   /** Called after every change the player makes. */
   onChange(state: BoardState): void;
+  /** The part of the board (board px) a card must stay out of: the corner window. Read on every layout. */
+  keepClear?: () => Box | null;
+  /** Where the toast goes (default: the board). The level screen passes itself so a toast stays readable while the board is shrunk. */
+  toastHost?: HTMLElement;
 }
 
 export interface BoardView {
@@ -119,7 +123,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   toastEl.hidden = true;
   toastEl.setAttribute('role', 'status');
   board.prepend(world);
-  board.append(toastEl);
+  (opts.toastHost ?? board).append(toastEl);
 
   const energy = createWireEnergy(wireLayer);
   let state: BoardState = EMPTY_BOARD;
@@ -181,18 +185,21 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
    */
   function layout(): void {
     const bw = Math.max(1, board.clientWidth);
-    const bh = Math.max(1, board.clientHeight - bottomEl.offsetHeight - 10);
+    // The world starts below the top bar (CSS `top` of .wc-world); the bottom bar is the other end.
+    const bh = Math.max(1, board.clientHeight - world.offsetTop - bottomEl.offsetHeight - 10);
     area = { w: bw, h: bh };
     const c0 = Math.max(MIN_CARD_SCALE, Math.min(1, bw / 700));
+    const clear = opts.keepClear?.() ?? null;
+    const blocked: Box[] = clear ? [{ x: clear.x, y: clear.y - world.offsetTop, w: clear.w, h: clear.h }] : [];
     const natural = [...cards].map(([id, box]) => {
       const p = positions.get(id) ?? { x: 0, y: 0 };
       return { id, x: p.x * spreadX(), y: p.y * spreadY(), w: box.offsetWidth, h: box.offsetHeight };
     });
     let result = separateBoxes([], area);
     cardScale = c0;
-    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8]) {
+    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58]) {
       cardScale = c;
-      result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8);
+      result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8, blocked);
       if (result.fits) break;
     }
     for (const [id, box] of cards) {
@@ -206,11 +213,13 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     }
   }
 
-  /** Centre of a pin in board coordinates. */
+  /** Centre of a pin in board coordinates (undoes the shrink while the board sits in the corner). */
   function dotCenter(dot: Element): { x: number; y: number } {
     const r = dot.getBoundingClientRect();
     const w = world.getBoundingClientRect();
-    return { x: r.left + r.width / 2 - w.left, y: r.top + r.height / 2 - w.top };
+    const b = board.getBoundingClientRect();
+    const k = board.offsetWidth > 0 && b.width > 0 ? b.width / board.offsetWidth : 1;
+    return { x: (r.left + r.width / 2 - w.left) / k, y: (r.top + r.height / 2 - w.top) / k };
   }
 
   // ---------- nodes ----------
@@ -365,7 +374,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const probe = placePiece(level, state, slot, { x: 0, y: 0 });
     const placed = probe?.placed[probe.placed.length - 1];
     if (!probe || !placed) return;
-    const taken: Box[] = [];
+    const clear = opts.keepClear?.() ?? null;
+    const taken: Box[] = clear ? [{ x: clear.x, y: clear.y - world.offsetTop, w: clear.w, h: clear.h }] : [];
     for (const [id, box] of cards) {
       const p = placedAt.get(id);
       if (p) taken.push({ x: p.x, y: p.y, w: box.offsetWidth * cardScale, h: box.offsetHeight * cardScale });

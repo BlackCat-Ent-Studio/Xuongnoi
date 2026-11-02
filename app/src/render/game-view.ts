@@ -255,9 +255,9 @@ export function createGameView(options: GameViewOptions = {}): GameView {
 
   function applySize(): void {
     if (!container || !renderer) return;
-    const rect = container.getBoundingClientRect();
-    width = Math.max(1, Math.floor(rect.width));
-    height = Math.max(1, Math.floor(rect.height));
+    // Layout size, not the on-screen box: the puzzle stage is scaled into a corner window by a transform.
+    width = Math.max(1, container.clientWidth);
+    height = Math.max(1, container.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setSize(width, height, false);
     rig.resize(width, height);
@@ -320,6 +320,15 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     if (drag && drag.id === e.pointerId) {
       drag = null;
       syncChrome();
+    }
+  }
+
+  /** Redraws after the player moved the stage camera; a finished run (loop stopped) is redrawn from its last frame. */
+  function redrawCamera(): void {
+    if (playing) {
+      if (!rafId) draw(0, true);
+    } else {
+      redrawStatic();
     }
   }
 
@@ -496,6 +505,24 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     onRestartRequest(cb): void {
       restartCallbacks.push(cb);
     },
+
+    panCamera(dxPx: number, dyPx: number): void {
+      rig.userPanBy(dxPx, dyPx);
+      redrawCamera();
+    },
+
+    zoomCamera(factor: number, clientX: number, clientY: number): void {
+      const ndc = toNdc(clientX, clientY);
+      rig.userZoomBy(factor, ndc ? { x: ndc.x, y: ndc.y } : undefined);
+      redrawCamera();
+    },
+
+    resetStageCamera(animate = true): void {
+      rig.resetUserCamera(animate && playing && rafId !== 0);
+      redrawCamera();
+    },
+
+    cameraState: () => rig.userCamera,
 
     resize(): void {
       applySize();

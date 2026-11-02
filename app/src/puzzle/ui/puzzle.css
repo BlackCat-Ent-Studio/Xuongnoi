@@ -34,33 +34,52 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 @media (min-width: 1000px) and (min-height: 560px) {
   .pz-phone { width: min(calc(100vw - 32px), calc((100dvh - 32px) * 844 / 390)); height: auto; aspect-ratio: 844 / 390; padding: 1.2cqw; border-radius: 4.2cqw; box-shadow: 0 2cqw 5cqw -1cqw rgba(0, 0, 0, .6), inset 0 0 0 .3cqw #2c2466; }
 }
-.pz-screen { position: relative; width: 100%; height: 100%; overflow: hidden; display: grid; grid-template-columns: 44% 56%; background: var(--board); }
+.pz-screen { position: relative; width: 100%; height: 100%; overflow: hidden; background: var(--board); }
 @media (min-width: 1000px) and (min-height: 560px) { .pz-screen { border-radius: 3.2cqw; } }
 
-.pz-stage { position: relative; background: var(--stage); min-width: 0; }
+/* Board and stage are two full-size layers. The one in front is full screen; the other is the same layer scaled
+   into the bottom-right corner (a live picture-in-picture). Swapping them only moves transform and opacity.
+   --pip-k / --pip-x / --pip-y are set by the level screen from the real screen size. */
+.pz-screen { --pip-k: .25; --pip-x: 0px; --pip-y: 0px; --pip-w: 25cqw; --pip-h: 12cqw; --pip-gap: 1.4cqw; }
+.pz-stage, .pz-screen .pz-board-host { position: absolute; inset: 0; z-index: 1; min-width: 0; overflow: hidden; transform-origin: 0 0; transition: transform .42s cubic-bezier(.3, .85, .3, 1); will-change: transform; }
+.pz-stage { background: var(--stage); }
+.pz-screen[data-focus="board"] .pz-stage, .pz-screen[data-focus="stage"] .pz-board-host { z-index: 10; transform: translate(var(--pip-x), var(--pip-y)) scale(var(--pip-k)); border-radius: calc(12px / var(--pip-k)); box-shadow: 0 calc(8px / var(--pip-k)) calc(18px / var(--pip-k)) calc(-4px / var(--pip-k)) rgba(0, 0, 0, .65); }
+.pz-stage::after, .pz-screen .pz-board-host::after { content: ''; position: absolute; inset: 0; z-index: 40; border-radius: inherit; pointer-events: none; box-shadow: inset 0 0 0 calc(3px / var(--pip-k)) var(--sun); opacity: 0; transition: opacity .3s; }
+.pz-screen[data-focus="board"] .pz-stage::after, .pz-screen[data-focus="stage"] .pz-board-host::after { opacity: 1; }
+.pz-screen.pz-noanim .pz-stage, .pz-screen.pz-noanim .pz-board-host, .pz-screen.pz-noanim .pz-stage::after, .pz-screen.pz-noanim .pz-board-host::after { transition: none; }
+/* the tap target over the corner window (not scaled, so it keeps a real finger size) */
+.pz-pip-hit { position: absolute; z-index: 12; left: var(--pip-x); top: var(--pip-y); width: var(--pip-w); height: var(--pip-h); padding: 0; border: 0; border-radius: 12px; background: transparent; cursor: pointer; }
+.pz-pip-hit:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
 .pz-stage-host { position: absolute; inset: 0; overflow: hidden; }
 .pz-stage-host .cam-reset { display: none !important; }
-.pz-hud { position: absolute; left: 1.6cqw; right: 1.6cqw; top: 1.4cqw; display: flex; align-items: center; gap: 1cqw; pointer-events: none; }
+.pz-hud { position: absolute; z-index: 11; left: 1.6cqw; right: 1.6cqw; top: 1.4cqw; display: flex; align-items: center; gap: 1cqw; pointer-events: none; }
 .pz-hud > * { pointer-events: auto; }
 .pz-back { flex: none; width: max(40px, 4.4cqw); height: max(40px, 4.4cqw); border: 0; border-radius: 50%; background: var(--ink-dark); color: var(--ink); font: 800 max(22px, 2.8cqw)/1 var(--display); cursor: pointer; box-shadow: 0 .4cqw 0 #0e0a26; padding: 0 0 .3cqw; }
 .pz-badge { font-family: var(--display); font-weight: 800; font-size: max(13px, 1.9cqw); background: var(--ink-dark); color: var(--ink); padding: .5cqw 1.3cqw; border-radius: 99px; box-shadow: 0 .4cqw 0 #0e0a26; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .pz-hud .pz-stars { margin-left: auto; gap: .4cqw; flex: none; }
 .pz-hud .pz-stars i { width: max(16px, 2.8cqw); height: max(16px, 2.8cqw); }
-.pz-viewtoggle { position: absolute; right: 1.6cqw; top: calc(1.4cqw + max(40px, 4.4cqw) + .6cqw); min-height: 40px; padding: 0 max(12px, 1.4cqw); border: 0; border-radius: 99px; background: var(--ink-dark); color: var(--ink); font: 700 max(12px, 1.4cqw) var(--body); cursor: pointer; box-shadow: 0 .4cqw 0 #0e0a26; white-space: nowrap; }
-.pz-viewtoggle[hidden] { display: none; }
-.pz-task { position: absolute; left: 1.6cqw; right: 1.6cqw; bottom: 1.6cqw; max-height: 38%; overflow: auto; background: #fffdf4; color: var(--ink-dark); border-radius: 1.6cqw; padding: .3cqw 1.4cqw .8cqw; font-size: max(12px, 1.5cqw); line-height: 1.3; box-shadow: 0 .5cqw 0 #c8b98a; }
-.pz-task-head { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 40px; padding: 0; border: 0; background: none; cursor: pointer; color: #8a5a00; }
-.pz-task-head b { font-family: var(--display); font-size: max(13px, 1.8cqw); }
-.pz-task-caret { font-size: max(14px, 1.9cqw); transition: transform .15s; }
-.pz-task.is-closed { padding-bottom: .3cqw; }
-.pz-task.is-closed .pz-task-body { display: none; }
-.pz-task.is-closed .pz-task-caret { transform: rotate(180deg); }
+.pz-hud .pz-actions { margin-left: .6cqw; }
+.pz-hud .pz-btn.run { font-size: max(15px, 2.2cqw); padding: .5cqw 2cqw; }
+/* the task: a button in the top bar opens the text just under it */
+.pz-task-btn { flex: none; display: inline-flex; align-items: center; gap: .6cqw; min-height: 40px; padding: 0 max(10px, 1.3cqw); border: 0; border-radius: 99px; background: #fffdf4; color: #8a5a00; font: 800 max(13px, 1.8cqw) var(--display); cursor: pointer; box-shadow: 0 .4cqw 0 #c8b98a; }
+.pz-task-caret { font-size: max(12px, 1.5cqw); transition: transform .15s; }
+.pz-task-btn[aria-expanded="true"] .pz-task-caret { transform: rotate(180deg); }
+.pz-task { position: absolute; z-index: 11; left: 1.6cqw; top: calc(1.4cqw + max(40px, 4.4cqw) + .8cqw); width: min(44cqw, 560px); max-height: 46%; overflow: auto; background: #fffdf4; color: var(--ink-dark); border-radius: 1.6cqw; padding: 1cqw 1.4cqw 1.1cqw; font-size: max(12px, 1.5cqw); line-height: 1.35; box-shadow: 0 .5cqw 0 #c8b98a; }
+.pz-task.is-closed { display: none; }
 .pz-task-body { margin: 0; }
+/* camera tools: only while the stage is the big view */
+.pz-cam { position: absolute; z-index: 11; right: 1.6cqw; top: calc(1.4cqw + max(40px, 4.4cqw) + .8cqw); display: none; flex-direction: column; align-items: center; gap: .8cqw; }
+.pz-screen[data-focus="stage"] .pz-cam { display: flex; }
+.pz-cam .pz-btn.small svg { width: 58%; height: 58%; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.pz-zoomchip { min-width: 40px; padding: .3cqw 1cqw; border-radius: 99px; background: rgba(36, 21, 16, .78); color: #fff1d0; font: 800 max(11px, 1.3cqw)/1.2 var(--display); text-align: center; }
+.pz-zoomchip[hidden] { display: none; }
+.pz-screen[data-focus="stage"] .pz-replay { display: none; }
 
 /* ---------- board ---------- */
-.pz-board-host { position: relative; min-width: 0; }
 .pz-board { --g-bg: var(--board); --g-dot: var(--board-dot); position: relative; cursor: default; background-size: 2.4cqw 2.4cqw; background-image: radial-gradient(var(--board-dot) .18cqw, transparent .2cqw); }
 .pz-board-host.pz-board { overflow: hidden; }
+/* cards live below the top bar; the bottom bar keeps room for the corner window */
+.pz-board .wc-world { top: calc(1.4cqw + max(40px, 4.4cqw) + 1cqw); }
 .pz-board .wc-wire-hit { stroke-width: 22; }
 .pz-board .wc-node .wc-dot { width: 15px; height: 15px; }
 .pz-board.wiring .wc-port.pick .wc-dot { transform: scale(1.5); box-shadow: 0 0 0 3px #fff; }
@@ -80,10 +99,10 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .pz-board .pz-param-go { opacity: .7; }
 .pz-board.readonly .pz-param { opacity: .6; cursor: default; }
 
-.pz-toast { position: absolute; left: 50%; top: 1.4cqw; transform: translateX(-50%); z-index: 8; max-width: 92%; background: #0e1438; color: var(--ink); border: .2cqw solid var(--sun); padding: .6cqw 1.4cqw; border-radius: 99px; font-size: max(12px, 1.45cqw); text-align: center; pointer-events: none; }
+.pz-toast { position: absolute; left: 50%; top: calc(1.4cqw + max(40px, 4.4cqw) + 1cqw); transform: translateX(-50%); z-index: 14; max-width: 92%; background: #0e1438; color: var(--ink); border: .2cqw solid var(--sun); padding: .6cqw 1.4cqw; border-radius: 99px; font-size: max(12px, 1.45cqw); text-align: center; pointer-events: none; }
 .pz-toast[hidden] { display: none; }
 
-.pz-bottom { position: absolute; left: 1.4cqw; right: 1.4cqw; bottom: 1.4cqw; z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 1cqw; pointer-events: none; }
+.pz-bottom { position: absolute; left: 1.4cqw; right: calc(var(--pip-w) + 2 * var(--pip-gap)); bottom: 1.4cqw; z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 1cqw; pointer-events: none; }
 .pz-bottom > * { pointer-events: auto; }
 .pz-tray { display: flex; flex-wrap: wrap; gap: .9cqw; align-items: flex-end; min-width: 0; }
 .pz-chip { border: 0; cursor: pointer; min-height: 40px; font: 800 max(12px, 1.35cqw)/1.1 var(--display); color: #10151b; background: var(--cc); padding: .7cqw 1cqw; border-radius: 1.2cqw; box-shadow: 0 .5cqw 0 rgba(0, 0, 0, .35); display: grid; text-align: left; }
@@ -134,5 +153,5 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pz-btn, .pz-chip { transition: none; }
+  .pz-btn, .pz-chip, .pz-stage, .pz-screen .pz-board-host, .pz-stage::after, .pz-screen .pz-board-host::after { transition: none; }
 }
