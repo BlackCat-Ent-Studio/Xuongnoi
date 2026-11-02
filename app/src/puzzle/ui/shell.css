@@ -49,16 +49,15 @@
 .pz-tagline { font: 600 max(11px, 1.9cqw) var(--display); color: #4a2d1a; margin: .3cqw 0 0; }
 
 /* ---------- title ---------- */
-.pz-s-title .pz-play, .pz-s-end .pz-play { position: absolute; left: 52.5%; top: 22.5cqw; transform: translateX(-50%); font-size: 5.2cqw; padding: .5cqw 6cqw .4cqw 4.4cqw; border-radius: 99px; animation: pz-pulse 2.6s ease-in-out infinite; }
+.pz-s-title .pz-play, .pz-s-end .pz-play { position: absolute; left: 52.5%; top: 22.5cqw; translate: -50% 0; font-size: 5.2cqw; padding: .5cqw 6cqw .4cqw 4.4cqw; border-radius: 99px; animation: pz-pulse 2.6s ease-in-out infinite; }
 .pz-s-title .pz-play { left: 50%; }
 .pz-play svg { width: 4.4cqw; height: 4.4cqw; fill: var(--a-wood-1); stroke: var(--a-wood-1); stroke-width: 2; stroke-linejoin: round; }
-.pz-play:active { animation: none; transform: translateX(-50%) translateY(.45cqw); }
-@keyframes pz-pulse { 50% { transform: translateX(-50%) scale(1.04); } }
-.pz-settings-btn { position: absolute; left: 50%; top: 33.4cqw; transform: translateX(-50%); font-size: max(14px, 2.4cqw); padding: .5cqw 2.4cqw; border-radius: 99px; }
+.pz-play:active { animation: none; transform: translateY(.45cqw); }
+@keyframes pz-pulse { 50% { transform: scale(1.04); } }
+.pz-settings-btn { position: absolute; left: 50%; top: 33.4cqw; translate: -50% 0; font-size: max(14px, 2.4cqw); padding: .5cqw 2.4cqw; border-radius: 99px; }
 /* the bench props sit where the title buttons go: keep the title clear */
 .pz-s-title .pz-props { display: none; }
 .pz-settings-btn svg { width: 2.8cqw; height: 2.8cqw; }
-.pz-settings-btn:active { transform: translateX(-50%) translateY(.3cqw); }
 .pz-cat-bubble { position: absolute; left: 22cqw; top: 23cqw; background: linear-gradient(var(--a-cream), var(--a-cream-2)); color: var(--a-wood-1); font: 600 max(12px, 1.6cqw)/1.3 var(--body); padding: .9cqw 1.3cqw; border-radius: 1.8cqw; box-shadow: 0 .5cqw 0 var(--a-cream-3); white-space: nowrap; animation: pz-bob 4.2s ease-in-out infinite; }
 .pz-cat-bubble::before { content: ""; position: absolute; left: -.9cqw; bottom: 1.1cqw; border: .6cqw solid transparent; border-right: 1.2cqw solid var(--a-cream); border-left: 0; }
 @keyframes pz-bob { 50% { transform: translateY(-.7cqw); } }
