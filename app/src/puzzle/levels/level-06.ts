@@ -7,7 +7,7 @@ export const level06: PuzzleLevel = {
   order: 6,
   title: 'Né lính gác',
   task: 'Mèo nhỏ muốn chạy tới ô xanh, nhưng mèo lính gác đi tuần ngang đường. Chạm vào lính gác là thua! Hãy bắt mèo nhỏ ĐỨNG CHỜ khi lính gác ở gần, và chạy khi lính gác đã xa.',
-  hint: 'Đặt "Khoảng cách" đo giữa mèo nhỏ và lính gác (nối hai "Nhân vật"). "Đủ gần" bật khi lính gác ở gần. Cho nó qua "Không" rồi nối vào "Cho đi" của mèo nhỏ. Chỉnh số "Ngưỡng": nhỏ quá mèo chạy liều, lớn quá mèo đứng mãi.',
+  hint: 'Đặt "Đo khoảng cách" đo giữa mèo nhỏ và lính gác (nối hai "Nhân vật"). "Trong tầm" bật khi lính gác ở gần. Cho nó qua "Đảo ngược" rồi nối vào "Cho đi" của mèo nhỏ. Chỉnh số "Ngưỡng": nhỏ quá mèo chạy liều, lớn quá mèo đứng mãi.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.catQuad],
   base: {

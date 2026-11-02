@@ -7,7 +7,7 @@ export const level07: PuzzleLevel = {
   order: 7,
   title: 'Cầu nhấp nháy',
   task: 'Cây cầu cứ lúc hiện lúc ẩn. Rô-bốt chỉ được lăn khi cầu đang hiện, nếu không sẽ rơi xuống nước! Hãy làm cầu nhấp nháy theo giờ, và cho rô-bốt đi khi cầu hiện.',
-  hint: '"Hẹn giờ" đã được đặt "Tự lặp lại" nên cứ hết giờ là "Hết giờ" bật một nhịp rồi đếm lại. Nối "Hết giờ" vào "Đảo" của "Công tắc nhớ". Khi công tắc bật: rô-bốt "Cho đi". Nối "Đang bật" qua "Không" vào "Ẩn khi bật" của cầu: công tắc bật thì cầu hiện, tắt thì cầu ẩn. Cho đồng hồ đủ giây để rô-bốt qua hết cầu.',
+  hint: '"Hẹn giờ" đã được đặt "Tự lặp lại" nên cứ hết giờ là "Hết giờ" bật một nhịp rồi đếm lại. Nối "Hết giờ" vào "Đảo" của "Công tắc nhớ". Khi công tắc bật: rô-bốt "Cho đi". Nối "Đang bật" qua "Đảo ngược" vào "Ẩn suốt lúc bật" của cầu: công tắc bật thì cầu hiện, tắt thì cầu ẩn. Cho đồng hồ đủ giây để rô-bốt qua hết cầu.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotWheel],
   base: {

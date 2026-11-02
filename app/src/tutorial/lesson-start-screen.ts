@@ -5,7 +5,7 @@ import { type NodeSpec, type WireSpec, setParamStep, textChanged } from './cours
 import type { Lesson } from './types';
 
 /**
- * "Màn hình bắt đầu": a start screen and an on-screen button that opens a door, and a countdown that waits for the
+ * "Màn hình mở đầu": a start screen and an on-screen button that opens a door, and a countdown that waits for the
  * start. Self-contained: shared builders arrive through `LessonKit`.
  */
 

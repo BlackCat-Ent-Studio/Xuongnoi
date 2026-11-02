@@ -3,17 +3,17 @@ import { asObject, numParam } from './util';
 
 export const distanceNode: NodeDef<undefined> = {
   kind: 'distance',
-  label: 'Khoảng cách',
+  label: 'Đo khoảng cách',
   category: 'logic',
   description:
-    'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). "Đủ gần" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Đủ gần" tắt.',
+    'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). "Trong tầm" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Trong tầm" tắt.',
   inputs: [
-    { id: 'a', type: 'object', label: 'Vật A', required: true },
-    { id: 'b', type: 'object', label: 'Vật B', required: true },
+    { id: 'a', type: 'object', label: 'Vật 1', required: true },
+    { id: 'b', type: 'object', label: 'Vật 2', required: true },
   ],
   outputs: [
     { id: 'distance', type: 'number', label: 'Khoảng cách' },
-    { id: 'within', type: 'bool', label: 'Đủ gần' },
+    { id: 'within', type: 'bool', label: 'Trong tầm' },
   ],
   params: [{ id: 'threshold', label: 'Ngưỡng "đủ gần"', kind: 'number', default: 3, min: 0, step: 0.5 }],
   evaluate(ctx, i, params) {

@@ -20,9 +20,9 @@ const T = {
   watch: { title: 'Xem thử trước', text: 'Bấm "Chơi", thử chạy sang phải. Cổng chặn đường, chưa qua được.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng" để làm tiếp.' },
   zone: {
-    title: 'Thêm Cảm biến vùng',
-    text: 'Kéo mảnh ghép "Cảm biến vùng" (nhóm Logic) vào bảng. Một hộp xanh mờ sẽ hiện quanh bệ vàng.',
-    explain: 'Cảm biến vùng là một hộp vô hình, nó biết có ai đang đứng trong hộp hay không. Lúc chơi hộp biến mất, chỉ còn tín hiệu.',
+    title: 'Thêm Vùng kích hoạt',
+    text: 'Kéo mảnh ghép "Vùng kích hoạt" (nhóm Logic) vào bảng. Một hộp xanh mờ sẽ hiện quanh bệ vàng.',
+    explain: 'Vùng kích hoạt là một hộp vô hình, nó biết có ai đang đứng trong hộp hay không. Lúc chơi hộp biến mất, chỉ còn tín hiệu.',
   },
   random: {
     title: 'Thêm Số ngẫu nhiên',
@@ -36,7 +36,7 @@ const T = {
   },
   andIn: {
     title: 'Bấm E và đứng trong vùng',
-    text: 'Nối "Vừa bấm" của Phím bấm (phím E) sang cổng "A" của mảnh ghép Và. Rồi nối "Có ai trong vùng" của Cảm biến vùng sang cổng "B".',
+    text: 'Nối "Vừa nhấn" của Phím bấm (phím E) sang cổng "A" của mảnh ghép Và. Rồi nối "Có ai trong vùng" của Vùng kích hoạt sang cổng "B".',
   },
   roll: {
     title: 'Cho phép tung',
@@ -53,14 +53,14 @@ const T = {
     title: 'Thêm So sánh',
     text: 'Kéo mảnh ghép "So sánh" (nhóm Logic) vào bảng. Mặc định nó là "≥ lớn hơn hoặc bằng", đúng điều ta cần.',
   },
-  const: { title: 'Thêm Hằng số', text: 'Kéo mảnh ghép "Hằng số" (nhóm Toán) vào bảng.' },
+  const: { title: 'Thêm Số cố định', text: 'Kéo mảnh ghép "Số cố định" (nhóm Toán) vào bảng.' },
   five: {
     title: 'Đặt số 5',
-    text: 'Chọn mảnh ghép Hằng số. Ở Thuộc tính, đổi "Giá trị" thành 5.',
+    text: 'Chọn mảnh ghép Số cố định. Ở Thuộc tính, đổi "Giá trị" thành 5.',
   },
   compareWire: {
     title: 'Số tung có từ 5 trở lên không?',
-    text: 'Nối "Số" của Số ngẫu nhiên sang "Số A" của So sánh. Rồi nối "Số" của Hằng số sang "Số B".',
+    text: 'Nối "Số" của Số ngẫu nhiên sang "Số A" của So sánh. Rồi nối "Số" của Số cố định sang "Số B".',
     explain: 'So sánh bật lên khi Số A lớn hơn hoặc bằng Số B, tức là khi tung được 5 hoặc 6.',
   },
   latch: {
@@ -74,7 +74,7 @@ const T = {
   },
   gate: {
     title: 'Mở cổng',
-    text: 'Nối "Đang bật" của Công tắc nhớ sang cổng "Ẩn đi" của hộp cổng xám (hộp cao, màu xám).',
+    text: 'Nối "Đang bật" của Công tắc nhớ sang cổng "Ẩn đi (1 nhịp)" của hộp cổng xám (hộp cao, màu xám).',
     explain: 'Hộp bị ẩn thì biến mất và không còn chặn đường nữa.',
   },
   playRoll: {
@@ -83,22 +83,22 @@ const T = {
   },
   edit2: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng". Ta sẽ làm lá cờ chiến thắng.' },
   distance: {
-    title: 'Thêm Khoảng cách',
-    text: 'Kéo mảnh ghép "Khoảng cách" (nhóm Logic) vào bảng.',
-    explain: 'Nó đo xem hai vật cách nhau bao xa. Khi đủ gần (mặc định trong 3 ô), cổng "Đủ gần" bật lên.',
+    title: 'Thêm Đo khoảng cách',
+    text: 'Kéo mảnh ghép "Đo khoảng cách" (nhóm Logic) vào bảng.',
+    explain: 'Nó đo xem hai vật cách nhau bao xa. Khi đủ gần (mặc định trong 3 ô), cổng "Trong tầm" bật lên.',
   },
   distanceWire: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật A", và cổng "Hộp" của lá cờ đỏ sang "Vật B" của Khoảng cách.',
+    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Hộp" của lá cờ đỏ sang "Vật 2" của Đo khoảng cách.',
   },
   show2: { title: 'Thêm Hiện số thứ hai', text: 'Kéo thêm một mảnh ghép "Hiện số" nữa vào bảng.' },
   show2Wire: {
     title: 'Xem khoảng cách',
-    text: 'Nối cổng "Khoảng cách" của mảnh ghép Khoảng cách sang "Số cần hiện" của Hiện số mới.',
+    text: 'Nối cổng "Khoảng cách" của mảnh ghép Đo khoảng cách sang "Số cần hiện" của Hiện số mới.',
     explain: 'Con số nhỏ dần khi bạn tiến lại gần cờ. Hai ô số đều tên "Điểm": muốn đổi, chọn mảnh ghép Hiện số rồi sửa "Tên hiển thị".',
   },
-  end: { title: 'Thêm mảnh ghép Thắng/Thua', text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.' },
-  win: { title: 'Tới gần cờ là thắng', text: 'Nối "Đủ gần" của Khoảng cách sang cổng "Thắng" của Thắng/Thua.' },
+  end: { title: 'Thêm mảnh ghép Thắng / Thua', text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.' },
+  win: { title: 'Tới gần cờ là thắng', text: 'Nối "Trong tầm" của Đo khoảng cách sang cổng "Thắng" của Thắng / Thua.' },
   play: {
     title: 'Chơi tới cờ',
     text: 'Bấm "Chơi", đứng trên bệ, bấm E cho tới khi cổng mở, rồi chạy tới lá cờ đỏ.',

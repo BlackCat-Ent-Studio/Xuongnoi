@@ -1,6 +1,7 @@
 import { listNodeDefs } from '../engine/registry';
 import type { NodeCategory } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
+import { nodeSearchAliases } from '../nodes/node-names';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
@@ -26,6 +27,8 @@ export interface PaletteDeps {
 interface Entry {
   kind: string;
   title: string;
+  titleEn: string;
+  aliases: string[];
   description: string;
   category: NodeCategory;
 }
@@ -67,6 +70,8 @@ export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): Palette
     entries = listNodeDefs(state.getMode()).map((d) => ({
       kind: d.kind,
       title: d.label,
+      titleEn: d.labelEn ?? '',
+      aliases: nodeSearchAliases(d.kind),
       description: d.description,
       category: d.category,
     }));
@@ -78,7 +83,9 @@ export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): Palette
     item.dataset.kind = entry.kind;
     item.title = `${entry.description} ${P.addTip}`;
     const txt = h('span', 'pn-item-text');
-    txt.append(h('b', '', entry.title), h('small', '', entry.description));
+    const name = h('b', '', entry.title);
+    if (entry.titleEn) name.append(h('span', 'pn-en', entry.titleEn));
+    txt.append(name, h('small', '', entry.description));
     item.append(categoryTile(entry.category), txt, createHandbookHelpButton(entry.kind, entry.title));
     attachDrag(item, entry);
     return item;

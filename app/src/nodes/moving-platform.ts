@@ -30,7 +30,7 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
   outputs: [
     { id: 'self', type: 'object', label: 'Bệ' },
     { id: 'moving', type: 'bool', label: 'Đang chạy' },
-    { id: 'arrived', type: 'bool', label: 'Vừa tới đầu mút' },
+    { id: 'arrived', type: 'bool', label: 'Vừa tới cuối đường' },
   ],
   params: [
     { id: 'position', label: 'Điểm A (xuất phát)', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },

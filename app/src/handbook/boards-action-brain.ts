@@ -52,7 +52,7 @@ const thing = (alias: string, x: number, z: number, extra: Params = {}): NodeSpe
 
 export const carryBoard = (): Board =>
   build(
-    'Thử: Cầm / Thả',
+    'Thử: Khiêng đồ',
     '2d-top',
     [STICK, hero(-3, 0), key('grab', 'KeyE', 190), key('drop', 'KeyQ', 330), key('toss', 'KeyF', 470), { alias: 'carry', kind: 'carry', x: 560, y: 20 }, thing('ball', -1.5, 0, { shape: 'ball' })],
     [...MOVE, ['hero', 'self', 'carry', 'character'], ['grab', 'pressed', 'carry', 'grab'], ['drop', 'pressed', 'carry', 'drop'], ['toss', 'pressed', 'carry', 'throw']],
@@ -77,7 +77,7 @@ export const interactBoard = (): Board =>
 
 export const handToolBoard = (): Board =>
   build(
-    'Thử: Cầm tay',
+    'Thử: Cầm dụng cụ',
     '2d-top',
     [
       STICK,
@@ -140,7 +140,7 @@ export const enterExitBoard = (): Board =>
 
 export const cargoBoard = (): Board =>
   build(
-    'Thử: Chất / Dỡ hàng',
+    'Thử: Chở hàng',
     '2d-top',
     [
       STICK,
@@ -201,13 +201,13 @@ export const shooterBoard = (): Board =>
       { alias: 'hp', kind: 'health', x: 560, y: 260, params: { maxHp: 4 } },
     ],
     [...MOVE, ['hero', 'self', 'gun', 'shooter'], ['dummy', 'self', 'gun', 'target'], ['fire', 'pressed', 'gun', 'fire'], ['dummy', 'self', 'hp', 'self']],
-    'Chơi: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Mục tiêu" để đạn bay theo hướng bạn nhìn.',
+    'Chơi: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Ngắm vào" để đạn bay theo hướng bạn nhìn.',
     'blue',
   );
 
 export const spawnerBoard = (): Board =>
   build(
-    'Thử: Sinh vật thể',
+    'Thử: Tạo vật mới',
     '2d-top',
     [
       STICK,
@@ -313,7 +313,7 @@ export const sequenceBoard = (): Board =>
 
 export const fightBoard = (): Board =>
   build(
-    'Thử: Đánh nhau',
+    'Thử: Đánh địch',
     '2d-top',
     [
       STICK,

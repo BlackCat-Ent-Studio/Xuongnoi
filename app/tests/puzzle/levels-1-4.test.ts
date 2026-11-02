@@ -139,7 +139,7 @@ const spareKinds = (level: PuzzleLevel): string[] =>
 const DECOYS: Array<[string, PuzzleLevel, string, PuzzleAnswer['wires']]> = [
   // [name, level, decoy kind, harmless wires that make the decoy part of an over-built win]
   [
-    'level 2: second Cảm biến chạm',
+    'level 2: second Chạm nhau',
     level02!,
     'touch',
     [

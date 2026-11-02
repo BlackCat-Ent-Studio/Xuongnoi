@@ -95,7 +95,7 @@ function assertTargets(s: Session): void {
 /** Every lesson of the pack: registered in the numbers chapter, valid starter board, no check passes before its edit. */
 describe.each([
   ['health-color', 'Thanh máu đổi màu'],
-  ['start-screen', 'Màn hình bắt đầu'],
+  ['start-screen', 'Màn hình mở đầu'],
   ['ask-dialog', 'Hộp hỏi'],
 ])('pack C lesson %s', (id, name) => {
   it('is in the numbers chapter with a valid starter board and ends info-only', () => {

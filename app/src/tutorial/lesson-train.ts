@@ -7,7 +7,7 @@ import type { Lesson } from './types';
 
 /**
  * "Tàu hỏa": three cars standing on a ring of rails become a locomotive and two wagons, coupled with
- * "Kéo theo bởi", running on the rail ("Bám ray") and resting a few seconds at every point like a station.
+ * "Theo xe đầu", running on the rail ("Bám ray") and resting a few seconds at every point like a station.
  */
 
 type BuildArgs = Parameters<LessonKit['buildBoard']>;

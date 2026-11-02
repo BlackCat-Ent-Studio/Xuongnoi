@@ -368,7 +368,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
       if (node && def) {
         const head = h('div', `pn-ihead cat-${def.category}`);
         const names = h('div', 'pn-inames');
-        names.append(h('div', 'prop-node-name pn-iname', def.label), h('div', 'pn-icat', P.categoryOf(NODE_CATEGORY_LABELS[def.category])));
+        names.append(h('div', 'prop-node-name pn-iname', def.label), h('div', 'pn-icat', def.labelEn ? `${def.labelEn} · ${P.categoryOf(NODE_CATEGORY_LABELS[def.category])}` : P.categoryOf(NODE_CATEGORY_LABELS[def.category])));
         head.append(categoryTile(def.category, true), names, createHandbookHelpButton(def.kind, def.label));
         el.append(head);
         if (playing) el.append(h('div', 'prop-locked pn-live-note', P.liveNote));

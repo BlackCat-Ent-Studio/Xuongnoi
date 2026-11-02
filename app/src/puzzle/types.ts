@@ -4,7 +4,7 @@ import type { StoreSlotsDef } from './store-slots';
 /**
  * One puzzle level ("Xưởng Bot giải đố"). A level is a real Xưởng Nối board: the locked part lives in
  * `base` and the player adds pieces from the tray and wires. The level is won when a locked
- * "Thắng/Thua" (win-lose) node in `base` ends the game with a win.
+ * "Thắng / Thua" (win-lose) node in `base` ends the game with a win.
  */
 export interface PuzzleLevel {
   /** Stable id, used as the progress key (never renumber). Example: 'bot-dau-tien'. */

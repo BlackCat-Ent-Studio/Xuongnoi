@@ -16,11 +16,11 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   who: {
     title: 'Nói xe nào sẽ chạy',
-    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện sang cổng "Ai" của Chạy theo tuyến.',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Ai" của Chạy theo tuyến.',
   },
   move: {
     title: 'Nối tay lái và chân ga',
-    text: 'Nối cổng "Đi ngang" và cổng "Đi dọc" của Chạy theo tuyến sang hai cổng cùng tên của mảnh ghép Phương tiện (hai sợi dây).',
+    text: 'Nối cổng "Đi ngang" và cổng "Đi dọc" của Chạy theo tuyến sang hai cổng cùng tên của mảnh ghép Xe (hai sợi dây).',
     explain: 'Giống như cần điều khiển, nhưng người bấm lần này là mảnh ghép chứ không phải bạn.',
   },
   watch: {
@@ -42,29 +42,29 @@ export const ROUTE_TRAFFIC_TEXT = {
     explain: 'Hộp kiểu "Đèn giao thông" sáng đèn đỏ lúc đầu. Khi nhận số 1, nó đổi sang "Màu 1" mà ta đã đặt là xanh lá. Số 2 là "Màu 2", số 3 là "Màu 3".',
   },
   zone: {
-    title: 'Thêm Cảm biến vùng',
-    text: 'Kéo mảnh ghép "Cảm biến vùng" (nhóm Logic) vào bảng.',
-    explain: 'Cảm biến vùng là một hộp vô hình. Nó biết có xe nào đang nằm trong hộp không. Ta dùng nó làm vạch dừng.',
+    title: 'Thêm Vùng kích hoạt',
+    text: 'Kéo mảnh ghép "Vùng kích hoạt" (nhóm Logic) vào bảng.',
+    explain: 'Vùng kích hoạt là một hộp vô hình. Nó biết có xe nào đang nằm trong hộp không. Ta dùng nó làm vạch dừng.',
   },
   place: {
     title: 'Đặt vạch dừng lên đường',
-    text: 'Chọn Cảm biến vùng. Ở Thuộc tính, sửa ô "Tâm vùng" cho vùng nằm trên đoạn đường phía trên: để X = 0 và Z = -6.',
+    text: 'Chọn Vùng kích hoạt. Ở Thuộc tính, sửa ô "Tâm vùng" cho vùng nằm trên đoạn đường phía trên: để X = 0 và Z = -6.',
     explain: 'Lúc mới thêm, vùng nằm giữa bảng, không nằm trên đường nào. Khi chỉnh sửa bạn thấy vùng là hộp xanh mờ, lúc chơi thì nó vô hình.',
   },
   filter: {
     title: 'Chỉ đếm xe',
-    text: 'Vẫn ở Thuộc tính của Cảm biến vùng, đổi "Tính những gì" thành "Phương tiện".',
+    text: 'Vẫn ở Thuộc tính của Vùng kích hoạt, đổi "Tính những gì" thành "Phương tiện".',
     explain: 'Chiếc xe là phương tiện chứ không phải nhân vật, nên mặc định cảm biến chưa thấy nó.',
   },
   not: {
-    title: 'Thêm mảnh ghép Không',
-    text: 'Kéo mảnh ghép "Không" (nhóm Logic) vào bảng.',
-    explain: 'Mảnh ghép "Không" đảo ngược tín hiệu: đang bật thì thành tắt.',
+    title: 'Thêm mảnh ghép Đảo ngược',
+    text: 'Kéo mảnh ghép "Đảo ngược" (nhóm Logic) vào bảng.',
+    explain: 'Mảnh ghép "Đảo ngược" đảo ngược tín hiệu: đang bật thì thành tắt.',
   },
   red: {
     title: 'Chưa đủ số là đèn đỏ',
-    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Vào" của mảnh ghép Không.',
-    explain: '"Đã đủ" bật khi đèn đã sang xanh. Qua mảnh ghép Không, ta được tín hiệu "đèn đang đỏ".',
+    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Vào" của mảnh ghép Đảo ngược.',
+    explain: '"Đã đủ" bật khi đèn đã sang xanh. Qua mảnh ghép Đảo ngược, ta được tín hiệu "đèn đang đỏ".',
   },
   and: {
     title: 'Thêm mảnh ghép Và',
@@ -73,7 +73,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   rule: {
     title: 'Xe ở vạch và đèn đỏ',
-    text: 'Nối cổng "Có ai trong vùng" của Cảm biến vùng sang cổng "A" của mảnh ghép Và. Nối cổng "Kết quả" của mảnh ghép Không sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và. Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "B" của mảnh ghép Và.',
   },
   stop: {
     title: 'Đèn đỏ thì dừng xe',
@@ -106,20 +106,20 @@ export const TRAIN_TEXT = {
   },
   loco: {
     title: 'Chiếc xe đầu là đầu máy',
-    text: 'Chọn chiếc Phương tiện đứng ở đầu hàng (bên phải nhất). Ở Thuộc tính đổi "Loại xe" thành "Đầu máy (tàu)".',
+    text: 'Chọn chiếc Xe đứng ở đầu hàng (bên phải nhất). Ở Thuộc tính đổi "Loại xe" thành "Đầu máy (tàu)".',
   },
   wagons: {
     title: 'Hai chiếc sau là toa tàu',
-    text: 'Chọn từng chiếc Phương tiện còn lại và đổi "Loại xe" thành "Toa tàu". Làm cho cả hai chiếc.',
+    text: 'Chọn từng chiếc Xe còn lại và đổi "Loại xe" thành "Toa tàu". Làm cho cả hai chiếc.',
   },
   tow1: {
     title: 'Toa 1 bám theo đầu máy',
-    text: 'Nối cổng "Xe" của đầu máy sang cổng "Kéo theo bởi" của toa đứng ngay sau nó.',
-    explain: 'Toa nào có "Kéo theo bởi" thì đi theo đúng vết bánh của chiếc xe phía trước và không cần ai lái.',
+    text: 'Nối cổng "Xe" của đầu máy sang cổng "Theo xe đầu" của toa đứng ngay sau nó.',
+    explain: 'Toa nào có "Theo xe đầu" thì đi theo đúng vết bánh của chiếc xe phía trước và không cần ai lái.',
   },
   tow2: {
     title: 'Toa 2 bám theo toa 1',
-    text: 'Nối cổng "Xe" của toa 1 sang cổng "Kéo theo bởi" của toa cuối.',
+    text: 'Nối cổng "Xe" của toa 1 sang cổng "Theo xe đầu" của toa cuối.',
     explain: 'Nối tiếp từng toa vào toa trước nó, đoàn tàu dài bao nhiêu cũng được.',
   },
   route: {
@@ -158,17 +158,17 @@ export const TRAIN_TEXT = {
     explain: '"Tới điểm" bật một nhịp mỗi lần tàu đi qua một điểm. Mỗi nhịp bắt Hẹn giờ đếm lại từ đầu.',
   },
   not: {
-    title: 'Thêm mảnh ghép Không',
-    text: 'Kéo mảnh ghép "Không" (nhóm Logic) vào bảng.',
+    title: 'Thêm mảnh ghép Đảo ngược',
+    text: 'Kéo mảnh ghép "Đảo ngược" (nhóm Logic) vào bảng.',
   },
   waiting: {
     title: 'Chưa hết giờ là còn đỗ',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Vào" của mảnh ghép Không.',
-    explain: 'Trong 3 giây đầu, Hẹn giờ chưa hết, mảnh ghép Không cho tín hiệu "đang đỗ".',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Vào" của mảnh ghép Đảo ngược.',
+    explain: 'Trong 3 giây đầu, Hẹn giờ chưa hết, mảnh ghép Đảo ngược cho tín hiệu "đang đỗ".',
   },
   stop: {
     title: 'Đang đỗ thì dừng tàu',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Không sang cổng "Dừng" của Chạy theo tuyến.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Dừng" của Chạy theo tuyến.',
   },
   play: {
     title: 'Chạy thử',
@@ -190,17 +190,17 @@ export const CARGO_TEXT = {
     explain: 'Mỗi món đồ có "Loại hàng" là một chữ bạn đặt. Thùng hàng loại "thùng", viên đá loại "đá". Xe chỉ chất loại hàng mà ta chọn.',
   },
   cargo: {
-    title: 'Thêm Chất / Dỡ hàng',
-    text: 'Kéo mảnh ghép "Chất / Dỡ hàng" (nhóm Hành động) vào bảng.',
+    title: 'Thêm Chở hàng',
+    text: 'Kéo mảnh ghép "Chở hàng" (nhóm Hành động) vào bảng.',
     explain: 'Mảnh ghép này lo việc đặt hàng lên thùng xe và lấy hàng xuống.',
   },
   vehicle: {
     title: 'Nói xe nào chở hàng',
-    text: 'Nối cổng "Xe" của mảnh ghép Phương tiện (xe tải) sang cổng "Xe" của Chất / Dỡ hàng.',
+    text: 'Nối cổng "Xe" của mảnh ghép Xe (xe tải) sang cổng "Xe" của Chở hàng.',
   },
   loadType: {
     title: 'Chỉ chất thùng hàng',
-    text: 'Chọn Chất / Dỡ hàng. Ở Thuộc tính, gõ chữ thùng vào ô "Loại cần chất".',
+    text: 'Chọn Chở hàng. Ở Thuộc tính, gõ chữ thùng vào ô "Loại cần chất".',
     explain: 'Có đặt loại thì xe bỏ qua món khác loại, ví dụ viên đá nằm sát xe nhất cũng không được chất lên.',
   },
   unloadType: {
@@ -218,17 +218,17 @@ export const CARGO_TEXT = {
   },
   load: {
     title: 'Bấm L để chất hàng',
-    text: 'Nối cổng "Vừa bấm" của Phím bấm (phím L) sang cổng "Chất" của Chất / Dỡ hàng.',
+    text: 'Nối cổng "Vừa nhấn" của Phím bấm (phím L) sang cổng "Chất" của Chở hàng.',
     explain: 'Mỗi lần bấm L, xe chất món hàng đúng loại ở gần nhất và trong tầm với.',
   },
   zone: {
     title: 'Thêm bãi dỡ hàng',
-    text: 'Kéo mảnh ghép "Cảm biến vùng" (nhóm Logic) vào bảng.',
+    text: 'Kéo mảnh ghép "Vùng kích hoạt" (nhóm Logic) vào bảng.',
     explain: 'Vùng mặc định nằm ngay giữa bảng, chỗ có ô vàng trên đường. Đó sẽ là bãi dỡ hàng.',
   },
   filter: {
     title: 'Chỉ tính xe',
-    text: 'Chọn Cảm biến vùng. Ở Thuộc tính đổi "Tính những gì" thành "Phương tiện".',
+    text: 'Chọn Vùng kích hoạt. Ở Thuộc tính đổi "Tính những gì" thành "Phương tiện".',
   },
   and: {
     title: 'Thêm mảnh ghép Và',
@@ -237,15 +237,15 @@ export const CARGO_TEXT = {
   },
   inZone: {
     title: 'Xe đang ở trong bãi',
-    text: 'Nối cổng "Có ai trong vùng" của Cảm biến vùng sang cổng "A" của mảnh ghép Và.',
+    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và.',
   },
   pressL: {
     title: 'Và bạn bấm L',
-    text: 'Nối cổng "Vừa bấm" của Phím bấm (phím L) sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Vừa nhấn" của Phím bấm (phím L) sang cổng "B" của mảnh ghép Và.',
   },
   unload: {
     title: 'Trong bãi thì L là dỡ hàng',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Dỡ" của Chất / Dỡ hàng.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Dỡ" của Chở hàng.',
     explain: 'Ngoài bãi, bấm L chỉ chất hàng. Trong bãi, "Dỡ" được ưu tiên hơn "Chất", nên bấm L là dỡ một món xuống.',
   },
   counter: {
@@ -258,7 +258,7 @@ export const CARGO_TEXT = {
   },
   count: {
     title: 'Mỗi lần dỡ là một lần giao',
-    text: 'Nối cổng "Vừa dỡ" của Chất / Dỡ hàng sang cổng "Cộng 1" của Bộ đếm.',
+    text: 'Nối cổng "Vừa dỡ" của Chở hàng sang cổng "Cộng 1" của Bộ đếm.',
   },
   show: {
     title: 'Thêm Hiện số',
@@ -266,16 +266,16 @@ export const CARGO_TEXT = {
   },
   showCount: {
     title: 'Hiện số thùng trên xe',
-    text: 'Nối cổng "Số hàng loại này" của Chất / Dỡ hàng sang cổng "Số cần hiện" của Hiện số.',
+    text: 'Nối cổng "Số hàng loại này" của Chở hàng sang cổng "Số cần hiện" của Hiện số.',
     explain: 'Trong lúc chơi, góc màn hình cho biết xe đang chở mấy thùng hàng.',
   },
   end: {
-    title: 'Thêm mảnh ghép Thắng/Thua',
-    text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép Thắng / Thua',
+    text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   win: {
     title: 'Giao đủ là thắng',
-    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Giao hàng thử',
@@ -287,7 +287,7 @@ export const CARGO_TEXT = {
   },
   done: {
     title: 'Bạn là tài xế giao hàng rồi!',
-    text: 'Bạn đã cho xe chất đúng loại hàng, dỡ ở bãi và đếm số lần giao. Hãy thử thêm một loại hàng khác với Chất / Dỡ hàng thứ hai, hoặc tăng mục tiêu của Bộ đếm.',
+    text: 'Bạn đã cho xe chất đúng loại hàng, dỡ ở bãi và đếm số lần giao. Hãy thử thêm một loại hàng khác với Chở hàng thứ hai, hoặc tăng mục tiêu của Bộ đếm.',
   },
 } as const;
 
@@ -344,13 +344,13 @@ export const GUIDE_TEXT = {
   },
   touch: {
     title: 'Chạm cờ vàng thì đếm',
-    text: 'Nối cổng "Đang chạm" của Cảm biến chạm (cái chạm cờ vàng) sang cổng "Cộng 1" của Bộ đếm.',
-    explain: 'Hai Cảm biến chạm đã có sẵn: một cái canh cờ vàng, một cái canh cờ đỏ (cái này đã nối sang Thắng/Thua).',
+    text: 'Nối cổng "Đang chạm" của Chạm nhau (cái chạm cờ vàng) sang cổng "Cộng 1" của Bộ đếm.',
+    explain: 'Hai Chạm nhau đã có sẵn: một cái canh cờ vàng, một cái canh cờ đỏ (cái này đã nối sang Thắng / Thua).',
   },
   select: {
     title: 'Thêm Chọn theo số',
     text: 'Kéo mảnh ghép "Chọn theo số" (nhóm Logic) vào bảng.',
-    explain: 'Nó nhận một số và chỉ bật đúng một cổng "Là 1", "Là 2"... tương ứng.',
+    explain: 'Nó nhận một số và chỉ bật đúng một cổng "Bằng 1", "Bằng 2"... tương ứng.',
   },
   selectIn: {
     title: 'Số đếm đi vào Chọn theo số',
@@ -358,11 +358,11 @@ export const GUIDE_TEXT = {
   },
   show1: {
     title: 'Số 1 thì hiện mũi tên 1',
-    text: 'Nối cổng "Là 1" của Chọn theo số sang cổng "Hiện" của mũi tên chỉ về cờ vàng.',
+    text: 'Nối cổng "Bằng 1" của Chọn theo số sang cổng "Hiện" của mũi tên chỉ về cờ vàng.',
   },
   show2: {
     title: 'Số 2 thì hiện mũi tên 2',
-    text: 'Nối cổng "Là 2" của Chọn theo số sang cổng "Hiện" của mũi tên chỉ về cờ đỏ.',
+    text: 'Nối cổng "Bằng 2" của Chọn theo số sang cổng "Hiện" của mũi tên chỉ về cờ đỏ.',
     explain: 'Lúc đầu chỉ mũi tên 1 hiện. Chạm cờ vàng thì số đếm lên 2, mũi tên 1 tắt và mũi tên 2 hiện.',
   },
   play: {

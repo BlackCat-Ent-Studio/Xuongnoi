@@ -6,7 +6,7 @@ import { handReach } from './world-options';
 
 /**
  * "Đi tuần về kho": a delivery brain for the puzzle levels. Like the patrol it walks between two ends and says
- * "Vừa tới đầu" on reaching one, but the store end is not a fixed point: it is the approach point of the next
+ * "Vừa tới đầu mút" on reaching one, but the store end is not a fixed point: it is the approach point of the next
  * EMPTY slot of the store, parked so the crate in the robot's hands is right over that slot's middle. Level data
  * only; it is registered by the puzzle game and never appears in the editor.
  */

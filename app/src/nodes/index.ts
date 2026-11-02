@@ -52,6 +52,7 @@ import { uiDialogNode } from './ui-dialog';
 import { uiMeterNode } from './ui-meter';
 import { uiPickNode } from './ui-pick';
 import { uiStartNode } from './ui-start';
+import { applyNodeNames } from './node-names';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
   input: 'Đầu vào',
@@ -121,6 +122,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   uiDialogNode,
   uiStartNode,
 ];
+
+// Approved display names (Vietnamese label + English term); ids stay as defined in each node file.
+for (const def of STEP_1_NODES) applyNodeNames(def);
 
 /** Registers all step-1 nodes. Safe to call repeatedly. */
 export function registerAllNodes(): void {

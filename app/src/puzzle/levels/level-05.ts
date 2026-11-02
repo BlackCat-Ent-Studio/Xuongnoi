@@ -12,7 +12,7 @@ export const level05: PuzzleLevel = {
   order: 5,
   title: 'Đủ ba thùng',
   task: 'Rô-bốt chân đang chở thùng vào kho. Khi kho có đủ 3 thùng thì mở cổng thắng! Hãy đặt vùng kho để đếm thùng, rồi so sánh với số cần.',
-  hint: 'Đặt "Cảm biến vùng" (nó đã nằm đúng chỗ kho), nối "Số lượng" vào "Số A" của "So sánh". Nối "Số cần" vào "Số B", rồi nối "Đúng" vào "Thắng".',
+  hint: 'Đặt "Vùng kích hoạt" (nó đã nằm đúng chỗ kho), nối "Số lượng" vào "Số A" của "So sánh". Nối "Số cần" vào "Số B", rồi nối "Đúng" vào "Thắng".',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,

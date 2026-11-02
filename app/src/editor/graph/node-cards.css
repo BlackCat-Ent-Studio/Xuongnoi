@@ -28,8 +28,11 @@
 .wc .wc-node .wc-tile { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .35); color: #10151b; }
 .wc .wc-node .wc-tile svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; }
+.wc .wc-node:not(.wc-group) .wc-title { flex: 1 1 0; min-width: min-content; }
 .wc .wc-name { font-weight: 800; font-size: 13.5px; }
+/* The subtitle (English term) never adds width: it fills the room the title and the card already have, so the card keeps its old footprint. */
 .wc .wc-sub { font-size: 11px; font-weight: 600; color: rgba(16, 21, 27, .72); }
+.wc .wc-node:not(.wc-group) .wc-sub { display: block; contain: inline-size; overflow: hidden; text-overflow: ellipsis; }
 .wc .wc-miss-badge { margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #10151b; color: var(--warn, #f2b33d); font-size: 12px; font-weight: 700; }
 
 /* ports: inputs first (left aligned), then outputs (right aligned) */

@@ -37,7 +37,7 @@ export const patrolNode: NodeDef<PatrolState> = {
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
-    { id: 'atEnd', type: 'bool', label: 'Vừa tới đầu' },
+    { id: 'atEnd', type: 'bool', label: 'Vừa tới đầu mút' },
   ],
   params: [
     { id: 'pointA', label: 'Điểm A', kind: 'vec3', default: DEFAULT_A },

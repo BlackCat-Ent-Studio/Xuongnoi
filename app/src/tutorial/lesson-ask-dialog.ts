@@ -52,7 +52,7 @@ const isGate: NodeFilter = (n) => (vecParam(n, 'size')?.y ?? 0) >= 3 && paramOf(
 
 const HERO_SELF: Endpoint = { kind: 'character', port: 'self', where: isPlayer };
 const NPC_SELF: Endpoint = { kind: 'character', port: 'self', where: isBot };
-/** The board's own Cảm biến chạm (hero vs star) uses "Tâm A vào trong B"; the one the learner adds keeps the default. */
+/** The board's own Chạm nhau (hero vs star) uses "Tâm A vào trong B"; the one the learner adds keeps the default. */
 const isAskTouch: NodeFilter = (n) => paramOf(n, 'mode') !== 'center';
 
 const TOUCH_A: Endpoint = { kind: 'touch', port: 'a', where: isAskTouch };

@@ -2,12 +2,12 @@
 
 export const SECRET_DOOR_TEXT = {
   title: 'Cửa bí mật',
-  summary: 'Một cánh cửa tự mở lúc bắt đầu rồi tự đóng sập sau lưng bạn. Học "Khi bắt đầu" và "Không".',
+  summary: 'Một cánh cửa tự mở lúc bắt đầu rồi tự đóng sập sau lưng bạn. Học "Khi bắt đầu" và "Đảo ngược".',
   boardName: 'Cửa bí mật',
   intro: {
     title: 'Cánh cửa chắn đường',
     text: 'Bạn đang đứng trong một căn phòng (hộp xanh mờ), cửa nâu chắn lối ra. Lá cờ vàng nằm ở bên kia. Ta sẽ làm cửa tự mở lúc bắt đầu, rồi tự đóng sập lại khi bạn đã đi ra khỏi phòng.',
-    explain: 'Hộp xanh mờ là một "Cảm biến vùng": nó biết có ai đang ở trong phòng hay không. Chạm vào lá cờ là thắng, phần này đã nối sẵn.',
+    explain: 'Hộp xanh mờ là một "Vùng kích hoạt": nó biết có ai đang ở trong phòng hay không. Chạm vào lá cờ là thắng, phần này đã nối sẵn.',
   },
   onStart: {
     title: 'Thêm Khi bắt đầu',
@@ -16,23 +16,23 @@ export const SECRET_DOOR_TEXT = {
   },
   open: {
     title: 'Cửa mở lúc bắt đầu',
-    text: 'Nối "Vừa bắt đầu" của Khi bắt đầu sang cổng "Ẩn đi" của Hộp cánh cửa (hộp nâu cao).',
+    text: 'Nối "Vừa bắt đầu" của Khi bắt đầu sang cổng "Ẩn đi (1 nhịp)" của Hộp cánh cửa (hộp nâu cao).',
     explain: 'Hộp bị "ẩn đi" thì biến mất và không còn chắn đường. Chỉ một nhịp ngắn là đủ để cửa mở.',
   },
   not: {
-    title: 'Thêm mảnh ghép Không',
-    text: 'Kéo mảnh ghép "Không" (nhóm Logic) vào bảng.',
-    explain: 'Mảnh ghép "Không" đảo ngược tín hiệu: đang bật thì thành tắt, đang tắt thì thành bật.',
+    title: 'Thêm mảnh ghép Đảo ngược',
+    text: 'Kéo mảnh ghép "Đảo ngược" (nhóm Logic) vào bảng.',
+    explain: 'Mảnh ghép "Đảo ngược" đảo ngược tín hiệu: đang bật thì thành tắt, đang tắt thì thành bật.',
   },
   notIn: {
     title: 'Ở trong phòng hay không?',
-    text: 'Nối cổng "Có ai trong vùng" của Cảm biến vùng sang cổng "Vào" của mảnh ghép Không.',
-    explain: 'Khi bạn còn ở trong phòng, "Có ai trong vùng" bật nên Không tắt. Khi bạn đi ra khỏi phòng, Không bật lên.',
+    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "Vào" của mảnh ghép Đảo ngược.',
+    explain: 'Khi bạn còn ở trong phòng, "Có ai trong vùng" bật nên Đảo ngược tắt. Khi bạn đi ra khỏi phòng, Đảo ngược bật lên.',
   },
   close: {
     title: 'Đi ra thì cửa đóng lại',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Không sang cổng "Hiện lại" của Hộp cánh cửa.',
-    explain: '"Hiện lại" cho cánh cửa hiện ra ở chỗ cũ. Cửa sập lại ngay sau lưng bạn, không quay đầu được nữa!',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Hiện lại (1 nhịp)" của Hộp cánh cửa.',
+    explain: '"Hiện lại (1 nhịp)" cho cánh cửa hiện ra ở chỗ cũ. Cửa sập lại ngay sau lưng bạn, không quay đầu được nữa!',
   },
   play: {
     title: 'Chạy thử',
@@ -44,22 +44,22 @@ export const SECRET_DOOR_TEXT = {
   },
   done: {
     title: 'Cửa bí mật xong rồi!',
-    text: 'Bạn đã dùng "Khi bắt đầu" để làm một việc lúc mở màn, và "Không" để làm điều ngược lại khi đã rời đi. Thử kéo cửa ra xa hơn, hoặc làm cho phòng nhỏ lại xem sao.',
+    text: 'Bạn đã dùng "Khi bắt đầu" để làm một việc lúc mở màn, và "Đảo ngược" để làm điều ngược lại khi đã rời đi. Thử kéo cửa ra xa hơn, hoặc làm cho phòng nhỏ lại xem sao.',
   },
 } as const;
 
 export const CHASE_GAME_TEXT = {
   title: 'Trò đuổi bắt',
-  summary: 'Một con bot đỏ đuổi theo bạn, một con bot xanh chạy trốn bạn. Học mảnh ghép "Đuổi theo / Tránh xa".',
+  summary: 'Một con bot đỏ đuổi theo bạn, một con bot xanh chạy trốn bạn. Học mảnh ghép "Đuổi / Trốn".',
   boardName: 'Trò đuổi bắt',
   intro: {
     title: 'Hai con bot',
     text: 'Bảng này có bạn (xanh dương), bot đỏ và bot xanh lá. Chạm bot đỏ là thua, chạm bot xanh lá là thắng. Hiện giờ hai bot đứng yên. Ta sẽ cho bot đỏ đuổi bạn, bot xanh lá chạy trốn bạn.',
-    explain: 'Hai chỗ chạm đã nối sẵn bằng Cảm biến chạm. Phần còn lại là "bộ não" cho hai con bot.',
+    explain: 'Hai chỗ chạm đã nối sẵn bằng Chạm nhau. Phần còn lại là "bộ não" cho hai con bot.',
   },
   chase: {
-    title: 'Thêm Đuổi theo / Tránh xa',
-    text: 'Kéo mảnh ghép "Đuổi theo / Tránh xa" (nhóm Bộ não) vào bảng.',
+    title: 'Thêm Đuổi / Trốn',
+    text: 'Kéo mảnh ghép "Đuổi / Trốn" (nhóm Bộ não) vào bảng.',
     explain: 'Bot để mắt tới một vật. Thấy vật trong tầm nhìn thì đuổi theo hoặc chạy trốn, vật ra quá xa thì bỏ cuộc.',
   },
   chaseWires: {
@@ -74,7 +74,7 @@ export const CHASE_GAME_TEXT = {
   },
   chase2: {
     title: 'Thêm một mảnh ghép nữa',
-    text: 'Kéo thêm một mảnh ghép "Đuổi theo / Tránh xa" nữa vào bảng, cho bot xanh lá.',
+    text: 'Kéo thêm một mảnh ghép "Đuổi / Trốn" nữa vào bảng, cho bot xanh lá.',
   },
   flee: {
     title: 'Đổi sang Tránh xa',
@@ -106,29 +106,29 @@ export const COLLIDER_GRAVITY_TEXT = {
   intro: {
     title: 'Thùng lên bệ trên cao',
     text: 'Có một thùng to nằm trên sàn và một bệ xanh lơ lửng rất cao. Bấm G để cầm thùng, bấm Cách (Space) để nhảy, bấm G lần nữa để thả. Ta sẽ chỉnh vài thứ trong mục "Nâng cao" để đưa được thùng lên bệ.',
-    explain: 'Nhân vật, phím, Cầm / Thả và Thắng/Thua đã có sẵn. Mục "Nâng cao" nằm gập ở cuối bảng Thuộc tính, bấm vào để mở ra.',
+    explain: 'Nhân vật, phím, Khiêng đồ và Thắng / Thua đã có sẵn. Mục "Nâng cao" nằm gập ở cuối bảng Thuộc tính, bấm vào để mở ra.',
   },
   touch: {
-    title: 'Thêm Cảm biến chạm',
-    text: 'Kéo mảnh ghép "Cảm biến chạm" (nhóm Logic) vào bảng.',
+    title: 'Thêm Chạm nhau',
+    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) vào bảng.',
     explain: 'Nó kiểm tra hai vật có đang chạm nhau không.',
   },
   touchWires: {
     title: 'Thùng và bệ',
-    text: 'Nối cổng "Đồ vật" của cái thùng sang "Vật A", và cổng "Hộp" của bệ xanh sang "Vật B" của Cảm biến chạm.',
+    text: 'Nối cổng "Đồ vật" của cái thùng sang "Vật chính", và cổng "Hộp" của bệ xanh sang "Vật kia" của Chạm nhau.',
   },
   win: {
     title: 'Chạm là thắng',
-    text: 'Nối cổng "Đang chạm" của Cảm biến chạm sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Đang chạm" của Chạm nhau sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   inside: {
     title: 'Phải nằm trọn bên trong',
-    text: 'Chọn Cảm biến chạm. Ở Thuộc tính, đổi "Tính khi nào" thành "A nằm trọn trong B".',
-    explain: 'Mặc định chỉ cần chạm mép là tính. Chọn "nằm trọn" thì thùng phải lọt hẳn vào trong bệ mới tính. Mảnh ghép Cảm biến vùng cũng có lựa chọn "Tính khi nào" giống vậy.',
+    text: 'Chọn Chạm nhau. Ở Thuộc tính, đổi "Tính khi nào" thành "A nằm trọn trong B".',
+    explain: 'Mặc định chỉ cần chạm mép là tính. Chọn "nằm trọn" thì thùng phải lọt hẳn vào trong bệ mới tính. Mảnh ghép Vùng kích hoạt cũng có lựa chọn "Tính khi nào" giống vậy.',
   },
   hold: {
     title: 'Phải nằm yên một lúc',
-    text: 'Vẫn ở Cảm biến chạm. Đổi "Chạm bao lâu mới tính (giây)" thành 0.5.',
+    text: 'Vẫn ở Chạm nhau. Đổi "Chạm bao lâu mới tính (giây)" thành 0.5.',
     explain: 'Thùng đang được bạn cầm bay ngang qua bệ thì không tính. Phải nằm yên trong bệ nửa giây mới thắng.',
   },
   heroGravity: {
@@ -185,27 +185,27 @@ export const CONVEYOR_TEXT = {
   },
   reverse: {
     title: 'Giữ phím để chạy ngược',
-    text: 'Nối cổng "Đang giữ" của Phím bấm sang cổng "Đảo chiều" của cái bục.',
+    text: 'Nối cổng "Đang giữ phím" của Phím bấm sang cổng "Đảo chiều" của cái bục.',
     explain: 'Chừng nào còn giữ phím, băng chạy ngược lại. Thả phím ra thì băng chạy lại như cũ. Hữu ích khi hàng chạy quá đà.',
   },
   filter: {
     title: 'Khu thu chỉ tính đồ vật',
-    text: 'Chọn Cảm biến vùng (khu thu hàng). Ở Thuộc tính, đổi "Tính những gì" thành "Đồ vật".',
+    text: 'Chọn Vùng kích hoạt (khu thu hàng). Ở Thuộc tính, đổi "Tính những gì" thành "Đồ vật".',
     explain: 'Thùng hàng là "đồ vật". Nhờ vậy nhân vật đi qua khu thu không bị tính nhầm.',
   },
   goods: {
     title: 'Chỉ tính thùng xanh',
-    text: 'Vẫn ở Cảm biến vùng. Điền "Chỉ tính loại hàng" là xanh.',
+    text: 'Vẫn ở Vùng kích hoạt. Điền "Chỉ tính loại hàng" là xanh.',
     explain: 'Ba thùng xanh lá mang nhãn "xanh", thùng đỏ mang nhãn "do". Khu thu chỉ đếm hàng đúng nhãn.',
   },
   min: {
     title: 'Đủ ba thùng mới tính',
-    text: 'Vẫn ở Cảm biến vùng. Đổi "Ít nhất bao nhiêu vật" thành 3.',
+    text: 'Vẫn ở Vùng kích hoạt. Đổi "Ít nhất bao nhiêu vật" thành 3.',
     explain: 'Cổng "Có ai trong vùng" chỉ bật khi có từ 3 vật trở lên trong khu thu.',
   },
   win: {
     title: 'Đủ hàng là thắng',
-    text: 'Nối cổng "Có ai trong vùng" của Cảm biến vùng sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Mở băng chuyền',

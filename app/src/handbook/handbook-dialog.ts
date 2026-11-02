@@ -202,6 +202,7 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
       ports.map((p) => {
         const name = h('span', 'hb-name');
         name.append(h('b', '', p.label));
+        if (p.labelEn) name.append(h('small', 'hb-port-en', p.labelEn));
         if (p.required) name.append(h('em', 'hb-req', T.required));
         return [name, typeCell(p), text(entry?.ports[p.id] ?? T.noExplain)];
       }),
@@ -281,7 +282,9 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
     meta.append(h('span', 'hb-tag', NODE_CATEGORY_LABELS[def.category]));
     const lv = levelOf(entry);
     if (entry && chapterOf(entry.lessonId)) meta.append(h('span', 'hb-level', T.levelBadge(lv)));
-    names.append(h('h3', 'hb-node-name', def.label), meta);
+    const heading = h('h3', 'hb-node-name', def.label);
+    if (def.labelEn) heading.append(h('small', 'hb-node-en', def.labelEn));
+    names.append(heading, meta);
     title.append(categoryTile(def.category, true), names);
     nodes.push(title);
 

@@ -27,10 +27,10 @@ const FACE_NUDGE = 0.02;
 
 export const fightNode: NodeDef<FightState> = {
   kind: 'fight',
-  label: 'Đánh nhau',
+  label: 'Đánh địch',
   category: 'brain',
   description:
-    'Bot tìm đường tới mục tiêu và ra đòn khi đã đủ gần: tín hiệu "Ra đòn" nối vào "Dùng" của node Cầm tay (có dụng cụ thì đòn mạnh hơn). Đánh xong lùi lại một chút rồi vào tiếp. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
+    'Bot tìm đường tới mục tiêu và ra đòn khi đã đủ gần: tín hiệu "Ra đòn" nối vào "Dùng" của node Cầm dụng cụ (có dụng cụ thì đòn mạnh hơn). Đánh xong lùi lại một chút rồi vào tiếp. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu', required: true },

@@ -15,15 +15,15 @@ export const UI_CHEST_TEXT = {
   },
   wireChest: {
     title: 'Nói vật nào bấm được',
-    text: 'Nối cổng "Hộp" của mảnh ghép Hộp có màu nâu (cái rương) sang cổng "Vật" của mảnh ghép Bấm vào vật.',
+    text: 'Nối cổng "Hộp" của mảnh ghép Hộp có màu nâu (cái rương) sang cổng "Vật cần bấm" của mảnh ghép Bấm vào vật.',
   },
   winLose: {
-    title: 'Thêm mảnh ghép Thắng/Thua',
-    text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép Thắng / Thua',
+    text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   wireWin: {
     title: 'Bấm rương là thắng',
-    text: 'Nối cổng "Vừa bấm" của Bấm vào vật sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Vừa bấm" của Bấm vào vật sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   timer: {
     title: 'Thêm đồng hồ đếm ngược',
@@ -41,7 +41,7 @@ export const UI_CHEST_TEXT = {
   },
   wireLose: {
     title: 'Hết giờ là thua',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Thua" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Thua" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Thử mở rương',
@@ -54,6 +54,6 @@ export const UI_CHEST_TEXT = {
   },
   done: {
     title: 'Bạn làm game bấm chuột rồi!',
-    text: 'Bạn đã biết dùng Bấm vào vật và Thanh đo. Hãy thử thêm "Nút trên màn hình" (nhóm Đầu vào), "Hộp hỏi" và "Màn hình bắt đầu" để game có thêm nút bấm và màn hình mở đầu.',
+    text: 'Bạn đã biết dùng Bấm vào vật và Thanh đo. Hãy thử thêm "Nút bấm" (nhóm Đầu vào), "Hộp hỏi" và "Màn hình mở đầu" để game có thêm nút bấm và màn hình mở đầu.',
   },
 } as const;

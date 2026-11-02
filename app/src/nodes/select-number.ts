@@ -12,7 +12,7 @@ interface SelectNumberState {
 const choicePorts: PortDef[] = Array.from({ length: SELECT_MAX_CHOICES }, (_, k) => ({
   id: `is${k + 1}`,
   type: 'bool' as const,
-  label: `Là ${k + 1}`,
+  label: `Bằng ${k + 1}`,
 }));
 
 function choiceCount(raw: number): number {
@@ -24,7 +24,7 @@ export const selectNumberNode: NodeDef<SelectNumberState> = {
   label: 'Chọn theo số',
   category: 'logic',
   description:
-    'Nhận một số và bật đúng một cổng "Là 1", "Là 2"... tương ứng với số đó (làm tròn). Số ngoài khoảng thì không cổng nào bật. "Vừa đổi" báo một nhịp mỗi khi lựa chọn đổi sang cái khác.',
+    'Nhận một số và bật đúng một cổng "Bằng 1", "Bằng 2"... tương ứng với số đó (làm tròn). Số ngoài khoảng thì không cổng nào bật. "Vừa đổi" báo một nhịp mỗi khi lựa chọn đổi sang cái khác.',
   inputs: [{ id: 'value', type: 'number', label: 'Số' }],
   outputs: [...choicePorts, { id: 'changed', type: 'bool', label: 'Vừa đổi' }],
   params: [

@@ -3,7 +3,7 @@ import { numParam } from './util';
 
 export const constNode: NodeDef<null> = {
   kind: 'const',
-  label: 'Hằng số',
+  label: 'Số cố định',
   category: 'math',
   description: 'Một con số cố định mà bạn tự đặt, để nối vào các nút khác.',
   inputs: [],

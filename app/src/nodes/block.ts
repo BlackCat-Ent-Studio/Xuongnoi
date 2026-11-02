@@ -32,7 +32,7 @@ interface BlockState {
   pick?: number;
   hide: EdgeState;
   show: EdgeState;
-  /** Last "Ẩn khi bật" value seen; the block only reacts when it changes. */
+  /** Last "Ẩn suốt lúc bật" value seen; the block only reacts when it changes. */
   whilePrev?: boolean;
   hidden: boolean;
   /** Signed belt speed from the params, or null when the block is no conveyor. */
@@ -44,18 +44,18 @@ export const blockNode: NodeDef<BlockState> = {
   label: 'Hộp',
   category: 'object',
   description:
-    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi" để làm hộp biến mất, bật "Hiện lại" để hộp hiện ra lại (đứng chỗ cũ). "Vừa bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn khi bật" cho hộp ẩn đi khi tín hiệu bật và hiện lại khi tín hiệu tắt (làm cửa mở theo tín hiệu); để trống thì không ảnh hưởng. Lần đổi nào đến sau cùng thì thắng: "Ẩn đi"/"Hiện lại" vẫn dùng được, nhưng khi "Ẩn khi bật" đổi giá trị thì nó quyết định.',
+    'Một hộp đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn đi (1 nhịp)" để làm hộp biến mất, bật "Hiện lại (1 nhịp)" để hộp hiện ra lại (đứng chỗ cũ). "Bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Chạy băng chuyền" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn suốt lúc bật" cho hộp ẩn đi khi tín hiệu bật và hiện lại khi tín hiệu tắt (làm cửa mở theo tín hiệu); để trống thì không ảnh hưởng. Lần đổi nào đến sau cùng thì thắng: "Ẩn đi (1 nhịp)"/"Hiện lại (1 nhịp)" vẫn dùng được, nhưng khi "Ẩn suốt lúc bật" đổi giá trị thì nó quyết định.',
   inputs: [
-    { id: 'hide', type: 'bool', label: 'Ẩn đi' },
-    { id: 'show', type: 'bool', label: 'Hiện lại' },
-    { id: 'pick', type: 'number', label: 'Đổi màu (1, 2 hoặc 3)' },
-    { id: 'run', type: 'bool', label: 'Chạy băng', default: true },
+    { id: 'hide', type: 'bool', label: 'Ẩn đi (1 nhịp)' },
+    { id: 'show', type: 'bool', label: 'Hiện lại (1 nhịp)' },
+    { id: 'pick', type: 'number', label: 'Đổi màu 1-2-3' },
+    { id: 'run', type: 'bool', label: 'Chạy băng chuyền', default: true },
     { id: 'reverse', type: 'bool', label: 'Đảo chiều' },
-    { id: 'hiddenWhile', type: 'bool', label: 'Ẩn khi bật' },
+    { id: 'hiddenWhile', type: 'bool', label: 'Ẩn suốt lúc bật' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Hộp' },
-    { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
+    { id: 'usedOn', type: 'bool', label: 'Bị dùng lên' },
   ],
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
@@ -152,7 +152,7 @@ export const blockNode: NodeDef<BlockState> = {
       s.hidden = true;
       ctx.world.hide(s.id);
     }
-    // Evaluated after "Ẩn đi", so when both rise on the same tick the entity ends up visible.
+    // Evaluated after "Ẩn đi (1 nhịp)", so when both rise on the same tick the entity ends up visible.
     if (risingEdge(s.show, asBool(i.show)) && s.hidden) {
       s.hidden = false;
       ctx.world.show(s.id);

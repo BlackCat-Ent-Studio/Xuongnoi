@@ -1,6 +1,6 @@
 import { getNodeDef } from '../../engine/registry';
 import { NODE_CATEGORY_LABELS } from '../../nodes';
-import type { GraphNode, NodeCategory, PortDef } from '../../engine/types';
+import type { GraphNode, NodeCategory, NodeDef, PortDef } from '../../engine/types';
 import { h } from '../dom';
 import { GRAPH_TEXT, missingBadge } from './graph-text-vi';
 import type { PortDir } from './port-compat';
@@ -49,8 +49,16 @@ function portRow(node: GraphNode, dir: PortDir, port: PortDef, missing: boolean)
   const dot = h('span', `wc-dot type-${port.type}`);
   row.append(dot, h('span', 'wc-pl', port.label));
   if (missing) row.append(h('span', 'wc-need', GRAPH_TEXT.needWire));
-  row.title = port.label;
+  row.title = port.labelEn ? `${port.label} · ${port.labelEn}` : port.label;
   return { row, dot };
+}
+
+/**
+ * Small line under the card title (the same line the card always had, so the footprint is unchanged):
+ * the name typed for this piece, else its English term, else its category.
+ */
+export function cardSubtitle(node: GraphNode, def: NodeDef | undefined): string {
+  return instanceName(node) || def?.labelEn || (def ? NODE_CATEGORY_LABELS[def.category] : '');
 }
 
 /** Builds one node: neutral header with a category tile, then stacked single-column port rows. */
@@ -64,13 +72,12 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   box.style.top = `${node.pos.y}px`;
 
   const head = h('div', 'wc-node-head');
-  if (def) head.title = def.description;
+  if (def) head.title = def.labelEn ? `${def.label} · ${def.labelEn}. ${def.description}` : def.description;
   const tile = h('span', `wc-tile cat-${def?.category ?? 'unknown'}`);
   tile.append(glyph(def?.category));
   const title = h('span', 'wc-title');
   title.append(h('b', 'wc-name', def?.label ?? GRAPH_TEXT.unknownNode));
-  // Small line under the title: the name typed for this piece, else its category.
-  const sub = instanceName(node) || (def ? NODE_CATEGORY_LABELS[def.category] : '');
+  const sub = cardSubtitle(node, def);
   if (sub) title.append(h('small', 'wc-sub', sub));
   head.append(tile, title);
   const missing = def ? def.inputs.filter((p) => missingPorts.has(p.id)).length : 0;

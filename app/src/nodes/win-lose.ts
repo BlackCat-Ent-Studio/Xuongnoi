@@ -3,7 +3,7 @@ import { asBool, strParam } from './util';
 
 export const winLoseNode: NodeDef<null> = {
   kind: 'win-lose',
-  label: 'Thắng/Thua',
+  label: 'Thắng / Thua',
   category: 'output',
   description: 'Kết thúc trò chơi. Khi "Thắng" bật thì báo thắng, khi "Thua" bật thì báo thua.',
   inputs: [

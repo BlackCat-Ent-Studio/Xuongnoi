@@ -4,7 +4,7 @@ import { strParam } from './util';
 
 export const uiStartNode: NodeDef<{ started: boolean }> = {
   kind: 'ui-start',
-  label: 'Màn hình bắt đầu',
+  label: 'Màn hình mở đầu',
   category: 'input',
   description:
     'Hiện màn hình mở đầu có tên game và nút "Bấm để chơi". "Đã bắt đầu" tắt cho tới khi người chơi bấm nút, rồi bật mãi. Nối nó vào các mảnh ghép khác để game chỉ chạy sau khi bắt đầu. Có thể bật menu tạm dừng: nhấn Esc khi đang chơi để hiện "Tiếp tục" và "Chơi lại".',

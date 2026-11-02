@@ -43,11 +43,11 @@ const DEFAULT_SIZE = { x: 4, y: 3, z: 4 };
 
 export const zoneSensorNode: NodeDef<ZoneState> = {
   kind: 'zone',
-  label: 'Cảm biến vùng',
+  label: 'Vùng kích hoạt',
   category: 'logic',
   description:
-    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng. Nối "Bám theo vật" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng". Bật "Xoay theo vật" để vùng quay theo hướng vật (chỉ ở 3D và nhìn từ trên). "Chỉ tính loại hàng" lọc đồ vật theo loại hàng; "Tính khi nào" chọn chạm mép, tâm vật vào trong hay nằm trọn bên trong; "Ít nhất bao nhiêu vật" là số vật tối thiểu để "Có ai trong vùng" bật.',
-  inputs: [{ id: 'follow', type: 'object', label: 'Bám theo vật' }],
+    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Vừa vào" / "Vừa ra" bật một nhịp; "Số lượng" đếm số vật trong vùng. Nối "Gắn vào vật" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng". Bật "Xoay theo vật" để vùng quay theo hướng vật (chỉ ở 3D và nhìn từ trên). "Chỉ tính loại hàng" lọc đồ vật theo loại hàng; "Tính khi nào" chọn chạm mép, tâm vật vào trong hay nằm trọn bên trong; "Ít nhất bao nhiêu vật" là số vật tối thiểu để "Có ai trong vùng" bật.',
+  inputs: [{ id: 'follow', type: 'object', label: 'Gắn vào vật' }],
   outputs: [
     { id: 'inside', type: 'bool', label: 'Có ai trong vùng' },
     { id: 'entered', type: 'bool', label: 'Vừa vào' },

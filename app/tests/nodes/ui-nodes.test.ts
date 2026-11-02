@@ -36,7 +36,7 @@ describe('ui-button', () => {
     });
   });
 
-  it('pulses "Vừa bấm" for the tick of the click and reports "Đang giữ" while held', () => {
+  it('pulses "Vừa bấm" for the tick of the click and reports "Đang giữ chuột" while held', () => {
     const w = makeWorld();
     expect(run(uiButtonNode, null, w, {}, params, ui({ clicked: [NODE_ID], held: [NODE_ID] }))).toEqual({ pressed: true, held: true });
     expect(run(uiButtonNode, null, w, {}, params, ui({ held: [NODE_ID] }))).toEqual({ pressed: false, held: true });

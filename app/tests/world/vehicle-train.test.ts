@@ -113,7 +113,7 @@ describe('route-follow: rail mode', () => {
     expect(log.slice(0, 6)).toEqual([3, 4, 1, 2, 3, 4]);
   });
 
-  it('stops on "Dừng" and resumes where it was', () => {
+  it('stops on "Phanh" and resumes where it was', () => {
     const s = sim([floor, loco(-8, -6), route(), ['k', 'key', { key: 'KeyS' }]], [...attach, ['k', 'held', 'route', 'stop']]);
     s.step(120);
     s.step(60, ['KeyS']);
@@ -168,7 +168,7 @@ describe('route-follow: rail mode', () => {
   });
 });
 
-describe('Phương tiện: model sizes and the coupling input', () => {
+describe('Xe: model sizes and the coupling input', () => {
   it('locomotive and wagon have sizes; the coupling is off by default', () => {
     expect(vehicleSize('locomotive').x).toBeGreaterThan(vehicleSize('truck').x);
     expect(vehicleSize('wagon').y).toBeGreaterThan(0);

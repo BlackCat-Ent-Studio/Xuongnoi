@@ -197,7 +197,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
   label: 'Chạy theo tuyến',
   category: 'brain',
   description:
-    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Phương tiện (hoặc từ nhân vật). Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
+    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Xe (hoặc từ nhân vật). Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
   inputs: [
     { id: 'self', type: 'object', label: 'Ai', required: true },
     { id: 'on', type: 'bool', label: 'Bật', default: true },

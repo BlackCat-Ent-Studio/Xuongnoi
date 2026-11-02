@@ -34,15 +34,15 @@ interface VehicleState {
 
 export const vehicleNode: NodeDef<VehicleState> = {
   kind: 'vehicle',
-  label: 'Phương tiện',
+  label: 'Xe',
   category: 'object',
   description:
-    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy". Tàu: chọn "Đầu máy" kéo bằng mảnh ghép "Chạy theo tuyến" (cách chạy "Bám ray"); nối "Xe" của đầu máy vào "Kéo theo bởi" của một "Toa tàu" để toa chạy theo sau, và nối tiếp toa sau vào toa trước để thành đoàn tàu.',
+    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy". Tàu: chọn "Đầu máy" kéo bằng mảnh ghép "Chạy theo tuyến" (cách chạy "Bám ray"); nối "Xe" của đầu máy vào "Theo xe đầu" của một "Toa tàu" để toa chạy theo sau, và nối tiếp toa sau vào toa trước để thành đoàn tàu.',
   inputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
-    { id: 'stop', type: 'bool', label: 'Dừng' },
-    { id: 'leader', type: 'object', label: 'Kéo theo bởi' },
+    { id: 'stop', type: 'bool', label: 'Phanh' },
+    { id: 'leader', type: 'object', label: 'Theo xe đầu' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Xe' },
@@ -166,7 +166,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
   evaluate(ctx, i, params, s) {
     const view = ctx.world.getEntity(s.id);
     const driver = view?.vehicle?.driver ?? null;
-    // Coupled behind another vehicle ("Kéo theo bởi"): it follows that vehicle's trail and ignores its own drive input.
+    // Coupled behind another vehicle ("Theo xe đầu"): it follows that vehicle's trail and ignores its own drive input.
     ctx.world.setVehicleTow(s.id, asObject(i.leader), Math.max(0, numParam(params, 'towDistance', 0)));
     const live = driver !== null || strParam(params, 'control', 'driver') === 'auto';
     ctx.world.setVehicleInput(

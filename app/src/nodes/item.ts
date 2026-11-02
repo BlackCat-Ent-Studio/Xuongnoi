@@ -39,17 +39,17 @@ export const itemNode: NodeDef<ItemState> = {
   label: 'Đồ vật',
   category: 'object',
   description:
-    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. "Ẩn đi" làm nó biến mất, "Hiện lại" cho nó hiện ra lại chỗ cũ. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm tay.',
+    'Một món đồ trong thế giới: chìa khoá, quả bóng, thùng... Nhân vật có thể cầm, thả, ném nó, và bấm "Tương tác" khi đứng gần. "Ẩn đi (1 nhịp)" làm nó biến mất, "Hiện lại (1 nhịp)" cho nó hiện ra lại chỗ cũ. Đồ vật rơi xuống đất và không chặn đường. Chọn "Cầm trên tay" để món này là dụng cụ (kiếm, cuốc...) dùng với node Cầm dụng cụ.',
   inputs: [
-    { id: 'hide', type: 'bool', label: 'Ẩn đi' },
-    { id: 'show', type: 'bool', label: 'Hiện lại' },
+    { id: 'hide', type: 'bool', label: 'Ẩn đi (1 nhịp)' },
+    { id: 'show', type: 'bool', label: 'Hiện lại (1 nhịp)' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Đồ vật' },
-    { id: 'held', type: 'bool', label: 'Đang được cầm' },
-    { id: 'interacted', type: 'bool', label: 'Vừa được tương tác' },
-    { id: 'inHand', type: 'bool', label: 'Đang ở trên tay' },
-    { id: 'usedOn', type: 'bool', label: 'Vừa bị dùng lên' },
+    { id: 'held', type: 'bool', label: 'Đang bị khiêng' },
+    { id: 'interacted', type: 'bool', label: 'Vừa được dùng' },
+    { id: 'inHand', type: 'bool', label: 'Đang cầm tay' },
+    { id: 'usedOn', type: 'bool', label: 'Bị dùng lên' },
   ],
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },
@@ -116,7 +116,7 @@ export const itemNode: NodeDef<ItemState> = {
       s.hidden = true;
       ctx.world.hide(s.id);
     }
-    // Evaluated after "Ẩn đi", so when both rise on the same tick the entity ends up visible.
+    // Evaluated after "Ẩn đi (1 nhịp)", so when both rise on the same tick the entity ends up visible.
     if (risingEdge(s.show, asBool(i.show)) && s.hidden) {
       s.hidden = false;
       ctx.world.show(s.id);

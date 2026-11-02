@@ -6,7 +6,7 @@ export const BOT_TOOL_TEXT = {
   intro: {
     title: 'Bot cũng cầm được dụng cụ',
     text: 'Bảng này có một con bot, một cái cuốc nằm trên đất và một tảng đá chắn đường. Ta sẽ dạy bot đi tới cuốc, cầm lên tay, đi tới đá rồi đập vỡ nó.',
-    explain: 'Mảnh ghép "Cầm tay" làm việc với mọi nhân vật, kể cả bot. Bot chỉ cần được "ra lệnh" bằng các mảnh ghép thay vì bấm phím.',
+    explain: 'Mảnh ghép "Cầm dụng cụ" làm việc với mọi nhân vật, kể cả bot. Bot chỉ cần được "ra lệnh" bằng các mảnh ghép thay vì bấm phím.',
   },
   watch: {
     title: 'Xem thử trước',
@@ -36,23 +36,23 @@ export const BOT_TOOL_TEXT = {
     explain: 'Mảnh ghép Hoặc gom hai tín hiệu "Vừa tới". Mỗi lần bot tới nơi, Chuỗi việc chuyển sang việc kế tiếp.',
   },
   hand: {
-    title: 'Thêm mảnh ghép Cầm tay',
-    text: 'Kéo mảnh ghép "Cầm tay" (nhóm Hành động) vào bảng.',
-    explain: 'Cầm tay nhặt món dụng cụ ở gần nhất lên tay, hoặc cất xuống. Nó cũng vung tay để dùng dụng cụ.',
+    title: 'Thêm mảnh ghép Cầm dụng cụ',
+    text: 'Kéo mảnh ghép "Cầm dụng cụ" (nhóm Hành động) vào bảng.',
+    explain: 'Cầm dụng cụ nhặt món dụng cụ ở gần nhất lên tay, hoặc cất xuống. Nó cũng vung tay để dùng dụng cụ.',
   },
   handWho: {
     title: 'Nói bot sẽ cầm',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Nhân vật" của mảnh ghép Cầm tay.',
+    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Nhân vật" của mảnh ghép Cầm dụng cụ.',
   },
   handToggle: {
     title: 'Tới cuốc thì cầm lên',
-    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía cuốc) sang cổng "Cầm/Cất" của Cầm tay.',
+    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía cuốc) sang cổng "Cầm / Cất" của Cầm dụng cụ.',
     explain: 'Khi bot vừa tới chỗ cuốc, mảnh ghép nhận một nhịp và bot nhặt cuốc lên tay.',
   },
   handUse: {
     title: 'Tới đá thì vung cuốc',
-    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía đá) sang cổng "Dùng" của Cầm tay.',
-    explain: 'Khi bot vừa tới chỗ đá, nó vung cuốc. Thứ nằm ngay phía trước bot sẽ nhận tín hiệu "Vừa bị dùng lên".',
+    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía đá) sang cổng "Dùng" của Cầm dụng cụ.',
+    explain: 'Khi bot vừa tới chỗ đá, nó vung cuốc. Thứ nằm ngay phía trước bot sẽ nhận tín hiệu "Bị dùng lên".',
   },
   and: {
     title: 'Chỉ cuốc mới đập được đá',
@@ -61,24 +61,24 @@ export const BOT_TOOL_TEXT = {
   },
   rockUsed: {
     title: 'Đá vừa bị dùng lên',
-    text: 'Nối cổng "Vừa bị dùng lên" của Hộp tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
+    text: 'Nối cổng "Bị dùng lên" của Hộp tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
   },
   inHand: {
     title: 'Cuốc đang ở trên tay',
-    text: 'Nối cổng "Đang ở trên tay" của cái cuốc sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Đang cầm tay" của cái cuốc sang cổng "B" của mảnh ghép Và.',
   },
   rockHide: {
     title: 'Đá bị đập thì vỡ',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi" của Hộp tảng đá.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của Hộp tảng đá.',
     explain: 'Đá bị "ẩn đi" thì biến mất, đường được thông.',
   },
   end: {
-    title: 'Thêm mảnh ghép Thắng/Thua',
-    text: 'Kéo mảnh ghép "Thắng/Thua" (nhóm Kết quả) vào bảng.',
+    title: 'Thêm mảnh ghép Thắng / Thua',
+    text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   win: {
     title: 'Đá vỡ là thắng',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Thắng" của mảnh ghép Thắng/Thua.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Chạy thử',

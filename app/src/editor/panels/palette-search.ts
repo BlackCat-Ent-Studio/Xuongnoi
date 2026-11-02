@@ -49,6 +49,8 @@ export interface SearchItem {
   kind: string;
   title: string;
   description: string;
+  /** Extra words that find this item (English term, the name it had before). */
+  aliases?: readonly string[];
 }
 
 /** Items matching every word of `query`, title matches first, then description/synonym matches. */
@@ -63,7 +65,7 @@ export function searchItems<T extends SearchItem>(
   const scored: { item: T; score: number; index: number }[] = [];
   items.forEach((item, index) => {
     const title = normalizeText(item.title);
-    const rest = normalizeText(`${item.description} ${(synonyms[item.kind] ?? []).join(' ')} ${item.kind}`);
+    const rest = normalizeText(`${item.description} ${(synonyms[item.kind] ?? []).join(' ')} ${(item.aliases ?? []).join(' ')} ${item.kind}`);
     const all = `${title} ${rest}`;
     if (!words.every((w) => all.includes(w))) return;
     let score = 1;
