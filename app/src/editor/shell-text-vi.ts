@@ -22,6 +22,7 @@ export const SHELL_TEXT = {
   fileOpen: 'Mở file…',
   fileSave: 'Lưu',
   fileExport: 'Xuất ra file',
+  fileGameSettings: 'Cài đặt game',
   savedLocal: 'Đã lưu trong trình duyệt',
 
   // Sửa

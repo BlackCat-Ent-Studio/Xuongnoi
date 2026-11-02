@@ -1,0 +1,1997 @@
+[
+ {
+  "id": "sample:side-stars",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống vực mất rồi!\"}",
+   "ticks": 159,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e24423ef"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống vực mất rồi!\"}",
+   "ticks": 159,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e24423ef"
+  }
+ },
+ {
+  "id": "sample:top-collect",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-block x1 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e572ce72"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-block x1 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e572ce72"
+  }
+ },
+ {
+  "id": "sample:3d-hop",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống rồi, thử lại nhé!\"}",
+   "ticks": 471,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9b21090"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống rồi, thử lại nhé!\"}",
+   "ticks": 471,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9b21090"
+  }
+ },
+ {
+  "id": "sample:key-door",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x2 from 1.2s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5dfb01a8"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6810c61a"
+  }
+ },
+ {
+  "id": "sample:pickaxe-rock",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "carried-in-block x1 from 10.1s",
+    "carried-in-body x1 from 3.6s",
+    "character-in-item x2 from 1.2s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58f34807"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "162b58cc"
+  }
+ },
+ {
+  "id": "sample:guard-patrol",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Lính gác bắt được bạn rồi!\"}",
+   "ticks": 449,
+   "breaks": [
+    "character-in-character x1 from 7.5s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6fa507dc"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Lính gác bắt được bạn rồi!\"}",
+   "ticks": 449,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4714b3f9"
+  }
+ },
+ {
+  "id": "sample:cleaner-bot",
+  "off": {
+   "ended": "{\"result\":\"win\",\"message\":\"Bot đã dọn sạch tất cả thùng!\"}",
+   "ticks": 768,
+   "breaks": [
+    "carried-in-body x1 from 2.2s",
+    "character-in-item x3 from 2.0s",
+    "item-in-item x2 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "cfbc58eb"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "item-in-item x2 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b09934ac"
+  }
+ },
+ {
+  "id": "sample:maze-chase",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bot đã bắt được bạn!\"}",
+   "ticks": 598,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "20edef6a"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bot đã bắt được bạn!\"}",
+   "ticks": 598,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "98acadce"
+  }
+ },
+ {
+  "id": "sample:platform-bot",
+  "off": {
+   "ended": "{\"result\":\"win\",\"message\":\"Bot đã leo lên lấy được ngôi sao!\"}",
+   "ticks": 280,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ad9fe33"
+  },
+  "on": {
+   "ended": "{\"result\":\"win\",\"message\":\"Bot đã leo lên lấy được ngôi sao!\"}",
+   "ticks": 280,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ad9fe33"
+  }
+ },
+ {
+  "id": "sample:arena",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 2.0s",
+    "character-in-item x3 from 1.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ce5f559e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6f51e008"
+  }
+ },
+ {
+  "id": "sample:race",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "76eb0c40"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "76eb0c40"
+  }
+ },
+ {
+  "id": "sample:dice-zones",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a005564a"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a005564a"
+  }
+ },
+ {
+  "id": "sample:portal-camera",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7e0feee"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7e0feee"
+  }
+ },
+ {
+  "id": "sample:dodge-shoot",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 155,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58b32a17"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 155,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58b32a17"
+  }
+ },
+ {
+  "id": "sample:city-delivery",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "carried-in-body x4 from 2.1s",
+    "character-in-item x4 from 1.6s",
+    "item-in-item x4 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7a61300"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "item-in-item x4 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "35922940"
+  }
+ },
+ {
+  "id": "sample:city-delivery-3d",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "carried-in-body x1 from 9.9s",
+    "character-in-item x13 from 0.7s",
+    "item-in-item x43 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "855d15e7"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "carried-in-body x1 from 9.9s",
+    "character-in-item x1 from 7.6s",
+    "item-in-item x43 from 0.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dc63a0f0"
+  }
+ },
+ {
+  "id": "lesson:walk-jump",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "lesson:collect-stars",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 10.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "644eb15e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 10.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "644eb15e"
+  }
+ },
+ {
+  "id": "lesson:win-lose",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 10.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "cb722355"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 10.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "cb722355"
+  }
+ },
+ {
+  "id": "lesson:secret-door",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7201482c"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7201482c"
+  }
+ },
+ {
+  "id": "lesson:carry-use",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 2.1s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a8fa9233"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "30717354"
+  }
+ },
+ {
+  "id": "lesson:hand-tools",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "33e767a5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "33e767a5"
+  }
+ },
+ {
+  "id": "lesson:ui-chest",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a2cb1c9e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a2cb1c9e"
+  }
+ },
+ {
+  "id": "lesson:make-bot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fd8c51d4"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fd8c51d4"
+  }
+ },
+ {
+  "id": "lesson:chores",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 0.6s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5c20044"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "8ea0d2c8"
+  }
+ },
+ {
+  "id": "lesson:chores-place",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x2 from 0.6s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7560ea31"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "8ea0d2c8"
+  }
+ },
+ {
+  "id": "lesson:bot-pickaxe",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 0.7s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "445d46e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "24e98dfd"
+  }
+ },
+ {
+  "id": "lesson:chase-game",
+  "off": {
+   "ended": "{\"result\":\"win\",\"message\":\"Bạn thắng rồi!\"}",
+   "ticks": 82,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "99150e55"
+  },
+  "on": {
+   "ended": "{\"result\":\"win\",\"message\":\"Bạn thắng rồi!\"}",
+   "ticks": 82,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "99150e55"
+  }
+ },
+ {
+  "id": "lesson:bot-senses",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "846c30e1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "846c30e1"
+  }
+ },
+ {
+  "id": "lesson:combat",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 2.0s",
+    "character-in-item x1 from 1.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c8d638c1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a8d2062"
+  }
+ },
+ {
+  "id": "lesson:platforms-shooting",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 195,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a0db6c4"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 195,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a0db6c4"
+  }
+ },
+ {
+  "id": "lesson:chance-zones",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "98109ea0"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "98109ea0"
+  }
+ },
+ {
+  "id": "lesson:camera-portals",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a077aafa"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a077aafa"
+  }
+ },
+ {
+  "id": "lesson:collider-gravity",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 1.3s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4c0999c6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "201103e3"
+  }
+ },
+ {
+  "id": "lesson:conveyor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 2.6s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "18f1cffc"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 2.6s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "18f1cffc"
+  }
+ },
+ {
+  "id": "lesson:vehicles",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fd8c51d4"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fd8c51d4"
+  }
+ },
+ {
+  "id": "lesson:bot-driver",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4139aa6d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4139aa6d"
+  }
+ },
+ {
+  "id": "lesson:route-traffic",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5c8203e7"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5c8203e7"
+  }
+ },
+ {
+  "id": "lesson:train",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b006c903"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b006c903"
+  }
+ },
+ {
+  "id": "lesson:cargo-delivery",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 10.5s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "44fee753"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 10.5s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "44fee753"
+  }
+ },
+ {
+  "id": "lesson:guide-arrow",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "d2d6a01b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "d2d6a01b"
+  }
+ },
+ {
+  "id": "lesson:health-color",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 10.5s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "beee6a2d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c968664d"
+  }
+ },
+ {
+  "id": "lesson:start-screen",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a33855e6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a33855e6"
+  }
+ },
+ {
+  "id": "lesson:ask-dialog",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 1.8s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ecb5b6e0"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e0040e30"
+  }
+ },
+ {
+  "id": "lesson:editor-tools",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "24cccaa1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "24cccaa1"
+  }
+ },
+ {
+  "id": "lesson:groups",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ebe3f267"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ebe3f267"
+  }
+ },
+ {
+  "id": "lesson:capstone-factory",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 0.2s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "3d9f5507"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7c0cee95"
+  }
+ },
+ {
+  "id": "handbook:key",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:stick",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:on-start",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:ui-button",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:ui-pick",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a9ab9b31"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a9ab9b31"
+  }
+ },
+ {
+  "id": "handbook:ui-dialog",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:ui-start",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:and",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:or",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:not",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:compare",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:touch",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e74b59a6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e74b59a6"
+  }
+ },
+ {
+  "id": "handbook:select-number",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:latch",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:zone",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ad429510"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ad429510"
+  }
+ },
+ {
+  "id": "handbook:distance",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dbd3037e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dbd3037e"
+  }
+ },
+ {
+  "id": "handbook:speed-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "74b21d90"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "74b21d90"
+  }
+ },
+ {
+  "id": "handbook:ahead-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "36b289ea"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "36b289ea"
+  }
+ },
+ {
+  "id": "handbook:vision-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f27a22b0"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f27a22b0"
+  }
+ },
+ {
+  "id": "handbook:color-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "104c8704"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "104c8704"
+  }
+ },
+ {
+  "id": "handbook:const",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 4.4s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "22f296e6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "below-floor x1 from 4.4s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "22f296e6"
+  }
+ },
+ {
+  "id": "handbook:math",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "bba2eeb6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "bba2eeb6"
+  }
+ },
+ {
+  "id": "handbook:counter",
+  "off": {
+   "ended": "{\"result\":\"win\",\"message\":\"Đủ 3 lần rồi!\"}",
+   "ticks": 586,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9c748180"
+  },
+  "on": {
+   "ended": "{\"result\":\"win\",\"message\":\"Đủ 3 lần rồi!\"}",
+   "ticks": 586,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9c748180"
+  }
+ },
+ {
+  "id": "handbook:timer",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hết giờ rồi!\"}",
+   "ticks": 600,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2110cfe0"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hết giờ rồi!\"}",
+   "ticks": 600,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2110cfe0"
+  }
+ },
+ {
+  "id": "handbook:random",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  }
+ },
+ {
+  "id": "handbook:map-range",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  }
+ },
+ {
+  "id": "handbook:character",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "da4f96"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "da4f96"
+  }
+ },
+ {
+  "id": "handbook:block",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "20e45719"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "20e45719"
+  }
+ },
+ {
+  "id": "handbook:item",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "3ae51dd0"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "3ae51dd0"
+  }
+ },
+ {
+  "id": "handbook:vehicle",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dfb5a409"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dfb5a409"
+  }
+ },
+ {
+  "id": "handbook:portal",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7d22c7c9"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7d22c7c9"
+  }
+ },
+ {
+  "id": "handbook:moving-platform",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2b234e36"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2b234e36"
+  }
+ },
+ {
+  "id": "handbook:rotating-platform",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6f17d8fb"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6f17d8fb"
+  }
+ },
+ {
+  "id": "handbook:win-lose",
+  "off": {
+   "ended": "{\"result\":\"win\",\"message\":\"Hoan hô, bạn thắng!\"}",
+   "ticks": 91,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a2cfbc8"
+  },
+  "on": {
+   "ended": "{\"result\":\"win\",\"message\":\"Hoan hô, bạn thắng!\"}",
+   "ticks": 91,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a2cfbc8"
+  }
+ },
+ {
+  "id": "handbook:show-number",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "98e9c47c"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "98e9c47c"
+  }
+ },
+ {
+  "id": "handbook:show-text",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "295d1960"
+  }
+ },
+ {
+  "id": "handbook:guide-arrow",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f583944a"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f583944a"
+  }
+ },
+ {
+  "id": "handbook:ui-meter",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hết giờ rồi!\"}",
+   "ticks": 600,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2110cfe0"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hết giờ rồi!\"}",
+   "ticks": 600,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2110cfe0"
+  }
+ },
+ {
+  "id": "handbook:carry",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "8473ec65"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "bcff169c"
+  }
+ },
+ {
+  "id": "handbook:interact",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "798a5561"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a62286"
+  }
+ },
+ {
+  "id": "handbook:hand-tool",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fbdc0031"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "850ef227"
+  }
+ },
+ {
+  "id": "handbook:health",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "430e331c"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "430e331c"
+  }
+ },
+ {
+  "id": "handbook:enter-exit",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7555d8c1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7555d8c1"
+  }
+ },
+ {
+  "id": "handbook:cargo",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f34d974a"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f34d974a"
+  }
+ },
+ {
+  "id": "handbook:camera",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "56153280"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "56153280"
+  }
+ },
+ {
+  "id": "handbook:teleport",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6701cfdf"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6701cfdf"
+  }
+ },
+ {
+  "id": "handbook:shooter",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c1ed24ad"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c1ed24ad"
+  }
+ },
+ {
+  "id": "handbook:spawner",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e603e1f"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e603e1f"
+  }
+ },
+ {
+  "id": "handbook:patrol",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "772cd2fe"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "772cd2fe"
+  }
+ },
+ {
+  "id": "handbook:go-to",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "95c38ed"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "95c38ed"
+  }
+ },
+ {
+  "id": "handbook:route-follow",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "1d5f8cc5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "1d5f8cc5"
+  }
+ },
+ {
+  "id": "handbook:chase",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 1.5s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "aa104a3e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "be998dbd"
+  }
+ },
+ {
+  "id": "handbook:sequence",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "20ea0589"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "20ea0589"
+  }
+ },
+ {
+  "id": "handbook:fight",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "66d87cad"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "66d87cad"
+  }
+ }
+]

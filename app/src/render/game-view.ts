@@ -13,6 +13,7 @@ import {
   type World,
 } from '../engine/types';
 import { createRuntime } from '../engine/runtime';
+import { worldOptionsForGraph } from '../world/graph-world-options';
 import { createWorld } from '../world/world';
 import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
@@ -183,7 +184,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   function build(graph: Graph, m: ViewMode): boolean {
     try {
       ensureNodesRegistered();
-      const w = createWorld(m, options.stage?.worldOptions?.(m));
+      const w = createWorld(m, options.stage?.worldOptions?.(m) ?? worldOptionsForGraph(graph));
       const r = createRuntime(graph, w, m);
       world = w;
       runtime = r;

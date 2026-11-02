@@ -144,6 +144,12 @@
 .pn-empty-state { padding: 16px 14px; color: var(--text2, #aab2bd); font-size: 12.5px; line-height: 1.5; }
 .pn-empty-state h3 { margin: 0 0 6px; color: var(--text, #e7e9ec); font-size: 13.5px; font-weight: 600; }
 .pn-empty-state p { margin: 0; }
+.pn-setting { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 4px 8px; margin: 14px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line2, #3a404a); }
+.pn-setting h3 { grid-column: 1 / -1; margin: 0; }
+.pn-setting-label { display: flex; align-items: center; gap: 8px; color: var(--text, #e7e9ec); font-weight: 600; cursor: pointer; }
+.pn-setting-label input { margin: 0; accent-color: var(--accent, #3ecf8e); }
+.pn-setting-label input:disabled { cursor: not-allowed; }
+.pn-setting-tip { grid-column: 1 / -1; font-size: 12px; }
 .pn-keys { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 7px 10px; margin: 12px 0 0; align-items: center; }
 .pn-keys dd { margin: 0; }
 .pn-keys kbd { font: 600 11px/1 inherit; padding: 2px 5px; border-radius: 4px; background: var(--raise, #2b3038); border: 1px solid var(--line2, #3a404a); color: var(--text, #e7e9ec); }

@@ -30,6 +30,10 @@ export const PANELS_TEXT_VI = {
   stepUp: (label: string) => `Tăng ${label}`,
   lookLabel: 'Kiểu dáng',
 
+  gameSettingsTitle: 'Cài đặt game',
+  solidBodiesLabel: 'Va chạm thật',
+  solidBodiesTip: 'Nhân vật và đồ vật đặc, không đi xuyên nhau; thả đồ rơi ngay trước tay. Áp dụng ở lần Chơi sau.',
+  solidBodiesLocked: 'Bấm Dừng để đổi cài đặt này.',
   emptyTitle: 'Chưa chọn mảnh ghép nào',
   emptyBody: 'Bấm vào một mảnh ghép trên bảng nối dây để xem và đổi thuộc tính của nó.',
   shortcuts: [

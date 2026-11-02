@@ -9,6 +9,8 @@ import type { WorldOptions } from './world-options';
  */
 
 export interface BodyRules {
+  respawnFallen: boolean;
+  frontAll: boolean;
   frontLooks: ReadonlySet<string>;
   frontCarry: { reach: number; height: number };
 }
@@ -24,7 +26,7 @@ const FALLBACK_FRONT = { reach: 0.65, height: 0.3 };
 
 export function bodyRules(options: WorldOptions | undefined): BodyRules | null {
   if (!options?.solidBodies) return null;
-  return { frontLooks: new Set(options.frontCarryLooks ?? []), frontCarry: options.frontCarry ?? FALLBACK_FRONT };
+  return { respawnFallen: options.respawnFallen === true, frontAll: options.frontCarryAll === true, frontLooks: new Set(options.frontCarryLooks ?? []), frontCarry: options.frontCarry ?? FALLBACK_FRONT };
 }
 
 /** True when this entity blocks (and is blocked by) other bodies: a standing character or an item lying free. */
@@ -38,12 +40,17 @@ export function overlapsBox(a: Entity, b: Entity): boolean {
   return boxOverlap(a, b, 'x') > 1e-6 && boxOverlap(a, b, 'y') > 1e-6 && boxOverlap(a, b, 'z') > 1e-6;
 }
 
+/** True when this carrier holds its item out in front instead of above its head. */
+function carriesInFront(holder: Entity, rules: BodyRules): boolean {
+  return rules.frontAll || (holder.look !== undefined && rules.frontLooks.has(holder.look));
+}
+
 /**
  * Where an item rides on its carrier: in front and low for the looks that hold it out front, otherwise just above
  * the top of the carrier's collision box (which is as tall as the figure that is drawn).
  */
 export function solidCarryPosition(holder: Entity, item: Entity, rules: BodyRules): Vec3 {
-  if (holder.look !== undefined && rules.frontLooks.has(holder.look)) {
+  if (carriesInFront(holder, rules)) {
     const feet = holder.pos.y - holder.size.y / 2;
     // Held just clear of the carrier's own box, so letting go leaves the item standing in front, not inside it.
     const body = colliderBox(holder);
@@ -88,7 +95,7 @@ export function updateCarryFloors(entities: readonly Entity[], rules: BodyRules,
     if (c.kind !== 'character') continue;
     delete c.carryFloor;
     const item = c.holding !== null ? entities.find((e) => e.id === c.holding) : undefined;
-    if (!item || item.inHand || item.heldBy !== c.id || c.look === undefined || !rules.frontLooks.has(c.look)) continue;
+    if (!item || item.inHand || item.heldBy !== c.id || !carriesInFront(c, rules)) continue;
     const at = carryAt(c, item);
     const bottom = at.y - item.size.y / 2;
     let top = -Infinity;

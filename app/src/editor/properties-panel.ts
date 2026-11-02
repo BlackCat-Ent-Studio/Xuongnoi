@@ -2,6 +2,7 @@ import { getNodeDef } from '../engine/registry';
 import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
+import { SOLID_BODIES_TOPIC } from '../handbook/topic-solid-bodies';
 import { h } from './dom';
 import { renderGroupInspector, renderMultiSelect } from './groups/group-inspector';
 import { createLookPicker, type LookPicker } from './look-picker';
@@ -310,9 +311,26 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     return b;
   }
 
+  /** The "Va chạm thật" switch of this game (also in the Tệp menu). Applies on the next Chơi. */
+  function solidBodiesToggle(): HTMLElement {
+    const playing = state.isPlaying();
+    const row = h('div', 'pn-setting');
+    row.dataset.setting = 'solid-bodies';
+    const label = h('label', 'pn-setting-label');
+    const box = h('input');
+    box.type = 'checkbox';
+    box.checked = state.getSolidBodies();
+    box.disabled = playing;
+    box.addEventListener('change', () => state.setSolidBodies(box.checked));
+    label.append(box, h('span', '', P.solidBodiesLabel));
+    label.title = playing ? P.solidBodiesLocked : P.solidBodiesTip;
+    row.append(h('h3', '', P.gameSettingsTitle), label, createHandbookHelpButton(SOLID_BODIES_TOPIC, P.solidBodiesLabel), h('p', 'pn-setting-tip', P.solidBodiesTip));
+    return row;
+  }
+
   function renderEmpty(): void {
     const box = h('div', 'pn-empty-state');
-    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody));
+    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle());
     const dl = h('dl', 'pn-keys');
     for (const s of P.shortcuts) {
       const dt = h('dt');
