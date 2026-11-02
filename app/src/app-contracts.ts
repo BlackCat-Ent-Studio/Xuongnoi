@@ -32,10 +32,19 @@ export interface GameView {
   applyNodeParams(nodeId: string, params: Record<string, unknown>): boolean;
   /** Edit mode: the graph nodes currently selected; the objects they own get a green collision-box frame. Hidden while playing. */
   setSelection(ownerNodeIds: ReadonlySet<string>): void;
+  /**
+   * Objects owned by these graph nodes pulse in yellow on the stage (a yellow shell with a thick outline, drawn over
+   * everything), while editing and while playing; the pulse breathes for a few seconds, then holds steady. An empty set
+   * clears it. Nodes that own no visible object (logic cards) show nothing.
+   */
+  setHighlight(ownerNodeIds: ReadonlySet<string>): void;
   /** Runtime of the current play session (for wire value inspection), null when not playing. */
   getRuntime(): Runtime | null;
-  /** Graph node id owning the entity under the pointer, or null. */
-  pickEntityOwner(clientX: number, clientY: number): string | null;
+  /**
+   * Graph node id owning the entity under the pointer, or null. `ignore` = owners the ray passes through (a floor);
+   * `slopPx` > 0 also looks that many px around the point when the exact spot holds nothing (thin objects, fingers).
+   */
+  pickEntityOwner(clientX: number, clientY: number, opts?: { slopPx?: number; ignore?: ReadonlySet<string> }): string | null;
   /** Point on the mode's editing plane under the pointer (side: z=0 plane; top / 3d: y = planeY). */
   screenToPlane(clientX: number, clientY: number, planeY?: number): Vec3 | null;
   /** Fired once when win/lose triggers. The view shows its own overlay with a "Chơi lại" button. */

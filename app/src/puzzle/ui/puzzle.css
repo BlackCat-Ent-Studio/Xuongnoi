@@ -85,6 +85,20 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .pz-board.wiring .wc-port.pick .wc-dot { transform: scale(1.5); box-shadow: 0 0 0 3px #fff; }
 .pz-board .wc-node-head { cursor: grab; touch-action: none; }
 .pz-board .wc-node.pz-dragging { z-index: 4; opacity: .92; }
+/* object cards: a picture of the stage object in place of the category dot, then the object's own name */
+.pz-board .wc-node .wc-tile.pz-thumb { position: relative; width: 38px; height: 38px; margin: -7px 0; border-radius: 12px; background: rgba(255, 255, 255, .5); display: grid; place-items: center; overflow: hidden; }
+.pz-board .wc-node .wc-tile.pz-thumb svg { width: 18px; height: 18px; }
+.pz-board .wc-node .wc-tile.pz-thumb.has-img svg { display: none; }
+.pz-thumb-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; pointer-events: none; user-select: none; }
+/* the card the player picked (or whose object was tapped on the stage): a yellow ring and glow; --hl undoes the corner-window shrink so it stays visible */
+.pz-screen { --hl: 1px; }
+.pz-screen[data-focus="stage"] { --hl: calc(1px / var(--pip-k)); }
+.pz-board .wc-node.pz-picked { z-index: 3; border-color: #ffd23f; box-shadow: 0 0 0 calc(4 * var(--hl)) #ffd23f, 0 0 calc(22 * var(--hl)) calc(7 * var(--hl)) rgba(255, 210, 63, .8), 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10); }
+.pz-board .wc-node.pz-ping { animation: pz-card-ping 1s ease-in-out 4; }
+@keyframes pz-card-ping {
+  50% { box-shadow: 0 0 0 calc(7 * var(--hl)) #fff0a0, 0 0 calc(34 * var(--hl)) calc(14 * var(--hl)) rgba(255, 210, 63, .95), 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10); }
+}
+@media (prefers-reduced-motion: reduce) { .pz-board .wc-node.pz-ping { animation: none; } }
 .pz-board .wc-node-head:active { cursor: grabbing; }
 .pz-board.readonly .wc-node-head { cursor: default; }
 .pz-board .wc-port { cursor: pointer; }

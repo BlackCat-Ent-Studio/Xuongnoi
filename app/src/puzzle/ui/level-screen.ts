@@ -3,11 +3,13 @@ import { TICK_DT, type GameResult } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { viewPitch } from '../../nodes/camera';
 import { starsFor } from '../run-level';
-import { STAGE_CHARACTER_SCALE } from '../stage/cozy-stage';
+import { renderObjectThumbnails } from '../../render/object-thumbnails';
+import { STAGE_CHARACTER_SCALE, createCozyStage } from '../stage/cozy-stage';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
 import { graphOf, toAnswer } from './board-state';
 import { createGuide, type Guide } from './guide';
+import { isFloorLike } from './object-cards';
 import { hasGuide, hasSeenIntro, isGuideForced, markGuideSeen, markIntroSeen, newPieceIntros } from './guide-script';
 import { countHint, extraHints, hintBadge } from './hint-rules';
 import { starsOf, withBest, type ProgressMap } from './progress';
@@ -41,6 +43,8 @@ export interface LevelScreenContext {
 type Phase = 'edit' | 'run' | 'ended';
 /** Which layer is full screen; the other one is the live picture-in-picture window in the bottom-right corner. */
 type Focus = 'board' | 'stage';
+/** How far (screen px) from a tap on the stage an object still counts as tapped. */
+const TAP_REACH_PX = 18;
 
 /** Main character: the first character whose look is the level's first cast look, else the first character. */
 export function mainCharacterId(level: PuzzleLevel): string | null {
@@ -236,7 +240,24 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   }
 
   /** The stage's own camera: drag, wheel, pinch and double tap, only while the stage is the big view. */
-  const cameraInput = attachStageCameraInput(stageSec, stage.view, () => focus === 'stage', syncCamera);
+  const cameraInput = attachStageCameraInput(stageSec, stage.view, () => focus === 'stage', syncCamera, onStageTap);
+
+  /** The object that glows on the stage and whose card is lit on the board (they always go together). */
+  let litObject: string | null = null;
+  function lightObject(id: string | null): void {
+    litObject = id;
+    stage.view.setHighlight(id === null ? new Set() : new Set([id]));
+  }
+
+  /** A tap on the big stage: an object with a card lights both; a second tap on it, the floor or empty space lets go. */
+  function onStageTap(clientX: number, clientY: number): void {
+    // Floors, scenery and anything without a card are see-through for the tap, so a thin bot or door behind or beside them still counts.
+    const ignore = new Set(level.base.nodes.filter((n) => isFloorLike(n) || !board?.hasObjectCard(n.id)).map((n) => n.id));
+    const id = stage.view.pickEntityOwner(clientX, clientY, { slopPx: TAP_REACH_PX, ignore });
+    const next = id !== null && id !== litObject ? id : null;
+    board?.pickCard(next);
+    lightObject(next);
+  }
 
   function zoomStep(factor: number): void {
     const r = stageSec.getBoundingClientRect();
@@ -411,7 +432,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
 
   stage.onEnd = finish;
 
-  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview, toastHost: screen, keepClear: () => ({ x: pipRect.x - PIP_CLEAR_PX, y: pipRect.y - PIP_CLEAR_PX, w: pipRect.w + 2 * PIP_CLEAR_PX, h: pipRect.h + 2 * PIP_CLEAR_PX }) });
+  board = createBoardView({ level, board: boardEl, trayEl, bottomEl: bottom, onChange: schedulePreview, toastHost: screen, onCardPick: lightObject, thumbnails: (ids) => renderObjectThumbnails(level.base, level.mode, createCozyStage(), ids), keepClear: () => ({ x: pipRect.x - PIP_CLEAR_PX, y: pipRect.y - PIP_CLEAR_PX, w: pipRect.w + 2 * PIP_CLEAR_PX, h: pipRect.h + 2 * PIP_CLEAR_PX }) });
   guide = createGuide({ level, screen, board, runBtn, isEditing: () => phase === 'edit', showBoard: () => setFocus('board') });
 
   // ----- buttons -----
@@ -482,6 +503,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     stopWatch();
     screenObserver.disconnect();
     cameraInput.dispose();
+    lightObject(null);
     stage.onEnd = null;
     stage.view.stop();
     board?.destroy();

@@ -19,9 +19,17 @@ export function positionOnPlane(mode: ViewMode, current: Vec3, point: Vec3, offs
   return { x: axis('x'), y: current.y, z: axis('z') };
 }
 
-/** Lets the user drag entities in the game view (edit mode) to set their `position` param. */
-export function installEntityDrag(container: HTMLElement, gameView: GameView, state: EditorState): void {
-  let active: { pointerId: number; nodeId: string; offset: Vec3; planeY: number; moved: boolean } | null = null;
+/** A press that moves less than this (screen px) is a tap. */
+const TAP_SLOP = 5;
+
+/**
+ * Lets the user drag entities in the game view (edit mode) to set their `position` param.
+ * A tap (no drag) on an object selects its card and `onPicked` can bring the card into view; a second tap on the only
+ * selected object, or a tap on empty space, lets go of the selection.
+ */
+export function installEntityDrag(container: HTMLElement, gameView: GameView, state: EditorState, onPicked?: (nodeId: string) => void): void {
+  let active: { pointerId: number; nodeId: string; offset: Vec3; planeY: number; moved: boolean; wasOnlySelected: boolean } | null = null;
+  let emptyDown: { pointerId: number; x: number; y: number } | null = null;
 
   const planePoint = (e: PointerEvent, planeY: number): Vec3 | null =>
     gameView.screenToPlane(e.clientX, e.clientY, planeY);
@@ -39,7 +47,10 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
 
   const end = (e: PointerEvent): void => {
     if (!active || e.pointerId !== active.pointerId) return;
+    const done = active;
     active = null;
+    if (e.type === 'pointerup' && !done.moved && done.wasOnlySelected) state.select(null);
+    else if (!done.wasOnlySelected) onPicked?.(done.nodeId);
     window.removeEventListener('pointermove', onMove);
     window.removeEventListener('pointerup', end);
     window.removeEventListener('pointercancel', end);
@@ -51,7 +62,10 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
     (e) => {
       if (state.isPlaying() || e.button !== 0 || !(e.target instanceof HTMLCanvasElement)) return;
       const nodeId = gameView.pickEntityOwner(e.clientX, e.clientY);
-      if (!nodeId) return;
+      if (!nodeId) {
+        emptyDown = { pointerId: e.pointerId, x: e.clientX, y: e.clientY };
+        return;
+      }
       const cur = readPosition(state.getGraph(), nodeId);
       if (!cur) return;
       const planeY = cur.y;
@@ -59,6 +73,8 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
       if (!p) return;
       e.preventDefault();
       e.stopPropagation();
+      const sel = state.getSelection();
+      const wasOnlySelected = sel?.kind === 'node' && sel.id === nodeId && state.getMulti().size === 1;
       state.select({ kind: 'node', id: nodeId });
       active = {
         pointerId: e.pointerId,
@@ -66,6 +82,7 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
         planeY,
         offset: { x: cur.x - p.x, y: cur.y - p.y, z: cur.z - p.z },
         moved: false,
+        wasOnlySelected,
       };
       window.addEventListener('pointermove', onMove);
       window.addEventListener('pointerup', end);
@@ -73,4 +90,13 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
     },
     true,
   );
+
+  // A tap on empty space (no orbit / pan) lets go of the selection.
+  container.addEventListener('pointerup', (e) => {
+    const down = emptyDown;
+    emptyDown = null;
+    if (!down || down.pointerId !== e.pointerId || state.isPlaying()) return;
+    if (Math.hypot(e.clientX - down.x, e.clientY - down.y) > TAP_SLOP) return;
+    if (state.getMulti().size > 0) state.select(null);
+  });
 }

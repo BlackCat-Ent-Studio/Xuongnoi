@@ -27,6 +27,7 @@ import {
   type Box,
   type PortEnd,
 } from './board-state';
+import { hasNamedTitle, isObjectKind, objectName } from './object-cards';
 import { PUZZLE_UI_TEXT } from './puzzle-text';
 import { playSfx } from './sound';
 
@@ -43,6 +44,8 @@ const MIN_CARD_SCALE = 0.78;
 /** A tap this close (screen px) to a pin counts as a tap on it, so small cards stay easy to wire. */
 const PORT_REACH = 26;
 const WIRE_REACH = 12;
+/** A press that moves less than this (screen px) is a tap, not a drag. */
+const TAP_SLOP = 6;
 
 const NO_MISSING: ReadonlySet<string> = new Set();
 const portKey = (node: string, dir: PortDir, port: string): string => `${node}|${dir}|${port}`;
@@ -81,6 +84,10 @@ export interface BoardViewOptions {
   keepClear?: () => Box | null;
   /** Where the toast goes (default: the board). The level screen passes itself so a toast stays readable while the board is shrunk. */
   toastHost?: HTMLElement;
+  /** Pictures of the stage objects, by node id. Called once, after the first draw, so the board never waits for it. */
+  thumbnails?: (nodeIds: string[]) => ReadonlyMap<string, string>;
+  /** The player tapped an object card (id) or tapped away from it / tapped it again (null). The stage glows that object. */
+  onCardPick?: (nodeId: string | null) => void;
 }
 
 export interface BoardView {
@@ -95,6 +102,10 @@ export interface BoardView {
   toast(message: string): void;
   destroy(): void;
   // ----- hooks for the tutorial guide -----
+  /** Whether the board shows a card for this node that stands for a stage object (it can be picked). */
+  hasObjectCard(nodeId: string): boolean;
+  /** Marks one object card as picked and pulses it (null clears). Does not call `onCardPick`. */
+  pickCard(nodeId: string | null): void;
   /** The pin of a port on the board, or null when it is not shown. */
   portEl(end: PortEnd): HTMLElement | null;
   /** The tray chip of a tray slot. */
@@ -128,6 +139,10 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   const energy = createWireEnergy(wireLayer);
   let state: BoardState = EMPTY_BOARD;
   let picked: PortEnd | null = null;
+  /** The object card that is lit (tapped on the board, or its object tapped on the stage). */
+  let pickedCard: string | null = null;
+  let thumbUrls: ReadonlyMap<string, string> = new Map();
+  let thumbRaf = 0;
   let running = false;
   /** Cards keep a readable size; only their positions follow the board size. */
   let cardScale = 1;
@@ -228,6 +243,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const head = box.querySelector('.wc-node-head');
     if (!head) return;
     box.classList.toggle('pz-locked', locked);
+    if (hasNamedTitle(node)) nameCard(box, head, node);
     if (locked) {
       head.append(lockIcon());
     } else {
@@ -271,6 +287,84 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return String(value ?? '');
   }
 
+  /** An object card is titled with the object's own name and a picture of it; the generic kind word is dropped. */
+  function nameCard(box: HTMLElement, head: Element, node: GraphNode): void {
+    const title = head.querySelector('.wc-title');
+    const name = title?.querySelector('.wc-name');
+    if (!title || !name) return;
+    name.textContent = objectName(node);
+    for (const extra of Array.from(title.children)) if (extra !== name) extra.remove();
+    head.querySelector('.wc-tile')?.classList.add('pz-thumb');
+    // The "Hộp" / "Đồ vật" word on the object's own pin is the same generic word; the pin keeps the object's name as its tip only.
+    for (const row of Array.from(box.querySelectorAll<HTMLElement>('.wc-port.out[data-port="self"]'))) {
+      row.querySelector('.wc-pl')?.replaceChildren();
+      row.title = objectName(node);
+    }
+    box.classList.add('pz-object');
+    const url = thumbUrls.get(node.id);
+    if (url) putThumb(box, url);
+  }
+
+  function putThumb(box: HTMLElement, url: string): void {
+    const tile = box.querySelector('.pz-thumb');
+    if (!tile || tile.querySelector('img')) return;
+    const img = h('img', 'pz-thumb-img');
+    img.alt = '';
+    img.draggable = false;
+    img.src = url;
+    tile.append(img);
+    tile.classList.add('has-img');
+  }
+
+  /** Draws the pictures after the board is on screen, so opening a level never waits for them. */
+  function scheduleThumbs(): void {
+    if (!opts.thumbnails || thumbRaf) return;
+    thumbRaf = requestAnimationFrame(() => {
+      thumbRaf = 0;
+      const ids = [...cards.entries()].filter(([, box]) => box.classList.contains('pz-object')).map(([id]) => id);
+      if (ids.length === 0 || !opts.thumbnails) return;
+      try {
+        thumbUrls = opts.thumbnails(ids);
+      } catch (err) {
+        console.error(err);
+        return;
+      }
+      for (const [id, box] of cards) {
+        const url = thumbUrls.get(id);
+        if (url) putThumb(box, url);
+      }
+    });
+  }
+
+  // ---------- picked object card ----------
+
+  function isPickable(id: string): boolean {
+    const box = cards.get(id);
+    return box !== undefined && isObjectKind(box.dataset.kind ?? '');
+  }
+
+  function showPicked(ping: boolean): void {
+    for (const [id, box] of cards) {
+      const on = id === pickedCard;
+      box.classList.toggle('pz-picked', on);
+      if (!on) box.classList.remove('pz-ping');
+      else if (ping) {
+        box.classList.remove('pz-ping');
+        void box.offsetWidth; // restart the pulse
+        box.classList.add('pz-ping');
+      }
+    }
+  }
+
+  /** The player's own tap on a card (or away): a second tap on the lit card, or any non-object spot, lights nothing. */
+  function userPick(id: string | null): void {
+    const next = id !== null && isPickable(id) && id !== pickedCard ? id : null;
+    if (next === null && pickedCard === null) return;
+    pickedCard = next;
+    showPicked(next !== null);
+    opts.onCardPick?.(next);
+  }
+
   function hideLockedPorts(box: HTMLElement, node: GraphNode, dots: Map<string, HTMLElement>): void {
     for (const row of Array.from(box.querySelectorAll<HTMLElement>('.wc-port'))) {
       const dir = row.dataset.dir === 'out' ? 'out' : 'in';
@@ -300,6 +394,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
         ports.set(portKey(node.id, dir, port), { end: { node: node.id, port, dir }, dot, row });
       }
     }
+    showPicked(false);
   }
 
   // ---------- wires ----------
@@ -478,6 +573,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       picked = null;
       applyPick();
     }
+    userPick(t.closest<HTMLElement>('.wc-node')?.dataset.id ?? null);
   });
 
   // ---------- dragging cards by their header ----------
@@ -493,9 +589,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     if (!head || !box || !id || !start) return;
     const startX = e.clientX;
     const startY = e.clientY;
+    let dragged = false;
     head.setPointerCapture(e.pointerId);
     box.classList.add('pz-dragging');
     const move = (ev: PointerEvent): void => {
+      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > TAP_SLOP) dragged = true;
       const x = Math.min(Math.max(0, start.x + ev.clientX - startX), Math.max(0, area.w - box.offsetWidth * cardScale));
       const y = Math.min(Math.max(0, start.y + ev.clientY - startY), Math.max(0, area.h - box.offsetHeight * cardScale));
       positions.set(id, { x: x / spreadX(), y: y / spreadY() });
@@ -503,7 +601,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       box.style.top = `${Math.round(y)}px`;
       drawWires();
     };
-    const end = (): void => {
+    const end = (up: PointerEvent): void => {
       head.removeEventListener('pointermove', move);
       head.removeEventListener('pointerup', end);
       head.removeEventListener('pointercancel', end);
@@ -511,6 +609,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       // Dropped on another card: the layout nudges the cards apart.
       layout();
       drawWires();
+      // A tap without a drag picks the card (a second tap lets go).
+      if (!dragged && up.type === 'pointerup') userPick(id);
     };
     head.addEventListener('pointermove', move);
     head.addEventListener('pointerup', end);
@@ -626,6 +726,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   ro.observe(board);
   ro.observe(bottomEl);
   render();
+  scheduleThumbs();
 
   return {
     state: () => state,
@@ -659,6 +760,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       drawWires();
     },
     toast,
+    hasObjectCard: (nodeId) => isPickable(nodeId),
+    pickCard(nodeId) {
+      pickedCard = nodeId !== null && isPickable(nodeId) ? nodeId : null;
+      showPicked(pickedCard !== null);
+    },
     portEl: (end) => ports.get(portKey(end.node, end.dir, end.port))?.dot ?? null,
     chipEl: (slot) => (trayEl.children[slot] as HTMLElement | undefined) ?? null,
     paramEl: (nodeId, paramId) => {
@@ -676,6 +782,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     },
     destroy() {
       stopEnergyLoop();
+      if (thumbRaf) cancelAnimationFrame(thumbRaf);
       window.clearTimeout(toastTimer);
       ro.disconnect();
     },

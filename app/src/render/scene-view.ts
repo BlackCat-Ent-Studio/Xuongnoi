@@ -9,6 +9,7 @@ import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
+import { ObjectHighlight } from './object-highlight';
 import type { StageFigure, StageTheme } from './stage-theme';
 
 const SUN_WITH_SHADOWS = 2;
@@ -86,6 +87,7 @@ export class SceneView {
   private readonly entries = new Map<string, Entry>();
   private readonly healthBars = new HealthBarLayer(this.group);
   private readonly colliderFrames = new ColliderFrames(this.group);
+  private readonly highlight = new ObjectHighlight(this.group);
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
   private mode: ViewMode = '2d-side';
@@ -262,6 +264,36 @@ export class SceneView {
     this.colliderFrames.sync(entities, owners);
   }
 
+  /**
+   * Pulsing frames around the visible entities owned by `owners` (empty set = none). The frame follows the drawn figure
+   * (its real bounds, not the collision box). `strength` 0..1 is the pulse; `width`/`height` the canvas size in px.
+   */
+  syncHighlight(entities: readonly EntityView[], owners: ReadonlySet<string>, strength: number, width: number, height: number): void {
+    const boxes: THREE.Box3[] = [];
+    if (owners.size > 0) {
+      for (const e of entities) {
+        if (!e.visible || e.inHand || !owners.has(e.ownerNodeId)) continue;
+        const root = this.rootOf(this.entries.get(e.id));
+        if (!root) continue;
+        root.updateWorldMatrix(true, true);
+        boxes.push(new THREE.Box3().setFromObject(root));
+      }
+    }
+    this.highlight.sync(boxes, strength, width, height);
+  }
+
+  /** How many highlight frames are visible (for tests and checks). */
+  get highlightCount(): number {
+    return this.highlight.shown;
+  }
+
+  private rootOf(entry: Entry | undefined): THREE.Object3D | null {
+    if (!entry) return null;
+    if (entry.type === 'block') return entry.mesh;
+    if (entry.type === 'item') return entry.pose;
+    return entry.figure.object;
+  }
+
   /** How many collision frames are visible (for tests and checks). */
   get colliderFrameCount(): number {
     return this.colliderFrames.shown;
@@ -422,18 +454,27 @@ export class SceneView {
     this.scene.add(grid);
   }
 
-  pick(ndc: THREE.Vector2, camera: THREE.Camera): string | null {
+  /** Owner of the first thing under the ray; owners in `ignore` (a floor) let the ray carry on to what is behind them. */
+  pick(ndc: THREE.Vector2, camera: THREE.Camera, ignore?: ReadonlySet<string>): string | null {
     this.raycaster.setFromCamera(ndc, camera);
     // Recursive: humanoid parts are nested meshes; each carries the owner id in userData.
     const hits = this.raycaster.intersectObjects(this.group.children, true);
-    const owner: unknown = hits[0]?.object.userData.ownerNodeId;
-    return typeof owner === 'string' ? owner : null;
+    if (!ignore) {
+      const owner: unknown = hits[0]?.object.userData.ownerNodeId;
+      return typeof owner === 'string' ? owner : null;
+    }
+    for (const hit of hits) {
+      const owner: unknown = hit.object.userData.ownerNodeId;
+      if (typeof owner === 'string' && !ignore.has(owner)) return owner;
+    }
+    return null;
   }
 
   dispose(): void {
     this.clear();
     this.healthBars.dispose();
     this.colliderFrames.dispose();
+    this.highlight.dispose();
     this.setGrid('3d', false);
     this.geometry.dispose();
   }

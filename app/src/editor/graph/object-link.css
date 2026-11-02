@@ -1,0 +1,7 @@
+/* A card whose object was just tapped on the game view: a yellow flash so the eye finds it on the board. */
+.wc .wc-node.wc-flash { animation: wc-flash 1s ease-in-out 3; }
+@keyframes wc-flash {
+  0%, 100% { outline: 0 solid rgba(255, 210, 63, 0); }
+  50% { outline: 5px solid rgba(255, 210, 63, .95); outline-offset: 3px; }
+}
+@media (prefers-reduced-motion: reduce) { .wc .wc-node.wc-flash { animation: none; outline: 4px solid rgba(255, 210, 63, .95); outline-offset: 3px; } }
