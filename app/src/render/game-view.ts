@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import type { GameView } from '../app-contracts';
 import {
   TICK_DT,
+  type EntityView,
   type GameResult,
   type Graph,
   type Params,
@@ -16,6 +17,7 @@ import { createWorld } from '../world/world';
 import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
 import { createAccumulator, createSimPacer } from './game-loop';
+import { TickBlender } from './tick-blend';
 import { floatingLabels } from './floating-labels';
 import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
@@ -42,6 +44,8 @@ export interface GameViewOptions {
 export function createGameView(options: GameViewOptions = {}): GameView {
   const sceneView = new SceneView(options.stage ?? null);
   const pacer = createSimPacer(createAccumulator());
+  /** Draws the 60 Hz world between its last two ticks so motion stays steady at any screen rate. */
+  const blender = new TickBlender();
   const pauseCallbacks: Array<(paused: boolean) => void> = [];
   const endCallbacks: Array<(result: GameResult, message: string) => void> = [];
   const restartCallbacks: Array<() => void> = [];
@@ -87,9 +91,9 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     sceneView.setBackdrop(backdropFor(stageFit !== null));
   }
 
-  function draw(dt: number, follow: boolean): void {
+  function draw(dt: number, follow: boolean, shown?: readonly EntityView[]): void {
     if (!renderer) return;
-    const entities = world ? world.entities() : [];
+    const entities = shown ?? (world ? world.entities() : []);
     sceneView.sync(entities, dt);
     sceneView.syncColliderFrames(entities, playing ? new Set() : selectedOwners);
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
@@ -162,6 +166,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   function resetSession(): void {
     cancelLoop();
     uiBuf.clear();
+    blender.clear();
     clicks.cancel();
     clearPause();
     playing = false;
@@ -225,6 +230,8 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       for (let i = 0; i < steps && !world.ended; i++) {
         runtime.tick({ ...readInputFn(), ui: i === 0 ? uiBuf.take() : uiBuf.peekHeld() });
         world.step(TICK_DT);
+        // Only the last two steps of a frame matter for the blend.
+        if (i >= steps - 2) blender.capture(world.entities());
       }
     } catch (err) {
       console.error(err);
@@ -233,11 +240,16 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       showError();
       return;
     }
-    draw(dt, true);
+    // The world ticks at 60 Hz; the picture is blended between the last two ticks by the unspent share of a tick.
+    const world0 = world;
+    const shown = world0.ended ? undefined : blender.blend(world0.entities(), pacer.alpha());
+    draw(dt, true, shown);
     const hudItems = world.hudItems();
     hud?.setItems(hudItems);
-    hud?.setFloating(floatingLabels(hudItems, (id) => world?.getEntity(id), rig.camera, width, height));
-    guideArrows?.sync(guideArrowShapes(hudItems, (id) => world?.getEntity(id), rig.camera, width, height));
+    const drawn = shown ? new Map(shown.map((e) => [e.id, e])) : null;
+    const lookup = (id: string): EntityView | undefined => drawn?.get(id) ?? world?.getEntity(id);
+    hud?.setFloating(floatingLabels(hudItems, lookup, rig.camera, width, height));
+    guideArrows?.sync(guideArrowShapes(hudItems, lookup, rig.camera, width, height));
     const ended = world.ended;
     // A character that ran out of health finishes tipping over before the end card appears.
     if (ended && world.entities().some((e) => e.visible && e.fallen !== undefined)) {
@@ -415,6 +427,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
         return;
       }
       playing = true;
+      blender.capture(world ? world.entities() : []);
       watchTime = 0;
       watchFrames = 0;
       rig.snap();

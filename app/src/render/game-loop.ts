@@ -3,6 +3,8 @@ import { TICK_DT } from '../engine/types';
 export interface Accumulator {
   /** Feed elapsed real seconds; returns how many fixed steps to run now. */
   advance(frameSeconds: number): number;
+  /** Share (0..1) of a fixed step already accumulated but not yet run: how far the screen is past the last step. */
+  alpha(): number;
   reset(): void;
 }
 
@@ -26,6 +28,9 @@ export function createAccumulator(dt: number = TICK_DT, maxSteps = 5): Accumulat
       if (acc >= dt) acc = 0;
       return steps;
     },
+    alpha(): number {
+      return Math.min(Math.max(acc / dt, 0), 1);
+    },
     reset(): void {
       acc = 0;
     },
@@ -35,6 +40,8 @@ export function createAccumulator(dt: number = TICK_DT, maxSteps = 5): Accumulat
 export interface SimPacer {
   /** Fixed steps to run for this frame: 0 while paused (except a requested single step). */
   stepsFor(frameSeconds: number): number;
+  /** Blend factor between the last two steps for drawing; 1 (the latest step as it is) while paused. */
+  alpha(): number;
   pause(): void;
   /** Leaves pause without replaying the time spent paused. */
   resume(): void;
@@ -58,6 +65,7 @@ export function createSimPacer(acc: Accumulator): SimPacer {
       }
       return acc.advance(frameSeconds);
     },
+    alpha: () => (paused ? 1 : acc.alpha()),
     pause(): void {
       paused = true;
       stepPending = false;
