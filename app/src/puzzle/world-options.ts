@@ -1,4 +1,4 @@
-import type { ViewMode } from '../engine/types';
+import type { Vec3, ViewMode } from '../engine/types';
 import type { WorldOptions } from '../world/world-options';
 import { PUZZLE_LOOKS } from './types';
 
@@ -14,6 +14,17 @@ const STAGE_UNIT = PUZZLE_CHARACTER_SCALE / 2.9;
  * the same spot, so what is drawn is what can be blocked.
  */
 export const LEGS_FRONT_CARRY = { reach: 1.19 * STAGE_UNIT, height: 0.55 * STAGE_UNIT };
+
+/** Gap the engine leaves between a carried crate and the carrier's box (same value the carry rules use). */
+const CARRY_MARGIN = 0.05;
+
+/**
+ * How far in front of a front-carrying robot's centre its hands hold a crate of this size: far enough to stand just
+ * clear of the robot's box. Used to park the robot so the crate ends over the middle of a store slot.
+ */
+export function handReach(itemSize: Vec3): number {
+  return Math.max(LEGS_FRONT_CARRY.reach, BOX_WIDTH / 2 + Math.max(itemSize.x, itemSize.z) / 2 + CARRY_MARGIN);
+}
 
 /**
  * World rules for a puzzle level. Only the 3D levels get real bodies; the 2D levels keep the plain rules.
