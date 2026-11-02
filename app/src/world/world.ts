@@ -1,4 +1,5 @@
 import type {
+  BodySnapshot,
   CargoLayout,
   CharacterIntent,
   EntityId,
@@ -709,6 +710,26 @@ export function createWorld(mode: ViewMode): World {
     },
     setCameraYaw(rad: number): void {
       yaw = Number.isFinite(rad) ? rad : 0;
+    },
+    debugBodies(): readonly BodySnapshot[] {
+      return list.map((e) => {
+        const b = colliderBox(e);
+        return {
+          id: e.id,
+          kind: e.kind,
+          owner: e.ownerNodeId,
+          visible: e.visible,
+          solid: e.solid,
+          zone: e.zone === true,
+          box: { pos: { ...b.pos }, size: { ...b.size } },
+          pos: { ...e.pos },
+          size: { ...e.size },
+          carried: e.kind === 'item' && e.heldBy !== null,
+          holder: e.heldBy,
+          seated: e.seatedIn !== null,
+          tag: e.tag ?? '',
+        };
+      });
     },
   };
   return api;
