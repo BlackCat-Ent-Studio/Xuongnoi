@@ -25,7 +25,15 @@ interface Slot {
   offset: number;
 }
 
-const SLOTS: readonly Slot[] = [
+/** Title: cat on the left, robots on the right, a clear column in the middle for the sign and buttons. */
+const TITLE_SLOTS: readonly Slot[] = [
+  { look: 'cat-chibi', x: 0.15, size: 0.46, turn: 0.45, offset: 0 },
+  { look: 'robot-wheel', x: 0.74, size: 0.4, turn: -0.4, offset: 1.7 },
+  { look: 'robot-legs', x: 0.88, size: 0.4, turn: -0.5, offset: 3.4 },
+];
+
+/** Ending: unchanged: the sign and "Về bản đồ" sit in the middle. */
+const CHEER_SLOTS: readonly Slot[] = [
   { look: 'cat-chibi', x: 0.2, size: 0.46, turn: 0.45, offset: 0 },
   { look: 'robot-wheel', x: 0.76, size: 0.4, turn: -0.4, offset: 1.7 },
   { look: 'robot-legs', x: 0.9, size: 0.4, turn: -0.5, offset: 3.4 },
@@ -94,7 +102,7 @@ export function createCharacterStage(frame: HTMLElement, mood: StageMood): Chara
     renderer.dispose();
   };
   try {
-    for (const slot of SLOTS) {
+    for (const slot of mood === 'cheer' ? CHEER_SLOTS : TITLE_SLOTS) {
       const kit = new PartKit(slot.look.startsWith('robot') ? ROBOT_TINT : '#ffffff');
       const rig = styleFor(slot.look).build(kit);
       const size = slot.size * H;

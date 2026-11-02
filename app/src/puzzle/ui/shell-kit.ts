@@ -41,7 +41,7 @@ const BENCH = `<svg viewBox="0 0 844 390" preserveAspectRatio="none" aria-hidden
   <rect x="-20" y="338" width="884" height="70" fill="#8a5a34"/><rect x="-20" y="338" width="884" height="10" fill="#c8955a"/>
   <path d="M-20 348h884" stroke="#3a2417" stroke-width="3"/>
   <g stroke="#3a2417" stroke-width="2" opacity=".35"><path d="M150 356h120M420 366h160M690 358h110"/></g>
-  <g stroke="#2b1a10" stroke-width="3">
+  <g class="pz-props" stroke="#2b1a10" stroke-width="3">
   <path d="M360 338l-6-34h40l-6 34z" fill="#c8714a"/><ellipse cx="374" cy="304" rx="22" ry="5" fill="#a85a38"/>
   <path d="M374 300c-14-16-14-30-10-44 10 12 14 26 10 44zM374 300c12-18 24-22 32-32-2 16-12 28-32 32zM374 300c-18-8-30-8-38-20 14-2 30 4 38 20z" fill="#93b58c"/>
   <path d="M470 338v-26h26v26z" fill="#fff1d0"/><path d="M496 318q10 0 10 8t-10 8" fill="none"/><rect x="470" y="312" width="26" height="6" fill="#e8c46a" stroke="none"/>
