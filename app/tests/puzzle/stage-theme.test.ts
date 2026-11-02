@@ -49,6 +49,11 @@ describe('stage roles per level', () => {
     expect(rolesOf('xuong-tong-hop')).toMatchObject({ floor: 'floor-tray', goal: 'goal', pad: 'button', door: 'door', 'crate-1': 'crate' });
   });
 
+  it('level 7: the red and the blue floor tiles are both plain flat tiles, never a push button', () => {
+    const roles = rolesOf('phan-loai-mau');
+    for (const n of [1, 2, 3, 4, 5, 6]) expect(roles[`pad-${n}`], `pad-${n}`).toBeNull();
+  });
+
   it('keeps the plain drawing for the editor-only modes; a sensor zone is a flat floor marker in 3D only', () => {
     const zone: EntityView = { id: 'z', kind: 'block', ownerNodeId: 'z', position: { x: 0, y: 1, z: 0 }, size: { x: 3, y: 3, z: 3 }, color: '#22c55e', visible: true, zone: true };
     expect(stageRoleOf(zone, '3d')).toBe('zone-mark');

@@ -23,6 +23,7 @@ export const STAGE_CHARACTER_SCALE = PUZZLE_CHARACTER_SCALE;
 export const STAGE_UNIT = STAGE_CHARACTER_SCALE / 2.9;
 
 const FLAT = 0.25;
+const BUTTON_MIN_THICKNESS = 0.1;
 const SLOT_EMPTY_FILL = 0.1;
 const SLOT_FILLED_FILL = 0.5;
 const FLOOR_MAX_THICKNESS = 1.2;
@@ -61,7 +62,8 @@ export function stageRoleOf(e: EntityView, mode: ViewMode): string | null {
   if (y <= FLAT) {
     if (side) return 'button';
     const tone = toneOf(e.color);
-    if (tone === 'red') return 'button';
+    // A thin red pad painted on the floor (level 7's colour tiles) stays a flat tile like its blue neighbours; only a thick red block is a push button.
+    if (tone === 'red' && y >= BUTTON_MIN_THICKNESS) return 'button';
     if (tone === 'green') return x >= 3 ? 'zone' : 'goal';
     return null;
   }
@@ -97,6 +99,9 @@ function still(object: THREE.Object3D, place: (e: EntityView) => void, extra: Pa
   };
 }
 
+/** The collision box of a door appears and vanishes at once, so the leaf must swing about as fast: nobody walks through a leaf. */
+const DOOR_SWING_SECONDS = 0.25;
+
 function doorFigure(e: EntityView, mode: ViewMode): StageFigure {
   const side = mode === '2d-side';
   const h = side ? 3.6 : Math.max(3, (e.size.y + 0.3) / STAGE_UNIT);
@@ -110,12 +115,12 @@ function doorFigure(e: EntityView, mode: ViewMode): StageFigure {
     object: door.g,
     update(view, dt) {
       door.g.position.set(view.position.x, floorY(view), side ? view.position.z - 0.45 : view.position.z);
-      open = approach(open, 0, dt, 0.5);
+      open = approach(open, 0, dt, DOOR_SWING_SECONDS);
       door.set(sm01(open));
     },
     // An opened door stays standing open beside its post; it only closes again if the signal drops.
     fadeOut(dt) {
-      open = approach(open, 1, dt, 0.8);
+      open = approach(open, 1, dt, DOOR_SWING_SECONDS);
       door.set(sm01(open));
       return false;
     },

@@ -8,6 +8,7 @@ import {
   checkBodies,
   checkColliderMatchesDrawing,
   checkContactClaims,
+  gap,
   describeViolation,
   type Violation,
 } from '../../src/world/physics-check';
@@ -42,7 +43,7 @@ function playAndCheck(level: PuzzleLevel, answer: PuzzleAnswer): { violations: s
   const seen = new Map<string, string>();
   let last: BodySnapshot[] = [];
   let lastWorld: World | null = null;
-  const solidBodies = level.mode === '3d';
+  const solidBodies = true;
   const result = runLevel(level, answer, level.timeLimit, (world, tick) => {
     const bodies = world.debugBodies?.() ?? [];
     last = [...bodies];
@@ -78,7 +79,7 @@ describe.each(LEVELS)('physics invariants: level $order $id', (level) => {
 });
 
 describe('physics invariants: drawn size', () => {
-  it.each(LEVELS.filter((l) => l.mode === '3d'))('level $order: character collision boxes match the $id drawing', (level) => {
+  it.each(LEVELS)('level $order: character collision boxes match the $id drawing', (level) => {
     let checked = 0;
     const bad: string[] = [];
     runLevel(level, level.solution, 0.05, (world, tick) => {
@@ -183,5 +184,158 @@ describe('physics invariants: crates are set down and lifted, never teleported',
     // The lift into the hands and the fall are both gradual: no crate moves more than a third of a unit in one tick.
     expect(r.worstStep).toBeLessThan(0.3);
     expect(r.worstGrabStep).toBeLessThan(0.3);
+  });
+});
+
+describe('physics invariants: doors really block and really let through', () => {
+  /** A door is any solid block that is hidden at some moment of the run. */
+  function watchDoors(level: PuzzleLevel, answer: PuzzleAnswer): { crossedClosed: string[]; crossedOpen: Set<string>; doors: Set<string> } {
+    const out = { crossedClosed: [] as string[], crossedOpen: new Set<string>(), doors: new Set<string>() };
+    const prev = new Map<string, { side: number; doorShown: boolean }>();
+    const everHidden = new Set<string>();
+    runLevel(level, answer, level.timeLimit, (world, tick) => {
+      const bodies = world.debugBodies?.() ?? [];
+      for (const d of bodies) if (d.kind === 'block' && d.solid && !d.visible) everHidden.add(d.owner);
+      for (const d of bodies) {
+        if (d.kind !== 'block' || !d.solid || !everHidden.has(d.owner)) continue;
+        out.doors.add(d.owner);
+        // The door is a wall across the walking line: its thin axis says which way people cross it.
+        const axis = d.box.size.x <= d.box.size.z ? 'x' : 'z';
+        for (const c of bodies) {
+          if (c.kind !== 'character' || !c.visible || c.seated) continue;
+          const key = `${d.owner}|${c.owner}`;
+          const side = Math.sign(c.box.pos[axis] - d.box.pos[axis]);
+          const before = prev.get(key);
+          if (before && before.side !== 0 && side !== 0 && side !== before.side) {
+            if (before.doorShown && d.visible) out.crossedClosed.push(`${c.owner} crossed shut ${d.owner} at t=${(tick / 60).toFixed(2)}s`);
+            else out.crossedOpen.add(`${c.owner}|${d.owner}`);
+          }
+          prev.set(key, { side: side !== 0 ? side : before?.side ?? 0, doorShown: d.visible });
+        }
+      }
+    });
+    return out;
+  }
+
+  it.each(LEVELS)('level $order $id: nobody crosses a door while it is shut (any answer)', (level) => {
+    for (const { name, answer } of answersFor(level)) {
+      expect(watchDoors(level, answer).crossedClosed, name).toEqual([]);
+    }
+  });
+
+  it.each(LEVELS.filter((l) => ['cua-kho', 'nhat-sao', 'hai-nut-mot-cua', 'xuong-tong-hop'].includes(l.id)))('level $order $id: the solution walks through the open door', (level) => {
+    const r = watchDoors(level, level.solution);
+    expect(r.doors.size).toBeGreaterThan(0);
+    expect(r.crossedOpen.size).toBeGreaterThan(0);
+  });
+});
+
+describe('physics invariants: a win comes for the stated reason', () => {
+  const by = (bodies: BodySnapshot[], owner: string): BodySnapshot => {
+    const b = bodies.find((x) => x.owner === owner);
+    if (!b) throw new Error(`no body ${owner}`);
+    return b;
+  };
+  const touching = (bodies: BodySnapshot[], a: string, b: string): boolean => gap(by(bodies, a), by(bodies, b)) <= 0.02;
+  const insideZone = (b: BodySnapshot, c: { x: number; z: number }, s: { x: number; z: number }): boolean => Math.abs(b.pos.x - c.x) <= s.x / 2 && Math.abs(b.pos.z - c.z) <= s.z / 2;
+
+  /** For each level: what must be true of the world on the tick the game was won. */
+  const PROOFS: Record<string, (bodies: BodySnapshot[], level: PuzzleLevel) => string[]> = {
+    'bot-dau-tien': (b) => (touching(b, 'bot', 'flag') ? [] : ['bot is not at the flag']),
+    'cua-kho': (b) => {
+      const bad: string[] = [];
+      if (!touching(b, 'bot', 'flag')) bad.push('bot is not at the flag');
+      if (by(b, 'bot').pos.x < by(b, 'door').pos.x) bad.push('bot is still before the door');
+      return bad;
+    },
+    'nhat-sao': (b) => {
+      const bad: string[] = [];
+      if (!touching(b, 'cat', 'goal')) bad.push('cat is not at the flag');
+      for (const s of ['star-1', 'star-2', 'star-3']) if (by(b, s).visible) bad.push(`${s} is still there`);
+      if (by(b, 'cat').pos.x < by(b, 'gate').pos.x) bad.push('cat is still before the gate');
+      return bad;
+    },
+    'hai-nut-mot-cua': (b) => {
+      const bad: string[] = [];
+      const door = by(b, 'door').pos.x;
+      if (!touching(b, 'bot-b', 'flag')) bad.push('bot B is not at the flag');
+      for (const bot of ['bot-a', 'bot-b']) if (by(b, bot).pos.x < door) bad.push(`${bot} is still before the door`);
+      if (by(b, 'bot-a').pos.x < by(b, 'button-b').pos.x) bad.push('bot A has not come up past button 2');
+      return bad;
+    },
+    'du-ba-thung': (b, level) => {
+      const zone = level.solution.nodes.find((n) => n.kind === 'zone')!;
+      const c = zone.params.center as { x: number; z: number };
+      const s = zone.params.size as { x: number; z: number };
+      const crates = b.filter((x) => x.kind === 'item');
+      const rest = crates.filter((x) => !x.carried && insideZone(x, c, s));
+      return rest.length === 3 ? [] : [`${rest.length} crates resting in the store`];
+    },
+    'ne-linh-gac': (b) => {
+      const bad: string[] = [];
+      if (Math.hypot(by(b, 'hero').pos.x - by(b, 'goal').pos.x, by(b, 'hero').pos.z - by(b, 'goal').pos.z) > 1.6) bad.push('hero is not on the green tile');
+      if (gap(by(b, 'hero'), by(b, 'guard')) <= 0.02) bad.push('hero is touching the guard');
+      return bad;
+    },
+    'phan-loai-mau': (b) => {
+      const c = { x: -10.7, z: 0 };
+      const s = { x: 5.6, z: 2 };
+      const inStore = b.filter((x) => x.kind === 'item' && !x.carried && insideZone(x, c, s)).map((x) => x.owner).sort();
+      return inStore.join() === 'crate-2,crate-4,crate-6' ? [] : [`store holds ${inStore.join() || 'nothing'}, expected the three blue crates only`];
+    },
+    'xuong-tong-hop': (b) => {
+      const bad: string[] = [];
+      const hero = by(b, 'hero');
+      const goal = by(b, 'goal');
+      if (Math.hypot(hero.pos.x - goal.pos.x, hero.pos.z - goal.pos.z) > 1.6) bad.push('cat is not on the green tile');
+      if (gap(hero, by(b, 'guard')) <= 0.02) bad.push('cat is touching the guard');
+      const stored = b.filter((x) => x.kind === 'item' && !x.carried && insideZone(x, { x: -6.4, z: 3 }, { x: 3.6, z: 2 }));
+      if (stored.length < 2) bad.push(`only ${stored.length} crates rest in the store`);
+      return bad;
+    },
+  };
+
+  it.each(LEVELS)('level $order $id: the world matches the win message', (level) => {
+    const proof = PROOFS[level.id];
+    expect(proof, `no proof written for ${level.id}`).toBeDefined();
+    const r = playAndCheck(level, level.solution);
+    expect(r.outcome).toBe('win');
+    expect(proof!(r.last, level)).toEqual([]);
+  });
+
+  it.each(LEVELS)('level $order $id: the reference solution wins with time to spare', (level) => {
+    const r = runLevel(level, level.solution);
+    expect(r.outcome).toBe('win');
+    expect(r.seconds).toBeLessThan(level.timeLimit * 0.75);
+  });
+});
+
+describe('physics invariants: a loss comes for the stated reason', () => {
+  const find = (bodies: BodySnapshot[], owner: string): BodySnapshot => bodies.find((x) => x.owner === owner)!;
+
+  it.each(LEVELS.filter((l) => ['ne-linh-gac', 'xuong-tong-hop'].includes(l.id)))('level $order $id: every lost run ends with the guard really touching the cat', (level) => {
+    let lost = 0;
+    for (const { name, answer } of answersFor(level)) {
+      const r = playAndCheck(level, answer);
+      if (r.outcome !== 'lose') continue;
+      lost++;
+      expect(gap(find(r.last, 'hero'), find(r.last, 'guard')), name).toBeLessThanOrEqual(0.02);
+    }
+    expect(lost).toBeGreaterThan(0);
+  });
+
+  it('level 7: every lost run ends with a red crate resting in the store', () => {
+    const level = LEVELS.find((l) => l.id === 'phan-loai-mau')!;
+    let lost = 0;
+    for (const { name, answer } of answersFor(level)) {
+      const r = playAndCheck(level, answer);
+      if (r.outcome !== 'lose') continue;
+      lost++;
+      const red = r.last.filter(
+        (b) => ['crate-1', 'crate-3', 'crate-5'].includes(b.owner) && !b.carried && Math.abs(b.pos.x + 10.7) <= 2.8 && Math.abs(b.pos.z) <= 1,
+      );
+      expect(red.length, name).toBeGreaterThan(0);
+    }
+    expect(lost).toBeGreaterThan(0);
   });
 });

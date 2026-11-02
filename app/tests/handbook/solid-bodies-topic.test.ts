@@ -27,7 +27,8 @@ describe('who gets which world rules', () => {
     const o = puzzleWorldOptions('3d')!;
     expect(o).toMatchObject({ solidBodies: true, respawnFallen: true });
     expect(o.characterBox?.size.y).toBeCloseTo(1.6);
-    expect(puzzleWorldOptions('2d-side')).toBeUndefined();
+    // The side-view puzzle levels play with the same solid bodies: nobody walks through anybody.
+    expect(puzzleWorldOptions('2d-side')).toEqual(o);
   });
 
   it('the editor gets only the solid-body rules: no scaled box, no respawn, no puzzle hold point', () => {

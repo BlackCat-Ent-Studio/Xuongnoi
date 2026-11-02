@@ -27,10 +27,10 @@ export function handReach(itemSize: Vec3): number {
 }
 
 /**
- * World rules for a puzzle level. Only the 3D levels get real bodies; the 2D levels keep the plain rules.
+ * World rules for a puzzle level: every level, 2D or 3D, plays with real bodies (nobody walks through anybody).
+ * The editor and its samples never come through here.
  */
-export function puzzleWorldOptions(mode: ViewMode): WorldOptions | undefined {
-  if (mode !== '3d') return undefined;
+export function puzzleWorldOptions(_mode: ViewMode): WorldOptions {
   const height = PUZZLE_CHARACTER_SCALE;
   return {
     solidBodies: true,
