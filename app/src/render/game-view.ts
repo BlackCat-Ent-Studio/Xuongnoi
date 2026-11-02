@@ -20,6 +20,7 @@ import { CameraRig } from './cameras';
 import { createAccumulator, createSimPacer } from './game-loop';
 import { TickBlender } from './tick-blend';
 import { floatingLabels } from './floating-labels';
+import { PULSE_SECONDS, pulseStrength } from './object-highlight';
 import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
 import { onPackLoaded } from './pack-models';
@@ -77,6 +78,10 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   let resetOnNextPreview = false;
   /** Graph nodes selected in the editor; their objects get a collision frame while editing. */
   let selectedOwners: ReadonlySet<string> = new Set();
+  /** Graph nodes whose objects pulse in yellow (a card was picked); works while editing and while playing. */
+  let glowOwners: ReadonlySet<string> = new Set();
+  let glowSince = 0;
+  let glowRaf = 0;
 
   const raycaster = new THREE.Raycaster();
   const uiBuf = new UiInputBuffer();
@@ -97,6 +102,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     const entities = shown ?? (world ? world.entities() : []);
     sceneView.sync(entities, dt);
     sceneView.syncColliderFrames(entities, playing ? new Set() : selectedOwners);
+    sceneView.syncHighlight(entities, glowOwners, pulseStrength((performance.now() - glowSince) / 1000), width, height);
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);
     if (rig.mode === '3d') sceneView.focusSun(rig.focus, rig.size);
     renderer.render(sceneView.scene, rig.camera);
@@ -118,6 +124,15 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       if (!playing) draw(0, false);
     });
   });
+
+  /** Keeps the pulse moving on a still scene (editing, or a finished run) for its first seconds; a running game redraws anyway. */
+  function glowFrame(): void {
+    glowRaf = 0;
+    if (glowOwners.size === 0 || !renderer) return;
+    const settled = (performance.now() - glowSince) / 1000 >= PULSE_SECONDS;
+    if (!rafId) redrawCamera();
+    if (!settled) glowRaf = requestAnimationFrame(glowFrame);
+  }
 
   function showError(): void {
     hud?.showError(TEXT_VI.previewError);
@@ -368,6 +383,16 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       if (options.transparentStage) renderer.setClearColor(0x000000, 0);
       // Development only: lets browser checks read the triangle count of the last frame.
       if (import.meta.env.DEV && options.stage) (window as unknown as { __pzRenderInfo?: THREE.WebGLInfo }).__pzRenderInfo = renderer.info;
+      // Development only: where an object's lower middle is on screen (client px), so browser checks can tap it.
+      if (import.meta.env.DEV) {
+        (window as unknown as { __pzScreenOf?: (owner: string) => { x: number; y: number } | null }).__pzScreenOf = (owner) => {
+          const e = world?.entities().find((o) => o.ownerNodeId === owner && o.visible);
+          const r = renderer?.domElement.getBoundingClientRect();
+          if (!e || !r) return null;
+          const v = new THREE.Vector3(e.position.x, e.position.y - e.size.y / 2 + Math.min(e.size.y / 2, 0.9), e.position.z).project(rig.camera);
+          return { x: r.left + ((v.x + 1) / 2) * r.width, y: r.top + ((1 - v.y) / 2) * r.height };
+        };
+      }
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFShadowMap;
       const canvas = renderer.domElement;
@@ -492,12 +517,34 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       redrawStatic();
     },
 
+    setHighlight(ownerNodeIds: ReadonlySet<string>): void {
+      glowOwners = new Set(ownerNodeIds);
+      glowSince = performance.now();
+      if (glowRaf) cancelAnimationFrame(glowRaf);
+      glowRaf = 0;
+      if (glowOwners.size > 0) glowRaf = requestAnimationFrame(glowFrame);
+      if (!rafId) redrawCamera();
+    },
+
     isPlaying: () => playing,
     getRuntime: () => (playing ? runtime : null),
 
-    pickEntityOwner(clientX: number, clientY: number): string | null {
+    pickEntityOwner(clientX: number, clientY: number, opts?: { slopPx?: number; ignore?: ReadonlySet<string> }): string | null {
       const ndc = toNdc(clientX, clientY);
-      return ndc ? sceneView.pick(ndc, rig.camera) : null;
+      if (!ndc) return null;
+      const exact = sceneView.pick(ndc, rig.camera, opts?.ignore);
+      const slop = opts?.slopPx ?? 0;
+      if (exact !== null || slop <= 0) return exact;
+      // A finger is wider than a thin object: look around the tap, nearest ring first.
+      for (const r of [0.5, 1]) {
+        for (let i = 0; i < 8; i++) {
+          const a = (i / 8) * Math.PI * 2;
+          const near = toNdc(clientX + Math.cos(a) * slop * r, clientY + Math.sin(a) * slop * r);
+          const owner = near ? sceneView.pick(near, rig.camera, opts?.ignore) : null;
+          if (owner !== null) return owner;
+        }
+      }
+      return null;
     },
 
     screenToPlane(clientX: number, clientY: number, planeY = 0): Vec3 | null {

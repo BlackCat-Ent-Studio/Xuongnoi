@@ -20,6 +20,7 @@ import { attachPointer } from './graph/canvas-pointer';
 import { createNodeActions } from './graph/node-actions';
 import { createWireDrag } from './graph/wire-drag';
 import './graph/wire-energy.css';
+import './graph/object-link.css';
 import { createWireEnergy, isEnergyEnabled, onEnergySettingChange } from './graph/wire-energy';
 import { TEXT_VI, formatWireValue } from './text-vi';
 
@@ -39,6 +40,8 @@ export interface WiringCanvas {
   fitToContent(): void;
   /** Pan so the node (or group block) sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
   centerOn(nodeId: string): void;
+  /** Brings the node's card into view (pans only when it is off screen or under a floating window) and flashes it. */
+  revealNode(nodeId: string): void;
   /** Update live wire value badges (play mode). */
   refreshBadges(): void;
   /** Nearest free spot (no overlap with nodes or notes) for a new node of `kind`, starting from `want`. */
@@ -468,6 +471,22 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   applyView();
   render();
 
+  function centerOnNode(nodeId: string): void {
+    const group = findGroup(state.getGraph(), nodeId);
+    const node = group ? { id: nodeId, kind: 'group', params: {}, pos: { x: group.x, y: group.y } } : state.getGraph().nodes.find((n) => n.id === nodeId);
+    if (!node) return;
+    // Show the group the node lives in first (this also selects it).
+    if (!group && (groupOfNode(state.getGraph(), nodeId)?.id ?? null) !== state.getScope()) state.select({ kind: 'node', id: nodeId });
+    const size = sizeOf(nodeId) ?? estimateNodeSize(node);
+    const r = el.getBoundingClientRect();
+    view = {
+      ...view,
+      panX: r.width / 2 - (node.pos.x + size.w / 2) * view.zoom,
+      panY: r.height / 2 - (node.pos.y + size.h / 2) * view.zoom,
+    };
+    applyView();
+  }
+
   return {
     el,
     clientToWorld,
@@ -480,20 +499,19 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
     },
     fitToContent,
-    centerOn(nodeId) {
-      const group = findGroup(state.getGraph(), nodeId);
-      const node = group ? { id: nodeId, kind: 'group', params: {}, pos: { x: group.x, y: group.y } } : state.getGraph().nodes.find((n) => n.id === nodeId);
-      if (!node) return;
-      // Show the group the node lives in first (this also selects it).
-      if (!group && (groupOfNode(state.getGraph(), nodeId)?.id ?? null) !== state.getScope()) state.select({ kind: 'node', id: nodeId });
-      const size = sizeOf(nodeId) ?? estimateNodeSize(node);
-      const r = el.getBoundingClientRect();
-      view = {
-        ...view,
-        panX: r.width / 2 - (node.pos.x + size.w / 2) * view.zoom,
-        panY: r.height / 2 - (node.pos.y + size.h / 2) * view.zoom,
-      };
-      applyView();
+    centerOn: centerOnNode,
+    revealNode(nodeId) {
+      const box = nodeEls.get(nodeId);
+      const node = state.getGraph().nodes.find((n) => n.id === nodeId);
+      if (!box || !node) return;
+      const size = { w: box.offsetWidth, h: box.offsetHeight };
+      const vis = visibleWorld();
+      const inside = node.pos.x >= vis.x && node.pos.y >= vis.y && node.pos.x + size.w <= vis.x + vis.w && node.pos.y + size.h <= vis.y + vis.h;
+      const covered = blockedWorld().some((b) => node.pos.x < b.x + b.w && node.pos.x + size.w > b.x && node.pos.y < b.y + b.h && node.pos.y + size.h > b.y);
+      if (!inside || covered) centerOnNode(nodeId);
+      box.classList.remove('wc-flash');
+      void box.offsetWidth; // restart the flash
+      box.classList.add('wc-flash');
     },
     refreshBadges,
     findFreeSpot,

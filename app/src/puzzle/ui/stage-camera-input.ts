@@ -33,6 +33,8 @@ export function attachStageCameraInput(
   isActive: () => boolean,
   /** Called after every camera change so the chip and buttons can follow. */
   onChange: () => void,
+  /** A tap (press and release without dragging) on the stage, in screen px. The second tap of a double tap only resets the camera. */
+  onTapAt?: (clientX: number, clientY: number) => void,
 ): StageCameraInput {
   const pointers = new Map<number, Pt>();
   let down: { t: number; x: number; y: number; moved: boolean } | null = null;
@@ -110,6 +112,7 @@ export function attachStageCameraInput(
       return;
     }
     lastTap = { t: now, x, y };
+    onTapAt?.(x, y);
   }
 
   function onWheel(e: WheelEvent): void {

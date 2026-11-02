@@ -544,7 +544,9 @@ export function mountEditor(root: HTMLElement): void {
   });
 
   gameView.mount(gameBox);
-  installEntityDrag(gameBox, gameView, state);
+  installEntityDrag(gameBox, gameView, state, (nodeId) => {
+    if (isShown(canvas.el)) canvas.revealNode(nodeId);
+  });
   const ro = new ResizeObserver(() => gameView.resize());
   ro.observe(gameBox);
 
@@ -713,6 +715,7 @@ export function mountEditor(root: HTMLElement): void {
         break;
       case 'selection':
         gameView.setSelection(state.getMulti());
+        gameView.setHighlight(state.getMulti());
         break;
       default:
         break;
