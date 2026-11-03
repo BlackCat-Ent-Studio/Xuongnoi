@@ -172,6 +172,18 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   const trayEl = h('div', 'pz-tray');
   trayEl.setAttribute('role', 'group');
   trayEl.setAttribute('aria-label', T.trayAria);
+  // One row that scrolls sideways: touch drags it natively, the mouse wheel is turned sideways here.
+  trayEl.addEventListener(
+    'wheel',
+    (e) => {
+      if (trayEl.scrollWidth <= trayEl.clientWidth) return;
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (dx === 0) return;
+      trayEl.scrollLeft += dx;
+      e.preventDefault();
+    },
+    { passive: false },
+  );
   bottom.append(trayEl);
   boardEl.append(bottom);
 
