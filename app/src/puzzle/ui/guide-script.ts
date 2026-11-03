@@ -91,10 +91,8 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     sw4: 'Lính gác là người nhìn của mảnh Dự đoán.',
     sw5: 'Mèo nhỏ là chỗ cần canh.',
     sw6: 'Số giây "Còn" vào So sánh, ô A.',
-    sw7: 'Số giây "Cần" của mèo vào Phép tính.',
-    sw8: 'Cộng thêm 0,5 giây cho chắc ăn.',
-    sw9: 'Kết quả vào So sánh, ô B.',
-    sw10: 'Còn đủ giây thì mèo chạy sang thùng kế!',
+    sw7: 'Số giây "Cần" vào So sánh, ô B.',
+    sw8: 'Còn đủ giây thì mèo chạy sang thùng kế!',
   },
   'phan-loai-mau': {
     sw1: 'Nối Rô-bốt vào Chạy theo tuyến để nó đi dọc các ô.',

@@ -12,12 +12,10 @@ export const GUARD_EYES = { range: 10, angle: 90 } as const;
 export const CAT_SPEED = 3.2;
 /** How close to a cover spot the cat counts as having arrived. */
 export const CAT_ARRIVE = 0.25;
-/** Seconds the cat crouches to spring after deciding to run; part of what the spare margin has to cover. */
+/** Seconds the cat crouches to spring after deciding to run; time the run takes on top of the plain distance over speed. */
 export const CAT_READY = 0.2;
 /** The cat eases into every cover spot from this far away (it never rushes into a hiding place), which costs a little time too. */
 export const CAT_EASE = 1;
-/** Spare seconds the cat wants on top of the time a dash takes. */
-export const SAFETY_MARGIN = 0.5;
 export const CRATE_SIZE: Vec3 = { x: 1.7, y: 2.2, z: 1.7 };
 
 export interface StealthLayout {
@@ -121,7 +119,7 @@ const base = stealthBase(LAYOUT);
 /**
  * Level 6 (ne-linh-gac): the little cat sneaks to the green tile past a guard robot that patrols and looks where it walks.
  * The cat only ever stops behind a crate; the player builds the cat's whole brain: the route run one leg at a time,
- * the sight forecast, and the "Còn >= Cần + 0,5" check that lets it dash. On the board only the cat and the guard with
+ * the sight forecast, and the "Còn >= Cần" check that lets it dash. On the board only the cat and the guard with
  * its walk (the enemy's brain, a locked card) are shown; crates, floor, goal tile, the guard's eyes, win/lose plumbing
  * and camera are scenery. The guard seeing the cat anywhere is a loss.
  */
@@ -130,7 +128,7 @@ export const level06: PuzzleLevel = {
   order: 6,
   title: 'Lẻn qua mắt lính gác',
   task: 'Mèo nhỏ phải lẻn tới ô xanh, nấp sau từng thùng một. Lính gác đi tuần và nhìn theo hướng đi: bị thấy là thua! Bạn tự lắp bộ não cho mèo: khi nào được chạy sang thùng kế, khi nào phải nấp.',
-  hint: 'Cho mèo đi theo "Chạy theo tuyến" (nối "Đi ngang" và "Đi dọc" về mèo). "Dự đoán tầm nhìn" cho biết "Còn" mấy giây nữa lính gác thấy chặng kế. Mèo chỉ chạy khi "Còn" lớn hơn hoặc bằng "Cần" cộng 0,5: dùng "Phép tính" và "Số cố định", rồi "So sánh", nối vào "Chạy". Chưa bị thấy trong 12 giây tới thì "An toàn" bật.',
+  hint: 'Cho mèo đi theo "Chạy theo tuyến" (nối "Đi ngang" và "Đi dọc" về mèo). "Dự đoán tầm nhìn" cho biết "Còn" mấy giây nữa lính gác thấy chặng kế, và "Cần" là số giây mèo chạy hết chặng. Mèo chỉ được chạy khi "Còn" lớn hơn hoặc bằng "Cần": dùng "So sánh" rồi nối vào "Chạy".',
   mode: '3d',
   cast: [PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.robotLegs],
   base: { nodes: base.nodes, wires: base.wires },
@@ -144,22 +142,18 @@ export const level06: PuzzleLevel = {
     { kind: 'route-follow', count: 1, params: routeParamsOf(LAYOUT) },
     { kind: 'sight-forecast', count: 1, params: FORECAST_PARAMS },
     { kind: 'compare', count: 1 },
-    { kind: 'math', count: 1, params: { op: 'add' } },
-    { kind: 'const', count: 1, params: { value: SAFETY_MARGIN } },
     { kind: 'distance', count: 1, params: { threshold: 3 } },
     { kind: 'not', count: 1 },
   ],
   editable: [{ kind: 'distance', paramId: 'threshold' }],
-  par: 5,
-  freeHints: 6,
+  par: 3,
+  freeHints: 4,
   timeLimit: 60,
   solution: {
     nodes: [
       { id: 's-route', kind: 'route-follow', params: routeParamsOf(LAYOUT), pos: { x: 260, y: 20 } },
       { id: 's-fore', kind: 'sight-forecast', params: FORECAST_PARAMS, pos: { x: 260, y: 300 } },
-      { id: 's-sum', kind: 'math', params: { op: 'add' }, pos: { x: 520, y: 300 } },
-      { id: 's-margin', kind: 'const', params: { value: SAFETY_MARGIN }, pos: { x: 520, y: 460 } },
-      { id: 's-cmp', kind: 'compare', params: { op: 'ge' }, pos: { x: 740, y: 300 } },
+      { id: 's-cmp', kind: 'compare', params: { op: 'ge' }, pos: { x: 520, y: 300 } },
     ],
     wires: [
       wire('sw1', ['hero', 'self'], ['s-route', 'self']),
@@ -168,10 +162,8 @@ export const level06: PuzzleLevel = {
       wire('sw4', ['guard', 'self'], ['s-fore', 'viewer']),
       wire('sw5', ['hero', 'self'], ['s-fore', 'target']),
       wire('sw6', ['s-fore', 'window'], ['s-cmp', 'a']),
-      wire('sw7', ['s-fore', 'need'], ['s-sum', 'a']),
-      wire('sw8', ['s-margin', 'value'], ['s-sum', 'b']),
-      wire('sw9', ['s-sum', 'out'], ['s-cmp', 'b']),
-      wire('sw10', ['s-cmp', 'out'], ['s-route', 'go']),
+      wire('sw7', ['s-fore', 'need'], ['s-cmp', 'b']),
+      wire('sw8', ['s-cmp', 'out'], ['s-route', 'go']),
     ],
   },
 };

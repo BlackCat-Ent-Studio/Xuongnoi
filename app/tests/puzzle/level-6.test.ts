@@ -29,10 +29,6 @@ const GOES_WHEN_NOT_LOOKING_NOW: PuzzleAnswer = withBrain({
 });
 const GOES_WHEN_SAFE: PuzzleAnswer = withBrain({ nodes: [], wires: [wire('x1', ['s-fore', 'safe'], ['s-route', 'go'])] });
 const GOES_AT_GUARD_TURN: PuzzleAnswer = withBrain({ nodes: [], wires: [wire('x1', ['patrol', 'atEnd'], ['s-route', 'go'])] });
-const WITHOUT_MARGIN: PuzzleAnswer = withBrain({
-  nodes: [piece('c', 'compare', { op: 'ge' })],
-  wires: [wire('x1', ['s-fore', 'window'], ['c', 'a']), wire('x2', ['s-fore', 'need'], ['c', 'b']), wire('x3', ['c', 'out'], ['s-route', 'go'])],
-});
 const byDistance = (threshold: number): PuzzleAnswer =>
   withBrain({
     nodes: [piece('d', 'distance', { threshold }), piece('n', 'not')],
@@ -103,11 +99,11 @@ describe('level 6: ne-linh-gac, the reference answer', () => {
     }
   });
 
-  it('has 5 pieces and 10 wires, within the tray and par', () => {
-    expect(piecesUsed(sol)).toBe(5);
-    expect(sol.wires).toHaveLength(10);
-    expect(level06.par).toBe(5);
-    expect(level06.freeHints).toBe(6);
+  it('has 3 pieces and 8 wires, within the tray and par', () => {
+    expect(piecesUsed(sol)).toBe(3);
+    expect(sol.wires).toHaveLength(8);
+    expect(level06.par).toBe(3);
+    expect(level06.freeHints).toBe(4);
     for (const n of sol.nodes) expect(level06.tray.find((t) => t.kind === n.kind), n.kind).toBeDefined();
   });
 });
@@ -135,35 +131,22 @@ describe('level 6: ways that must not win', () => {
     }
   });
 
-  it('a huge margin never runs', () => {
-    const margin = (v: number): PuzzleAnswer => ({ ...sol, nodes: sol.nodes.map((n) => (n.kind === 'const' ? { ...n, params: { value: v } } : n)) });
-    expect(runLevel(level06, margin(30)).outcome).toBe('timeout');
-  });
-
-  // The spare 0,5 s (sw3 and its number piece) is the one part that is not needed to win: the forecast already counts
-  // the whole leg as exposed from the first moment any point of it is seen, which leaves more room than the run
-  // loses to getting ready and easing into the cover. Every other wire and piece is essential.
-  const MARGIN_WIRES = ['sw8'];
-  const MARGIN_PIECES = ['s-margin'];
-
-  it('removing any one wire of the reference answer fails, except the spare 0,5 s', () => {
+  it('removing any one wire of the reference answer fails', () => {
     for (const w of sol.wires) {
       const r = runLevel(level06, { ...sol, wires: sol.wires.filter((x) => x.id !== w.id) });
-      if (MARGIN_WIRES.includes(w.id)) expect(r.outcome, 'without ' + w.id).toBe('win');
-      else expect(r.outcome, 'without ' + w.id).not.toBe('win');
+      expect(r.outcome, 'without ' + w.id).not.toBe('win');
     }
   }, 120_000);
 
-  it('the answer without any spare time still wins here (the forecast already counts the whole leg as exposed early)', () => {
-    expect(runLevel(level06, WITHOUT_MARGIN).outcome).toBe('win');
-  });
-
-  it('removing any one piece fails, except the number piece of the spare 0,5 s', () => {
+  it('removing any one piece fails', () => {
     for (const n of sol.nodes) {
       const r = runLevel(level06, { nodes: sol.nodes.filter((m) => m.id !== n.id), wires: sol.wires.filter((w) => w.from.node !== n.id && w.to.node !== n.id) });
-      if (MARGIN_PIECES.includes(n.id)) expect(r.outcome, 'without ' + n.id).toBe('win');
-      else expect(r.outcome, 'without ' + n.id).not.toBe('win');
+      expect(r.outcome, 'without ' + n.id).not.toBe('win');
     }
+  });
+
+  it('no cheaper answer wins: the forecast and route with any single extra wire into Chạy, or the decoys, never win', () => {
+    for (const a of [GOES_WHEN_SAFE, GOES_AT_GUARD_TURN, GOES_WHEN_NOT_LOOKING_NOW, byDistance(3)]) expect(runLevel(level06, a).outcome).not.toBe('win');
   });
 
   it('a loss is the guard really seeing the cat: inside range, inside the cone, no crate between', () => {
