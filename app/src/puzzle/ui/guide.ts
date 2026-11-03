@@ -222,6 +222,8 @@ export function createGuide(opts: GuideOptions): Guide {
   }
 
   function aim(el: HTMLElement | null): void {
+    // A pin or row that is off screen: pan the board to it first.
+    if (el?.isConnected) board.ensureVisible(el);
     const r = el?.isConnected ? el.getBoundingClientRect() : null;
     if (!r || r.width === 0 || r.height === 0) {
       root.classList.add('no-target');

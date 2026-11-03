@@ -219,3 +219,84 @@ export function fitContent(content: Rect, area: { w: number; h: number }, avoid:
   }
   return best ?? { k: 1, x: pad, y: pad };
 }
+
+// ---------- the free board: one world, seen through a view ----------
+
+/** Open and "fit again" never zoom out below this, so cards stay readable; the rest is reached by panning. */
+export const FIT_MIN_K = 0.7;
+export const FIT_MAX_K = 1;
+
+/** World point -> position inside the board area (view: screen = world * k + offset). */
+export const worldToScreen = (v: FitView, p: Pt): Pt => ({ x: v.x + p.x * v.k, y: v.y + p.y * v.k });
+/** Position inside the board area -> world point. */
+export const screenToWorld = (v: FitView, p: Pt): Pt => ({ x: (p.x - v.x) / v.k, y: (p.y - v.y) / v.k });
+
+/**
+ * The view that opens a level (and "fit again"): all of `content` (world px) inside `area` (screen px), with the zoom
+ * kept between FIT_MIN_K and FIT_MAX_K. Where the cards fit, they are centred; on an axis where they do not fit even at
+ * the smallest zoom, the view shows the start (left / top) of the cards and the rest is left to panning.
+ * `avoid` is the corner window: the content is fitted either left of it or above it, whichever leaves the bigger zoom.
+ */
+export function fitFree(content: Rect, area: { w: number; h: number }, avoid: Rect | null, pad = 14): FitView {
+  if (content.w <= 0 || content.h <= 0) return { k: 1, x: pad, y: pad };
+  const inCorner = !!avoid && avoid.w > 0 && avoid.h > 0 && avoid.x + avoid.w >= area.w - 40 && avoid.y + avoid.h >= area.h - 40;
+  const tries: { w: number; h: number }[] = inCorner && avoid ? [{ w: Math.max(40, avoid.x), h: area.h }, { w: area.w, h: Math.max(40, avoid.y) }] : [{ w: area.w, h: area.h }];
+  let best: FitView | null = null;
+  let bestRaw = -Infinity;
+  for (const t of tries) {
+    const raw = Math.min((t.w - 2 * pad) / content.w, (t.h - 2 * pad) / content.h);
+    if (raw <= bestRaw + 1e-9) continue;
+    bestRaw = raw;
+    const k = Math.min(FIT_MAX_K, Math.max(FIT_MIN_K, raw));
+    const spareW = t.w - 2 * pad - content.w * k;
+    const spareH = t.h - 2 * pad - content.h * k;
+    best = { k, x: pad + Math.max(0, spareW / 2) - content.x * k, y: pad + Math.max(0, spareH / 2) - content.y * k };
+  }
+  return best ?? { k: 1, x: pad, y: pad };
+}
+
+const hits = (a: Rect, b: Rect, gap: number): boolean => a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+
+/**
+ * Where a new card of `size` goes in the world: the free spot closest to `near` (a world point; the card's centre),
+ * preferring spots fully inside `within` (the part of the world on screen). Searches outwards on a grid; never null.
+ */
+export function freeSpotNear(taken: readonly Rect[], size: { w: number; h: number }, near: Pt, within: Rect | null, gap = 14, step = 20): Pt {
+  const cx = near.x - size.w / 2;
+  const cy = near.y - size.h / 2;
+  const free = (x: number, y: number): boolean => !taken.some((t) => hits({ x, y, w: size.w, h: size.h }, t, gap));
+  const inside = (x: number, y: number): boolean => !within || (x >= within.x && y >= within.y && x + size.w <= within.x + within.w && y + size.h <= within.y + within.h);
+  const MAX_RING = 400;
+  for (const mustBeInside of within ? [true, false] : [false]) {
+    for (let ring = 0; ring <= MAX_RING; ring++) {
+      let best: Pt | null = null;
+      let bestD = Infinity;
+      for (let i = -ring; i <= ring; i++) {
+        for (let j = -ring; j <= ring; j++) {
+          if (Math.max(Math.abs(i), Math.abs(j)) !== ring) continue;
+          const x = cx + i * step;
+          const y = cy + j * step;
+          if (mustBeInside && !inside(x, y)) continue;
+          const d = Math.hypot(i, j);
+          if (d < bestD && free(x, y)) {
+            best = { x, y };
+            bestD = d;
+          }
+        }
+      }
+      if (best) return { x: Math.round(best.x), y: Math.round(best.y) };
+    }
+  }
+  return { x: Math.round(cx), y: Math.round(cy) };
+}
+
+/** The view moved the least so that `box` (screen px) sits inside `area` with `margin` to spare; a box bigger than the area keeps its top-left. */
+export function panToShow(v: FitView, box: Rect, area: { w: number; h: number }, margin = 24): FitView {
+  const shift = (lo: number, size: number, avail: number): number => {
+    if (size + 2 * margin >= avail) return margin - lo;
+    if (lo < margin) return margin - lo;
+    if (lo + size > avail - margin) return avail - margin - (lo + size);
+    return 0;
+  };
+  return { k: v.k, x: v.x + shift(box.x, box.w, area.w), y: v.y + shift(box.y, box.h, area.h) };
+}

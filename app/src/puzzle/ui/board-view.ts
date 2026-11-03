@@ -14,9 +14,7 @@ import {
   clampParam,
   connect,
   editableParamIds,
-  findFreeSpot,
   separateBoxes,
-  tryFreeSpot,
   isPortShown,
   isSceneryNode,
   paramValue,
@@ -29,7 +27,7 @@ import {
   type Box,
   type PortEnd,
 } from './board-state';
-import { arrangeLayout, boundsOf, fitContent, type FitView } from './board-arrange';
+import { arrangeLayout, boundsOf, fitFree, freeSpotNear, panToShow, screenToWorld, worldToScreen, type FitView } from './board-arrange';
 import { attachPanZoom } from './board-pan-zoom';
 import { isObjectKind } from './object-cards';
 import { PUZZLE_UI_TEXT } from './puzzle-text';
@@ -44,11 +42,13 @@ import '../../editor/graph/node-cards.css';
 import '../../editor/graph/wire-energy.css';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
-/** Levels are laid out on a board this big (logical px); cards that stick out widen it. */
-const BOARD_W = 1000;
-const BOARD_H = 560;
-/** Smallest card scale; at 12px base text this keeps phone text at about 9px. */
-const MIN_CARD_SCALE = 0.78;
+/** Level card positions (a 1000x560 space) are spread this much wider in the free world. */
+const WORLD_SPREAD = 1.5;
+/** The player's zoom range. */
+const MIN_VIEW_K = 0.25;
+const MAX_VIEW_K = 1.6;
+/** Room left around a card dropped from the tray (world px), so its wires have space. */
+const PLACE_GAP = 32;
 /** A tap this close (screen px) to a pin counts as a tap on it, so small cards stay easy to wire. */
 const PORT_REACH = 26;
 const WIRE_REACH = 12;
@@ -120,6 +120,8 @@ export interface BoardView {
   /** Stops animating but keeps the lit wires (the game ended). */
   freezeEnergy(): void;
   refit(): void;
+  /** Pans the board (never zooms) so this pin / row of a card is on screen. Does nothing for other elements. */
+  ensureVisible(el: HTMLElement): void;
   toast(message: string): void;
   destroy(): void;
   // ----- hooks for the tutorial guide -----
@@ -165,15 +167,12 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** The object card that is lit (tapped on the board, or its object tapped on the stage). */
   let pickedCard: string | null = null;
   let running = false;
-  /** Cards keep a readable size; only their positions follow the board size. */
+  /** Cards are drawn at the view zoom (real size at 1). */
   let cardScale = 1;
-  /** Board area (screen px) above the bottom bar, where cards live. */
-  let area = { w: BOARD_W, h: BOARD_H };
+  /** Board area (screen px) between the top bar and the bottom bar, where cards live. */
+  let area = { w: 1000, h: 560 };
   /** Where each card sits on screen after layout (top-left, px). */
   const placedAt = new Map<string, { x: number; y: number }>();
-  const spreadX = (): number => area.w / BOARD_W;
-  const spreadY = (): number => area.h / BOARD_H;
-  const positions = new Map<string, { x: number; y: number }>();
   const ports = new Map<string, PortEntry>();
   const cards = new Map<string, HTMLElement>();
   let popover: HTMLElement | null = null;
@@ -183,15 +182,19 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let energyLast = 0;
   let getRuntime: () => Runtime | null = () => null;
 
-  // ----- tidy tools: knots, focus, the tidy layout and its pan / zoom -----
+  // ----- the free board: knots, focus, the world and its pan / zoom -----
   /** Reroute knots (drawing only; the graph and the answer never see them). Kept in memory for this visit of the level. */
   let knots: KnotBook = emptyKnots();
-  /** After "Sắp xếp gọn" the cards sit in a free layout (board px, scale 1) seen through `view`; before it they follow the level's stretched layout. */
-  let tidy = false;
-  const tidyPos = new Map<string, Pt>();
+  /** Where every card sits in the world (px at zoom 1, top-left). The board shows it through `view`. */
+  const worldPos = new Map<string, Pt>();
   let view: FitView = { k: 1, x: 0, y: 0 };
   /** The player moved the view by hand: a resize then keeps it. */
   let viewMoved = false;
+  /** The cards got their first size and the opening view was fitted. */
+  let opened = false;
+  /** The level's own cards have been checked once for true overlaps. */
+  let settled = false;
+  let lastEmptyTap: { t: number; x: number; y: number } | null = null;
   let animRaf = 0;
   /** The card whose wires are lit (the others fade). */
   let focusId: string | null = null;
@@ -208,8 +211,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let swallowClick = false;
 
   function resetPositions(): void {
-    positions.clear();
-    for (const n of level.base.nodes) positions.set(n.id, { x: n.pos.x, y: n.pos.y });
+    worldPos.clear();
+    for (const n of level.base.nodes) worldPos.set(n.id, { x: Math.round(n.pos.x * WORLD_SPREAD), y: Math.round(n.pos.y * WORLD_SPREAD) });
+    settled = false;
   }
   resetPositions();
 
@@ -220,7 +224,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return [...base, ...state.placed.map((p) => ({ node: p.node, locked: false }))];
   }
 
-  const posOf = (node: GraphNode): { x: number; y: number } => positions.get(node.id) ?? node.pos;
+  const posOf = (node: GraphNode): { x: number; y: number } => worldPos.get(node.id) ?? node.pos;
 
   function toast(message: string): void {
     if (!message) return;
@@ -242,44 +246,37 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   // ---------- layout ----------
 
-  /**
-   * Level positions (1000x560 logical space) are stretched to the board; cards stay near full size
-   * (a little smaller on a small board) and are pushed apart where they would overlap.
-   */
+  /** Every card is drawn at its world position seen through the view: real size times the zoom, nothing squeezed or pushed. */
   function layout(): void {
     const bw = Math.max(1, board.clientWidth);
     // The world starts below the top bar (CSS `top` of .wc-world); the bottom bar is the other end.
     const bh = Math.max(1, board.clientHeight - world.offsetTop - bottomEl.offsetHeight - 10);
     area = { w: bw, h: bh };
-    if (tidy) return layoutTidy();
-    const c0 = Math.max(MIN_CARD_SCALE, Math.min(1, bw / 700));
-    const clear = opts.keepClear?.() ?? null;
-    const blocked: Box[] = clear ? [{ x: clear.x, y: clear.y - world.offsetTop, w: clear.w, h: clear.h }] : [];
-    const toolsAt = toolsBox();
-    const natural = [...cards].map(([id, box]) => {
-      const p = positions.get(id) ?? { x: 0, y: 0 };
-      return { id, x: p.x * spreadX(), y: p.y * spreadY(), w: box.offsetWidth, h: box.offsetHeight };
-    });
-    let result = separateBoxes([], area);
-    cardScale = c0;
-    // Cards keep clear of the tool buttons when that still fits; on a crowded board the buttons may cover a corner instead.
-    for (const keep of toolsAt ? [[...blocked, toolsAt], blocked] : [blocked]) {
-      for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58, c0 * 0.52, c0 * 0.46]) {
-        cardScale = c;
-        result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8, keep);
-        if (result.fits) break;
-      }
-      if (result.fits) break;
+    settleOnce();
+    if (!opened && settled && board.clientWidth > 0) {
+      opened = true;
+      view = fitAll();
     }
+    cardScale = view.k;
     for (const [id, box] of cards) {
-      const p = result.pos.get(id);
-      if (!p) continue;
+      const p = toScreen(worldPosOf(id));
       placedAt.set(id, p);
       box.style.left = `${Math.round(p.x)}px`;
       box.style.top = `${Math.round(p.y)}px`;
       box.style.transformOrigin = '0 0';
       box.style.transform = `scale(${cardScale})`;
     }
+  }
+
+  /** The level's own cards are only moved once, and only when two of them truly overlap in the world. */
+  function settleOnce(): void {
+    if (settled) return;
+    const rects = worldRects();
+    if (rects.length === 0 || rects.some((r) => r.w === 0 || r.h === 0)) return;
+    settled = true;
+    const touching = rects.some((a, i) => rects.some((b, j) => j > i && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y));
+    if (!touching) return;
+    for (const [id, p] of separateBoxes(rects, { w: 1e6, h: 1e6 }, 12).pos) worldPos.set(id, p);
   }
 
   /** A screen position in board coordinates (undoes the shrink while the board sits in the corner). */
@@ -296,15 +293,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return boardPoint(r.left + r.width / 2, r.top + r.height / 2);
   }
 
-  // ---------- the tidy layout ----------
+  // ---------- the world and its view ----------
 
-  /** Board px <-> layout space (where knots and the tidy cards live): the stretched layout scales x and y apart, the tidy one is a plain zoom. */
-  function toScreen(p: Pt): Pt {
-    return tidy ? { x: view.x + p.x * view.k, y: view.y + p.y * view.k } : { x: p.x * spreadX(), y: p.y * spreadY() };
-  }
-  function toLayout(p: Pt): Pt {
-    return tidy ? { x: (p.x - view.x) / view.k, y: (p.y - view.y) / view.k } : { x: p.x / spreadX(), y: p.y / spreadY() };
-  }
+  /** Board px <-> world space (where the cards and the knots live): a plain pan and zoom. */
+  const toScreen = (p: Pt): Pt => worldToScreen(view, p);
+  const toLayout = (p: Pt): Pt => screenToWorld(view, p);
   const snapKnot = (p: Pt): Pt => ({ x: Math.round(p.x / KNOT_GRID) * KNOT_GRID, y: Math.round(p.y / KNOT_GRID) * KNOT_GRID });
 
   const sizeOf = (id: string): { w: number; h: number } => {
@@ -312,42 +305,19 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return { w: box?.offsetWidth ?? 0, h: box?.offsetHeight ?? 0 };
   };
 
-  /** Every card as a box in layout space (card scale 1). */
-  function tidyRects(): (Box & { id: string })[] {
-    return [...cards.keys()].map((id) => ({ id, ...tidyPosOf(id), ...sizeOf(id) }));
+  /** Every card as a box in the world (zoom 1). */
+  function worldRects(): (Box & { id: string })[] {
+    return [...cards.keys()].map((id) => ({ id, ...worldPosOf(id), ...sizeOf(id) }));
   }
 
-  function tidyPosOf(id: string): Pt {
-    let p = tidyPos.get(id);
+  function worldPosOf(id: string): Pt {
+    let p = worldPos.get(id);
     if (!p) {
-      const b = boundsOf([...tidyPos].map(([k, q]) => ({ ...q, ...sizeOf(k) })));
+      const b = boundsOf([...worldPos].map(([k, q]) => ({ ...q, ...sizeOf(k) })));
       p = { x: b.x, y: b.y + b.h + 24 };
-      tidyPos.set(id, p);
+      worldPos.set(id, p);
     }
     return p;
-  }
-
-  function layoutTidy(): void {
-    cardScale = view.k;
-    for (const [id, box] of cards) {
-      const p = toScreen(tidyPosOf(id));
-      placedAt.set(id, p);
-      box.style.left = `${Math.round(p.x)}px`;
-      box.style.top = `${Math.round(p.y)}px`;
-      box.style.transformOrigin = '0 0';
-      box.style.transform = `scale(${cardScale})`;
-    }
-  }
-
-  /** The tool buttons (right edge, under the top bar) as a box in board coordinates; they keep their size while the board sits in the corner. */
-  function toolsBox(): Box | null {
-    return tools.offsetWidth > 0 ? { x: tools.offsetLeft - 6, y: tools.offsetTop - world.offsetTop - 6, w: tools.offsetWidth + 12, h: tools.offsetHeight + 12 } : null;
-  }
-
-  /** Width of the strip on the right the tidy view keeps free for the tool buttons. */
-  function toolsInset(): number {
-    const t = toolsBox();
-    return t ? Math.max(0, area.w - t.x) : 0;
   }
 
   /** The corner window as a box in board coordinates. */
@@ -356,10 +326,27 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return c ? { x: c.x, y: c.y - world.offsetTop, w: c.w, h: c.h } : null;
   }
 
-  /** The view that shows every card (and keeps clear of the corner window). */
-  function tidyFit(): FitView {
-    return fitContent(boundsOf(tidyRects()), area, avoidBox(), toolsInset());
+  /** The view that shows every card (zoom between 0.70 and 1; past that, the start of the cards) and keeps clear of the corner window. */
+  function fitAll(): FitView {
+    return fitFree(boundsOf(worldRects()), area, avoidBox());
   }
+
+  /** Pans the view (no zoom change) so a pin or row of a card is on screen; the guide calls this before it points at it. */
+  function ensureVisible(el: HTMLElement): void {
+    if (running || !nodeLayer.contains(el)) return;
+    const r = el.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return;
+    const a = boardPoint(r.left, r.top);
+    const b = boardPoint(r.right, r.bottom);
+    const next = panToShow(view, { x: a.x, y: a.y, w: b.x - a.x, h: b.y - a.y }, area, 48);
+    if (next.x === view.x && next.y === view.y) return;
+    stopAnim();
+    view = next;
+    viewMoved = true;
+    layout();
+    drawWires();
+  }
+
 
   function stopAnim(): void {
     if (animRaf) cancelAnimationFrame(animRaf);
@@ -369,7 +356,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** Slides the cards and the view to their new places. Wires are drawn as plain curves while it moves, then routed. */
   function animateTidy(toPos: ReadonlyMap<string, Pt>, toView: FitView, ms: number): void {
     stopAnim();
-    const fromPos = new Map(tidyPos);
+    const fromPos = new Map(worldPos);
     const fromView = { ...view };
     const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     const t0 = performance.now();
@@ -378,7 +365,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
       for (const [id, to] of toPos) {
         const f = fromPos.get(id) ?? to;
-        tidyPos.set(id, { x: f.x + (to.x - f.x) * e, y: f.y + (to.y - f.y) * e });
+        worldPos.set(id, { x: f.x + (to.x - f.x) * e, y: f.y + (to.y - f.y) * e });
       }
       view = { k: fromView.k + (toView.k - fromView.k) * e, x: fromView.x + (toView.x - fromView.x) * e, y: fromView.y + (toView.y - fromView.y) * e };
       layout();
@@ -409,8 +396,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       x.addEventListener('click', (e) => {
         e.stopPropagation();
         if (running) return;
-        positions.delete(node.id);
-        tidyPos.delete(node.id);
+        worldPos.delete(node.id);
         state = removePiece(state, node.id);
         playSfx('unwire');
         if (picked?.node === node.id) picked = null;
@@ -549,9 +535,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     };
   }
 
-  /** In the stretched layout wires stay on the visible board; the tidy layout is bigger than the screen and routes freely. */
+  /** The world is bigger than the screen: wires route freely. */
   function routeBounds(): { bounds?: Box } {
-    return tidy ? {} : { bounds: { x: 0, y: 0, w: area.w, h: area.h - 8 } };
+    return {};
   }
 
   function drawWires(fast = false): void {
@@ -863,48 +849,27 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       pin: pinOffset,
       order: new Map([...cards.keys()].map((id) => [id, placedAt.get(id)?.y ?? 0])),
     });
-    if (!tidy) {
-      // Start exactly where the cards are now, so the first frame does not jump.
-      tidy = true;
-      view = { k: cardScale, x: 0, y: 0 };
-      for (const id of cards.keys()) {
-        const p = placedAt.get(id) ?? { x: 0, y: 0 };
-        tidyPos.set(id, { x: p.x / cardScale, y: p.y / cardScale });
-      }
-    }
     knots = emptyKnots();
     focusId = selWire = null;
     viewMoved = false;
-    const fit = fitContent(boundsOf(nodes.map((n) => ({ ...(target.get(n.id) ?? { x: 0, y: 0 }), w: n.w, h: n.h }))), area, avoidBox(), toolsInset());
+    const fit = fitFree(boundsOf(nodes.map((n) => ({ ...(target.get(n.id) ?? { x: 0, y: 0 }), w: n.w, h: n.h }))), area, avoidBox());
     animateTidy(target, fit, TIDY_MS);
     toast(TIDY_TEXT.tidied);
   }
 
   function fitView(): void {
-    if (running || !tidy) return;
+    if (running) return;
     viewMoved = false;
-    animateTidy(new Map(tidyPos), tidyFit(), FIT_MS);
+    animateTidy(new Map(worldPos), fitAll(), FIT_MS);
   }
 
-  /** Drops a card that was dragged in the tidy layout: it slides down if it landed on another card. */
-  function settleTidy(id: string): void {
-    const me = tidyPosOf(id);
-    const others = tidyRects().filter((r) => r.id !== id);
+  /** Drops a card that was dragged: it slides down if it landed on another card. */
+  function settleDropped(id: string): void {
+    const me = worldPosOf(id);
+    const others = worldRects().filter((r) => r.id !== id);
     const res = separateBoxes([{ id, ...me, ...sizeOf(id) }], { w: 1e6, h: 1e6 }, 12, others);
     const p = res.pos.get(id);
-    if (p) tidyPos.set(id, p);
-  }
-
-  /** A free spot for a new card inside the part of the tidy layout on screen (below all cards when that is full). */
-  function tidyFreeSpot(size: { w: number; h: number }): { pos: Pt; inView: boolean } {
-    const region = { x: -view.x / view.k, y: -view.y / view.k, w: area.w / view.k, h: area.h / view.k };
-    const taken = tidyRects().map((r) => ({ x: r.x - region.x, y: r.y - region.y, w: r.w, h: r.h }));
-    const clear = avoidBox();
-    if (clear) taken.push({ x: (clear.x - view.x) / view.k - region.x, y: (clear.y - view.y) / view.k - region.y, w: clear.w / view.k, h: clear.h / view.k });
-    const spot = tryFreeSpot(taken, size, region, 14, 12);
-    if (spot) return { pos: { x: region.x + spot.x, y: region.y + spot.y }, inView: true };
-    const b = boundsOf(tidyRects());
-    return { pos: { x: b.x, y: b.y + b.h + 24 }, inView: false };
+    if (p) worldPos.set(id, p);
   }
 
   // ---------- tray ----------
@@ -934,32 +899,35 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const probe = placePiece(level, state, slot, { x: 0, y: 0 });
     const placed = probe?.placed[probe.placed.length - 1];
     if (!probe || !placed) return;
-    const clear = opts.keepClear?.() ?? null;
-    const taken: Box[] = clear ? [{ x: clear.x, y: clear.y - world.offsetTop, w: clear.w, h: clear.h }] : [];
-    for (const [id, box] of cards) {
-      const p = placedAt.get(id);
-      if (p) taken.push({ x: p.x, y: p.y, w: box.offsetWidth * cardScale, h: box.offsetHeight * cardScale });
-    }
-    const est = estimateNodeSize(placed.node);
-    let logical: Pt;
-    let refit = false;
-    if (tidy) {
-      const free = tidyFreeSpot(est);
-      logical = { x: Math.round(free.pos.x), y: Math.round(free.pos.y) };
-      tidyPos.set(placed.node.id, logical);
-      refit = !free.inView;
-    } else {
-      const spot = findFreeSpot(taken, { w: est.w * cardScale, h: est.h * cardScale }, area, 8);
-      // Stored in level space so the card keeps its place when the board is resized.
-      logical = { x: Math.round(spot.x / spreadX()), y: Math.round(spot.y / spreadY()) };
-    }
-    positions.set(placed.node.id, logical);
+    const logical = freeSpotFor(estimateNodeSize(placed.node), null);
+    worldPos.set(placed.node.id, logical);
     state = { ...probe, placed: probe.placed.map((p) => (p === placed ? { ...p, node: { ...p.node, pos: logical } } : p)) };
     picked = null;
     closePopover();
     playSfx('pick');
     changed();
-    if (refit) fitView();
+    // The card is drawn now: if it came out bigger than its estimate (number rows), find it a spot that really fits.
+    const real = sizeOf(placed.node.id);
+    if (real.w > 0 && (real.w > estimateNodeSize(placed.node).w + 1 || real.h > estimateNodeSize(placed.node).h + 1)) {
+      worldPos.set(placed.node.id, freeSpotFor(real, placed.node.id));
+      layout();
+      drawWires();
+    }
+  }
+
+  /** A free spot for a new card, nearest the middle of what the player sees now (the world keeps it there when the view moves). */
+  function freeSpotFor(size: { w: number; h: number }, skip: string | null): Pt {
+    const taken: Box[] = worldRects()
+      .filter((r) => r.id !== skip)
+      .map((r) => ({ x: r.x, y: r.y, w: r.w, h: r.h }));
+    const clear = avoidBox();
+    if (clear) {
+      const at = toLayout({ x: clear.x, y: clear.y });
+      taken.push({ x: at.x, y: at.y, w: clear.w / view.k, h: clear.h / view.k });
+    }
+    const topLeft = toLayout({ x: 0, y: 0 });
+    const visible = { x: topLeft.x, y: topLeft.y, w: area.w / view.k, h: area.h / view.k };
+    return freeSpotNear(taken, size, { x: visible.x + visible.w / 2, y: visible.y + visible.h / 2 }, visible, PLACE_GAP);
   }
 
   // ---------- picking and joining ----------
@@ -1046,8 +1014,22 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       picked = null;
       applyPick();
     }
-    tapFocus(t.closest<HTMLElement>('.wc-node')?.dataset.id ?? null);
+    const card = t.closest<HTMLElement>('.wc-node')?.dataset.id ?? null;
+    tapFocus(card);
+    if (card === null && !t.closest('.pz-bottom')) tapEmpty(e);
   });
+
+  /** Two taps close together on empty board: fit all the cards again (same rule as on open). */
+  function tapEmpty(e: MouseEvent): void {
+    const now = performance.now();
+    const prev = lastEmptyTap;
+    if (prev && now - prev.t < DOUBLE_MS && Math.hypot(prev.x - e.clientX, prev.y - e.clientY) < DOUBLE_PX) {
+      lastEmptyTap = null;
+      fitView();
+      return;
+    }
+    lastEmptyTap = { t: now, x: e.clientX, y: e.clientY };
+  }
 
   // Knots: dragging a knot or a wire; hovering a wire (Ctrl+R adds a knot to it).
   board.addEventListener('pointermove', onBoardMove);
@@ -1062,9 +1044,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   });
   window.addEventListener('keydown', onKey);
 
-  // The tidy layout is a free view: drag the board to move it, wheel or two fingers to zoom.
+  // The board is a free view: drag the empty board to move it, wheel or two fingers to zoom.
   const panZoom = attachPanZoom(board, {
-    enabled: () => tidy && !running && animRaf === 0 && knotDrag === null,
+    enabled: () => !running && animRaf === 0 && knotDrag === null,
     startsOn: (t) => !t.closest('button, .wc-node-head, .wc-port, .pz-param, .pz-knot, .wc-wire-hit, .pz-pop, .pz-bottom'),
     wheelBlocked: (t) => !!t.closest('.pz-bottom, .pz-pop'),
     origin: () => {
@@ -1075,11 +1057,12 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     setView: (v, done) => {
       view = v;
       viewMoved = true;
+      closePopover();
       layout();
       drawWires(!done);
     },
-    minK: 0.25,
-    maxK: 1.6,
+    minK: MIN_VIEW_K,
+    maxK: MAX_VIEW_K,
   });
 
   // ---------- dragging cards by their header ----------
@@ -1100,11 +1083,10 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     box.classList.add('pz-dragging');
     const move = (ev: PointerEvent): void => {
       if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > TAP_SLOP) dragged = true;
-      // The tidy layout has no edge to stop at; the stretched one keeps every card on the board.
-      const x = tidy ? start.x + ev.clientX - startX : Math.min(Math.max(0, start.x + ev.clientX - startX), Math.max(0, area.w - box.offsetWidth * cardScale));
-      const y = tidy ? start.y + ev.clientY - startY : Math.min(Math.max(0, start.y + ev.clientY - startY), Math.max(0, area.h - box.offsetHeight * cardScale));
-      if (tidy) tidyPos.set(id, toLayout({ x, y }));
-      else positions.set(id, { x: x / spreadX(), y: y / spreadY() });
+      // The world has no edge to stop at.
+      const x = start.x + ev.clientX - startX;
+      const y = start.y + ev.clientY - startY;
+      worldPos.set(id, toLayout({ x, y }));
       box.style.left = `${Math.round(x)}px`;
       box.style.top = `${Math.round(y)}px`;
       drawWires(true);
@@ -1115,7 +1097,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       head.removeEventListener('pointercancel', end);
       box.classList.remove('pz-dragging');
       // Dropped on another card: the layout nudges the cards apart.
-      if (tidy) settleTidy(id);
+      settleDropped(id);
       layout();
       drawWires();
       // A tap without a drag picks the card (a second tap lets go).
@@ -1250,8 +1232,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   const ro = new ResizeObserver(() => {
     layout();
-    if (tidy && !viewMoved && animRaf === 0) {
-      view = tidyFit();
+    if (!viewMoved && animRaf === 0) {
+      view = fitAll();
       layout();
     }
     drawWires();
@@ -1268,10 +1250,10 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       closePopover();
       resetPositions();
       stopAnim();
-      tidy = false;
-      tidyPos.clear();
       knots = emptyKnots();
       focusId = selWire = null;
+      viewMoved = false;
+      opened = false;
       changed();
     },
     setRunning(on, rtGetter) {
@@ -1302,6 +1284,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       layout();
       drawWires();
     },
+    ensureVisible,
     toast,
     hasObjectCard: (nodeId) => isPickable(nodeId),
     pickCard(nodeId) {
