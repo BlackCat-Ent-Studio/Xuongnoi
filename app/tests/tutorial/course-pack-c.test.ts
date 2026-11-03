@@ -46,7 +46,7 @@ function session(lessonId: string) {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {
@@ -141,6 +141,8 @@ function buildHealthColor(s: Session) {
   s.wire(p(hp, 'hp'), p(map, 'value'));
   expect(s.stepId()).toBe('wire-map-meter');
   s.wire(p(map, 'value'), p(meter, 'value'));
+  expect(s.stepId()).toBe('start-ui-meter-show');
+  s.wire(p(s.kindId('on-start'), 'started'), p(meter, 'show'));
   expect(s.stepId()).toBe('add-select');
   const sel = s.add('select-number');
   expect(s.stepId()).toBe('wire-hp-select');
@@ -221,6 +223,8 @@ function buildStartScreen(s: Session) {
   expect(s.stepId()).toBe('wire-door');
   const door = s.kindId('block', (q) => (q.size as { y: number }).y >= 3);
   s.wire(p(button, 'pressed'), p(door, 'hide'));
+  expect(s.stepId()).toBe('start-ui-button-show');
+  s.wire(p(s.kindId('on-start'), 'started'), p(button, 'show'));
   expect(s.stepId()).toBe('add-timer');
   const timer = s.add('timer');
   expect(s.stepId()).toBe('add-timer');

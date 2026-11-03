@@ -119,10 +119,12 @@ export const sightForecastNode: NodeDef<ForecastState> = {
   label: 'Dự đoán tầm nhìn',
   category: 'logic',
   description:
-    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn, và có thể có mảnh Đi tuần) và "Mục tiêu". Nó chơi thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng theo mảnh Chạy theo tuyến) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
+    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn) và "Mục tiêu". Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Đường đi tuần" thì nó mới biết người nhìn đi đâu (không nối thì coi như người nhìn đứng yên). Nó chơi thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" (nối "Tuyến chạy" của mảnh Chạy theo tuyến vào "Tuyến của Mục tiêu") để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
   inputs: [
     { id: 'viewer', type: 'object', label: 'Người nhìn', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu' },
+    { id: 'patrol', type: 'object', label: 'Đường đi tuần' },
+    { id: 'route', type: 'object', label: 'Tuyến của Mục tiêu' },
   ],
   outputs: [
     { id: 'window', type: 'number', label: 'Còn (giây)' },
@@ -155,7 +157,9 @@ export const sightForecastNode: NodeDef<ForecastState> = {
     const vision = visionNoteOf(world, viewer.id, ctx.tick);
     // The first tick may run before the eyes have reported in; staying unsure (not safe) is the careful answer.
     if (!vision) return ctx.tick === 0 ? { ...UNSURE } : { window: NEVER_SEEN, safe: true, need: 0 };
-    const patrol = patrolNoteOf(world, viewer.id, ctx.tick);
+    // Only a patrol that is wired in is known; without the wire the viewer is taken to stand still.
+    const patrolId = asObject(i.patrol);
+    const patrol = patrolId !== null ? patrolNoteOf(world, patrolId, ctx.tick) : undefined;
     if (!patrol && ctx.tick === 0) return { ...UNSURE };
 
     const targetId = asObject(i.target);
@@ -165,8 +169,10 @@ export const sightForecastNode: NodeDef<ForecastState> = {
     let points: Vec3[];
     let need = 0;
     if (leg) {
-      // The leg comes from the target's own route piece; with none running, the target's spot is watched instead.
-      const route = target ? routeNoteOf(world, target.id, ctx.tick) : undefined;
+      // The leg comes from the target's route piece wired into "Tuyến của Mục tiêu"; with none, the target's spot is watched instead.
+      // The route piece must belong to the Mục tiêu itself, as it always did.
+      const routeId = asObject(i.route);
+      const route = target && routeId === target.id ? routeNoteOf(world, routeId, ctx.tick) : undefined;
       if (!route) {
         if (ctx.tick === 0) return { ...UNSURE };
         if (!target || !target.visible) return { window: NEVER_SEEN, safe: true, need: 0 };

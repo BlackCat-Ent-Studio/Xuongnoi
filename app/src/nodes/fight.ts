@@ -10,7 +10,7 @@ import {
   visiblePosition,
   type SteerMemo,
 } from './steering';
-import { asObject, numParam } from './util';
+import { asBool, asObject, numParam } from './util';
 
 interface FightState {
   memo: SteerMemo;
@@ -30,10 +30,11 @@ export const fightNode: NodeDef<FightState> = {
   label: 'Đánh địch',
   category: 'brain',
   description:
-    'Bot tìm đường tới mục tiêu và ra đòn khi đã đủ gần: tín hiệu "Ra đòn" nối vào "Dùng" của node Cầm dụng cụ (có dụng cụ thì đòn mạnh hơn). Đánh xong lùi lại một chút rồi vào tiếp. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
+    'Bot tìm đường tới mục tiêu và ra đòn khi đã đủ gần: tín hiệu "Ra đòn" nối vào "Dùng" của node Cầm dụng cụ (có dụng cụ thì đòn mạnh hơn). Đánh xong lùi lại một chút rồi vào tiếp. Nối tín hiệu vào "Cho đi" thì bot mới hoạt động, rồi nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu', required: true },
+    { id: 'go', type: 'bool', label: 'Cho đi' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
@@ -58,7 +59,7 @@ export const fightNode: NodeDef<FightState> = {
     const self = liveCharacter(world, selfId);
     const targetPos = visiblePosition(world, targetId);
     const idle = { ...STILL, attack: false };
-    if (!self || !selfId || !targetPos || !targetId) return idle;
+    if (!asBool(i.go) || !self || !selfId || !targetPos || !targetId) return idle;
     if (world.healthOf(selfId)?.dead || world.healthOf(targetId)?.dead) return idle;
 
     const sight = Math.max(0, numParam(params, 'sightRange', 8));

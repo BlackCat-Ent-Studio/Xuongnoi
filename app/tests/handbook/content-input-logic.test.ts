@@ -45,7 +45,7 @@ describe('handbook input and logic pages', () => {
         const board = entry.tryBoard();
         expect(board.name).toBe(`Thử: ${def!.label}`);
         expect(board.graph.nodes.some((n) => n.kind === entry.kind)).toBe(true);
-        expect(board.graph.nodes.length).toBeLessThanOrEqual(8);
+        expect(board.graph.nodes.length).toBeLessThanOrEqual(9); // 8 pieces + the "Khi bắt đầu" card the wire rule adds
         expect(board.notes?.length).toBeGreaterThan(0);
 
         const parsed = parseBoard(serializeBoard(board));

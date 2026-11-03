@@ -218,15 +218,15 @@ function railEvaluate(
 
 const IDLE: Record<string, number | boolean> = { moveX: 0, moveY: 0, jump: false, blocked: false, reached: false, index: 0, atPoint: false };
 
-export const routeFollowNode: NodeDef<RouteState> = {
+const routeFollowCore: NodeDef<RouteState> = {
   kind: 'route-follow',
   label: 'Chạy theo tuyến',
   category: 'brain',
   description:
-    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Xe (hoặc từ nhân vật). Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
+    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Xe (hoặc từ nhân vật). Phải nối tín hiệu vào "Bật" thì mới chạy. Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
   inputs: [
     { id: 'self', type: 'object', label: 'Ai', required: true },
-    { id: 'on', type: 'bool', label: 'Bật', default: true },
+    { id: 'on', type: 'bool', label: 'Bật' },
     { id: 'stop', type: 'bool', label: 'Dừng' },
     { id: 'go', type: 'bool', label: 'Chạy' },
   ],
@@ -318,7 +318,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     const points = readPoints(params);
     if (s.idx === null || s.idx >= points.length) s.idx = nearestIndex(world, self.position, points);
     const shown = (): number => (s.idx ?? 0) + 1;
-    if (i.on !== undefined && !asBool(i.on)) {
+    if (!asBool(i.on)) {
       s.waitLeft = 0;
       return { ...IDLE, index: shown() };
     }
@@ -383,5 +383,28 @@ export const routeFollowNode: NodeDef<RouteState> = {
     const top = self.drive?.speed ?? 0;
     const k = top > 0 ? clamp(speed / top, 0.1, 1) : 1;
     return { moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump, blocked, reached, index: shown(), atPoint: false };
+  },
+};
+
+/** Ticks the "Dừng" input must hold the walker before "Đã đứng yên" turns on (0.15 s). */
+const STILL_TICKS = 9;
+const heldTicks = new WeakMap<object, number>();
+
+/**
+ * The route piece plus "Tuyến chạy" (names the walker whose route a forecast may read; it is wired, never guessed) and
+ * "Đã đứng yên" (tells that the "Dừng" input has really stopped the walker, e.g. to grab only while standing at a point).
+ */
+export const routeFollowNode: NodeDef<RouteState> = {
+  ...routeFollowCore,
+  outputs: [...routeFollowCore.outputs, { id: 'route', type: 'object', label: 'Tuyến chạy' }, { id: 'halted', type: 'bool', label: 'Đã đứng yên' }],
+  evaluate(ctx, i, params, s): PortValues {
+    const out = routeFollowCore.evaluate(ctx, i, params, s);
+    const self = liveCharacter(ctx.world, asObject(i.self));
+    // "Đã đứng yên": its "Dừng" input has held the walker still for a moment, not just flickered for a tick, so a brief on-off
+    // loop of its own outputs can never fake it.
+    const holding = self !== undefined && asBool(i.on) && asBool(i.stop);
+    const ticks = holding ? (heldTicks.get(s as object) ?? 0) + 1 : 0;
+    heldTicks.set(s as object, ticks);
+    return { ...out, route: self?.id ?? null, halted: ticks >= STILL_TICKS };
   },
 };

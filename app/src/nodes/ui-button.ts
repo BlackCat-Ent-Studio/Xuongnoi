@@ -10,7 +10,7 @@ export const uiButtonNode: NodeDef<null> = {
   category: 'input',
   description:
     'Hiện một nút bấm trên màn hình game. "Vừa bấm" bật một nhịp mỗi lần người chơi bấm nút, "Đang giữ chuột" bật khi còn giữ chuột. Nối "Hiện" để bật tắt nút.',
-  inputs: [{ id: 'show', type: 'bool', label: 'Hiện', default: true }],
+  inputs: [{ id: 'show', type: 'bool', label: 'Hiện' }],
   outputs: [
     { id: 'pressed', type: 'bool', label: 'Vừa bấm' },
     { id: 'held', type: 'bool', label: 'Đang giữ chuột' },
@@ -22,7 +22,7 @@ export const uiButtonNode: NodeDef<null> = {
   ],
   create: () => null,
   evaluate(ctx, i, params) {
-    const show = i.show === undefined ? true : i.show === true;
+    const show = i.show === true;
     ctx.world.setHud({
       key: ctx.nodeId,
       label: '',

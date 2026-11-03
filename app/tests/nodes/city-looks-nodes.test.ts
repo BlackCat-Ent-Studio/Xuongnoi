@@ -16,6 +16,7 @@ import { itemNode } from '../../src/nodes/item';
 import { CameraRig } from '../../src/render/cameras';
 import { createWorld } from '../../src/world/world';
 import { makeWorld } from './fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -28,7 +29,7 @@ function sim(nodes: NodeSpec[], wires: WireSpec[] = []) {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld('3d');
-  const rt = createRuntime(graph, world, '3d');
+  const rt = createRuntime(wireStarts(graph, '3d'), world, '3d');
   const input: InputSnapshot = { keysDown: new Set() };
   return {
     world,
@@ -147,7 +148,7 @@ describe('camera view preset', () => {
     w.setCamera = (_o, c) => void sent.push(c);
     const params = Object.fromEntries(cameraNode.params.map((p) => [p.id, p.default])) as Params;
     const state = cameraNode.create!({ world: w, nodeId: 'c', dt: TICK_DT } as never, params);
-    const ev = (p: Params) => cameraNode.evaluate({ world: w, nodeId: 'c', dt: TICK_DT } as never, {}, p, state);
+    const ev = (p: Params) => cameraNode.evaluate({ world: w, nodeId: 'c', dt: TICK_DT } as never, { on: true }, p, state);
     ev(params);
     ev({ ...params, view: 'tilted' });
     expect(sent[0]?.pitch).toBeUndefined();

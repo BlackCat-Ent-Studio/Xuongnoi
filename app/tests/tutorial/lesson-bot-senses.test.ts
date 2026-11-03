@@ -61,7 +61,7 @@ describe('bot-senses lesson', () => {
     const s = session();
     const g = (): Graph => s.state.getGraph();
     const byKind = (kind: string, where?: (n: Graph['nodes'][number]) => boolean) => g().nodes.find((n) => n.kind === kind && (!where || where(n)))!.id;
-    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b)).toEqual({ ok: true }));
+    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b, { replace: true })).toEqual({ ok: true }));
     const add = (kind: string): string => {
       let id = '';
       s.do(() => {

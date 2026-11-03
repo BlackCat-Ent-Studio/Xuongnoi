@@ -168,16 +168,16 @@ describe('level 1 (bot-dau-tien)', () => {
   it('without the wire into the walking input of the bot it stands still', () => {
     expect(runLevel(level01!, without(level01!.solution, 's3')).outcome).toBe('timeout');
   });
-  it('needs one piece and three wires', () => {
-    expect(level01!.par).toBe(1);
-    expect(level01!.solution.wires).toHaveLength(3);
+  it('needs two pieces and four wires: the walk and the start signal that switches it on', () => {
+    expect(level01!.par).toBe(2);
+    expect(level01!.solution.wires).toHaveLength(4);
   });
 });
 
 describe('level 2 (cua-kho)', () => {
   const sol = level02!.solution;
-  it('needs three pieces: walk, touch, memory switch', () => {
-    expect(sol.nodes.map((n) => n.kind)).toEqual(['go-to', 'touch', 'latch']);
+  it('needs four pieces: walk, touch, memory switch, start', () => {
+    expect(sol.nodes.map((n) => n.kind)).toEqual(['go-to', 'touch', 'latch', 'on-start']);
   });
   it('touch straight into the door signal opens it only while the bot stands on the button, so the bot gets stuck', () => {
     const noLatch: PuzzleAnswer = {

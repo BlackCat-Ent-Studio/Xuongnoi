@@ -3,7 +3,7 @@ import type { GraphNode, Wire } from '../../../src/engine/types';
 import { canConnect } from '../../../src/engine/wiring';
 import { buildPlayGraph, runLevel } from '../../../src/puzzle/run-level';
 import type { PuzzleAnswer, PuzzleLevel } from '../../../src/puzzle/types';
-import { isPortShown } from '../../../src/puzzle/ui/board-state';
+import { isPortShown, startMayJoin } from '../../../src/puzzle/ui/board-state';
 
 /** Every wire the board would accept between a shown output and a still-free shown input of the answer's graph. */
 export function acceptedWires(level: PuzzleLevel, answer: PuzzleAnswer): Wire[] {
@@ -21,7 +21,7 @@ export function acceptedWires(level: PuzzleLevel, answer: PuzzleAnswer): Wire[] 
     for (const [tn, tp] of ins) {
       if (fn === tn || used.has(`${tn}.${tp}`)) continue;
       const w: Wire = { id: `${fn}.${fp}>${tn}.${tp}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } };
-      if (canConnect(graph, w.from, w.to).ok) found.push(w);
+      if (canConnect(graph, w.from, w.to).ok && startMayJoin(graph, w.from, w.to)) found.push(w);
     }
   }
   return found;

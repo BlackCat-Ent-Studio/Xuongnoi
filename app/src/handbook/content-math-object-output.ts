@@ -84,7 +84,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     purpose: 'Đếm ngược số giây bạn đặt, và báo khi hết giờ.',
     whenToUse: 'Giới hạn thời gian chơi, chờ vài giây rồi mới làm gì đó, hiện đồng hồ đếm ngược trên màn hình.',
     ports: {
-      run: 'Vào: đồng hồ chỉ chạy khi cổng này bật. Không nối dây thì tự chạy.',
+      run: 'Vào: đồng hồ chỉ chạy khi cổng này bật. Không nối dây thì đồng hồ đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để đếm từ đầu game.',
       reset: 'Vào: mỗi lần chuyển từ tắt sang bật thì đồng hồ về lại đủ số giây và đếm lại từ đầu.',
       left: 'Ra: số giây còn lại, giảm dần về 0.',
       done: 'Ra: bật khi đã hết giờ (còn 0 giây) và giữ bật.',
@@ -201,7 +201,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       hide: 'Vào: mỗi lần chuyển từ tắt sang bật thì hộp biến mất (không còn chặn, không thấy nữa).',
       show: 'Vào: mỗi lần chuyển từ tắt sang bật thì hộp hiện lại đúng chỗ cũ. Nếu "Ẩn đi (1 nhịp)" và "Hiện lại (1 nhịp)" cùng lúc thì hộp hiện.',
       pick: 'Vào (số): đổi màu hộp sang "Màu 1", "Màu 2" hoặc "Màu 3" khi nhận 1, 2 hoặc 3 (hợp với Đèn giao thông). Số khác thì không đổi.',
-      run: 'Vào: với băng chuyền, bật thì băng chạy, tắt thì dừng. Không nối dây thì tự chạy.',
+      run: 'Vào: với băng chuyền, bật thì băng chạy, tắt thì dừng. Không nối dây thì băng đứng yên.',
       reverse: 'Vào: với băng chuyền, bật thì băng chạy ngược chiều.',
       hiddenWhile: 'Vào: bật thì hộp biến mất, tắt thì hộp hiện lại đúng chỗ cũ. Không nối dây thì không có tác dụng. Lần đổi nào đến sau cùng thì thắng, kể cả so với "Ẩn đi (1 nhịp)" và "Hiện lại (1 nhịp)".',
       self: 'Ra (vật): chính chiếc hộp này, nối vào Chạm, Mũi tên chỉ đường...',
@@ -322,7 +322,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     whenToUse: 'Đi tắt qua vực, nhảy sang nửa bên kia màn chơi, bẫy dịch chuyển, mê cung có cổng nối các phòng xa nhau.',
     ports: {
       partner: 'Vào (vật): nối "Cổng" của cổng kia vào đây để ghép đôi. Không cần nếu hai cổng cùng "Mã cặp".',
-      on: 'Vào: bật thì cổng hoạt động, tắt thì cổng không đưa ai đi. Không nối dây thì luôn bật.',
+      on: 'Vào: bật thì cổng hoạt động, tắt thì cổng không đưa ai đi. Không nối dây thì cổng không hoạt động.',
       self: 'Ra (vật): chính cổng này, dùng làm "Cổng đối diện" cho cổng kia.',
       used: 'Ra: bật một nhịp khi vừa có ai đi vào cổng.',
       who: 'Ra (vật): người, đồ vật hoặc xe vừa đi vào cổng.',
@@ -349,7 +349,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     purpose: 'Một bệ rắn tự chạy từ điểm A tới điểm B rồi quay lại, chở theo ai đứng trên nó.',
     whenToUse: 'Thang máy, bệ trôi qua vực, bục đưa người lên cao, màn chơi cần nhảy đúng lúc lên bệ.',
     ports: {
-      run: 'Vào: bật thì bệ chạy, tắt thì đứng yên. Không nối dây thì tự chạy.',
+      run: 'Vào: bật thì bệ chạy, tắt thì đứng yên. Không nối dây thì bệ đứng yên.',
       self: 'Ra (vật): chính chiếc bệ.',
       moving: 'Ra: bật khi bệ đang di chuyển (không bật lúc nghỉ ở đầu mút).',
       arrived: 'Ra: bật một nhịp khi bệ vừa tới một đầu mút.',
@@ -379,7 +379,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     whenToUse: 'Cầu xoay, cánh cửa quay, cánh quạt bẫy quét qua, bục xoay để người chơi canh nhịp nhảy.',
     ports: {
       turn: 'Vào: ở kiểu "Xoay từng nấc", mỗi lần chuyển từ tắt sang bật thì hộp xoay thêm 90 độ.',
-      run: 'Vào: bật thì tự xoay (kiểu quay liên tục, hoặc "Tự xoay sau"), tắt thì ngừng. Không nối dây thì luôn chạy.',
+      run: 'Vào: bật thì tự xoay (kiểu quay liên tục, hoặc "Tự xoay sau"), tắt thì ngừng. Không nối dây thì không xoay.',
       self: 'Ra (vật): chính hộp xoay, nối vào Chạm để biết ai bị quét trúng.',
       angle: 'Ra (số): góc hiện tại, tính bằng độ. Kiểu từng nấc chỉ ra 0, 90, 180, 270.',
       turned: 'Ra: bật một nhịp khi hộp vừa xoay xong một nấc (kiểu từng nấc).',
@@ -448,7 +448,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     purpose: 'Hiện một dòng chữ lên màn hình: ở góc, hoặc lơ lửng phía trên một vật và đi theo vật đó.',
     whenToUse: 'Gợi ý cách chơi ("Bấm F để mở"), tên nhân vật, lời nhắc nổi trên đầu, nhãn cho một món đồ.',
     ports: {
-      show: 'Vào: bật thì hiện chữ, tắt thì giấu. Không nối dây thì chữ luôn hiện.',
+      show: 'Vào: bật thì hiện chữ, tắt thì giấu. Không nối dây thì chữ không hiện.',
       anchor: 'Vào (vật): nối vật vào đây thì chữ nổi phía trên vật và đi theo nó. Vật bị ẩn thì chữ cũng ẩn.',
     },
     params: {
@@ -472,7 +472,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     ports: {
       from: 'Vào (vật): vật mang mũi tên, thường là Nhân vật hoặc Xe. Cổng bắt buộc phải nối.',
       to: 'Vào (vật): vật mà mũi tên chỉ tới. Chưa nối hoặc vật đó đang ẩn thì mũi tên ẩn đi.',
-      show: 'Vào: bật thì hiện mũi tên, tắt thì giấu. Không nối dây thì luôn cho phép hiện.',
+      show: 'Vào: bật thì hiện mũi tên, tắt thì giấu. Không nối dây thì mũi tên không hiện.',
       distance: 'Ra (số): khoảng cách giữa hai vật, không tính chênh lệch độ cao. Dùng tiếp được cho mảnh ghép khác.',
     },
     params: {
@@ -495,7 +495,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     ports: {
       value: 'Vào (số): số cần đo. Cổng bắt buộc phải nối.',
       anchor: 'Vào (vật): gắn thanh lên một vật để thanh đi theo vật. Không nối thì thanh nằm ở góc màn hình.',
-      show: 'Vào: bật thì hiện thanh, tắt thì giấu. Không nối dây thì luôn hiện.',
+      show: 'Vào: bật thì hiện thanh, tắt thì giấu. Không nối dây thì thanh không hiện.',
     },
     params: {
       label: 'Tên viết cạnh thanh, ví dụ "Máu".',

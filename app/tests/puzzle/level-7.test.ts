@@ -71,7 +71,7 @@ describe('level 7: phan-loai-mau', () => {
     const counts = new Map<string, number>();
     for (const n of sol.nodes) counts.set(n.kind, (counts.get(n.kind) ?? 0) + 1);
     const spare = level07.tray.filter((t) => t.count > (counts.get(t.kind) ?? 0));
-    expect(spare.map((t) => [t.kind, t.count - (counts.get(t.kind) ?? 0)])).toEqual([['not', 1]]);
+    expect(spare.map((t) => [t.kind, t.count - (counts.get(t.kind) ?? 0)])).toEqual([['speed-sensor', 1]]);
     for (const [kind, n] of counts) expect(level07.tray.find((t) => t.kind === kind)?.count, kind).toBe(n);
     expect(level07.tray.reduce((sum, t) => sum + t.count, 0)).toBe(piecesUsed(sol) + 1);
     expect(level07.par).toBe(piecesUsed(sol));
@@ -83,7 +83,7 @@ describe('level 7: phan-loai-mau', () => {
     expect(starsFor(level07, sol, 7)).toBe(3);
     expect(starsFor(level07, sol, 8)).toBe(2);
     expect(starsFor(level07, sol, 20)).toBe(1);
-    const over: PuzzleAnswer = { nodes: [...sol.nodes, { id: 'extra', kind: 'not', params: {}, pos: { x: 0, y: 0 } }], wires: sol.wires };
+    const over: PuzzleAnswer = { nodes: [...sol.nodes, { id: 'extra', kind: 'speed-sensor', params: {}, pos: { x: 0, y: 0 } }], wires: sol.wires };
     expect(starsFor(level07, over, 0)).toBe(2);
   });
 

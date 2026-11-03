@@ -152,14 +152,14 @@ describe('counter', () => {
 
 describe('timer', () => {
   it('done after seconds * 60 ticks, not before', () => {
-    const out = runNode(timerNode, Array.from({ length: 180 }, () => ({})), { seconds: 3 });
+    const out = runNode(timerNode, Array.from({ length: 180 }, () => ({ inputs: { run: true } })), { seconds: 3 });
     expect(out[178]?.done).toBe(false);
     expect(out[179]?.done).toBe(true);
     expect(out[179]?.left).toBe(0);
   });
 
   it('left never goes below zero and stays done', () => {
-    const out = runNode(timerNode, Array.from({ length: 100 }, () => ({})), { seconds: 1 });
+    const out = runNode(timerNode, Array.from({ length: 100 }, () => ({ inputs: { run: true } })), { seconds: 1 });
     expect(out[99]).toEqual({ left: 0, done: true });
   });
 
@@ -169,7 +169,7 @@ describe('timer', () => {
   });
 
   it('reset edge restarts the countdown', () => {
-    const steps = [...Array.from({ length: 60 }, () => ({})), { inputs: { reset: true } }];
+    const steps = [...Array.from({ length: 60 }, () => ({ inputs: { run: true } })), { inputs: { run: true, reset: true } }];
     const out = runNode(timerNode, steps, { seconds: 1 });
     expect(out[59]?.done).toBe(true);
     expect(out[60]?.done).toBe(false);
@@ -177,13 +177,13 @@ describe('timer', () => {
   });
 
   it('repeat off (default) stays done after the countdown', () => {
-    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({})), { seconds: 1 });
+    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({ inputs: { run: true } })), { seconds: 1 });
     expect(out[60]?.done).toBe(true);
     expect(out[120]?.done).toBe(true);
   });
 
   it('repeat on: done for one tick, then restarts by itself', () => {
-    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({})), { seconds: 1, repeat: 'yes' });
+    const out = runNode(timerNode, Array.from({ length: 130 }, () => ({ inputs: { run: true } })), { seconds: 1, repeat: 'yes' });
     expect(out[58]?.done).toBe(false);
     expect(out[59]?.done).toBe(true);
     expect(out[60]?.done).toBe(false);

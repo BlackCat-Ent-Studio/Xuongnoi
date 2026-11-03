@@ -135,14 +135,20 @@ describe('level 7: stop at the pad, grab only while standing at it', () => {
     for (const x of PAD_X) expect(run.stills.some((s) => Math.abs(s.x - x) < 0.3), `stopped at ${x}`).toBe(true);
   });
 
-  it('with only the walk wired the robot pauses at all six pads and never grabs', () => {
+  it('with only the walk wired (and switched on) the robot never pauses at a pad: nothing stops it without a Dừng wire', () => {
     const walkOnly: PuzzleAnswer = {
-      nodes: sol.nodes.filter((n) => n.id === 's-route'),
-      wires: sol.wires.filter((w) => w.id === 'sw1').concat({ id: 'x', from: { node: 's-route', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } }),
+      nodes: sol.nodes.filter((n) => n.id === 's-route' || n.id === 's-start'),
+      wires: sol.wires.filter((w) => w.id === 'sw1' || w.id === 'sw18').concat({ id: 'x', from: { node: 's-route', port: 'moveX' }, to: { node: 'robot', port: 'moveX' } }),
     };
     const r = trace(walkOnly, 40);
-    for (const x of PAD_X) expect(r.stills.some((s) => Math.abs(s.x - x) < 0.3), `stopped at ${x}`).toBe(true);
+    for (const x of PAD_X) expect(r.stills.some((s) => Math.abs(s.x - x) < 0.3), `paused at ${x}`).toBe(false);
     expect(r.grabs.length).toBe(0);
+  });
+
+  it('with the walk only switched off (no Khi bắt đầu wire) the robot stays where it is', () => {
+    const r = trace({ ...sol, wires: sol.wires.filter((w) => w.id !== 'sw18') }, 10);
+    expect(r.outcome).toBe('timeout');
+    expect(Math.max(...r.xs) - Math.min(...r.xs)).toBeLessThan(0.5);
   });
 
   it('at a blue pad the robot faces the crate it lifts', () => {

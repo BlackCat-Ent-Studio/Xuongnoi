@@ -38,7 +38,7 @@ export const level07: PuzzleLevel = {
     robot: { in: [], out: [] },
     walk: { in: ['go'], out: [] },
     bridge: { in: ['hiddenWhile'], out: [] },
-    begin: { in: [], out: [] },
+    begin: { in: [], out: ['started'] },
     water: { in: [], out: [] },
     goal: { in: [], out: [] },
     'bank-l': { in: [], out: [] },
@@ -68,6 +68,7 @@ export const level07: PuzzleLevel = {
       { id: 'sw2', from: { node: 's-latch', port: 'on' }, to: { node: 'walk', port: 'go' } },
       { id: 'sw3', from: { node: 's-latch', port: 'on' }, to: { node: 's-not', port: 'in' } },
       { id: 'sw4', from: { node: 's-not', port: 'out' }, to: { node: 'bridge', port: 'hiddenWhile' } },
+      { id: 'sw5', from: { node: 'begin', port: 'started' }, to: { node: 's-timer', port: 'run' } },
     ],
   },
 };

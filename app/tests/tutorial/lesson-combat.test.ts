@@ -35,7 +35,7 @@ describe('lesson 9: combat', () => {
       return id;
     };
     const wire = (from: PortRef, to: PortRef): void => {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     };
     const nodes = state.getGraph().nodes;
@@ -72,6 +72,8 @@ describe('lesson 9: combat', () => {
     wire(p(fight, 'moveX'), p(bot, 'moveX'));
     at('wire-fight-attack');
     wire(p(fight, 'attack'), p(botHand, 'use'));
+    at('start-fight-go');
+    wire(p(state.getGraph().nodes.find((n) => n.kind === 'on-start')!.id, 'started'), p(fight, 'go'));
     at('play-fight');
     state.setPlaying(true);
     tick();

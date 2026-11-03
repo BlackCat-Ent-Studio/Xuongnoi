@@ -33,7 +33,7 @@ function session() {
       return id;
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {
@@ -67,6 +67,10 @@ describe('lesson 14: camera and portals', () => {
     s.state.setParam(a, 'pair', 'x1');
     s.state.setParam(b, 'pair', 'x1');
     s.tick();
+    expect(s.stepId()).toBe('start-portal-on');
+    const start = s.state.getGraph().nodes.find((n) => n.kind === 'on-start')!.id;
+    s.wire(p(start, 'started'), p(a, 'on'));
+    s.wire(p(start, 'started'), p(b, 'on'));
     expect(s.stepId()).toBe('try-portals');
   });
 
@@ -88,6 +92,11 @@ describe('lesson 14: camera and portals', () => {
     s.tick();
     expectStep('pair-portals');
     s.wire(p(b, 'self'), p(a, 'partner'));
+    expectStep('start-portal-on');
+    const start = s.state.getGraph().nodes.find((n) => n.kind === 'on-start')!.id;
+    s.wire(p(start, 'started'), p(a, 'on'));
+    expectStep('start-portal-on');
+    s.wire(p(start, 'started'), p(b, 'on'));
     expectStep('try-portals');
     s.play(true);
     expectStep('back-to-edit-2');

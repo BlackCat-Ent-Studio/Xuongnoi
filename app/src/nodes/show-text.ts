@@ -12,7 +12,7 @@ export const showTextNode: NodeDef<null> = {
   description:
     'Hiện một dòng chữ lên màn hình game: ở góc màn hình, hoặc lơ lửng phía trên một vật nếu bạn nối cổng "Gắn vào vật" (chữ đi theo vật, vật bị ẩn thì chữ cũng ẩn). Không nối "Hiện" thì chữ luôn hiện; nối vào để bật tắt chữ.',
   inputs: [
-    { id: 'show', type: 'bool', label: 'Hiện', default: true },
+    { id: 'show', type: 'bool', label: 'Hiện' },
     { id: 'anchor', type: 'object', label: 'Gắn vào vật' },
   ],
   outputs: [],
@@ -37,7 +37,7 @@ export const showTextNode: NodeDef<null> = {
     const c = strParam(params, 'corner', 'top-left');
     const corner = CORNERS.find((x) => x === c) ?? 'top-left';
     const anchor = asObject(i.anchor);
-    const show = i.show === undefined ? true : i.show === true;
+    const show = i.show === true;
     ctx.world.setHud({
       key: ctx.nodeId,
       label: '',

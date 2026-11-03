@@ -30,15 +30,16 @@ export const patrolNode: NodeDef<PatrolState> = {
   label: 'Đi tuần',
   category: 'brain',
   description:
-    'Cho bot đi qua đi lại giữa hai điểm A và B, dừng chờ một lúc ở mỗi đầu. Nối "Đi ngang" / "Đi dọc" vào nhân vật bot. Có thể quay đầu khi gặp mép vực.',
+    'Cho bot đi qua đi lại giữa hai điểm A và B, dừng chờ một lúc ở mỗi đầu. Nối "Đi ngang" / "Đi dọc" vào nhân vật bot. Phải nối tín hiệu vào "Hoạt động" thì bot mới đi. Có thể quay đầu khi gặp mép vực. "Tuyến đi tuần" nối vào mảnh Dự đoán tầm nhìn để nó biết bot này đi đường nào.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
-    { id: 'on', type: 'bool', label: 'Hoạt động', default: true },
+    { id: 'on', type: 'bool', label: 'Hoạt động' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
     { id: 'atEnd', type: 'bool', label: 'Vừa tới đầu mút' },
+    { id: 'route', type: 'object', label: 'Tuyến đi tuần' },
   ],
   params: [
     { id: 'pointA', label: 'Điểm A', kind: 'vec3', default: DEFAULT_A },
@@ -59,9 +60,10 @@ export const patrolNode: NodeDef<PatrolState> = {
   create: () => ({ heading: null, waitLeft: 0, memo: {} }),
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
-    const still = { ...STILL, atEnd: false };
     const self = liveCharacter(world, asObject(i.self));
-    const on = i.on === undefined ? true : asBool(i.on);
+    // "Tuyến đi tuần" names the walker whose patrol a forecast may read; it is wired, never guessed.
+    const still = { ...STILL, atEnd: false, route: self?.id ?? null };
+    const on = asBool(i.on);
     if (!self || !on) return still;
 
     const a = vec3Param(params, 'pointA', DEFAULT_A);
@@ -96,6 +98,6 @@ export const patrolNode: NodeDef<PatrolState> = {
 
     // A patrol told to turn at ledges walks straight; otherwise it routes around walls and over platforms.
     const steer = followPath({ world, self, goal, dt: ctx.dt, memo: s.memo, straight: turnAtEdge || !pathfindOn(params) }, { avoidFall: turnAtEdge });
-    return { moveX: steer.moveX, moveY: steer.moveY, atEnd: false };
+    return { moveX: steer.moveX, moveY: steer.moveY, atEnd: false, route: self.id };
   },
 };

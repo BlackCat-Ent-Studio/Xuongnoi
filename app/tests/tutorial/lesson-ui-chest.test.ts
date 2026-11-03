@@ -38,7 +38,7 @@ function session() {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {
@@ -66,6 +66,9 @@ function finishedGame() {
   const meter = s.add('ui-meter');
   s.param(meter, 'max', 10);
   s.wire(p(timer, 'left'), p(meter, 'value'));
+  const start = s.state.getGraph().nodes.find((n) => n.kind === 'on-start')!.id;
+  s.wire(p(start, 'started'), p(timer, 'run'));
+  s.wire(p(start, 'started'), p(meter, 'show'));
   s.wire(p(timer, 'done'), p(wl, 'lose'));
   return { s, graph: s.state.getGraph(), chest: s.chestId(), pick, meter, timer };
 }
@@ -77,7 +80,7 @@ describe('lesson 17: secret chest', () => {
     expect(lessonName(lesson.title)).toBe('Rương bí mật');
     const board = lesson.createBoard();
     expect(board.mode).toBe('2d-side');
-    expect(board.graph.nodes.map((n) => n.kind).sort()).toEqual(['block', 'block', 'character', 'stick']);
+    expect(board.graph.nodes.map((n) => n.kind).sort()).toEqual(['block', 'block', 'character', 'on-start', 'stick']);
   });
 
   it('walks every step in order and ends info-only', () => {
@@ -96,12 +99,17 @@ describe('lesson 17: secret chest', () => {
     const timer = s.add('timer');
     expect(s.stepId()).toBe('add-timer');
     s.param(timer, 'seconds', 10);
+    expect(s.stepId()).toBe('start-timer-run');
+    const start = s.state.getGraph().nodes.find((n) => n.kind === 'on-start')!.id;
+    s.wire(p(start, 'started'), p(timer, 'run'));
     expect(s.stepId()).toBe('add-meter');
     const meter = s.add('ui-meter');
     expect(s.stepId()).toBe('add-meter');
     s.param(meter, 'max', 10);
     expect(s.stepId()).toBe('wire-meter');
     s.wire(p(timer, 'left'), p(meter, 'value'));
+    expect(s.stepId()).toBe('start-ui-meter-show');
+    s.wire(p(start, 'started'), p(meter, 'show'));
     expect(s.stepId()).toBe('wire-lose');
     s.wire(p(timer, 'done'), p(wl, 'lose'));
     expect(s.stepId()).toBe('play');

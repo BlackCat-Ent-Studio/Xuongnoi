@@ -19,7 +19,7 @@ const piece = (id: string, kind: string, params: GraphNode['params'] = {}): Grap
 
 /** The cat's walking brain every attempt shares: the route run one leg at a time, and the forecast watching the cat's next leg. */
 const BRAIN_NODES = sol.nodes.filter((n) => ['s-route', 's-fore'].includes(n.id));
-const BRAIN_WIRES = sol.wires.filter((w) => ['sw1', 'sw2', 'sw3', 'sw4', 'sw5'].includes(w.id));
+const BRAIN_WIRES = sol.wires.filter((w) => ['sw1', 'sw2', 'sw3', 'sw4', 'sw5', 'sw9', 'sw10', 'sw11'].includes(w.id));
 const withBrain = (extra: PuzzleAnswer): PuzzleAnswer => ({ nodes: [...BRAIN_NODES, ...extra.nodes], wires: [...BRAIN_WIRES, ...extra.wires] });
 
 /** Things a player might try instead of the reference answer. */
@@ -99,9 +99,9 @@ describe('level 6: ne-linh-gac, the reference answer', () => {
     }
   });
 
-  it('has 3 pieces and 8 wires, within the tray and par', () => {
+  it('has 3 pieces and 11 wires, within the tray and par', () => {
     expect(piecesUsed(sol)).toBe(3);
-    expect(sol.wires).toHaveLength(8);
+    expect(sol.wires).toHaveLength(11);
     expect(level06.par).toBe(3);
     expect(level06.freeHints).toBe(4);
     for (const n of sol.nodes) expect(level06.tray.find((t) => t.kind === n.kind), n.kind).toBeDefined();
@@ -216,7 +216,8 @@ describe('level 6 board: logic cards are visible and locked, scenery is hidden',
   const visible = level06.base.nodes.filter((n) => !isSceneryNode(level06, n.id));
 
   it('the visible cards are only the cat and the guard with its walk: the cat has no brain until the player builds it', () => {
-    expect(visible.map((n) => n.id).sort()).toEqual(['guard', 'hero', 'patrol']);
+    // The locked "Khi bắt đầu" card is what switches the guard's walk on; the cat's walk takes the same signal from it.
+    expect(visible.map((n) => n.id).sort()).toEqual(['guard', 'hero', 'patrol', 'start']);
     expect(visible.find((n) => n.id === 'guard')?.params.look).toBe('robot-legs');
     expect(visible.find((n) => n.id === 'hero')?.params.look).toBe('cat-chibi');
     const kinds = new Set(level06.base.nodes.map((n) => n.kind));

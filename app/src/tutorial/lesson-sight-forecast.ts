@@ -29,7 +29,8 @@ const T = {
   },
   viewer: {
     title: 'Ai đang nhìn?',
-    text: 'Nối "Nhân vật" của bot đỏ sang "Người nhìn" của Dự đoán tầm nhìn.',
+    text: 'Nối "Nhân vật" của bot đỏ sang "Người nhìn" của Dự đoán tầm nhìn. Rồi nối "Tuyến đi tuần" của mảnh Đi tuần sang "Đường đi tuần".',
+    explain: 'Mảnh đoán trước chỉ biết những gì được nối dây vào: không nối "Đường đi tuần" thì nó coi như lính gác đứng yên.',
   },
   target: {
     title: 'Canh chỗ nào?',
@@ -68,6 +69,7 @@ const WIRES: BuildArgs[2] = [
 const guard: Resolve = (g) => first(g, 'character', (n) => n.params.color === GUARD);
 const you: Resolve = (g) => first(g, 'character', (n) => n.params.color === YOU);
 const fore: Resolve = (g) => first(g, 'sight-forecast');
+const walk: Resolve = (g) => first(g, 'patrol');
 const num: Resolve = (g) => first(g, 'show-number');
 const safe: Resolve = (g) => first(g, 'show-text');
 
@@ -87,7 +89,7 @@ export function createSightForecastLesson(kit: LessonKit): Lesson {
     steps: [
       { id: 'intro', title: T.intro.title, text: T.intro.text, explain: T.intro.explain },
       { ...kit.addStep('add-forecast', 'sight-forecast'), title: T.add.title, text: T.add.text, explain: T.add.explain },
-      { ...wiresStep('wire-viewer', [link(guard, 'self', fore, 'viewer')]), title: T.viewer.title, text: T.viewer.text },
+      { ...wiresStep('wire-viewer', [link(guard, 'self', fore, 'viewer'), link(walk, 'route', fore, 'patrol')]), title: T.viewer.title, text: T.viewer.text, explain: T.viewer.explain },
       { ...wiresStep('wire-target', [link(you, 'self', fore, 'target')]), title: T.target.title, text: T.target.text, explain: T.target.explain },
       {
         ...wiresStep('wire-out', [link(fore, 'window', num, 'value'), link(fore, 'safe', safe, 'show')]),

@@ -67,8 +67,9 @@ export const level02: PuzzleLevel | null = {
     { kind: 'go-to', count: 1 },
     { kind: 'touch', count: 2 },
     { kind: 'latch', count: 1 },
+    { kind: 'on-start', count: 1 },
   ],
-  par: 3,
+  par: 4,
   freeHints: 3,
   timeLimit: 25,
   solution: {
@@ -76,6 +77,7 @@ export const level02: PuzzleLevel | null = {
       { id: 'p-goto', kind: 'go-to', params: {}, pos: { x: 400, y: 20 } },
       { id: 'p-touch', kind: 'touch', params: {}, pos: { x: 400, y: 200 } },
       { id: 'p-latch', kind: 'latch', params: {}, pos: { x: 600, y: 200 } },
+      { id: 'p-start', kind: 'on-start', params: {}, pos: { x: 160, y: 380 } },
     ],
     wires: [
       wire('s1', ['bot', 'self'], ['p-goto', 'self']),
@@ -85,6 +87,7 @@ export const level02: PuzzleLevel | null = {
       wire('s5', ['button', 'self'], ['p-touch', 'b']),
       wire('s6', ['p-touch', 'touching'], ['p-latch', 'set']),
       wire('s7', ['p-latch', 'on'], ['door', 'hiddenWhile']),
+      wire('s8', ['p-start', 'started'], ['p-goto', 'go']),
     ],
   },
 };

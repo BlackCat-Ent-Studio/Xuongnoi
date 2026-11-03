@@ -7,6 +7,7 @@ import { vehicleNode } from '../../src/nodes/vehicle';
 import { vehicleSize } from '../../src/world/vehicles';
 import { createWorld } from '../../src/world/world';
 import { defaultParams } from '../nodes/fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -27,7 +28,7 @@ function sim(nodes: NodeSpec[], wires: WireSpec[]): Sim {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld('2d-top');
-  const rt = createRuntime(graph, world, '2d-top');
+  const rt = createRuntime(wireStarts(graph, '2d-top'), world, '2d-top');
   return {
     world,
     rt,

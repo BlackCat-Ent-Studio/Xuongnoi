@@ -3,6 +3,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Graph, type Params, type Vec3 } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { createWorld } from '../../src/world/world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -26,7 +27,7 @@ function moveX(kind: 'chase' | 'go-to', params: Params, preyX: number): number {
     wires: [wire('hero', 'self', 'b', 'self', 0), wire('prey', 'self', 'b', 'target', 1)],
   };
   const world = createWorld('2d-side');
-  const rt = createRuntime(graph, world, '2d-side');
+  const rt = createRuntime(wireStarts(graph, '2d-side'), world, '2d-side');
   rt.tick({ keysDown: new Set() });
   world.step(TICK_DT);
   return rt.getOutput('b', 'moveX') as number;

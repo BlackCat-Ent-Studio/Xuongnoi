@@ -99,23 +99,26 @@ export const level03: PuzzleLevel | null = {
   tray: [
     { kind: 'route-follow', count: 1, params: ROUTE_PARAMS },
     { kind: 'counter', count: 1 },
+    { kind: 'on-start', count: 1 },
     // Spare piece: "Và" looks useful for gathering signals but nothing here needs it.
     { kind: 'and', count: 1 },
   ],
   editable: [{ kind: 'counter', paramId: 'target' }],
-  par: 2,
+  par: 3,
   freeHints: 2,
   timeLimit: 30,
   solution: {
     nodes: [
       { id: 'p-route', kind: 'route-follow', params: ROUTE_PARAMS, pos: { x: 400, y: 20 } },
       { id: 'p-count', kind: 'counter', params: { target: 3 }, pos: { x: 400, y: 200 } },
+      { id: 'p-start', kind: 'on-start', params: {}, pos: { x: 160, y: 380 } },
     ],
     wires: [
       wire('s1', ['cat', 'self'], ['p-route', 'self']),
       wire('s2', ['p-route', 'moveX'], ['cat', 'moveX']),
       wire('s3', ['p-route', 'reached'], ['p-count', 'up']),
       wire('s4', ['p-count', 'reached'], ['gate', 'hiddenWhile']),
+      wire('s5', ['p-start', 'started'], ['p-route', 'on']),
     ],
   },
 };

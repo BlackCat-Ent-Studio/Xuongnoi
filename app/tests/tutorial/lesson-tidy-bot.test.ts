@@ -57,7 +57,7 @@ describe('tidy-bot lesson', () => {
     const byParam = (kind: string, key: string, value: unknown): string =>
       g().nodes.find((n) => n.kind === kind && n.params[key] === value)!.id;
     const slotAt = (x: number): string => g().nodes.find((n) => n.params.color === '#f59e0b' && (n.params.position as { x: number }).x === x)!.id;
-    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b)).toEqual({ ok: true }));
+    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b, { replace: true })).toEqual({ ok: true }));
     const add = (kind: string): string => {
       let id = '';
       s.do(() => {
@@ -75,6 +75,9 @@ describe('tidy-bot lesson', () => {
     connect(p(guard, 'self'), p(route, 'self'));
     expect(s.stepId()).toBe('wire-route');
     connect(p(route, 'moveX'), p(guard, 'moveX'));
+    expect(s.stepId()).toBe('start-route-follow-on');
+    const start = g().nodes.find((n) => n.kind === 'on-start')!.id;
+    connect(p(start, 'started'), p(route, 'on'));
     expect(s.stepId()).toBe('stop-for');
     s.do(() => s.state.setParam(route, 'stopFor', 0));
     expect(s.stepId()).toBe('stop-for');
@@ -96,6 +99,8 @@ describe('tidy-bot lesson', () => {
     connect(p(picker, 'slot'), p(go, 'target'));
     expect(s.stepId()).toBe('wire-go');
     connect(p(go, 'moveX'), p(porter, 'moveX'));
+    expect(s.stepId()).toBe('start-go-to-go');
+    connect(p(start, 'started'), p(go, 'go'));
     expect(s.stepId()).toBe('play');
     return { s, guard, porter };
   }

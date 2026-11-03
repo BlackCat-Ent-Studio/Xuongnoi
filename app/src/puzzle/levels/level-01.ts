@@ -49,18 +49,24 @@ export const level01: PuzzleLevel | null = {
   },
   tray: [
     { kind: 'go-to', count: 1 },
-    // Spare piece: "Đảo ngược" looks useful but nothing here needs it.
-    { kind: 'not', count: 1 },
+    // Nothing acts without a wire: "Đi tới" walks only while a signal reaches its "Cho đi", and this one is on from the first moment.
+    { kind: 'on-start', count: 1 },
+    // Spare piece: "Và" looks useful but nothing here needs it. (Not "Đảo ngược": left alone it gives a steady "bật", the same as "Khi bắt đầu".)
+    { kind: 'and', count: 1 },
   ],
-  par: 1,
+  par: 2,
   freeHints: 1,
   timeLimit: 15,
   solution: {
-    nodes: [{ id: 'p-goto', kind: 'go-to', params: {}, pos: { x: 400, y: 150 } }],
+    nodes: [
+      { id: 'p-goto', kind: 'go-to', params: {}, pos: { x: 400, y: 150 } },
+      { id: 'p-start', kind: 'on-start', params: {}, pos: { x: 160, y: 300 } },
+    ],
     wires: [
       wire('s1', ['bot', 'self'], ['p-goto', 'self']),
       wire('s2', ['flag', 'self'], ['p-goto', 'target']),
       wire('s3', ['p-goto', 'moveX'], ['bot', 'moveX']),
+      wire('s4', ['p-start', 'started'], ['p-goto', 'go']),
     ],
   },
 };

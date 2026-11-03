@@ -39,7 +39,7 @@ function session() {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {

@@ -50,7 +50,7 @@ function session(id: string) {
       return nodeId;
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     set(nodeId: string, param: string, value: ParamValue): void {
@@ -136,6 +136,10 @@ function solveChaseGame(s: Session) {
   s.wire(p(runner, 'self'), p(chase2, 'self'));
   s.wire(p(hero, 'self'), p(chase2, 'target'));
   s.wire(p(chase2, 'moveX'), p(runner, 'moveX'));
+  s.expectStep('start-chase-go');
+  const start = s.nodeOf('on-start');
+  s.wire(p(start, 'started'), p(chase1, 'go'));
+  s.wire(p(start, 'started'), p(chase2, 'go'));
   s.expectStep('play');
   s.play(true);
   s.expectStep('win');
@@ -185,6 +189,8 @@ function solveConveyor(s: Session) {
   s.set(belt, 'style', 'conveyor');
   s.expectStep('belt-direction');
   s.set(belt, 'beltDir', '-x');
+  s.expectStep('start-block-run');
+  s.wire(p(s.nodeOf('on-start'), 'started'), p(belt, 'run'));
   s.expectStep('add-key');
   const key = s.add('key');
   s.expectStep('wire-reverse');

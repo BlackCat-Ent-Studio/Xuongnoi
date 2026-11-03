@@ -5,14 +5,14 @@ import type { GraphNode, Wire } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { level05 } from '../../src/puzzle/levels/level-05';
 import { buildPlayGraph, piecesUsed, runLevel } from '../../src/puzzle/run-level';
-import { isPortShown } from '../../src/puzzle/ui/board-state';
+import { isPortShown, startMayJoin } from '../../src/puzzle/ui/board-state';
 import type { PuzzleAnswer } from '../../src/puzzle/types';
 
 registerAllNodes();
 
 const sol = level05.solution;
 /** The spare tray piece. */
-const decoy: GraphNode = { id: 'decoy', kind: 'not', params: {}, pos: { x: 0, y: 0 } };
+const decoy: GraphNode = { id: 'decoy', kind: 'or', params: {}, pos: { x: 0, y: 0 } };
 /** A cheaper answer still has to win in about the time the reference needs. */
 const SEARCH_SECONDS = 35;
 
@@ -32,13 +32,13 @@ function acceptedWires(answer: PuzzleAnswer): Wire[] {
     for (const [tn, tp] of ins) {
       if (fn === tn || used.has(`${tn}.${tp}`)) continue;
       const w: Wire = { id: `${fn}.${fp}>${tn}.${tp}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } };
-      if (canConnect(graph, w.from, w.to).ok) found.push(w);
+      if (canConnect(graph, w.from, w.to).ok && startMayJoin(graph, w.from, w.to)) found.push(w);
     }
   }
   return found;
 }
 
-describe('level 5: the spare "Đảo ngược" gives no cheaper win', () => {
+describe('level 5: the spare "Hoặc" gives no cheaper win', () => {
   it('par is the number of solution pieces and the spare is not part of it', () => {
     expect(level05.par).toBe(sol.nodes.length);
     expect(sol.nodes.map((n) => n.kind)).not.toContain(decoy.kind);

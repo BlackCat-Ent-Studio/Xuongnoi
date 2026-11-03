@@ -19,7 +19,7 @@ export const uiMeterNode: NodeDef<null> = {
   inputs: [
     { id: 'value', type: 'number', label: 'Số cần đo', required: true },
     { id: 'anchor', type: 'object', label: 'Gắn vào vật' },
-    { id: 'show', type: 'bool', label: 'Hiện', default: true },
+    { id: 'show', type: 'bool', label: 'Hiện' },
   ],
   outputs: [],
   params: [
@@ -33,7 +33,7 @@ export const uiMeterNode: NodeDef<null> = {
   evaluate(ctx, i, params) {
     const value = asNum(i.value);
     const anchor = asObject(i.anchor);
-    const show = i.show === undefined ? true : i.show === true;
+    const show = i.show === true;
     ctx.world.setHud({
       key: ctx.nodeId,
       label: uiText(params, 'label', 'Máu'),

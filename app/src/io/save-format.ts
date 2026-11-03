@@ -15,6 +15,7 @@ import {
 } from '../engine/types';
 import { NOTE_MAX_COUNT, NOTE_MAX_TEXT, clampNoteSize, isNoteColor } from '../engine/notes';
 import { GROUP_NAME_MAX, cleanGroupName, isGroupColor, withGroups } from '../editor/groups/group-model';
+import { migrateWireRule } from '../editor/graph/wire-rule-migration';
 import { registerAllNodes } from '../nodes';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
 import { IO_TEXT } from './text-vi';
@@ -27,7 +28,7 @@ const isFiniteNum = (v: unknown): v is number => typeof v === 'number' && Number
 
 export function createEmptyBoard(mode: ViewMode): Board {
   // A brand-new game starts with real collisions; older boards and the samples keep the plain rules.
-  return { name: IO_TEXT.newBoardName, mode, graph: { nodes: [], wires: [], settings: { solidBodies: true } } };
+  return { name: IO_TEXT.newBoardName, mode, graph: { nodes: [], wires: [], settings: { solidBodies: true, wireRule: true } } };
 }
 
 export function serializeBoard(board: Board): string {
@@ -220,7 +221,13 @@ export function parseBoard(text: string): ParseResult {
 
   graph = withGroups(graph, parseGroups(rawGraph.groups, nodes));
   // Only an explicit `true` switches a setting on; anything else reads as the old behaviour.
-  if (isRecord(rawGraph.settings) && rawGraph.settings.solidBodies === true) graph = { ...graph, settings: { solidBodies: true } };
+  const rawSettings = isRecord(rawGraph.settings) ? rawGraph.settings : {};
+  const settings: Graph['settings'] = {};
+  if (rawSettings.solidBodies === true) settings.solidBodies = true;
+  if (rawSettings.wireRule === true) settings.wireRule = true;
+  if (Object.keys(settings).length > 0) graph = { ...graph, settings };
+  // A board saved before the wire rule gets its "Khi bắt đầu" wires here, on every way in (file, library, autosave, sample).
+  graph = migrateWireRule(graph, mode as ViewMode);
 
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };

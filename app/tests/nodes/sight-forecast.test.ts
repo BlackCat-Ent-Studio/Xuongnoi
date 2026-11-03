@@ -4,6 +4,7 @@ import { TICK_DT, type Graph, type GraphNode, type Params, type Vec3 } from '../
 import { registerAllNodes } from '../../src/nodes';
 import { NEVER_SEEN, forecastSight, legPoints } from '../../src/nodes/sight-forecast';
 import { createWorld } from '../../src/world/world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -51,7 +52,7 @@ function trace(b: { nodes: NodeSpec[]; wires: WireSpec[] }, ticks: number, foreI
     wires: b.wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld('3d');
-  const rt = createRuntime(graph, world, '3d');
+  const rt = createRuntime(wireStarts(graph, '3d'), world, '3d');
   const out: Trace = { window: [], safe: [], seen: [] };
   for (let i = 0; i < ticks; i++) {
     rt.tick({ keysDown: new Set() });
@@ -166,7 +167,7 @@ describe('sight forecast node', () => {
         wires: b.wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
       };
       const world = createWorld('3d');
-      const rt = createRuntime(graph, world, '3d');
+      const rt = createRuntime(wireStarts(graph, '3d'), world, '3d');
       const zs: number[] = [];
       for (let i = 0; i < 600; i++) {
         rt.tick({ keysDown: new Set() });

@@ -7,6 +7,7 @@ import { vehicleNode } from '../../src/nodes/vehicle';
 import { vehicleSize } from '../../src/world/vehicles';
 import { createWorld } from '../../src/world/world';
 import { defaultParams, makeCtx, makeWorld } from '../nodes/fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -183,7 +184,7 @@ describe('route-follow tuning params', () => {
       wires: [{ id: 'w0', from: { node: 'car', port: 'self' }, to: { node: 'route', port: 'self' } }],
     };
     const world = createWorld('2d-top');
-    const rt = createRuntime(graph, world, '2d-top');
+    const rt = createRuntime(wireStarts(graph, '2d-top'), world, '2d-top');
     return { first: () => (rt.tick({ keysDown: new Set() }), world.step(TICK_DT), rt) };
   }
 

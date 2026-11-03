@@ -38,7 +38,7 @@ function session() {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {
@@ -72,6 +72,9 @@ function build() {
   s.param(plat, 'position', { x: -2, y: -0.25, z: 0 });
   s.at('platform-b');
   s.param(plat, 'to', { x: 2, y: -0.25, z: 0 });
+  s.at('start-moving-platform-run');
+  const start = g().find((n) => n.kind === 'on-start')!.id;
+  s.wire(p(start, 'started'), p(plat, 'run'));
   s.at('play-ride');
   s.play(true);
   s.at('back-1');
@@ -100,6 +103,8 @@ function build() {
   const timer = s.add('timer');
   s.at('add-timer'); // default 30 seconds is too slow
   s.param(timer, 'seconds', 3);
+  s.at('start-timer-run');
+  s.wire(p(start, 'started'), p(timer, 'run'));
   s.at('wire-spawn');
   s.wire(p(timer, 'done'), p(spawner, 'spawn'));
   s.at('add-loop-or');
@@ -128,7 +133,7 @@ describe('lesson 13: platforms and shooting', () => {
     expect(chapterOf(lesson.id)?.id).toBe('fighting');
     expect(lesson.createBoard().mode).toBe('2d-side');
     expect(lesson.steps.length).toBeGreaterThanOrEqual(18);
-    expect(lesson.steps.length).toBeLessThanOrEqual(26);
+    expect(lesson.steps.length).toBeLessThanOrEqual(28); // 26 steps of the lesson itself + the two start wires the wire rule asks for
   });
 
   it('walks through every step in order and finishes on win', () => {

@@ -28,6 +28,7 @@ import {
   type GroupFail,
 } from './groups/group-model';
 import { spreadOverlaps } from './graph/graph-geometry';
+import { migrateBoardWireRule } from './graph/wire-rule-migration';
 import { createHistory } from './history';
 import { nextNodeId } from './node-ids';
 
@@ -382,8 +383,9 @@ export function createEditorState(initial: Board): EditorState {
     },
     loadBoard(next) {
       // Boards laid out before a node grew new ports can have cards on top of each other.
-      const graph = spreadOverlaps(next.graph);
-      board = graph === next.graph ? next : { ...next, graph };
+      const migrated = migrateBoardWireRule(next);
+      const graph = spreadOverlaps(migrated.graph);
+      board = graph === migrated.graph ? migrated : { ...migrated, graph };
       selection = null;
       multi = new Set();
       scope = null;
@@ -402,8 +404,10 @@ export function createEditorState(initial: Board): EditorState {
     getSolidBodies: () => board.graph.settings?.solidBodies === true,
     setSolidBodies(on) {
       if (playing || on === (board.graph.settings?.solidBodies === true)) return;
-      const { settings: _old, ...rest } = board.graph;
-      commit({ ...board, graph: on ? { ...rest, settings: { solidBodies: true } } : rest }, ['graph']);
+      const { settings: old, ...rest } = board.graph;
+      const { solidBodies: _was, ...others } = old ?? {};
+      const settings = on ? { ...others, solidBodies: true } : others;
+      commit({ ...board, graph: Object.keys(settings).length > 0 ? { ...rest, settings } : rest }, ['graph']);
     },
     setPlaying(p) {
       if (p === playing) return;

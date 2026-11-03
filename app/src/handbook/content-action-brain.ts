@@ -83,7 +83,9 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     whenToUse: 'Đập đá bằng cuốc, chém quái bằng kiếm, đánh nhau tay không hay có vũ khí.',
     ports: {
       character: 'Nhân vật cầm dụng cụ. Nối cổng "Nhân vật" vào đây.',
-      toggle: 'Mỗi lần bật lên: tay đang trống thì nhặt dụng cụ gần nhất, đang cầm thì cất xuống.',
+      equip: 'Mỗi lần bật lên: tay đang trống thì nhặt dụng cụ gần nhất.',
+      unequip: 'Mỗi lần bật lên: tay đang cầm thì cất dụng cụ xuống.',
+      toggle: 'Cổng cũ, chỉ để game cũ vẫn chạy: mỗi lần bật lên, tay trống thì nhặt, đang cầm thì cất. Game mới nên dùng "Cầm" và "Cất".',
       use: 'Mỗi lần bật lên là một lần vung tay. Không cầm gì thì là cú đấm.',
       holding: 'Bật khi nhân vật đang cầm dụng cụ trên tay.',
       tool: 'Món dụng cụ đang ở trên tay (loại "đồ vật").',
@@ -91,7 +93,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       hit: 'Vật vừa bị đánh trúng ở phía trước (loại "đồ vật"), nếu có.',
     },
     params: { reach: 'Tầm với: dùng cho cả lúc nhặt dụng cụ lẫn lúc vung, tính từ nhân vật ra phía trước.' },
-    example: 'Phím E → "Cầm / Cất", phím F → "Dùng". Vật thể tảng đá có "Bị dùng lên" → "Ẩn đi (1 nhịp)" của một cánh cổng.',
+    example: 'Phím E → "Cầm", phím R → "Cất", phím F → "Dùng". Vật thể tảng đá có "Bị dùng lên" → "Ẩn đi (1 nhịp)" của một cánh cổng.',
     tips: [
       'Dụng cụ phải là Đồ vật đặt "Cách cầm" = Cầm trên tay, nếu không nó sẽ lên đầu như hàng khiêng.',
       'Đòn đánh chỉ trúng thứ nằm ngay trước mặt. Hãy quay mặt về phía tảng đá trước khi vung.',
@@ -128,16 +130,18 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
   },
   {
     kind: 'enter-exit',
-    purpose: 'Cho nhân vật lên xe ngồi lái khi đứng gần xe, và xuống xe khi đang ngồi. Một nút bấm làm cả hai việc.',
+    purpose: 'Cho nhân vật lên xe ngồi lái khi đứng gần xe, và xuống xe khi đang ngồi. Mỗi việc có một cổng riêng: "Lên xe" và "Xuống xe".',
     whenToUse: 'Game có ô tô, xe máy, xe tải: người chơi đi bộ tới xe, bấm E để lên lái.',
     ports: {
       character: 'Ai sẽ lên xuống xe. Nối cổng "Nhân vật" vào đây.',
-      press: 'Mỗi lần bật lên: đang đứng ngoài thì lên xe gần nhất, đang ngồi thì xuống.',
+      enter: 'Mỗi lần bật lên: nhân vật đứng gần xe thì lên xe gần nhất ngồi lái.',
+      exit: 'Mỗi lần bật lên: nhân vật đang ngồi trên xe thì xuống xe, đứng cạnh xe.',
+      press: 'Cổng cũ, chỉ để game cũ vẫn chạy: mỗi lần bật lên, đang đứng ngoài thì lên xe, đang ngồi thì xuống. Game mới nên dùng "Lên xe" và "Xuống xe".',
       inVehicle: 'Bật khi nhân vật đang ngồi trên xe.',
       vehicle: 'Chiếc xe đang ngồi (loại "đồ vật"), trống nếu đang đứng ngoài.',
     },
     params: { reach: 'Đứng cách xe bao xa vẫn lên được.' },
-    example: 'Phím E "Vừa nhấn" → "Bấm". Cần điều khiển nối cả vào Nhân vật lẫn Xe để lái được khi đã ngồi.',
+    example: 'Phím E "Vừa nhấn" → "Lên xe", phím Q "Vừa nhấn" → "Xuống xe". Cần điều khiển nối cả vào Nhân vật lẫn Xe để lái được khi đã ngồi.',
     tips: [
       'Phải đứng đủ gần xe mới lên được. Đứng xa bấm E sẽ không có gì xảy ra.',
       'Khi đã ngồi, cần điều khiển phải nối vào "Đi ngang / Đi dọc" của Xe thì mới lái được.',
@@ -184,7 +188,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     purpose: 'Điều khiển góc nhìn lúc chơi: bám theo một vật hoặc đứng yên, phóng to thu nhỏ và rung màn hình.',
     whenToUse: 'Phóng to khi vào hầm, rung màn hình khi nổ hoặc bị đánh, đứng yên nhìn cả sân, đổi góc nhìn ở bản 3D.',
     ports: {
-      on: 'Bật thì Máy quay này được dùng. Không nối thì luôn bật.',
+      on: 'Bật thì Máy quay này được dùng. Không nối thì máy quay không làm gì; nối "Đã bắt đầu" của Khi bắt đầu để dùng ngay từ đầu game.',
       target: 'Vật cho máy quay bám theo (kiểu "Bám theo vật").',
       zoom: 'Mức phóng to nối bằng số. Số lớn hơn 0 thì dùng số này, bằng 0 thì dùng mức mặc định trong thuộc tính.',
       shake: 'Mỗi lần bật lên là một lần rung màn hình.',
@@ -303,10 +307,11 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     whenToUse: 'Lính gác đi tuần, quái đi qua đi lại trên đường, người đi bộ trong thành phố.',
     ports: {
       self: 'Bot cần đi tuần. Nối "Nhân vật" của bot vào đây.',
-      on: 'Bật thì đi tuần, tắt thì đứng yên. Không nối thì luôn đi.',
+      on: 'Bật thì đi tuần, tắt thì đứng yên. Không nối thì đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để đi tuần ngay từ đầu game.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của nhân vật bot.',
       moveY: 'Lệnh đi dọc. Nối vào "Đi dọc" của nhân vật bot.',
       atEnd: 'Bật một nhịp khi vừa tới một đầu.',
+      route: 'Cho biết bot nào đang đi tuần. Nối vào "Đường đi tuần" của Dự đoán tầm nhìn để nó biết bot này đi đường nào.',
     },
     params: {
       pointA: 'Đầu thứ nhất của quãng đường (x, y, z).',
@@ -331,7 +336,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ports: {
       self: 'Bot cần đi. Nối "Nhân vật" của bot vào đây.',
       target: 'Tuỳ chọn: vật làm đích. Không nối thì đi tới "Điểm đến" trong thuộc tính.',
-      go: 'Bật thì đi, tắt thì đứng yên. Không nối thì luôn đi.',
+      go: 'Bật thì đi, tắt thì đứng yên. Không nối thì đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để đi ngay từ đầu game.',
       target2: 'Nâng cao, tuỳ chọn: đích thứ hai. Chỉ dùng khi "Dùng đích 2" bật.',
       useTarget2: 'Nâng cao, tuỳ chọn: bật thì bot đi tới "Đích 2" thay cho "Đích". Không nối thì luôn dùng "Đích". Bật mà chưa có Đích 2 thì bot đứng yên. Ví dụ nối "Đang khiêng" của Khiêng đồ vào đây: đi lấy đồ ở Đích, cầm xong thì đi cất ở Đích 2.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của nhân vật bot.',
@@ -339,6 +344,8 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       jump: 'Lệnh nhảy khi cần leo bục hay vượt chướng ngại. Nối vào "Nhảy" của nhân vật bot.',
       arrived: 'Bật suốt lúc bot đang ở gần đích.',
       arrivedPulse: 'Chỉ bật một nhịp ngay lúc vừa tới. Dùng để báo "xong việc".',
+      arrivedAt1: 'Bật suốt lúc bot đã tới "Đích" (khi đang đi tới Đích, không phải Đích 2). Nối vào "Nhấc lên" để bot nhấc đồ ở Đích.',
+      arrivedAt2: 'Bật suốt lúc bot đã tới "Đích 2". Nối vào "Thả" để bot đặt đồ xuống ở Đích 2.',
     },
     params: {
       targetPos: 'Điểm đến khi không nối "Đích". Gồm x, y, z.',
@@ -363,7 +370,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     whenToUse: 'Xe buýt chạy tuyến, tàu chạy quanh đường ray, xe ô tô trong thành phố, người đi bộ theo đường định sẵn.',
     ports: {
       self: 'Xe hoặc bot cần chạy. Nối "Xe" của Xe, hoặc "Nhân vật" của bot.',
-      on: 'Bật thì chạy, tắt thì đứng yên. Không nối thì luôn chạy.',
+      on: 'Bật thì chạy, tắt thì đứng yên. Không nối thì đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để chạy ngay từ đầu game.',
       stop: 'Bật thì dừng lại, ví dụ đèn đỏ. Hết bật thì chạy tiếp.',
       go: 'Chỉ khi chạy từng chặng: bot đứng ở điểm cho tới khi cổng này bật, rồi chạy thẳng tới điểm kế. Tới nơi mà cổng vẫn bật thì chạy tiếp luôn.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của xe hoặc bot.',
@@ -372,6 +379,8 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       blocked: 'Bật khi xe đang bị chặn vì có vật cản, xe hay người phía trước.',
       reached: 'Bật một nhịp khi vừa tới một điểm.',
       index: 'Số thứ tự điểm đang hướng tới (1, 2, 3...).',
+      halted: 'Bật khi cổng "Dừng" đã giữ bot đứng yên được một lúc (khoảng 0,15 giây), không phải chỉ một nhịp thoáng qua. Dùng để chỉ cho nhặt đồ khi bot đã đứng lại ở một điểm.',
+      route: 'Cho biết bot nào đang chạy tuyến. Nối vào "Tuyến của Mục tiêu" của Dự đoán tầm nhìn để nó biết tuyến này.',
       atPoint: 'Bật suốt lúc bot đứng lại ở một điểm (khi đã đặt "Dừng ở mỗi điểm"). Dùng để chỉ cho nhặt đồ khi bot đang đứng yên.',
     },
     params: {
@@ -407,6 +416,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ports: {
       self: 'Bot đang đuổi. Nối "Nhân vật" của bot vào đây.',
       target: 'Vật bị đuổi (hoặc bị tránh). Thường là nhân vật của người chơi.',
+      go: 'Bật thì bot mới đuổi (hoặc tránh), tắt thì đứng yên. Không nối thì đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để bot hoạt động ngay từ đầu game.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của nhân vật bot.',
       moveY: 'Lệnh đi dọc. Nối vào "Đi dọc" của nhân vật bot.',
       jump: 'Lệnh nhảy khi cần vượt bục. Nối vào "Nhảy" của bot.',
@@ -463,6 +473,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ports: {
       self: 'Bot sẽ đánh nhau. Nối "Nhân vật" của bot vào đây.',
       target: 'Đối thủ cần đánh. Thường là nhân vật của người chơi.',
+      go: 'Bật thì bot mới đánh, tắt thì đứng yên. Không nối thì đứng yên; nối "Đã bắt đầu" của Khi bắt đầu để bot đánh ngay từ đầu game.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của nhân vật bot.',
       moveY: 'Lệnh đi dọc. Nối vào "Đi dọc" của nhân vật bot.',
       jump: 'Lệnh nhảy khi cần vượt bục. Nối vào "Nhảy" của bot.',

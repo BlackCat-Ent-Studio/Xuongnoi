@@ -44,6 +44,8 @@ export interface PortDef {
   default?: PortValue;
   /** Input only: the node does nothing useful until this port is wired. The editor flags it when empty. */
   required?: boolean;
+  /** Input only: kept so saved boards still work, but one input does two actions. New boards use the dedicated inputs. */
+  legacy?: boolean;
 }
 
 export type ParamKind = 'number' | 'select' | 'key' | 'color' | 'vec3' | 'text';
@@ -168,6 +170,11 @@ export interface NodeGroup {
 export interface GraphSettings {
   /** "Va chạm thật": characters and loose items are solid bodies (see world/world-options.ts). Only ever stored as `true`. */
   solidBodies?: boolean;
+  /**
+   * Set once a board follows "every action needs its own wire" (inputs such as "Cho đi" are off until wired).
+   * A board without it is an older one: loading it wires a "Khi bắt đầu" card into those inputs. Only ever stored as `true`.
+   */
+  wireRule?: boolean;
 }
 
 export interface Graph {

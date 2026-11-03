@@ -140,13 +140,16 @@ describe('camera node', () => {
     const params = defaultParams(def, { zoom: 9, shakeTime: 0.5 });
     const state = def.create!(makeCtx(w), params);
     const run = (inputs: Record<string, never | boolean | number | string | null>) => def.evaluate(makeCtx(w), inputs, params, state);
-    expect(run({ target: 'e1' })).toEqual({ active: true });
+    expect(run({ target: 'e1' })).toEqual({ active: false }); // nothing wired to "Bật": the camera does nothing
+    expect(sent).toEqual([null]);
+    sent.length = 0;
+    expect(run({ target: 'e1', on: true })).toEqual({ active: true });
     expect(sent[0]).toMatchObject({ mode: 'follow', target: 'e1', zoom: 4, shake: 0 });
-    run({ zoom: 2 });
+    run({ zoom: 2, on: true });
     expect(sent[1]!.zoom).toBe(2);
-    run({ shake: true });
+    run({ shake: true, on: true });
     expect(sent[2]!.shake).toBeGreaterThan(0.9);
-    run({ shake: true }); // held, not a new pulse; decays
+    run({ shake: true, on: true }); // held, not a new pulse; decays
     expect(sent[3]!.shake).toBeLessThan(sent[2]!.shake);
     expect(run({ on: false })).toEqual({ active: false });
     expect(sent[4]).toBeNull();

@@ -9,7 +9,7 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
     'Một cổng phát sáng: ai chạm vào sẽ được đưa tới cổng còn lại của cặp (phải bước ra khỏi cổng mới đi lại được). Ghép đôi bằng cách nối "Cổng đối diện" tới mảnh ghép Cổng kia, hoặc đặt cùng một "Mã cặp" cho hai cổng. Người, đồ vật và xe đều đi qua được.',
   inputs: [
     { id: 'partner', type: 'object', label: 'Cổng đối diện' },
-    { id: 'on', type: 'bool', label: 'Bật', default: true },
+    { id: 'on', type: 'bool', label: 'Bật' },
   ],
   outputs: [
     { id: 'self', type: 'object', label: 'Cổng' },
@@ -43,7 +43,7 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
     ctx.world.setPortal(s.id, {
       partner: asObject(i.partner),
       pair: strParam(params, 'pair', ''),
-      enabled: i.on === undefined ? true : asBool(i.on),
+      enabled: asBool(i.on),
       cooldown: numParam(params, 'cooldown', 0.5),
     });
     const who = ctx.world.portalUser(s.id);

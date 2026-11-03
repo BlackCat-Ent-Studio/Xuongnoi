@@ -129,7 +129,7 @@ describe('"Tìm đường" switch on brain nodes', () => {
     const ctx = makeCtx(world);
     const state = goToNode.create!(ctx, params);
     for (let i = 0; i < 900; i++) {
-      const out = goToNode.evaluate(ctx, { self: bot }, params, state);
+      const out = goToNode.evaluate(ctx, { self: bot, go: true }, params, state);
       world.setCharacterIntent(bot, { moveX: out.moveX as number, moveY: out.moveY as number, jump: out.jump === true, speed: 5, jumpPower: 10 });
       world.step(TICK_DT);
     }
@@ -158,7 +158,7 @@ describe('"Tìm đường" switch on brain nodes', () => {
     const cp = defaultParams(chaseNode, { sightRange: 30, giveUpRange: 40, pathfind: 'off' });
     const cs = chaseNode.create!(ctx, cp);
     for (let i = 0; i < 600; i++) {
-      const out = chaseNode.evaluate(ctx, { self: bot, target }, cp, cs);
+      const out = chaseNode.evaluate(ctx, { self: bot, target, go: true }, cp, cs);
       world.setCharacterIntent(bot, { moveX: out.moveX as number, moveY: out.moveY as number, jump: false, speed: 5, jumpPower: 10 });
       world.step(TICK_DT);
     }
@@ -168,7 +168,7 @@ describe('"Tìm đường" switch on brain nodes', () => {
     const pp = defaultParams(patrolNode, { pointA: v(3, 0.5, 2), pointB: v(13, 0.5, 2), pathfind: 'off', wait: 0 });
     const ps = patrolNode.create!(makeCtx(w2), pp);
     for (let i = 0; i < 600; i++) {
-      const out = patrolNode.evaluate(makeCtx(w2), { self: b2 }, pp, ps);
+      const out = patrolNode.evaluate(makeCtx(w2), { self: b2, on: true }, pp, ps);
       w2.setCharacterIntent(b2, { moveX: out.moveX as number, moveY: out.moveY as number, jump: false, speed: 5, jumpPower: 10 });
       w2.step(TICK_DT);
     }
@@ -197,7 +197,7 @@ describe('bots driving vehicles', () => {
 
     let minAbsZAtWall = Infinity;
     for (let i = 0; i < 60 * 40; i++) {
-      const out = goToNode.evaluate(ctx, { self: vs.id, target: goal }, gParams, gs);
+      const out = goToNode.evaluate(ctx, { self: vs.id, target: goal, go: true }, gParams, gs);
       vehicleNode.evaluate(ctx, { moveX: out.moveX as number, moveY: out.moveY as number }, vParams, vs);
       world.step(TICK_DT);
       const p = world.getEntity(vs.id)!.position;

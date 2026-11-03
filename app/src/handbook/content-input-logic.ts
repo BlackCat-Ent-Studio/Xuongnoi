@@ -65,9 +65,12 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   },
   {
     kind: 'on-start',
-    purpose: 'Bật đúng một nhịp ngay khi trò chơi bắt đầu chạy, rồi tắt luôn.',
+    purpose: 'Báo ngay khi trò chơi bắt đầu chạy: một nhịp "Vừa bắt đầu", và "Đã bắt đầu" bật suốt từ đó.',
     whenToUse: 'Khi muốn làm gì đó một lần lúc mở game: hiện lời chào, hỏi người chơi một câu, bật sẵn một công tắc.',
-    ports: { fired: 'Chỉ bật ở nhịp đầu tiên khi bấm Chơi, sau đó tắt mãi.' },
+    ports: {
+      fired: 'Chỉ bật ở nhịp đầu tiên khi bấm Chơi, sau đó tắt mãi.',
+      started: 'Bật suốt từ lúc bấm Chơi. Nối vào "Cho đi", "Bật", "Chạy"... của mảnh cần được bật từ đầu game (Đi tới, Đi tuần, Hẹn giờ...).',
+    },
     params: {},
     example: 'Khi bắt đầu "Vừa bắt đầu" → Công tắc nhớ "Bật" → Hiện chữ: lời chào hiện ra và ở lại suốt game.',
     tips: [
@@ -82,7 +85,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     purpose: 'Hiện một nút bấm ngay trên màn hình game để người chơi bấm bằng chuột hoặc ngón tay.',
     whenToUse: 'Game trên điện thoại, nút "Nhảy" hay "Bắn" trên màn hình, nút mở cửa, nút chọn chế độ.',
     ports: {
-      show: 'Nối vào để bật tắt nút: bật thì nút hiện, tắt thì nút ẩn và không bấm được. Không nối thì nút luôn hiện.',
+      show: 'Nối vào để bật tắt nút: bật thì nút hiện, tắt thì nút ẩn và không bấm được. Không nối thì nút không hiện; nối "Đã bắt đầu" của Khi bắt đầu để nút hiện từ đầu game.',
       pressed: 'Bật một nhịp mỗi lần người chơi bấm nút.',
       held: 'Bật suốt lúc người chơi còn giữ chuột (hoặc ngón tay) trên nút.',
     },
@@ -486,7 +489,9 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     purpose: 'Đoán trước bao nhiêu giây nữa một người nhìn sẽ thấy một chỗ, bằng cách chơi thử trước đường đi tuần và tầm nhìn của họ.',
     whenToUse: 'Bot lẻn vào chỉ chạy khi chắc chắn chưa bị lính gác thấy: tính xem còn kịp chạy qua một đoạn hở hay phải nấp.',
     ports: {
-      viewer: 'Người nhìn: nhân vật có mảnh Tầm nhìn (và có thể có mảnh Đi tuần). Bắt buộc nối. Mảnh này đọc luật nhìn và đường đi tuần của người đó.',
+      viewer: 'Người nhìn: nhân vật có mảnh Tầm nhìn. Bắt buộc nối. Mảnh này đọc luật nhìn (tầm xa, góc, tường che) của người đó.',
+      patrol: 'Đường đi tuần của người nhìn: nối "Tuyến đi tuần" của mảnh Đi tuần vào đây. Không nối thì coi như người nhìn đứng yên.',
+      route: 'Chỉ ở kiểu canh chặng kế: nối "Tuyến chạy" của mảnh Chạy theo tuyến của Mục tiêu vào đây. Không nối thì chỉ canh chỗ Mục tiêu đang đứng.',
       target: 'Vật cần canh: chỗ nó đứng là chỗ được canh. Ở kiểu canh chặng kế, đây là bot đang chạy từng chặng theo mảnh Chạy theo tuyến.',
       window: 'Còn bao nhiêu giây nữa người nhìn sẽ thấy chỗ đó (hay một điểm bất kỳ của chặng) lần đầu. Bằng 0 nếu đang bị thấy rồi; 99 nếu chưa bị thấy trong thời gian nhìn trước.',
       safe: 'Bật khi trong thời gian nhìn trước vẫn chưa bị thấy.',
@@ -500,7 +505,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nó chỉ đoán chứ không đổi gì trong game: không làm ai di chuyển hay thấy được ai.',
       'Nó dùng đúng luật của mảnh Tầm nhìn (tầm xa, góc nhìn, tường che), nên người nhìn cần có một mảnh Tầm nhìn đang nối.',
-      'Người nhìn có mảnh Đi tuần thì nó đoán cả lúc họ tới đầu đường rồi quay lại; không có thì coi như họ đứng yên.',
+      'Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Đường đi tuần" thì nó đoán cả lúc họ tới đầu đường rồi quay lại; không nối thì coi như họ đứng yên.',
       'Nó đoán đường đi tuần là đường thẳng giữa hai điểm A và B của mảnh Đi tuần (hãy tắt Tìm đường).',
     ],
     lessonId: 'sight-forecast',

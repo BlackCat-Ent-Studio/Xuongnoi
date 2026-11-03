@@ -28,15 +28,15 @@ const nextScenery = (): { x: number; y: number } => {
 const scenery = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: nextScenery() });
 const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
 
-/** Pieces the player takes from the tray, ready set up for this level (walk up to the goal and stand still; one key picks up and puts down). */
+/** Pieces the player takes from the tray, ready set up for this level (walk up to the goal and stand still; "Nhấc lên" and "Thả" are two separate inputs). */
 const GO_TO_PARAMS: GraphNode['params'] = { stopDistance: STOP, slowRadius: 3, settle: SETTLE, pathfind: 'off' };
-const CARRY_PARAMS: GraphNode['params'] = { mode: 'toggle' };
+const CARRY_PARAMS: GraphNode['params'] = { mode: 'separate' };
 
 /**
  * Level 5 (du-ba-thung): the first 3D level. Three crates lie scattered on the floor and the legs robot must set
  * each one in its own slot of the store. The player builds the whole circuit from four pieces: "Tìm vật gần nhất"
  * picks the nearest loose crate (not those already in a slot), "Ô trống kế tiếp" picks the slot to fill, "Đi tới"
- * walks to the crate and then (second goal) to the slot, and "Khiêng đồ" in one-key mode picks up and puts down.
+ * walks to the crate and then (second goal) to the slot, and "Khiêng đồ" lifts on one input and puts down on another.
  *
  * On the board only the robot and the three slot marks are drawn. The floor, store mark, crates, the slot zones that
  * decide the win, the win/lose rule and the camera are scenery (not drawn).
@@ -59,6 +59,8 @@ export const level05: PuzzleLevel = {
       scenery('crate-2', 'item', { name: 'Thùng 2', position: { x: -7.5, y: 0.3, z: 0 }, size: CRATE_SIZE, shape: 'crate', color: '#b45309' }),
       scenery('crate-3', 'item', { name: 'Thùng 3', position: { x: -9, y: 0.3, z: 4.5 }, size: CRATE_SIZE, shape: 'crate', color: '#b45309' }),
       scenery('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.9 }),
+      // Locked and not drawn: it switches the fixed camera on, since nothing acts without a wire.
+      scenery('start', 'on-start', {}),
       // The win asks for a crate resting in each of the three slots (so one slot cannot be piled up).
       ...slotCentres(STORE).map((c, i) =>
         scenery(`slot-zone-${i + 1}`, 'zone', { center: { x: c.x, y: 0.5, z: c.z }, size: { x: SLOT_SIZE, y: 3, z: SLOT_SIZE }, filter: 'item', rule: 'center', color: '#22c55e' }),
@@ -76,11 +78,12 @@ export const level05: PuzzleLevel = {
       wire('b3', ['slots-12', 'out'], ['slots-all', 'a']),
       wire('b4', ['slot-zone-3', 'inside'], ['slots-all', 'b']),
       wire('b5', ['slots-all', 'out'], ['end', 'win']),
+      wire('b6', ['start', 'started'], ['cam', 'on']),
     ],
   },
   shownPorts: {
     ...Object.fromEntries(
-      ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'slots-12', 'slots-all', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`)].map((id) => [id, { in: [], out: [] }]),
+      ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'start', 'slots-12', 'slots-all', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`)].map((id) => [id, { in: [], out: [] }]),
     ),
     robot: { in: ['moveX', 'moveY'], out: ['self'] },
     'slot-1': { in: [], out: ['self'] },
@@ -92,11 +95,12 @@ export const level05: PuzzleLevel = {
     { kind: 'go-to', count: 1, params: GO_TO_PARAMS },
     { kind: 'next-free-slot', count: 1 },
     { kind: 'carry', count: 1, params: CARRY_PARAMS },
-    // Spare piece: nothing in the circuit needs flipping a signal, so "Đảo ngược" only looks useful.
-    { kind: 'not', count: 1 },
+    { kind: 'on-start', count: 1 },
+    // Spare piece: nothing in the circuit needs gathering two signals, so "Hoặc" only looks useful. (Not "Đảo ngược": left alone it gives a steady "bật", the same as "Khi bắt đầu".)
+    { kind: 'or', count: 1 },
   ],
-  par: 4,
-  freeHints: 7,
+  par: 5,
+  freeHints: 8,
   timeLimit: 90,
   solution: {
     nodes: [
@@ -104,6 +108,7 @@ export const level05: PuzzleLevel = {
       { id: 's-go', kind: 'go-to', params: GO_TO_PARAMS, pos: { x: 480, y: 120 } },
       { id: 's-next', kind: 'next-free-slot', params: {}, pos: { x: 260, y: 300 } },
       { id: 's-hands', kind: 'carry', params: CARRY_PARAMS, pos: { x: 480, y: 400 } },
+      { id: 's-start', kind: 'on-start', params: {}, pos: { x: 260, y: 480 } },
     ],
     wires: [
       wire('sw1', ['robot', 'self'], ['s-find', 'who']),
@@ -118,7 +123,9 @@ export const level05: PuzzleLevel = {
       wire('sw10', ['s-next', 'slot'], ['s-go', 'target2']),
       wire('sw11', ['robot', 'self'], ['s-hands', 'character']),
       wire('sw12', ['s-hands', 'holding'], ['s-go', 'useTarget2']),
-      wire('sw13', ['s-go', 'arrived'], ['s-hands', 'grab']),
+      wire('sw13', ['s-go', 'arrivedAt1'], ['s-hands', 'grab']),
+      wire('sw16', ['s-go', 'arrivedAt2'], ['s-hands', 'drop']),
+      wire('sw17', ['s-start', 'started'], ['s-go', 'go']),
       wire('sw14', ['s-go', 'moveX'], ['robot', 'moveX']),
       wire('sw15', ['s-go', 'moveY'], ['robot', 'moveY']),
     ],
