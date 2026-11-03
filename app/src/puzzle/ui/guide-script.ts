@@ -14,6 +14,7 @@ import { defaultParams, paramValue, type BoardState } from './board-state';
 /** What each piece is for, finishing "<name>: ...". Lines stay short because the cat says them one at a time. */
 const KIND_PURPOSE: Record<string, string> = {
   'go-to': 'cho bot tự đi tới đích.',
+  'nearest-item': 'tìm thùng nằm gần nhất.',
   touch: 'biết khi hai vật chạm nhau.',
   latch: 'nhớ mãi một tín hiệu.',
   or: 'bật khi một trong hai bật.',
@@ -72,9 +73,21 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     s8: 'Đủ 3 sao thì cổng ẩn đi!',
   },
   'du-ba-thung': {
-    sw1: 'Số thùng trong kho vào Số A.',
-    sw2: 'Số thùng cần có vào Số B.',
-    sw3: 'Đủ thùng thì thắng!',
+    sw1: 'Nối Rô-bốt vào Tìm vật gần nhất để nó tìm thùng gần rô-bốt.',
+    sw2: 'Ô kho 1 vào Tìm vật gần nhất: thùng đã cất rồi thì bỏ qua.',
+    sw3: 'Ô kho 2 cũng vào đó.',
+    sw4: 'Ô kho 3 cũng vào đó nốt.',
+    sw5: 'Thùng gần nhất làm Đích cho Đi tới.',
+    sw6: 'Nối Rô-bốt vào mảnh Đi tới.',
+    sw7: 'Ô kho 1 vào mảnh Ô trống kế tiếp.',
+    sw8: 'Ô kho 2 cũng vào đó.',
+    sw9: 'Ô kho 3 cũng vào đó.',
+    sw10: 'Ô trống kế tiếp làm Đích 2 cho Đi tới.',
+    sw11: 'Nối Rô-bốt vào Khiêng đồ để có tay.',
+    sw12: 'Đang khiêng thì Đi tới đổi sang Đích 2.',
+    sw13: 'Tới nơi thì Khiêng đồ nhấc lên, tới kho thì thả.',
+    sw14: 'Lối đi ngang của Đi tới cho rô-bốt đi.',
+    sw15: 'Lối đi dọc của Đi tới cũng cho rô-bốt.',
   },
   'ne-linh-gac': {
     sw1: 'Mèo nhỏ vào mảnh Đo khoảng cách.',
@@ -116,6 +129,7 @@ export const GUIDE_TEXT = {
 /** Level-specific cheer after the win, else the generic one. */
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
+  'du-ba-thung': 'Giỏi quá! Rô-bốt tự cất đủ ba thùng rồi!',
   'phan-loai-mau': 'Giỏi quá! Bạn tự nối cả mạch rồi!',
 };
 

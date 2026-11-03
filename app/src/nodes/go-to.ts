@@ -26,7 +26,7 @@ export const goToNode: NodeDef<GoToState> = {
   label: 'Đi tới',
   category: 'brain',
   description:
-    'Cho bot đi tới một vật hoặc một điểm, rồi dừng lại và báo "Đã tới". Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot. Nếu không nối "Đích" thì bot đi tới điểm đã đặt. Có thể nối thêm "Đích 2": khi "Dùng đích 2" bật, bot đi tới Đích 2 thay cho Đích.',
+    'Cho bot đi tới một vật hoặc một điểm, rồi dừng lại và báo "Đã tới". Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot. Nếu không nối "Đích" thì bot đi tới điểm đã đặt. Có thể nối thêm "Đích 2": khi "Dùng đích 2" bật, bot đi tới Đích 2 thay cho Đích (chưa có Đích 2 thì đứng yên).',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'target', type: 'object', label: 'Đích (vật)' },
@@ -77,8 +77,15 @@ export const goToNode: NodeDef<GoToState> = {
       return { ...STILL, arrived: false, arrivedPulse: false };
     }
     // A wired object that has vanished (hidden crate...) falls back to the fixed point.
-    const aim = asBool(i.useTarget2) ? i.target2 : i.target;
-    const goal = visiblePosition(world, asObject(aim)) ?? vec3Param(params, 'targetPos', DEFAULT_TARGET);
+    const second = asBool(i.useTarget2);
+    const aimed = visiblePosition(world, asObject(second ? i.target2 : i.target));
+    // "Dùng đích 2" with no Đích 2 to go to (nothing wired, or it has vanished): stand still instead of wandering off to the fixed point.
+    if (second && !aimed) {
+      s.settled = 0;
+      risingEdge(s.arrived, false);
+      return { ...STILL, arrived: false, arrivedPulse: false };
+    }
+    const goal = aimed ?? vec3Param(params, 'targetPos', DEFAULT_TARGET);
     const near = hasArrived(world.mode, self.position, goal, numParam(params, 'stopDistance', 0.5));
     s.settled = go && near ? s.settled + ctx.dt : 0;
     // "Đứng yên bao lâu": 0 (default) reports the arrival at once; otherwise only after the bot has stood still that long.

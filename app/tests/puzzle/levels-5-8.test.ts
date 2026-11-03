@@ -101,18 +101,13 @@ describe.each(LEVELS)('puzzle level $order $id', (level) => {
 });
 
 describe('level 5: du-ba-thung', () => {
-  it('needs the compare to ask for the full count', () => {
-    expect(runLevel(level05, withParams(level05.solution, 'compare', { op: 'gt' })).outcome).toBe('timeout');
+  it('the robot stops before the crates and the slots (go-to stop distance matters)', () => {
+    expect(runLevel(level05, withParams(level05.solution, 'go-to', { stopDistance: 4 })).outcome).not.toBe('win');
   });
 
-  it('a zone placed away from the storage never counts crates', () => {
-    const away = withParams(level05.solution, 'zone', { center: { x: 0, y: 1, z: 5 } });
-    expect(runLevel(level05, away).outcome).toBe('timeout');
-  });
-
-  it('a counter left unwired does nothing', () => {
-    const extra: PuzzleAnswer = { ...EMPTY, nodes: [{ id: 'c', kind: 'counter', params: {}, pos: { x: 0, y: 0 } }] };
-    expect(runLevel(level05, extra).outcome).toBe('timeout');
+  it('a spare "Đảo ngược" left unwired does nothing', () => {
+    const extra: PuzzleAnswer = { ...level05.solution, nodes: [...level05.solution.nodes, { id: 'n', kind: 'not', params: {}, pos: { x: 0, y: 0 } }] };
+    expect(runLevel(level05, extra).outcome).toBe('win');
   });
 });
 

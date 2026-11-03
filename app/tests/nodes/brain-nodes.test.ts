@@ -195,14 +195,15 @@ describe('go-to node', () => {
     expect(second.arrived).toBe(true);
   });
 
-  it('Đích 2 on but nothing wired to it falls back to the fixed point', () => {
+  it('Dùng đích 2 on but no Đích 2 to go to: the bot stands still', () => {
     const s = sim(
       '2d-side',
       [hero(0), floor('f', 0, 40), ['g', 'go-to', { targetPos: v(5, 1, 0), stopDistance: 0.4 }], ['c', 'const', { value: 1 }], ['on', 'compare', { op: 'ge' }]],
       [...drive('g'), ['c', 'value', 'on', 'a'], ['on', 'out', 'g', 'useTarget2']],
     );
     s.step(300);
-    expect(s.hero().position.x).toBeGreaterThan(4.4);
+    expect(s.hero().position.x).toBeCloseTo(0, 3);
+    expect(s.out('g', 'arrived')).toBe(false);
   });
 
   it('does nothing while go is off, then starts when it turns on', () => {

@@ -333,7 +333,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       target: 'Tuỳ chọn: vật làm đích. Không nối thì đi tới "Điểm đến" trong thuộc tính.',
       go: 'Bật thì đi, tắt thì đứng yên. Không nối thì luôn đi.',
       target2: 'Nâng cao, tuỳ chọn: đích thứ hai. Chỉ dùng khi "Dùng đích 2" bật.',
-      useTarget2: 'Nâng cao, tuỳ chọn: bật thì bot đi tới "Đích 2" thay cho "Đích". Không nối thì luôn dùng "Đích". Ví dụ nối "Đang khiêng" của Khiêng đồ vào đây: đi lấy đồ ở Đích, cầm xong thì đi cất ở Đích 2.',
+      useTarget2: 'Nâng cao, tuỳ chọn: bật thì bot đi tới "Đích 2" thay cho "Đích". Không nối thì luôn dùng "Đích". Bật mà chưa có Đích 2 thì bot đứng yên. Ví dụ nối "Đang khiêng" của Khiêng đồ vào đây: đi lấy đồ ở Đích, cầm xong thì đi cất ở Đích 2.',
       moveX: 'Lệnh đi ngang. Nối vào "Đi ngang" của nhân vật bot.',
       moveY: 'Lệnh đi dọc. Nối vào "Đi dọc" của nhân vật bot.',
       jump: 'Lệnh nhảy khi cần leo bục hay vượt chướng ngại. Nối vào "Nhảy" của nhân vật bot.',

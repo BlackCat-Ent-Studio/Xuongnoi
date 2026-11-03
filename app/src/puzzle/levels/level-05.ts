@@ -1,7 +1,7 @@
 import type { GraphNode, Wire } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
-import { slotMarkNodes, type StoreSlotsDef } from '../store-slots';
+import { SLOT_SIZE, slotCentres, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
 import { handReach } from '../world-options';
 
 /**
@@ -11,14 +11,13 @@ import { handReach } from '../world-options';
  */
 const STORE: StoreSlotsDef = { pickup: { x: -8, y: 0.5, z: 0 }, first: { x: 10.3, z: 0 }, step: { x: -1.8, z: 0 }, count: 3 };
 const CRATE_SIZE = { x: 0.6, y: 0.6, z: 0.6 };
-/** The robot stops this far from a crate (clear of the crate's body, inside the hands' reach) to pick it up. */
-const FETCH_STOP = 1.05;
-/** The robot stops this far from a slot, so the crate in its hands lands in the slot's middle. */
-const PARK_REACH = Math.round(handReach(CRATE_SIZE) * 100) / 100;
-/** Seconds the robot stands still before it grabs or lets go. */
+/**
+ * The robot stops this far from its goal: clear of a crate's body (robot box 0.65 + crate 0.3 = 0.95) and inside the
+ * hands' reach, and exactly where a crate in its hands lands in the middle of a slot.
+ */
+const STOP = Math.round(handReach(CRATE_SIZE) * 100) / 100;
+/** Seconds the robot stands still before it reports "Đã tới", so it never grabs or lets go on the move. */
 const SETTLE = 0.3;
-
-const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
 
 let sceneryIndex = 0;
 /** Scenery is never drawn, so it only needs a spot of its own: a strip below the board holds them all in rows. */
@@ -27,24 +26,27 @@ const nextScenery = (): { x: number; y: number } => {
   return { x: 20 + (i % 5) * 190, y: 640 + Math.floor(i / 5) * 44 };
 };
 const scenery = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: nextScenery() });
-const card = (id: string, kind: string, params: GraphNode['params'], x: number, y: number): GraphNode => ({ id, kind, params, pos: { x, y } });
+const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
 
-/** Left part of the board, three columns: the robot's whole circuit as locked cards. */
-const COL = [6, 184, 362] as const;
+/** Pieces the player takes from the tray, ready set up for this level (walk up to the goal and stand still; one key picks up and puts down). */
+const GO_TO_PARAMS: GraphNode['params'] = { stopDistance: STOP, slowRadius: 3, settle: SETTLE, pathfind: 'off' };
+const CARRY_PARAMS: GraphNode['params'] = { mode: 'toggle' };
 
 /**
- * Level 5 (du-ba-thung): the legs robot shuttles crates into a storage zone; the player counts them.
+ * Level 5 (du-ba-thung): the first 3D level. Three crates lie scattered on the floor and the legs robot must set
+ * each one in its own slot of the store. The player builds the whole circuit from four pieces: "Tìm vật gần nhất"
+ * picks the nearest loose crate (not those already in a slot), "Ô trống kế tiếp" picks the slot to fill, "Đi tới"
+ * walks to the crate and then (second goal) to the slot, and "Khiêng đồ" in one-key mode picks up and puts down.
  *
- * The robot's behaviour is a circuit of ordinary Xưởng Nối pieces, drawn as locked cards on the left: "Tìm vật gần
- * nhất" picks the nearest crate not yet in a slot, "Đi tới" walks up to it, "Khiêng đồ" grabs it, a second "Đi tới"
- * walks it to the "Ô trống kế tiếp", and the hands let go there. The floor, store mark, crates and camera are scenery.
+ * On the board only the robot and the three slot marks are drawn. The floor, store mark, crates, the slot zones that
+ * decide the win, the win/lose rule and the camera are scenery (not drawn).
  */
 export const level05: PuzzleLevel = {
   id: 'du-ba-thung',
   order: 5,
   title: 'Đủ ba thùng',
-  task: 'Rô-bốt chân đang chở thùng vào kho. Khi kho có đủ 3 thùng thì mở cổng thắng! Hãy đặt vùng kho để đếm thùng, rồi so sánh với số cần.',
-  hint: 'Đặt "Vùng kích hoạt" (nó đã nằm đúng chỗ kho), nối "Số lượng" vào "Số A" của "So sánh". Nối "Số cần" vào "Số B", rồi nối "Đúng" vào "Thắng".',
+  task: 'Ba thùng nằm rải rác trên sàn. Hãy nối mạch để rô-bốt chân tự nhặt từng thùng và cất vào kho, mỗi thùng một ô. Đủ ba ô có thùng là thắng!',
+  hint: '"Tìm vật gần nhất" chọn thùng (Ô kho 1, 2, 3 báo thùng nào cất rồi), nối vào "Đích" của "Đi tới". "Ô trống kế tiếp" chọn ô cất, nối vào "Đích 2". Khiêng xong ("Đang khiêng") thì bật "Dùng đích 2". Tới nơi ("Đã tới") thì "Khiêng đồ" nhấc hoặc thả.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,
@@ -57,77 +59,68 @@ export const level05: PuzzleLevel = {
       scenery('crate-2', 'item', { name: 'Thùng 2', position: { x: -7.5, y: 0.3, z: 0 }, size: CRATE_SIZE, shape: 'crate', color: '#b45309' }),
       scenery('crate-3', 'item', { name: 'Thùng 3', position: { x: -9, y: 0.3, z: 4.5 }, size: CRATE_SIZE, shape: 'crate', color: '#b45309' }),
       scenery('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.9 }),
-      // Column 1: the robot, the three slot marks and its hands.
-      card('robot', 'character', { name: 'Rô-bốt chân', position: { x: 8, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, COL[0], 4),
-      ...slotMarkNodes(STORE, (i) => ({ x: COL[0], y: 120 + i * 64 })),
-      card('hands', 'carry', {}, COL[0], 316),
-      // Column 2: finds the nearest loose crate and the next free slot, and adds the sideways walk of the two trips.
-      card('finder', 'nearest-item', {}, COL[1], 4),
-      card('next', 'next-free-slot', {}, COL[1], 228),
-      card('sum-x', 'math', { op: 'add' }, COL[1], 374),
-      // Column 3: the two trips (to the crate, to the slot) and the forward-backward sum.
-      card('fetch', 'go-to', { stopDistance: FETCH_STOP, slowRadius: 3, settle: SETTLE, pathfind: 'off' }, COL[2], 4),
-      card('store', 'go-to', { stopDistance: PARK_REACH, slowRadius: 3, settle: SETTLE, pathfind: 'off' }, COL[2], 202),
-      card('sum-y', 'math', { op: 'add' }, COL[2], 400),
-      // Player's targets on the right.
-      { id: 'need', kind: 'const', params: { value: 3 }, pos: { x: 640, y: 20 } },
-      { id: 'end', kind: 'win-lose', params: { winMessage: 'Kho đủ ba thùng, cổng mở rồi!' }, pos: { x: 820, y: 20 } },
+      // The win asks for a crate resting in each of the three slots (so one slot cannot be piled up).
+      ...slotCentres(STORE).map((c, i) =>
+        scenery(`slot-zone-${i + 1}`, 'zone', { center: { x: c.x, y: 0.5, z: c.z }, size: { x: SLOT_SIZE, y: 3, z: SLOT_SIZE }, filter: 'item', rule: 'center', color: '#22c55e' }),
+      ),
+      scenery('slots-12', 'and', {}),
+      scenery('slots-all', 'and', {}),
+      scenery('end', 'win-lose', { winMessage: 'Ba thùng đã nằm gọn trong kho!' }),
+      // The two things the player wires to: the robot and the store slot marks, in a column on the left.
+      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: 8, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 10 } },
+      ...slotMarkNodes(STORE, (i) => ({ x: 10, y: 128 + i * 80 })),
     ],
     wires: [
-      wire('b1', ['robot', 'self'], ['finder', 'who']),
-      wire('b2', ['robot', 'self'], ['fetch', 'self']),
-      wire('b3', ['robot', 'self'], ['store', 'self']),
-      wire('b4', ['robot', 'self'], ['hands', 'character']),
-      ...[1, 2, 3].map((n) => wire(`b${4 + n}`, [`slot-${n}`, 'self'], ['next', `s${n}`])),
-      ...[1, 2, 3].map((n) => wire(`b${7 + n}`, [`slot-${n}`, 'self'], ['finder', `i${n}`])),
-      wire('b11', ['finder', 'item'], ['fetch', 'target']),
-      wire('b12', ['finder', 'found'], ['fetch', 'go']),
-      wire('b13', ['next', 'slot'], ['store', 'target']),
-      wire('b14', ['hands', 'holding'], ['finder', 'pause']),
-      wire('b15', ['hands', 'holding'], ['store', 'go']),
-      wire('b16', ['fetch', 'moveX'], ['sum-x', 'a']),
-      wire('b17', ['store', 'moveX'], ['sum-x', 'b']),
-      wire('b18', ['sum-x', 'out'], ['robot', 'moveX']),
-      wire('b19', ['fetch', 'moveY'], ['sum-y', 'a']),
-      wire('b20', ['store', 'moveY'], ['sum-y', 'b']),
-      wire('b21', ['sum-y', 'out'], ['robot', 'moveY']),
-      wire('b22', ['fetch', 'arrived'], ['hands', 'grab']),
-      wire('b23', ['store', 'arrived'], ['hands', 'drop']),
+      wire('b1', ['slot-zone-1', 'inside'], ['slots-12', 'a']),
+      wire('b2', ['slot-zone-2', 'inside'], ['slots-12', 'b']),
+      wire('b3', ['slots-12', 'out'], ['slots-all', 'a']),
+      wire('b4', ['slot-zone-3', 'inside'], ['slots-all', 'b']),
+      wire('b5', ['slots-all', 'out'], ['end', 'win']),
     ],
   },
   shownPorts: {
-    ...Object.fromEntries(['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam'].map((id) => [id, { in: [], out: [] }])),
+    ...Object.fromEntries(
+      ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'slots-12', 'slots-all', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`)].map((id) => [id, { in: [], out: [] }]),
+    ),
     robot: { in: ['moveX', 'moveY'], out: ['self'] },
     'slot-1': { in: [], out: ['self'] },
     'slot-2': { in: [], out: ['self'] },
     'slot-3': { in: [], out: ['self'] },
-    hands: { in: ['character', 'grab', 'drop'], out: ['holding'] },
-    finder: { in: ['who', 'pause', 'i1', 'i2', 'i3'], out: ['item', 'found'] },
-    next: { in: ['s1', 's2', 's3'], out: ['slot'] },
-    'sum-x': { in: ['a', 'b'], out: ['out'] },
-    'sum-y': { in: ['a', 'b'], out: ['out'] },
-    fetch: { in: ['self', 'target', 'go'], out: ['moveX', 'moveY', 'arrived'] },
-    store: { in: ['self', 'target', 'go'], out: ['moveX', 'moveY', 'arrived'] },
-    need: { out: ['value'] },
-    end: { in: ['win'] },
   },
   tray: [
-    { kind: 'zone', count: 1, params: { center: { x: 8.5, y: 1, z: 0 }, size: { x: 5.6, y: 3, z: 2 }, filter: 'item', rule: 'center', color: '#22c55e' } },
-    { kind: 'compare', count: 1, params: { op: 'ge' } },
-    { kind: 'counter', count: 1 },
+    { kind: 'nearest-item', count: 1 },
+    { kind: 'go-to', count: 1, params: GO_TO_PARAMS },
+    { kind: 'next-free-slot', count: 1 },
+    { kind: 'carry', count: 1, params: CARRY_PARAMS },
+    // Spare piece: nothing in the circuit needs flipping a signal, so "Đảo ngược" only looks useful.
+    { kind: 'not', count: 1 },
   ],
-  par: 2,
-  freeHints: 2,
+  par: 4,
+  freeHints: 7,
   timeLimit: 90,
   solution: {
     nodes: [
-      { id: 's-zone', kind: 'zone', params: { center: { x: 8.5, y: 1, z: 0 }, size: { x: 5.6, y: 3, z: 2 }, filter: 'item', rule: 'center', color: '#22c55e' }, pos: { x: 220, y: 200 } },
-      { id: 's-cmp', kind: 'compare', params: { op: 'ge' }, pos: { x: 420, y: 200 } },
+      { id: 's-find', kind: 'nearest-item', params: {}, pos: { x: 260, y: 20 } },
+      { id: 's-go', kind: 'go-to', params: GO_TO_PARAMS, pos: { x: 480, y: 120 } },
+      { id: 's-next', kind: 'next-free-slot', params: {}, pos: { x: 260, y: 300 } },
+      { id: 's-hands', kind: 'carry', params: CARRY_PARAMS, pos: { x: 480, y: 400 } },
     ],
     wires: [
-      { id: 'sw1', from: { node: 's-zone', port: 'count' }, to: { node: 's-cmp', port: 'a' } },
-      { id: 'sw2', from: { node: 'need', port: 'value' }, to: { node: 's-cmp', port: 'b' } },
-      { id: 'sw3', from: { node: 's-cmp', port: 'out' }, to: { node: 'end', port: 'win' } },
+      wire('sw1', ['robot', 'self'], ['s-find', 'who']),
+      wire('sw2', ['slot-1', 'self'], ['s-find', 'i1']),
+      wire('sw3', ['slot-2', 'self'], ['s-find', 'i2']),
+      wire('sw4', ['slot-3', 'self'], ['s-find', 'i3']),
+      wire('sw5', ['s-find', 'item'], ['s-go', 'target']),
+      wire('sw6', ['robot', 'self'], ['s-go', 'self']),
+      wire('sw7', ['slot-1', 'self'], ['s-next', 's1']),
+      wire('sw8', ['slot-2', 'self'], ['s-next', 's2']),
+      wire('sw9', ['slot-3', 'self'], ['s-next', 's3']),
+      wire('sw10', ['s-next', 'slot'], ['s-go', 'target2']),
+      wire('sw11', ['robot', 'self'], ['s-hands', 'character']),
+      wire('sw12', ['s-hands', 'holding'], ['s-go', 'useTarget2']),
+      wire('sw13', ['s-go', 'arrived'], ['s-hands', 'grab']),
+      wire('sw14', ['s-go', 'moveX'], ['robot', 'moveX']),
+      wire('sw15', ['s-go', 'moveY'], ['robot', 'moveY']),
     ],
   },
 };

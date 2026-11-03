@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
 import { runLevel } from '../../src/puzzle/run-level';
+import { slotCentres } from '../../src/puzzle/store-slots';
 import { PUZZLE_CHARACTER_SCALE } from '../../src/puzzle/world-options';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 import type { BodySnapshot, World } from '../../src/engine/types';
@@ -264,12 +265,16 @@ describe('physics invariants: a win comes for the stated reason', () => {
       return bad;
     },
     'du-ba-thung': (b, level) => {
-      const zone = level.solution.nodes.find((n) => n.kind === 'zone')!;
-      const c = zone.params.center as { x: number; z: number };
-      const s = zone.params.size as { x: number; z: number };
-      const crates = b.filter((x) => x.kind === 'item');
-      const rest = crates.filter((x) => !x.carried && insideZone(x, c, s));
-      return rest.length === 3 ? [] : [`${rest.length} crates resting in the store`];
+      // Each of the three crates rests in the middle of its own slot, and no slot holds two.
+      const slots = slotCentres(level.storeSlots!);
+      const crates = b.filter((x) => x.kind === 'item' && !x.carried);
+      const bad: string[] = [];
+      if (crates.length !== 3) bad.push(`${crates.length} crates resting`);
+      slots.forEach((c, i) => {
+        const here = crates.filter((x) => Math.abs(x.pos.x - c.x) < 0.1 && Math.abs(x.pos.z - c.z) < 0.1);
+        if (here.length !== 1) bad.push(`slot ${i + 1} holds ${here.length} crates`);
+      });
+      return bad;
     },
     'ne-linh-gac': (b) => {
       const bad: string[] = [];

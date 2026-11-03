@@ -5,7 +5,7 @@ import { TICK_DT, type World } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { GRAB_REACH } from '../../src/nodes/carry';
 import { level05 } from '../../src/puzzle/levels/level-05';
-import { buildPlayGraph, runLevel } from '../../src/puzzle/run-level';
+import { buildPlayGraph, piecesUsed, runLevel } from '../../src/puzzle/run-level';
 import { slotRects } from '../../src/puzzle/store-slots';
 import { isSceneryNode, shownPortsOf } from '../../src/puzzle/ui/board-state';
 import { puzzleWorldOptions } from '../../src/puzzle/world-options';
@@ -13,12 +13,14 @@ import type { PuzzleAnswer } from '../../src/puzzle/types';
 import { createWorld } from '../../src/world/world';
 
 /**
- * Level 5 runs on the pieces the editor offers: no puzzle-only brain forces the robot's behaviour.
+ * Level 5 is built by the player from the pieces the editor offers: the board shows only the robot and the three
+ * slot marks; no puzzle-only brain forces the robot's behaviour.
  */
 
 const allKinds = (): string[] => [
   ...new Set([...level05.base.nodes, ...level05.solution.nodes].map((n) => n.kind).concat(level05.tray.map((t) => t.kind))),
 ];
+const EMPTY: PuzzleAnswer = { nodes: [], wires: [] };
 
 describe('level 5 is made of editor pieces only', () => {
   it('every node kind of the level is registered by the editor registry alone', () => {
@@ -42,96 +44,78 @@ describe('level 5 is made of editor pieces only', () => {
   it('uses none of the old puzzle-only brain kinds', () => {
     for (const kind of allKinds()) expect(['pad-patrol', 'pad-carry', 'slot-patrol', 'fetch-store']).not.toContain(kind);
   });
-
-  it('the new nearest-item piece is one of the editor pieces and is on the board', () => {
-    registerAllNodes();
-    expect(getNodeDef('nearest-item')).toBeDefined();
-    expect(level05.base.nodes.some((n) => n.kind === 'nearest-item')).toBe(true);
-  });
 });
 
-describe('level 5 board: robot logic is visible, only the world is hidden', () => {
+describe('level 5 board: only the robot and the slot marks are drawn', () => {
   registerAllNodes();
-  const SCENERY = ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam'].sort();
+  const SCENERY = ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'slot-zone-1', 'slot-zone-2', 'slot-zone-3', 'slots-12', 'slots-all', 'end'].sort();
   const visible = level05.base.nodes.filter((n) => !isSceneryNode(level05, n.id));
-  const sizeOf = (id: string): { w: number; h: number } => {
-    const sp = level05.shownPorts?.[id];
-    return { w: 170, h: 34 + 26 * ((sp?.in?.length ?? 0) + (sp?.out?.length ?? 0)) };
-  };
 
-  it('only the floor, store mark, crates and camera are hidden', () => {
+  it('the floor, store, crates, win plumbing and camera are hidden; the visible cards are the robot and the 3 slots', () => {
     expect(level05.base.nodes.filter((n) => isSceneryNode(level05, n.id)).map((n) => n.id).sort()).toEqual(SCENERY);
+    expect(visible.map((n) => n.id).sort()).toEqual(['robot', 'slot-1', 'slot-2', 'slot-3']);
+    expect(visible.map((n) => n.kind).sort()).toEqual(['block', 'block', 'block', 'character']);
   });
 
-  it('the robot, slots and every logic piece of its circuit are visible cards', () => {
-    expect(visible.map((n) => n.id).sort()).toEqual(['end', 'fetch', 'finder', 'hands', 'need', 'next', 'robot', 'slot-1', 'slot-2', 'slot-3', 'store', 'sum-x', 'sum-y']);
-    const kinds = visible.map((n) => n.kind).sort();
-    expect(kinds.filter((k) => k === 'go-to')).toHaveLength(2);
-    for (const k of ['nearest-item', 'next-free-slot', 'carry', 'math']) expect(kinds, k).toContain(k);
-  });
-
-  it('every locked wire joins visible cards, and the hidden scenery has no wires', () => {
+  it('no robot logic is locked on the board: every base wire joins hidden scenery only', () => {
     const hidden = new Set(level05.base.nodes.filter((n) => isSceneryNode(level05, n.id)).map((n) => n.id));
-    expect(level05.base.wires.length).toBeGreaterThan(0);
-    for (const w of level05.base.wires) {
-      expect(hidden.has(w.from.node) || hidden.has(w.to.node), `${w.id} touches hidden scenery`).toBe(false);
-    }
+    for (const w of level05.base.wires) expect(hidden.has(w.from.node) && hidden.has(w.to.node), `${w.id} is scenery plumbing`).toBe(true);
+    const logic = level05.base.nodes.filter((n) => ['go-to', 'nearest-item', 'next-free-slot', 'carry', 'math', 'compare', 'counter'].includes(n.kind));
+    expect(logic).toEqual([]);
   });
 
-  it('every locked wire end is a port the card shows', () => {
-    for (const w of level05.base.wires) {
-      expect(shownPortsOf(level05, w.from.node).out?.has(w.from.port), `${w.id} from ${w.from.node}.${w.from.port}`).toBe(true);
-      expect(shownPortsOf(level05, w.to.node).in?.has(w.to.port), `${w.id} to ${w.to.node}.${w.to.port}`).toBe(true);
-    }
+  it('the robot shows its walk inputs and its self output; the slots show their self output', () => {
+    expect([...(shownPortsOf(level05, 'robot').in ?? [])].sort()).toEqual(['moveX', 'moveY']);
+    expect([...(shownPortsOf(level05, 'robot').out ?? [])]).toEqual(['self']);
+    for (const s of ['slot-1', 'slot-2', 'slot-3']) expect([...(shownPortsOf(level05, s).out ?? [])]).toEqual(['self']);
   });
 
-  it('the locked circuit cards are packed in the left part of the board and never overlap', () => {
-    const circuit = visible.filter((n) => n.id !== 'need' && n.id !== 'end');
-    for (const n of circuit) {
-      const { w, h } = sizeOf(n.id);
-      expect(n.pos.x + w, `${n.id} right edge`).toBeLessThanOrEqual(560);
-      expect(n.pos.y + h, `${n.id} bottom edge`).toBeLessThanOrEqual(560);
-    }
+  it('visible cards sit apart on the left and the solution uses only shown ports', () => {
     for (let i = 0; i < visible.length; i++) {
       for (let j = i + 1; j < visible.length; j++) {
         const a = visible[i]!;
         const b = visible[j]!;
-        const sa = sizeOf(a.id);
-        const sb = sizeOf(b.id);
-        const hit = a.pos.x < b.pos.x + sb.w && b.pos.x < a.pos.x + sa.w && a.pos.y < b.pos.y + sb.h && b.pos.y < a.pos.y + sa.h;
-        expect(hit, `${a.id} overlaps ${b.id}`).toBe(false);
+        const rows = (id: string): number => (shownPortsOf(level05, id).in?.size ?? 0) + (shownPortsOf(level05, id).out?.size ?? 0);
+        const apart = a.pos.y + 34 + 26 * rows(a.id) <= b.pos.y || b.pos.y + 34 + 26 * rows(b.id) <= a.pos.y || Math.abs(a.pos.x - b.pos.x) >= 170;
+        expect(apart, `${a.id} overlaps ${b.id}`).toBe(true);
       }
+    }
+    for (const w of level05.solution.wires) {
+      if (visible.some((n) => n.id === w.from.node)) expect(shownPortsOf(level05, w.from.node).out?.has(w.from.port), w.id).toBe(true);
+      if (visible.some((n) => n.id === w.to.node)) expect(shownPortsOf(level05, w.to.node).in?.has(w.to.port), w.id).toBe(true);
     }
   });
 
-  it('the robot walks to crates with no pathfinding detour and stops clear of the crate, within hand reach', () => {
-    const fetch = level05.base.nodes.find((n) => n.id === 'fetch')!;
-    const stop = fetch.params.stopDistance as number;
+  it('the tray is the four solution pieces plus one spare; par is the piece count; the go-to preset stops clear of a crate within hand reach', () => {
+    expect(level05.tray.map((t) => t.kind).sort()).toEqual(['carry', 'go-to', 'next-free-slot', 'nearest-item', 'not'].sort());
+    expect(level05.tray.every((t) => t.count === 1)).toBe(true);
+    expect(level05.solution.nodes.map((n) => n.kind)).not.toContain('not');
+    expect(level05.par).toBe(4);
+    expect(piecesUsed(level05.solution)).toBe(level05.par);
+    expect(level05.freeHints).toBe(Math.floor(level05.solution.wires.length / 2));
+    const stop = level05.tray.find((t) => t.kind === 'go-to')!.params!.stopDistance as number;
     expect(stop).toBeGreaterThan(0.95); // robot half-box 0.65 + crate half 0.3
     expect(stop).toBeLessThan(GRAB_REACH);
   });
 });
 
-const EMPTY: PuzzleAnswer = { nodes: [], wires: [] };
-
 describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
   interface Grab {
-    tick: number;
     crate: string;
     stepBefore: number;
     dist: number;
     faceDot: number;
   }
 
-  /** Plays the reference answer without the win wire so every trip finishes, and records each grab. */
-  function trace(seconds = 70): { grabs: Grab[]; final: Map<string, { x: number; z: number }>; win: { outcome: string; seconds: number } } {
+  /** Plays the reference answer without the win plumbing, so every trip finishes, and records each grab. */
+  function trace(seconds = 70): { grabs: Grab[]; final: Map<string, { x: number; z: number }> } {
     const grabs: Grab[] = [];
     const final = new Map<string, { x: number; z: number }>();
     let prev: { x: number; z: number } | null = null;
     let prevHeld: string | null = null;
     let lastStep = 0;
-    const answer = { ...level05.solution, wires: level05.solution.wires.filter((w) => w.to.node !== 'end') };
-    runLevel(level05, answer, seconds, (world: World, tick) => {
+    const noWin = { ...level05, base: { ...level05.base, wires: level05.base.wires.filter((w) => w.to.node !== 'end') } };
+    runLevel(noWin, level05.solution, seconds, (world: World, tick) => {
       const all = world.listEntities();
       const robot = all.find((e) => e.kind === 'character')!;
       const step = prev ? Math.hypot(robot.position.x - prev.x, robot.position.z - prev.z) : 0;
@@ -141,14 +125,7 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
         const dx = crate.position.x - robot.position.x;
         const dz = crate.position.z - robot.position.z;
         const dist = Math.hypot(dx, dz);
-        const g: Grab = {
-          tick,
-          crate: crate.ownerNodeId,
-          stepBefore: lastStep,
-          dist,
-          faceDot: robot.facing ? (robot.facing.x * dx + robot.facing.z * dz) / (dist || 1) : 0,
-        };
-        grabs.push(g);
+        grabs.push({ crate: crate.ownerNodeId, stepBefore: lastStep, dist, faceDot: robot.facing ? (robot.facing.x * dx + robot.facing.z * dz) / (dist || 1) : 0 });
       }
       lastStep = step;
       prev = { x: robot.position.x, z: robot.position.z };
@@ -157,15 +134,15 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
         for (const e of all) if (e.kind === 'item') final.set(e.ownerNodeId, { x: e.position.x, z: e.position.z });
       }
     });
-    const r = runLevel(level05, level05.solution);
-    return { grabs, final, win: { outcome: r.outcome, seconds: r.seconds } };
+    return { grabs, final };
   }
 
   const run = trace();
+  const win = runLevel(level05, level05.solution);
 
   it('the reference solution wins well inside the time limit', () => {
-    expect(run.win.outcome).toBe('win');
-    expect(run.win.seconds).toBeLessThan(level05.timeLimit);
+    expect(win.outcome).toBe('win');
+    expect(win.seconds).toBeLessThan(level05.timeLimit);
   });
 
   it('it grabs exactly three crates, nearest first: the middle crate, then the two far ones', () => {
@@ -175,9 +152,7 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
   });
 
   it('never grabs while moving: the robot stood still on the tick it grabs', () => {
-    for (const g of run.grabs) {
-      expect(g.stepBefore, `${g.crate} step before the grab`).toBeLessThan(0.01);
-    }
+    for (const g of run.grabs) expect(g.stepBefore, `${g.crate} step before the grab`).toBeLessThan(0.01);
   });
 
   it('stops in front of the crate within hand reach and facing it', () => {
@@ -187,7 +162,7 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
     }
   });
 
-  it('sets each crate down in its own slot, in the middle, without help from the win wire', () => {
+  it('sets each crate down in the middle of its own slot, without help from the win rule', () => {
     const rects = slotRects(level05.storeSlots!);
     const used = new Set<number>();
     for (const c of ['crate-1', 'crate-2', 'crate-3']) {
@@ -199,28 +174,38 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
     expect(used.size).toBe(3);
   });
 
-  it('with nothing wired by the player the robot still fetches and stores all three crates but nothing ends the level', () => {
+  it('an empty answer never wins, and pieces alone (unwired) do nothing', () => {
     expect(runLevel(level05, EMPTY).outcome).toBe('timeout');
+    expect(runLevel(level05, { nodes: level05.solution.nodes, wires: [] }).outcome).toBe('timeout');
   });
 
-  it('removing the count wire or the win wire fails', () => {
-    for (const id of ['sw1', 'sw3']) {
-      const cut: PuzzleAnswer = { ...level05.solution, wires: level05.solution.wires.filter((x) => x.id !== id) };
-      expect(runLevel(level05, cut).outcome, `without ${id}`).not.toBe('win');
+  it('every solution wire is needed: with any one removed the level is not won', () => {
+    // Only "Ô kho 3 -> Tìm vật gần nhất" can go: the level ends the moment the third crate is down, before the finder
+    // would look at slot 3 again. The wire keeps the robot calm once the win rule is off (see the settle test).
+    for (const w of level05.solution.wires.filter((x) => x.id !== 'sw4')) {
+      const cut: PuzzleAnswer = { ...level05.solution, wires: level05.solution.wires.filter((x) => x.id !== w.id) };
+      expect(runLevel(level05, cut).outcome, `without ${w.id}`).not.toBe('win');
     }
   });
 
-  it('without the "Số cần" wire "So sánh" reads 0 and the level is won at once (same as before the board was rebuilt)', () => {
-    const cut: PuzzleAnswer = { ...level05.solution, wires: level05.solution.wires.filter((x) => x.id !== 'sw2') };
-    const r = runLevel(level05, cut);
-    expect(r.outcome).toBe('win');
-    expect(r.seconds).toBeLessThan(1);
+  it('every solution piece is needed: with any one removed (and its wires) the level is not won', () => {
+    for (const n of level05.solution.nodes) {
+      const cut: PuzzleAnswer = {
+        nodes: level05.solution.nodes.filter((x) => x.id !== n.id),
+        wires: level05.solution.wires.filter((w) => w.from.node !== n.id && w.to.node !== n.id),
+      };
+      expect(runLevel(level05, cut).outcome, `without ${n.id}`).not.toBe('win');
+    }
   });
 
-  it('removing the robot own wires would stop it: the circuit really is the locked cards', () => {
-    const noHands = { ...level05, base: { ...level05.base, wires: level05.base.wires.filter((w) => w.id !== 'b22') } };
-    expect(runLevel(noHands, level05.solution, 40).outcome).not.toBe('win');
-    const noSlots = { ...level05, base: { ...level05.base, wires: level05.base.wires.filter((w) => w.to.node !== 'next') } };
-    expect(runLevel(noSlots, level05.solution, 40).outcome).not.toBe('win');
+  it('without "Ô trống kế tiếp" every crate is taken to one place and the level is not won', () => {
+    const direct: PuzzleAnswer = {
+      nodes: level05.solution.nodes.filter((x) => x.id !== 's-next'),
+      wires: [
+        ...level05.solution.wires.filter((w) => w.from.node !== 's-next' && w.to.node !== 's-next'),
+        { id: 'x1', from: { node: 'slot-1', port: 'self' }, to: { node: 's-go', port: 'target2' } },
+      ],
+    };
+    expect(runLevel(level05, direct).outcome).not.toBe('win');
   });
 });
