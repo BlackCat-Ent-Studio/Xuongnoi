@@ -328,6 +328,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'self': ['Bot', 'Agent'],
         'target': ['Đích (vật)', 'Destination'],
         'go': ['Cho đi', 'Go'],
+        'target2': ['Đích 2 (vật)', 'Second destination'],
+        'useTarget2': ['Dùng đích 2', 'Use second'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
