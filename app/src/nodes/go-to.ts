@@ -14,6 +14,8 @@ import { asBool, asObject, numParam, risingEdge, vec3Param, type EdgeState } fro
 
 interface GoToState {
   arrived: EdgeState;
+  /** Seconds the bot has been standing within stop distance (only counted while "Cho đi" is on). */
+  settled: number;
   memo: SteerMemo;
 }
 
@@ -49,21 +51,34 @@ export const goToNode: NodeDef<GoToState> = {
       step: 0.1,
     },
     { id: 'slowRadius', label: 'Chậm lại khi gần tới', kind: 'number', default: SLOW_RADIUS, min: 0.1, max: 5, step: 0.1, advanced: true },
+    {
+      id: 'settle',
+      label: 'Đứng yên bao lâu rồi mới báo "Đã tới" (giây)',
+      kind: 'number',
+      default: 0,
+      min: 0,
+      max: 5,
+      step: 0.1,
+      advanced: true,
+    },
     PATHFIND_PARAM,
   ],
-  create: () => ({ arrived: { prev: false }, memo: {} }),
+  create: () => ({ arrived: { prev: false }, settled: 0, memo: {} }),
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
     const go = i.go === undefined ? true : asBool(i.go);
     const self = liveCharacter(world, asObject(i.self));
     if (!self) {
+      s.settled = 0;
       risingEdge(s.arrived, false);
       return { ...STILL, arrived: false, arrivedPulse: false };
     }
     // A wired object that has vanished (hidden crate...) falls back to the fixed point.
     const goal = visiblePosition(world, asObject(i.target)) ?? vec3Param(params, 'targetPos', DEFAULT_TARGET);
     const near = hasArrived(world.mode, self.position, goal, numParam(params, 'stopDistance', 0.5));
-    const arrived = go && near;
+    s.settled = go && near ? s.settled + ctx.dt : 0;
+    // "Đứng yên bao lâu": 0 (default) reports the arrival at once; otherwise only after the bot has stood still that long.
+    const arrived = go && near && s.settled >= numParam(params, 'settle', 0) - 1e-9;
     const arrivedPulse = risingEdge(s.arrived, arrived);
     if (!go || near) return { ...STILL, arrived, arrivedPulse };
 

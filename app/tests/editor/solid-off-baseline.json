@@ -101,5 +101,7 @@
  "handbook:route-follow": "1d5f8cc5:900",
  "handbook:chase": "aa104a3e:900",
  "handbook:sequence": "20ea0589:900",
- "handbook:fight": "66d87cad:900"
+ "handbook:fight": "66d87cad:900",
+ "lesson:nearest-bot": "70c8b34f:900",
+ "handbook:nearest-item": "d23d21a4:900"
 }

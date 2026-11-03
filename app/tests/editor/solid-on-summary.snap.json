@@ -621,6 +621,25 @@
   }
  },
  {
+  "id": "lesson:nearest-bot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "70c8b34f"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "70c8b34f"
+  }
+ },
+ {
   "id": "lesson:combat",
   "off": {
    "ended": "running",
@@ -1380,6 +1399,27 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "bfa1c98e"
+  }
+ },
+ {
+  "id": "handbook:nearest-item",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 1.1s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "d23d21a4"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "523c1ec7"
   }
  },
  {

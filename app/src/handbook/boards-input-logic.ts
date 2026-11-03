@@ -297,3 +297,26 @@ export const tryNextFreeSlot = (): Board =>
       ['pick', 'full', 'full', 'show'],
     ],
   );
+
+export const tryNearestItem = (): Board =>
+  build(
+    'Tìm vật gần nhất',
+    'Bấm Chơi: hai thùng nằm hai phía của bot, bot đi tới thùng gần hơn. Dừng game, kéo thùng bên kia lại gần bot hơn rồi Chơi lại: bot đổi sang thùng đó.',
+    [
+      { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
+      { alias: 'bot', kind: 'character', x: 300, y: 20, params: { position: { x: 0, y: 1, z: 0 }, role: 'bot', color: '#ef4444', speed: 4 } },
+      { alias: 'near', kind: 'item', x: 20, y: 500, params: { position: { x: 5, y: 1, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' } },
+      { alias: 'far', kind: 'item', x: 300, y: 500, params: { position: { x: -9, y: 1, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' } },
+      { alias: 'look', kind: 'nearest-item', x: 600, y: 20 },
+      { alias: 'go', kind: 'go-to', x: 900, y: 20, params: { pathfind: 'off' } },
+      { alias: 'dist', kind: 'show-number', x: 900, y: 330, params: { label: 'Khoảng cách', corner: 'top-right' } },
+    ],
+    [
+      ['bot', 'self', 'look', 'who'],
+      ['bot', 'self', 'go', 'self'],
+      ['look', 'item', 'go', 'target'],
+      ['look', 'found', 'go', 'go'],
+      ['go', 'moveX', 'bot', 'moveX'],
+      ['look', 'distance', 'dist', 'value'],
+    ],
+  );

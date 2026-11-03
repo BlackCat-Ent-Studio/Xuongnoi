@@ -342,6 +342,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       targetPos: 'Điểm đến khi không nối "Đích". Gồm x, y, z.',
       stopDistance: 'Cách đích bao xa thì coi là đã tới và dừng.',
       slowRadius: 'Nâng cao: gần tới nơi bao xa thì bắt đầu đi chậm lại.',
+      settle: 'Nâng cao: bot phải đứng yên gần đích bao nhiêu giây rồi mới báo "Đã tới". 0 là báo ngay. Đặt khoảng 0,3 giây để nối "Đã tới" vào "Nhấc lên" thì bot nhấc đồ khi đã đứng im, không nhấc lúc đang bước.',
       pathfind: PATHFIND_TEXT,
     },
     example: '"Vật thể" kho hàng → "Đích"; "Nhân vật" của bot → "Bot"; "Đi ngang / Đi dọc / Nhảy" → các cổng cùng tên của bot; "Vừa tới" → "Xong việc" của Chuỗi việc.',
