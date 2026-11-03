@@ -368,6 +368,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       blocked: 'Bật khi xe đang bị chặn vì có vật cản, xe hay người phía trước.',
       reached: 'Bật một nhịp khi vừa tới một điểm.',
       index: 'Số thứ tự điểm đang hướng tới (1, 2, 3...).',
+      atPoint: 'Bật suốt lúc bot đứng lại ở một điểm (khi đã đặt "Dừng ở mỗi điểm"). Dùng để chỉ cho nhặt đồ khi bot đang đứng yên.',
     },
     params: {
       count: 'Số điểm của tuyến, từ 2 tới 32.',
@@ -378,6 +379,8 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       arriveRadius: 'Nâng cao: coi là tới điểm khi cách điểm bao xa. 0 là tự chọn, xe rộng hơn người.',
       railCorner: 'Nâng cao: độ bo tròn góc khi Bám ray. 0 là góc nhọn.',
       steerGain: 'Nâng cao: độ gắt khi cua cho xe lái bằng ga và lái. Số lớn thì đánh lái gắt hơn.',
+      stopFor: 'Nâng cao: bot đứng lại bao nhiêu giây ở mỗi điểm rồi mới đi tiếp. 0 là không dừng. Chỉ dành cho bot đi bộ ở kiểu "Lái tới từng điểm".',
+      faceAtStop: 'Nâng cao: khi đang dừng ở một điểm, bot có quay mặt về món đồ gần nhất trong tầm tay hay không. Mặc định không quay.',
       ...routePoints,
     },
     example: '"Xe" của Xe → "Ai"; "Đi ngang" / "Đi dọc" → cổng cùng tên của Xe; tín hiệu đèn đỏ → "Dừng".',

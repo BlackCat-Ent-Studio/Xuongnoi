@@ -8,6 +8,7 @@ import {
   liveCharacter,
 } from './steering';
 import { buildRail, nearestS, railAt, upcomingPoint, type Rail } from './route-rail';
+import { GRAB_REACH } from './carry';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 export const ROUTE_MAX_POINTS = 32;
@@ -23,6 +24,11 @@ const STEER_GAIN = 2;
 /** Beyond this misalignment (radians) a throttle-steered vehicle eases off the gas while it turns. */
 const SHARP_TURN = 1.2;
 const SHARP_TURN_GAS = 0.35;
+/**
+ * Stick push, for the one tick a stop begins, that turns a walker toward the thing beside it without really moving it
+ * (about 0.02 units/s, far below the speed sensor's "standing still" limit).
+ */
+const TURN_PUSH = 0.004;
 
 interface RouteState {
   /** Index of the point being approached; null until the first tick picks the nearest one. */
@@ -32,6 +38,10 @@ interface RouteState {
   /** Rail mode: the track built from the points, and how far along it the walker is (null until placed). */
   rail: { key: string; track: Rail } | null;
   pos: number | null;
+  /** Seconds left of a stop at the point just reached ("Dừng ở mỗi điểm"). */
+  waitLeft: number;
+  /** True until the first tick of a stop has turned the walker toward what is beside it. */
+  turnPending: boolean;
 }
 
 /** Rail mode lets go of its place on the track when the body is this far off it (blocked by a wall, say). */
@@ -72,6 +82,18 @@ function nearestIndex(world: WorldApi, from: Vec3, points: readonly Vec3[]): num
     }
   });
   return best;
+}
+
+/** Stick values that point a walker toward the nearest loose item within hand reach, or null when none is there. */
+function turnTowardNearbyItem(world: WorldApi, self: EntityView): { moveX: number; moveY: number } | null {
+  const held = world.heldItem(self.id);
+  let best: { ux: number; uz: number; dist: number } | null = null;
+  for (const it of world.listEntities()) {
+    if (it.kind !== 'item' || !it.visible || it.carried || it.inHand || it.id === held) continue;
+    const toward = unitToward(world.mode, self.position, it.position);
+    if (toward && toward.dist <= GRAB_REACH && (best === null || toward.dist < best.dist)) best = toward;
+  }
+  return best ? moveForDirection(world.mode, world.cameraYaw(), best.ux, best.uz, TURN_PUSH) : null;
 }
 
 function wrapAngle(a: number): number {
@@ -177,7 +199,7 @@ function railEvaluate(
   const loop = strParam(params, 'style', 'loop') !== 'pingpong';
   const fillet = clamp(numParam(params, 'railCorner', 1.5), 0, 10);
   const r = railTick({ world, self, s, points, loop, fillet, speed, dt, halted });
-  const out = { jump: false, blocked, reached: r.reached, index: shown() };
+  const out = { jump: false, blocked, reached: r.reached, index: shown(), atPoint: false };
   if (self.kind === 'vehicle') {
     if (halted) world.setVehicleInput(self.id, 0, 0, true);
     const top = self.drive?.speed ?? 1;
@@ -190,7 +212,7 @@ function railEvaluate(
   return { ...out, moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump };
 }
 
-const IDLE: Record<string, number | boolean> = { moveX: 0, moveY: 0, jump: false, blocked: false, reached: false, index: 0 };
+const IDLE: Record<string, number | boolean> = { moveX: 0, moveY: 0, jump: false, blocked: false, reached: false, index: 0, atPoint: false };
 
 export const routeFollowNode: NodeDef<RouteState> = {
   kind: 'route-follow',
@@ -210,6 +232,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     { id: 'blocked', type: 'bool', label: 'Đang bị chặn' },
     { id: 'reached', type: 'bool', label: 'Tới điểm' },
     { id: 'index', type: 'number', label: 'Điểm hiện tại' },
+    { id: 'atPoint', type: 'bool', label: 'Đang ở điểm' },
   ],
   params: [
     { id: 'count', label: 'Số điểm (2 đến 32)', kind: 'number', default: 4, min: ROUTE_MIN_POINTS, max: ROUTE_MAX_POINTS, step: 1 },
@@ -256,8 +279,20 @@ export const routeFollowNode: NodeDef<RouteState> = {
     },
     { id: 'railCorner', label: 'Độ bo góc khi bám ray (0 = góc nhọn)', kind: 'number', default: 1.5, min: 0, max: 10, step: 0.1, advanced: true },
     { id: 'steerGain', label: 'Độ gắt khi cua (xe lái bằng ga - lái)', kind: 'number', default: 2, min: 0.5, max: 8, step: 0.5, advanced: true },
+    { id: 'stopFor', label: 'Dừng ở mỗi điểm (giây, 0 = không dừng; chỉ khi chạy kiểu "Lái tới từng điểm")', kind: 'number', default: 0, min: 0, max: 30, step: 0.5, advanced: true },
+    {
+      id: 'faceAtStop',
+      label: 'Khi dừng, quay mặt về',
+      kind: 'select',
+      default: 'none',
+      options: [
+        { value: 'none', label: 'Không quay (giữ hướng đang đi)' },
+        { value: 'item', label: 'Vật ở gần nhất trong tầm tay' },
+      ],
+      advanced: true,
+    },
   ],
-  create: () => ({ idx: null, dir: 1, rail: null, pos: null }),
+  create: () => ({ idx: null, dir: 1, rail: null, pos: null, waitLeft: 0, turnPending: false }),
   evaluate(ctx, i, params, s): PortValues {
     const world = ctx.world;
     const self = liveCharacter(world, asObject(i.self));
@@ -265,7 +300,10 @@ export const routeFollowNode: NodeDef<RouteState> = {
     const points = readPoints(params);
     if (s.idx === null || s.idx >= points.length) s.idx = nearestIndex(world, self.position, points);
     const shown = (): number => (s.idx ?? 0) + 1;
-    if (i.on !== undefined && !asBool(i.on)) return { ...IDLE, index: shown() };
+    if (i.on !== undefined && !asBool(i.on)) {
+      s.waitLeft = 0;
+      return { ...IDLE, index: shown() };
+    }
 
     const isVehicle = self.kind === 'vehicle';
     if (strParam(params, 'follow', 'steer') === 'rail') return railEvaluate(ctx.dt, world, self, params, s, points, shown, asBool(i.stop));
@@ -287,6 +325,18 @@ export const routeFollowNode: NodeDef<RouteState> = {
       } else {
         s.idx = (s.idx + 1) % points.length;
       }
+      const stopFor = Math.max(0, numParam(params, 'stopFor', 0));
+      if (stopFor > 0 && !isVehicle) {
+        s.waitLeft = stopFor;
+        s.turnPending = strParam(params, 'faceAtStop', 'none') === 'item';
+      }
+    }
+    if (s.waitLeft > 0) {
+      // Stopped at the point: stand still (one tiny push first, to look at what is beside the walker).
+      s.waitLeft = Math.max(0, s.waitLeft - ctx.dt);
+      const turn = s.turnPending ? turnTowardNearbyItem(world, self) : null;
+      s.turnPending = false;
+      return { moveX: turn?.moveX ?? 0, moveY: turn?.moveY ?? 0, jump: false, blocked: false, reached, index: shown(), atPoint: true };
     }
     const goal = points[s.idx]!;
 
@@ -297,18 +347,18 @@ export const routeFollowNode: NodeDef<RouteState> = {
 
     if (halted) {
       if (isVehicle) world.setVehicleInput(self.id, 0, 0, true);
-      return { moveX: 0, moveY: 0, jump: false, blocked, reached, index: shown() };
+      return { moveX: 0, moveY: 0, jump: false, blocked, reached, index: shown(), atPoint: false };
     }
 
     if (isVehicle) {
       const sticks = vehicleSticks(world, self, goal, speed, clamp(numParam(params, 'steerGain', STEER_GAIN), 0.5, 8));
       world.setVehicleInput(self.id, sticks.moveX, sticks.moveY);
-      return { moveX: sticks.moveX, moveY: sticks.moveY, jump: false, blocked, reached, index: shown() };
+      return { moveX: sticks.moveX, moveY: sticks.moveY, jump: false, blocked, reached, index: shown(), atPoint: false };
     }
 
     const steer = steerToward(world, self, goal);
     const top = self.drive?.speed ?? 0;
     const k = top > 0 ? clamp(speed / top, 0.1, 1) : 1;
-    return { moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump, blocked, reached, index: shown() };
+    return { moveX: steer.moveX * k, moveY: steer.moveY * k, jump: steer.jump, blocked, reached, index: shown(), atPoint: false };
   },
 };

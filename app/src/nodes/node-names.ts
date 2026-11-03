@@ -285,6 +285,22 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'next-free-slot': {
+    vi: 'Ô trống kế tiếp',
+    en: 'Next Free Slot',
+    ports: {
+      in: {
+        's1': ['Ô 1', 'Slot 1'],
+        's2': ['Ô 2', 'Slot 2'],
+        's3': ['Ô 3', 'Slot 3'],
+        's4': ['Ô 4', 'Slot 4'],
+      },
+      out: {
+        'slot': ['Ô trống', 'Free slot'],
+        'full': ['Đầy', 'All full'],
+      },
+    },
+  },
   'go-to': {
     vi: 'Đi tới',
     en: 'Move To',
@@ -527,6 +543,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'blocked': ['Đang bị chặn', 'Blocked'],
         'reached': ['Tới điểm', 'Reached point'],
         'index': ['Điểm hiện tại', 'Current point'],
+        'atPoint': ['Đang ở điểm', 'At point'],
       },
     },
   },

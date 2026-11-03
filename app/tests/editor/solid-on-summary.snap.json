@@ -602,6 +602,25 @@
   }
  },
  {
+  "id": "lesson:tidy-bot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "def401bf"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "def401bf"
+  }
+ },
+ {
   "id": "lesson:combat",
   "off": {
    "ended": "running",
@@ -1340,6 +1359,27 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "104c8704"
+  }
+ },
+ {
+  "id": "handbook:next-free-slot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-item x1 from 2.1s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4d8bbb5b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "bfa1c98e"
   }
  },
  {

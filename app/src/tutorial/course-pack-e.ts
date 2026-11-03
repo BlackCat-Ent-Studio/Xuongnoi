@@ -1,4 +1,5 @@
 import { createBotSensesLesson } from './lesson-bot-senses';
+import { createTidyBotLesson } from './lesson-tidy-bot';
 import type { LessonKit } from './lessons-vehicles';
 import type { Lesson } from './types';
 
@@ -7,5 +8,5 @@ import type { Lesson } from './types';
  * the menu order comes from COURSE in course.ts, so the order here does not matter.
  */
 export function createCoursePackE(kit: LessonKit): Lesson[] {
-  return [createBotSensesLesson(kit)];
+  return [createBotSensesLesson(kit), createTidyBotLesson(kit)];
 }

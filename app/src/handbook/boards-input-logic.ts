@@ -273,3 +273,27 @@ export const tryColorSensor = (): Board =>
     ],
     [['stick', 'x', 'hero', 'moveX'], ['hero', 'self', 'eye', 'who'], ['eye', 'index', 'num', 'value'], ['eye', 'match', 'hi', 'show']],
   );
+
+export const tryNextFreeSlot = (): Board =>
+  build(
+    'Ô trống kế tiếp',
+    'Bấm Chơi: ô vàng thứ nhất đã có thùng nên bot đi tới ô vàng thứ hai. Dừng game, xóa thùng đi rồi Chơi lại: bot sẽ đi tới ô thứ nhất.',
+    [
+      { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
+      { alias: 'bot', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 }, role: 'bot', color: '#ef4444', speed: 4 } },
+      { alias: 'slotA', kind: 'block', x: 300, y: 330, params: { type: 'pickup', position: { x: 3, y: 0.55, z: 0 }, size: { x: 1.6, y: 0.1, z: 1 }, color: '#f59e0b' } },
+      { alias: 'slotB', kind: 'block', x: 300, y: 500, params: { type: 'pickup', position: { x: 7, y: 0.55, z: 0 }, size: { x: 1.6, y: 0.1, z: 1 }, color: '#f59e0b' } },
+      { alias: 'crate', kind: 'item', x: 20, y: 500, params: { position: { x: 3, y: 1, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' } },
+      { alias: 'pick', kind: 'next-free-slot', x: 600, y: 20 },
+      { alias: 'go', kind: 'go-to', x: 900, y: 20, params: { pathfind: 'off' } },
+      text('full', 900, 330, 'Kho đầy rồi!'),
+    ],
+    [
+      ['slotA', 'self', 'pick', 's1'],
+      ['slotB', 'self', 'pick', 's2'],
+      ['pick', 'slot', 'go', 'target'],
+      ['bot', 'self', 'go', 'self'],
+      ['go', 'moveX', 'bot', 'moveX'],
+      ['pick', 'full', 'full', 'show'],
+    ],
+  );
