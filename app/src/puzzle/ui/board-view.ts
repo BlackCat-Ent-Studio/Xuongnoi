@@ -1246,7 +1246,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     toolButton(ICONS.shrink, TIDY_TEXT.fit, TIDY_TEXT.fitAria, fitView),
   ];
   tools.append(...toolButtons);
-  board.append(tools);
+  // The tidy / gather / fit buttons are kept but not shown: the user did not want them on the board.
 
   const ro = new ResizeObserver(() => {
     layout();

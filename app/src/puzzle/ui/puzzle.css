@@ -144,10 +144,10 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 
 .pz-bottom { position: absolute; left: 1.4cqw; right: calc(var(--pip-w) + 2 * var(--pip-gap)); bottom: 1.4cqw; z-index: 5; display: flex; align-items: flex-end; justify-content: space-between; gap: 1cqw; pointer-events: none; }
 .pz-bottom > * { pointer-events: auto; }
-.pz-tray { display: flex; flex-wrap: nowrap; gap: .9cqw; align-items: flex-end; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: 9px 9px .7cqw .4cqw; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.pz-tray { display: flex; flex-wrap: nowrap; gap: .9cqw; align-items: flex-end; min-width: 0; overflow-x: auto; overflow-y: hidden; padding: .4cqw .4cqw .7cqw .4cqw; overscroll-behavior-x: contain; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
 .pz-tray::-webkit-scrollbar { display: none; }
 .pz-tray > .pz-chip-wrap { position: relative; display: grid; flex: none; white-space: nowrap; }
-.pz-chip-wrap > .pz-chip { padding-right: calc(1cqw + 9px); }
+.pz-chip-wrap > .pz-chip { padding-right: calc(1cqw + 20px); }
 .pz-chip { border: 0; cursor: pointer; min-height: 40px; font: 800 max(12px, 1.35cqw)/1.1 var(--display); color: #10151b; background: var(--cc); padding: .7cqw 1cqw; border-radius: 1.2cqw; box-shadow: 0 .5cqw 0 rgba(0, 0, 0, .35); display: grid; text-align: left; }
 .pz-chip span { font: 600 max(10.5px, 1.05cqw) var(--body); opacity: .8; }
 .pz-chip:disabled { opacity: .35; cursor: default; }

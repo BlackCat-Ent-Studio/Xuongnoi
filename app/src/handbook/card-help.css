@@ -1,7 +1,12 @@
 /* "?" on a card corner and the short popup it opens. Self-contained: the puzzle page has no editor tokens. */
-.hb-help.hb-card-help { position: absolute; top: -7px; right: -7px; z-index: 5; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-sizing: border-box; border: 2px solid #1d3fa8; border-radius: 50%; background: #fff; color: #1d3fa8; font: 800 13px/1 system-ui, sans-serif; cursor: pointer; user-select: none; box-shadow: 0 2px 0 rgba(0, 0, 0, .35); touch-action: manipulation; }
+/* Same look as the card's own header buttons (the "×"): a soft dark circle on the card colour. */
+.hb-help.hb-card-help { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); z-index: 5; display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; box-sizing: border-box; padding: 0; border: 0; border-radius: 50%; background: rgba(16, 21, 27, .18); color: #10151b; font: 800 13px/1 var(--display, system-ui), system-ui, sans-serif; cursor: pointer; user-select: none; box-shadow: none; touch-action: manipulation; }
 .hb-help.hb-card-help::after { content: ''; position: absolute; inset: -7px; }
-.hb-help.hb-card-help:hover { background: #dfe8ff; border-color: #1d3fa8; color: #1d3fa8; }
+.hb-help.hb-card-help:hover { background: rgba(16, 21, 27, .3); border: 0; color: #10151b; }
+/* Puzzle cards: sits in the header row right next to the "×" (or the lock), never on top of it. */
+.pz-board .wc-node-head .hb-help.hb-card-help { position: relative; top: auto; right: auto; transform: none; flex: none; width: 24px; height: 24px; font-size: 14px; }
+/* Tray chips: inside the chip's top-right corner. */
+.pz-chip-wrap > .hb-help.hb-card-help { top: 5px; right: 5px; transform: none; width: 18px; height: 18px; font-size: 11px; }
 .hb-help.hb-card-help:focus-visible { outline: 2px solid #ffd23f; outline-offset: 2px; }
 
 .ch-overlay { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 12px; box-sizing: border-box; background: rgba(8, 10, 20, .55); }
