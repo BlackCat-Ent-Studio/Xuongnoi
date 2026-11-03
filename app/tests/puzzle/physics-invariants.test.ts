@@ -300,16 +300,46 @@ describe('physics invariants: a win comes for the stated reason', () => {
   });
 });
 
+/** Does the straight line a -> b pass through the box on the ground plane? (Same slab test the sight rule uses, without the graze.) */
+function segmentCrosses(a: { x: number; z: number }, b: { x: number; z: number }, box: { pos: { x: number; z: number }; size: { x: number; z: number } }): boolean {
+  let t0 = 0;
+  let t1 = 1;
+  for (const k of ['x', 'z'] as const) {
+    const lo = box.pos[k] - box.size[k] / 2 + 0.02;
+    const hi = box.pos[k] + box.size[k] / 2 - 0.02;
+    const d = b[k] - a[k];
+    if (Math.abs(d) < 1e-9) {
+      if (a[k] < lo || a[k] > hi) return false;
+      continue;
+    }
+    let n = (lo - a[k]) / d;
+    let f = (hi - a[k]) / d;
+    if (n > f) [n, f] = [f, n];
+    t0 = Math.max(t0, n);
+    t1 = Math.min(t1, f);
+    if (t0 > t1) return false;
+  }
+  return true;
+}
+
 describe('physics invariants: a loss comes for the stated reason', () => {
   const find = (bodies: BodySnapshot[], owner: string): BodySnapshot => bodies.find((x) => x.owner === owner)!;
 
-  it.each(LEVELS.filter((l) => ['ne-linh-gac'].includes(l.id)))('level $order $id: every lost run ends with the guard really touching the cat', (level) => {
+  it.each(LEVELS.filter((l) => ['ne-linh-gac'].includes(l.id)))('level $order $id: every lost run ends with the guard really in view of the cat', (level) => {
     let lost = 0;
     for (const { name, answer } of answersFor(level)) {
       const r = playAndCheck(level, answer);
       if (r.outcome !== 'lose') continue;
       lost++;
-      expect(gap(find(r.last, 'hero'), find(r.last, 'guard')), name).toBeLessThanOrEqual(0.02);
+      const hero = find(r.last, 'hero');
+      const guard = find(r.last, 'guard');
+      // Inside the eye range (10) and nothing taller than the eyes between them.
+      expect(Math.hypot(hero.pos.x - guard.pos.x, hero.pos.z - guard.pos.z), name).toBeLessThanOrEqual(10.001);
+      const crates = r.last.filter((b) => b.owner.startsWith('crate-'));
+      for (const c of crates) {
+        const hits = Math.abs(hero.pos.x - guard.pos.x) > 1e-6 || Math.abs(hero.pos.z - guard.pos.z) > 1e-6 ? segmentCrosses(guard.pos, hero.pos, c.box) : false;
+        expect(hits, `${name}: ${c.owner} is between them`).toBe(false);
+      }
     }
     expect(lost).toBeGreaterThan(0);
   });

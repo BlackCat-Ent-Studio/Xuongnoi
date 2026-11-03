@@ -29,6 +29,7 @@ const KIND_PURPOSE: Record<string, string> = {
   'route-follow': 'đi theo hàng ô, dừng từng ô.',
   carry: 'nhấc và thả thùng.',
   'next-free-slot': 'chỉ ô kho còn trống.',
+  'sight-forecast': 'biết trước khi nào bị thấy.',
   math: 'cộng hai số lại.',
 };
 
@@ -36,6 +37,7 @@ const KIND_PURPOSE: Record<string, string> = {
 const LEVEL_INTRO: Record<string, string> = {
   'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
   'du-ba-thung': 'Ôi, màn này là 3D! Camera nhìn từ trên cao, hơi nghiêng. Mình cùng làm nhé!',
+  'ne-linh-gac': 'Lính gác nhìn theo hướng đi! Bạn tự nối bộ não cho mèo nhỏ. Mình chỉ từng bước nhé!',
   'phan-loai-mau': 'Màn cuối! Bạn tự nối cả mạch cho rô-bốt. Mình chỉ từng bước nhé!',
 };
 
@@ -77,10 +79,16 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     sw3: 'Đủ thùng thì thắng!',
   },
   'ne-linh-gac': {
-    sw1: 'Mèo nhỏ vào mảnh Đo khoảng cách.',
-    sw2: 'Mèo lính gác cũng vào đó.',
-    sw3: 'Trong tầm thì lật ngược bằng Đảo ngược.',
-    sw4: 'Lính gác xa thì mèo được đi.',
+    sw1: 'Nối Mèo nhỏ vào mảnh Chạy theo tuyến.',
+    sw2: 'Đi ngang của tuyến về cho mèo.',
+    sw3: 'Đi dọc của tuyến cũng về cho mèo.',
+    sw4: 'Lính gác là người nhìn của mảnh Dự đoán.',
+    sw5: 'Mèo nhỏ là chỗ cần canh.',
+    sw6: 'Số giây "Còn" vào So sánh, ô A.',
+    sw7: 'Số giây "Cần" của mèo vào Phép tính.',
+    sw8: 'Cộng thêm 0,5 giây cho chắc ăn.',
+    sw9: 'Kết quả vào So sánh, ô B.',
+    sw10: 'Còn đủ giây thì mèo chạy sang thùng kế!',
   },
   'phan-loai-mau': {
     sw1: 'Nối Rô-bốt vào Chạy theo tuyến để nó đi dọc các ô.',
@@ -116,6 +124,7 @@ export const GUIDE_TEXT = {
 /** Level-specific cheer after the win, else the generic one. */
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
+  'ne-linh-gac': 'Giỏi quá! Mèo nhỏ lẻn qua mà không bị thấy!',
   'phan-loai-mau': 'Giỏi quá! Bạn tự nối cả mạch rồi!',
 };
 

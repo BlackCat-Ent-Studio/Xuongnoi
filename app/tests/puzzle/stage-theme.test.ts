@@ -45,7 +45,7 @@ describe('stage roles per level', () => {
   });
 
   it('level 6: tray floor, goal pad', () => {
-    expect(rolesOf('ne-linh-gac')).toMatchObject({ floor: 'floor-tray', goal: 'goal' });
+    expect(rolesOf('ne-linh-gac')).toMatchObject({ floor: 'floor-tray', goal: 'goal', 'crate-1': 'cover', 'crate-2': 'cover', 'crate-3': 'cover' });
   });
 
   it('level 7: the red and the blue floor tiles are both plain flat tiles, never a push button', () => {

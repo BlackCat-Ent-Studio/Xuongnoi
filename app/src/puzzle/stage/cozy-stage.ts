@@ -74,6 +74,8 @@ export function stageRoleOf(e: EntityView, mode: ViewMode): string | null {
     return null;
   }
   if (y >= 1.9 && Math.min(x, z) <= 1.5 && Math.max(x, z) >= 3) return 'door';
+  // A tall, roughly square solid block is a big crate to hide behind (level 6's cover).
+  if (y >= 1.9 && Math.min(x, z) >= 1.2 && Math.max(x, z) <= 2.2) return 'cover';
   return null;
 }
 
@@ -197,6 +199,17 @@ function starFigure(e: EntityView): StageFigure {
 function crateFigure(e: EntityView): StageFigure {
   const crate = makeCrate();
   crate.scale.setScalar(e.size.x * 0.9);
+  markShadows(crate, true);
+  return still(crate, (view) => {
+    crate.position.set(view.position.x, floorY(view), view.position.z);
+    crate.rotation.y = 0;
+  });
+}
+
+/** A tall crate drawn to the block's footprint and height. */
+function coverFigure(e: EntityView): StageFigure {
+  const crate = makeCrate();
+  crate.scale.set(e.size.x * 0.94, e.size.y, e.size.z * 0.94);
   markShadows(crate, true);
   return still(crate, (view) => {
     crate.position.set(view.position.x, floorY(view), view.position.z);
@@ -328,6 +341,8 @@ export function createCozyStage(): StageTheme {
           return starFigure(e);
         case 'crate':
           return crateFigure(e);
+        case 'cover':
+          return coverFigure(e);
         case 'zone-mark':
           return zoneMarkFigure(e);
         case 'slot':
