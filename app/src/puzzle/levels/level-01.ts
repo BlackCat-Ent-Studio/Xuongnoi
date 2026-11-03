@@ -1,7 +1,13 @@
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
+import { groundParams, sceneryMaker, wire } from './player-built-kit';
 
-/** Level 1 (bot-dau-tien): the first wires. The bot walks by itself once "Đi tới" is joined to it and to the flag. */
+const scenery = sceneryMaker();
+
+/**
+ * Level 1 (bot-dau-tien): the first wires. The board shows only the bot and the flag; the player takes "Đi tới" from the
+ * tray and joins it to both and to the bot's walking input. The ground and the win rule (bot touches the flag) are scenery.
+ */
 export const level01: PuzzleLevel | null = {
   id: 'bot-dau-tien',
   order: 1,
@@ -16,51 +22,45 @@ export const level01: PuzzleLevel | null = {
         id: 'bot',
         kind: 'character',
         params: { name: 'Bot', position: { x: -9, y: 1, z: 0 }, speed: 4, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' },
-        pos: { x: 30, y: 40 },
+        pos: { x: 10, y: 20 },
       },
       {
         id: 'flag',
         kind: 'block',
         params: { name: 'Cờ', position: { x: 9, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#ef4444', type: 'pickup' },
-        pos: { x: 800, y: 40 },
+        pos: { x: 10, y: 150 },
       },
-      { id: 'touch-flag', kind: 'touch', params: {}, pos: { x: 410, y: 380 } },
-      {
-        id: 'end',
-        kind: 'win-lose',
-        params: { winMessage: 'Bot tới cờ rồi!', loseMessage: 'Thua mất rồi!' },
-        pos: { x: 790, y: 400 },
-      },
-      {
-        id: 'ground',
-        kind: 'block',
-        params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d', type: 'solid' },
-        pos: { x: 30, y: 400 },
-      },
+      scenery('touch-flag', 'touch', {}),
+      scenery('end', 'win-lose', { winMessage: 'Bot tới cờ rồi!', loseMessage: 'Thua mất rồi!' }),
+      scenery('ground', 'block', groundParams(30)),
     ],
     wires: [
-      { id: 'b1', from: { node: 'bot', port: 'self' }, to: { node: 'touch-flag', port: 'a' } },
-      { id: 'b2', from: { node: 'flag', port: 'self' }, to: { node: 'touch-flag', port: 'b' } },
-      { id: 'b3', from: { node: 'touch-flag', port: 'touching' }, to: { node: 'end', port: 'win' } },
+      wire('b1', ['bot', 'self'], ['touch-flag', 'a']),
+      wire('b2', ['flag', 'self'], ['touch-flag', 'b']),
+      wire('b3', ['touch-flag', 'touching'], ['end', 'win']),
     ],
   },
   shownPorts: {
     bot: { in: ['moveX'], out: ['self'] },
     flag: { in: [], out: ['self'] },
-    'touch-flag': { in: ['a', 'b'], out: ['touching'] },
-    end: { in: ['win'], out: [] },
+    'touch-flag': { in: [], out: [] },
+    end: { in: [], out: [] },
     ground: { in: [], out: [] },
   },
-  tray: [{ kind: 'go-to', count: 1 }],
+  tray: [
+    { kind: 'go-to', count: 1 },
+    // Spare piece: "Đảo ngược" looks useful but nothing here needs it.
+    { kind: 'not', count: 1 },
+  ],
   par: 1,
-  freeHints: 0,
+  freeHints: 1,
   timeLimit: 15,
   solution: {
     nodes: [{ id: 'p-goto', kind: 'go-to', params: {}, pos: { x: 400, y: 150 } }],
     wires: [
-      { id: 's1', from: { node: 'bot', port: 'self' }, to: { node: 'p-goto', port: 'self' } },
-      { id: 's2', from: { node: 'flag', port: 'self' }, to: { node: 'p-goto', port: 'target' } },
-      { id: 's3', from: { node: 'p-goto', port: 'moveX' }, to: { node: 'bot', port: 'moveX' } },
+      wire('s1', ['bot', 'self'], ['p-goto', 'self']),
+      wire('s2', ['flag', 'self'], ['p-goto', 'target']),
+      wire('s3', ['p-goto', 'moveX'], ['bot', 'moveX']),
     ],
   },
 };
