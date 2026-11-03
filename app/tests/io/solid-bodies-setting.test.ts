@@ -37,33 +37,33 @@ describe('Va chạm thật setting: save and load', () => {
 
   it('a new empty board is on, in every mode', () => {
     for (const mode of ['2d-side', '2d-top', '3d'] as const) {
-      expect(createEmptyBoard(mode).graph.settings).toEqual({ solidBodies: true });
+      expect(createEmptyBoard(mode).graph.settings).toEqual({ solidBodies: true, wireRule: true });
       expect(worldOptionsForGraph(createEmptyBoard(mode).graph)).toMatchObject({ solidBodies: true });
     }
   });
 
   it('a file without the field loads off and gives the plain world rules', () => {
     const res = parseBoard(oldFile());
-    expect(res.ok && res.board.graph.settings).toBeUndefined();
+    expect(res.ok && res.board.graph.settings).toEqual({ wireRule: true });
     expect(res.ok && worldOptionsForGraph(res.board.graph)).toBeUndefined();
   });
 
   it('anything but an explicit true loads off', () => {
     for (const settings of [{}, { solidBodies: false }, { solidBodies: 'true' }, { solidBodies: 1 }, 'on', null, []]) {
       const res = parseBoard(oldFile({ settings }));
-      expect(res.ok && res.board.graph.settings, JSON.stringify(settings)).toBeUndefined();
+      expect(res.ok && res.board.graph.settings, JSON.stringify(settings)).toEqual({ wireRule: true });
     }
   });
 
-  it('on survives serialize and parse; off writes nothing, so old files stay byte-identical', () => {
+  it('on survives serialize and parse; off writes only the wire-rule mark, never the solid switch', () => {
     const on = createEmptyBoard('3d');
     const back = parseBoard(serializeBoard(on));
-    expect(back.ok && back.board.graph.settings).toEqual({ solidBodies: true });
+    expect(back.ok && back.board.graph.settings).toEqual({ solidBodies: true, wireRule: true });
     expect(serializeBoard(on)).toContain('"solidBodies": true');
 
     const off = parseBoard(oldFile());
     if (!off.ok) throw new Error('old file must load');
-    expect(serializeBoard(off.board)).not.toContain('settings');
+    expect(serializeBoard(off.board)).not.toContain('solidBodies');
   });
 
   it('the editor toggles it, marks the board changed, undoes it and refuses while playing', () => {
@@ -76,11 +76,11 @@ describe('Va chạm thật setting: save and load', () => {
     s.setSolidBodies(true);
     expect(s.getSolidBodies()).toBe(true);
     expect(seen).toContain('graph');
-    expect(s.getGraph().settings).toEqual({ solidBodies: true });
+    expect(s.getGraph().settings).toEqual({ solidBodies: true, wireRule: true });
     s.setSolidBodies(true);
     s.undo();
     expect(s.getSolidBodies()).toBe(false);
-    expect(s.getGraph().settings).toBeUndefined();
+    expect(s.getGraph().settings).toEqual({ wireRule: true });
     s.redo();
     expect(s.getSolidBodies()).toBe(true);
     s.setPlaying(true);
@@ -88,7 +88,7 @@ describe('Va chạm thật setting: save and load', () => {
     expect(s.getSolidBodies()).toBe(true);
     s.setPlaying(false);
     s.setSolidBodies(false);
-    expect(s.getGraph().settings).toBeUndefined();
+    expect(s.getGraph().settings).toEqual({ wireRule: true });
   });
 
   it('other edits keep the setting', () => {
@@ -107,16 +107,16 @@ describe('Va chạm thật setting: save and load', () => {
     const board = touched(createEmptyBoard('3d'));
     scheduleAutosave(board);
     flushAutosave();
-    expect(loadAutosave()?.graph.settings).toEqual({ solidBodies: true });
+    expect(loadAutosave()?.graph.settings).toEqual({ solidBodies: true, wireRule: true });
     const saved = saveCurrentGame(board);
     expect(saved?.ok).toBe(true);
     const id = getCurrentGameId()!;
     const loaded = loadGame(id);
-    expect(loaded.ok && loaded.board.graph.settings).toEqual({ solidBodies: true });
+    expect(loaded.ok && loaded.board.graph.settings).toEqual({ solidBodies: true, wireRule: true });
     const copy = duplicateGame(id);
     expect(copy.ok).toBe(true);
     const copied = copy.ok ? loadGame(copy.id) : null;
-    expect(copied?.ok && copied.board.graph.settings).toEqual({ solidBodies: true });
+    expect(copied?.ok && copied.board.graph.settings).toEqual({ solidBodies: true, wireRule: true });
   });
 
   it('a game saved with it off stays off through the library', () => {
@@ -125,6 +125,6 @@ describe('Va chạm thật setting: save and load', () => {
     const board = touched(off.board);
     expect(saveCurrentGame(board)?.ok).toBe(true);
     const loaded = loadGame(getCurrentGameId()!);
-    expect(loaded.ok && loaded.board.graph.settings).toBeUndefined();
+    expect(loaded.ok && loaded.board.graph.settings).toEqual({ wireRule: true });
   });
 });

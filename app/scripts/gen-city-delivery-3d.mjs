@@ -11,11 +11,11 @@ const OUT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'src',
 
 /** Rough on-canvas node sizes (same estimate the editor uses before a node is measured). */
 const SIZES = {
-  key: [200, 138], stick: [200, 138], 'on-start': [200, 110], and: [200, 138], or: [200, 138], not: [200, 110],
+  key: [200, 138], stick: [200, 138], 'on-start': [200, 136], and: [200, 138], or: [200, 138], not: [200, 110],
   const: [200, 110], math: [200, 138], compare: [200, 138], counter: [242, 282], timer: [249, 152], character: [264, 256],
   block: [372, 230], touch: [242, 178], 'win-lose': [200, 138], 'show-number': [200, 110], 'show-text': [200, 138],
-  'guide-arrow': [220, 166], item: [300, 230], carry: [256, 204], 'hand-tool': [256, 230], 'go-to': [242, 256],
-  'route-follow': [235, 282], sequence: [328, 308], 'select-number': [200, 278], vehicle: [285, 308], 'enter-exit': [256, 152],
+  'guide-arrow': [220, 166], item: [300, 230], carry: [256, 204], 'hand-tool': [256, 282], 'go-to': [242, 360],
+  'route-follow': [235, 386], sequence: [328, 308], 'select-number': [200, 278], vehicle: [285, 308], 'enter-exit': [256, 204],
   cargo: [271, 282], random: [200, 138], latch: [200, 166], camera: [372, 194], 'ui-meter': [200, 166], 'ui-start': [207, 110],
 };
 const GAP_X = 50;
