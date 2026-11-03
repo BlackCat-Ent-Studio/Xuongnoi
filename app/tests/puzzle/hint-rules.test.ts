@@ -43,8 +43,9 @@ describe('hint counter and badge', () => {
     expect(extraHints(l3, 3)).toBe(1);
   });
 
-  it('level 1 has no free hint, so its badge is costly from the start', () => {
-    expect(hintBadge(lv(1), 0).costly).toBe(true);
+  it('level 1 has one free hint, then the badge turns costly', () => {
+    expect(hintBadge(lv(1), 0)).toEqual({ left: 1, costly: false });
+    expect(hintBadge(lv(1), 1).costly).toBe(true);
   });
 
   it('three presses on level 3 leave 2 stars for a par solution; no hints on level 6 keep 3', () => {
@@ -141,13 +142,15 @@ describe('new-piece intros', () => {
   });
 });
 
-describe('levels 1, 5 and 7 forced guide', () => {
-  it('is forced until the guide is marked seen, and only on levels 1, 5 and 7', () => {
+describe('levels 1, 2, 4, 5 and 7 forced guide', () => {
+  it('is forced until the guide is marked seen, and only on levels 1, 2, 4, 5 and 7', () => {
     const s = memory();
     expect(isGuideForced(lv(1), s)).toBe(true);
     expect(isGuideForced(lv(5), s)).toBe(true);
     expect(isGuideForced(lv(7), s)).toBe(true);
-    expect(isGuideForced(lv(2), s)).toBe(false);
+    expect(isGuideForced(lv(3), s)).toBe(false);
+    expect(isGuideForced(lv(2), s)).toBe(true);
+    expect(isGuideForced(lv(4), s)).toBe(true);
     markGuideSeen(lv(1).id, s);
     expect(isGuideForced(lv(1), s)).toBe(false);
     expect(isGuideForced(lv(5), s)).toBe(true);

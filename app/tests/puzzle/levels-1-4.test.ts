@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { getNodeDef } from '../../src/engine/registry';
+import { canConnect } from '../../src/engine/wiring';
 import { registerAllNodes } from '../../src/nodes';
 import { level01 } from '../../src/puzzle/levels/level-01';
 import { level02 } from '../../src/puzzle/levels/level-02';
 import { level03 } from '../../src/puzzle/levels/level-03';
 import { level04 } from '../../src/puzzle/levels/level-04';
-import { piecesUsed, runLevel, starsFor } from '../../src/puzzle/run-level';
+import { buildPlayGraph, piecesUsed, runLevel, starsFor } from '../../src/puzzle/run-level';
+import { isSceneryNode } from '../../src/puzzle/ui/board-state';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
+import { searchCheaperWins } from './fixtures/cheaper-win-search';
 
 registerAllNodes();
 
@@ -22,6 +25,13 @@ const withoutNode = (a: PuzzleAnswer, nodeId: string): PuzzleAnswer => ({
   nodes: a.nodes.filter((n) => n.id !== nodeId),
   wires: a.wires.filter((w) => w.from.node !== nodeId && w.to.node !== nodeId),
 });
+
+/** Tray kinds the reference solution leaves unused: the spare (decoy) pieces. */
+const spareKinds = (level: PuzzleLevel): string[] =>
+  level.tray.flatMap((t) => {
+    const spare = t.count - level.solution.nodes.filter((n) => n.kind === t.kind).length;
+    return spare > 0 ? [t.kind] : [];
+  });
 
 describe.each(LEVELS.map((l) => [l.order, l] as const))('puzzle level %i', (_order, level) => {
   it('has the expected id, order and one locked win-lose node', () => {
@@ -71,7 +81,16 @@ describe.each(LEVELS.map((l) => [l.order, l] as const))('puzzle level %i', (_ord
     for (const n of level.solution.nodes) expect(baseIds.has(n.id)).toBe(false);
     const all = new Set([...baseIds, ...level.solution.nodes.map((n) => n.id)]);
     for (const w of [...level.base.wires, ...level.solution.wires]) {
-      expect(all.has(w.from.node) && all.has(w.to.node), `wire ${w.id}`).toBe(true);
+      expect(all.has(w.from.node) && w.from.node !== w.to.node && all.has(w.to.node), `wire ${w.id}`).toBe(true);
+    }
+  });
+
+  it('every solution wire passes the real board connection rules, one after the other', () => {
+    const placed: PuzzleAnswer['wires'] = [];
+    for (const w of level.solution.wires) {
+      const graph = buildPlayGraph(level, { nodes: level.solution.nodes, wires: placed });
+      expect(canConnect(graph, w.from, w.to), `wire ${w.id}`).toEqual({ ok: true });
+      placed.push(w);
     }
   });
 
@@ -94,27 +113,54 @@ describe.each(LEVELS.map((l) => [l.order, l] as const))('puzzle level %i', (_ord
     for (const k of CONTROL_KINDS) expect(kinds).not.toContain(k);
   });
 
-  it('locked node cards do not overlap', () => {
+  it('visible cards (the characters and objects the player wires to) do not overlap and sit in the left part of the board', () => {
     const CARD_W = 170;
-    const rect = (id: string, pos: { x: number; y: number }) => {
-      const def = level.shownPorts?.[id];
-      const node = level.base.nodes.find((n) => n.id === id)!;
-      const d = getNodeDef(node.kind)!;
-      const ins = def?.in ? def.in.length : d.inputs.length;
-      const outs = def?.out ? def.out.length : d.outputs.length;
-      return { x: pos.x, y: pos.y, w: CARD_W, h: 34 + 26 * Math.max(ins, outs, 1) };
+    const visible = level.base.nodes.filter((n) => !isSceneryNode(level, n.id));
+    const size = (id: string) => {
+      const sp = level.shownPorts?.[id];
+      return { w: CARD_W, h: 34 + 26 * ((sp?.in?.length ?? 0) + (sp?.out?.length ?? 0)) };
     };
-    const rects = level.base.nodes.map((n) => rect(n.id, n.pos));
-    for (let i = 0; i < rects.length; i++) {
-      for (let j = i + 1; j < rects.length; j++) {
-        const a = rects[i]!;
-        const b = rects[j]!;
-        const overlap = a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
-        expect(overlap, `${level.base.nodes[i]!.id} overlaps ${level.base.nodes[j]!.id}`).toBe(false);
+    for (let i = 0; i < visible.length; i++) {
+      const a = visible[i]!;
+      const sa = size(a.id);
+      expect(a.pos.x + sa.w, `${a.id} right edge`).toBeLessThanOrEqual(400);
+      expect(a.pos.y + sa.h, `${a.id} bottom edge`).toBeLessThanOrEqual(560);
+      for (let j = i + 1; j < visible.length; j++) {
+        const b = visible[j]!;
+        const sb = size(b.id);
+        const hit = a.pos.x < b.pos.x + sb.w && b.pos.x < a.pos.x + sa.w && a.pos.y < b.pos.y + sb.h && b.pos.y < a.pos.y + sa.h;
+        expect(hit, `${a.id} overlaps ${b.id}`).toBe(false);
       }
-      expect(rects[i]!.x + CARD_W).toBeLessThanOrEqual(1000);
-      expect(rects[i]!.y + rects[i]!.h).toBeLessThanOrEqual(560);
     }
+  });
+
+  it('the tray holds the solution pieces plus exactly one spare, and the spare gives no cheaper win', () => {
+    const spares = spareKinds(level);
+    const extra = level.tray.reduce((n, t) => n + t.count, 0) - level.solution.nodes.length;
+    expect(extra).toBe(1);
+    expect(spares).toHaveLength(1);
+    const spare = spares[0] ? { id: 'spare', kind: spares[0], params: {}, pos: { x: 0, y: 0 } } : null;
+    const result = searchCheaperWins(level, spare, level.timeLimit);
+    expect(result.wins).toEqual([]);
+    expect(result.tried).toBeGreaterThan(level.order === 1 ? 1 : 50);
+  }, 300_000);
+
+  it('an over-built answer with the spare piece still wins, but with 2 stars', () => {
+    const kind = spareKinds(level)[0];
+    if (!kind) return;
+    const answer: PuzzleAnswer = {
+      nodes: [...level.solution.nodes, { id: 'p-spare', kind, params: {}, pos: { x: 100, y: 100 } }],
+      wires: level.solution.wires,
+    };
+    expect(piecesUsed(answer)).toBe(level.par + 1);
+    expect(runLevel(level, answer).outcome).toBe('win');
+    expect(starsFor(level, answer, 0)).toBe(2);
+    expect(starsFor(level, level.solution, 0)).toBe(3);
+  });
+
+  it('the free hints scale with the wires the player joins', () => {
+    expect(level.freeHints).toBeGreaterThanOrEqual(1);
+    expect(level.freeHints).toBeLessThanOrEqual(Math.ceil(level.solution.wires.length / 2));
   });
 });
 
@@ -122,96 +168,21 @@ describe('level 1 (bot-dau-tien)', () => {
   it('without the wire into the walking input of the bot it stands still', () => {
     expect(runLevel(level01!, without(level01!.solution, 's3')).outcome).toBe('timeout');
   });
-});
-
-const withDecoy = (a: PuzzleAnswer, kind: string, wires: PuzzleAnswer['wires'] = []): PuzzleAnswer => ({
-  nodes: [...a.nodes, { id: 'p-decoy', kind, params: {}, pos: { x: 100, y: 100 } }],
-  wires: [...a.wires, ...wires],
-});
-
-/** Tray pieces beyond what the reference solution uses, as kinds. */
-const spareKinds = (level: PuzzleLevel): string[] =>
-  level.tray.flatMap((t) => {
-    const spare = t.count - level.solution.nodes.filter((n) => n.kind === t.kind).length;
-    return spare > 0 ? [t.kind] : [];
-  });
-
-const DECOYS: Array<[string, PuzzleLevel, string, PuzzleAnswer['wires']]> = [
-  // [name, level, decoy kind, harmless wires that make the decoy part of an over-built win]
-  [
-    'level 2: second Chạm nhau',
-    level02!,
-    'touch',
-    [
-      { id: 'd1', from: { node: 'bot', port: 'self' }, to: { node: 'p-decoy', port: 'a' } },
-      { id: 'd2', from: { node: 'button', port: 'self' }, to: { node: 'p-decoy', port: 'b' } },
-    ],
-  ],
-  [
-    'level 3: third Hoặc',
-    level03!,
-    'or',
-    [
-      { id: 'd1', from: { node: 'p-or2', port: 'out' }, to: { node: 'p-decoy', port: 'a' } },
-      { id: 'd2', from: { node: 'p-decoy', port: 'out' }, to: { node: 'p-count', port: 'up' } },
-    ],
-  ],
-  [
-    'level 4: Và next to Hoặc',
-    level04!,
-    'and',
-    [
-      { id: 'd1', from: { node: 'p-touch-a', port: 'touching' }, to: { node: 'p-decoy', port: 'a' } },
-      { id: 'd2', from: { node: 'p-touch-b', port: 'touching' }, to: { node: 'p-decoy', port: 'b' } },
-    ],
-  ],
-];
-
-describe.each(DECOYS)('decoy tray piece: %s', (_name, level, kind, harmless) => {
-  const sol = level.solution;
-  const overBuilt = (): PuzzleAnswer => {
-    // Level 3 routes the signal through the decoy, so drop the direct or2 -> counter wire.
-    const base = level.id === 'nhat-sao' ? without(sol, 's5') : sol;
-    return withDecoy(base, kind, harmless);
-  };
-
-  it('is a spare tray piece, not needed by the reference solution', () => {
-    expect(spareKinds(level)).toEqual([kind]);
-    expect(sol.nodes.some((n) => n.kind === kind && n.id === 'p-decoy')).toBe(false);
-  });
-  it('an over-built answer still wins but earns only 2 stars without hints, 3 with the solution', () => {
-    const answer = overBuilt();
-    expect(piecesUsed(answer)).toBe(level.par + 1);
-    expect(runLevel(level, answer).outcome).toBe('win');
-    expect(starsFor(level, answer, 0)).toBe(2);
-    expect(starsFor(level, sol, 0)).toBe(3);
-  });
-  it('no answer with fewer than par pieces wins: drop any piece, with or without the decoy as stand-in', () => {
-    for (const n of sol.nodes) {
-      const dropped = withoutNode(sol, n.id);
-      expect(runLevel(level, dropped).outcome, `without ${n.id}`).not.toBe('win');
-      expect(runLevel(level, withDecoy(dropped, kind)).outcome, `decoy unwired instead of ${n.id}`).not.toBe('win');
-      // decoy takes over the dropped piece's wires, keeping its ports where the kinds share them
-      if (n.kind === kind) continue; // same kind: the swap is just the solution again
-      const swapped: PuzzleAnswer = { ...sol, nodes: sol.nodes.map((m) => (m.id === n.id ? { ...m, kind } : m)) };
-      expect(runLevel(level, swapped).outcome, `decoy ${kind} in place of ${n.id}`).not.toBe('win');
-    }
-  });
-  it('the tray stays within the pieces the level teaches (no key/stick) and keeps par and hints', () => {
-    expect(level.tray.every((t) => !CONTROL_KINDS.includes(t.kind))).toBe(true);
-    expect(level.par).toBe(sol.nodes.length);
+  it('needs one piece and three wires', () => {
+    expect(level01!.par).toBe(1);
+    expect(level01!.solution.wires).toHaveLength(3);
   });
 });
 
 describe('level 2 (cua-kho)', () => {
   const sol = level02!.solution;
+  it('needs three pieces: walk, touch, memory switch', () => {
+    expect(sol.nodes.map((n) => n.kind)).toEqual(['go-to', 'touch', 'latch']);
+  });
   it('touch straight into the door signal opens it only while the bot stands on the button, so the bot gets stuck', () => {
     const noLatch: PuzzleAnswer = {
-      nodes: sol.nodes.filter((n) => n.id === 'p-touch'),
-      wires: [
-        ...sol.wires.filter((w) => w.id === 's1' || w.id === 's2'),
-        { id: 'x1', from: { node: 'p-touch', port: 'touching' }, to: { node: 'door', port: 'hiddenWhile' } },
-      ],
+      nodes: sol.nodes.filter((n) => n.id !== 'p-latch'),
+      wires: [...sol.wires.filter((w) => !w.to.node.includes('latch') && !w.from.node.includes('latch')), { id: 'x1', from: { node: 'p-touch', port: 'touching' }, to: { node: 'door', port: 'hiddenWhile' } }],
     };
     expect(runLevel(level02!, noLatch).outcome).toBe('timeout');
   });
@@ -222,30 +193,41 @@ describe('level 2 (cua-kho)', () => {
 
 describe('level 3 (nhat-sao)', () => {
   const sol = level03!.solution;
-  const withConst = (value: number): PuzzleAnswer => ({
+  const withTarget = (value: number): PuzzleAnswer => ({
     ...sol,
-    nodes: sol.nodes.map((n) => (n.id === 'p-const' ? { ...n, params: { ...n.params, value } } : n)),
+    nodes: sol.nodes.map((n) => (n.id === 'p-count' ? { ...n, params: { ...n.params, target: value } } : n)),
   });
-  it('the tray constant starts above 3, so the gate stays shut until the player sets 3', () => {
-    const start = level03!.tray.find((t) => t.kind === 'const')!;
-    expect(Number(start.params?.value)).toBeGreaterThan(3);
-    expect(runLevel(level03!, withConst(Number(start.params?.value))).outcome).toBe('timeout');
-    for (const v of [0, 1, 2, 4]) expect(runLevel(level03!, withConst(v)).outcome, `value ${v}`).toBe('timeout');
-    expect(runLevel(level03!, withConst(3)).outcome).toBe('win');
+  it('the tray counter starts above 3, so the gate stays shut until the player sets the goal to 3', () => {
+    const start = Number(level03!.tray.find((t) => t.kind === 'counter')?.params?.target ?? 5);
+    expect(start).toBeGreaterThan(3);
+    expect(runLevel(level03!, withTarget(start)).outcome).toBe('timeout');
+    expect(runLevel(level03!, withTarget(4)).outcome).toBe('timeout');
+    expect(runLevel(level03!, withTarget(3)).outcome).toBe('win');
   });
-  it('only the compare constant is editable', () => {
-    expect(level03!.editable).toEqual([{ kind: 'const', paramId: 'value' }]);
+  it('only the counter goal is editable', () => {
+    expect(level03!.editable).toEqual([{ kind: 'counter', paramId: 'target' }]);
   });
-  it('the cat cannot reach the goal on its own: gate blocks it', () => {
-    expect(runLevel(level03!, EMPTY).outcome).toBe('timeout');
+  it('the cat cannot reach the goal on its own: the gate blocks it', () => {
+    expect(runLevel(level03!, { nodes: sol.nodes.filter((n) => n.kind === 'route-follow'), wires: sol.wires.filter((w) => w.id === 's1' || w.id === 's2') }).outcome).toBe('timeout');
+  });
+  it('the walk is a tray piece with its points already set', () => {
+    const route = level03!.tray.find((t) => t.kind === 'route-follow');
+    expect(route?.params?.count).toBe(4);
   });
 });
 
 describe('level 4 (hai-nut-mot-cua)', () => {
   const sol = level04!.solution;
-  it('one sensor alone is not enough: a robot is left behind', () => {
-    expect(runLevel(level04!, without(sol, 's5')).outcome).toBe('timeout');
-    expect(runLevel(level04!, without(sol, 's6')).outcome).toBe('timeout');
+  it('needs the walk of both bots, one touch sensor and Hoặc', () => {
+    expect(sol.nodes.map((n) => n.kind).sort()).toEqual(['go-to', 'go-to', 'or', 'touch']);
+    expect(level04!.par).toBe(4);
+  });
+  it('one signal alone is not enough: a robot is left behind', () => {
+    expect(runLevel(level04!, without(sol, 's10')).outcome).toBe('timeout');
+    expect(runLevel(level04!, without(sol, 's11')).outcome).toBe('timeout');
+  });
+  it('bot A must wait for bot B: without the "Cho đi" wire A leaves its button and the door shuts', () => {
+    expect(runLevel(level04!, without(sol, 's7')).outcome).toBe('timeout');
   });
   it('both robots are locked with the approved looks', () => {
     expect(level04!.base.nodes.filter((n) => n.kind === 'character').map((n) => n.params.look)).toEqual(['robot-legs', 'robot-wheel']);
@@ -253,5 +235,23 @@ describe('level 4 (hai-nut-mot-cua)', () => {
   it('the door is wired only through its hidden-while input', () => {
     expect(level04!.shownPorts!.door).toEqual({ in: ['hiddenWhile'], out: [] });
     expect(sol.wires.some((w) => w.to.node === 'door' && w.to.port === 'hiddenWhile')).toBe(true);
+  });
+  it('bot A is the one standing on button 1 at the start', () => {
+    const a = level04!.base.nodes.find((n) => n.id === 'bot-a')!.params.position as { x: number };
+    const b1 = level04!.base.nodes.find((n) => n.id === 'button-a')!.params.position as { x: number };
+    expect(a.x).toBe(b1.x);
+  });
+  it('the second touch sensor can stand in for "Đã tới" but then the answer costs a piece more', () => {
+    const swapped: PuzzleAnswer = {
+      nodes: [...sol.nodes, { id: 'p-touch2', kind: 'touch', params: {}, pos: { x: 100, y: 100 } }],
+      wires: [
+        ...sol.wires.filter((w) => w.id !== 's11'),
+        { id: 'x1', from: { node: 'bot-b', port: 'self' }, to: { node: 'p-touch2', port: 'a' } },
+        { id: 'x2', from: { node: 'button-b', port: 'self' }, to: { node: 'p-touch2', port: 'b' } },
+        { id: 'x3', from: { node: 'p-touch2', port: 'touching' }, to: { node: 'p-or', port: 'b' } },
+      ],
+    };
+    expect(runLevel(level04!, swapped).outcome).toBe('win');
+    expect(starsFor(level04!, swapped, 0)).toBe(2);
   });
 });
