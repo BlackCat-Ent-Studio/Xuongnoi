@@ -81,11 +81,7 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 /* cards live below the top bar; the bottom bar keeps room for the corner window */
 .pz-board .wc-world { top: calc(1.4cqw + max(40px, 4.4cqw) + 1cqw); }
 .pz-board .wc-wire-hit { stroke-width: 22; }
-/* pins sit on the card edge, half outside, so a wire never starts inside a card (the ring in the card colour cuts the border) */
-.wc.pz-board .wc-node .wc-port { padding: 0 14px; }
-.wc.pz-board .wc-node .wc-dot { position: absolute; top: 50%; width: 15px; height: 15px; margin: -7.5px 0 0; outline: 2.5px solid var(--card, #222832); }
-.wc.pz-board .wc-node .wc-port.in .wc-dot { left: -9.5px; right: auto; }
-.wc.pz-board .wc-node .wc-port.out .wc-dot { right: -9.5px; left: auto; }
+.pz-board .wc-node .wc-dot { width: 15px; height: 15px; }
 /* focus: the wires of the tapped card stay bright, the rest fade (own classes: .is-dim means "value off" while running) */
 .pz-board .pz-wire { transition: opacity .25s; }
 .pz-board.pz-focusing .pz-wire:not(.pz-lit) { opacity: .2; }
