@@ -7,13 +7,12 @@ import {
   SLOT_COLOR,
   SLOT_SIZE,
   nextEmptySlot,
-  readSlotParams,
+  parkingSpot,
   slotCentres,
   slotIsTaken,
   slotRects,
   type SlotRect,
 } from '../../src/puzzle/store-slots';
-import { parkingSpot } from '../../src/puzzle/slot-patrol';
 import type { PuzzleLevel } from '../../src/puzzle/types';
 
 /** Levels with a store pad, how many slots each has and how many crates the reference solution delivers. */
@@ -68,19 +67,15 @@ describe('store slots: level data', () => {
     }
   });
 
-  it.each(STORES)('level $order: the brain reads back the same slots the marks are drawn at', ({ order }) => {
+  it.each(STORES)('level $order: the player-facing slot cards are wired to the next-free-slot picker in filling order', ({ order }) => {
     const level = levelOf(order);
-    const brain = level.base.nodes.find((n) => n.kind === 'slot-patrol' || n.kind === 'fetch-store');
-    if (brain) {
-      expect(readSlotParams(brain.params).slots).toEqual(slotRects(level.storeSlots!));
-      return;
-    }
-    // Made of board pieces: the player's "Ô trống kế tiếp" card reads the slot marks, in filling order.
-    const picker = level.solution.nodes.find((n) => n.kind === 'next-free-slot')!;
+    // Made of board pieces: a "Ô trống kế tiếp" card (locked on the board or placed by the player) reads the slot marks.
+    const picker = [...level.base.nodes, ...level.solution.nodes].find((n) => n.kind === 'next-free-slot')!;
     expect(picker).toBeDefined();
+    const wires = [...level.base.wires, ...level.solution.wires];
     const centres = slotCentres(level.storeSlots!);
     centres.forEach((c, i) => {
-      const wire = level.solution.wires.find((w) => w.to.node === picker.id && w.to.port === `s${i + 1}`)!;
+      const wire = wires.find((w) => w.to.node === picker.id && w.to.port === `s${i + 1}`)!;
       expect(wire, `slot ${i + 1} wired`).toBeDefined();
       const mark = level.base.nodes.find((n) => n.id === wire.from.node)!;
       expect(mark.params.position).toMatchObject({ x: c.x, z: c.z });
