@@ -223,7 +223,7 @@ describe('physics invariants: doors really block and really let through', () => 
     }
   });
 
-  it.each(LEVELS.filter((l) => ['cua-kho', 'nhat-sao', 'hai-nut-mot-cua', 'xuong-tong-hop'].includes(l.id)))('level $order $id: the solution walks through the open door', (level) => {
+  it.each(LEVELS.filter((l) => ['cua-kho', 'nhat-sao', 'hai-nut-mot-cua'].includes(l.id)))('level $order $id: the solution walks through the open door', (level) => {
     const r = watchDoors(level, level.solution);
     expect(r.doors.size).toBeGreaterThan(0);
     expect(r.crossedOpen.size).toBeGreaterThan(0);
@@ -283,16 +283,6 @@ describe('physics invariants: a win comes for the stated reason', () => {
       const inStore = b.filter((x) => x.kind === 'item' && !x.carried && insideZone(x, c, s)).map((x) => x.owner).sort();
       return inStore.join() === 'crate-2,crate-4,crate-6' ? [] : [`store holds ${inStore.join() || 'nothing'}, expected the three blue crates only`];
     },
-    'xuong-tong-hop': (b) => {
-      const bad: string[] = [];
-      const hero = by(b, 'hero');
-      const goal = by(b, 'goal');
-      if (Math.hypot(hero.pos.x - goal.pos.x, hero.pos.z - goal.pos.z) > 1.6) bad.push('cat is not on the green tile');
-      if (gap(hero, by(b, 'guard')) <= 0.02) bad.push('cat is touching the guard');
-      const stored = b.filter((x) => x.kind === 'item' && !x.carried && insideZone(x, { x: -6.4, z: 3 }, { x: 3.6, z: 2 }));
-      if (stored.length < 2) bad.push(`only ${stored.length} crates rest in the store`);
-      return bad;
-    },
   };
 
   it.each(LEVELS)('level $order $id: the world matches the win message', (level) => {
@@ -313,7 +303,7 @@ describe('physics invariants: a win comes for the stated reason', () => {
 describe('physics invariants: a loss comes for the stated reason', () => {
   const find = (bodies: BodySnapshot[], owner: string): BodySnapshot => bodies.find((x) => x.owner === owner)!;
 
-  it.each(LEVELS.filter((l) => ['ne-linh-gac', 'xuong-tong-hop'].includes(l.id)))('level $order $id: every lost run ends with the guard really touching the cat', (level) => {
+  it.each(LEVELS.filter((l) => ['ne-linh-gac'].includes(l.id)))('level $order $id: every lost run ends with the guard really touching the cat', (level) => {
     let lost = 0;
     for (const { name, answer } of answersFor(level)) {
       const r = playAndCheck(level, answer);

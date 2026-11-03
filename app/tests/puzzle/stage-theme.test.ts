@@ -44,9 +44,8 @@ describe('stage roles per level', () => {
     expect(rolesOf('du-ba-thung')).toMatchObject({ floor: 'floor-tray', 'store-pad': 'zone', 'crate-1': 'crate', 'crate-2': 'crate', 'crate-3': 'crate' });
   });
 
-  it('levels 6 and 8: tray floor, goal pad; level 8 also button, door, crates', () => {
+  it('level 6: tray floor, goal pad', () => {
     expect(rolesOf('ne-linh-gac')).toMatchObject({ floor: 'floor-tray', goal: 'goal' });
-    expect(rolesOf('xuong-tong-hop')).toMatchObject({ floor: 'floor-tray', goal: 'goal', pad: 'button', door: 'door', 'crate-1': 'crate' });
   });
 
   it('level 7: the red and the blue floor tiles are both plain flat tiles, never a push button', () => {

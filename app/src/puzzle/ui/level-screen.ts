@@ -127,7 +127,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   });
   const heroId = mainCharacterId(level);
   const guided = hasGuide(level);
-  /** Level 1's and level 5's first visit: the guide leads and cannot be skipped. */
+  /** First visit of a guided level: the guide leads and cannot be skipped. */
   const forcedGuide = isGuideForced(level);
   const replayBtn = h('button', 'pz-replay', T.guideReplay);
   replayBtn.type = 'button';
@@ -481,7 +481,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     showPreview();
   });
   showPreview();
-  // Levels 1 and 5 lead the first visit with the guide (no skip); "↻ Hướng dẫn" brings it back later.
+  // Guided levels (1, 5, 7) lead the first visit with the guide (no skip); "↻ Hướng dẫn" brings it back later.
   // Other levels introduce each piece the player has not met yet, once per level.
   if (forcedGuide) {
     guide.start(false);

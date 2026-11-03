@@ -128,7 +128,7 @@ describe('new-piece intros', () => {
     // a kind introduced on level 2 is not introduced again on level 3
     const l3 = newPieceIntros(lv(3));
     expect(l3.every((t) => !l2.includes(t))).toBe(true);
-    for (let o = 2; o <= 8; o++) for (const t of newPieceIntros(lv(o))) expect(t.split(/\s+/).length).toBeLessThanOrEqual(14);
+    for (let o = 2; o <= 7; o++) for (const t of newPieceIntros(lv(o))) expect(t.split(/\s+/).length).toBeLessThanOrEqual(14);
   });
 
   it('is remembered per level, apart from the level 1 guide mark', () => {
@@ -141,17 +141,30 @@ describe('new-piece intros', () => {
   });
 });
 
-describe('level 1 and level 5 forced guide', () => {
-  it('is forced until the guide is marked seen, and only on levels 1 and 5', () => {
+describe('levels 1, 5 and 7 forced guide', () => {
+  it('is forced until the guide is marked seen, and only on levels 1, 5 and 7', () => {
     const s = memory();
     expect(isGuideForced(lv(1), s)).toBe(true);
     expect(isGuideForced(lv(5), s)).toBe(true);
+    expect(isGuideForced(lv(7), s)).toBe(true);
     expect(isGuideForced(lv(2), s)).toBe(false);
     markGuideSeen(lv(1).id, s);
     expect(isGuideForced(lv(1), s)).toBe(false);
     expect(isGuideForced(lv(5), s)).toBe(true);
     markGuideSeen(lv(5).id, s);
     expect(isGuideForced(lv(5), s)).toBe(false);
+    expect(isGuideForced(lv(7), s)).toBe(true);
+    markGuideSeen(lv(7).id, s);
+    expect(isGuideForced(lv(7), s)).toBe(false);
+  });
+
+  it('level 7 leads with a cat intro and a hand-written line per solution wire', () => {
+    const steps = buildGuideSteps(lv(7));
+    expect(steps[0]?.type).toBe('intro');
+    const wires = steps.filter((x) => x.type === 'wire');
+    expect(wires).toHaveLength(lv(7).solution.wires.length);
+    for (const w of wires) expect(w.text).not.toContain('(');
+    expect(lv(7).freeHints).toBe(7);
   });
 
   it('level 5 has the cat intro and a friendly line per solution wire, and no tips on top of the guide', () => {

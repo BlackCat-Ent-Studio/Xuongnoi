@@ -20,7 +20,6 @@ import type { PuzzleLevel } from '../../src/puzzle/types';
 const STORES = [
   { order: 5, slots: 3, delivered: 3 },
   { order: 7, slots: 3, delivered: 3 },
-  { order: 8, slots: 2, delivered: 2 },
 ] as const;
 
 const levelOf = (order: number): PuzzleLevel => PUZZLE_LEVELS.find((l) => l.order === order)!;
@@ -59,11 +58,13 @@ describe('store slots: level data', () => {
     expect(zones.length).toBeGreaterThan(0);
     for (const c of centres) {
       expect(inside({ x: pp.x, z: pp.z, sx: ps.x, sz: ps.z }, c)).toBe(true);
-      for (const z of zones) {
+      // Some counting zone (the whole store, or one zone per slot) covers this slot.
+      const covered = zones.some((z) => {
         const zc = z.params.center as { x: number; z: number };
         const zs = z.params.size as { x: number; z: number };
-        expect(inside({ x: zc.x, z: zc.z, sx: zs.x, sz: zs.z }, c)).toBe(true);
-      }
+        return inside({ x: zc.x, z: zc.z, sx: zs.x, sz: zs.z }, c);
+      });
+      expect(covered).toBe(true);
     }
   });
 
@@ -74,12 +75,12 @@ describe('store slots: level data', () => {
       expect(readSlotParams(brain.params).slots).toEqual(slotRects(level.storeSlots!));
       return;
     }
-    // Made of board pieces: the "Ô trống kế tiếp" card reads the slot marks, in filling order.
-    const picker = level.base.nodes.find((n) => n.kind === 'next-free-slot')!;
+    // Made of board pieces: the player's "Ô trống kế tiếp" card reads the slot marks, in filling order.
+    const picker = level.solution.nodes.find((n) => n.kind === 'next-free-slot')!;
     expect(picker).toBeDefined();
     const centres = slotCentres(level.storeSlots!);
     centres.forEach((c, i) => {
-      const wire = level.base.wires.find((w) => w.to.node === picker.id && w.to.port === `s${i + 1}`)!;
+      const wire = level.solution.wires.find((w) => w.to.node === picker.id && w.to.port === `s${i + 1}`)!;
       expect(wire, `slot ${i + 1} wired`).toBeDefined();
       const mark = level.base.nodes.find((n) => n.id === wire.from.node)!;
       expect(mark.params.position).toMatchObject({ x: c.x, z: c.z });

@@ -17,7 +17,6 @@ import {
 registerAllNodes();
 
 const GUIDED = PUZZLE_LEVELS.filter((l) => l.order <= 7);
-const level8 = PUZZLE_LEVELS.find((l) => l.order === 8);
 
 /** Does what the step asks, the way the player would. */
 function perform(step: GuideStep, level: (typeof GUIDED)[number], state: BoardState): BoardState {
@@ -46,14 +45,13 @@ function perform(step: GuideStep, level: (typeof GUIDED)[number], state: BoardSt
 }
 
 describe('guide steps', () => {
-  it('covers 7 guided levels and leaves level 8 alone', () => {
+  it('covers the 7 levels; levels 1, 5 and 7 have the full guide, the others give one step per "?"', () => {
     expect(GUIDED).toHaveLength(7);
-    expect(level8).toBeDefined();
-    if (level8) {
-      expect(hasGuide(level8)).toBe(false);
-      expect(buildGuideSteps(level8)).toEqual([]);
-      expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1, 5]); // level 1 and the first 3D level have the full guide
-      expect(solutionSteps(level8).length).toBeGreaterThan(0); // the "?" hint still works there
+    expect(PUZZLE_LEVELS).toHaveLength(7);
+    expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1, 5, 7]);
+    for (const level of PUZZLE_LEVELS.filter((l) => !hasGuide(l))) {
+      expect(buildGuideSteps(level)).toEqual([]);
+      expect(solutionSteps(level).length).toBeGreaterThan(0); // the "?" hint still works there
     }
   });
 
@@ -66,7 +64,7 @@ describe('guide steps', () => {
     ];
 
     it('guided levels open with a line and end with "press run"; every line stays short', () => {
-      if (level.order === 1 || level.order === 5) {
+      if (hasGuide(level)) {
         const guide = buildGuideSteps(level);
         expect(hasGuide(level)).toBe(true);
         expect(guide[0]?.type).toBe('intro');

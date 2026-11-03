@@ -1,6 +1,6 @@
-import type { PuzzleLevel } from '../types';
-import { PUZZLE_LOOKS } from '../types';
-import { slotBrainParams, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
+import type { PuzzleLevel } from '../../types';
+import { PUZZLE_LOOKS } from '../../types';
+import { slotBrainParams, slotMarkNodes, type StoreSlotsDef } from '../../store-slots';
 
 const CRATE = { size: { x: 0.6, y: 0.6, z: 0.6 }, shape: 'crate', color: '#b45309' };
 const WALL_COLOR = '#a8a29e';

@@ -26,12 +26,17 @@ const KIND_PURPOSE: Record<string, string> = {
   distance: 'đo hai nhân vật cách nhau bao xa.',
   timer: 'đếm giờ, hết giờ thì báo.',
   'color-sensor': 'nhìn màu của ô dưới chân bot.',
+  'route-follow': 'đi theo hàng ô, dừng từng ô.',
+  carry: 'nhấc và thả thùng.',
+  'next-free-slot': 'chỉ ô kho còn trống.',
+  math: 'cộng hai số lại.',
 };
 
-/** The cat's opening line per level. Levels 1 and 5 (the first 3D level) have the full guide; the others get one step per "?". */
+/** The cat's opening line per level. Levels 1, 5 (the first 3D level) and 7 (the last, built by the player alone) have the full guide; the others get one step per "?". */
 const LEVEL_INTRO: Record<string, string> = {
   'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
   'du-ba-thung': 'Ôi, màn này là 3D! Camera nhìn từ trên cao, hơi nghiêng. Mình cùng làm nhé!',
+  'phan-loai-mau': 'Màn cuối! Bạn tự nối cả mạch cho rô-bốt. Mình chỉ từng bước nhé!',
 };
 
 /** Friendly lines for the wires, keyed by level id then solution wire id. Other wires get a generated line. */
@@ -78,11 +83,23 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     sw4: 'Lính gác xa thì mèo được đi.',
   },
   'phan-loai-mau': {
-    sw1: 'Cho Đọc màu nhìn màu dưới chân rô-bốt.',
-    sw2: 'Thấy màu xanh thì báo cho mảnh Và.',
-    sw3: 'Tay đang khiêng thì báo qua mảnh Đảo ngược.',
-    sw4: 'Đảo ngược: tay rảnh mới báo cho mảnh Và.',
-    sw5: 'Màu xanh VÀ tay rảnh thì mới cầm!',
+    sw1: 'Nối Rô-bốt vào Chạy theo tuyến để nó đi dọc các ô.',
+    sw2: 'Lối đi ngang của tuyến vào mảnh Phép tính.',
+    sw3: 'Phép tính cho rô-bốt đi ngang.',
+    sw4: 'Cho Đọc màu nhìn màu dưới chân rô-bốt.',
+    sw5: 'Thấy đúng màu thì báo cho mảnh Và.',
+    sw6: 'Đang đứng ở một ô thì cũng báo cho mảnh Và.',
+    sw7: 'Nối Rô-bốt vào Khiêng đồ để có tay.',
+    sw8: 'Đúng màu VÀ đang đứng ở ô thì Nhấc lên!',
+    sw9: 'Đang khiêng thì tuyến dừng, khỏi đi tiếp.',
+    sw10: 'Ô kho 1 vào mảnh Ô trống kế tiếp.',
+    sw11: 'Ô kho 2 cũng vào đó.',
+    sw12: 'Ô kho 3 cũng vào đó nữa.',
+    sw13: 'Nối Rô-bốt vào mảnh Đi tới.',
+    sw14: 'Ô trống kế tiếp làm đích cho Đi tới.',
+    sw15: 'Đang khiêng thì mới cho Đi tới chạy.',
+    sw16: 'Lối đi ngang của Đi tới vào Phép tính nữa.',
+    sw17: 'Tới ô kho thì Thả thùng xuống!',
   },
 };
 
@@ -99,6 +116,7 @@ export const GUIDE_TEXT = {
 /** Level-specific cheer after the win, else the generic one. */
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
+  'phan-loai-mau': 'Giỏi quá! Bạn tự nối cả mạch rồi!',
 };
 
 export const winLine = (level: PuzzleLevel): string => WIN_LINES[level.id] ?? GUIDE_TEXT.win;
@@ -112,7 +130,7 @@ export type GuideStep =
   | { type: 'wire'; text: string; wire: Wire }
   | { type: 'run'; text: string };
 
-/** Does this level have the full guide? Levels 1 and 5 do; the other levels give one step per "?". */
+/** Does this level have the full guide? Levels 1, 5 and 7 do; the other levels give one step per "?". */
 export const hasGuide = (level: PuzzleLevel): boolean => level.id in LEVEL_INTRO;
 
 /** Stable identity of a solution step (not tied to positions), used to count each "?" reveal once. Null for steps that are not solution work. */

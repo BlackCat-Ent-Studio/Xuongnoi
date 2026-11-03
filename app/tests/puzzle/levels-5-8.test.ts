@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { level05 } from '../../src/puzzle/levels/level-05';
 import { level06 } from '../../src/puzzle/levels/level-06';
 import { level07 } from '../../src/puzzle/levels/level-07';
-import { level08 } from '../../src/puzzle/levels/level-08';
 import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
 import { canConnect } from '../../src/engine/wiring';
 import { registerAllNodes } from '../../src/nodes';
@@ -11,7 +10,7 @@ import type { Graph, Params } from '../../src/engine/types';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 
 const EMPTY: PuzzleAnswer = { nodes: [], wires: [] };
-const LEVELS: PuzzleLevel[] = [level05, level06, level07, level08];
+const LEVELS: PuzzleLevel[] = [level05, level06, level07];
 
 /** Copy of the answer where every placed node of `kind` gets these params. */
 function withParams(a: PuzzleAnswer, kind: string, params: Params): PuzzleAnswer {
@@ -21,12 +20,6 @@ function withParams(a: PuzzleAnswer, kind: string, params: Params): PuzzleAnswer
 /** Copy of the answer without the given wires (pieces left unwired stay on the board). */
 function withoutWires(a: PuzzleAnswer, ...ids: string[]): PuzzleAnswer {
   return { ...a, wires: a.wires.filter((w) => !ids.includes(w.id)) };
-}
-
-/** Copy of the answer keeping only these placed pieces and the wires between known nodes. */
-function onlyPieces(a: PuzzleAnswer, level: PuzzleLevel, keep: string[]): PuzzleAnswer {
-  const alive = new Set([...level.base.nodes.map((n) => n.id), ...keep]);
-  return { nodes: a.nodes.filter((n) => keep.includes(n.id)), wires: a.wires.filter((w) => alive.has(w.from.node) && alive.has(w.to.node)) };
 }
 
 describe.each(PUZZLE_LEVELS)('puzzle level $order $id: real board rules', (level) => {
@@ -149,46 +142,5 @@ describe('level 6: ne-linh-gac', () => {
       wires: [...notBack.wires, { id: 'x1', from: { node: 's-dist', port: 'within' }, to: { node: 'walk', port: 'go' } }],
     };
     expect(runLevel(level06, direct).outcome).not.toBe('win');
-  });
-});
-
-describe('level 8: xuong-tong-hop', () => {
-  const s = level08.solution;
-  const guardIds = ['s-dist', 's-not'];
-  const doorIds = ['s-touch', 's-cmp', 's-and'];
-
-  it('a door without the guard check lets the cat run into the guard', () => {
-    expect(runLevel(level08, onlyPieces(s, level08, doorIds)).outcome).toBe('lose');
-  });
-
-  it('guard check without opening the door never finishes', () => {
-    expect(runLevel(level08, onlyPieces(s, level08, guardIds)).outcome).toBe('timeout');
-  });
-
-  it('the door needs the crates as well as the button', () => {
-    const noCrates = withoutWires(s, 'sw3', 'sw4', 'sw2');
-    expect(runLevel(level08, noCrates).outcome).toBe('timeout');
-  });
-
-  it('a second way works: a memory switch keeps the button press', () => {
-    const alt: PuzzleAnswer = {
-      nodes: [
-        ...s.nodes,
-        { id: 's-latch', kind: 'latch', params: {}, pos: { x: 620, y: 250 } },
-      ],
-      wires: [
-        ...s.wires.filter((w) => w.id !== 'sw5'),
-        { id: 'a1', from: { node: 's-touch', port: 'began' }, to: { node: 's-latch', port: 'set' } },
-        { id: 'a2', from: { node: 's-latch', port: 'on' }, to: { node: 's-and', port: 'a' } },
-      ],
-    };
-    expect(runLevel(level08, alt).outcome).toBe('win');
-  });
-
-  it('a range of safe distances works', () => {
-    for (const threshold of [2.5, 3, 3.5]) {
-      expect(runLevel(level08, withParams(s, 'distance', { threshold })).outcome).toBe('win');
-    }
-    expect(runLevel(level08, withParams(s, 'distance', { threshold: 1 })).outcome).toBe('lose');
   });
 });

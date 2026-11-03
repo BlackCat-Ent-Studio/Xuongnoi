@@ -1,14 +1,14 @@
-import type { GraphNode } from '../../engine/types';
+import type { GraphNode, Wire } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
-import { slotMarkNodes, type StoreSlotsDef } from '../store-slots';
+import { SLOT_SIZE, slotCentres, slotMarkNodes, type StoreSlotsDef } from '../store-slots';
 import { handReach } from '../world-options';
 
 const RED = '#ef4444';
 const BLUE = '#3b82f6';
 const CRATE_SIZE = { x: 0.7, y: 0.7, z: 0.7 };
 /** The crates wait in a lane beside the walking line (z = 0); the robot reads the coloured tile on the line and takes the crate from the side. */
-const CRATE_Z = 1.02;
+const CRATE_Z = 1.12;
 
 /** Colour of the crate on each pad, left to right. Three blue ones, three red ones. */
 const PADS: readonly { x: number; color: string }[] = [
@@ -33,14 +33,6 @@ const PARK_REACH = Math.round(handReach(CRATE_SIZE) * 100) / 100;
 /** Seconds the robot stands at each pad before walking on. */
 const PAD_STOP = 0.5;
 
-/**
- * Cards of the script, packed in the left part of the 1000x560 board (the player works on the right): four columns
- * of 170-wide cards, left to right in the order the work flows (robot and store slots, where to walk, how to walk,
- * the hands). On screen a card is taller than its few rows suggest, so the cards in a column are spaced generously.
- */
-const COLUMN_X = [6, 178, 350, 522] as const;
-const column = (col: 0 | 1 | 2 | 3, y: number): { x: number; y: number } => ({ x: COLUMN_X[col], y });
-
 let sceneryIndex = 0;
 /** Scenery is never drawn, so it only needs a spot of its own: a strip below the board holds them all in rows. */
 const nextScenery = (): { x: number; y: number } => {
@@ -49,27 +41,37 @@ const nextScenery = (): { x: number; y: number } => {
 };
 const scenery = (id: string, kind: string, params: GraphNode['params']): GraphNode => ({ id, kind, params, pos: nextScenery() });
 
-/** A visible locked card of the script. */
-const card = (id: string, kind: string, params: GraphNode['params'], pos: { x: number; y: number }): GraphNode => ({ id, kind, params, pos });
+/** Pieces the player takes from the tray, ready set up for this level (the walk along the pads, the walk to the store, the sum). */
+const ROUTE_PARAMS: GraphNode['params'] = {
+  count: PADS.length,
+  ...Object.fromEntries(PADS.map((p, i) => [`p${i + 1}`, { x: p.x, y: 0.5, z: 0 }])),
+  style: 'loop',
+  follow: 'steer',
+  speed: 5,
+  lookAhead: 0,
+  arriveRadius: 0.2,
+  stopFor: PAD_STOP,
+};
+const GO_TO_PARAMS: GraphNode['params'] = { stopDistance: PARK_REACH, slowRadius: 3, pathfind: 'off' };
+
+const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
 
 /**
- * Level 7 (phan-loai-mau): red and blue crates sit on coloured pads in a row. The legs robot walks the row, the
- * player decides when it grabs: only on a blue pad and only with free hands. Three blue crates in the store win,
- * a red one in the store loses.
+ * Level 7 (phan-loai-mau): red and blue crates sit on coloured pads in a row. The player builds the whole circuit of
+ * the legs robot: walk the pads and stop at each one, read the colour, grab only on blue while standing at a pad,
+ * walk the crate to the first free store slot, put it down and go on. Three blue crates in the store win, a red one
+ * in the store loses.
  *
- * The robot's whole routine is made of ordinary Xưởng Nối pieces that sit on the board as locked cards (left part):
- *  - "Chạy theo tuyến" walks the pads and stops at each one, turning to the crate beside it; it stays put while the hands are full.
- *  - "Đo tốc độ" says when the robot stands still; a locked "Và" lets the player's signal through only then
- *    (or while the hands are full, so the same signal puts a held crate down again).
- *  - "Ô trống kế tiếp" picks the first free store slot and "Đi tới" walks there with the crate; arriving puts it down.
- * Only the floor, pads, crates, store marks, the win/lose plumbing and the camera are scenery (not drawn).
+ * On the board only the robot and the three store slot marks are drawn. The floor, pads, crates, store zones, the
+ * win/lose plumbing and the camera are scenery (not drawn). Every behaviour comes from ordinary Xưởng Nối pieces
+ * the player places and wires: "Chạy theo tuyến", "Đọc màu", "Và", "Khiêng đồ", "Đi tới", "Ô trống kế tiếp", "Phép tính".
  */
 export const level07: PuzzleLevel = {
   id: 'phan-loai-mau',
   order: 7,
   title: 'Phân loại thùng màu',
-  task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua!',
-  hint: 'Đặt "Đọc màu", nối Rô-bốt vào "Vật" và chỉnh "Màu cần tìm" thành 2 (xanh). Rô-bốt chỉ cầm khi thấy màu xanh VÀ tay đang rảnh: nối "Đang khiêng" qua "Đảo ngược", rồi cùng "Đúng màu" vào "Và". Kết quả của "Và" nối vào "Nhấc lên".',
+  task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua! Bạn tự nối cả mạch cho rô-bốt.',
+  hint: 'Cho rô-bốt đi theo hàng ô bằng "Chạy theo tuyến". "Đọc màu" chỉnh về 2 (xanh); thấy xanh VÀ đang đứng ở ô thì "Nhấc lên". Khiêng xong thì tuyến dừng, "Đi tới" đem thùng tới "Ô trống kế tiếp", tới nơi thì "Thả". "Phép tính" cộng hai lối đi ngang.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,
@@ -90,108 +92,80 @@ export const level07: PuzzleLevel = {
           tag: p.color === BLUE ? 'xanh' : 'do',
         }),
       ),
-      scenery('blue-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
+      // The win asks for a blue crate resting in each of the three slots (so one slot cannot be piled up).
+      ...slotCentres(STORE).map((c, i) =>
+        scenery(`slot-zone-${i + 1}`, 'zone', { center: { x: c.x, y: 0.5, z: c.z }, size: { x: SLOT_SIZE, y: 3, z: SLOT_SIZE }, filter: 'item', goods: 'xanh', rule: 'center', color: BLUE }),
+      ),
+      scenery('slots-12', 'and', {}),
+      scenery('slots-all', 'and', {}),
       scenery('red-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
-      scenery('need', 'const', { value: 3 }),
-      scenery('enough', 'compare', { op: 'ge' }),
       scenery('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
       scenery('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
-      // Left column: the robot, the three store slots and the card that picks the next free one.
-      card('robot', 'character', { name: 'Rô-bốt chân', position: { x: -7.6, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, column(0, 10)),
-      ...slotMarkNodes(STORE, (i) => column(0, 190 + i * 110)),
-      // Second column: which slot is next and the walk there with the crate.
-      card('next-slot', 'next-free-slot', {}, column(1, 10)),
-      card('to-store', 'go-to', { stopDistance: PARK_REACH, slowRadius: 3, pathfind: 'off' }, column(1, 225)),
-      // Third column: the walk along the pads, the sum of the two walks, and the sensor that says "standing still".
-      card(
-        'route',
-        'route-follow',
-        {
-          count: PADS.length,
-          ...Object.fromEntries(PADS.map((p, i) => [`p${i + 1}`, { x: p.x, y: 0.5, z: 0 }])),
-          style: 'loop',
-          follow: 'steer',
-          speed: 5,
-          lookAhead: 0,
-          arriveRadius: 0.2,
-          stopFor: PAD_STOP,
-          faceAtStop: 'item',
-        },
-        column(2, 10),
-      ),
-      card('sum-x', 'math', { op: 'add' }, column(2, 225)),
-      card('speed', 'speed-sensor', {}, column(2, 405)),
-      // Fourth column: when the hands may close (standing still, or already full), and the hands themselves.
-      card('still-or-full', 'or', {}, column(3, 10)),
-      card('gate', 'and', {}, column(3, 185)),
-      card('hands', 'carry', { mode: 'toggle' }, column(3, 355)),
+      // The two things the player wires to: the robot and the store slot marks, in a column on the left.
+      { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -7.6, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 10 } },
+      ...slotMarkNodes(STORE, (i) => ({ x: 10, y: 128 + i * 80 })),
     ],
     wires: [
-      { id: 'b1', from: { node: 'robot', port: 'self' }, to: { node: 'route', port: 'self' } },
-      { id: 'b2', from: { node: 'robot', port: 'self' }, to: { node: 'to-store', port: 'self' } },
-      { id: 'b3', from: { node: 'robot', port: 'self' }, to: { node: 'hands', port: 'character' } },
-      { id: 'b4', from: { node: 'robot', port: 'self' }, to: { node: 'speed', port: 'who' } },
-      { id: 'b5', from: { node: 'route', port: 'moveX' }, to: { node: 'sum-x', port: 'a' } },
-      { id: 'b6', from: { node: 'to-store', port: 'moveX' }, to: { node: 'sum-x', port: 'b' } },
-      { id: 'b7', from: { node: 'sum-x', port: 'out' }, to: { node: 'robot', port: 'moveX' } },
-      { id: 'b8', from: { node: 'route', port: 'moveY' }, to: { node: 'robot', port: 'moveY' } },
-      { id: 'b9', from: { node: 'speed', port: 'still' }, to: { node: 'still-or-full', port: 'a' } },
-      { id: 'b10', from: { node: 'hands', port: 'holding' }, to: { node: 'still-or-full', port: 'b' } },
-      { id: 'b11', from: { node: 'still-or-full', port: 'out' }, to: { node: 'gate', port: 'b' } },
-      { id: 'b12', from: { node: 'gate', port: 'out' }, to: { node: 'hands', port: 'grab' } },
-      { id: 'b13', from: { node: 'hands', port: 'holding' }, to: { node: 'route', port: 'stop' } },
-      { id: 'b14', from: { node: 'hands', port: 'holding' }, to: { node: 'to-store', port: 'go' } },
-      { id: 'b15', from: { node: 'slot-1', port: 'self' }, to: { node: 'next-slot', port: 's1' } },
-      { id: 'b16', from: { node: 'slot-2', port: 'self' }, to: { node: 'next-slot', port: 's2' } },
-      { id: 'b17', from: { node: 'slot-3', port: 'self' }, to: { node: 'next-slot', port: 's3' } },
-      { id: 'b18', from: { node: 'next-slot', port: 'slot' }, to: { node: 'to-store', port: 'target' } },
-      { id: 'b19', from: { node: 'to-store', port: 'arrived' }, to: { node: 'hands', port: 'drop' } },
-      { id: 'b20', from: { node: 'blue-store', port: 'count' }, to: { node: 'enough', port: 'a' } },
-      { id: 'b21', from: { node: 'need', port: 'value' }, to: { node: 'enough', port: 'b' } },
-      { id: 'b22', from: { node: 'enough', port: 'out' }, to: { node: 'end', port: 'win' } },
-      { id: 'b23', from: { node: 'red-store', port: 'inside' }, to: { node: 'end', port: 'lose' } },
+      wire('b1', ['slot-zone-1', 'inside'], ['slots-12', 'a']),
+      wire('b2', ['slot-zone-2', 'inside'], ['slots-12', 'b']),
+      wire('b3', ['slots-12', 'out'], ['slots-all', 'a']),
+      wire('b4', ['slot-zone-3', 'inside'], ['slots-all', 'b']),
+      wire('b5', ['slots-all', 'out'], ['end', 'win']),
+      wire('b6', ['red-store', 'inside'], ['end', 'lose']),
     ],
   },
   shownPorts: {
     ...Object.fromEntries(
-      ['floor', 'store-mark', 'blue-store', 'red-store', 'enough', 'cam', 'end', ...PADS.flatMap((_, i) => [`pad-${i + 1}`, `crate-${i + 1}`])].map((id) => [id, { in: [], out: [] }]),
+      ['floor', 'store-mark', 'red-store', 'slots-12', 'slots-all', 'cam', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`), ...PADS.flatMap((_, i) => [`pad-${i + 1}`, `crate-${i + 1}`])].map((id) => [id, { in: [], out: [] }]),
     ),
-    need: { out: [] },
-    robot: { in: ['moveX', 'moveY'], out: ['self'] },
+    robot: { in: ['moveX'], out: ['self'] },
     'slot-1': { in: [], out: ['self'] },
     'slot-2': { in: [], out: ['self'] },
     'slot-3': { in: [], out: ['self'] },
-    'next-slot': { in: ['s1', 's2', 's3'], out: ['slot'] },
-    speed: { in: ['who'], out: ['still'] },
-    'still-or-full': { in: ['a', 'b'], out: ['out'] },
-    gate: { in: ['a', 'b'], out: ['out'] },
-    hands: { in: ['character', 'grab', 'drop'], out: ['holding'] },
-    route: { in: ['self', 'stop'], out: ['moveX', 'moveY'] },
-    'sum-x': { in: ['a', 'b'], out: ['out'] },
-    'to-store': { in: ['self', 'target', 'go'], out: ['moveX', 'arrived'] },
   },
   tray: [
+    { kind: 'route-follow', count: 1, params: ROUTE_PARAMS },
     { kind: 'color-sensor', count: 1, params: { where: 'feet', want: 1, color1: RED, color2: BLUE } },
-    { kind: 'not', count: 1 },
     { kind: 'and', count: 1 },
-    { kind: 'or', count: 1 },
+    { kind: 'carry', count: 1 },
+    { kind: 'go-to', count: 1, params: GO_TO_PARAMS },
+    { kind: 'next-free-slot', count: 1 },
+    { kind: 'math', count: 1, params: { op: 'add' } },
+    // Spare piece: the grab needs no "not holding" check, so "Đảo ngược" only looks useful.
+    { kind: 'not', count: 1 },
   ],
   editable: [{ kind: 'color-sensor', paramId: 'want' }],
-  par: 3,
-  freeHints: 3,
+  par: 7,
+  freeHints: 7,
   timeLimit: 60,
   solution: {
     nodes: [
-      { id: 's-eye', kind: 'color-sensor', params: { where: 'feet', want: 2, color1: RED, color2: BLUE }, pos: { x: 620, y: 40 } },
-      { id: 's-free', kind: 'not', params: {}, pos: { x: 620, y: 300 } },
-      { id: 's-and', kind: 'and', params: {}, pos: { x: 820, y: 170 } },
+      { id: 's-route', kind: 'route-follow', params: ROUTE_PARAMS, pos: { x: 620, y: 20 } },
+      { id: 's-sum', kind: 'math', params: { op: 'add' }, pos: { x: 820, y: 20 } },
+      { id: 's-eye', kind: 'color-sensor', params: { where: 'feet', want: 2, color1: RED, color2: BLUE }, pos: { x: 620, y: 260 } },
+      { id: 's-and', kind: 'and', params: {}, pos: { x: 820, y: 200 } },
+      { id: 's-hands', kind: 'carry', params: {}, pos: { x: 820, y: 330 } },
+      { id: 's-next', kind: 'next-free-slot', params: {}, pos: { x: 620, y: 400 } },
+      { id: 's-goto', kind: 'go-to', params: GO_TO_PARAMS, pos: { x: 820, y: 450 } },
     ],
     wires: [
-      { id: 'sw1', from: { node: 'robot', port: 'self' }, to: { node: 's-eye', port: 'who' } },
-      { id: 'sw2', from: { node: 's-eye', port: 'match' }, to: { node: 's-and', port: 'a' } },
-      { id: 'sw3', from: { node: 'hands', port: 'holding' }, to: { node: 's-free', port: 'in' } },
-      { id: 'sw4', from: { node: 's-free', port: 'out' }, to: { node: 's-and', port: 'b' } },
-      { id: 'sw5', from: { node: 's-and', port: 'out' }, to: { node: 'gate', port: 'a' } },
+      wire('sw1', ['robot', 'self'], ['s-route', 'self']),
+      wire('sw2', ['s-route', 'moveX'], ['s-sum', 'a']),
+      wire('sw3', ['s-sum', 'out'], ['robot', 'moveX']),
+      wire('sw4', ['robot', 'self'], ['s-eye', 'who']),
+      wire('sw5', ['s-eye', 'match'], ['s-and', 'a']),
+      wire('sw6', ['s-route', 'atPoint'], ['s-and', 'b']),
+      wire('sw7', ['robot', 'self'], ['s-hands', 'character']),
+      wire('sw8', ['s-and', 'out'], ['s-hands', 'grab']),
+      wire('sw9', ['s-hands', 'holding'], ['s-route', 'stop']),
+      wire('sw10', ['slot-1', 'self'], ['s-next', 's1']),
+      wire('sw11', ['slot-2', 'self'], ['s-next', 's2']),
+      wire('sw12', ['slot-3', 'self'], ['s-next', 's3']),
+      wire('sw13', ['robot', 'self'], ['s-goto', 'self']),
+      wire('sw14', ['s-next', 'slot'], ['s-goto', 'target']),
+      wire('sw15', ['s-hands', 'holding'], ['s-goto', 'go']),
+      wire('sw16', ['s-goto', 'moveX'], ['s-sum', 'b']),
+      wire('sw17', ['s-goto', 'arrived'], ['s-hands', 'drop']),
     ],
   },
 };
