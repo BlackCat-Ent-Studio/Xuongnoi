@@ -171,6 +171,40 @@ describe('go-to node', () => {
     expect(s.hero().position.x).toBeCloseTo(x, 3);
   });
 
+  it('walks to Đích 2 only while "Dùng đích 2" is on, otherwise to Đích', () => {
+    const run = (useSecond: boolean): { x: number; arrived: boolean } => {
+      const s = sim(
+        '2d-side',
+        [
+          hero(0),
+          floor('f', 0, 40),
+          ['left', 'block', { position: v(-5, 0.5, 0), size: v(0.6, 0.6, 0.6), type: 'pickup' }],
+          ['right', 'block', { position: v(6, 0.5, 0), size: v(0.6, 0.6, 0.6), type: 'pickup' }],
+          ['g', 'go-to', { stopDistance: 0.4 }],
+          ['c', 'const', { value: 1 }],
+          ['on', 'compare', { op: 'ge' }],
+        ],
+        [...drive('g'), ['left', 'self', 'g', 'target'], ['right', 'self', 'g', 'target2'], ...(useSecond ? ([['c', 'value', 'on', 'a'], ['on', 'out', 'g', 'useTarget2']] as WireSpec[]) : [])],
+      );
+      s.step(300);
+      return { x: s.hero().position.x, arrived: s.out('g', 'arrived') === true };
+    };
+    expect(run(false).x).toBeLessThan(-4);
+    const second = run(true);
+    expect(second.x).toBeGreaterThan(5);
+    expect(second.arrived).toBe(true);
+  });
+
+  it('Đích 2 on but nothing wired to it falls back to the fixed point', () => {
+    const s = sim(
+      '2d-side',
+      [hero(0), floor('f', 0, 40), ['g', 'go-to', { targetPos: v(5, 1, 0), stopDistance: 0.4 }], ['c', 'const', { value: 1 }], ['on', 'compare', { op: 'ge' }]],
+      [...drive('g'), ['c', 'value', 'on', 'a'], ['on', 'out', 'g', 'useTarget2']],
+    );
+    s.step(300);
+    expect(s.hero().position.x).toBeGreaterThan(4.4);
+  });
+
   it('does nothing while go is off, then starts when it turns on', () => {
     // `go` stays off until the timer is done (1 s).
     const s = sim(

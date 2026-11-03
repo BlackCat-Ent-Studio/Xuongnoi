@@ -26,11 +26,14 @@ export const goToNode: NodeDef<GoToState> = {
   label: 'Đi tới',
   category: 'brain',
   description:
-    'Cho bot đi tới một vật hoặc một điểm, rồi dừng lại và báo "Đã tới". Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot. Nếu không nối "Đích" thì bot đi tới điểm đã đặt.',
+    'Cho bot đi tới một vật hoặc một điểm, rồi dừng lại và báo "Đã tới". Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot. Nếu không nối "Đích" thì bot đi tới điểm đã đặt. Có thể nối thêm "Đích 2": khi "Dùng đích 2" bật, bot đi tới Đích 2 thay cho Đích.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'target', type: 'object', label: 'Đích (vật)' },
     { id: 'go', type: 'bool', label: 'Cho đi', default: true },
+    // Optional second goal: when "Dùng đích 2" is on the bot walks to it instead of "Đích (vật)". Left unwired = old behaviour.
+    { id: 'target2', type: 'object', label: 'Đích 2 (vật)' },
+    { id: 'useTarget2', type: 'bool', label: 'Dùng đích 2' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
@@ -74,7 +77,8 @@ export const goToNode: NodeDef<GoToState> = {
       return { ...STILL, arrived: false, arrivedPulse: false };
     }
     // A wired object that has vanished (hidden crate...) falls back to the fixed point.
-    const goal = visiblePosition(world, asObject(i.target)) ?? vec3Param(params, 'targetPos', DEFAULT_TARGET);
+    const aim = asBool(i.useTarget2) ? i.target2 : i.target;
+    const goal = visiblePosition(world, asObject(aim)) ?? vec3Param(params, 'targetPos', DEFAULT_TARGET);
     const near = hasArrived(world.mode, self.position, goal, numParam(params, 'stopDistance', 0.5));
     s.settled = go && near ? s.settled + ctx.dt : 0;
     // "Đứng yên bao lâu": 0 (default) reports the arrival at once; otherwise only after the bot has stood still that long.

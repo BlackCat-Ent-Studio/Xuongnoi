@@ -640,6 +640,25 @@
   }
  },
  {
+  "id": "lesson:two-goals-bot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2abb091d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2abb091d"
+  }
+ },
+ {
   "id": "lesson:combat",
   "off": {
    "ended": "running",
