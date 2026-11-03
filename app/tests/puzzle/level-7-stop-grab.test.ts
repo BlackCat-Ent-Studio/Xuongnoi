@@ -21,7 +21,8 @@ interface Grab {
   crate: EntityView;
   crateStart: { x: number; z: number };
   stepBefore: number;
-  stepAfter: number;
+  /** Biggest jump of the carried crate between two ticks during the first second after the grab. */
+  crateJump: number;
 }
 interface Trace {
   outcome: string;
@@ -41,20 +42,26 @@ function trace(answer: PuzzleAnswer, limit = level07.timeLimit): Trace {
   let prev: { x: number; z: number } | null = null;
   let prevStep = 0;
   let prevHeld: string | null = null;
-  const pending: Grab[] = [];
+  const carriedAt = new Map<string, { x: number; z: number }>();
+  const watching: { g: Grab; until: number }[] = [];
   const result = runLevel(level07, answer, limit, (world: World, tick) => {
     const all = world.listEntities();
     const robot = all.find((e) => e.kind === 'character')!;
     for (const e of all) if (e.kind === 'item' && !starts.has(e.id)) starts.set(e.id, { x: e.position.x, z: e.position.z });
     const step = prev ? Math.hypot(robot.position.x - prev.x, robot.position.z - prev.z) : 0;
     const held = world.heldItem(robot.id);
-    for (const g of pending) g.stepAfter = step;
-    pending.length = 0;
     if (held !== null && prevHeld === null) {
       const crate = world.getEntity(held)!;
-      const g: Grab = { tick, robot: { x: robot.position.x, z: robot.position.z }, crate, crateStart: starts.get(held)!, stepBefore: prevStep, stepAfter: 0 };
+      const g: Grab = { tick, robot: { x: robot.position.x, z: robot.position.z }, crate, crateStart: starts.get(held)!, stepBefore: prevStep, crateJump: 0 };
       t.grabs.push(g);
-      pending.push(g);
+      watching.push({ g, until: tick + 60 });
+    }
+    for (const w of watching) {
+      if (tick > w.until) continue;
+      const c = world.getEntity(w.g.crate.id)!;
+      const before = carriedAt.get(c.id);
+      if (before) w.g.crateJump = Math.max(w.g.crateJump, Math.hypot(c.position.x - before.x, c.position.z - before.z));
+      carriedAt.set(c.id, { x: c.position.x, z: c.position.z });
     }
     if (held === null && prevHeld !== null) t.dropTicks.push(tick);
     if (step < STILL_STEP) t.stills.push({ tick, x: robot.position.x, faceZ: robot.facing?.z ?? 0 });
@@ -90,7 +97,7 @@ describe('level 7: stop at the pad, grab only while standing still', () => {
     expect(run.grabs.length).toBe(3);
     for (const g of run.grabs) {
       expect(g.stepBefore, `step before grab at tick ${g.tick}`).toBeLessThan(STILL_STEP);
-      expect(g.stepAfter, `step after grab at tick ${g.tick}`).toBeLessThan(STILL_STEP);
+      expect(g.crateJump, `crate jump after grab at tick ${g.tick}`).toBeLessThan(0.3);
       const pad = PAD_X.find((x) => Math.abs(x - g.robot.x) < 0.3);
       expect(pad, `robot at ${g.robot.x} is not on a pad`).toBeDefined();
       expect(Math.hypot(g.crateStart.x - g.robot.x, g.crateStart.z - g.robot.z)).toBeLessThanOrEqual(GRAB_REACH);
@@ -102,7 +109,7 @@ describe('level 7: stop at the pad, grab only while standing still', () => {
     const eye = sol.nodes.find((n) => n.id === 's-eye')!;
     const blueOnly: PuzzleAnswer = {
       nodes: [eye],
-      wires: [sol.wires[0]!, { id: 'x', from: { node: 's-eye', port: 'match' }, to: { node: 'hands', port: 'grab' } }],
+      wires: [sol.wires[0]!, { id: 'x', from: { node: 's-eye', port: 'match' }, to: { node: 'gate', port: 'a' } }],
     };
     const r = trace(blueOnly);
     for (const g of r.grabs) expect(g.stepBefore).toBeLessThan(STILL_STEP);

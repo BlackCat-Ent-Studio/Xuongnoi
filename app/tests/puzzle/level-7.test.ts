@@ -61,7 +61,7 @@ describe('level 7: phan-loai-mau', () => {
     const eye = sol.nodes.find((n) => n.id === 's-eye')!;
     const blueOnly: PuzzleAnswer = {
       nodes: [eye],
-      wires: [sol.wires[0]!, { id: 'x', from: { node: 's-eye', port: 'match' }, to: { node: 'hands', port: 'grab' } }],
+      wires: [sol.wires[0]!, { id: 'x', from: { node: 's-eye', port: 'match' }, to: { node: 'gate', port: 'a' } }],
     };
     expect(runLevel(level07, blueOnly).outcome).not.toBe('win');
   });
@@ -94,7 +94,7 @@ describe('level 7: phan-loai-mau', () => {
     it('an over-built answer with the decoy wins but earns 2 stars; the solution earns 3', () => {
       const over: PuzzleAnswer = {
         nodes: [...sol.nodes, or],
-        wires: [...sol.wires.filter((w) => w.id !== 'sw5'), wire(['s-and', 'out'], ['p-decoy', 'a']), wire(['p-decoy', 'out'], ['hands', 'grab'])],
+        wires: [...sol.wires.filter((w) => w.id !== 'sw5'), wire(['s-and', 'out'], ['p-decoy', 'a']), wire(['p-decoy', 'out'], ['gate', 'a'])],
       };
       expect(piecesUsed(over)).toBe(level07.par + 1);
       expect(runLevel(level07, over).outcome).toBe('win');
@@ -105,12 +105,12 @@ describe('level 7: phan-loai-mau', () => {
     it('every wiring of at most two pieces fails to win', () => {
       const pieces = [eye, not, and, or];
       const outs: [string, string][] = [['robot', 'self'], ['hands', 'holding'], ['s-eye', 'match'], ['s-eye', 'index'], ['s-free', 'out'], ['s-and', 'out'], ['p-decoy', 'out']];
-      const ins: [string, string][] = [['hands', 'grab'], ['s-eye', 'who'], ['s-free', 'in'], ['s-and', 'a'], ['s-and', 'b'], ['p-decoy', 'a'], ['p-decoy', 'b']];
+      const ins: [string, string][] = [['gate', 'a'], ['s-eye', 'who'], ['s-free', 'in'], ['s-and', 'a'], ['s-and', 'b'], ['p-decoy', 'a'], ['p-decoy', 'b']];
       let tried = 0;
       for (let i = 0; i < pieces.length; i++) {
         for (let j = i; j < pieces.length; j++) {
           const nodes = j === i ? [pieces[i]!] : [pieces[i]!, pieces[j]!];
-          const alive = new Set(['robot', 'hands', ...nodes.map((n) => n.id)]);
+          const alive = new Set(['robot', 'hands', 'gate', ...nodes.map((n) => n.id)]);
           const cand = [];
           for (const o of outs) {
             for (const t of ins) {
@@ -118,9 +118,9 @@ describe('level 7: phan-loai-mau', () => {
               cand.push(wire(o, t));
             }
           }
-          const grabs = cand.filter((w) => w.to.node === 'hands');
-          const others = cand.filter((w) => w.to.node !== 'hands');
-          // One wire into "Nhấc lên", up to two more anywhere.
+          const grabs = cand.filter((w) => w.to.node === 'gate');
+          const others = cand.filter((w) => w.to.node !== 'gate');
+          // One wire into the locked "Và" that feeds "Nhấc lên", up to two more anywhere.
           for (const g of grabs) {
             for (let a = -1; a < others.length; a++) {
               for (let b = a; b < others.length; b++) {
