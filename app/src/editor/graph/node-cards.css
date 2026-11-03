@@ -24,7 +24,7 @@
 }
 
 /* header band */
-.wc .wc-node-head { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: var(--cc); color: #10151b; border-radius: 15px 15px 0 0; cursor: move; }
+.wc .wc-node-head { position: relative; display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: var(--cc); color: #10151b; border-radius: 15px 15px 0 0; cursor: move; }
 .wc .wc-node .wc-tile { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .35); color: #10151b; }
 .wc .wc-node .wc-tile svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; }

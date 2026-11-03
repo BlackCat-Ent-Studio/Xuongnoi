@@ -12,12 +12,15 @@ import { buildRows, filterRows, levelOf, sectionsByCategory, sectionsByLevel, ty
 import { HANDBOOK_TEXT as T } from './handbook-text-vi';
 import { SOLID_BODIES_PAGE, SOLID_BODIES_TOPIC } from './topic-solid-bodies';
 import './handbook-dialog.css';
+import './handbook-standalone.css';
 
 export interface HandbookDialogDeps {
   /** Replaces the current game with this board, like opening a sample. */
   openBoard(board: Board): void;
   /** Starts a course lesson; false when the id is unknown. */
   startLesson(lessonId: string): boolean;
+  /** Reading only (puzzle page): no "Thử ngay" and no lesson button, and the page gets its own colours. */
+  readOnly?: boolean;
 }
 
 export interface HandbookDialog {
@@ -72,7 +75,7 @@ function table(cols: readonly string[], rows: HTMLElement[][]): HTMLElement {
 const text = (s: string, className = ''): HTMLElement => h('span', className, s);
 
 export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
-  const overlay = h('div', 'modal-overlay');
+  const overlay = h('div', deps.readOnly ? 'modal-overlay hb-standalone' : 'modal-overlay');
   overlay.hidden = true;
   const box = h('div', 'modal hb-modal');
   box.setAttribute('role', 'dialog');
@@ -301,7 +304,7 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
         for (const tip of entry.tips) ul.append(h('li', '', tip));
         nodes.push(section(T.tips, ul));
       }
-      const bar = actions(entry);
+      const bar = deps.readOnly ? null : actions(entry);
       if (bar) nodes.push(bar);
     }
     page.replaceChildren(...nodes);

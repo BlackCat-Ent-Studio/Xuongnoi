@@ -1,6 +1,7 @@
 import { getNodeDef } from '../../engine/registry';
 import { NODE_CATEGORY_LABELS } from '../../nodes';
 import type { GraphNode, NodeCategory, NodeDef, PortDef } from '../../engine/types';
+import { createCardHelpButton } from '../../handbook/card-help-popup';
 import { h } from '../dom';
 import { GRAPH_TEXT, missingBadge } from './graph-text-vi';
 import type { PortDir } from './port-compat';
@@ -82,6 +83,8 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   head.append(tile, title);
   const missing = def ? def.inputs.filter((p) => missingPorts.has(p.id)).length : 0;
   if (missing > 0) head.append(h('span', 'wc-miss-badge', missingBadge(missing)));
+  // Sits on the header's corner without taking room, so the card keeps its footprint.
+  if (def) head.append(createCardHelpButton(node.kind, def.label));
   box.append(head);
 
   const dots = new Map<string, HTMLElement>();

@@ -2,6 +2,7 @@ import { getNodeDef } from '../../engine/registry';
 import type { GraphNode, ParamDef, PortRef, PortType, Runtime, Wire } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { estimateNodeSize } from '../../editor/graph/graph-geometry';
+import { createCardHelpButton } from '../../handbook/card-help-popup';
 import { buildNodeView } from '../../editor/graph/node-view';
 import type { PortDir } from '../../editor/graph/port-compat';
 import { createWireEnergy, isEnergyEnabled } from '../../editor/graph/wire-energy';
@@ -914,12 +915,15 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     level.tray.forEach((piece, slot) => {
       const def = getNodeDef(piece.kind);
       const n = left[slot] ?? 0;
+      const wrap = h('div', 'pz-chip-wrap');
       const chip = h('button', `pz-chip cat-${def?.category ?? 'logic'}`);
       chip.type = 'button';
       chip.disabled = n <= 0 || running;
       chip.append(h('b', '', def?.label ?? piece.kind), h('span', '', n > 0 ? PUZZLE_UI_TEXT.trayLeft(n) : PUZZLE_UI_TEXT.trayUsed));
       chip.addEventListener('click', () => addFromTray(slot));
-      trayEl.append(chip);
+      wrap.append(chip);
+      if (def) wrap.append(createCardHelpButton(piece.kind, def.label));
+      trayEl.append(wrap);
     });
   }
 

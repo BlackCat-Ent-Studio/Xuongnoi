@@ -1,5 +1,7 @@
 import { createGameView } from './render/game-view';
 import { registerAllNodes } from './nodes';
+import { HANDBOOK_OPEN_EVENT } from './handbook/handbook-request';
+import type { HandbookDialog } from './handbook/handbook-dialog';
 import { h } from './editor/dom';
 import { PUZZLE_LEVELS } from './puzzle/levels';
 import type { PuzzleLevel } from './puzzle/types';
@@ -155,6 +157,16 @@ function unlockOnce(): void {
 }
 document.addEventListener('pointerdown', unlockOnce, true);
 document.addEventListener('keydown', unlockOnce, true);
+
+// The "?" on cards and tray chips asks for the full handbook; it is built the first time someone wants it.
+let handbookDialog: Promise<HandbookDialog> | null = null;
+document.addEventListener(HANDBOOK_OPEN_EVENT, (e) => {
+  const kind = (e as CustomEvent<string>).detail;
+  handbookDialog ??= import('./handbook/handbook-dialog').then((m) => m.createHandbookDialog({ openBoard: () => undefined, startLesson: () => false, readOnly: true }));
+  handbookDialog.then((d) => d.open(kind)).catch(() => {
+    handbookDialog = null;
+  });
+});
 
 // One soft "tap" for every button, except the ones that make their own sound.
 const OWN_SOUND = '.pz-chip, .pz-hint-btn, .pz-x, .pz-btn.run';
