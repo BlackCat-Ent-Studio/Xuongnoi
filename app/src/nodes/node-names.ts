@@ -285,6 +285,25 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'nearest-item': {
+    vi: 'Tìm vật gần nhất',
+    en: 'Nearest Item',
+    ports: {
+      in: {
+        'who': ['Ai', 'Who'],
+        'pause': ['Tạm nghỉ', 'Pause'],
+        'i1': ['Bỏ qua đồ trên ô 1', 'Ignore slot 1'],
+        'i2': ['Bỏ qua đồ trên ô 2', 'Ignore slot 2'],
+        'i3': ['Bỏ qua đồ trên ô 3', 'Ignore slot 3'],
+        'i4': ['Bỏ qua đồ trên ô 4', 'Ignore slot 4'],
+      },
+      out: {
+        'item': ['Vật gần nhất', 'Nearest item'],
+        'found': ['Có', 'Found'],
+        'distance': ['Khoảng cách', 'Distance'],
+      },
+    },
+  },
   'next-free-slot': {
     vi: 'Ô trống kế tiếp',
     en: 'Next Free Slot',

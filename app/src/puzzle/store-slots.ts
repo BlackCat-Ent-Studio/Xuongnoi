@@ -1,5 +1,6 @@
-import type { EntityView, GraphNode, Params, Vec3 } from '../engine/types';
-import { numParam, vec3Param } from '../nodes/util';
+import type { EntityView, GraphNode, Vec3 } from '../engine/types';
+import { unitToward } from '../nodes/steering';
+import { handReach } from './world-options';
 
 /**
  * Store slots: the marked places on a store pad where delivered crates are set down, one crate per slot.
@@ -68,23 +69,10 @@ export function slotMarkNodes(def: StoreSlotsDef, cardPos: (i: number) => { x: n
   }));
 }
 
-/** Params of the delivering brain ('slot-patrol') for this definition. */
-export function slotBrainParams(def: StoreSlotsDef, wait: number): Params {
-  return {
-    pickup: def.pickup,
-    slotFirst: { x: def.first.x, y: 0.5, z: def.first.z },
-    slotStep: { x: def.step.x, y: 0, z: def.step.z },
-    slotCount: def.count,
-    wait,
-  };
-}
-
-/** Reads the slot definition back out of the brain's params. */
-export function readSlotParams(params: Params): { pickup: Vec3; slots: SlotRect[] } {
-  const first = vec3Param(params, 'slotFirst', { x: 0, y: 0.5, z: 0 });
-  const step = vec3Param(params, 'slotStep', { x: 1, y: 0, z: 0 });
-  return {
-    pickup: vec3Param(params, 'pickup', { x: 0, y: 0.5, z: 0 }),
-    slots: slotRects({ first, step, count: numParam(params, 'slotCount', 1) }),
-  };
+/** Where the robot must stand so a crate in its hands is over the middle of `slot`, walking in from `pickup`. */
+export function parkingSpot(slot: SlotRect, pickup: Vec3, crateSize: Vec3, y: number): Vec3 {
+  const dir = unitToward('3d', pickup, { x: slot.x, y, z: slot.z });
+  if (!dir) return { x: slot.x, y, z: slot.z };
+  const reach = handReach(crateSize);
+  return { x: slot.x - dir.ux * reach, y, z: slot.z - dir.uz * reach };
 }

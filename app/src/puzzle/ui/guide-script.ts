@@ -33,9 +33,11 @@ const KIND_PURPOSE: Record<string, string> = {
   math: 'cộng hai số lại.',
 };
 
-/** The cat's opening line per level. Levels 1, 5 (the first 3D level) and 7 (the last, built by the player alone) have the full guide; the others get one step per "?". */
+/** The cat's opening line per level. Levels 1, 2, 4 (new circuits built by the player), 5 (the first 3D level) and 7 (the last, built by the player alone) have the full guide; the others get one step per "?". */
 const LEVEL_INTRO: Record<string, string> = {
   'bot-dau-tien': 'Chào bạn! Mình là Mèo Mun. Làm theo bàn tay nhé!',
+  'cua-kho': 'Bot phải qua cửa kho. Bạn tự nối cả mạch. Mình chỉ từng bước nhé!',
+  'hai-nut-mot-cua': 'Hai bot, hai nút, một cửa! Mình chỉ từng bước nhé!',
   'du-ba-thung': 'Ôi, màn này là 3D! Camera nhìn từ trên cao, hơi nghiêng. Mình cùng làm nhé!',
   'ne-linh-gac': 'Lính gác nhìn theo hướng đi! Bạn tự nối bộ não cho mèo nhỏ. Mình chỉ từng bước nhé!',
   'phan-loai-mau': 'Màn cuối! Bạn tự nối cả mạch cho rô-bốt. Mình chỉ từng bước nhé!',
@@ -49,29 +51,33 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     s3: 'Cho mảnh Đi tới lái bot!',
   },
   'cua-kho': {
-    s1: 'Nối Bot vào mảnh Chạm nhau.',
-    s2: 'Nối Nút đỏ vào Chạm nhau luôn.',
-    s3: 'Bot dẫm nút thì bật công tắc.',
-    s4: 'Công tắc bật thì cửa ẩn đi.',
+    s1: 'Nối Bot vào mảnh Đi tới.',
+    s2: 'Cờ là chỗ bot cần tới.',
+    s3: 'Cho Đi tới lái bot!',
+    s4: 'Nối Bot vào mảnh Chạm nhau.',
+    s5: 'Nối Nút đỏ vào Chạm nhau luôn.',
+    s6: 'Bot dẫm nút thì bật công tắc.',
+    s7: 'Công tắc bật thì cửa ẩn đi.',
   },
   'hai-nut-mot-cua': {
-    s1: 'Bot đầu nối vào Chạm nhau thứ nhất.',
-    s2: 'Nút 1 cũng nối vào Chạm nhau đó.',
-    s3: 'Bot thứ hai nối vào Chạm nhau thứ hai.',
-    s4: 'Nút 2 nối vào Chạm nhau thứ hai.',
-    s5: 'Chạm nhau đầu vào mảnh Hoặc.',
-    s6: 'Chạm nhau hai vào mảnh Hoặc nữa.',
-    s7: 'Hoặc bật thì cửa mở!',
+    s1: 'Nối Bot A vào mảnh Đi tới.',
+    s2: 'Cờ là chỗ Bot A cần tới.',
+    s3: 'Cho Đi tới lái Bot A.',
+    s4: 'Nối Bot B vào mảnh Đi tới thứ hai.',
+    s5: 'Nút 2 là chỗ Bot B cần tới.',
+    s6: 'Cho Đi tới lái Bot B.',
+    s7: 'Bot B tới nút 2 rồi, Bot A mới được đi.',
+    s8: 'Nối Bot A vào mảnh Chạm nhau.',
+    s9: 'Nối Nút 1 vào Chạm nhau luôn.',
+    s10: 'Bot A đứng trên nút 1 thì báo cho Hoặc.',
+    s11: 'Bot B tới nút 2 cũng báo cho Hoặc.',
+    s12: 'Một trong hai bật thì cửa mở!',
   },
   'nhat-sao': {
-    s1: 'Sao 1 chạm thì vào mảnh Hoặc.',
-    s2: 'Sao 2 cũng vào mảnh Hoặc.',
-    s3: 'Gom tiếp sang mảnh Hoặc thứ hai.',
-    s4: 'Sao 3 vào mảnh Hoặc thứ hai.',
-    s5: 'Nhặt sao nào, bộ đếm cộng 1.',
-    s6: 'Đưa số đếm sang So sánh.',
-    s7: 'Nối con số 3 vào So sánh.',
-    s8: 'Đủ 3 sao thì cổng ẩn đi!',
+    s1: 'Nối Mèo vào Chạy theo tuyến.',
+    s2: 'Tuyến lái mèo đi ngang.',
+    s3: 'Mèo tới một sao thì bộ đếm cộng 1.',
+    s4: 'Đếm đủ thì cổng ẩn đi!',
   },
   'du-ba-thung': {
     sw1: 'Số thùng trong kho vào Số A.',
@@ -125,6 +131,8 @@ export const GUIDE_TEXT = {
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
   'ne-linh-gac': 'Giỏi quá! Mèo nhỏ lẻn qua mà không bị thấy!',
+  'cua-kho': 'Giỏi lắm! Cửa mở mãi cho bot rồi!',
+  'hai-nut-mot-cua': 'Giỏi lắm! Cả hai bot qua cửa rồi!',
   'phan-loai-mau': 'Giỏi quá! Bạn tự nối cả mạch rồi!',
 };
 
@@ -139,7 +147,7 @@ export type GuideStep =
   | { type: 'wire'; text: string; wire: Wire }
   | { type: 'run'; text: string };
 
-/** Does this level have the full guide? Levels 1, 5 and 7 do; the other levels give one step per "?". */
+/** Does this level have the full guide? Levels 1, 2, 4, 5 and 7 do; the other levels give one step per "?". */
 export const hasGuide = (level: PuzzleLevel): boolean => level.id in LEVEL_INTRO;
 
 /** Stable identity of a solution step (not tied to positions), used to count each "?" reveal once. Null for steps that are not solution work. */

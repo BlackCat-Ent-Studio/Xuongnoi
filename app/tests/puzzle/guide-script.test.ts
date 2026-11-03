@@ -45,10 +45,10 @@ function perform(step: GuideStep, level: (typeof GUIDED)[number], state: BoardSt
 }
 
 describe('guide steps', () => {
-  it('covers the 7 levels; levels 1, 5 and 7 have the full guide, the others give one step per "?"', () => {
+  it('covers the 7 levels; levels 1, 2, 4, 5 and 7 have the full guide, the others give one step per "?"', () => {
     expect(GUIDED).toHaveLength(7);
     expect(PUZZLE_LEVELS).toHaveLength(7);
-    expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1, 5, 6, 7]);
+    expect(PUZZLE_LEVELS.filter(hasGuide).map((l) => l.order)).toEqual([1, 2, 4, 5, 6, 7]);
     for (const level of PUZZLE_LEVELS.filter((l) => !hasGuide(l))) {
       expect(buildGuideSteps(level)).toEqual([]);
       expect(solutionSteps(level).length).toBeGreaterThan(0); // the "?" hint still works there
@@ -137,7 +137,7 @@ describe('guide steps', () => {
     const level6 = GUIDED.find((l) => l.order === 6);
     const level7 = GUIDED.find((l) => l.order === 7);
     const params = (l: typeof level3) => (l ? solutionSteps(l).filter((s) => s.type === 'param') : []);
-    expect(params(level3).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['value', 3]]);
+    expect(params(level3).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['target', 3]]);
     expect(params(level6)).toEqual([]);
     expect(params(level7).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['want', 2]]);
     expect(params(GUIDED.find((l) => l.order === 1))).toEqual([]);

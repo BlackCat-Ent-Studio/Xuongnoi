@@ -258,9 +258,10 @@ describe('physics invariants: a win comes for the stated reason', () => {
     'hai-nut-mot-cua': (b) => {
       const bad: string[] = [];
       const door = by(b, 'door').pos.x;
-      if (!touching(b, 'bot-b', 'flag')) bad.push('bot B is not at the flag');
+      if (!touching(b, 'bot-a', 'flag')) bad.push('bot A is not at the flag');
+      if (!touching(b, 'bot-b', 'button-b')) bad.push('bot B is not on button 2');
       for (const bot of ['bot-a', 'bot-b']) if (by(b, bot).pos.x < door) bad.push(`${bot} is still before the door`);
-      if (by(b, 'bot-a').pos.x < by(b, 'button-b').pos.x) bad.push('bot A has not come up past button 2');
+      if (by(b, 'bot-a').pos.x > by(b, 'bot-b').pos.x) bad.push('bot A got past bot B');
       return bad;
     },
     'du-ba-thung': (b, level) => {

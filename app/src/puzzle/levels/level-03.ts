@@ -1,6 +1,9 @@
-import type { GraphNode, Wire } from '../../engine/types';
+import type { GraphNode } from '../../engine/types';
 import type { PuzzleLevel } from '../types';
 import { PUZZLE_LOOKS } from '../types';
+import { groundParams, sceneryMaker, wire } from './player-built-kit';
+
+const scenery = sceneryMaker();
 
 const STARS = [
   { id: 'star-1', x: -4 },
@@ -8,34 +11,44 @@ const STARS = [
   { id: 'star-3', x: 4 },
 ] as const;
 
-/** Each locked star has its own locked touch sensor: when the cat touches it, the star hides. */
+/** Stars are blocks of type "pickup" so the cat walks through them. Each star hides itself when the cat touches it (scenery: the pick-up effect). */
 const starNodes: GraphNode[] = STARS.flatMap((s, k): GraphNode[] => [
   {
     id: s.id,
     kind: 'block',
-    params: { name: `Ngôi sao ${k + 1}`, position: { x: s.x, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
-    pos: { x: 30, y: 20 + k * 100 },
+    params: { name: `Sao ${k + 1}`, position: { x: s.x, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup' },
+    pos: { x: 10, y: 140 + k * 80 },
   },
-  { id: `touch-${s.id}`, kind: 'touch', params: {}, pos: { x: 230, y: 20 + k * 130 } },
+  scenery(`touch-${s.id}`, 'touch', {}),
 ]);
 
-const starWires: Wire[] = STARS.flatMap((s, k): Wire[] => [
-  { id: `bs${k}a`, from: { node: 'cat', port: 'self' }, to: { node: `touch-${s.id}`, port: 'a' } },
-  { id: `bs${k}b`, from: { node: s.id, port: 'self' }, to: { node: `touch-${s.id}`, port: 'b' } },
-  { id: `bs${k}c`, from: { node: `touch-${s.id}`, port: 'began' }, to: { node: s.id, port: 'hide' } },
-]);
+/** The cat walks the route star 1, star 2, star 3, then the flag. The walk is a tray piece with these points already set. */
+const ROUTE_PARAMS: GraphNode['params'] = {
+  count: 4,
+  p1: { x: -4, y: 0.5, z: 0 },
+  p2: { x: 0, y: 0.5, z: 0 },
+  p3: { x: 4, y: 0.5, z: 0 },
+  p4: { x: 11, y: 0.5, z: 0 },
+  speed: 4,
+  lookAhead: 0,
+};
 
 /**
- * Level 3 (nhat-sao): count three star pickups, then open the gate (side view, the same wooden door as level 2). Stars are blocks of type "pickup" so the cat
- * walks through them. The gate's "Ẩn suốt lúc bật" follows the compare signal (it closes again when the signal drops)
- * and the compare is "bằng", so only the exact number 3 keeps it open for good; the tray constant starts at 5.
+ * Level 3 (nhat-sao): count three stars, then open the gate (side view, the same wooden door as level 2). The board shows
+ * the cat, the three stars and the gate. The player makes the cat walk the route (one point per star, then the flag),
+ * counts every point it reaches and joins the counter's "Đã đủ" to the gate. The counter's goal starts at 5 and the
+ * player sets it to 3; the gate's "Ẩn suốt lúc bật" follows "Đã đủ", which stays on once the goal is reached.
+ * The stars hiding when touched, the flag and the win rule (cat touches the flag) are scenery.
+ *
+ * Why no "So sánh": a compare whose two inputs are fed by one "Số cố định" is always true, which opens the gate with
+ * no counting at all (a cheaper win), so the counter's own "Đã đủ" does the comparing.
  */
 export const level03: PuzzleLevel | null = {
   id: 'nhat-sao',
   order: 3,
   title: 'Nhặt sao',
-  task: 'Mèo tự đi qua 3 ngôi sao rồi tới cổng. Cổng chỉ mở khi mèo đã nhặt đủ 3 sao. Hãy đếm sao và đặt số là 3.',
-  hint: 'Gom 3 tín hiệu "Mới chạm" bằng hai mảnh "Hoặc" rồi đưa vào Bộ đếm. So sánh số đếm với Số cố định 3, rồi nối vào "Ẩn suốt lúc bật" của cổng.',
+  task: 'Mèo đi qua 3 ngôi sao rồi tới cổng. Cổng chỉ mở khi mèo đã nhặt đủ 3 sao. Bạn tự nối mạch: cho mèo đi, đếm số sao, đặt mục tiêu là 3.',
+  hint: '"Chạy theo tuyến" cho mèo đi qua từng sao. Mỗi lần "Tới điểm" thì "Bộ đếm" cộng 1. Chỉnh "Mục tiêu" về 3, rồi nối "Đã đủ" vào "Ẩn suốt lúc bật" của cổng.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.catChibi],
   base: {
@@ -43,69 +56,40 @@ export const level03: PuzzleLevel | null = {
       {
         id: 'cat',
         kind: 'character',
-        params: { name: 'Mèo nhỏ', position: { x: -8, y: 1, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
-        pos: { x: 30, y: 400 },
-      },
-      {
-        id: 'route',
-        kind: 'route-follow',
-        params: {
-          count: 4,
-          p1: { x: -4, y: 0.5, z: 0 },
-          p2: { x: 0, y: 0.5, z: 0 },
-          p3: { x: 4, y: 0.5, z: 0 },
-          p4: { x: 11, y: 0.5, z: 0 },
-          speed: 4,
-          lookAhead: 0,
-        },
-        pos: { x: 230, y: 400 },
+        params: { name: 'Mèo', position: { x: -8, y: 1, z: 0 }, speed: 4, color: '#f59e0b', look: PUZZLE_LOOKS.catChibi, role: 'bot' },
+        pos: { x: 10, y: 20 },
       },
       ...starNodes,
       {
         id: 'gate',
         kind: 'block',
         params: { name: 'Cổng', position: { x: 8, y: 4, z: 0 }, size: { x: 0.8, y: 8, z: 1 }, color: '#92400e', type: 'solid' },
-        pos: { x: 800, y: 30 },
+        pos: { x: 10, y: 400 },
       },
-      {
-        id: 'goal',
-        kind: 'block',
-        params: { name: 'Cờ đích', position: { x: 11, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#22c55e', type: 'pickup' },
-        pos: { x: 430, y: 400 },
-      },
-      { id: 'touch-goal', kind: 'touch', params: {}, pos: { x: 620, y: 400 } },
-      {
-        id: 'ground',
-        kind: 'block',
-        params: { name: 'Mặt đất', position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d', type: 'solid' },
-        pos: { x: 430, y: 500 },
-      },
-      {
-        id: 'end',
-        kind: 'win-lose',
-        params: { winMessage: 'Mèo nhặt đủ 3 sao và qua cổng!', loseMessage: 'Thua mất rồi!' },
-        pos: { x: 800, y: 440 },
-      },
+      scenery('goal', 'block', { name: 'Cờ đích', position: { x: 11, y: 0.6, z: 0 }, size: { x: 0.8, y: 1.2, z: 0.8 }, color: '#22c55e', type: 'pickup' }),
+      scenery('touch-goal', 'touch', {}),
+      scenery('ground', 'block', groundParams(30)),
+      scenery('end', 'win-lose', { winMessage: 'Mèo nhặt đủ 3 sao và qua cổng!', loseMessage: 'Thua mất rồi!' }),
     ],
     wires: [
-      { id: 'b1', from: { node: 'cat', port: 'self' }, to: { node: 'route', port: 'self' } },
-      { id: 'b2', from: { node: 'route', port: 'moveX' }, to: { node: 'cat', port: 'moveX' } },
-      { id: 'b3', from: { node: 'route', port: 'moveY' }, to: { node: 'cat', port: 'moveY' } },
-      ...starWires,
-      { id: 'b4', from: { node: 'cat', port: 'self' }, to: { node: 'touch-goal', port: 'a' } },
-      { id: 'b5', from: { node: 'goal', port: 'self' }, to: { node: 'touch-goal', port: 'b' } },
-      { id: 'b6', from: { node: 'touch-goal', port: 'touching' }, to: { node: 'end', port: 'win' } },
+      ...STARS.flatMap((s, k) => [
+        wire(`bs${k}a`, ['cat', 'self'], [`touch-${s.id}`, 'a']),
+        wire(`bs${k}b`, [s.id, 'self'], [`touch-${s.id}`, 'b']),
+        wire(`bs${k}c`, [`touch-${s.id}`, 'began'], [s.id, 'hide']),
+      ]),
+      wire('b4', ['cat', 'self'], ['touch-goal', 'a']),
+      wire('b5', ['goal', 'self'], ['touch-goal', 'b']),
+      wire('b6', ['touch-goal', 'touching'], ['end', 'win']),
     ],
   },
   shownPorts: {
-    cat: { in: [], out: [] },
-    route: { in: [], out: [] },
-    'star-1': { in: [], out: [] },
-    'star-2': { in: [], out: [] },
-    'star-3': { in: [], out: [] },
-    'touch-star-1': { in: [], out: ['began'] },
-    'touch-star-2': { in: [], out: ['began'] },
-    'touch-star-3': { in: [], out: ['began'] },
+    cat: { in: ['moveX'], out: ['self'] },
+    'star-1': { in: [], out: ['self'] },
+    'star-2': { in: [], out: ['self'] },
+    'star-3': { in: [], out: ['self'] },
+    'touch-star-1': { in: [], out: [] },
+    'touch-star-2': { in: [], out: [] },
+    'touch-star-3': { in: [], out: [] },
     gate: { in: ['hiddenWhile'], out: [] },
     goal: { in: [], out: [] },
     'touch-goal': { in: [], out: [] },
@@ -113,32 +97,25 @@ export const level03: PuzzleLevel | null = {
     end: { in: [], out: [] },
   },
   tray: [
-    { kind: 'or', count: 3 },
+    { kind: 'route-follow', count: 1, params: ROUTE_PARAMS },
     { kind: 'counter', count: 1 },
-    { kind: 'compare', count: 1, params: { op: 'eq' } },
-    { kind: 'const', count: 1, params: { value: 5 } },
+    // Spare piece: "Và" looks useful for gathering signals but nothing here needs it.
+    { kind: 'and', count: 1 },
   ],
-  editable: [{ kind: 'const', paramId: 'value' }],
-  par: 5,
+  editable: [{ kind: 'counter', paramId: 'target' }],
+  par: 2,
   freeHints: 2,
   timeLimit: 30,
   solution: {
     nodes: [
-      { id: 'p-or1', kind: 'or', params: {}, pos: { x: 230, y: 150 } },
-      { id: 'p-or2', kind: 'or', params: {}, pos: { x: 400, y: 150 } },
-      { id: 'p-count', kind: 'counter', params: {}, pos: { x: 570, y: 150 } },
-      { id: 'p-cmp', kind: 'compare', params: { op: 'eq' }, pos: { x: 570, y: 280 } },
-      { id: 'p-const', kind: 'const', params: { value: 3 }, pos: { x: 400, y: 300 } },
+      { id: 'p-route', kind: 'route-follow', params: ROUTE_PARAMS, pos: { x: 400, y: 20 } },
+      { id: 'p-count', kind: 'counter', params: { target: 3 }, pos: { x: 400, y: 200 } },
     ],
     wires: [
-      { id: 's1', from: { node: 'touch-star-1', port: 'began' }, to: { node: 'p-or1', port: 'a' } },
-      { id: 's2', from: { node: 'touch-star-2', port: 'began' }, to: { node: 'p-or1', port: 'b' } },
-      { id: 's3', from: { node: 'p-or1', port: 'out' }, to: { node: 'p-or2', port: 'a' } },
-      { id: 's4', from: { node: 'touch-star-3', port: 'began' }, to: { node: 'p-or2', port: 'b' } },
-      { id: 's5', from: { node: 'p-or2', port: 'out' }, to: { node: 'p-count', port: 'up' } },
-      { id: 's6', from: { node: 'p-count', port: 'value' }, to: { node: 'p-cmp', port: 'a' } },
-      { id: 's7', from: { node: 'p-const', port: 'value' }, to: { node: 'p-cmp', port: 'b' } },
-      { id: 's8', from: { node: 'p-cmp', port: 'out' }, to: { node: 'gate', port: 'hiddenWhile' } },
+      wire('s1', ['cat', 'self'], ['p-route', 'self']),
+      wire('s2', ['p-route', 'moveX'], ['cat', 'moveX']),
+      wire('s3', ['p-route', 'reached'], ['p-count', 'up']),
+      wire('s4', ['p-count', 'reached'], ['gate', 'hiddenWhile']),
     ],
   },
 };

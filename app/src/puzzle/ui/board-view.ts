@@ -208,7 +208,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     });
     let result = separateBoxes([], area);
     cardScale = c0;
-    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58]) {
+    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58, c0 * 0.52, c0 * 0.46]) {
       cardScale = c;
       result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8, blocked);
       if (result.fits) break;

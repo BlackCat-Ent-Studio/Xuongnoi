@@ -33,6 +33,7 @@ import { vehicleNode } from './vehicle';
 import { randomNode } from './random';
 import { latchNode } from './latch';
 import { nextFreeSlotNode } from './next-free-slot';
+import { nearestItemNode } from './nearest-item';
 import { mapRangeNode } from './map-range';
 import { zoneSensorNode } from './zone-sensor';
 import { cargoNode } from './cargo';
@@ -113,6 +114,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   sightForecastNode,
   colorSensorNode,
   nextFreeSlotNode,
+  nearestItemNode,
   cameraNode,
   teleportNode,
   portalNode,

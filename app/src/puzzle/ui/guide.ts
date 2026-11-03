@@ -172,22 +172,71 @@ export function createGuide(opts: GuideOptions): Guide {
     return board.paramEl(nodeId, step.paramId);
   }
 
+  /**
+   * Puts the cat and her bubble on the side of the screen with free space: the first spot (screen px) that stays
+   * clear of the spotlit ring, else the one that covers it least. Always clamped inside the screen. No ring: top left.
+   */
+  function placeMascot(ring: { x: number; y: number; w: number; h: number } | null): void {
+    const S = screen.getBoundingClientRect();
+    const mw = mascotEl.offsetWidth;
+    const mh = mascotEl.offsetHeight;
+    if (mw === 0 || mh === 0) return;
+    const hudBottom = screen.querySelector('.pz-hud')?.getBoundingClientRect().bottom;
+    const gap = Math.max(8, S.width * 0.014);
+    const topY = (hudBottom !== undefined ? hudBottom - S.top : 0) + gap;
+    const clampX = (x: number): number => Math.max(gap, Math.min(x, S.width - mw - gap));
+    const clampY = (y: number): number => Math.max(gap, Math.min(y, S.height - mh - gap));
+    const left = gap;
+    const right = S.width - mw - gap;
+    const center = (S.width - mw) / 2;
+    const bottomY = S.height - mh - gap;
+    const midY = (S.height - mh) / 2;
+    let spots: Array<[number, number]> = [[left, topY]];
+    if (ring) {
+      const lowTarget = ring.y + ring.h / 2 > S.height * 0.45;
+      const rows = lowTarget ? [topY, midY, bottomY] : [bottomY, midY, topY];
+      spots = rows.flatMap((y) => [left, right, center].map((x): [number, number] => [x, y]));
+      // beside the target too: above it, below it, left of it, right of it
+      spots.push([ring.x + ring.w / 2 - mw / 2, ring.y - mh - gap], [ring.x + ring.w / 2 - mw / 2, ring.y + ring.h + gap], [ring.x - mw - gap, ring.y + ring.h / 2 - mh / 2], [ring.x + ring.w + gap, ring.y + ring.h / 2 - mh / 2]);
+    }
+    const margin = 6;
+    const overlap = (x: number, y: number): number => {
+      if (!ring) return 0;
+      const ox = Math.min(x + mw, ring.x + ring.w + margin) - Math.max(x, ring.x - margin);
+      const oy = Math.min(y + mh, ring.y + ring.h + margin) - Math.max(y, ring.y - margin);
+      return ox > 0 && oy > 0 ? ox * oy : 0;
+    };
+    let best = spots[0]!;
+    let bestScore = Infinity;
+    for (const [sx, sy] of spots) {
+      const x = clampX(sx);
+      const y = clampY(sy);
+      const o = overlap(x, y);
+      if (o < bestScore) {
+        bestScore = o;
+        best = [x, y];
+        if (o === 0) break;
+      }
+    }
+    Object.assign(mascotEl.style, { left: `${best[0]}px`, top: `${best[1]}px`, bottom: 'auto' });
+  }
+
   function aim(el: HTMLElement | null): void {
     const r = el?.isConnected ? el.getBoundingClientRect() : null;
     if (!r || r.width === 0 || r.height === 0) {
       root.classList.add('no-target');
-      root.classList.remove('mascot-low');
+      placeMascot(null);
       return;
     }
     root.classList.remove('no-target');
     const S = screen.getBoundingClientRect();
-    root.classList.toggle('mascot-low', r.top + r.height / 2 - S.top < S.height * 0.45);
     const pad = Math.max(10, Math.min(r.width, r.height) * 0.25);
     const w = Math.max(MIN_RING, r.width + pad * 2);
     const hh = Math.max(MIN_RING, r.height + pad * 2);
     const cx = r.left - S.left + r.width / 2;
     const cy = r.top - S.top + r.height / 2;
     Object.assign(spot.style, { left: `${cx - w / 2}px`, top: `${cy - hh / 2}px`, width: `${w}px`, height: `${hh}px` });
+    placeMascot({ x: cx - w / 2, y: cy - hh / 2, w, h: hh });
     if (hand) {
       // Keep the whole hand on screen when the target sits near the bottom edge.
       const handH = hand.getBoundingClientRect().height;
@@ -289,6 +338,7 @@ export function createGuide(opts: GuideOptions): Guide {
     showBoard();
     setShown(true, { tip: true });
     speak(line);
+    placeMascot(null);
     tipTimer = window.setTimeout(nextTip, TIP_SHOW_MS);
   }
 
@@ -375,6 +425,7 @@ export function createGuide(opts: GuideOptions): Guide {
       board.setGhost(null);
       setShown(true, { bye: true });
       speak(winLine(level), 'happy');
+      placeMascot(null);
       byeTimer = window.setTimeout(stop, BYE_SHOW_MS);
     },
     dispose() {

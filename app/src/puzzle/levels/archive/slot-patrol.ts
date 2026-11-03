@@ -1,14 +1,14 @@
-import type { EntityView, NodeDef, Vec3, WorldApi } from '../engine/types';
-import { STILL, followPath, liveCharacter, planarDelta, unitToward, hasArrived, MIN_STOP_DISTANCE, type SteerMemo } from '../nodes/steering';
-import { asBool, asObject, numParam } from '../nodes/util';
-import { nextEmptySlot, readSlotParams, type SlotRect } from './store-slots';
-import { handReach } from './world-options';
+import { getNodeDef, registerNode } from '../../../engine/registry';
+import type { EntityView, NodeDef, Params, Vec3, WorldApi } from '../../../engine/types';
+import { STILL, followPath, liveCharacter, planarDelta, hasArrived, MIN_STOP_DISTANCE, type SteerMemo } from '../../../nodes/steering';
+import { asBool, asObject, numParam, vec3Param } from '../../../nodes/util';
+import { nextEmptySlot, parkingSpot, slotRects, type SlotRect, type StoreSlotsDef } from '../../store-slots';
 
 /**
  * "Đi tuần về kho": a delivery brain for the puzzle levels. Like the patrol it walks between two ends and says
  * "Vừa tới đầu mút" on reaching one, but the store end is not a fixed point: it is the approach point of the next
- * EMPTY slot of the store, parked so the crate in the robot's hands is right over that slot's middle. Level data
- * only; it is registered by the puzzle game and never appears in the editor.
+ * EMPTY slot of the store, parked so the crate in the robot's hands is right over that slot's middle. It belongs
+ * to the archived workshop level only; that level registers it when it is loaded. It never appears in the editor.
  */
 
 interface SlotPatrolState {
@@ -22,12 +22,25 @@ const PARK_DISTANCE = 0.03;
 /** Half-size assumed for the crate while the hands are empty (the robot still walks to the store and back). */
 const DEFAULT_CRATE = 0.35;
 
-/** Where the robot must stand so a crate in its hands is over the middle of `slot`, walking in from `pickup`. */
-export function parkingSpot(slot: SlotRect, pickup: Vec3, crateSize: Vec3, y: number): Vec3 {
-  const dir = unitToward('3d', pickup, { x: slot.x, y, z: slot.z });
-  if (!dir) return { x: slot.x, y, z: slot.z };
-  const reach = handReach(crateSize);
-  return { x: slot.x - dir.ux * reach, y, z: slot.z - dir.uz * reach };
+/** Params of the delivering brain for this slot definition. */
+export function slotBrainParams(def: StoreSlotsDef, wait: number): Params {
+  return {
+    pickup: def.pickup,
+    slotFirst: { x: def.first.x, y: 0.5, z: def.first.z },
+    slotStep: { x: def.step.x, y: 0, z: def.step.z },
+    slotCount: def.count,
+    wait,
+  };
+}
+
+/** Reads the slot definition back out of the brain's params. */
+function readSlotParams(params: Params): { pickup: Vec3; slots: SlotRect[] } {
+  const first = vec3Param(params, 'slotFirst', { x: 0, y: 0.5, z: 0 });
+  const step = vec3Param(params, 'slotStep', { x: 1, y: 0, z: 0 });
+  return {
+    pickup: vec3Param(params, 'pickup', { x: 0, y: 0.5, z: 0 }),
+    slots: slotRects({ first, step, count: numParam(params, 'slotCount', 1) }),
+  };
 }
 
 function heldCrateSize(world: WorldApi, self: EntityView): Vec3 {
@@ -102,4 +115,9 @@ export const slotPatrolNode: NodeDef<SlotPatrolState> = {
 function planarGap(world: WorldApi, a: Vec3, b: Vec3): number {
   const d = planarDelta(world.mode, a, b);
   return Math.hypot(d.x, d.z);
+}
+
+/** Registers the brain; safe to call repeatedly. */
+export function registerSlotPatrol(): void {
+  if (!getNodeDef(slotPatrolNode.kind)) registerNode(slotPatrolNode);
 }

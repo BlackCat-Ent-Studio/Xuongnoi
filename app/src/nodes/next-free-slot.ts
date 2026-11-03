@@ -6,10 +6,10 @@ export const SLOT_INPUTS = 4;
 /** A loose item counts as sitting on a marker when its middle is this far inside the marker's edge (slack for an item still settling). */
 const SLOT_SLACK = 0.25;
 
-const SLOT_PORTS = Array.from({ length: SLOT_INPUTS }, (_, k) => ({ id: `s${k + 1}`, type: 'object' as const, label: `Ô ${k + 1}` }));
+export const SLOT_PORTS = Array.from({ length: SLOT_INPUTS }, (_, k) => ({ id: `s${k + 1}`, type: 'object' as const, label: `Ô ${k + 1}` }));
 
 /** True when a loose item (not carried, not in a hand, visible) has its middle over the marker. */
-function isTaken(world: WorldApi, marker: EntityView, items: readonly EntityView[]): boolean {
+export function isTaken(world: WorldApi, marker: EntityView, items: readonly EntityView[]): boolean {
   const reachX = marker.size.x / 2 + SLOT_SLACK;
   const reachZ = marker.size.z / 2 + SLOT_SLACK;
   return items.some(
