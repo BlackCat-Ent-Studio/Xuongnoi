@@ -297,3 +297,29 @@ export const tryNextFreeSlot = (): Board =>
       ['pick', 'full', 'full', 'show'],
     ],
   );
+
+export const trySightForecast = (): Board =>
+  build(
+    'Dự đoán tầm nhìn',
+    'Bấm Chơi: bot đỏ đi tuần qua lại và nhìn theo hướng đi, bạn đứng yên bên phải. Số "Còn" đếm ngược tới lúc bot thấy bạn, và hiện ra trước cả khi bị thấy. Số 99 nghĩa là chưa bị thấy trong 12 giây tới.',
+    [
+      { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
+      { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: 5, y: 1, z: 0 }, role: 'bot', color: '#3b82f6' } },
+      { alias: 'bot', kind: 'character', x: 300, y: 330, params: { position: { x: -9, y: 1, z: 0 }, role: 'bot', color: '#ef4444', speed: 2 } },
+      { alias: 'walk', kind: 'patrol', x: 600, y: 330, params: { pointA: { x: -9, y: 1, z: 0 }, pointB: { x: 0, y: 1, z: 0 }, wait: 1, pathfind: 'off' } },
+      { alias: 'eyes', kind: 'vision-sensor', x: 600, y: 20, params: { range: 6, angle: 90 } },
+      { alias: 'ahead', kind: 'sight-forecast', x: 900, y: 20 },
+      { alias: 'left', kind: 'show-number', x: 1200, y: 20, params: { label: 'Còn (giây)', corner: 'top-right' } },
+      text('safe', 1200, 200, 'Chưa bị thấy trong 12 giây tới'),
+    ],
+    [
+      ['bot', 'self', 'walk', 'self'],
+      ['walk', 'moveX', 'bot', 'moveX'],
+      ['bot', 'self', 'eyes', 'viewer'],
+      ['hero', 'self', 'eyes', 'target'],
+      ['bot', 'self', 'ahead', 'viewer'],
+      ['hero', 'self', 'ahead', 'target'],
+      ['ahead', 'window', 'left', 'value'],
+      ['ahead', 'safe', 'safe', 'show'],
+    ],
+  );

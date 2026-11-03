@@ -54,3 +54,15 @@ export function lineOfSight(entities: readonly Entity[], mode: ViewMode, from: E
   }
   return true;
 }
+
+/** Same test against a ready list of boxes (centre + full size), for callers that look at imaginary points. */
+export function segmentClear(
+  boxes: readonly { position: Record<Axis, number>; size: Record<Axis, number> }[],
+  mode: ViewMode,
+  a: Record<Axis, number>,
+  b: Record<Axis, number>,
+): boolean {
+  const axes = axesOf(mode);
+  for (const box of boxes) if (segmentHitsBox(a, b, box.position, box.size, axes)) return false;
+  return true;
+}

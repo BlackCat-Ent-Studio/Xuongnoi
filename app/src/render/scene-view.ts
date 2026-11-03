@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { EntityView, ViewMode } from '../engine/types';
+import type { EntityView, SolidBox, ViewMode } from '../engine/types';
 import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
 import { HealthBarLayer } from './health-bar';
@@ -10,6 +10,7 @@ import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
 import { ObjectHighlight } from './object-highlight';
+import { VisionFanLayer, type FanSpec } from './vision-fan';
 import type { StageFigure, StageTheme } from './stage-theme';
 
 const SUN_WITH_SHADOWS = 2;
@@ -87,6 +88,7 @@ export class SceneView {
   private readonly entries = new Map<string, Entry>();
   private readonly healthBars = new HealthBarLayer(this.group);
   private readonly colliderFrames = new ColliderFrames(this.group);
+  private readonly visionFans = new VisionFanLayer(this.group);
   private readonly highlight = new ObjectHighlight();
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
@@ -257,6 +259,11 @@ export class SceneView {
       }
     }
     this.healthBars.sync(entities);
+  }
+
+  /** Sight fans of the characters that have a "Tầm nhìn" sensor (none when the list is empty). `boxes` is only asked for when there is a fan. */
+  syncVisionFans(specs: readonly FanSpec[], boxes: () => readonly SolidBox[]): void {
+    this.visionFans.sync(specs, boxes);
   }
 
   /** Green collision-box frames for the entities owned by `owners` (pass an empty set to hide them). */

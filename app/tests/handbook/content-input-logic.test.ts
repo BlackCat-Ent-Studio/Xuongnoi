@@ -12,13 +12,13 @@ registerAllNodes();
 
 const KINDS = [
   'key', 'stick', 'on-start', 'ui-button', 'ui-pick', 'ui-dialog', 'ui-start',
-  'and', 'or', 'not', 'compare', 'touch', 'select-number', 'latch', 'zone', 'distance', 'speed-sensor', 'ahead-sensor', 'vision-sensor', 'color-sensor', 'next-free-slot',
+  'and', 'or', 'not', 'compare', 'touch', 'select-number', 'latch', 'zone', 'distance', 'speed-sensor', 'ahead-sensor', 'vision-sensor', 'color-sensor', 'next-free-slot', 'sight-forecast',
 ];
 
 const sorted = (a: string[]): string[] => [...a].sort();
 
 describe('handbook input and logic pages', () => {
-  it('covers exactly the 21 input and logic kinds once each', () => {
+  it('covers exactly the 22 input and logic kinds once each', () => {
     expect(sorted(HANDBOOK_INPUT_LOGIC.map((e) => e.kind))).toEqual(sorted(KINDS));
   });
 

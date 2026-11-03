@@ -11,6 +11,7 @@ import {
   type SteerMemo,
 } from './steering';
 import { PATHFIND_PARAM, pathfindOn } from './pathfind-param';
+import { notePatrol } from './sight-notes';
 import { asBool, asObject, numParam, strParam, vec3Param } from './util';
 
 interface PatrolState {
@@ -68,6 +69,7 @@ export const patrolNode: NodeDef<PatrolState> = {
     if (s.heading === null) {
       s.heading = distanceFor(world.mode, self.position, a) >= distanceFor(world.mode, self.position, b) ? 'A' : 'B';
     }
+    notePatrol(world, self.id, { a, b, heading: s.heading, waitLeft: s.waitLeft, wait: Math.max(0, numParam(params, 'wait', 1)), tick: ctx.tick });
     if (s.waitLeft > 0) {
       s.waitLeft = Math.max(0, s.waitLeft - ctx.dt);
       return still;

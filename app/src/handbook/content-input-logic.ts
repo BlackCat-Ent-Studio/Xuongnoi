@@ -7,6 +7,7 @@ import {
   tryKey,
   tryLatch,
   tryNextFreeSlot,
+  trySightForecast,
   tryNot,
   tryOnStart,
   tryOr,
@@ -425,7 +426,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nhìn từ bên cạnh thì hình quạt hướng sang trái hoặc phải theo hướng nhân vật quay mặt; nhìn từ trên và 3D thì theo hướng mặt trên mặt đất.',
       'Người nhìn không bao giờ thấy chính nó, và vật bị ẩn hay đang ngồi trên xe thì không được tính.',
-      'Tầm nhìn chưa có hình mờ khi chỉnh sửa, hãy thử bằng cách bấm Chơi rồi di chuyển.',
+      'Lúc bấm Chơi (3D), mỗi nhân vật có Tầm nhìn hiện hình quạt vàng trên sàn; hình quạt đổi sang đỏ khi nó đang thấy gì đó.',
       'Bot đứng yên luôn quay về một hướng, nên người chơi đi vòng ra sau lưng là thoát khỏi tầm nhìn.',
     ],
     lessonId: 'bot-senses',
@@ -478,5 +479,30 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     ],
     lessonId: 'tidy-bot',
     tryBoard: tryNextFreeSlot,
+  },
+  {
+    kind: 'sight-forecast',
+    purpose: 'Đoán trước bao nhiêu giây nữa một người nhìn sẽ thấy một chỗ, bằng cách chơi thử trước đường đi tuần và tầm nhìn của họ.',
+    whenToUse: 'Bot lẻn vào chỉ chạy khi chắc chắn chưa bị lính gác thấy: tính xem còn kịp chạy qua một đoạn hở hay phải nấp.',
+    ports: {
+      viewer: 'Người nhìn: nhân vật có mảnh Tầm nhìn (và có thể có mảnh Đi tuần). Bắt buộc nối. Mảnh này đọc luật nhìn và đường đi tuần của người đó.',
+      target: 'Vật cần canh: chỗ nó đứng là chỗ được canh. Ở kiểu canh chặng kế, đây là bot đang chạy từng chặng theo mảnh Chạy theo tuyến.',
+      window: 'Còn bao nhiêu giây nữa người nhìn sẽ thấy chỗ đó (hay một điểm bất kỳ của chặng) lần đầu. Bằng 0 nếu đang bị thấy rồi; 99 nếu chưa bị thấy trong thời gian nhìn trước.',
+      safe: 'Bật khi trong thời gian nhìn trước vẫn chưa bị thấy.',
+      need: 'Chỉ ở kiểu canh chặng kế: số giây Mục tiêu cần để chạy hết chặng đó (đường còn lại cộng chặng, chia cho tốc độ chạy). Ở kiểu canh một chỗ thì bằng 0.',
+    },
+    params: {
+      watch: 'Canh một chỗ (chỗ của Mục tiêu) hay canh cả chặng kế mà Mục tiêu sắp chạy (lấy từ mảnh Chạy theo tuyến của nó). Mặc định canh một chỗ.',
+      horizon: 'Nâng cao: nhìn trước tối đa bao nhiêu giây. Mặc định 12.',
+    },
+    example: 'Lính gác "Nhân vật" → "Người nhìn"; bot lẻn "Nhân vật" → "Mục tiêu"; "Còn" → So sánh, rồi so với "Cần (giây)" của Chạy theo tuyến để biết có kịp chạy không.',
+    tips: [
+      'Nó chỉ đoán chứ không đổi gì trong game: không làm ai di chuyển hay thấy được ai.',
+      'Nó dùng đúng luật của mảnh Tầm nhìn (tầm xa, góc nhìn, tường che), nên người nhìn cần có một mảnh Tầm nhìn đang nối.',
+      'Người nhìn có mảnh Đi tuần thì nó đoán cả lúc họ tới đầu đường rồi quay lại; không có thì coi như họ đứng yên.',
+      'Nó đoán đường đi tuần là đường thẳng giữa hai điểm A và B của mảnh Đi tuần (hãy tắt Tìm đường).',
+    ],
+    lessonId: 'sight-forecast',
+    tryBoard: trySightForecast,
   },
 ];

@@ -535,6 +535,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'self': ['Ai', 'Agent'],
         'on': ['Bật', 'Enable'],
         'stop': ['Dừng', 'Stop'],
+        'go': ['Chạy', 'Go'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -798,6 +799,21 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'lost': ['Vừa mất dấu', 'Lost'],
         'nearest': ['Vật gần nhất', 'Nearest'],
         'distance': ['Khoảng cách', 'Distance'],
+      },
+    },
+  },
+  'sight-forecast': {
+    vi: 'Dự đoán tầm nhìn',
+    en: 'Sight Forecast',
+    ports: {
+      in: {
+        'viewer': ['Người nhìn', 'Viewer'],
+        'target': ['Mục tiêu', 'Target'],
+      },
+      out: {
+        'window': ['Còn (giây)', 'Time left'],
+        'safe': ['An toàn', 'Safe'],
+        'need': ['Cần (giây)', 'Time needed'],
       },
     },
   },
