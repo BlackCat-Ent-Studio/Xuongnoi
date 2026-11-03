@@ -174,6 +174,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'self': ['Bot', 'Agent'],
         'target': ['Mục tiêu', 'Target'],
+        'go': ['Cho đi', 'Go'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -260,6 +261,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'character': ['Ai', 'Who'],
+        'enter': ['Lên xe', 'Enter'],
+        'exit': ['Xuống xe', 'Exit'],
         'press': ['Bấm', 'Press'],
       },
       out: {
@@ -276,6 +279,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'self': ['Bot', 'Agent'],
         'target': ['Mục tiêu', 'Target'],
+        'go': ['Cho đi', 'Go'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -337,6 +341,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'jump': ['Nhảy', 'Jump'],
         'arrived': ['Đã tới', 'Arrived'],
         'arrivedPulse': ['Vừa tới', 'Just arrived'],
+        'arrivedAt1': ['Tới Đích', 'At destination'],
+        'arrivedAt2': ['Tới Đích 2', 'At second destination'],
       },
     },
   },
@@ -361,6 +367,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'character': ['Nhân vật', 'Character'],
+        'equip': ['Cầm', 'Equip'],
+        'unequip': ['Cất', 'Unequip'],
         'toggle': ['Cầm / Cất', 'Equip'],
         'use': ['Dùng', 'Use'],
       },
@@ -487,6 +495,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       out: {
         'fired': ['Vừa bắt đầu', 'Fired'],
+        'started': ['Đã bắt đầu', 'Started'],
       },
     },
   },
@@ -502,6 +511,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'moveX': ['Đi ngang', 'Move X'],
         'moveY': ['Đi dọc', 'Move Y'],
         'atEnd': ['Vừa tới đầu mút', 'At end'],
+        'route': ['Tuyến đi tuần', 'Patrol route'],
       },
     },
   },
@@ -566,6 +576,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'reached': ['Tới điểm', 'Reached point'],
         'index': ['Điểm hiện tại', 'Current point'],
         'atPoint': ['Đang ở điểm', 'At point'],
+        'route': ['Tuyến chạy', 'Route'],
+        'halted': ['Đã đứng yên', 'Stood still'],
       },
     },
   },
@@ -830,6 +842,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'viewer': ['Người nhìn', 'Viewer'],
         'target': ['Mục tiêu', 'Target'],
+        'patrol': ['Đường đi tuần', 'Patrol route'],
+        'route': ['Tuyến của Mục tiêu', 'Target route'],
       },
       out: {
         'window': ['Còn (giây)', 'Time left'],

@@ -26,7 +26,7 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
   category: 'object',
   description:
     'Một bệ rắn tự chạy từ điểm A (vị trí đặt) tới điểm B rồi quay lại. Nhân vật, đồ vật, xe đứng trên bệ sẽ đi theo; ai đứng cạnh thì bị đẩy đi. Bệ không bao giờ ép ai vào tường: bị kẹt thì nó dừng chờ. Tắt "Chạy" để bệ đứng yên. Bot tìm đường coi bệ này như chỗ trống (không tính là đất cố định).',
-  inputs: [{ id: 'run', type: 'bool', label: 'Chạy', default: true }],
+  inputs: [{ id: 'run', type: 'bool', label: 'Chạy' }],
   outputs: [
     { id: 'self', type: 'object', label: 'Bệ' },
     { id: 'moving', type: 'bool', label: 'Đang chạy' },
@@ -76,8 +76,8 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
       s.rest = Math.max(0, s.rest - ctx.dt);
       return idle;
     }
-    // The engine resolves an unwired run port to its default (true); treat a missing key the same way.
-    const run = i.run === undefined ? true : i.run === true;
+    // An unwired run port is off, so a missing key reads as off too.
+    const run = i.run === true;
     if (!run || s.parked) return idle;
 
     const target = s.dir > 0 ? s.b : s.a;

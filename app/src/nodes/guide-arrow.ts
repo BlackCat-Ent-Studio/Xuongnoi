@@ -14,7 +14,7 @@ export const guideArrowNode: NodeDef<null> = {
   inputs: [
     { id: 'from', type: 'object', label: 'Từ', required: true },
     { id: 'to', type: 'object', label: 'Tới' },
-    { id: 'show', type: 'bool', label: 'Hiện', default: true },
+    { id: 'show', type: 'bool', label: 'Hiện' },
   ],
   outputs: [{ id: 'distance', type: 'number', label: 'Khoảng cách' }],
   params: [
@@ -34,7 +34,7 @@ export const guideArrowNode: NodeDef<null> = {
   evaluate(ctx, i, params) {
     const from = asObject(i.from);
     const to = asObject(i.to);
-    const show = i.show === undefined ? true : asBool(i.show);
+    const show = asBool(i.show);
     const a = from !== null ? ctx.world.getEntity(from) : undefined;
     const b = to !== null ? ctx.world.getEntity(to) : undefined;
     const usable = a !== undefined && a.visible && b !== undefined && b.visible;

@@ -17,6 +17,7 @@ import { fightNode } from '../../src/nodes/fight';
 import { healthNode } from '../../src/nodes/health';
 import { createWorld } from '../../src/world/world';
 import { makeWorld, runNode } from './fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -30,7 +31,7 @@ function sim(mode: ViewMode, nodes: NodeSpec[], wires: WireSpec[]) {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world: World = createWorld(mode);
-  const rt: Runtime = createRuntime(graph, world, mode);
+  const rt: Runtime = createRuntime(wireStarts(graph, mode), world, mode);
   return {
     world,
     rt,

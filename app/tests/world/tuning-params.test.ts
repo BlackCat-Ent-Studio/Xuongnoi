@@ -137,7 +137,7 @@ describe('fight backoffSeconds', () => {
     const bot = makeChar(w, 0, { role: 'bot' });
     const target = makeChar(w, 1);
     run(w, 5);
-    const out = runNode(fightNode, [{ inputs: { self: bot, target } }, { inputs: { self: bot, target } }], { sightRange: 30, ...over }, w);
+    const out = runNode(fightNode, [{ inputs: { self: bot, target, go: true } }, { inputs: { self: bot, target, go: true } }], { sightRange: 30, ...over }, w);
     return { attacked: out[0]!.attack === true, moveX: Number(out[1]!.moveX) };
   }
 

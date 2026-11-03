@@ -4,6 +4,7 @@ import { TICK_DT, type Graph, type GraphNode, type Params, type Vec3 } from '../
 import { registerAllNodes } from '../../src/nodes';
 import { routeNoteOf } from '../../src/nodes/sight-notes';
 import { createWorld } from '../../src/world/world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -28,7 +29,7 @@ function setup(extra: Params = {}) {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld('3d');
-  const rt = createRuntime(graph, world, '3d');
+  const rt = createRuntime(wireStarts(graph, '3d'), world, '3d');
   const bot = () => world.entities().find((e) => e.ownerNodeId === 'bot')!;
   const step = (go: boolean) => {
     rt.tick({ keysDown: new Set(go ? ['Space'] : []) });

@@ -11,7 +11,7 @@ import {
   type SteerMemo,
 } from './steering';
 import { PATHFIND_PARAM, pathfindOn } from './pathfind-param';
-import { asObject, numParam, strParam } from './util';
+import { asBool, asObject, numParam, strParam } from './util';
 
 interface ChaseState {
   /** True while the bot has noticed the target and has not yet given up. */
@@ -29,10 +29,11 @@ export const chaseNode: NodeDef<ChaseState> = {
   label: 'Đuổi / Trốn',
   category: 'brain',
   description:
-    'Bot để mắt tới một vật: thấy trong tầm nhìn thì đuổi theo (hoặc chạy trốn), ra xa quá tầm bỏ cuộc thì thôi. Nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
+    'Bot để mắt tới một vật: thấy trong tầm nhìn thì đuổi theo (hoặc chạy trốn), ra xa quá tầm bỏ cuộc thì thôi. Nối tín hiệu vào "Cho đi" thì bot mới hoạt động, rồi nối "Đi ngang" / "Đi dọc" / "Nhảy" vào nhân vật bot.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu', required: true },
+    { id: 'go', type: 'bool', label: 'Cho đi' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
@@ -63,7 +64,7 @@ export const chaseNode: NodeDef<ChaseState> = {
     const world = ctx.world;
     const self = liveCharacter(world, asObject(i.self));
     const targetPos = visiblePosition(world, asObject(i.target));
-    if (!self || !targetPos) {
+    if (!self || !targetPos || !asBool(i.go)) {
       s.engaged = false;
       return { ...STILL, seeing: false };
     }

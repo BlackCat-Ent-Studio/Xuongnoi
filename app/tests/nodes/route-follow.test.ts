@@ -5,6 +5,7 @@ import { registerAllNodes } from '../../src/nodes';
 import { routeFollowNode } from '../../src/nodes/route-follow';
 import { createWorld } from '../../src/world/world';
 import { defaultParams, makeCtx, makeWorld } from './fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -29,7 +30,7 @@ function sim(mode: ViewMode, nodes: NodeSpec[], wires: WireSpec[]): Sim {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld(mode);
-  const rt = createRuntime(graph, world, mode);
+  const rt = createRuntime(wireStarts(graph, mode), world, mode);
   let log: number[] = [];
   return {
     world,
@@ -294,7 +295,7 @@ describe('route-follow node: unit behaviour', () => {
     for (const count of [1, 99]) {
       const params = defaultParams(routeFollowNode, { count, p1: v(10, 0), p2: v(10, 0), p3: v(-10, 0), p4: v(-10, 0) });
       const state = routeFollowNode.create!(makeCtx(w), params);
-      const out = routeFollowNode.evaluate(makeCtx(w), { self: 'c' }, params, state);
+      const out = routeFollowNode.evaluate(makeCtx(w), { self: 'c', on: true }, params, state);
       expect(out.index).toBeGreaterThanOrEqual(1);
       expect(out.index).toBeLessThanOrEqual(8);
     }

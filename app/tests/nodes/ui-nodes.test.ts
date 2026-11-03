@@ -27,7 +27,7 @@ describe('ui-button', () => {
 
   it('draws a visible button widget in its corner', () => {
     const w = makeWorld();
-    run(uiButtonNode, null, w, {}, params);
+    run(uiButtonNode, null, w, { show: true }, params);
     expect(lastHud(w)).toMatchObject({
       key: NODE_ID,
       corner: 'top-right',
@@ -38,14 +38,14 @@ describe('ui-button', () => {
 
   it('pulses "Vừa bấm" for the tick of the click and reports "Đang giữ chuột" while held', () => {
     const w = makeWorld();
-    expect(run(uiButtonNode, null, w, {}, params, ui({ clicked: [NODE_ID], held: [NODE_ID] }))).toEqual({ pressed: true, held: true });
-    expect(run(uiButtonNode, null, w, {}, params, ui({ held: [NODE_ID] }))).toEqual({ pressed: false, held: true });
-    expect(run(uiButtonNode, null, w, {}, params, ui())).toEqual({ pressed: false, held: false });
+    expect(run(uiButtonNode, null, w, { show: true }, params, ui({ clicked: [NODE_ID], held: [NODE_ID] }))).toEqual({ pressed: true, held: true });
+    expect(run(uiButtonNode, null, w, { show: true }, params, ui({ held: [NODE_ID] }))).toEqual({ pressed: false, held: true });
+    expect(run(uiButtonNode, null, w, { show: true }, params, ui())).toEqual({ pressed: false, held: false });
   });
 
   it('ignores other widgets and works without any UI input', () => {
     const w = makeWorld();
-    expect(run(uiButtonNode, null, w, {}, params, ui({ clicked: ['other'] }))).toEqual({ pressed: false, held: false });
+    expect(run(uiButtonNode, null, w, { show: true }, params, ui({ clicked: ['other'] }))).toEqual({ pressed: false, held: false });
     expect(run(uiButtonNode, null, w, {}, params)).toEqual({ pressed: false, held: false });
   });
 
@@ -99,7 +99,7 @@ describe('ui-meter', () => {
   it('draws a corner bar with its label, value and colour', () => {
     const w = makeWorld();
     const params = defaultParams(uiMeterNode, { label: 'Giờ', max: 10, color: '#00ff00', corner: 'bottom-left' });
-    run(uiMeterNode, null, w, { value: 2.5 }, params);
+    run(uiMeterNode, null, w, { value: 2.5, show: true }, params);
     expect(lastHud(w)).toEqual({
       key: NODE_ID,
       label: 'Giờ',

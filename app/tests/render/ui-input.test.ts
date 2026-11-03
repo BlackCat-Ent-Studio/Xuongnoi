@@ -6,6 +6,7 @@ import { TICK_DT } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { UiInputBuffer, createClickTracker, pickEntities } from '../../src/render/ui-input';
 import { createWorld } from '../../src/world/world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -107,7 +108,7 @@ describe('runtime input plumbing', () => {
 
   it('delivers input.ui to the nodes and keeps ticks without it working', () => {
     const world = createWorld('2d-side');
-    const rt = createRuntime(graph, world, '2d-side');
+    const rt = createRuntime(wireStarts(graph, '2d-side'), world, '2d-side');
     rt.tick({ keysDown: new Set() });
     expect(rt.getOutput('btn', 'pressed')).toBe(false);
     rt.tick({ keysDown: new Set(), ui: { clicked: new Set(['btn', 'start']), held: new Set(['btn']), picked: new Set() } });

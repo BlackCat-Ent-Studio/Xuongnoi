@@ -15,7 +15,7 @@ export const timerNode: NodeDef<TimerState> = {
   category: 'math',
   description: 'Đếm ngược số giây đã đặt. Hết giờ thì "Hết giờ" bật. Bật "Đếm lại" để bắt đầu lại từ đầu.',
   inputs: [
-    { id: 'run', type: 'bool', label: 'Chạy', default: true },
+    { id: 'run', type: 'bool', label: 'Chạy' },
     { id: 'reset', type: 'bool', label: 'Đếm lại' },
   ],
   outputs: [
@@ -53,8 +53,8 @@ export const timerNode: NodeDef<TimerState> = {
     if (risingEdge(s.reset, asBool(i.reset))) {
       s.left = total;
     }
-    // The engine resolves an unwired run port to its default (true); treat a missing key the same way.
-    const run = i.run === undefined ? true : asBool(i.run);
+    // An unwired run port is off, so a missing key reads as off too.
+    const run = asBool(i.run);
     if (run && s.left > 0) {
       s.left -= ctx.dt;
       if (s.left < EPS) s.left = 0;

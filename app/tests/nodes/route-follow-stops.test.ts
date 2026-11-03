@@ -3,6 +3,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type EntityView, type Graph, type GraphNode, type Params, type Vec3, type World } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { createWorld } from '../../src/world/world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -44,7 +45,7 @@ function run(nodes: NodeSpec[], wires: WireSpec[], ticks: number): Run {
     wires: wires.map(([fn, fp, tn, tp], i) => ({ id: `w${i}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } })),
   };
   const world = createWorld('3d');
-  const rt = createRuntime(graph, world, '3d');
+  const rt = createRuntime(wireStarts(graph, '3d'), world, '3d');
   const at: boolean[] = [];
   const xs: number[] = [];
   const hero = (): EntityView => world.entities().find((e) => e.ownerNodeId === 'hero')!;

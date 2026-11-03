@@ -118,7 +118,7 @@ describe('applyNodeParams', () => {
   });
 
   it('timer duration keeps elapsed time', () => {
-    const g = { nodes: [node('t', 'timer', { seconds: 10 })], wires: [] } as unknown as Graph;
+    const g = { nodes: [node('t', 'timer', { seconds: 10 }), node('s', 'on-start')], wires: [{ id: 'w1', from: { node: 's', port: 'started' }, to: { node: 't', port: 'run' } }] } as unknown as Graph;
     const world = createWorld('2d-side');
     const rt = createRuntime(g, world, '2d-side');
     for (let i = 0; i < 60; i++) rt.tick(noKeys);

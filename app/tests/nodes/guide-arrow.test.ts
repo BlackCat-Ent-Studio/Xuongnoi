@@ -11,7 +11,7 @@ function thing(w: W, x: number, z: number, y = 0.5): EntityId {
 }
 function run(w: W, inputs: Record<string, EntityId | boolean | null>, over: Record<string, string> = {}) {
   const params = defaultParams(guideArrowNode, over);
-  const out = guideArrowNode.evaluate(makeCtx(w, { nodeId: 'arrow' }), inputs, params, null);
+  const out = guideArrowNode.evaluate(makeCtx(w, { nodeId: 'arrow' }), { show: true, ...inputs }, params, null);
   const hud = w.hudItems().find((h) => h.key === 'arrow') as HudItem;
   return { out, hud };
 }

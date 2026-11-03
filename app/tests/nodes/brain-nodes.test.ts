@@ -17,6 +17,7 @@ import { nextWaypoint, moveForDirection } from '../../src/nodes/steering';
 import { pickFollowTarget } from '../../src/render/cameras';
 import { createWorld } from '../../src/world/world';
 import { runNode } from './fake-world';
+import { wireStarts } from '../helpers/wire-starts';
 
 beforeAll(() => registerAllNodes());
 
@@ -41,7 +42,7 @@ function sim(mode: ViewMode, nodes: NodeSpec[], wires: WireSpec[], yaw = 0): Sim
   };
   const world = createWorld(mode);
   world.setCameraYaw(yaw);
-  const rt = createRuntime(graph, world, mode);
+  const rt = createRuntime(wireStarts(graph, mode), world, mode);
   const entity = (ownerId: string): EntityView => world.entities().find((e) => e.ownerNodeId === ownerId)!;
   return {
     world,
