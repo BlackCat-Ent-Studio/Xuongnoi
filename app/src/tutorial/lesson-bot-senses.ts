@@ -64,7 +64,7 @@ const T = {
   aheadText: {
     title: 'Báo có tường',
     text: 'Nối "Bị chặn" của Dò phía trước sang cổng "Hiện" của mảnh Hiện chữ. Chữ "Có tường, nhảy lên!" sẽ chỉ hiện khi có tường chắn trước mặt.',
-    explain: 'Hiện chữ có cổng "Hiện" mặc định là bật. Nối vào thì chữ chỉ hiện khi tín hiệu bật.',
+    explain: 'Hiện chữ chỉ hiện khi có tín hiệu bật ở cổng "Hiện". Nối vào thì chữ hiện đúng lúc tín hiệu bật.',
   },
   color: {
     title: 'Đọc màu sàn',

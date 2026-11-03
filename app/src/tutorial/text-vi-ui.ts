@@ -28,7 +28,7 @@ export const UI_CHEST_TEXT = {
   timer: {
     title: 'Thêm đồng hồ đếm ngược',
     text: 'Kéo mảnh ghép "Hẹn giờ" (nhóm Tính toán) vào bảng. Chọn nó, ở Thuộc tính đổi "Số giây" thành 10.',
-    explain: 'Hẹn giờ đếm ngược từ số giây bạn đặt, tự chạy ngay khi game bắt đầu.',
+    explain: 'Hẹn giờ đếm ngược từ số giây bạn đặt, khi có tín hiệu bật ở cổng "Chạy" (ở bước sau ta nối "Khi bắt đầu" vào đó).',
   },
   meter: {
     title: 'Thêm Thanh đo',

@@ -66,7 +66,7 @@ function session(lessonId: string) {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      expect(state.connect(from, to)).toEqual({ ok: true });
+      expect(state.connect(from, to, { replace: true })).toEqual({ ok: true });
       tick();
     },
     play(on: boolean): void {
@@ -164,6 +164,7 @@ describe('lesson route-traffic: a car that waits at a red light', () => {
       expect(s.stepId()).toBe('wire-route-move');
       s.wire(p(route, 'moveY'), p(car, 'moveY'));
     });
+    s.apply('start-route-follow-on', () => s.wire(p(s.kind('on-start'), 'started'), p(route, 'on')));
     s.apply('watch', () => s.play(true));
     s.apply('back-to-edit', () => s.play(false));
     s.apply('wire-timer', () => s.wire(p(timer, 'done'), p(counter, 'up')));
@@ -203,6 +204,7 @@ describe('lesson route-traffic: a car that waits at a red light', () => {
       s.wire(p(route, 'moveX'), p(car, 'moveX'));
       s.wire(p(route, 'moveY'), p(car, 'moveY'));
     });
+    s.apply('start-route-follow-on', () => s.wire(p(s.kind('on-start'), 'started'), p(route, 'on')));
     s.apply('watch', () => s.play(true));
     s.apply('back-to-edit', () => s.play(false));
     s.apply('wire-timer', () => s.wire(p(s.kind('timer'), 'done'), p(s.kind('counter'), 'up')));
@@ -268,12 +270,14 @@ describe('lesson train: a locomotive with two wagons on the rails', () => {
     let route = '';
     s.apply('add-route', () => (route = s.add('route-follow')));
     s.apply('wire-route-who', () => s.wire(p(loco, 'self'), p(route, 'self')));
+    s.apply('start-route-follow-on', () => s.wire(p(s.kind('on-start'), 'started'), p(route, 'on')));
     s.apply('route-rail', () => s.param(route, 'follow', 'rail'));
     s.apply('watch', () => s.play(true));
     s.apply('back-to-edit', () => s.play(false));
     let timer = '';
     s.apply('add-timer', () => (timer = s.add('timer')));
     s.apply('timer-seconds', () => s.param(timer, 'seconds', 3));
+    s.apply('start-timer-run', () => s.wire(p(s.kind('on-start'), 'started'), p(timer, 'run')));
     s.apply('wire-reached', () => s.wire(p(route, 'reached'), p(timer, 'reset')));
     let not = '';
     s.apply('add-not', () => (not = s.add('not')));

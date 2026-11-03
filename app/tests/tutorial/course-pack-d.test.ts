@@ -72,8 +72,9 @@ describe('groups lesson', () => {
   it('starts as two bot setups plus a floor, with no groups', () => {
     const board = findLesson('groups')!.createBoard();
     const kinds = board.graph.nodes.map((n) => n.kind).sort();
-    expect(kinds).toEqual(['block', 'character', 'character', 'go-to', 'go-to']);
-    expect(board.graph.wires).toHaveLength(4);
+    // The "Khi bắt đầu" card is what the wire rule adds so both bots still set off at the start.
+    expect(kinds).toEqual(['block', 'character', 'character', 'go-to', 'go-to', 'on-start']);
+    expect(board.graph.wires).toHaveLength(6);
     expect(board.graph.groups).toBeUndefined();
   });
 
@@ -175,7 +176,7 @@ describe('capstone factory lesson', () => {
     const graph = (): Graph => s.state.getGraph();
     const byPos = (kind: string, col: number, row: number) =>
       graph().nodes.find((n) => n.kind === kind && n.pos.x === 20 + col * 250 && n.pos.y === 20 + row * 200)!.id;
-    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b)).toEqual({ ok: true }));
+    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b, { replace: true })).toEqual({ ok: true }));
     const add = (kind: string): string => {
       let id = '';
       s.do(() => {

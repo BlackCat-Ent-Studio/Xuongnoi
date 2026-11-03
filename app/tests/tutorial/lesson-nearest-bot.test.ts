@@ -54,7 +54,7 @@ describe('nearest-bot lesson', () => {
   function solve() {
     const s = session();
     const g = (): Graph => s.state.getGraph();
-    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b)).toEqual({ ok: true }));
+    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b, { replace: true })).toEqual({ ok: true }));
     const add = (kind: string): string => {
       let id = '';
       s.do(() => {

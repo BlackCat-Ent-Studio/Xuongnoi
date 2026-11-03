@@ -1,4 +1,5 @@
 import { createNode } from '../editor/editor-state';
+import { migrateBoardWireRule } from '../editor/graph/wire-rule-migration';
 import type { Board, Graph, NoteColor, Params, ViewMode } from '../engine/types';
 import { addWire } from '../engine/wiring';
 
@@ -24,7 +25,7 @@ function build(name: string, mode: ViewMode, nodes: NodeSpec[], wires: WireSpec[
     if (!('nodes' in res)) throw new Error(`Cannot wire ${fa}.${fp} -> ${ta}.${tp}: ${res.reason}`);
     graph = res;
   }
-  return { name, mode, graph, notes: [{ id: 'note-1', text: note, color: noteColor, pos: { x: 20, y: 520 }, size: { w: 340, h: 130 } }] };
+  return migrateBoardWireRule({ name, mode, graph, notes: [{ id: 'note-1', text: note, color: noteColor, pos: { x: 20, y: 520 }, size: { w: 340, h: 130 } }] });
 }
 
 const at = (x: number, z: number): Params => ({ position: { x, y: 0.5, z } });

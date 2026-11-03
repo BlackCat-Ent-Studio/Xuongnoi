@@ -56,7 +56,7 @@ describe('sight-forecast lesson', () => {
     const g = (): Graph => s.state.getGraph();
     const byColor = (color: string): string => g().nodes.find((n) => n.kind === 'character' && n.params.color === color)!.id;
     const one = (kind: string): string => g().nodes.find((n) => n.kind === kind)!.id;
-    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b)).toEqual({ ok: true }));
+    const connect = (a: PortRef, b: PortRef): void => s.do(() => expect(s.state.connect(a, b, { replace: true })).toEqual({ ok: true }));
     const guard = byColor('#ef4444');
     const you = byColor('#3b82f6');
     expect(s.stepId()).toBe('intro');
@@ -68,6 +68,8 @@ describe('sight-forecast lesson', () => {
     });
     expect(s.stepId()).toBe('wire-viewer');
     connect(p(guard, 'self'), p(fore, 'viewer'));
+    expect(s.stepId()).toBe('wire-viewer'); // the patrol wire is still missing
+    connect(p(one('patrol'), 'route'), p(fore, 'patrol'));
     expect(s.stepId()).toBe('wire-target');
     connect(p(you, 'self'), p(fore, 'target'));
     expect(s.stepId()).toBe('wire-out');

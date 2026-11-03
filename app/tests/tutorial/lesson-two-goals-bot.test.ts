@@ -30,7 +30,7 @@ describe('two-goals-bot lesson', () => {
       runner.evaluate(takeSnapshot(state, null));
     };
     const connect = (a: PortRef, b: PortRef): void => {
-      expect(state.connect(a, b)).toEqual({ ok: true });
+      expect(state.connect(a, b, { replace: true })).toEqual({ ok: true });
       look();
     };
     look();
@@ -47,6 +47,8 @@ describe('two-goals-bot lesson', () => {
     connect(p(id('Ô xanh lá'), 'self'), p(go, 'target'));
     connect(p(id('Ô vàng'), 'self'), p(go, 'target2'));
     connect(p(go, 'moveX'), p(bot, 'moveX'));
+    expect(runner.step().id).toBe('start-go-to-go');
+    connect(p(g.nodes.find((n) => n.kind === 'on-start')!.id, 'started'), p(go, 'go'));
     expect(runner.step().id).toBe('wire-switch');
     connect(p(key, 'held'), p(go, 'useTarget2'));
     expect(runner.step().id).toBe('play');

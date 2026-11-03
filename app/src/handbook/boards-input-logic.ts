@@ -1,4 +1,5 @@
 import { createNode } from '../editor/editor-state';
+import { migrateBoardWireRule } from '../editor/graph/wire-rule-migration';
 import { addWire } from '../engine/wiring';
 import type { Board, Graph, Note, Params } from '../engine/types';
 
@@ -25,7 +26,7 @@ function build(label: string, note: string, nodes: NodeSpec[], wires: WireSpec[]
     graph = res;
   }
   const notes: Note[] = [{ id: 'note-1', text: note, color: 'yellow', pos: { x: 20, y: 420 }, size: { w: 300, h: 130 } }];
-  return { name: `Thử: ${label}`, mode: '2d-side', graph, notes };
+  return migrateBoardWireRule({ name: `Thử: ${label}`, mode: '2d-side', graph, notes });
 }
 
 const text = (alias: string, x: number, y: number, t: string, corner = 'top-left'): NodeSpec => ({

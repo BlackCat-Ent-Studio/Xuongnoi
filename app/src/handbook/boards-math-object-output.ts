@@ -1,3 +1,4 @@
+import { migrateBoardWireRule } from '../editor/graph/wire-rule-migration';
 import { registerAllNodes } from '../nodes';
 import { addWire } from '../engine/wiring';
 import type { Board, GraphNode, Graph, Params, ViewMode } from '../engine/types';
@@ -29,7 +30,7 @@ function build(name: string, mode: ViewMode, note: string, specs: Spec[], wires:
     if ('ok' in res) throw new Error(`Bảng thử "${name}": không nối được ${fn}.${fp} -> ${tn}.${tp} (${res.reason})`);
     graph = res;
   }
-  return { name, mode, graph, notes: [{ id: 'note1', text: note, color: 'yellow', pos: { x: 40, y: -130 }, size: { w: 520, h: 100 } }] };
+  return migrateBoardWireRule({ name, mode, graph, notes: [{ id: 'note1', text: note, color: 'yellow', pos: { x: 40, y: -130 }, size: { w: 520, h: 100 } }] });
 }
 
 const floor = (w = 24): Spec => ({

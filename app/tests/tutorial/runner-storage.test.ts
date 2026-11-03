@@ -26,7 +26,7 @@ const lesson: Lesson = {
   id: 't',
   title: 'T',
   summary: '',
-  createBoard: () => ({ name: 'x', mode: '2d-side', graph: { nodes: [], wires: [] } }),
+  createBoard: () => ({ name: 'x', mode: '2d-side', graph: { nodes: [], wires: [], settings: { wireRule: true } } }),
   steps: [
     { id: 'a', title: 'a', text: 'a' },
     { id: 'b', title: 'b', text: 'b', check: (s) => s.playing },

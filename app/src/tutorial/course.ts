@@ -1,3 +1,5 @@
+import { migrateBoardWireRule } from '../editor/graph/wire-rule-migration';
+import { withStartWireSteps } from './start-wire-steps';
 import type { Lesson } from './types';
 
 /** One chapter of the course: a heading in the lesson menu and the lessons under it, easiest first. */
@@ -36,7 +38,11 @@ export function arrangeCourse(all: readonly Lesson[]): Lesson[] {
     ...COURSE.flatMap((c) => c.lessonIds.map((id) => byId.get(id)).filter((l): l is Lesson => l !== undefined)),
     ...all.filter((l) => !listed.has(l.id)),
   ];
-  return ordered.map((l, i) => ({ ...l, title: `${i + 1}. ${lessonName(l.title)}` }));
+  // A lesson's starting board follows the wire rule like any other board (see wire-rule-migration).
+  return ordered.map((raw, i) => {
+    const l = withStartWireSteps(raw);
+    return { ...l, title: `${i + 1}. ${lessonName(l.title)}`, createBoard: () => migrateBoardWireRule(l.createBoard()) };
+  });
 }
 
 /** The chapter a lesson belongs to, or undefined for a lesson outside the course list. */

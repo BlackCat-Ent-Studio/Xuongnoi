@@ -25,7 +25,7 @@ const T = {
   addPlatform: {
     title: 'Thêm bệ di chuyển',
     text: 'Kéo mảnh ghép "Bệ di chuyển" (nhóm Vật thể) vào bảng.',
-    explain: 'Bệ tự chạy từ điểm A tới điểm B rồi quay lại. Ai đứng trên bệ sẽ đi theo bệ.',
+    explain: 'Bệ chạy từ điểm A tới điểm B rồi quay lại khi cổng "Chạy" được bật (ở bước sau ta nối "Khi bắt đầu" vào đó). Ai đứng trên bệ sẽ đi theo bệ.',
   },
   platformA: {
     title: 'Đặt điểm A bên bờ trái',

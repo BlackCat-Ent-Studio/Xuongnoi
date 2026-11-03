@@ -45,7 +45,7 @@ function session(lessonId: string) {
       tick();
     },
     wire(from: PortRef, to: PortRef): void {
-      const res = state.connect(from, to);
+      const res = state.connect(from, to, { replace: true });
       expect(res).toEqual({ ok: true });
       tick();
     },
@@ -389,6 +389,8 @@ describe('lesson 6: make a bot', () => {
     s.wire(p(bot, 'self'), p(patrol, 'self'));
     expect(s.stepId()).toBe('wire-bot-move');
     s.wire(p(patrol, 'moveX'), p(bot, 'moveX'));
+    expect(s.stepId()).toBe('start-patrol-on');
+    s.wire(p(s.idOf('on-start'), 'started'), p(patrol, 'on'));
     expect(s.stepId()).toBe('play-patrol');
     s.play(true);
     expect(s.stepId()).toBe('back-to-edit');
