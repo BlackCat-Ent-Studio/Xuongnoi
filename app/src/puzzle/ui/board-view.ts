@@ -1,7 +1,7 @@
 import { getNodeDef } from '../../engine/registry';
 import type { GraphNode, ParamDef, PortRef, PortType, Runtime, Wire } from '../../engine/types';
 import { h } from '../../editor/dom';
-import { estimateNodeSize, wirePath } from '../../editor/graph/graph-geometry';
+import { estimateNodeSize } from '../../editor/graph/graph-geometry';
 import { buildNodeView } from '../../editor/graph/node-view';
 import type { PortDir } from '../../editor/graph/port-compat';
 import { createWireEnergy, isEnergyEnabled } from '../../editor/graph/wire-energy';
@@ -15,6 +15,7 @@ import {
   editableParamIds,
   findFreeSpot,
   separateBoxes,
+  tryFreeSpot,
   isPortShown,
   isSceneryNode,
   paramValue,
@@ -27,9 +28,15 @@ import {
   type Box,
   type PortEnd,
 } from './board-state';
+import { arrangeLayout, boundsOf, fitContent, type FitView } from './board-arrange';
+import { attachPanZoom } from './board-pan-zoom';
 import { isObjectKind } from './object-cards';
 import { PUZZLE_UI_TEXT } from './puzzle-text';
+import { ICONS, svg } from './shell-kit';
 import { playSfx } from './sound';
+import { clampUnit, legIndexAt, midPoint, routeWires, type Pt, type RouteCard, type WireRoute, type WireSpec } from './wire-geometry';
+import { addKnot, emptyKnots, bestGomSpot, fanOuts, gomKnots, isSharedKnot, knotPoints, mergeKnots, moveKnot, pruneKnots, removeKnot, wiresOfKnot, type KnotBook } from './wire-knots';
+import { TIDY_TEXT } from './wire-tidy-text';
 
 import '../../editor/graph/graph.css';
 import '../../editor/graph/node-cards.css';
@@ -46,9 +53,24 @@ const PORT_REACH = 26;
 const WIRE_REACH = 12;
 /** A press that moves less than this (screen px) is a tap, not a drag. */
 const TAP_SLOP = 6;
+/** Two taps on a wire this close in time (ms) and place (screen px) are a double tap. */
+const DOUBLE_MS = 320;
+const DOUBLE_PX = 30;
+/** Knots snap to this grid (board px at card scale 1). */
+const KNOT_GRID = 8;
+/** A knot dropped this close (screen px) to another knot joins it. */
+const MERGE_PX = 18;
+const TIDY_MS = 620;
+const FIT_MS = 320;
 
 const NO_MISSING: ReadonlySet<string> = new Set();
 const portKey = (node: string, dir: PortDir, port: string): string => `${node}|${dir}|${port}`;
+
+/** Icons of the tidy tools (same style as the camera tools). */
+const TOOL_ICONS = {
+  tidy: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 5h6v5h-6zM14.5 5h6v5h-6zM9 14h6v5H9z"/></svg>',
+  gom: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 6h5c4 0 4 6 8 6h4M3.5 18h5c4 0 4-6 8-6"/></svg>',
+} as const;
 
 const LOCK_PATH = 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3';
 
@@ -127,7 +149,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   const wireLayer = document.createElementNS(SVG_NS, 'svg');
   wireLayer.setAttribute('class', 'wc-wires');
   const nodeLayer = h('div', 'wc-nodes');
-  world.append(wireLayer, nodeLayer);
+  const knotLayer = document.createElementNS(SVG_NS, 'svg');
+  knotLayer.setAttribute('class', 'wc-wires pz-knots');
+  world.append(wireLayer, nodeLayer, knotLayer);
   const toastEl = h('div', 'pz-toast');
   toastEl.hidden = true;
   toastEl.setAttribute('role', 'status');
@@ -158,6 +182,30 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let energyLast = 0;
   let getRuntime: () => Runtime | null = () => null;
 
+  // ----- tidy tools: knots, focus, the tidy layout and its pan / zoom -----
+  /** Reroute knots (drawing only; the graph and the answer never see them). Kept in memory for this visit of the level. */
+  let knots: KnotBook = emptyKnots();
+  /** After "Sắp xếp gọn" the cards sit in a free layout (board px, scale 1) seen through `view`; before it they follow the level's stretched layout. */
+  let tidy = false;
+  const tidyPos = new Map<string, Pt>();
+  let view: FitView = { k: 1, x: 0, y: 0 };
+  /** The player moved the view by hand: a resize then keeps it. */
+  let viewMoved = false;
+  let animRaf = 0;
+  /** The card whose wires are lit (the others fade). */
+  let focusId: string | null = null;
+  /** A wire the player tapped (lit until they tap elsewhere). */
+  let selWire: string | null = null;
+  let hoverWire: string | null = null;
+  let routes = new Map<string, WireRoute>();
+  let wireViews: { id: string; from: string; to: string; g: SVGGElement }[] = [];
+  let lastWireTap: { id: string; t: number; x: number; y: number } | null = null;
+  let lastKnotTap: { id: string; t: number } | null = null;
+  let wireTapTimer = 0;
+  let wirePress: { id: string; pid: number; sx: number; sy: number } | null = null;
+  let knotDrag: { id: string; pid: number; sx: number; sy: number; moved: boolean } | null = null;
+  let swallowClick = false;
+
   function resetPositions(): void {
     positions.clear();
     for (const n of level.base.nodes) positions.set(n.id, { x: n.pos.x, y: n.pos.y });
@@ -184,6 +232,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   }
 
   function changed(): void {
+    const alive = new Set([...level.base.wires, ...state.wires].map((w) => w.id));
+    knots = pruneKnots(knots, alive);
+    if (selWire !== null && !alive.has(selWire)) selWire = null;
     render();
     onChange(state);
   }
@@ -199,18 +250,24 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     // The world starts below the top bar (CSS `top` of .wc-world); the bottom bar is the other end.
     const bh = Math.max(1, board.clientHeight - world.offsetTop - bottomEl.offsetHeight - 10);
     area = { w: bw, h: bh };
+    if (tidy) return layoutTidy();
     const c0 = Math.max(MIN_CARD_SCALE, Math.min(1, bw / 700));
     const clear = opts.keepClear?.() ?? null;
     const blocked: Box[] = clear ? [{ x: clear.x, y: clear.y - world.offsetTop, w: clear.w, h: clear.h }] : [];
+    const toolsAt = toolsBox();
     const natural = [...cards].map(([id, box]) => {
       const p = positions.get(id) ?? { x: 0, y: 0 };
       return { id, x: p.x * spreadX(), y: p.y * spreadY(), w: box.offsetWidth, h: box.offsetHeight };
     });
     let result = separateBoxes([], area);
     cardScale = c0;
-    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58, c0 * 0.52, c0 * 0.46]) {
-      cardScale = c;
-      result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8, blocked);
+    // Cards keep clear of the tool buttons when that still fits; on a crowded board the buttons may cover a corner instead.
+    for (const keep of toolsAt ? [[...blocked, toolsAt], blocked] : [blocked]) {
+      for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58, c0 * 0.52, c0 * 0.46]) {
+        cardScale = c;
+        result = separateBoxes(natural.map((n) => ({ ...n, w: n.w * c, h: n.h * c })), area, 8, keep);
+        if (result.fits) break;
+      }
       if (result.fits) break;
     }
     for (const [id, box] of cards) {
@@ -224,13 +281,115 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     }
   }
 
-  /** Centre of a pin in board coordinates (undoes the shrink while the board sits in the corner). */
-  function dotCenter(dot: Element): { x: number; y: number } {
-    const r = dot.getBoundingClientRect();
+  /** A screen position in board coordinates (undoes the shrink while the board sits in the corner). */
+  function boardPoint(clientX: number, clientY: number): Pt {
     const w = world.getBoundingClientRect();
     const b = board.getBoundingClientRect();
     const k = board.offsetWidth > 0 && b.width > 0 ? b.width / board.offsetWidth : 1;
-    return { x: (r.left + r.width / 2 - w.left) / k, y: (r.top + r.height / 2 - w.top) / k };
+    return { x: (clientX - w.left) / k, y: (clientY - w.top) / k };
+  }
+
+  /** Centre of a pin in board coordinates. */
+  function dotCenter(dot: Element): Pt {
+    const r = dot.getBoundingClientRect();
+    return boardPoint(r.left + r.width / 2, r.top + r.height / 2);
+  }
+
+  // ---------- the tidy layout ----------
+
+  /** Board px <-> layout space (where knots and the tidy cards live): the stretched layout scales x and y apart, the tidy one is a plain zoom. */
+  function toScreen(p: Pt): Pt {
+    return tidy ? { x: view.x + p.x * view.k, y: view.y + p.y * view.k } : { x: p.x * spreadX(), y: p.y * spreadY() };
+  }
+  function toLayout(p: Pt): Pt {
+    return tidy ? { x: (p.x - view.x) / view.k, y: (p.y - view.y) / view.k } : { x: p.x / spreadX(), y: p.y / spreadY() };
+  }
+  const snapKnot = (p: Pt): Pt => ({ x: Math.round(p.x / KNOT_GRID) * KNOT_GRID, y: Math.round(p.y / KNOT_GRID) * KNOT_GRID });
+
+  const sizeOf = (id: string): { w: number; h: number } => {
+    const box = cards.get(id);
+    return { w: box?.offsetWidth ?? 0, h: box?.offsetHeight ?? 0 };
+  };
+
+  /** Every card as a box in layout space (card scale 1). */
+  function tidyRects(): (Box & { id: string })[] {
+    return [...cards.keys()].map((id) => ({ id, ...tidyPosOf(id), ...sizeOf(id) }));
+  }
+
+  function tidyPosOf(id: string): Pt {
+    let p = tidyPos.get(id);
+    if (!p) {
+      const b = boundsOf([...tidyPos].map(([k, q]) => ({ ...q, ...sizeOf(k) })));
+      p = { x: b.x, y: b.y + b.h + 24 };
+      tidyPos.set(id, p);
+    }
+    return p;
+  }
+
+  function layoutTidy(): void {
+    cardScale = view.k;
+    for (const [id, box] of cards) {
+      const p = toScreen(tidyPosOf(id));
+      placedAt.set(id, p);
+      box.style.left = `${Math.round(p.x)}px`;
+      box.style.top = `${Math.round(p.y)}px`;
+      box.style.transformOrigin = '0 0';
+      box.style.transform = `scale(${cardScale})`;
+    }
+  }
+
+  /** The tool buttons (right edge, under the top bar) as a box in board coordinates; they keep their size while the board sits in the corner. */
+  function toolsBox(): Box | null {
+    return tools.offsetWidth > 0 ? { x: tools.offsetLeft - 6, y: tools.offsetTop - world.offsetTop - 6, w: tools.offsetWidth + 12, h: tools.offsetHeight + 12 } : null;
+  }
+
+  /** Width of the strip on the right the tidy view keeps free for the tool buttons. */
+  function toolsInset(): number {
+    const t = toolsBox();
+    return t ? Math.max(0, area.w - t.x) : 0;
+  }
+
+  /** The corner window as a box in board coordinates. */
+  function avoidBox(): Box | null {
+    const c = opts.keepClear?.() ?? null;
+    return c ? { x: c.x, y: c.y - world.offsetTop, w: c.w, h: c.h } : null;
+  }
+
+  /** The view that shows every card (and keeps clear of the corner window). */
+  function tidyFit(): FitView {
+    return fitContent(boundsOf(tidyRects()), area, avoidBox(), toolsInset());
+  }
+
+  function stopAnim(): void {
+    if (animRaf) cancelAnimationFrame(animRaf);
+    animRaf = 0;
+  }
+
+  /** Slides the cards and the view to their new places. Wires are drawn as plain curves while it moves, then routed. */
+  function animateTidy(toPos: ReadonlyMap<string, Pt>, toView: FitView, ms: number): void {
+    stopAnim();
+    const fromPos = new Map(tidyPos);
+    const fromView = { ...view };
+    const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t0 = performance.now();
+    const frame = (now: number): void => {
+      const t = reduce ? 1 : Math.min(1, (now - t0) / ms);
+      const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+      for (const [id, to] of toPos) {
+        const f = fromPos.get(id) ?? to;
+        tidyPos.set(id, { x: f.x + (to.x - f.x) * e, y: f.y + (to.y - f.y) * e });
+      }
+      view = { k: fromView.k + (toView.k - fromView.k) * e, x: fromView.x + (toView.x - fromView.x) * e, y: fromView.y + (toView.y - fromView.y) * e };
+      layout();
+      if (t < 1) {
+        drawWires(true);
+        animRaf = requestAnimationFrame(frame);
+      } else {
+        animRaf = 0;
+        drawWires();
+      }
+    };
+    animRaf = requestAnimationFrame(frame);
   }
 
   // ---------- nodes ----------
@@ -250,6 +409,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
         e.stopPropagation();
         if (running) return;
         positions.delete(node.id);
+        tidyPos.delete(node.id);
         state = removePiece(state, node.id);
         playSfx('unwire');
         if (picked?.node === node.id) picked = null;
@@ -350,45 +510,400 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return getNodeDef(from?.kind ?? '')?.outputs.find((p) => p.id === w.from.port)?.type ?? null;
   }
 
-  function drawWires(): void {
-    wireLayer.replaceChildren();
-    energy.reset();
+  /** Every wire of the board (the level's locked ones and the player's) whose two pins are on screen. */
+  function shownWires(): { wire: Wire; locked: boolean; out: PortEntry; inn: PortEntry; type: PortType }[] {
     const all = [...level.base.wires.map((wire) => ({ wire, locked: true })), ...state.wires.map((wire) => ({ wire, locked: false }))];
+    const res: { wire: Wire; locked: boolean; out: PortEntry; inn: PortEntry; type: PortType }[] = [];
     for (const { wire, locked } of all) {
       const out = ports.get(portKey(wire.from.node, 'out', wire.from.port));
       const inn = ports.get(portKey(wire.to.node, 'in', wire.to.port));
       const type = outputType(wire);
-      if (!out || !inn || !type) continue;
-      const a = dotCenter(out.dot);
-      const b = dotCenter(inn.dot);
-      const d = wirePath(a.x, a.y, b.x, b.y);
+      if (out && inn && type) res.push({ wire, locked, out, inn, type });
+    }
+    return res;
+  }
+
+  const pinKey = (end: PortRef): string => `${end.node}|${end.port}`;
+
+  /** Every card as a box on screen. */
+  function cardRects(): RouteCard[] {
+    const out: RouteCard[] = [];
+    for (const [id, box] of cards) {
+      const p = placedAt.get(id);
+      if (p) out.push({ id, x: p.x, y: p.y, w: box.offsetWidth * cardScale, h: box.offsetHeight * cardScale });
+    }
+    return out;
+  }
+
+  function wireSpec(wire: Wire, out: PortEntry, inn: PortEntry): WireSpec {
+    return {
+      id: wire.id,
+      fromCard: wire.from.node,
+      toCard: wire.to.node,
+      a: dotCenter(out.dot),
+      b: dotCenter(inn.dot),
+      via: knotPoints(knots, wire.id).map(toScreen),
+      fromKey: pinKey(wire.from),
+      toKey: pinKey(wire.to),
+    };
+  }
+
+  /** In the stretched layout wires stay on the visible board; the tidy layout is bigger than the screen and routes freely. */
+  function routeBounds(): { bounds?: Box } {
+    return tidy ? {} : { bounds: { x: 0, y: 0, w: area.w, h: area.h - 8 } };
+  }
+
+  function drawWires(fast = false): void {
+    wireLayer.replaceChildren();
+    energy.reset();
+    wireViews = [];
+    const rects = cardRects();
+    const list = shownWires();
+    routes = routeWires(rects, list.map((w) => wireSpec(w.wire, w.out, w.inn)), { unit: clampUnit(cardScale), fast, ...routeBounds() });
+    for (const { wire, locked, out, inn, type } of list) {
+      const route = routes.get(wire.id);
+      if (!route) continue;
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', 'pz-wire');
       const path = document.createElementNS(SVG_NS, 'path');
       path.setAttribute('class', `wc-wire type-${type}${locked ? ' pz-wire-locked' : ''}`);
-      path.setAttribute('d', d);
+      path.setAttribute('d', route.d);
       const hit = document.createElementNS(SVG_NS, 'path');
       hit.setAttribute('class', 'wc-wire-hit');
-      hit.setAttribute('d', d);
+      hit.setAttribute('d', route.d);
       hit.dataset.wire = wire.id;
       if (locked) hit.dataset.locked = '1';
-      wireLayer.append(path, hit);
+      hit.addEventListener('pointerdown', (e) => onWirePress(e, wire.id));
+      g.append(path, hit);
+      wireLayer.append(g);
+      wireViews.push({ id: wire.id, from: wire.from.node, to: wire.to.node, g });
       if (isEnergyEnabled()) energy.addWire(wire, type, path, out.dot, inn.dot, running);
     }
-    drawGhost();
+    drawKnots(new Map(list.map((w) => [w.wire.id, w.type])));
+    drawGhost(rects);
+    applyLook();
   }
 
   /** The guide's dotted line from where a wire starts to where it ends; the pins are never touched. */
-  function drawGhost(): void {
+  function drawGhost(rects: RouteCard[]): void {
     if (!ghost || running) return;
     const out = ports.get(portKey(ghost.from.node, 'out', ghost.from.port));
     const inn = ports.get(portKey(ghost.to.node, 'in', ghost.to.port));
     const type = outputType({ id: 'ghost', from: ghost.from, to: ghost.to });
     if (!out || !inn || !type) return;
-    const a = dotCenter(out.dot);
-    const b = dotCenter(inn.dot);
+    const spec = wireSpec({ id: 'ghost', from: ghost.from, to: ghost.to }, out, inn);
+    const route = routeWires(rects, [{ ...spec, via: [] }], { unit: clampUnit(cardScale), fast: false, ...routeBounds() }).get('ghost');
+    if (!route) return;
     const path = document.createElementNS(SVG_NS, 'path');
     path.setAttribute('class', `pz-ghost-wire type-${type}`);
-    path.setAttribute('d', wirePath(a.x, a.y, b.x, b.y));
+    path.setAttribute('d', route.d);
     wireLayer.append(path);
+  }
+
+  // ---------- focus ----------
+
+  /** Lights the wires of the tapped card (or wire) and fades everything else. */
+  function applyLook(): void {
+    if (focusId !== null && !cards.has(focusId)) focusId = null;
+    const focusing = !running && (focusId !== null || selWire !== null);
+    board.classList.toggle('pz-focusing', focusing);
+    const litWires = new Set<string>();
+    const litCards = new Set<string>();
+    if (focusing) {
+      for (const v of wireViews) {
+        if (focusId !== null ? v.from === focusId || v.to === focusId : v.id === selWire) {
+          litWires.add(v.id);
+          litCards.add(v.from);
+          litCards.add(v.to);
+        }
+      }
+      if (focusId !== null) litCards.add(focusId);
+    }
+    for (const v of wireViews) {
+      v.g.classList.toggle('pz-lit', litWires.has(v.id));
+      v.g.classList.toggle('pz-hover', !running && hoverWire === v.id);
+    }
+    for (const [id, box] of cards) box.classList.toggle('pz-faded', focusing && !litCards.has(id));
+    for (const el of knotLayer.children) {
+      const id = (el as SVGElement).dataset.knot ?? '';
+      el.classList.toggle('pz-faded', focusing && !wiresOfKnot(knots, id).some((w) => litWires.has(w)));
+    }
+  }
+
+  /** The player's own tap on a card (or away): lights that card's wires; a second tap lets go. */
+  function tapFocus(id: string | null): void {
+    focusId = id !== null && id !== focusId ? id : null;
+    selWire = null;
+    applyLook();
+    userPick(id);
+  }
+
+  // ---------- knots ----------
+
+  function drawKnots(types: ReadonlyMap<string, PortType>): void {
+    knotLayer.replaceChildren();
+    for (const [id, p] of Object.entries(knots.pos)) {
+      const type = wiresOfKnot(knots, id)
+        .map((w) => types.get(w))
+        .find((t) => t !== undefined);
+      if (!type) continue;
+      const shared = isSharedKnot(knots, id);
+      const at = toScreen(p);
+      const g = document.createElementNS(SVG_NS, 'g');
+      g.setAttribute('class', `pz-knot type-${type}${shared ? ' shared' : ''}`);
+      g.setAttribute('transform', `translate(${at.x} ${at.y})`);
+      g.dataset.knot = id;
+      const circle = (r: number, cls: string): SVGCircleElement => {
+        const c = document.createElementNS(SVG_NS, 'circle');
+        c.setAttribute('r', String(r));
+        c.setAttribute('class', cls);
+        return c;
+      };
+      g.append(circle(16, 'pz-knot-hit'), circle(shared ? 9.5 : 7.5, 'pz-knot-ring'), circle(shared ? 4 : 3, 'pz-knot-core'));
+      g.addEventListener('pointerdown', (e) => onKnotDown(e, id));
+      knotLayer.append(g);
+    }
+  }
+
+  const sourceOf = (wireId: string): string | undefined => {
+    const w = [...level.base.wires, ...state.wires].find((x) => x.id === wireId);
+    return w ? pinKey(w.from) : undefined;
+  };
+
+  function onKnotDown(e: PointerEvent, id: string): void {
+    if (running || e.button > 0) return;
+    e.stopPropagation();
+    e.preventDefault();
+    const now = performance.now();
+    if (lastKnotTap && lastKnotTap.id === id && now - lastKnotTap.t < DOUBLE_MS) {
+      lastKnotTap = null;
+      knots = removeKnot(knots, id);
+      playSfx('unwire');
+      swallowClick = true;
+      drawWires();
+      return;
+    }
+    lastKnotTap = { id, t: now };
+    beginKnotDrag(e.pointerId, id, e.clientX, e.clientY);
+  }
+
+  function beginKnotDrag(pid: number, id: string, x: number, y: number): void {
+    knotDrag = { id, pid, sx: x, sy: y, moved: false };
+    try {
+      board.setPointerCapture(pid);
+    } catch {
+      // The pointer is already gone; the drag then just never starts.
+    }
+  }
+
+  /** A press on a wire: a drag from it pulls out a knot, a tap is handled by the click. */
+  function onWirePress(e: PointerEvent, wireId: string): void {
+    if (running || e.button > 0) return;
+    wirePress = { id: wireId, pid: e.pointerId, sx: e.clientX, sy: e.clientY };
+  }
+
+  function addKnotAt(wireId: string, screenPt: Pt): string | null {
+    const route = routes.get(wireId);
+    if (!route) return null;
+    const res = addKnot(knots, wireId, snapKnot(toLayout(screenPt)), legIndexAt(route, screenPt));
+    knots = res.book;
+    return res.id;
+  }
+
+  function onBoardMove(e: PointerEvent): void {
+    if (wirePress && wirePress.pid === e.pointerId && Math.hypot(e.clientX - wirePress.sx, e.clientY - wirePress.sy) > TAP_SLOP) {
+      const press = wirePress;
+      wirePress = null;
+      window.clearTimeout(wireTapTimer);
+      lastWireTap = null;
+      const id = addKnotAt(press.id, boardPoint(press.sx, press.sy));
+      if (id) beginKnotDrag(press.pid, id, press.sx, press.sy);
+    }
+    if (knotDrag && knotDrag.pid === e.pointerId) {
+      if (Math.hypot(e.clientX - knotDrag.sx, e.clientY - knotDrag.sy) > TAP_SLOP) knotDrag.moved = true;
+      if (!knotDrag.moved) return;
+      knots = moveKnot(knots, knotDrag.id, snapKnot(toLayout(boardPoint(e.clientX, e.clientY))));
+      drawWires(true);
+    }
+  }
+
+  function onBoardUp(e: PointerEvent): void {
+    if (wirePress && wirePress.pid === e.pointerId) wirePress = null;
+    if (!knotDrag || knotDrag.pid !== e.pointerId) return;
+    const drag = knotDrag;
+    knotDrag = null;
+    selWire = null;
+    if (!drag.moved) return;
+    swallowClick = true;
+    window.setTimeout(() => (swallowClick = false), 0);
+    const here = knots.pos[drag.id];
+    if (here) {
+      const at = toScreen(here);
+      const near = Object.keys(knots.pos).find((k) => {
+        const q = knots.pos[k];
+        if (k === drag.id || !q) return false;
+        const s = toScreen(q);
+        return Math.hypot(s.x - at.x, s.y - at.y) <= MERGE_PX;
+      });
+      if (near) {
+        const merged = mergeKnots(knots, near, drag.id, sourceOf);
+        if (merged) {
+          knots = merged;
+          playSfx('wire');
+          toast(TIDY_TEXT.knotMerged);
+        } else toast(TIDY_TEXT.knotSameSource);
+      }
+    }
+    drawWires();
+  }
+
+  /** A tap on a wire: it lights up; a second tap close behind adds a knot; otherwise the wire is taken off (as before). */
+  function wireTap(id: string, locked: boolean, e: MouseEvent): void {
+    const now = performance.now();
+    const prev = lastWireTap;
+    if (prev && prev.id === id && now - prev.t < DOUBLE_MS && Math.hypot(prev.x - e.clientX, prev.y - e.clientY) < DOUBLE_PX) {
+      window.clearTimeout(wireTapTimer);
+      lastWireTap = null;
+      selWire = null;
+      if (addKnotAt(id, boardPoint(e.clientX, e.clientY))) {
+        playSfx('wire');
+        drawWires();
+      }
+      return;
+    }
+    lastWireTap = { id, t: now, x: e.clientX, y: e.clientY };
+    selWire = id;
+    focusId = null;
+    applyLook();
+    window.clearTimeout(wireTapTimer);
+    wireTapTimer = window.setTimeout(() => {
+      lastWireTap = null;
+      if (running) return;
+      if (locked) return toast(PUZZLE_TEXT.lockedWire);
+      if (!state.wires.some((w) => w.id === id)) return;
+      state = removeWire(state, id);
+      playSfx('unwire');
+      toast(PUZZLE_TEXT.removed);
+      changed();
+    }, DOUBLE_MS);
+  }
+
+  /** Ctrl+R: a knot in the middle of the wire the pointer is over (or the one just tapped). */
+  function onKey(e: KeyboardEvent): void {
+    if (running || board.inert) return;
+    if (e.key === 'Escape') {
+      if (focusId !== null || selWire !== null) {
+        focusId = selWire = null;
+        applyLook();
+      }
+      return;
+    }
+    if (!(e.ctrlKey || e.metaKey) || e.key.toLowerCase() !== 'r') return;
+    const id = hoverWire ?? selWire;
+    const route = id ? routes.get(id) : undefined;
+    if (!id || !route) return;
+    e.preventDefault();
+    window.clearTimeout(wireTapTimer);
+    lastWireTap = null;
+    selWire = null;
+    if (addKnotAt(id, midPoint(route.pts))) {
+      playSfx('wire');
+      toast(TIDY_TEXT.knotAdded);
+      drawWires();
+    }
+  }
+
+  /** "Gom dây": every output pin with three wires or more gets one shared knot near its targets. */
+  function gom(): void {
+    if (running) return;
+    const list = shownWires();
+    const groups = fanOuts(list.map((w) => w.wire), 3);
+    if (groups.size === 0) {
+      toast(TIDY_TEXT.gomNone);
+      return;
+    }
+    const rects = cardRects();
+    const route = { unit: clampUnit(cardScale), fast: false, ...routeBounds() };
+    let specs = list.map((w) => wireSpec(w.wire, w.out, w.inn));
+    const placed: { wireIds: string[]; at: Pt }[] = [];
+    for (const ids of groups.values()) {
+      const at = bestGomSpot(rects, specs, ids, route);
+      placed.push({ wireIds: ids, at: snapKnot(toLayout(at)) });
+      specs = specs.map((sp) => (ids.includes(sp.id) ? { ...sp, via: [at] } : sp));
+    }
+    knots = gomKnots(knots, placed);
+    playSfx('wire');
+    toast(TIDY_TEXT.gomDone(placed.length));
+    drawWires();
+  }
+
+  // ---------- Sắp xếp gọn ----------
+
+  function pinOffset(node: string, dir: PortDir, port: string): Pt | undefined {
+    const entry = ports.get(portKey(node, dir, port));
+    const box = cards.get(node);
+    if (!entry || !box) return undefined;
+    return { x: dir === 'in' ? 0 : box.offsetWidth, y: box.clientTop + entry.row.offsetTop + entry.row.offsetHeight / 2 };
+  }
+
+  /** Moves every card into columns along the signal flow, animated; the view then zooms to show them all. */
+  function tidyUp(): void {
+    if (running || cards.size === 0) return;
+    picked = null;
+    closePopover();
+    applyPick();
+    const nodes = [...cards].map(([id, box]) => {
+      const kind = box.dataset.kind ?? '';
+      return { id, kind, category: getNodeDef(kind)?.category ?? 'logic', ...sizeOf(id) };
+    });
+    const target = arrangeLayout({
+      nodes,
+      wires: shownWires().map((w) => w.wire),
+      pin: pinOffset,
+      order: new Map([...cards.keys()].map((id) => [id, placedAt.get(id)?.y ?? 0])),
+    });
+    if (!tidy) {
+      // Start exactly where the cards are now, so the first frame does not jump.
+      tidy = true;
+      view = { k: cardScale, x: 0, y: 0 };
+      for (const id of cards.keys()) {
+        const p = placedAt.get(id) ?? { x: 0, y: 0 };
+        tidyPos.set(id, { x: p.x / cardScale, y: p.y / cardScale });
+      }
+    }
+    knots = emptyKnots();
+    focusId = selWire = null;
+    viewMoved = false;
+    const fit = fitContent(boundsOf(nodes.map((n) => ({ ...(target.get(n.id) ?? { x: 0, y: 0 }), w: n.w, h: n.h }))), area, avoidBox(), toolsInset());
+    animateTidy(target, fit, TIDY_MS);
+    toast(TIDY_TEXT.tidied);
+  }
+
+  function fitView(): void {
+    if (running || !tidy) return;
+    viewMoved = false;
+    animateTidy(new Map(tidyPos), tidyFit(), FIT_MS);
+  }
+
+  /** Drops a card that was dragged in the tidy layout: it slides down if it landed on another card. */
+  function settleTidy(id: string): void {
+    const me = tidyPosOf(id);
+    const others = tidyRects().filter((r) => r.id !== id);
+    const res = separateBoxes([{ id, ...me, ...sizeOf(id) }], { w: 1e6, h: 1e6 }, 12, others);
+    const p = res.pos.get(id);
+    if (p) tidyPos.set(id, p);
+  }
+
+  /** A free spot for a new card inside the part of the tidy layout on screen (below all cards when that is full). */
+  function tidyFreeSpot(size: { w: number; h: number }): { pos: Pt; inView: boolean } {
+    const region = { x: -view.x / view.k, y: -view.y / view.k, w: area.w / view.k, h: area.h / view.k };
+    const taken = tidyRects().map((r) => ({ x: r.x - region.x, y: r.y - region.y, w: r.w, h: r.h }));
+    const clear = avoidBox();
+    if (clear) taken.push({ x: (clear.x - view.x) / view.k - region.x, y: (clear.y - view.y) / view.k - region.y, w: clear.w / view.k, h: clear.h / view.k });
+    const spot = tryFreeSpot(taken, size, region, 14, 12);
+    if (spot) return { pos: { x: region.x + spot.x, y: region.y + spot.y }, inView: true };
+    const b = boundsOf(tidyRects());
+    return { pos: { x: b.x, y: b.y + b.h + 24 }, inView: false };
   }
 
   // ---------- tray ----------
@@ -422,15 +937,25 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       if (p) taken.push({ x: p.x, y: p.y, w: box.offsetWidth * cardScale, h: box.offsetHeight * cardScale });
     }
     const est = estimateNodeSize(placed.node);
-    const spot = findFreeSpot(taken, { w: est.w * cardScale, h: est.h * cardScale }, area, 8);
-    // Stored in level space so the card keeps its place when the board is resized.
-    const logical = { x: Math.round(spot.x / spreadX()), y: Math.round(spot.y / spreadY()) };
+    let logical: Pt;
+    let refit = false;
+    if (tidy) {
+      const free = tidyFreeSpot(est);
+      logical = { x: Math.round(free.pos.x), y: Math.round(free.pos.y) };
+      tidyPos.set(placed.node.id, logical);
+      refit = !free.inView;
+    } else {
+      const spot = findFreeSpot(taken, { w: est.w * cardScale, h: est.h * cardScale }, area, 8);
+      // Stored in level space so the card keeps its place when the board is resized.
+      logical = { x: Math.round(spot.x / spreadX()), y: Math.round(spot.y / spreadY()) };
+    }
     positions.set(placed.node.id, logical);
     state = { ...probe, placed: probe.placed.map((p) => (p === placed ? { ...p, node: { ...p.node, pos: logical } } : p)) };
     picked = null;
     closePopover();
     playSfx('pick');
     changed();
+    if (refit) fitView();
   }
 
   // ---------- picking and joining ----------
@@ -495,6 +1020,10 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   board.addEventListener('click', (e) => {
     if (running) return;
+    if (swallowClick || panZoom.wasDrag()) {
+      swallowClick = false;
+      return;
+    }
     const t = e.target;
     if (!(t instanceof Element)) return;
     // composedPath still lists the popover when the tapped − / + button was just replaced by the refill.
@@ -502,24 +1031,51 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       closePopover();
       return;
     }
-    if (t.closest('button, .wc-node-head, .pz-pop')) return;
+    if (t.closest('button, .wc-node-head, .pz-pop, .pz-knot')) return;
     const hit = t.closest<SVGElement>('.wc-wire-hit');
     const row = t.closest('.wc-port');
     const onRow = row ? [...ports.values()].find((p) => p.row === row) : undefined;
     const pin = onRow ?? pinNear(e.clientX, e.clientY, hit ? WIRE_REACH : PORT_REACH);
     if (pin) return tapPort(pin.end);
-    if (hit?.dataset.wire) {
-      if (hit.dataset.locked) return toast(PUZZLE_TEXT.lockedWire);
-      state = removeWire(state, hit.dataset.wire);
-      playSfx('unwire');
-      toast(PUZZLE_TEXT.removed);
-      return changed();
-    }
+    if (hit?.dataset.wire) return wireTap(hit.dataset.wire, !!hit.dataset.locked, e);
     if (picked) {
       picked = null;
       applyPick();
     }
-    userPick(t.closest<HTMLElement>('.wc-node')?.dataset.id ?? null);
+    tapFocus(t.closest<HTMLElement>('.wc-node')?.dataset.id ?? null);
+  });
+
+  // Knots: dragging a knot or a wire; hovering a wire (Ctrl+R adds a knot to it).
+  board.addEventListener('pointermove', onBoardMove);
+  board.addEventListener('pointerup', onBoardUp);
+  board.addEventListener('pointercancel', onBoardUp);
+  board.addEventListener('pointerover', (e) => {
+    const id = e.target instanceof Element ? (e.target.closest<SVGElement>('.wc-wire-hit')?.dataset.wire ?? null) : null;
+    if (id !== hoverWire) {
+      hoverWire = id;
+      applyLook();
+    }
+  });
+  window.addEventListener('keydown', onKey);
+
+  // The tidy layout is a free view: drag the board to move it, wheel or two fingers to zoom.
+  const panZoom = attachPanZoom(board, {
+    enabled: () => tidy && !running && animRaf === 0 && knotDrag === null,
+    startsOn: (t) => !t.closest('button, .wc-node-head, .wc-port, .pz-param, .pz-knot, .wc-wire-hit, .pz-pop, .pz-bottom'),
+    wheelBlocked: (t) => !!t.closest('.pz-bottom, .pz-pop'),
+    origin: () => {
+      const w = world.getBoundingClientRect();
+      return { x: w.left, y: w.top };
+    },
+    view: () => view,
+    setView: (v, done) => {
+      view = v;
+      viewMoved = true;
+      layout();
+      drawWires(!done);
+    },
+    minK: 0.25,
+    maxK: 1.6,
   });
 
   // ---------- dragging cards by their header ----------
@@ -540,12 +1096,14 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     box.classList.add('pz-dragging');
     const move = (ev: PointerEvent): void => {
       if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > TAP_SLOP) dragged = true;
-      const x = Math.min(Math.max(0, start.x + ev.clientX - startX), Math.max(0, area.w - box.offsetWidth * cardScale));
-      const y = Math.min(Math.max(0, start.y + ev.clientY - startY), Math.max(0, area.h - box.offsetHeight * cardScale));
-      positions.set(id, { x: x / spreadX(), y: y / spreadY() });
+      // The tidy layout has no edge to stop at; the stretched one keeps every card on the board.
+      const x = tidy ? start.x + ev.clientX - startX : Math.min(Math.max(0, start.x + ev.clientX - startX), Math.max(0, area.w - box.offsetWidth * cardScale));
+      const y = tidy ? start.y + ev.clientY - startY : Math.min(Math.max(0, start.y + ev.clientY - startY), Math.max(0, area.h - box.offsetHeight * cardScale));
+      if (tidy) tidyPos.set(id, toLayout({ x, y }));
+      else positions.set(id, { x: x / spreadX(), y: y / spreadY() });
       box.style.left = `${Math.round(x)}px`;
       box.style.top = `${Math.round(y)}px`;
-      drawWires();
+      drawWires(true);
     };
     const end = (up: PointerEvent): void => {
       head.removeEventListener('pointermove', move);
@@ -553,10 +1111,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       head.removeEventListener('pointercancel', end);
       box.classList.remove('pz-dragging');
       // Dropped on another card: the layout nudges the cards apart.
+      if (tidy) settleTidy(id);
       layout();
       drawWires();
       // A tap without a drag picks the card (a second tap lets go).
-      if (!dragged && up.type === 'pointerup') userPick(id);
+      if (!dragged && up.type === 'pointerup') tapFocus(id);
     };
     head.addEventListener('pointermove', move);
     head.addEventListener('pointerup', end);
@@ -665,8 +1224,32 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     applyPick();
   }
 
+  // ---------- tools ----------
+
+  const tools = h('div', 'pz-tools');
+  const toolButton = (icon: string, text: string, title: string, onClick: () => void): HTMLButtonElement => {
+    const btn = h('button', 'pz-tool');
+    btn.type = 'button';
+    btn.title = title;
+    btn.setAttribute('aria-label', title);
+    btn.append(svg(icon), h('span', 'pz-tool-txt', text));
+    btn.addEventListener('click', onClick);
+    return btn;
+  };
+  const toolButtons = [
+    toolButton(TOOL_ICONS.tidy, TIDY_TEXT.tidy, TIDY_TEXT.tidyHint, tidyUp),
+    toolButton(TOOL_ICONS.gom, TIDY_TEXT.gom, TIDY_TEXT.gomHint, gom),
+    toolButton(ICONS.shrink, TIDY_TEXT.fit, TIDY_TEXT.fitAria, fitView),
+  ];
+  tools.append(...toolButtons);
+  board.append(tools);
+
   const ro = new ResizeObserver(() => {
     layout();
+    if (tidy && !viewMoved && animRaf === 0) {
+      view = tidyFit();
+      layout();
+    }
     drawWires();
   });
   ro.observe(board);
@@ -680,12 +1263,23 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       picked = null;
       closePopover();
       resetPositions();
+      stopAnim();
+      tidy = false;
+      tidyPos.clear();
+      knots = emptyKnots();
+      focusId = selWire = null;
       changed();
     },
     setRunning(on, rtGetter) {
       running = on;
       picked = null;
       closePopover();
+      stopAnim();
+      knotDrag = wirePress = null;
+      window.clearTimeout(wireTapTimer);
+      lastWireTap = null;
+      focusId = selWire = hoverWire = null;
+      for (const btn of toolButtons) btn.disabled = on;
       board.classList.toggle('readonly', on);
       board.classList.remove('wiring');
       stopEnergyLoop();
@@ -709,6 +1303,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     pickCard(nodeId) {
       pickedCard = nodeId !== null && isPickable(nodeId) ? nodeId : null;
       showPicked(pickedCard !== null);
+      focusId = pickedCard;
+      selWire = null;
+      applyLook();
     },
     portEl: (end) => ports.get(portKey(end.node, end.dir, end.port))?.dot ?? null,
     chipEl: (slot) => (trayEl.children[slot] as HTMLElement | undefined) ?? null,
@@ -727,7 +1324,12 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     },
     destroy() {
       stopEnergyLoop();
+      stopAnim();
       window.clearTimeout(toastTimer);
+      window.clearTimeout(wireTapTimer);
+      window.removeEventListener('keydown', onKey);
+      panZoom.dispose();
+      tools.remove();
       ro.disconnect();
     },
   };
