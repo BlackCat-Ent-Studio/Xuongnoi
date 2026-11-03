@@ -659,6 +659,25 @@
   }
  },
  {
+  "id": "lesson:sight-forecast",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f6f17f60"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f6f17f60"
+  }
+ },
+ {
   "id": "lesson:combat",
   "off": {
    "ended": "running",
@@ -1418,6 +1437,25 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "bfa1c98e"
+  }
+ },
+ {
+  "id": "handbook:sight-forecast",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7decfb9c"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "7decfb9c"
   }
  },
  {

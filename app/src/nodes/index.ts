@@ -41,6 +41,7 @@ import { distanceNode } from './distance';
 import { speedSensorNode } from './speed-sensor';
 import { aheadSensorNode } from './ahead-sensor';
 import { visionSensorNode } from './vision-sensor';
+import { sightForecastNode } from './sight-forecast';
 import { colorSensorNode } from './color-sensor';
 import { cameraNode } from './camera';
 import { teleportNode } from './teleport';
@@ -110,6 +111,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   speedSensorNode,
   aheadSensorNode,
   visionSensorNode,
+  sightForecastNode,
   colorSensorNode,
   nextFreeSlotNode,
   nearestItemNode,

@@ -1,4 +1,5 @@
 import { createBotSensesLesson } from './lesson-bot-senses';
+import { createSightForecastLesson } from './lesson-sight-forecast';
 import { createNearestBotLesson } from './lesson-nearest-bot';
 import { createTwoGoalsBotLesson } from './lesson-two-goals-bot';
 import { createTidyBotLesson } from './lesson-tidy-bot';
@@ -10,5 +11,5 @@ import type { Lesson } from './types';
  * the menu order comes from COURSE in course.ts, so the order here does not matter.
  */
 export function createCoursePackE(kit: LessonKit): Lesson[] {
-  return [createBotSensesLesson(kit), createTidyBotLesson(kit), createNearestBotLesson(kit), createTwoGoalsBotLesson(kit)];
+  return [createBotSensesLesson(kit), createTidyBotLesson(kit), createNearestBotLesson(kit), createTwoGoalsBotLesson(kit), createSightForecastLesson(kit)];
 }

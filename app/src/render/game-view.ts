@@ -25,6 +25,7 @@ import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
 import { Hud } from './hud';
 import { onPackLoaded } from './pack-models';
 import { SceneView } from './scene-view';
+import { fanSpecs } from './vision-fan';
 import type { StageTheme } from './stage-theme';
 import { TEXT_VI } from './text-vi';
 import { UiInputBuffer, createClickTracker, pickEntities } from './ui-input';
@@ -101,6 +102,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     if (!renderer) return;
     const entities = shown ?? (world ? world.entities() : []);
     sceneView.sync(entities, dt);
+    sceneView.syncVisionFans(world && runtime ? fanSpecs(world, runtime.tickIndex, entities, mode) : [], () => world?.solidBoxes() ?? []);
     sceneView.syncColliderFrames(entities, playing ? new Set() : selectedOwners);
     sceneView.syncHighlight(entities, glowOwners, pulseStrength((performance.now() - glowSince) / 1000));
     rig.update(entities, dt, follow, follow && world ? world.cameraCommand() : null);

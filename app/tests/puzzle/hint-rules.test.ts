@@ -142,11 +142,12 @@ describe('new-piece intros', () => {
   });
 });
 
-describe('levels 1, 2, 4, 5 and 7 forced guide', () => {
-  it('is forced until the guide is marked seen, and only on levels 1, 2, 4, 5 and 7', () => {
+describe('levels 1, 2, 4, 5, 6 and 7 forced guide', () => {
+  it('is forced until the guide is marked seen, and only on levels 1, 2, 4, 5, 6 and 7', () => {
     const s = memory();
     expect(isGuideForced(lv(1), s)).toBe(true);
     expect(isGuideForced(lv(5), s)).toBe(true);
+    expect(isGuideForced(lv(6), s)).toBe(true);
     expect(isGuideForced(lv(7), s)).toBe(true);
     expect(isGuideForced(lv(3), s)).toBe(false);
     expect(isGuideForced(lv(2), s)).toBe(true);

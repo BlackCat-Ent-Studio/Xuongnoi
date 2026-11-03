@@ -30,6 +30,7 @@ const KIND_PURPOSE: Record<string, string> = {
   'route-follow': 'đi theo hàng ô, dừng từng ô.',
   carry: 'nhấc và thả thùng.',
   'next-free-slot': 'chỉ ô kho còn trống.',
+  'sight-forecast': 'biết trước khi nào bị thấy.',
   math: 'cộng hai số lại.',
 };
 
@@ -39,6 +40,7 @@ const LEVEL_INTRO: Record<string, string> = {
   'cua-kho': 'Bot phải qua cửa kho. Bạn tự nối cả mạch. Mình chỉ từng bước nhé!',
   'hai-nut-mot-cua': 'Hai bot, hai nút, một cửa! Mình chỉ từng bước nhé!',
   'du-ba-thung': 'Ôi, màn này là 3D! Camera nhìn từ trên cao, hơi nghiêng. Mình cùng làm nhé!',
+  'ne-linh-gac': 'Lính gác nhìn theo hướng đi! Bạn tự nối bộ não cho mèo nhỏ. Mình chỉ từng bước nhé!',
   'phan-loai-mau': 'Màn cuối! Bạn tự nối cả mạch cho rô-bốt. Mình chỉ từng bước nhé!',
 };
 
@@ -96,10 +98,14 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     sw15: 'Lối đi dọc của Đi tới cũng cho rô-bốt.',
   },
   'ne-linh-gac': {
-    sw1: 'Mèo nhỏ vào mảnh Đo khoảng cách.',
-    sw2: 'Mèo lính gác cũng vào đó.',
-    sw3: 'Trong tầm thì lật ngược bằng Đảo ngược.',
-    sw4: 'Lính gác xa thì mèo được đi.',
+    sw1: 'Nối Mèo nhỏ vào mảnh Chạy theo tuyến.',
+    sw2: 'Đi ngang của tuyến về cho mèo.',
+    sw3: 'Đi dọc của tuyến cũng về cho mèo.',
+    sw4: 'Lính gác là người nhìn của mảnh Dự đoán.',
+    sw5: 'Mèo nhỏ là chỗ cần canh.',
+    sw6: 'Số giây "Còn" vào So sánh, ô A.',
+    sw7: 'Số giây "Cần" vào So sánh, ô B.',
+    sw8: 'Còn đủ giây thì mèo chạy sang thùng kế!',
   },
   'phan-loai-mau': {
     sw1: 'Nối Rô-bốt vào Chạy theo tuyến để nó đi dọc các ô.',
@@ -136,6 +142,7 @@ export const GUIDE_TEXT = {
 const WIN_LINES: Record<string, string> = {
   'bot-dau-tien': 'Giỏi lắm! Bot tới cờ rồi!',
   'du-ba-thung': 'Giỏi quá! Rô-bốt tự cất đủ ba thùng rồi!',
+  'ne-linh-gac': 'Giỏi quá! Mèo nhỏ lẻn qua mà không bị thấy!',
   'cua-kho': 'Giỏi lắm! Cửa mở mãi cho bot rồi!',
   'hai-nut-mot-cua': 'Giỏi lắm! Cả hai bot qua cửa rồi!',
   'phan-loai-mau': 'Giỏi quá! Bạn tự nối cả mạch rồi!',

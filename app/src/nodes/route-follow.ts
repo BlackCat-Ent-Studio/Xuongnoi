@@ -9,6 +9,7 @@ import {
 } from './steering';
 import { buildRail, nearestS, railAt, upcomingPoint, type Rail } from './route-rail';
 import { GRAB_REACH } from './carry';
+import { legsEvaluate } from './route-legs';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 export const ROUTE_MAX_POINTS = 32;
@@ -42,6 +43,9 @@ interface RouteState {
   waitLeft: number;
   /** True until the first tick of a stop has turned the walker toward what is beside it. */
   turnPending: boolean;
+  /** "Chạy từng chặng" only: standing at a point or dashing to the next. */
+  phase: 'wait' | 'ready' | 'dash' | null;
+  readyLeft: number;
 }
 
 /** Rail mode lets go of its place on the track when the body is this far off it (blocked by a wall, say). */
@@ -224,6 +228,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
     { id: 'self', type: 'object', label: 'Ai', required: true },
     { id: 'on', type: 'bool', label: 'Bật', default: true },
     { id: 'stop', type: 'bool', label: 'Dừng' },
+    { id: 'go', type: 'bool', label: 'Chạy' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
@@ -281,6 +286,19 @@ export const routeFollowNode: NodeDef<RouteState> = {
     { id: 'steerGain', label: 'Độ gắt khi cua (xe lái bằng ga - lái)', kind: 'number', default: 2, min: 0.5, max: 8, step: 0.5, advanced: true },
     { id: 'stopFor', label: 'Dừng ở mỗi điểm (giây, 0 = không dừng; chỉ khi chạy kiểu "Lái tới từng điểm")', kind: 'number', default: 0, min: 0, max: 30, step: 0.5, advanced: true },
     {
+      id: 'legs',
+      label: 'Chạy từng chặng',
+      kind: 'select',
+      default: 'off',
+      options: [
+        { value: 'off', label: 'Không (chạy liên tục như cũ)' },
+        { value: 'dash', label: 'Có (đứng ở mỗi điểm tới khi "Chạy" bật, rồi chạy thẳng tới điểm kế)' },
+      ],
+      advanced: true,
+    },
+    { id: 'readyFor', label: 'Chuẩn bị trước mỗi chặng (giây, chỉ khi chạy từng chặng)', kind: 'number', default: 0, min: 0, max: 5, step: 0.1, advanced: true },
+    { id: 'slowRadius', label: 'Giảm tốc khi gần điểm (đơn vị, chỉ khi chạy từng chặng)', kind: 'number', default: 0.6, min: 0.2, max: 5, step: 0.1, advanced: true },
+    {
       id: 'faceAtStop',
       label: 'Khi dừng, quay mặt về',
       kind: 'select',
@@ -292,7 +310,7 @@ export const routeFollowNode: NodeDef<RouteState> = {
       advanced: true,
     },
   ],
-  create: () => ({ idx: null, dir: 1, rail: null, pos: null, waitLeft: 0, turnPending: false }),
+  create: () => ({ idx: null, dir: 1, rail: null, pos: null, waitLeft: 0, turnPending: false, phase: null, readyLeft: 0 }),
   evaluate(ctx, i, params, s): PortValues {
     const world = ctx.world;
     const self = liveCharacter(world, asObject(i.self));
@@ -306,6 +324,11 @@ export const routeFollowNode: NodeDef<RouteState> = {
     }
 
     const isVehicle = self.kind === 'vehicle';
+    if (!isVehicle && strParam(params, 'legs', 'off') === 'dash') {
+      const reach = numParam(params, 'lookAhead', 2.5);
+      const blocked = reach > 0 && world.probeAhead(self.id, reach) !== null;
+      return legsEvaluate({ world, self, params, s, points, go: asBool(i.go), halted: blocked || asBool(i.stop), blocked, dt: ctx.dt, tick: ctx.tick, shown });
+    }
     if (strParam(params, 'follow', 'steer') === 'rail') return railEvaluate(ctx.dt, world, self, params, s, points, shown, asBool(i.stop));
     // 0 = automatic: vehicles use a wide circle (they never stop at a point), walkers a tight one.
     const arriveParam = Math.max(0, numParam(params, 'arriveRadius', 0));

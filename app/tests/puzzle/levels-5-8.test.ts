@@ -17,11 +17,6 @@ function withParams(a: PuzzleAnswer, kind: string, params: Params): PuzzleAnswer
   return { ...a, nodes: a.nodes.map((n) => (n.kind === kind ? { ...n, params: { ...n.params, ...params } } : n)) };
 }
 
-/** Copy of the answer without the given wires (pieces left unwired stay on the board). */
-function withoutWires(a: PuzzleAnswer, ...ids: string[]): PuzzleAnswer {
-  return { ...a, wires: a.wires.filter((w) => !ids.includes(w.id)) };
-}
-
 describe.each(PUZZLE_LEVELS)('puzzle level $order $id: real board rules', (level) => {
   it('every solution wire passes the same connect rule the board uses, wired one by one', () => {
     registerAllNodes();
@@ -108,34 +103,5 @@ describe('level 5: du-ba-thung', () => {
   it('a spare "Đảo ngược" left unwired does nothing', () => {
     const extra: PuzzleAnswer = { ...level05.solution, nodes: [...level05.solution.nodes, { id: 'n', kind: 'not', params: {}, pos: { x: 0, y: 0 } }] };
     expect(runLevel(level05, extra).outcome).toBe('win');
-  });
-});
-
-describe('level 6: ne-linh-gac', () => {
-  it('a hero that always walks runs into the guard', () => {
-    expect(runLevel(level06, EMPTY).outcome).toBe('lose');
-  });
-
-  it('a safe distance that is too small still gets caught', () => {
-    expect(runLevel(level06, withParams(level06.solution, 'distance', { threshold: 1 })).outcome).toBe('lose');
-  });
-
-  it('a safe distance that is too big keeps the hero waiting forever', () => {
-    expect(runLevel(level06, withParams(level06.solution, 'distance', { threshold: 8 })).outcome).toBe('timeout');
-  });
-
-  it('a range of safe distances works', () => {
-    for (const threshold of [2, 3, 4]) {
-      expect(runLevel(level06, withParams(level06.solution, 'distance', { threshold })).outcome).toBe('win');
-    }
-  });
-
-  it('forgetting the "Đảo ngược" (hero waits when the guard is far) never arrives', () => {
-    const notBack = withoutWires(level06.solution, 'sw3', 'sw4');
-    const direct: PuzzleAnswer = {
-      ...notBack,
-      wires: [...notBack.wires, { id: 'x1', from: { node: 's-dist', port: 'within' }, to: { node: 'walk', port: 'go' } }],
-    };
-    expect(runLevel(level06, direct).outcome).not.toBe('win');
   });
 });
