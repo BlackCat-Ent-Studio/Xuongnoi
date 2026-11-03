@@ -99,6 +99,8 @@ export function stealthBase(l: StealthLayout): { nodes: GraphNode[]; wires: Wire
     { id: 'guard', kind: 'character', params: { name: 'Lính gác', position: { x: GUARD_LANE.x, y: 1, z: l.guardZ }, speed: GUARD_LANE.speed, color: '#64748b', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 150 } },
     { id: 'patrol', kind: 'patrol', params: { pointA: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z1 - TURN_SLACK }, pointB: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z2 + TURN_SLACK }, wait: GUARD_LANE.wait, pathfind: 'off' }, pos: { x: 10, y: 230 } },
     scenery('eyes', 'vision-sensor', { range: GUARD_EYES.range, angle: GUARD_EYES.angle, walls: 'yes' }),
+    // The guard walks only because this locked card switches its walk on; the cat's own walk takes the same signal from it.
+    { id: 'start', kind: 'on-start', params: {}, pos: { x: 10, y: 430 } },
   ];
   const wires: Wire[] = [
     wire('b1', ['guard', 'self'], ['patrol', 'self']),
@@ -110,6 +112,8 @@ export function stealthBase(l: StealthLayout): { nodes: GraphNode[]; wires: Wire
     wire('b7', ['goal', 'self'], ['arrive', 'b']),
     wire('b8', ['arrive', 'touching'], ['end', 'win']),
     wire('b9', ['eyes', 'seen'], ['end', 'lose']),
+    wire('b10', ['start', 'started'], ['patrol', 'on']),
+    wire('b11', ['start', 'started'], ['cam', 'on']),
   ];
   return { nodes, wires };
 }
@@ -136,7 +140,8 @@ export const level06: PuzzleLevel = {
     ...Object.fromEntries(['floor', 'goal', 'crate-1', 'crate-2', 'crate-3', 'arrive', 'eyes', 'cam', 'end'].map((id) => [id, { in: [], out: [] }])),
     hero: { in: ['moveX', 'moveY'], out: ['self'] },
     guard: { in: [], out: ['self'] },
-    patrol: { in: [], out: ['atEnd'] },
+    patrol: { in: ['on'], out: ['atEnd', 'route'] },
+    start: { in: [], out: ['started'] },
   },
   tray: [
     { kind: 'route-follow', count: 1, params: routeParamsOf(LAYOUT) },
@@ -164,6 +169,9 @@ export const level06: PuzzleLevel = {
       wire('sw6', ['s-fore', 'window'], ['s-cmp', 'a']),
       wire('sw7', ['s-fore', 'need'], ['s-cmp', 'b']),
       wire('sw8', ['s-cmp', 'out'], ['s-route', 'go']),
+      wire('sw9', ['start', 'started'], ['s-route', 'on']),
+      wire('sw10', ['patrol', 'route'], ['s-fore', 'patrol']),
+      wire('sw11', ['s-route', 'route'], ['s-fore', 'route']),
     ],
   },
 };

@@ -51,6 +51,8 @@ export const level08: PuzzleLevel = {
       { id: 'wall-south', kind: 'block', params: { position: { x: -4, y: 0.9, z: 3.75 }, size: { x: 1, y: 1.8, z: 8.5 }, color: WALL_COLOR, type: 'solid' }, pos: { x: 410, y: 160 } },
       { id: 'caught', kind: 'touch', params: {}, pos: { x: 210, y: 476 } },
       { id: 'cam', kind: 'camera', params: { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.8 }, pos: { x: 210, y: 520 } },
+      // Hidden: switches the guard, the rolling robot's neighbour and the camera on from the first moment.
+      { id: 'begin', kind: 'on-start', params: {}, pos: { x: 410, y: 220 } },
       { id: 'end', kind: 'win-lose', params: { winMessage: 'Cả xưởng cùng làm việc, mèo nhỏ ra tới đích!', loseMessage: 'Lính gác bắt được mèo nhỏ rồi!' }, pos: { x: 410, y: 20 } },
     ],
     wires: [
@@ -73,6 +75,9 @@ export const level08: PuzzleLevel = {
       { id: 'b17', from: { node: 'guard', port: 'self' }, to: { node: 'caught', port: 'b' } },
       { id: 'b18', from: { node: 'walk', port: 'arrived' }, to: { node: 'end', port: 'win' } },
       { id: 'b19', from: { node: 'caught', port: 'touching' }, to: { node: 'end', port: 'lose' } },
+      { id: 'b20', from: { node: 'begin', port: 'started' }, to: { node: 'guard-brain', port: 'on' } },
+      { id: 'b21', from: { node: 'begin', port: 'started' }, to: { node: 'legs-brain', port: 'on' } },
+      { id: 'b22', from: { node: 'begin', port: 'started' }, to: { node: 'cam', port: 'on' } },
     ],
   },
   shownPorts: {
@@ -101,6 +106,7 @@ export const level08: PuzzleLevel = {
     'wall-south': { in: [], out: [] },
     caught: { in: [], out: [] },
     cam: { in: [], out: [] },
+    begin: { in: [], out: [] },
     end: { in: [] },
   },
   tray: [

@@ -3,6 +3,7 @@ import { getNodeDef } from '../../engine/registry';
 import { canConnect } from '../../engine/wiring';
 import type { Graph, GraphNode, NodeDef, ParamDef, ParamValue, Params, PortRef, Wire } from '../../engine/types';
 import { checkPortPair, type PortDir } from '../../editor/graph/port-compat';
+import { FORMERLY_ON_BY_DEFAULT } from '../../editor/graph/wire-rule-migration';
 import { buildPlayGraph } from '../run-level';
 import type { PuzzleAnswer, PuzzleLevel } from '../types';
 
@@ -34,6 +35,7 @@ export const EMPTY_BOARD: BoardState = { placed: [], wires: [], overrides: {} };
 export const PUZZLE_TEXT = {
   lockedWire: 'Dây này cố định, không gỡ được',
   lockedInput: 'Cổng này đã có dây cố định',
+  startOnlyEnables: '"Khi bắt đầu" chỉ dùng để bật một mảnh ghép lên (cổng "Cho đi", "Bật", "Chạy"...)',
   hiddenPort: 'Cổng này không dùng trong màn này',
   joined: 'Đã nối!',
   removed: 'Đã gỡ dây',
@@ -192,6 +194,16 @@ function isBaseInput(level: PuzzleLevel, to: PortRef): boolean {
   return level.base.wires.some((w) => w.to.node === to.node && w.to.port === to.port);
 }
 
+/**
+ * "Khi bắt đầu" is the signal that switches a piece on from the first moment. As a constant "true" for the logic of a level
+ * (a door, a memory switch) it would skip the puzzle, so a puzzle board lets it reach only the inputs that switch a piece on.
+ */
+export function startMayJoin(graph: Graph, from: PortRef, to: PortRef): boolean {
+  if (graph.nodes.find((n) => n.id === from.node)?.kind !== 'on-start') return true;
+  const kind = graph.nodes.find((n) => n.id === to.node)?.kind;
+  return FORMERLY_ON_BY_DEFAULT.some((r) => r.kind === kind && r.port === to.port);
+}
+
 /** Can the picked port be joined to this one? Used for the pulsing hints and for the join itself. */
 export function checkJoin(level: PuzzleLevel, state: BoardState, a: PortEnd, b: PortEnd): { ok: true } | { ok: false; message: string } {
   if (sameEnd(a, b)) return { ok: false, message: '' };
@@ -200,7 +212,10 @@ export function checkJoin(level: PuzzleLevel, state: BoardState, a: PortEnd, b: 
   }
   const to = a.dir === 'in' ? a : b;
   if (a.dir !== b.dir && isBaseInput(level, to)) return { ok: false, message: PUZZLE_TEXT.lockedInput };
-  const res = checkPortPair(graphOf(level, state), endRef(a), a.dir, endRef(b), b.dir);
+  const graph = graphOf(level, state);
+  const [from, into] = a.dir === 'out' ? [a, b] : [b, a];
+  if (a.dir !== b.dir && !startMayJoin(graph, endRef(from), endRef(into))) return { ok: false, message: PUZZLE_TEXT.startOnlyEnables };
+  const res = checkPortPair(graph, endRef(a), a.dir, endRef(b), b.dir);
   return res.ok ? { ok: true } : res;
 }
 

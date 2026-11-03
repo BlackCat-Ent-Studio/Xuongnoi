@@ -48,7 +48,7 @@ describe('level 5 is made of editor pieces only', () => {
 
 describe('level 5 board: only the robot and the slot marks are drawn', () => {
   registerAllNodes();
-  const SCENERY = ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'slot-zone-1', 'slot-zone-2', 'slot-zone-3', 'slots-12', 'slots-all', 'end'].sort();
+  const SCENERY = ['floor', 'store-pad', 'crate-1', 'crate-2', 'crate-3', 'cam', 'start', 'slot-zone-1', 'slot-zone-2', 'slot-zone-3', 'slots-12', 'slots-all', 'end'].sort();
   const visible = level05.base.nodes.filter((n) => !isSceneryNode(level05, n.id));
 
   it('the floor, store, crates, win plumbing and camera are hidden; the visible cards are the robot and the 3 slots', () => {
@@ -86,11 +86,11 @@ describe('level 5 board: only the robot and the slot marks are drawn', () => {
     }
   });
 
-  it('the tray is the four solution pieces plus one spare; par is the piece count; the go-to preset stops clear of a crate within hand reach', () => {
-    expect(level05.tray.map((t) => t.kind).sort()).toEqual(['carry', 'go-to', 'next-free-slot', 'nearest-item', 'not'].sort());
+  it('the tray is the five solution pieces plus one spare; par is the piece count; the go-to preset stops clear of a crate within hand reach', () => {
+    expect(level05.tray.map((t) => t.kind).sort()).toEqual(['carry', 'go-to', 'next-free-slot', 'nearest-item', 'on-start', 'or'].sort());
     expect(level05.tray.every((t) => t.count === 1)).toBe(true);
-    expect(level05.solution.nodes.map((n) => n.kind)).not.toContain('not');
-    expect(level05.par).toBe(4);
+    expect(level05.solution.nodes.map((n) => n.kind)).not.toContain('or');
+    expect(level05.par).toBe(5);
     expect(piecesUsed(level05.solution)).toBe(level05.par);
     expect(level05.freeHints).toBe(Math.floor(level05.solution.wires.length / 2));
     const stop = level05.tray.find((t) => t.kind === 'go-to')!.params!.stopDistance as number;

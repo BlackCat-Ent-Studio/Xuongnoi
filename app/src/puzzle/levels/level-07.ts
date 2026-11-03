@@ -30,8 +30,6 @@ const STORE_SIZE = { x: 5.6, z: 2 };
 
 /** How far in front of the robot's middle the hands hold one of these crates: the robot stops this far from a slot so the crate lands in its middle. */
 const PARK_REACH = Math.round(handReach(CRATE_SIZE) * 100) / 100;
-/** Seconds the robot stands at each pad before walking on. */
-const PAD_STOP = 0.5;
 
 let sceneryIndex = 0;
 /** Scenery is never drawn, so it only needs a spot of its own: a strip below the board holds them all in rows. */
@@ -50,15 +48,18 @@ const ROUTE_PARAMS: GraphNode['params'] = {
   speed: 5,
   lookAhead: 0,
   arriveRadius: 0.2,
-  stopFor: PAD_STOP,
 };
 const GO_TO_PARAMS: GraphNode['params'] = { stopDistance: PARK_REACH, slowRadius: 3, pathfind: 'off' };
+/** Seconds the robot waits at each pad before walking on. */
+const PAD_STOP = 0.5;
+/** The timer that holds the robot at each pad (the player's own "Hẹn giờ": restarted by "Tới điểm", wired into "Dừng"). */
+const PAD_TIMER_PARAMS: GraphNode['params'] = { seconds: PAD_STOP };
 
 const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
 
 /**
  * Level 7 (phan-loai-mau): red and blue crates sit on coloured pads in a row. The player builds the whole circuit of
- * the legs robot: walk the pads and stop at each one, read the colour, grab only on blue while standing at a pad,
+ * the legs robot: walk the pads and wait at each one on a timer, read the colour, grab only on blue while waiting at a pad,
  * walk the crate to the first free store slot, put it down and go on. Three blue crates in the store win, a red one
  * in the store loses.
  *
@@ -71,7 +72,7 @@ export const level07: PuzzleLevel = {
   order: 7,
   title: 'Phân loại thùng màu',
   task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua! Bạn tự nối cả mạch cho rô-bốt.',
-  hint: 'Cho rô-bốt đi theo hàng ô bằng "Chạy theo tuyến". "Đọc màu" chỉnh về 2 (xanh); thấy xanh VÀ đang đứng ở ô thì "Nhấc lên". Khiêng xong thì tuyến dừng, "Đi tới" đem thùng tới "Ô trống kế tiếp", tới nơi thì "Thả". "Phép tính" cộng hai lối đi ngang.',
+  hint: 'Cho rô-bốt đi theo hàng ô bằng "Chạy theo tuyến" (nối "Khi bắt đầu" vào "Bật" cho nó chạy). Mỗi lần "Tới điểm" thì "Hẹn giờ" đếm lại, và trong lúc đếm thì tuyến "Dừng". "Đọc màu" chỉnh về 2 (xanh); thấy xanh VÀ đang đợi ở ô thì "Nhấc lên". Khiêng xong thì tuyến dừng, "Đi tới" đem thùng tới "Ô trống kế tiếp", tới nơi thì "Thả". "Phép tính" cộng hai lối đi ngang.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,
@@ -100,6 +101,8 @@ export const level07: PuzzleLevel = {
       scenery('slots-all', 'and', {}),
       scenery('red-store', 'zone', { center: { x: STORE_CENTER.x, y: 0.5, z: STORE_CENTER.z }, size: { x: STORE_SIZE.x, y: 3, z: STORE_SIZE.z }, filter: 'item', goods: 'do', rule: 'center', color: RED }),
       scenery('cam', 'camera', { mode: 'fixed', point: { x: 0, y: 0, z: 0 }, view: 'tilted', zoom: 0.85 }),
+      // Locked and not drawn: it switches the fixed camera on, since nothing acts without a wire.
+      scenery('start', 'on-start', {}),
       scenery('end', 'win-lose', { winMessage: 'Ba thùng xanh đã về kho!', loseMessage: 'Có thùng đỏ lẫn vào kho rồi!' }),
       // The two things the player wires to: the robot and the store slot marks, in a column on the left.
       { id: 'robot', kind: 'character', params: { name: 'Rô-bốt chân', position: { x: -7.6, y: 1, z: 0 }, speed: 5, color: '#7cc4f0', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 10 } },
@@ -112,11 +115,12 @@ export const level07: PuzzleLevel = {
       wire('b4', ['slot-zone-3', 'inside'], ['slots-all', 'b']),
       wire('b5', ['slots-all', 'out'], ['end', 'win']),
       wire('b6', ['red-store', 'inside'], ['end', 'lose']),
+      wire('b7', ['start', 'started'], ['cam', 'on']),
     ],
   },
   shownPorts: {
     ...Object.fromEntries(
-      ['floor', 'store-mark', 'red-store', 'slots-12', 'slots-all', 'cam', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`), ...PADS.flatMap((_, i) => [`pad-${i + 1}`, `crate-${i + 1}`])].map((id) => [id, { in: [], out: [] }]),
+      ['floor', 'store-mark', 'red-store', 'slots-12', 'slots-all', 'cam', 'start', 'end', ...[1, 2, 3].map((n) => `slot-zone-${n}`), ...PADS.flatMap((_, i) => [`pad-${i + 1}`, `crate-${i + 1}`])].map((id) => [id, { in: [], out: [] }]),
     ),
     robot: { in: ['moveX'], out: ['self'] },
     'slot-1': { in: [], out: ['self'] },
@@ -131,11 +135,15 @@ export const level07: PuzzleLevel = {
     { kind: 'go-to', count: 1, params: GO_TO_PARAMS },
     { kind: 'next-free-slot', count: 1 },
     { kind: 'math', count: 1, params: { op: 'add' } },
-    // Spare piece: the grab needs no "not holding" check, so "Đảo ngược" only looks useful.
-    { kind: 'not', count: 1 },
+    { kind: 'on-start', count: 1 },
+    { kind: 'timer', count: 1, params: PAD_TIMER_PARAMS },
+    { kind: 'compare', count: 1, params: { op: 'gt' } },
+    { kind: 'or', count: 1 },
+    // Spare piece: it measures speed, which looks like the way to tell the robot stands still, but "Dừng" already tells that. (Not "Đảo ngược", "Công tắc nhớ" or a second "Và": left alone, or set by the stops, they can do the colour sensor's or the start card's work.)
+    { kind: 'speed-sensor', count: 1 },
   ],
   editable: [{ kind: 'color-sensor', paramId: 'want' }],
-  par: 7,
+  par: 11,
   freeHints: 7,
   timeLimit: 60,
   solution: {
@@ -147,6 +155,10 @@ export const level07: PuzzleLevel = {
       { id: 's-hands', kind: 'carry', params: {}, pos: { x: 820, y: 330 } },
       { id: 's-next', kind: 'next-free-slot', params: {}, pos: { x: 620, y: 400 } },
       { id: 's-goto', kind: 'go-to', params: GO_TO_PARAMS, pos: { x: 820, y: 450 } },
+      { id: 's-start', kind: 'on-start', params: {}, pos: { x: 380, y: 20 } },
+      { id: 's-timer', kind: 'timer', params: PAD_TIMER_PARAMS, pos: { x: 380, y: 160 } },
+      { id: 's-cmp', kind: 'compare', params: { op: 'gt' }, pos: { x: 380, y: 300 } },
+      { id: 's-or', kind: 'or', params: {}, pos: { x: 380, y: 420 } },
     ],
     wires: [
       wire('sw1', ['robot', 'self'], ['s-route', 'self']),
@@ -154,10 +166,10 @@ export const level07: PuzzleLevel = {
       wire('sw3', ['s-sum', 'out'], ['robot', 'moveX']),
       wire('sw4', ['robot', 'self'], ['s-eye', 'who']),
       wire('sw5', ['s-eye', 'match'], ['s-and', 'a']),
-      wire('sw6', ['s-route', 'atPoint'], ['s-and', 'b']),
+      wire('sw6', ['s-route', 'halted'], ['s-and', 'b']),
       wire('sw7', ['robot', 'self'], ['s-hands', 'character']),
       wire('sw8', ['s-and', 'out'], ['s-hands', 'grab']),
-      wire('sw9', ['s-hands', 'holding'], ['s-route', 'stop']),
+      wire('sw9', ['s-or', 'out'], ['s-route', 'stop']),
       wire('sw10', ['slot-1', 'self'], ['s-next', 's1']),
       wire('sw11', ['slot-2', 'self'], ['s-next', 's2']),
       wire('sw12', ['slot-3', 'self'], ['s-next', 's3']),
@@ -166,6 +178,12 @@ export const level07: PuzzleLevel = {
       wire('sw15', ['s-hands', 'holding'], ['s-goto', 'go']),
       wire('sw16', ['s-goto', 'moveX'], ['s-sum', 'b']),
       wire('sw17', ['s-goto', 'arrived'], ['s-hands', 'drop']),
+      wire('sw18', ['s-start', 'started'], ['s-route', 'on']),
+      wire('sw19', ['s-route', 'reached'], ['s-timer', 'reset']),
+      wire('sw20', ['s-start', 'started'], ['s-timer', 'run']),
+      wire('sw21', ['s-timer', 'left'], ['s-cmp', 'a']),
+      wire('sw22', ['s-cmp', 'out'], ['s-or', 'a']),
+      wire('sw23', ['s-hands', 'holding'], ['s-or', 'b']),
     ],
   },
 };

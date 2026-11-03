@@ -44,7 +44,7 @@ describe('level 7 is made of editor pieces only', () => {
 describe('level 7 shows only the robot and the store slot marks', () => {
   registerAllNodes();
   const SCENERY = [
-    'floor', 'store-mark', 'red-store', 'slots-12', 'slots-all', 'slot-zone-1', 'slot-zone-2', 'slot-zone-3', 'cam', 'end',
+    'floor', 'store-mark', 'red-store', 'slots-12', 'slots-all', 'start', 'slot-zone-1', 'slot-zone-2', 'slot-zone-3', 'cam', 'end',
     ...Array.from({ length: 6 }, (_, i) => [`pad-${i + 1}`, `crate-${i + 1}`]).flat(),
   ].sort();
   const visible = level07.base.nodes.filter((n) => !isSceneryNode(level07, n.id));

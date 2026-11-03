@@ -115,6 +115,8 @@ export const level04: PuzzleLevel | null = {
       wire('s10', ['p-touch', 'touching'], ['p-or', 'a']),
       wire('s11', ['p-goto-b', 'arrived'], ['p-or', 'b']),
       wire('s12', ['p-or', 'out'], ['door', 'hiddenWhile']),
+      // Bot A stands on button 1 from the start, so the same signal that holds the door open also sends bot B off.
+      wire('s13', ['p-or', 'out'], ['p-goto-b', 'go']),
     ],
   },
 };
