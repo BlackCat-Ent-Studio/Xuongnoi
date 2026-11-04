@@ -645,6 +645,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const stepping = running && stepFired !== null;
     const focusing = stepping || (!running && (focusId !== null || selWire !== null));
     board.classList.toggle('pz-focusing', focusing);
+    // A paused step run fades everything else much further, so only the circuit that just ran stands out.
+    board.classList.toggle('pz-stepping', stepFired !== null);
     const litWires = new Set<string>();
     const litCards = new Set<string>();
     if (stepping && stepFired) {

@@ -89,6 +89,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .pz-board .pz-wire.pz-lit .wc-wire-flow { opacity: .95; stroke-width: 3; }
 .pz-board .wc-node { transition: box-shadow .25s, border-color .25s, opacity .25s; }
 .pz-board .wc-node.pz-faded { opacity: .62; }
+.pz-board.pz-stepping .wc-node.pz-faded { opacity: .2; }
+.pz-board.pz-stepping.pz-focusing .pz-wire:not(.pz-lit) { opacity: .1; }
 /* reroute knots */
 .pz-board .pz-knots { z-index: 5; }
 .pz-board .pz-knot { pointer-events: all; cursor: grab; transition: opacity .25s; }
