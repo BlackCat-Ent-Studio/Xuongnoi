@@ -10,7 +10,8 @@ interface Ctx {
   state: EditorState;
   nodeEls: Map<string, HTMLElement>;
   sizeOf: (id: string) => Size | undefined;
-  drawWires: () => void;
+  /** `fast`: plain curves, used while cards slide. */
+  drawWires: (fast?: boolean) => void;
   fit: () => void;
   /** World-space regions covered by overlays; new nodes are kept off them. */
   blocked?: () => Box[];
@@ -66,8 +67,9 @@ export function createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit, 
     state.moveItems([...layout].map(([id, pos]) => ({ id, pos })));
     const t0 = performance.now();
     const tick = (): void => {
-      drawWires();
-      if (performance.now() - t0 < ARRANGE_MS) requestAnimationFrame(tick);
+      const last = performance.now() - t0 >= ARRANGE_MS;
+      drawWires(!last);
+      if (!last) requestAnimationFrame(tick);
       else {
         el.classList.remove('arranging');
         animating = false;

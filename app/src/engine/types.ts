@@ -185,6 +185,12 @@ export interface GraphSettings {
   wireRule?: boolean;
 }
 
+/** Bend points of wires on the canvas. `pos`: knot id to position; `chain`: wire id to the knot ids it passes, in order. */
+export interface GraphKnots {
+  pos: Record<string, { x: number; y: number }>;
+  chain: Record<string, string[]>;
+}
+
 export interface Graph {
   nodes: GraphNode[];
   wires: Wire[];
@@ -192,6 +198,8 @@ export interface Graph {
   groups?: NodeGroup[];
   /** Optional game settings (absent in older files and whenever every switch is off). */
   settings?: GraphSettings;
+  /** Optional wire bend points ("nút gấp") made on the wiring canvas. Drawing only: the engine ignores it. Absent whenever there are none. */
+  knots?: GraphKnots;
 }
 
 /** A saved board = one game. */

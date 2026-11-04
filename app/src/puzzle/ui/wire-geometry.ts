@@ -54,6 +54,8 @@ export interface RouteOptions {
   fast: boolean;
   /** Routes stay inside this box (the visible board) when it is given; otherwise they may run round the outside of all cards. */
   bounds?: Rect;
+  /** Grid cell size in px; the default follows `unit`. A coarser grid routes faster (the editor's cards are big). */
+  grid?: number;
 }
 
 const TURN = 5;
@@ -468,7 +470,7 @@ export function routeWires(cards: readonly RouteCard[], wires: readonly WireSpec
     for (const w of wires) out.set(w.id, curveRoute(w));
     return out;
   }
-  const g = gridSize(u);
+  const g = opts.grid !== undefined && opts.grid >= 3 ? Math.round(opts.grid) : gridSize(u);
   const clear = 10 * u;
   const stub = 18 * u;
   const round = 9 * u;

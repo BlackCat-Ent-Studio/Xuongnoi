@@ -29,6 +29,8 @@ import {
 } from './groups/group-model';
 import { spreadOverlaps } from './graph/graph-geometry';
 import { migrateBoardWireRule } from './graph/wire-rule-migration';
+import { pruneGraphKnots, withKnots } from './graph/board-knots';
+import type { KnotBook } from '../puzzle/ui/wire-knots';
 import { createHistory } from './history';
 import { nextNodeId } from './node-ids';
 
@@ -177,6 +179,8 @@ export interface EditorState {
   setNodePos(nodeId: string, pos: { x: number; y: number }): void;
   /** Move nodes, groups and/or notes in one undo step. */
   moveItems(moves: readonly Move[], opts?: { amend?: boolean }): void;
+  /** Replace the wire bend points (one undo step). An empty set drops the field so boards without knots stay as they were. */
+  setKnots(knots: KnotBook): void;
   /** `replace`: an occupied input drops its old wire inside the same undo step instead of failing. */
   connect(from: PortRef, to: PortRef, opts?: { replace?: boolean }): ConnectResult;
   deleteSelection(): boolean;
@@ -215,7 +219,7 @@ export function createEditorState(initial: Board): EditorState {
   /** Records the current board for undo, then swaps in `next`. */
   const commit = (next: Board, kinds: readonly ChangeKind[], key?: string): void => {
     history.record(board, key);
-    board = { ...next, graph: pruneGroups(next.graph) };
+    board = { ...next, graph: pruneGraphKnots(pruneGroups(next.graph)) };
     if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     for (const k of kinds) emit(k);
     emit('history');
@@ -450,6 +454,10 @@ export function createEditorState(initial: Board): EditorState {
       moveItems([{ id: nodeId, pos }]);
     },
     moveItems,
+    setKnots(knots) {
+      if (playing) return;
+      commit({ ...board, graph: withKnots(board.graph, knots) }, ['layout']);
+    },
     connect(from, to, opts) {
       if (playing) return { ok: false, reason: 'unknown-node' };
       let graph = board.graph;

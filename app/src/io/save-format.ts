@@ -15,6 +15,7 @@ import {
 } from '../engine/types';
 import { NOTE_MAX_COUNT, NOTE_MAX_TEXT, clampNoteSize, isNoteColor } from '../engine/notes';
 import { GROUP_NAME_MAX, cleanGroupName, isGroupColor, withGroups } from '../editor/groups/group-model';
+import { sanitizeKnots } from '../editor/graph/board-knots';
 import { migrateWireRule } from '../editor/graph/wire-rule-migration';
 import { registerAllNodes } from '../nodes';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
@@ -228,6 +229,9 @@ export function parseBoard(text: string): ParseResult {
   if (Object.keys(settings).length > 0) graph = { ...graph, settings };
   // A board saved before the wire rule gets its "Khi bắt đầu" wires here, on every way in (file, library, autosave, sample).
   graph = migrateWireRule(graph, mode as ViewMode);
+  // Wire bend points are decoration: a bad entry is dropped, and a board without any keeps no `knots` key.
+  const knots = sanitizeKnots(rawGraph.knots, seenWires);
+  if (knots) graph = { ...graph, knots };
 
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };

@@ -5,13 +5,15 @@ import { groupsOf } from '../groups/group-model';
 import { zoomAround, type Point, type View } from './graph-geometry';
 import { syncNotes, type NoteParts } from './note-view';
 import type { WireDrag } from './wire-drag';
+import { TAP_SLOP, type KnotEditor } from './knot-editor';
 
 type Drag =
   | { kind: 'pan'; sx: number; sy: number; px: number; py: number }
   | { kind: 'items'; id: string; sx: number; sy: number; items: { id: string; ox: number; oy: number }[]; moved: boolean; groupClick: boolean }
   | { kind: 'resize'; id: string; sx: number; sy: number; w: number; h: number }
   | { kind: 'marquee'; sx: number; sy: number; base: Set<string>; box: HTMLElement }
-  | { kind: 'wire' };
+  | { kind: 'wire' }
+  | { kind: 'knot' };
 
 interface Ctx {
   el: HTMLElement;
@@ -24,11 +26,19 @@ interface Ctx {
   setView: (v: View) => void;
   clientToWorld: (cx: number, cy: number) => Point;
   render: () => void;
-  drawWires: () => void;
+  /** Cards (or group blocks) are being dragged: draw only the wires that touch them, at most once per frame. */
+  moveWires: (cardIds: ReadonlySet<string>) => void;
+  knots: KnotEditor;
+  /** A tap (press and release without moving) on a node or group block. */
+  onTap: (id: string) => void;
+  /** A press on bare board. */
+  onEmptyDown: () => void;
+  /** Where a single dropped card ends up (it slides off the card it landed on). `box` is its dropped rectangle. */
+  settle: (id: string, box: { x: number; y: number }) => { x: number; y: number };
 }
 
 /** Mouse and wheel handling for the canvas: pan, zoom, move items, resize notes, marquee select, wire drags. */
-export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, getView, setView, clientToWorld, render, drawWires }: Ctx): void {
+export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, getView, setView, clientToWorld, render, moveWires, knots, onTap, onEmptyDown, settle }: Ctx): void {
   let drag: Drag | null = null;
   const kindOf = (id: string): 'note' | 'group' | 'node' =>
     noteEls.has(id) ? 'note' : groupsOf(state.getGraph()).some((g) => g.id === id) ? 'group' : 'node';
@@ -103,9 +113,22 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
       beginItemDrag(e, box.dataset.id, readonly);
       return;
     }
+    const knotId = target.closest<SVGElement>('.wc-knot')?.dataset.knot;
+    if (knotId && !readonly) {
+      e.preventDefault();
+      if (knots.knotDown(e, knotId)) {
+        drag = { kind: 'knot' };
+        el.setPointerCapture(e.pointerId);
+      }
+      return;
+    }
     const wireId = target instanceof SVGElement ? target.dataset.wire : undefined;
     if (wireId) {
       state.select({ kind: 'wire', id: wireId });
+      if (!readonly && knots.wireDown(e, wireId)) {
+        drag = { kind: 'knot' };
+        el.setPointerCapture(e.pointerId);
+      }
       return;
     }
     if (e.shiftKey) {
@@ -116,6 +139,7 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
       return;
     }
     state.select(null);
+    onEmptyDown();
     startPan(e);
   });
 
@@ -126,7 +150,7 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     } else if (drag.kind === 'items') {
       const dx = (e.clientX - drag.sx) / getView().zoom;
       const dy = (e.clientY - drag.sy) / getView().zoom;
-      if (!drag.moved && Math.hypot(dx, dy) * getView().zoom < 3) return;
+      if (!drag.moved && Math.hypot(dx, dy) * getView().zoom <= TAP_SLOP) return;
       drag.moved = true;
       for (const it of drag.items) {
         const box = nodeEls.get(it.id) ?? noteEls.get(it.id)?.el;
@@ -135,7 +159,9 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
           box.style.top = `${Math.round(it.oy + dy)}px`;
         }
       }
-      drawWires();
+      moveWires(new Set(drag.items.map((it) => it.id)));
+    } else if (drag.kind === 'knot') {
+      knots.move(e);
     } else if (drag.kind === 'resize') {
       const box = noteEls.get(drag.id)?.el;
       if (box) {
@@ -160,9 +186,15 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
       if (d.moved) {
         const dx = (e.clientX - d.sx) / getView().zoom;
         const dy = (e.clientY - d.sy) / getView().zoom;
-        state.moveItems(d.items.map((it) => ({ id: it.id, pos: { x: Math.round(it.ox + dx), y: Math.round(it.oy + dy) } })));
+        const moves = d.items.map((it) => ({ id: it.id, pos: { x: Math.round(it.ox + dx), y: Math.round(it.oy + dy) } }));
+        const only = moves.length === 1 ? moves[0] : undefined;
+        if (only && kindOf(only.id) !== 'note') only.pos = settle(only.id, only.pos);
+        state.moveItems(moves);
         render();
-      } else if (d.groupClick) state.select({ kind: kindOf(d.id), id: d.id });
+      } else {
+        if (d.groupClick) state.select({ kind: kindOf(d.id), id: d.id });
+        if (kindOf(d.id) !== 'note') onTap(d.id);
+      }
     } else if (d.kind === 'resize') {
       state.updateNote(d.id, { size: { w: d.w + (e.clientX - d.sx) / getView().zoom, h: d.h + (e.clientY - d.sy) / getView().zoom } });
       syncNotes(state, noteLayer, noteEls);
@@ -181,12 +213,14 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
         }
         state.selectMany([...hit]);
       }
-    } else if (d.kind === 'wire') wires.end(e);
+    } else if (d.kind === 'knot') knots.up();
+    else if (d.kind === 'wire') wires.end(e);
   });
 
   el.addEventListener('pointercancel', (e) => {
     if (drag?.kind === 'wire') wires.cancel();
     if (drag?.kind === 'marquee') drag.box.remove();
+    if (drag?.kind === 'knot') knots.cancel();
     drag = null;
     if (el.hasPointerCapture(e.pointerId)) el.releasePointerCapture(e.pointerId);
     render();

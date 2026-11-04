@@ -1,4 +1,6 @@
 import { getNodeDef, knownOutputsOf } from '../engine/registry';
+import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
+import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
@@ -7,6 +9,9 @@ import { createGraphToolbar } from './graph/graph-toolbar';
 import './graph/graph.css';
 import './graph/node-cards.css';
 import './graph/group.css';
+import { knotKey, wireIdOfKnotKey } from './graph/board-knots';
+import { settleDrop } from './graph/drop-settle';
+import { createKnotEditor } from './graph/knot-editor';
 import { createGroupCrumb } from './graph/group-crumb';
 import { buildGroupView, buildStub, layoutStubs, stubBox, type StubSpot } from './graph/group-view';
 import { deriveGroupPorts, findGroup, groupOfNode, groupsOf, nodesInScope, sceneGraph } from './groups/group-model';
@@ -27,6 +32,29 @@ import { TEXT_VI, formatWireValue } from './text-vi';
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MIN_MAP_HEIGHT = 480;
 const ZOOM_STEP = 1.2;
+/**
+ * Wires are routed around the cards (right-angle paths) only while the open board or group shows at most this many
+ * cards; a bigger one keeps the plain curves. Measured (headless Chrome, first draw of every wire): a 58-card group
+ * with 115 wires takes 0.38 s, the flat 128-card city sample with 165 wires 1.0 s. Later redraws only touch the wires
+ * of the card that moved (about 1 to 8 ms), so only the first draw of a board sets the limit.
+ */
+export const ROUTE_CARD_LIMIT = 60;
+/** Router grid cell (px): the editor's cards are big, so a coarse grid keeps routing quick. */
+const ROUTE_GRID = 16;
+/** Free room kept around the pins of the wires being routed, so a route can go round the cards in the way (px). */
+const ROUTE_ROOM = 200;
+
+/** What a drawn wire needs to be redrawn alone: its ends, the cards they belong to and its element. */
+interface WireDraw {
+  wire: Wire;
+  type: PortType;
+  /** Cards (node, group block or group stub) the wire starts and ends on. */
+  from: string;
+  to: string;
+  outKey: string;
+  inKey: string;
+  g: SVGGElement;
+}
 
 export interface WiringCanvas {
   el: HTMLElement;
@@ -75,13 +103,14 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const wireLayer = svgEl('svg', 'wc-wires');
   const noteLayer = h('div', 'wc-notes');
   const nodeLayer = h('div', 'wc-nodes');
+  const knotLayer = svgEl('svg', 'wc-wires wc-knots');
   const badgeLayer = h('div', 'wc-badges');
   const hint = h('div', 'wc-hint', TEXT_VI.canvasEmpty);
   const crumb = createGroupCrumb(state);
   const tip = h('div', 'wc-tip');
   tip.hidden = true;
   const stubLayer = h('div', 'wc-stubs');
-  world.append(wireLayer, noteLayer, stubLayer, nodeLayer, badgeLayer);
+  world.append(wireLayer, noteLayer, stubLayer, nodeLayer, knotLayer, badgeLayer);
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
   let overlayBR = { w: 0, h: 0 };
@@ -89,6 +118,15 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const noteEls = new Map<string, NoteParts>();
   const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
   const wirePaths = new Map<string, SVGPathElement>();
+  const wireDraws = new Map<string, WireDraw>();
+  const portCard = new Map<string, string>(); // port key → the card it sits on
+  /** Routes found on a grid, with what they were found for (see `routeSpecs`). */
+  const routed = new Map<string, { sig: string; route: WireRoute }>();
+  let drawnRects = new Map<string, string>(); // card id → its box when the wires were last routed
+  /** The card whose wires stay clear while the others fade (a tap on it; a tap on the board or Esc lets go). */
+  let focusId: string | null = null;
+  let moveRaf = 0;
+  let pendingMove = new Set<string>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
   const energy = createWireEnergy(wireLayer);
   let energyRaf = 0;
@@ -226,6 +264,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     stubLayer.replaceChildren();
     nodeEls.clear();
     portEls.clear();
+    portCard.clear();
     stubSpots = [];
     const graph = state.getGraph();
     const scope = state.getScope();
@@ -240,6 +279,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       for (const [k, dot] of dots) {
         const [dir, port] = k.split('|') as [PortDir, string];
         portEls.set(portKey(node.id, port, dir), dot);
+        portCard.set(portKey(node.id, port, dir), node.id);
       }
       nodeLayer.append(box);
       nodeEls.set(node.id, box);
@@ -249,7 +289,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
         const inside = new Set(group.nodeIds);
         const miss = [...missing].reduce((n, [id, ports]) => (inside.has(id) ? n + ports.size : n), 0);
         const { box, dots } = buildGroupView(group, deriveGroupPorts(graph, group), miss);
-        for (const d of dots) portEls.set(portKey(d.node, d.port, d.dir), d.dot);
+        for (const d of dots) {
+          portEls.set(portKey(d.node, d.port, d.dir), d.dot);
+          portCard.set(portKey(d.node, d.port, d.dir), group.id);
+        }
         nodeLayer.append(box);
         nodeEls.set(group.id, box);
       }
@@ -258,15 +301,16 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     const group = findGroup(graph, scope);
     if (!group) return;
     stubSpots = layoutStubs(deriveGroupPorts(graph, group), nodesInScope(graph, scope), sizeOf);
-    for (const spot of stubSpots) {
+    stubSpots.forEach((spot, i) => {
       const { el: stub, dot } = buildStub(spot);
       stubLayer.append(stub);
       // The stub's dot is the outside end of every wire crossing through this port.
       for (const w of spot.port.wires) {
         const out = spot.port.dir === 'in' ? portKey(w.from.node, w.from.port, 'out') : portKey(w.to.node, w.to.port, 'in');
         portEls.set(out, dot);
+        portCard.set(out, `stub:${i}`);
       }
-    }
+    });
   }
 
   function wireType(wire: Wire): PortType | null {
@@ -274,40 +318,234 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     return (from && knownOutputsOf(from.kind).find((p) => p.id === wire.from.port)?.type) || null;
   }
 
-  function drawWires(): void {
+  /** Every card as a box in world space (nodes, group blocks and, inside a group, its boundary stubs). */
+  function cardRects(): RouteCard[] {
+    const out: RouteCard[] = [];
+    for (const [id, box] of nodeEls) out.push({ id, x: box.offsetLeft, y: box.offsetTop, w: box.offsetWidth, h: box.offsetHeight });
+    stubSpots.forEach((spot, i) => out.push({ id: `stub:${i}`, ...stubBox(spot) }));
+    return out;
+  }
+
+  /** The part of the board a set of wires can need: their pins and knots plus room around them to go round cards. */
+  function routeBox(specs: readonly WireSpec[]): Box {
+    let x0 = Infinity;
+    let y0 = Infinity;
+    let x1 = -Infinity;
+    let y1 = -Infinity;
+    for (const sp of specs) {
+      for (const p of [sp.a, sp.b, ...sp.via]) {
+        x0 = Math.min(x0, p.x);
+        y0 = Math.min(y0, p.y);
+        x1 = Math.max(x1, p.x);
+        y1 = Math.max(y1, p.y);
+      }
+    }
+    return { x: x0 - ROUTE_ROOM, y: y0 - ROUTE_ROOM, w: x1 - x0 + 2 * ROUTE_ROOM, h: y1 - y0 + 2 * ROUTE_ROOM };
+  }
+
+  const routingOn = (): boolean => nodeEls.size <= ROUTE_CARD_LIMIT;
+
+  function specOf(d: Omit<WireDraw, 'g'>, a: Point, b: Point): WireSpec {
+    return { id: d.wire.id, fromCard: d.from, toCard: d.to, a, b, via: knotPoints(knots.book(), knotKey(state.getScope(), d.wire.id)), fromKey: d.outKey, toKey: d.inKey };
+  }
+
+  const pk = (p: Point): string => `${Math.round(p.x)},${Math.round(p.y)}`; // pins are measured from the screen: ignore sub-pixel noise
+  const sigOf = (sp: WireSpec): string => `${pk(sp.a)}>${pk(sp.b)}|${sp.fromCard}>${sp.toCard}|${sp.via.map(pk).join(';')}`;
+  const rectKey = (r: RouteCard): string => `${r.x},${r.y},${r.w},${r.h}`;
+
+  /**
+   * Routes for these wires. Small boards go around the cards on a grid; bigger ones (or `fast`, used while things
+   * slide) keep the plain curves and only wires with knots get a route (a curve chain through the knots).
+   * `all`: the whole board is drawn; a wire keeps its earlier route unless its ends or knots moved or a card that
+   * moved since now sits on it. `some`: just these wires, routed afresh (a card is being dragged).
+   */
+  function routeSpecs(specs: readonly WireSpec[], mode: 'fast' | 'all' | 'some'): Map<string, WireRoute> {
+    const out = new Map<string, WireRoute>();
+    if (mode === 'fast' || !routingOn()) {
+      routed.clear();
+      drawnRects.clear();
+      for (const sp of specs) if (sp.via.length > 0) out.set(sp.id, curveRoute(sp));
+      return out;
+    }
+    const rects = cardRects();
+    let todo: readonly WireSpec[] = specs;
+    if (mode === 'all') {
+      const changed = rects.filter((r) => drawnRects.get(r.id) !== rectKey(r));
+      const fresh: WireSpec[] = [];
+      const alive = new Set<string>();
+      for (const sp of specs) {
+        alive.add(sp.id);
+        const hit = routed.get(sp.id);
+        if (hit && hit.sig === sigOf(sp) && !(changed.length > 0 && hitsCard(hit.route.pts, changed))) out.set(sp.id, hit.route);
+        else fresh.push(sp);
+      }
+      for (const id of routed.keys()) if (!alive.has(id)) routed.delete(id);
+      drawnRects = new Map(rects.map((r) => [r.id, rectKey(r)]));
+      todo = fresh;
+    }
+    if (todo.length === 0) return out;
+    const made = routeWires(rects, todo, { unit: 1, fast: false, grid: ROUTE_GRID, bounds: routeBox(todo) });
+    for (const sp of todo) {
+      const r = made.get(sp.id);
+      if (r) {
+        out.set(sp.id, r);
+        routed.set(sp.id, { sig: sigOf(sp), route: r });
+      } else routed.delete(sp.id);
+    }
+    return out;
+  }
+
+  const pathOf = (route: WireRoute | undefined, a: Point, b: Point): string => route?.d ?? wirePath(a.x, a.y, b.x, b.y);
+
+  function drawWires(fast = false): void {
+    if (moveRaf) cancelAnimationFrame(moveRaf);
+    moveRaf = 0;
+    pendingMove = new Set();
     wireLayer.replaceChildren();
     energy.reset();
     wirePaths.clear();
+    wireDraws.clear();
     badgeLayer.replaceChildren();
     badgeEls.clear();
     const playing = state.isPlaying();
+    const items: { d: Omit<WireDraw, 'g'>; a: Point; b: Point }[] = [];
     for (const wire of state.getGraph().wires) {
-      const a = portCenter(portKey(wire.from.node, wire.from.port, 'out'));
-      const b = portCenter(portKey(wire.to.node, wire.to.port, 'in'));
+      const outKey = portKey(wire.from.node, wire.from.port, 'out');
+      const inKey = portKey(wire.to.node, wire.to.port, 'in');
+      const a = portCenter(outKey);
+      const b = portCenter(inKey);
       const type = wireType(wire);
       if (!a || !b || !type) continue;
-      const d = wirePath(a.x, a.y, b.x, b.y);
+      items.push({ d: { wire, type, from: portCard.get(outKey) ?? wire.from.node, to: portCard.get(inKey) ?? wire.to.node, outKey, inKey }, a, b });
+    }
+    const routes = routeSpecs(items.map(({ d, a, b }) => specOf(d, a, b)), fast ? 'fast' : 'all');
+    const types = new Map<string, PortType>(); // by knot key
+    for (const { d, a, b } of items) {
+      const { wire, type } = d;
+      const route = routes.get(wire.id);
+      const pd = pathOf(route, a, b);
+      const g = svgEl('g', 'wc-wire-g');
       const hit = svgEl('path', 'wc-wire-hit');
-      hit.setAttribute('d', d);
+      hit.setAttribute('d', pd);
       hit.dataset.wire = wire.id;
       const path = svgEl('path', `wc-wire type-${type}`);
-      path.setAttribute('d', d);
-      wireLayer.append(path, hit);
+      path.setAttribute('d', pd);
+      g.append(path, hit);
+      wireLayer.append(g);
       wirePaths.set(wire.id, path);
-      if (isEnergyEnabled()) energy.addWire(wire, type, path, portEls.get(portKey(wire.from.node, wire.from.port, 'out')), portEls.get(portKey(wire.to.node, wire.to.port, 'in')), playing);
+      wireDraws.set(wire.id, { ...d, g });
+      types.set(knotKey(state.getScope(), wire.id), type);
+      if (isEnergyEnabled()) energy.addWire(wire, type, path, portEls.get(d.outKey), portEls.get(d.inKey), playing);
       if (playing) {
+        const mid = route ? midPoint(route.pts) : { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
         const badge = h('div', `wc-badge type-${type}`);
-        badge.style.left = `${(a.x + b.x) / 2}px`;
-        badge.style.top = `${(a.y + b.y) / 2}px`;
+        badge.style.left = `${mid.x}px`;
+        badge.style.top = `${mid.y}px`;
         badgeLayer.append(badge);
         badgeEls.set(wire.id, { el: badge, wire, type });
       }
     }
+    knots.draw(types);
     applySelection();
+    applyFocus();
     refreshBadges();
     syncEnergyLoop();
     minimap.redraw();
   }
+
+  /** Draws only these wires again (null = all), in place: the other wires and the DOM stay as they are. */
+  function redrawWires(only: ReadonlySet<string> | null): void {
+    if (only === null || wireDraws.size === 0) {
+      drawWires();
+      return;
+    }
+    const specs: WireSpec[] = [];
+    for (const id of only) {
+      const d = wireDraws.get(id);
+      const a = d && portCenter(d.outKey);
+      const b = d && portCenter(d.inKey);
+      if (d && a && b) specs.push(specOf(d, a, b));
+    }
+    const fresh = routeSpecs(specs, 'some');
+    for (const sp of specs) {
+      const route = fresh.get(sp.id);
+      const pd = pathOf(route, sp.a, sp.b);
+      for (const part of wireDraws.get(sp.id)?.g.children ?? []) if (part.tagName === 'path') part.setAttribute('d', pd);
+    }
+  }
+
+  /** Cards are being dragged: their wires follow, once per frame. */
+  function moveWires(cardIds: ReadonlySet<string>): void {
+    for (const d of wireDraws.values()) if (cardIds.has(d.from) || cardIds.has(d.to)) pendingMove.add(d.wire.id);
+    if (moveRaf) return;
+    moveRaf = requestAnimationFrame(() => {
+      moveRaf = 0;
+      const ids = pendingMove;
+      pendingMove = new Set();
+      redrawWires(ids);
+    });
+  }
+
+  function applyFocus(): void {
+    if (focusId !== null && !nodeEls.has(focusId)) focusId = null;
+    const on = focusId !== null && !state.isPlaying();
+    el.classList.toggle('focusing', on);
+    const litCards = new Set<string>();
+    const litWires = new Set<string>();
+    if (on && focusId !== null) {
+      litCards.add(focusId);
+      for (const d of wireDraws.values()) {
+        if (d.from !== focusId && d.to !== focusId) continue;
+        litWires.add(d.wire.id);
+        litCards.add(d.from);
+        litCards.add(d.to);
+      }
+    }
+    for (const [id, d] of wireDraws) d.g.classList.toggle('lit', litWires.has(id));
+    for (const [id, box] of nodeEls) box.classList.toggle('faded', on && !litCards.has(id));
+    const scope = state.getScope();
+    knots.fade(on ? new Set([...litWires].map((id) => knotKey(scope, id))) : null);
+  }
+
+  function setFocus(id: string | null): void {
+    if (id === focusId) return;
+    focusId = id;
+    applyFocus();
+  }
+
+  /** Where a single dropped card ends up: where it was dropped, or the nearest free spot when it landed on another card. */
+  function settleCard(id: string, pos: Point): Point {
+    const size = sizeOf(id);
+    if (!size) return pos;
+    const taken: Box[] = [];
+    for (const [other, box] of nodeEls) if (other !== id) taken.push({ x: box.offsetLeft, y: box.offsetTop, w: box.offsetWidth, h: box.offsetHeight });
+    for (const spot of stubSpots) taken.push(stubBox(spot));
+    return settleDrop(taken, { ...pos, ...size });
+  }
+
+  const knots = createKnotEditor({
+    state,
+    layer: knotLayer,
+    zoom: () => view.zoom,
+    toWorld: (cx, cy) => clientToWorld(cx, cy),
+    routeOf(wireId) {
+      const known = routed.get(wireId)?.route;
+      if (known) return known;
+      const d = wireDraws.get(wireId);
+      const a = d && portCenter(d.outKey);
+      const b = d && portCenter(d.inKey);
+      return d && a && b ? curveRoute(specOf(d, a, b)) : null;
+    },
+    keyOf: (wireId) => knotKey(state.getScope(), wireId),
+    sourceOf: (key) => {
+      const id = wireIdOfKnotKey(key);
+      const w = state.getGraph().wires.find((x) => x.id === id);
+      return w ? `${w.from.node}|${w.from.port}` : undefined;
+    },
+    redraw: (keys) => redrawWires(keys === null ? null : new Set([...keys].map(wireIdOfKnotKey))),
+    refreshDots: () => knots.draw(new Map([...wireDraws].map(([id, d]) => [knotKey(state.getScope(), id), d.type]))),
+    notify,
+  });
 
   function render(): void {
     renderNodes();
@@ -411,7 +649,14 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     el, state, wires, nodeEls, noteEls, noteLayer,
     getView: () => view,
     setView: (v) => { view = v; applyView(); },
-    clientToWorld, render, drawWires,
+    clientToWorld, render, moveWires, knots,
+    onTap: (id) => setFocus(id === focusId ? null : id),
+    onEmptyDown: () => setFocus(null),
+    settle: settleCard,
+  });
+
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && focusId !== null) setFocus(null);
   });
 
   // Fade the bottom-left cluster while a dragged node or wire passes under it (it still takes clicks).
@@ -448,9 +693,11 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   state.subscribe((kind) => {
     if (kind === 'scope') {
+      focusId = null;
       render();
       fitToContent();
     } else if (kind === 'board') {
+      focusId = null;
       seenNodes.clear();
       for (const n of state.getGraph().nodes) seenNodes.add(n.id);
       render();

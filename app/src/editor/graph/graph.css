@@ -23,6 +23,21 @@
 .wc .wc-wire { fill: none; stroke: var(--pc); stroke-width: 2.4; stroke-linecap: round; }
 .wc .wc-wire.selected { stroke-width: 4.5; filter: drop-shadow(0 0 3px var(--pc)); }
 .wc .wc-wire-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+/* tap a card: its wires stay clear, the rest fades (opacity only) */
+.wc .wc-wire-g { transition: opacity .25s; }
+.wc.focusing .wc-wire-g:not(.lit) { opacity: .2; }
+.wc .wc-node.faded { opacity: .62; }
+/* wire knots: bend points made by double-tapping a wire */
+.wc-knots { z-index: 5; }
+.wc .wc-knot { pointer-events: all; cursor: grab; transition: opacity .25s; }
+.wc .wc-knot.faded { opacity: .25; }
+.wc .wc-knot-hit { fill: transparent; }
+.wc .wc-knot-ring { fill: var(--g-bg); stroke: var(--pc); stroke-width: 3; }
+.wc .wc-knot-core { fill: var(--pc); }
+.wc .wc-knot.shared .wc-knot-ring { stroke-width: 4; }
+.wc .wc-knot:hover .wc-knot-ring { stroke-width: 5; }
+.wc.readonly .wc-knot { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .wc .wc-wire-g, .wc .wc-knot, .wc .wc-node { transition: none; } }
 .wc .wc-wire-temp { fill: none; stroke: var(--pc, var(--text2, #aab2bd)); stroke-width: 2.4; stroke-dasharray: 6 5; pointer-events: none; }
 .wc-badge { position: absolute; transform: translate(-50%, -50%); padding: 0 7px; font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap; background: #0f1114; border: 1px solid var(--pc); border-radius: 9px; color: var(--text, #e7e9ec); }
 

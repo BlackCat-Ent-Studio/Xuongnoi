@@ -9,7 +9,7 @@
   background: var(--card); color: var(--text, #e7e9ec);
   border: 2px solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 18px;
   box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 14px 22px -12px rgba(0, 0, 0, .8);
-  transition: box-shadow .25s, border-color .25s;
+  transition: box-shadow .25s, border-color .25s, opacity .25s;
 }
 .wc .wc-node.selected {
   border-color: var(--accent, #3ecf8e);
