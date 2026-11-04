@@ -1,4 +1,4 @@
-import { getNodeDef } from '../engine/registry';
+import { activeInputs, getNodeDef, knownInputs } from '../engine/registry';
 import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
@@ -252,7 +252,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
   function portLabelOf(nodeId: string, portId: string, dir: 'in' | 'out'): string {
     const n = state.getGraph().nodes.find((x) => x.id === nodeId);
     const d = n && getNodeDef(n.kind);
-    const p = (dir === 'in' ? d?.inputs : d?.outputs)?.find((x) => x.id === portId);
+    const p = (dir === 'in' ? (d ? knownInputs(d) : undefined) : d?.outputs)?.find((x) => x.id === portId);
     return p?.label ?? portId;
   }
 
@@ -397,7 +397,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
           }
           el.append(sec);
         }
-        const ports = portsSection(node, def.inputs, def.outputs);
+        const ports = portsSection(node, activeInputs(def, node.params), def.outputs);
         if (ports) el.append(ports);
 
         const actions = h('div', 'pn-actions');

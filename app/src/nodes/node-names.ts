@@ -567,6 +567,14 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'on': ['Bật', 'Enable'],
         'stop': ['Dừng', 'Stop'],
         'go': ['Chạy', 'Go'],
+        'obj1': ['Điểm 1 (vật)', 'Point 1 (object)'],
+        'obj2': ['Điểm 2 (vật)', 'Point 2 (object)'],
+        'obj3': ['Điểm 3 (vật)', 'Point 3 (object)'],
+        'obj4': ['Điểm 4 (vật)', 'Point 4 (object)'],
+        'obj5': ['Điểm 5 (vật)', 'Point 5 (object)'],
+        'obj6': ['Điểm 6 (vật)', 'Point 6 (object)'],
+        'obj7': ['Điểm 7 (vật)', 'Point 7 (object)'],
+        'obj8': ['Điểm 8 (vật)', 'Point 8 (object)'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -905,7 +913,7 @@ export function applyNodeNames<T extends NodeDef<any>>(def: T): T { // eslint-di
   def.labelEn = names.en;
   for (const dir of ['in', 'out'] as const) {
     const table = names.ports[dir] ?? {};
-    for (const p of dir === 'in' ? def.inputs : def.outputs) {
+    for (const p of dir === 'in' ? [...def.inputs, ...(def.optionalInputs?.all ?? [])] : def.outputs) {
       const row = table[p.id] ?? extraNames(def.kind, p.id);
       if (!row) continue;
       p.label = row[0];
