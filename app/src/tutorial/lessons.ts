@@ -892,7 +892,7 @@ const lesson6: Lesson = {
 
 // ---------- lesson 7 ----------
 
-/** Three "Đi tới" bricks tell the bot where to walk; they are told apart by the fallback point they hold. */
+/** Three "Di chuyển" bricks tell the bot where to walk; they are told apart by the fallback point they hold. */
 const GO_CRATE_X = -1.5;
 const GO_PAD_X = 4.5;
 const GO_HOME_X = -5;

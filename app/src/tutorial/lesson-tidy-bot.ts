@@ -6,7 +6,7 @@ import type { Lesson } from './types';
 /**
  * "Bot cất thùng": two bots on one floor. The guard walks between two points and stops a moment at each ("Chạy theo
  * tuyến" with "Dừng ở mỗi điểm"). The porter looks at two marked slots, one of them already holding a crate, and
- * walks to the one that is still free ("Ô trống kế tiếp" + "Đi tới").
+ * walks to the one that is still free ("Ô trống kế tiếp" + "Di chuyển").
  */
 
 type BuildArgs = Parameters<LessonKit['buildBoard']>;
@@ -27,7 +27,7 @@ const T = {
   },
   wireRoute: {
     title: 'Nối bot gác vào tuyến',
-    text: 'Nối "Nhân vật" của bot đỏ sang "Ai" của Chạy theo tuyến, rồi nối "Đi ngang" của Chạy theo tuyến sang "Đi ngang" của bot đỏ.',
+    text: 'Nối "Đối tượng" của bot đỏ sang "Đối tượng" của Chạy theo tuyến, rồi nối "Đi ngang" của Chạy theo tuyến sang "Đi ngang" của bot đỏ.',
   },
   stopFor: {
     title: 'Dừng ở mỗi điểm',
@@ -43,21 +43,21 @@ const T = {
   },
   slots: {
     title: 'Cho nó xem hai ô vàng',
-    text: 'Nối "Vật thể" của ô vàng thứ nhất (bên trái) sang "Ô 1", và của ô vàng thứ hai (bên phải) sang "Ô 2" của Ô trống kế tiếp.',
+    text: 'Nối "Đối tượng" của ô vàng thứ nhất (bên trái) sang "Ô 1", và của ô vàng thứ hai (bên phải) sang "Ô 2" của Ô trống kế tiếp.',
   },
   goTo: {
     title: 'Cho bot khuân vác đi',
-    text: 'Kéo mảnh ghép "Đi tới" (nhóm Bộ não) vào bảng.',
+    text: 'Kéo mảnh ghép "Di chuyển" (nhóm Bộ não) vào bảng.',
   },
   wireGo: {
     title: 'Đi tới ô trống',
-    text: 'Nối "Nhân vật" của bot xanh sang "Bot" của Đi tới, "Ô trống" sang "Đích (vật)", và "Đi ngang" của Đi tới sang "Đi ngang" của bot xanh.',
+    text: 'Nối "Đối tượng" của bot xanh sang "Bot" của Di chuyển, "Ô trống" sang "Điểm đến", và "Đi ngang" của Di chuyển sang "Đi ngang" của bot xanh.',
     explain: 'Ô thứ nhất đã có thùng nên "Ô trống" chỉ vào ô thứ hai. Cất thùng vào ô thứ nhất thì nó sẽ chỉ sang ô thứ hai.',
   },
   play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đỏ đi tuần và dừng ở mỗi điểm, còn bot xanh đi thẳng tới ô vàng thứ hai.' },
   done: {
     title: 'Xong rồi!',
-    text: 'Bạn đã dùng "Dừng ở mỗi điểm", "Ô trống kế tiếp" và "Đi tới". Ghép chúng với "Khiêng đồ" là bot tự lấy thùng và cất vào kho. Xem thêm trong Sổ tay.',
+    text: 'Bạn đã dùng "Dừng ở mỗi điểm", "Ô trống kế tiếp" và "Di chuyển". Ghép chúng với "Khiêng đồ" là bot tự lấy thùng và cất vào kho. Xem thêm trong Sổ tay.',
   },
 };
 

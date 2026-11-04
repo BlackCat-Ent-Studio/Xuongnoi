@@ -17,7 +17,7 @@ function withoutWires(a: PuzzleAnswer, ...ids: string[]): PuzzleAnswer {
 
 describe('archived: cau-nhap-nhay', () => {
   it('a robot that always rolls falls into the water; one nobody sets rolling never moves', () => {
-    // An unwired "Đảo ngược" is a steady "bật": wired to "Cho đi" it keeps the robot rolling.
+    // An unwired "Đảo ngược" is a steady "bật": wired to "Bật" it keeps the robot rolling.
     const always: PuzzleAnswer = { nodes: [{ id: 'on', kind: 'not', params: {}, pos: { x: 0, y: 0 } }], wires: [{ id: 'x', from: { node: 'on', port: 'out' }, to: { node: 'walk', port: 'go' } }] };
     expect(runLevel(level07, always).outcome).toBe('lose');
     expect(runLevel(level07, EMPTY).outcome).toBe('timeout');

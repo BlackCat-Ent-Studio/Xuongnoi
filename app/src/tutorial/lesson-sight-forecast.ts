@@ -29,24 +29,24 @@ const T = {
   },
   viewer: {
     title: 'Ai đang nhìn?',
-    text: 'Nối "Nhân vật" của bot đỏ sang "Người nhìn" của Dự đoán tầm nhìn. Rồi nối "Tuyến đi tuần" của mảnh Đi tuần sang "Đường đi tuần".',
-    explain: 'Mảnh đoán trước chỉ biết những gì được nối dây vào: không nối "Đường đi tuần" thì nó coi như lính gác đứng yên.',
+    text: 'Nối "Đối tượng" của bot đỏ sang "Người nhìn" của Dự đoán tầm nhìn. Rồi nối "Tuyến đi tuần" của mảnh Đi tuần sang "Tuyến đi tuần".',
+    explain: 'Mảnh đoán trước chỉ biết những gì được nối dây vào: không nối "Tuyến đi tuần" thì nó coi như lính gác đứng yên.',
   },
   target: {
     title: 'Canh chỗ nào?',
-    text: 'Nối "Nhân vật" của nhân vật xanh sang "Mục tiêu".',
+    text: 'Nối "Đối tượng" của nhân vật xanh sang "Mục tiêu".',
     explain: 'Chỗ nhân vật xanh đứng chính là chỗ được canh.',
   },
   out: {
     title: 'Xem kết quả',
-    text: 'Nối "Còn (giây)" sang mảnh hiện số, và "An toàn" sang mảnh hiện chữ.',
-    explain: '"Còn" là số giây tới lần đầu lính gác thấy chỗ đó, bằng 0 nếu đang bị thấy. Số 99 là chưa bị thấy trong 12 giây tới, và lúc đó "An toàn" bật.',
+    text: 'Nối "Giây còn lại" sang mảnh hiện số, và "An toàn" sang mảnh hiện chữ.',
+    explain: '"Giây còn lại" là số giây tới lần đầu lính gác thấy chỗ đó, bằng 0 nếu đang bị thấy. Số 99 là chưa bị thấy trong 12 giây tới, và lúc đó "An toàn" bật.',
   },
   play: { title: 'Chơi thử', text: 'Bấm Chơi. Số ở góc phải đếm ngược tới lúc lính gác quay lại nhìn thấy nhân vật xanh.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút Dừng để quay lại bảng lắp ghép.' },
   done: {
     title: 'Xong rồi!',
-    text: 'Bạn đã dùng "Dự đoán tầm nhìn". Đem "Còn" so với thời gian bot cần để chạy qua một đoạn (cổng "Cần" của Chạy theo tuyến) là bot biết lúc nào nên lẻn. Xem thêm trong Sổ tay.',
+    text: 'Bạn đã dùng "Dự đoán tầm nhìn". Đem "Giây còn lại" so với thời gian bot cần để chạy qua một đoạn (cổng "Giây cần thiết" của Chạy theo tuyến) là bot biết lúc nào nên lẻn. Xem thêm trong Sổ tay.',
   },
 };
 

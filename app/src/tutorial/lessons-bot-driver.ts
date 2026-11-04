@@ -26,73 +26,73 @@ const T = {
     text: 'Bấm nút "Dừng" để làm tiếp.',
   },
   sequence: {
-    title: 'Thêm Chuỗi việc',
-    text: 'Kéo mảnh ghép "Chuỗi việc" (nhóm Bộ não) vào bảng.',
-    explain: 'Chuỗi việc làm lần lượt từng việc. Mặc định có 2 việc: việc 1 là đi tới xe, việc 2 là lái xe tới cờ.',
+    title: 'Thêm Chuỗi bước',
+    text: 'Kéo mảnh ghép "Chuỗi bước" (nhóm Bộ não) vào bảng.',
+    explain: 'Chuỗi bước làm lần lượt từng bước. Mặc định có 2 bước: bước 1 là đi tới xe, bước 2 là lái xe tới cờ.',
   },
   goto1: {
-    title: 'Thêm Đi tới cho bot',
-    text: 'Kéo một mảnh ghép "Đi tới" (nhóm Bộ não) vào bảng. Mảnh ghép này sẽ dẫn bot đi bộ tới xe.',
-    explain: 'Đi tới tự tìm đường vòng qua tường để tới đích, rồi bật "Vừa tới" một nhịp khi đã đến nơi.',
+    title: 'Thêm Di chuyển cho bot',
+    text: 'Kéo một mảnh ghép "Di chuyển" (nhóm Bộ não) vào bảng. Mảnh ghép này sẽ dẫn bot đi bộ tới xe.',
+    explain: 'Di chuyển tự tìm đường vòng qua tường để tới đích, rồi bật "Khi đến nơi" một nhịp khi đã đến nơi.',
   },
   goto1Who: {
     title: 'Nói ai đi, đi đâu',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Bot" của mảnh ghép Đi tới. Rồi nối cổng "Xe" của mảnh ghép Xe sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Đối tượng" của con bot sang cổng "Bot" của mảnh ghép Di chuyển. Rồi nối cổng "Đối tượng" của mảnh ghép Xe sang cổng "Điểm đến".',
   },
   goto1Move: {
     title: 'Cho bot bước đi',
-    text: 'Nối "Đi ngang" của mảnh ghép Đi tới sang "Đi ngang" của bot, và "Đi dọc" sang "Đi dọc" của bot.',
-    explain: 'Mảnh ghép Đi tới chỉ nghĩ xem nên đi hướng nào. Bot chỉ bước khi ta nối hướng đó vào nó.',
+    text: 'Nối "Đi ngang" của mảnh ghép Di chuyển sang "Đi ngang" của bot, và "Đi dọc" sang "Đi dọc" của bot.',
+    explain: 'Mảnh ghép Di chuyển chỉ nghĩ xem nên đi hướng nào. Bot chỉ bước khi ta nối hướng đó vào nó.',
   },
   goto1Stop: {
     title: 'Dừng cách xe một chút',
-    text: 'Chọn mảnh ghép Đi tới đang dẫn bot. Ở Thuộc tính, đổi "Dừng cách đích" thành 1.5.',
+    text: 'Chọn mảnh ghép Di chuyển đang dẫn bot. Ở Thuộc tính, đổi "Dừng cách đích" thành 1.5.',
     explain: 'Xe là vật cứng nên bot không thể đứng đúng giữa xe. Dừng cách xe một chút là bot đã đứng đủ gần để leo lên.',
   },
   step1: {
-    title: 'Việc 1: đi tới xe',
-    text: 'Nối "Việc 1" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới.',
-    explain: '"Cho đi" là công tắc: mảnh ghép Đi tới chỉ làm việc khi nó bật.',
+    title: 'Bước 1: đi tới xe',
+    text: 'Nối "Bước 1" của Chuỗi bước sang cổng "Bật" của mảnh ghép Di chuyển.',
+    explain: '"Bật" là công tắc: mảnh ghép Di chuyển chỉ làm việc khi nó bật.',
   },
   enter: {
     title: 'Thêm mảnh ghép lên xe',
     text: 'Kéo mảnh ghép "Lên / Xuống xe" (nhóm Hành động) vào bảng.',
-    explain: 'Mỗi lần nó nhận một nhịp "Bấm", nhân vật đứng gần xe sẽ lên xe. Lần sau thì xuống xe.',
+    explain: 'Mỗi lần nó nhận một nhịp "Bấm (cũ)", nhân vật đứng gần xe sẽ lên xe. Lần sau thì xuống xe.',
   },
   enterWho: {
     title: 'Nói bot sẽ lên xe',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Ai" của mảnh ghép Lên / Xuống xe.',
+    text: 'Nối cổng "Đối tượng" của con bot sang cổng "Nhân vật" của mảnh ghép Lên / Xuống xe.',
   },
   arrive: {
     title: 'Tới nơi thì lên xe',
-    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (dẫn bot) vào hai chỗ: cổng "Bấm" của Lên / Xuống xe và cổng "Xong việc" của Chuỗi việc.',
-    explain: 'Một cổng nối được nhiều dây. Khi bot vừa tới xe, nó lên xe và Chuỗi việc chuyển sang việc 2.',
+    text: 'Nối "Khi đến nơi" của mảnh ghép Di chuyển (dẫn bot) vào hai chỗ: cổng "Bấm (cũ)" của Lên / Xuống xe và cổng "Sang bước kế" của Chuỗi bước.',
+    explain: 'Một cổng nối được nhiều dây. Khi bot vừa tới xe, nó lên xe và Chuỗi bước chuyển sang bước 2.',
   },
   goto2: {
-    title: 'Thêm Đi tới cho xe',
-    text: 'Kéo thêm một mảnh ghép "Đi tới" nữa vào bảng. Mảnh ghép này sẽ dẫn chiếc xe tới cờ.',
+    title: 'Thêm Di chuyển cho xe',
+    text: 'Kéo thêm một mảnh ghép "Di chuyển" nữa vào bảng. Mảnh ghép này sẽ dẫn chiếc xe tới cờ.',
     explain: 'Bot ngồi trong xe thì bộ não lái luôn chiếc xe, nên lần này người đi là xe chứ không phải bot.',
   },
   goto2Who: {
     title: 'Xe đi tới cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Bot" của mảnh ghép Đi tới mới. Rồi nối cổng "Vật thể" của lá cờ (hộp vàng) sang cổng "Đích (vật)".',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Xe sang cổng "Bot" của mảnh ghép Di chuyển mới. Rồi nối cổng "Đối tượng" của lá cờ (hộp vàng) sang cổng "Điểm đến".',
   },
   step2: {
-    title: 'Việc 2: lái xe tới cờ',
-    text: 'Nối "Việc 2" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới mới.',
+    title: 'Bước 2: lái xe tới cờ',
+    text: 'Nối "Bước 2" của Chuỗi bước sang cổng "Bật" của mảnh ghép Di chuyển mới.',
   },
   goto2Move: {
     title: 'Cho xe chạy',
-    text: 'Nối "Đi ngang" của mảnh ghép Đi tới mới sang "Đi ngang" của mảnh ghép Xe, và "Đi dọc" sang "Đi dọc".',
+    text: 'Nối "Đi ngang" của mảnh ghép Di chuyển mới sang "Đi ngang" của mảnh ghép Xe, và "Đi dọc" sang "Đi dọc".',
     explain: 'Xe được lái bằng đúng hai cổng này, giống như cần điều khiển lái xe.',
   },
   touch: {
-    title: 'Thêm Chạm nhau',
-    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) vào bảng.',
+    title: 'Thêm Va chạm',
+    text: 'Kéo mảnh ghép "Va chạm" (nhóm Logic) vào bảng.',
   },
   touchWho: {
     title: 'Xe chạm cờ',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe sang "Vật chính" và cổng "Vật thể" của lá cờ sang "Vật kia" của Chạm nhau.',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Xe sang "Đối tượng A" và cổng "Đối tượng" của lá cờ sang "Đối tượng B" của Va chạm.',
   },
   end: {
     title: 'Thêm mảnh ghép Thắng / Thua',
@@ -100,7 +100,7 @@ const T = {
   },
   win: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Đang chạm" của Chạm nhau sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
+    text: 'Nối "Đang chạm" của Va chạm sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Chạy thử',
@@ -132,14 +132,14 @@ function wired(graph: Graph, from: GraphNode | undefined, fromPort: string, to: 
   return graph.wires.some((w) => w.from.node === from.id && w.from.port === fromPort && w.to.node === to.id && w.to.port === toPort);
 }
 
-/** The "Đi tới" that walks the bot: the one fed by the bot, else the first one on the board. */
+/** The "Di chuyển" that walks the bot: the one fed by the bot, else the first one on the board. */
 function walker(graph: Graph): GraphNode | undefined {
   const bot = first(graph, 'character', isBotChar);
   const all = nodesOfKind(graph, 'go-to');
   return all.find((g) => wired(graph, bot, 'self', g, 'self')) ?? all[0];
 }
 
-/** The "Đi tới" that drives the car: the one fed by the car, else the first one that is not the walker. */
+/** The "Di chuyển" that drives the car: the one fed by the car, else the first one that is not the walker. */
 function driver(graph: Graph): GraphNode | undefined {
   const car = first(graph, 'vehicle');
   const walk = walker(graph);

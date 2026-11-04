@@ -12,7 +12,7 @@ export const HEALTH_COLOR_TEXT = {
   addHealth: {
     title: 'Thêm mảnh ghép Máu',
     text: 'Kéo mảnh ghép "Máu" (nhóm Hành động) vào bảng.',
-    explain: 'Nhân vật chỉ bị đau khi có mảnh ghép Máu. Cổng "Máu còn" cho ta con số máu hiện tại.',
+    explain: 'Nhân vật chỉ bị đau khi có mảnh ghép Máu. Cổng "Máu hiện tại" cho ta con số máu hiện tại.',
   },
   maxHp: {
     title: 'Chỉ cho 3 máu',
@@ -21,7 +21,7 @@ export const HEALTH_COLOR_TEXT = {
   },
   wireSelf: {
     title: 'Máu này là máu của bạn',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Nhân vật" của mảnh ghép Máu.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (bạn) sang cổng "Nhân vật" của mảnh ghép Máu.',
   },
   addMeter: {
     title: 'Thêm Thanh đo',
@@ -29,22 +29,22 @@ export const HEALTH_COLOR_TEXT = {
     explain: 'Thanh đo vẽ một con số thành thanh dài ngắn. Mặc định thanh rỗng ở 0 và đầy ở 100.',
   },
   addMap: {
-    title: 'Thêm mảnh ghép Đổi thang số',
-    text: 'Kéo mảnh ghép "Đổi thang số" (nhóm Tính toán) vào bảng.',
-    explain: 'Máu chạy từ 0 đến 3 nhưng thanh đo cần 0 đến 100. Đổi thang số kéo giãn con số từ thang này sang thang kia.',
+    title: 'Thêm mảnh ghép Quy đổi khoảng',
+    text: 'Kéo mảnh ghép "Quy đổi khoảng" (nhóm Tính toán) vào bảng.',
+    explain: 'Máu chạy từ 0 đến 3 nhưng thanh đo cần 0 đến 100. Quy đổi khoảng kéo giãn con số từ thang này sang thang kia.',
   },
   mapScale: {
     title: 'Báo thang cũ là 0 đến 3',
-    text: 'Chọn mảnh ghép Đổi thang số, ở Thuộc tính đổi "Thang cũ: đến" thành 3. Thang mới giữ nguyên 0 đến 100.',
+    text: 'Chọn mảnh ghép Quy đổi khoảng, ở Thuộc tính đổi "Thang cũ: đến" thành 3. Thang mới giữ nguyên 0 đến 100.',
     explain: 'Máu 3 thành 100, máu 2 thành 67, máu 1 thành 33, máu 0 thành 0.',
   },
   wireHpMap: {
-    title: 'Máu vào Đổi thang số',
-    text: 'Nối cổng "Máu còn" của mảnh ghép Máu sang cổng "Số vào" của Đổi thang số.',
+    title: 'Máu vào Quy đổi khoảng',
+    text: 'Nối cổng "Máu hiện tại" của mảnh ghép Máu sang cổng "Giá trị vào" của Quy đổi khoảng.',
   },
   wireMapMeter: {
     title: 'Thang mới vào Thanh đo',
-    text: 'Nối cổng "Số ra" của Đổi thang số sang cổng "Số cần đo" của Thanh đo.',
+    text: 'Nối cổng "Giá trị ra" của Quy đổi khoảng sang cổng "Giá trị" của Thanh đo.',
   },
   addSelect: {
     title: 'Thêm mảnh ghép Chọn theo số',
@@ -53,7 +53,7 @@ export const HEALTH_COLOR_TEXT = {
   },
   wireHpSelect: {
     title: 'Máu vào Chọn theo số',
-    text: 'Nối cổng "Máu còn" của mảnh ghép Máu sang cổng "Số" của Chọn theo số.',
+    text: 'Nối cổng "Máu hiện tại" của mảnh ghép Máu sang cổng "Giá trị" của Chọn theo số.',
     explain: 'Còn 1 máu thì "Bằng 1" bật, còn 3 máu thì "Bằng 3" bật.',
   },
   addText: {
@@ -84,7 +84,7 @@ export const HEALTH_COLOR_TEXT = {
   },
   done: {
     title: 'Bạn biết đổi số thành hình rồi!',
-    text: 'Đổi thang số biến máu thành thanh đo, Chọn theo số biến máu thành các mức để làm việc khác nhau. Thử thêm mảnh ghép "Vật thể" và nối "Là 1/2/3" để đổi màu đèn báo.',
+    text: 'Quy đổi khoảng biến máu thành thanh đo, Chọn theo số biến máu thành các mức để làm việc khác nhau. Thử thêm mảnh ghép "Vật thể" và nối "Là 1/2/3" để đổi màu đèn báo.',
   },
 } as const;
 
@@ -109,7 +109,7 @@ export const START_SCREEN_TEXT = {
   addButton: {
     title: 'Thêm Nút bấm',
     text: 'Kéo mảnh ghép "Nút bấm" (nhóm Đầu vào) vào bảng.',
-    explain: 'Nút nằm ở góc màn hình game. Mỗi lần bấm, cổng "Vừa bấm" bật một nhịp.',
+    explain: 'Nút nằm ở góc màn hình game. Mỗi lần bấm, cổng "Khi bấm" bật một nhịp.',
   },
   buttonText: {
     title: 'Đặt chữ cho nút',
@@ -117,7 +117,7 @@ export const START_SCREEN_TEXT = {
   },
   wireDoor: {
     title: 'Bấm nút để mở cửa',
-    text: 'Nối cổng "Vừa bấm" của Nút bấm sang cổng "Ẩn đi (1 nhịp)" của Vật thể màu nâu (cánh cửa).',
+    text: 'Nối cổng "Khi bấm" của Nút bấm sang cổng "Ẩn" của Vật thể màu nâu (cánh cửa).',
   },
   addTimer: {
     title: 'Thêm đồng hồ',
@@ -125,7 +125,7 @@ export const START_SCREEN_TEXT = {
   },
   wireRun: {
     title: 'Đồng hồ chờ bắt đầu',
-    text: 'Nối cổng "Đã bắt đầu" của Màn hình mở đầu sang cổng "Chạy" của Hẹn giờ.',
+    text: 'Nối cổng "Đã bắt đầu" của Màn hình mở đầu sang cổng "Bắt đầu" của Hẹn giờ.',
     explain: 'Hẹn giờ đứng yên cho tới khi người chơi bấm nút bắt đầu, nên không ai bị mất giờ oan.',
   },
   wireLose: {
@@ -148,48 +148,48 @@ export const START_SCREEN_TEXT = {
 } as const;
 
 export const ASK_DIALOG_TEXT = {
-  title: 'Hộp hỏi',
+  title: 'Hộp thoại',
   summary: 'Chạm vào bạn bot thì hiện câu hỏi, chọn đúng câu trả lời để mở đường.',
-  boardName: 'Hộp hỏi',
+  boardName: 'Hộp thoại',
   intro: {
     title: 'Bot hỏi đường',
     text: 'Bảng này có sẵn bạn, sàn nhà, một bạn bot đứng giữa đường, cổng gỗ chắn đường và ngôi sao ở xa. Ta sẽ cho bot hỏi bạn một câu: trả lời đúng thì cổng mở, trả lời sai thì thua.',
-    explain: 'Hộp hỏi cho người chơi chọn. Mỗi lựa chọn là một cổng riêng, nên bạn nối mỗi lựa chọn tới việc khác nhau.',
+    explain: 'Hộp thoại cho người chơi chọn. Mỗi lựa chọn là một cổng riêng, nên bạn nối mỗi lựa chọn tới việc khác nhau.',
   },
   addTouch: {
-    title: 'Thêm Chạm nhau',
-    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) vào bảng.',
+    title: 'Thêm Va chạm',
+    text: 'Kéo mảnh ghép "Va chạm" (nhóm Logic) vào bảng.',
     explain: 'Nó báo khi hai vật chạm nhau. Ở đây ta dùng nó để biết bạn đã lại gần bot.',
   },
   wireHero: {
     title: 'Vật A là bạn',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Vật chính" của Chạm nhau.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (bạn) sang cổng "Đối tượng A" của Va chạm.',
   },
   wireBot: {
     title: 'Vật B là bạn bot',
-    text: 'Nối cổng "Nhân vật" của rô-bốt cam (bot) sang cổng "Vật kia" của Chạm nhau.',
+    text: 'Nối cổng "Đối tượng" của rô-bốt cam (bot) sang cổng "Đối tượng B" của Va chạm.',
   },
   addDialog: {
-    title: 'Thêm Hộp hỏi',
-    text: 'Kéo mảnh ghép "Hộp hỏi" (nhóm Đầu vào) vào bảng.',
+    title: 'Thêm Hộp thoại',
+    text: 'Kéo mảnh ghép "Hộp thoại" (nhóm Đầu vào) vào bảng.',
     explain: 'Khi cổng "Hỏi" bật, hộp hiện câu hỏi với 2 hoặc 3 nút trả lời. Người chơi bấm nút nào thì cổng "Chọn" tương ứng bật một nhịp, rồi hộp đóng lại.',
   },
   wireAsk: {
     title: 'Chạm vào bot là hỏi',
-    text: 'Nối cổng "Mới chạm" của Chạm nhau sang cổng "Hỏi" của Hộp hỏi.',
+    text: 'Nối cổng "Bắt đầu chạm" của Va chạm sang cổng "Hỏi" của Hộp thoại.',
   },
   question: {
     title: 'Viết câu hỏi',
-    text: 'Chọn Hộp hỏi, ở Thuộc tính đổi "Câu hỏi" thành câu bạn thích, ví dụ "Bạn muốn làm gì?". Hai câu trả lời "Có" và "Không" bạn đổi tuỳ ý.',
+    text: 'Chọn Hộp thoại, ở Thuộc tính đổi "Câu hỏi" thành câu bạn thích, ví dụ "Bạn muốn làm gì?". Hai câu trả lời "Có" và "Không" bạn đổi tuỳ ý.',
   },
   wireOpen: {
     title: 'Chọn 1 mở cổng',
-    text: 'Nối cổng "Chọn 1" của Hộp hỏi sang cổng "Ẩn đi (1 nhịp)" của Vật thể màu nâu (cổng gỗ cao).',
+    text: 'Nối cổng "Khi chọn 1" của Hộp thoại sang cổng "Ẩn" của Vật thể màu nâu (cổng gỗ cao).',
     explain: 'Câu trả lời thứ nhất là câu đúng, nên đường mở ra.',
   },
   wireTrap: {
     title: 'Chọn 2 là thua',
-    text: 'Nối cổng "Chọn 2" của Hộp hỏi sang cổng "Thua" của mảnh ghép Thắng / Thua.',
+    text: 'Nối cổng "Khi chọn 2" của Hộp thoại sang cổng "Thua" của mảnh ghép Thắng / Thua.',
     explain: 'Câu trả lời thứ hai là bẫy. Cho mỗi lựa chọn một hậu quả khác nhau làm câu hỏi có ý nghĩa.',
   },
   play: {
@@ -202,6 +202,6 @@ export const ASK_DIALOG_TEXT = {
   },
   done: {
     title: 'Bạn biết hỏi người chơi rồi!',
-    text: 'Bạn đã biết Hộp hỏi. Thử cho 3 câu trả lời và nối mỗi câu tới một phần thưởng khác nhau.',
+    text: 'Bạn đã biết Hộp thoại. Thử cho 3 câu trả lời và nối mỗi câu tới một phần thưởng khác nhau.',
   },
 } as const;

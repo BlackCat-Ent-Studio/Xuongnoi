@@ -3,12 +3,12 @@ import { asNum, clamp, numParam, strParam } from './util';
 
 export const mapRangeNode: NodeDef<undefined> = {
   kind: 'map-range',
-  label: 'Đổi thang số',
+  label: 'Quy đổi khoảng',
   category: 'math',
   description:
     'Đổi một số từ thang này sang thang khác. Ví dụ máu 0–100 thành độ rộng thanh 0–1, hoặc khoảng cách 0–10 thành tốc độ 5–1. "Giữ trong khoảng" không cho kết quả vượt ra ngoài thang mới.',
-  inputs: [{ id: 'value', type: 'number', label: 'Số vào' }],
-  outputs: [{ id: 'value', type: 'number', label: 'Số ra' }],
+  inputs: [{ id: 'value', type: 'number', label: 'Giá trị vào' }],
+  outputs: [{ id: 'value', type: 'number', label: 'Giá trị ra' }],
   params: [
     { id: 'inMin', label: 'Thang cũ: từ', kind: 'number', default: 0, step: 1 },
     { id: 'inMax', label: 'Thang cũ: đến', kind: 'number', default: 1, step: 1 },

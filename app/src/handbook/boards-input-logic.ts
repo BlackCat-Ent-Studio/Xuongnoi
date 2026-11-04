@@ -84,7 +84,7 @@ export const tryUiButton = (): Board =>
 
 export const tryUiPick = (): Board =>
   build(
-    'Bấm vào vật',
+    'Bấm vào đối tượng',
     'Bấm Chơi, rồi bấm chuột vào hộp cam ở giữa màn hình. Mỗi lần bấm trúng, dòng chữ hiện hoặc ẩn đi.',
     [
       { alias: 'box', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: 2, z: 0 }, size: { x: 2, y: 2, z: 1 }, color: '#f97316' } },
@@ -97,7 +97,7 @@ export const tryUiPick = (): Board =>
 
 export const tryUiDialog = (): Board =>
   build(
-    'Hộp hỏi',
+    'Hộp thoại',
     'Bấm Chơi: hộp hỏi hiện ra ngay. Chọn "Có" hoặc "Không" và xem dòng chữ thay đổi.',
     [
       { alias: 'start', kind: 'on-start', x: 20, y: 20 },
@@ -158,7 +158,7 @@ export const tryCompare = (): Board =>
 
 export const tryTouch = (): Board =>
   build(
-    'Chạm nhau',
+    'Va chạm',
     'Bấm Chơi, rồi bấm mũi tên phải để nhân vật đi tới bức tường đỏ. Chạm tới thì chữ hiện.',
     [
       ...WALKER,
@@ -302,7 +302,7 @@ export const tryNextFreeSlot = (): Board =>
 export const trySightForecast = (): Board =>
   build(
     'Dự đoán tầm nhìn',
-    'Bấm Chơi: bot đỏ đi tuần qua lại và nhìn theo hướng đi, bạn đứng yên bên phải. Số "Còn" đếm ngược tới lúc bot thấy bạn, và hiện ra trước cả khi bị thấy. Số 99 nghĩa là chưa bị thấy trong 12 giây tới.',
+    'Bấm Chơi: bot đỏ đi tuần qua lại và nhìn theo hướng đi, bạn đứng yên bên phải. Số "Giây còn lại" đếm ngược tới lúc bot thấy bạn, và hiện ra trước cả khi bị thấy. Số 99 nghĩa là chưa bị thấy trong 12 giây tới.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
       { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: 5, y: 1, z: 0 }, role: 'bot', color: '#3b82f6' } },
@@ -327,7 +327,7 @@ export const trySightForecast = (): Board =>
 
 export const tryNearestItem = (): Board =>
   build(
-    'Tìm vật gần nhất',
+    'Tìm đồ gần nhất',
     'Bấm Chơi: hai thùng nằm hai phía của bot, bot đi tới thùng gần hơn. Dừng game, kéo thùng bên kia lại gần bot hơn rồi Chơi lại: bot đổi sang thùng đó.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },

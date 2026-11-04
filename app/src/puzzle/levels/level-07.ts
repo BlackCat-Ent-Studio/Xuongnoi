@@ -52,7 +52,7 @@ const ROUTE_PARAMS: GraphNode['params'] = {
 const GO_TO_PARAMS: GraphNode['params'] = { stopDistance: PARK_REACH, slowRadius: 3, pathfind: 'off' };
 /** Seconds the robot waits at each pad before walking on. */
 const PAD_STOP = 0.5;
-/** The timer that holds the robot at each pad (the player's own "Hẹn giờ": restarted by "Tới điểm", wired into "Dừng"). */
+/** The timer that holds the robot at each pad (the player's own "Hẹn giờ": restarted by "Khi tới điểm", wired into "Dừng"). */
 const PAD_TIMER_PARAMS: GraphNode['params'] = { seconds: PAD_STOP };
 
 const wire = (id: string, from: [string, string], to: [string, string]): Wire => ({ id, from: { node: from[0], port: from[1] }, to: { node: to[0], port: to[1] } });
@@ -65,14 +65,14 @@ const wire = (id: string, from: [string, string], to: [string, string]): Wire =>
  *
  * On the board only the robot and the three store slot marks are drawn. The floor, pads, crates, store zones, the
  * win/lose plumbing and the camera are scenery (not drawn). Every behaviour comes from ordinary Xưởng Nối pieces
- * the player places and wires: "Chạy theo tuyến", "Đọc màu", "Và", "Khiêng đồ", "Đi tới", "Ô trống kế tiếp", "Phép tính".
+ * the player places and wires: "Chạy theo tuyến", "Đọc màu", "Và", "Khiêng đồ", "Di chuyển", "Ô trống kế tiếp", "Phép tính".
  */
 export const level07: PuzzleLevel = {
   id: 'phan-loai-mau',
   order: 7,
   title: 'Phân loại thùng màu',
   task: 'Rô-bốt chân đi dọc hàng thùng đỏ và thùng xanh. Chỉ được khiêng thùng XANH về kho. Đủ 3 thùng xanh trong kho là thắng, lỡ khiêng thùng đỏ về kho là thua! Bạn tự nối cả mạch cho rô-bốt.',
-  hint: 'Cho rô-bốt đi theo hàng ô bằng "Chạy theo tuyến" (nối "Khi bắt đầu" vào "Bật" cho nó chạy). Mỗi lần "Tới điểm" thì "Hẹn giờ" đếm lại, và trong lúc đếm thì tuyến "Dừng". "Đọc màu" chỉnh về 2 (xanh); thấy xanh VÀ đang đợi ở ô thì "Nhấc lên". Khiêng xong thì tuyến dừng, "Đi tới" đem thùng tới "Ô trống kế tiếp", tới nơi thì "Thả". "Phép tính" cộng hai lối đi ngang.',
+  hint: 'Cho rô-bốt đi theo hàng ô bằng "Chạy theo tuyến" (nối "Khi bắt đầu" vào "Bật" cho nó chạy). Mỗi lần "Khi tới điểm" thì "Hẹn giờ" đếm lại, và trong lúc đếm thì tuyến "Dừng". "Đọc màu" chỉnh về 2 (xanh); thấy xanh VÀ đang đợi ở ô thì "Nhấc lên". Khiêng xong thì tuyến dừng, "Di chuyển" đem thùng tới "Ô trống kế tiếp", tới nơi thì "Thả". "Phép tính" cộng hai lối đi ngang.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,

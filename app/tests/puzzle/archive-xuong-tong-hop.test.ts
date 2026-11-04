@@ -38,7 +38,7 @@ describe('archived: xuong-tong-hop', () => {
   const doorIds = ['s-touch', 's-cmp', 's-and'];
 
   it('a door without the guard check lets the cat run into the guard', () => {
-    // The cat walks only because something switches "Cho đi" on: an unwired "Đảo ngược" is a steady "bật".
+    // The cat walks only because something switches "Bật" on: an unwired "Đảo ngược" is a steady "bật".
     const door = onlyPieces(s, level08, doorIds);
     const always: PuzzleAnswer = { nodes: [...door.nodes, { id: 'on', kind: 'not', params: {}, pos: { x: 0, y: 0 } }], wires: [...door.wires, { id: 'x', from: { node: 'on', port: 'out' }, to: { node: 'walk', port: 'go' } }] };
     expect(runLevel(level08, always).outcome).toBe('lose');

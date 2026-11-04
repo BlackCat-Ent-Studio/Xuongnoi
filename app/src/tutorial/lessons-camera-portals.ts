@@ -38,7 +38,7 @@ const T = {
   },
   pair: {
     title: 'Ghép hai cổng thành một cặp',
-    text: 'Nối cổng "Cổng" của mảnh ghép Cổng này sang cổng "Cổng đối diện" của mảnh ghép Cổng kia.',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Cổng này sang cổng "Cổng đối diện" của mảnh ghép Cổng kia.',
     explain: 'Chỉ cần nối một dây là đủ. Cách khác: gõ cùng một "Mã cặp" vào cả hai cổng, hai cổng có chung mã sẽ tự ghép đôi.',
   },
   tryPortals: {
@@ -57,7 +57,7 @@ const T = {
   },
   distanceWho: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Vật thể" của lá cờ xanh (hộp nhặt được) sang "Vật 2" của mảnh ghép Đo khoảng cách.',
+    text: 'Nối cổng "Đối tượng" của nhân vật sang "Đối tượng A", và cổng "Đối tượng" của lá cờ xanh (hộp nhặt được) sang "Đối tượng B" của mảnh ghép Đo khoảng cách.',
   },
   threshold: {
     title: 'Gần là bao nhiêu?',
@@ -81,7 +81,7 @@ const T = {
   },
   shake: {
     title: 'Rung khi qua cổng',
-    text: 'Nối cổng "Vừa có người vào" của một mảnh ghép Cổng sang cổng "Rung" của Máy quay.',
+    text: 'Nối cổng "Khi có người vào" của một mảnh ghép Cổng sang cổng "Rung" của Máy quay.',
     explain: 'Mỗi lần có người bước vào cổng, màn hình rung nhẹ một chút. Độ mạnh và thời gian rung chỉnh được trong Thuộc tính của Máy quay.',
   },
   key: {
@@ -91,25 +91,25 @@ const T = {
   teleport: {
     title: 'Thêm Dịch chuyển',
     text: 'Kéo mảnh ghép "Dịch chuyển" (nhóm Hành động) vào bảng.',
-    explain: 'Mỗi khi nhận một nhịp ở "Đi", nó đưa một vật tới chỗ khác ngay lập tức, không cần cổng.',
+    explain: 'Mỗi khi nhận một nhịp ở "Dịch chuyển", nó đưa một vật tới chỗ khác ngay lập tức, không cần cổng.',
   },
   teleportWire: {
     title: 'Bấm R để về nhà',
-    text: 'Nối "Nhân vật" của nhân vật sang "Ai" của mảnh ghép Dịch chuyển. Rồi nối "Vừa nhấn" của phím R sang "Đi".',
-    explain: '"Vừa nhấn" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn R là dịch chuyển một lần.',
+    text: 'Nối "Đối tượng" của nhân vật sang "Đối tượng" của mảnh ghép Dịch chuyển. Rồi nối "Khi nhấn phím" của phím R sang "Dịch chuyển".',
+    explain: '"Khi nhấn phím" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn R là dịch chuyển một lần.',
   },
   home: {
     title: 'Chọn nơi về',
-    text: 'Chọn mảnh ghép Dịch chuyển. Ở Thuộc tính, đổi "Nơi đến" thành X = -8 (giữ Y = 1), đúng chỗ nhân vật xuất phát.',
-    explain: 'Khi không nối "Nơi đến (vật)", mảnh ghép dùng toạ độ này làm nơi về.',
+    text: 'Chọn mảnh ghép Dịch chuyển. Ở Thuộc tính, đổi "Vị trí đến" thành X = -8 (giữ Y = 1), đúng chỗ nhân vật xuất phát.',
+    explain: 'Khi không nối "Điểm đến", mảnh ghép dùng toạ độ này làm nơi về.',
   },
   winNodes: {
     title: 'Thêm mảnh ghép thắng',
-    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) và mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
+    text: 'Kéo mảnh ghép "Va chạm" (nhóm Logic) và mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.',
   },
   winWire: {
     title: 'Chạm cờ là thắng',
-    text: 'Nối "Nhân vật" của nhân vật sang "Vật chính" và "Vật thể" của lá cờ sang "Vật kia" của Chạm nhau. Rồi nối "Đang chạm" sang "Thắng".',
+    text: 'Nối "Đối tượng" của nhân vật sang "Đối tượng A" và "Đối tượng" của lá cờ sang "Đối tượng B" của Va chạm. Rồi nối "Đang chạm" sang "Thắng".',
   },
   play: {
     title: 'Chạy thử',

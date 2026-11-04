@@ -3,33 +3,33 @@ import type { LessonKit } from './lessons-vehicles';
 import type { Lesson } from './types';
 
 /**
- * "Bot có hai đích": one bot, a green mark on the left and a yellow mark on the right, and a key. "Đi tới" walks to
- * the green mark (Đích); while the key is held "Dùng đích 2" turns it to the yellow mark (Đích 2).
+ * "Bot có hai đích": one bot, a green mark on the left and a yellow mark on the right, and a key. "Di chuyển" walks to
+ * the green mark (Điểm đến); while the key is held "Dùng điểm đến 2" turns it to the yellow mark (Điểm đến 2).
  */
 
 type BuildArgs = Parameters<LessonKit['buildBoard']>;
 
 const T = {
   title: 'Bot có hai đích',
-  summary: 'Một mảnh Đi tới, hai nơi để đi, đổi nơi bằng một phím.',
+  summary: 'Một mảnh Di chuyển, hai nơi để đi, đổi nơi bằng một phím.',
   boardName: 'Bot hai đích',
   intro: {
     title: 'Hai ô, một bot',
     text: 'Bot xanh đứng giữa sàn. Bên trái có ô xanh lá, bên phải có ô vàng. Ta sẽ cho bot đi tới ô xanh lá, và đổi sang ô vàng khi giữ phím Space.',
-    explain: 'Một mảnh Đi tới có thể có hai đích. Bật "Dùng đích 2" là nó đổi đích.',
+    explain: 'Một mảnh Di chuyển có thể có hai đích. Bật "Dùng điểm đến 2" là nó đổi đích.',
   },
-  goTo: { title: 'Cho bot đi', text: 'Kéo mảnh ghép "Đi tới" (nhóm Bộ não) vào bảng.' },
+  goTo: { title: 'Cho bot đi', text: 'Kéo mảnh ghép "Di chuyển" (nhóm Bộ não) vào bảng.' },
   wireGo: {
     title: 'Nối hai đích',
-    text: 'Nối "Nhân vật" của bot sang "Bot", ô xanh lá sang "Đích (vật)", ô vàng sang "Đích 2 (vật)", "Đi ngang" sang "Đi ngang" của bot.',
+    text: 'Nối "Đối tượng" của bot sang "Bot", ô xanh lá sang "Điểm đến", ô vàng sang "Điểm đến 2", "Đi ngang" sang "Đi ngang" của bot.',
   },
   wireSwitch: {
     title: 'Phím đổi đích',
-    text: 'Nối "Đang giữ phím" của Phím bấm sang "Dùng đích 2" của Đi tới.',
-    explain: 'Không giữ phím thì bot đi tới Đích. Giữ phím thì bot quay sang Đích 2.',
+    text: 'Nối "Đang giữ phím" của Phím bấm sang "Dùng điểm đến 2" của Di chuyển.',
+    explain: 'Không giữ phím thì bot đi tới Điểm đến. Giữ phím thì bot quay sang Điểm đến 2.',
   },
   play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đi tới ô xanh lá. Giữ Space là nó quay sang ô vàng.' },
-  done: { title: 'Xong rồi!', text: 'Đích 2 hợp với việc đi lấy rồi đi cất: nối "Đang khiêng" vào "Dùng đích 2". Xem thêm trong Sổ tay.' },
+  done: { title: 'Xong rồi!', text: 'Điểm đến 2 hợp với việc đi lấy rồi đi cất: nối "Đang khiêng" vào "Dùng điểm đến 2". Xem thêm trong Sổ tay.' },
 };
 
 const NODES: BuildArgs[1] = [

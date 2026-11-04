@@ -33,7 +33,7 @@ const T = {
   },
   wireDrive: {
     title: 'Nối cần lái vào xe',
-    text: 'Nối cổng "Ngang (trái-phải)" của Cần điều khiển sang cổng "Đi ngang" của mảnh ghép Xe.',
+    text: 'Nối cổng "Trục ngang" của Cần điều khiển sang cổng "Đi ngang" của mảnh ghép Xe.',
     explain: 'Giống như điều khiển nhân vật: phải là số dương, trái là số âm. Xe sẽ tăng tốc và giảm tốc từ từ chứ không dừng ngay.',
   },
   enter: {
@@ -43,7 +43,7 @@ const T = {
   },
   wireWho: {
     title: 'Nói ai sẽ lên xe',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Ai" của mảnh ghép Lên / Xuống xe.',
+    text: 'Nối cổng "Đối tượng" của nhân vật sang cổng "Nhân vật" của mảnh ghép Lên / Xuống xe.',
   },
   key: {
     title: 'Thêm nút bấm',
@@ -55,8 +55,8 @@ const T = {
   },
   wirePress: {
     title: 'Bấm E để lên xe',
-    text: 'Nối cổng "Vừa nhấn" của mảnh ghép Phím bấm (phím E) sang cổng "Bấm" của mảnh ghép Lên / Xuống xe.',
-    explain: '"Vừa nhấn" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn E là một lần lên hoặc xuống.',
+    text: 'Nối cổng "Khi nhấn phím" của mảnh ghép Phím bấm (phím E) sang cổng "Bấm (cũ)" của mảnh ghép Lên / Xuống xe.',
+    explain: '"Khi nhấn phím" chỉ bật một nhịp mỗi lần nhấn, nên mỗi lần nhấn E là một lần lên hoặc xuống.',
   },
   play: {
     title: 'Thử lái xe',

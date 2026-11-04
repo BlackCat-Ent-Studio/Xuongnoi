@@ -15,10 +15,10 @@ export const uiMeterNode: NodeDef<null> = {
   label: 'Thanh đo',
   category: 'output',
   description:
-    'Vẽ một thanh đo cho một con số, ví dụ máu hoặc thời gian còn lại. Số bằng "Nhỏ nhất" thì thanh rỗng, bằng "Lớn nhất" thì thanh đầy. Nối "Gắn vào vật" để thanh đi theo vật, không nối thì thanh nằm ở góc màn hình.',
+    'Vẽ một thanh đo cho một con số, ví dụ máu hoặc thời gian còn lại. Số bằng "Nhỏ nhất" thì thanh rỗng, bằng "Lớn nhất" thì thanh đầy. Nối "Gắn vào đối tượng" để thanh đi theo vật, không nối thì thanh nằm ở góc màn hình.',
   inputs: [
-    { id: 'value', type: 'number', label: 'Số cần đo', required: true },
-    { id: 'anchor', type: 'object', label: 'Gắn vào vật' },
+    { id: 'value', type: 'number', label: 'Giá trị', required: true },
+    { id: 'anchor', type: 'object', label: 'Gắn vào đối tượng' },
     { id: 'show', type: 'bool', label: 'Hiện' },
   ],
   outputs: [],

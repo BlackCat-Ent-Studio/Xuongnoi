@@ -92,7 +92,7 @@ function tryCounter(): Board {
   return build(
     'Thử: Bộ đếm',
     '2d-side',
-    'Bấm Space vài lần: mỗi lần "Vừa nhấn" làm Bộ đếm +1 và con số hiện lên góc màn hình. Đếm tới 3 là "Đã đủ" bật và bạn thắng. Bấm phím R để đưa về 0.',
+    'Bấm Space vài lần: mỗi lần "Khi nhấn phím" làm Bộ đếm +1 và con số hiện lên góc màn hình. Đếm tới 3 là "Đã đạt mục tiêu" bật và bạn thắng. Bấm phím R để đưa về 0.',
     [
       ...b.specs,
       { id: 'press', kind: 'key', col: 0, row: 1, params: { key: 'Space' } },
@@ -145,9 +145,9 @@ function tryRandom(): Board {
 function tryMapRange(): Board {
   const b = sideBase({ jump: false });
   return build(
-    'Thử: Đổi thang số',
+    'Thử: Quy đổi khoảng',
     '2d-side',
-    'Vị trí X của nhân vật chạy từ -8 đến 8. Đổi thang số biến nó thành 0..100 để Thanh đo đầy dần. Đi sang phải và nhìn thanh đầy lên.',
+    'Vị trí X của nhân vật chạy từ -8 đến 8. Quy đổi khoảng biến nó thành 0..100 để Thanh đo đầy dần. Đi sang phải và nhìn thanh đầy lên.',
     [
       ...b.specs,
       { id: 'map', kind: 'map-range', col: 1, row: 1, params: { inMin: -8, inMax: 8, outMin: 0, outMax: 100 } },
@@ -331,7 +331,7 @@ function tryShowText(): Board {
   return build(
     'Thử: Hiện chữ',
     '2d-side',
-    'Dòng chữ "Mình đây!" bay theo nhân vật vì đã nối "Gắn vào vật". Chữ ở góc chỉ hiện khi bạn giữ phím Space. Thử gõ chữ khác vào ô "Chữ".',
+    'Dòng chữ "Mình đây!" bay theo nhân vật vì đã nối "Gắn vào đối tượng". Chữ ở góc chỉ hiện khi bạn giữ phím Space. Thử gõ chữ khác vào ô "Chữ".',
     [
       ...b.specs,
       { id: 'hold-key', kind: 'key', col: 0, row: 1, params: { key: 'Space' } },
@@ -371,7 +371,7 @@ function tryUiMeter(): Board {
   return build(
     'Thử: Thanh đo',
     '2d-side',
-    'Thanh đỏ nổi trên đầu nhân vật tụt dần theo 10 giây của Hẹn giờ (đầy lúc 10, rỗng lúc 0). Hết giờ là thua. Thử bỏ dây "Gắn vào vật" để thanh về góc màn hình.',
+    'Thanh đỏ nổi trên đầu nhân vật tụt dần theo 10 giây của Hẹn giờ (đầy lúc 10, rỗng lúc 0). Hết giờ là thua. Thử bỏ dây "Gắn vào đối tượng" để thanh về góc màn hình.',
     [
       ...b.specs,
       { id: 'timer', kind: 'timer', col: 1, row: 1, params: { seconds: 10 } },

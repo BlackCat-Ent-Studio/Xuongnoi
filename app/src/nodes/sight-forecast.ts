@@ -5,7 +5,7 @@ import { patrolNoteOf, routeNoteOf, visionNoteOf, type PatrolNote } from './sigh
 import { directionOf, insideCone, lookDirection, viewDistance } from './vision-sensor';
 import { asObject, clamp, numParam, strParam } from './util';
 
-/** What "Còn" shows when the viewer's sight never reaches the watched place within the looking-ahead time. */
+/** What "Giây còn lại" shows when the viewer's sight never reaches the watched place within the looking-ahead time. */
 export const NEVER_SEEN = 99;
 /** Gap between two watched points along a leg (units). */
 const SAMPLE_STEP = 0.4;
@@ -119,17 +119,17 @@ export const sightForecastNode: NodeDef<ForecastState> = {
   label: 'Dự đoán tầm nhìn',
   category: 'logic',
   description:
-    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn) và "Mục tiêu". Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Đường đi tuần" thì nó mới biết người nhìn đi đâu (không nối thì coi như người nhìn đứng yên). Nó chơi thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" (nối "Tuyến chạy" của mảnh Chạy theo tuyến vào "Tuyến của Mục tiêu") để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
+    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn) và "Mục tiêu". Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Tuyến đi tuần" thì nó mới biết người nhìn đi đâu (không nối thì coi như người nhìn đứng yên). Nó chơi thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" (nối "Tuyến chạy" của mảnh Chạy theo tuyến vào "Tuyến của Mục tiêu") để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
   inputs: [
     { id: 'viewer', type: 'object', label: 'Người nhìn', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu' },
-    { id: 'patrol', type: 'object', label: 'Đường đi tuần' },
+    { id: 'patrol', type: 'object', label: 'Tuyến đi tuần' },
     { id: 'route', type: 'object', label: 'Tuyến của Mục tiêu' },
   ],
   outputs: [
-    { id: 'window', type: 'number', label: 'Còn (giây)' },
+    { id: 'window', type: 'number', label: 'Giây còn lại' },
     { id: 'safe', type: 'bool', label: 'An toàn' },
-    { id: 'need', type: 'number', label: 'Cần (giây)' },
+    { id: 'need', type: 'number', label: 'Giây cần thiết' },
   ],
   params: [
     {

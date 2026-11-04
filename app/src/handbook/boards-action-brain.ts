@@ -202,13 +202,13 @@ export const shooterBoard = (): Board =>
       { alias: 'hp', kind: 'health', x: 560, y: 260, params: { maxHp: 4 } },
     ],
     [...MOVE, ['hero', 'self', 'gun', 'shooter'], ['dummy', 'self', 'gun', 'target'], ['fire', 'pressed', 'gun', 'fire'], ['dummy', 'self', 'hp', 'self']],
-    'Chơi: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Ngắm vào" để đạn bay theo hướng bạn nhìn.',
+    'Chơi: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Mục tiêu" để đạn bay theo hướng bạn nhìn.',
     'blue',
   );
 
 export const spawnerBoard = (): Board =>
   build(
-    'Thử: Tạo vật mới',
+    'Thử: Tạo đối tượng',
     '2d-top',
     [
       STICK,
@@ -239,7 +239,7 @@ export const patrolBoard = (): Board =>
 
 export const goToBoard = (): Board =>
   build(
-    'Thử: Đi tới',
+    'Thử: Di chuyển',
     '2d-top',
     [
       bot('walker', -5, 0),
@@ -308,7 +308,7 @@ export const chaseBoard = (): Board =>
 
 export const sequenceBoard = (): Board =>
   build(
-    'Thử: Chuỗi việc',
+    'Thử: Chuỗi bước',
     '2d-top',
     [
       bot('worker', -5, -3),

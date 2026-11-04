@@ -87,7 +87,7 @@ const objectPortId = (k: number): string => `obj${k + 1}`;
 const OBJECT_PORTS: PortDef[] = Array.from({ length: OBJECT_POINTS }, (_, k) => ({
   id: objectPortId(k),
   type: 'object',
-  label: `Điểm ${k + 1} (vật)`,
+  label: `Điểm ${k + 1}`,
   labelEn: `Point ${k + 1} (object)`,
 }));
 
@@ -257,9 +257,9 @@ const routeFollowCore: NodeDef<RouteState> = {
   label: 'Chạy theo tuyến',
   category: 'brain',
   description:
-    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Ai" từ ô "Xe" của mảnh ghép Xe (hoặc từ nhân vật). Phải nối tín hiệu vào "Bật" thì mới chạy. Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
+    'Cho xe (không cần người lái) hoặc nhân vật bot chạy qua các điểm Điểm 1, 2, 3... theo vòng lặp hoặc đi rồi quay lại. Nối "Đối tượng" từ ô "Đối tượng" của mảnh ghép Xe (hoặc từ nhân vật). Phải nối tín hiệu vào "Bật" thì mới chạy. Tự dừng khi có xe, người hay vật cản phía trước trong tầm "Dừng khi có vật phía trước". Muốn dừng ở đèn đỏ: nối tín hiệu đèn đỏ (ví dụ vùng cảm biến) vào "Dừng". Bot đi thẳng tới từng điểm, nên hãy đặt các điểm dọc theo đường.',
   inputs: [
-    { id: 'self', type: 'object', label: 'Ai', required: true },
+    { id: 'self', type: 'object', label: 'Đối tượng', required: true },
     { id: 'on', type: 'bool', label: 'Bật' },
     { id: 'stop', type: 'bool', label: 'Dừng' },
     { id: 'go', type: 'bool', label: 'Chạy' },
@@ -274,7 +274,7 @@ const routeFollowCore: NodeDef<RouteState> = {
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
     { id: 'jump', type: 'bool', label: 'Nhảy' },
     { id: 'blocked', type: 'bool', label: 'Đang bị chặn' },
-    { id: 'reached', type: 'bool', label: 'Tới điểm' },
+    { id: 'reached', type: 'bool', label: 'Khi tới điểm' },
     { id: 'index', type: 'number', label: 'Điểm hiện tại' },
     { id: 'atPoint', type: 'bool', label: 'Đang ở điểm' },
   ],
@@ -309,7 +309,7 @@ const routeFollowCore: NodeDef<RouteState> = {
       default: 'preset',
       options: [
         { value: 'preset', label: 'Không (dùng toạ độ Điểm 1, 2, 3... đã đặt)' },
-        { value: 'objects', label: 'Có (hiện ô "Điểm 1 (vật)"... nối vật vào, bot đi tới chỗ vật đang đứng; ô nào chưa nối thì dùng toạ độ đã đặt; tối đa 8 điểm đầu)' },
+        { value: 'objects', label: 'Có (hiện ô "Điểm 1"... nối vật vào, bot đi tới chỗ vật đang đứng; ô nào chưa nối thì dùng toạ độ đã đặt; tối đa 8 điểm đầu)' },
       ],
       advanced: true,
     },
@@ -437,21 +437,21 @@ const routeFollowCore: NodeDef<RouteState> = {
   },
 };
 
-/** Ticks the "Dừng" input must hold the walker before "Đã đứng yên" turns on (0.15 s). */
+/** Ticks the "Dừng" input must hold the walker before "Đang đứng yên" turns on (0.15 s). */
 const STILL_TICKS = 9;
 const heldTicks = new WeakMap<object, number>();
 
 /**
  * The route piece plus "Tuyến chạy" (names the walker whose route a forecast may read; it is wired, never guessed) and
- * "Đã đứng yên" (tells that the "Dừng" input has really stopped the walker, e.g. to grab only while standing at a point).
+ * "Đang đứng yên" (tells that the "Dừng" input has really stopped the walker, e.g. to grab only while standing at a point).
  */
 export const routeFollowNode: NodeDef<RouteState> = {
   ...routeFollowCore,
-  outputs: [...routeFollowCore.outputs, { id: 'route', type: 'object', label: 'Tuyến chạy' }, { id: 'halted', type: 'bool', label: 'Đã đứng yên' }],
+  outputs: [...routeFollowCore.outputs, { id: 'route', type: 'object', label: 'Tuyến chạy' }, { id: 'halted', type: 'bool', label: 'Đang đứng yên' }],
   evaluate(ctx, i, params, s): PortValues {
     const out = routeFollowCore.evaluate(ctx, i, params, s);
     const self = liveCharacter(ctx.world, asObject(i.self));
-    // "Đã đứng yên": its "Dừng" input has held the walker still for a moment, not just flickered for a tick, so a brief on-off
+    // "Đang đứng yên": its "Dừng" input has held the walker still for a moment, not just flickered for a tick, so a brief on-off
     // loop of its own outputs can never fake it.
     const holding = self !== undefined && asBool(i.on) && asBool(i.stop);
     const ticks = holding ? (heldTicks.get(s as object) ?? 0) + 1 : 0;

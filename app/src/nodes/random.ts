@@ -45,8 +45,8 @@ export const randomNode: NodeDef<RandomState> = {
     'Tung ra một số ngẫu nhiên trong khoảng bạn chọn, như tung xúc xắc. Chọn lúc nào tung: mỗi lần "Tung" bật, liên tục mỗi nhịp, hoặc một lần lúc bắt đầu (chưa tung lần nào thì ra 0). Để "Hạt giống" = 0 thì mỗi lần chơi ra số khác nhau; đặt số khác 0 thì lần nào cũng ra y hệt.',
   inputs: [{ id: 'roll', type: 'bool', label: 'Tung' }],
   outputs: [
-    { id: 'value', type: 'number', label: 'Số' },
-    { id: 'rolled', type: 'bool', label: 'Vừa tung' },
+    { id: 'value', type: 'number', label: 'Giá trị' },
+    { id: 'rolled', type: 'bool', label: 'Khi tung' },
   ],
   params: [
     { id: 'min', label: 'Nhỏ nhất', kind: 'number', default: 1, step: 1 },

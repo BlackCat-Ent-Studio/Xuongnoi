@@ -5,15 +5,15 @@ import { groundParams, sceneryMaker, wire } from './player-built-kit';
 const scenery = sceneryMaker();
 
 /**
- * Level 1 (bot-dau-tien): the first wires. The board shows only the bot and the flag; the player takes "Đi tới" from the
+ * Level 1 (bot-dau-tien): the first wires. The board shows only the bot and the flag; the player takes "Di chuyển" from the
  * tray and joins it to both and to the bot's walking input. The ground and the win rule (bot touches the flag) are scenery.
  */
 export const level01: PuzzleLevel | null = {
   id: 'bot-dau-tien',
   order: 1,
   title: 'Bot đầu tiên',
-  task: 'Bot muốn đi tới lá cờ. Hãy kéo mảnh "Đi tới" vào, rồi nối dây cho bot và lá cờ.',
-  hint: 'Nối 3 dây: Bot vào "Bot", Cờ vào "Đích", và "Đi ngang" của mảnh đi vào "Đi ngang" của bot.',
+  task: 'Bot muốn đi tới lá cờ. Hãy kéo mảnh "Di chuyển" vào, rồi nối dây cho bot và lá cờ.',
+  hint: 'Nối 3 dây: Bot vào "Bot", Cờ vào "Điểm đến", và "Đi ngang" của mảnh đi vào "Đi ngang" của bot.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.robotLegs],
   base: {
@@ -49,7 +49,7 @@ export const level01: PuzzleLevel | null = {
   },
   tray: [
     { kind: 'go-to', count: 1 },
-    // Nothing acts without a wire: "Đi tới" walks only while a signal reaches its "Cho đi", and this one is on from the first moment.
+    // Nothing acts without a wire: "Di chuyển" walks only while a signal reaches its "Bật", and this one is on from the first moment.
     { kind: 'on-start', count: 1 },
     // Spare piece: "Và" looks useful but nothing here needs it. (Not "Đảo ngược": left alone it gives a steady "bật", the same as "Khi bắt đầu".)
     { kind: 'and', count: 1 },

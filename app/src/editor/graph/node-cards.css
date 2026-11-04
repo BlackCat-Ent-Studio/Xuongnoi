@@ -31,7 +31,8 @@
 .wc .wc-node:not(.wc-group) .wc-title { flex: 1 1 0; min-width: min-content; }
 .wc .wc-name { font-weight: 800; font-size: 13.5px; }
 /* The subtitle (English term) never adds width: it fills the room the title and the card already have, so the card keeps its old footprint. */
-.wc .wc-sub { font-size: 11px; font-weight: 600; color: rgba(16, 21, 27, .72); }
+/* Larger and darker than before so the English term reads at a glance; the line height stays at the old 13.2px so the header does not grow. */
+.wc .wc-sub { font-size: 12px; line-height: 13.2px; font-weight: 700; color: rgba(16, 21, 27, .9); }
 .wc .wc-node:not(.wc-group) .wc-sub { display: block; contain: inline-size; overflow: hidden; text-overflow: ellipsis; }
 .wc .wc-miss-badge { margin-left: 8px; padding: 1px 8px; border-radius: 10px; background: #10151b; color: var(--warn, #f2b33d); font-size: 12px; font-weight: 700; }
 

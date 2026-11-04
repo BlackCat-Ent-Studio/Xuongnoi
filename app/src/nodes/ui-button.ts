@@ -9,11 +9,11 @@ export const uiButtonNode: NodeDef<null> = {
   label: 'Nút bấm',
   category: 'input',
   description:
-    'Hiện một nút bấm trên màn hình game. "Vừa bấm" bật một nhịp mỗi lần người chơi bấm nút, "Đang giữ chuột" bật khi còn giữ chuột. Nối "Hiện" để bật tắt nút.',
+    'Hiện một nút bấm trên màn hình game. "Khi bấm" bật một nhịp mỗi lần người chơi bấm nút, "Đang giữ nút" bật khi còn giữ chuột. Nối "Hiện" để bật tắt nút.',
   inputs: [{ id: 'show', type: 'bool', label: 'Hiện' }],
   outputs: [
-    { id: 'pressed', type: 'bool', label: 'Vừa bấm' },
-    { id: 'held', type: 'bool', label: 'Đang giữ chuột' },
+    { id: 'pressed', type: 'bool', label: 'Khi bấm' },
+    { id: 'held', type: 'bool', label: 'Đang giữ nút' },
   ],
   params: [
     { id: 'text', label: 'Chữ trên nút', kind: 'text', default: 'Bấm vào đây' },

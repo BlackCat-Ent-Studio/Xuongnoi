@@ -27,7 +27,7 @@ const T = {
   },
   wireSelf: {
     title: 'Nói mảnh ghép Máu của ai',
-    text: 'Nối cổng "Nhân vật" của con bot đỏ sang cổng "Nhân vật" của mảnh ghép Máu mới.',
+    text: 'Nối cổng "Đối tượng" của con bot đỏ sang cổng "Nhân vật" của mảnh ghép Máu mới.',
   },
   wireWin: {
     title: 'Hết máu là thắng',
@@ -54,11 +54,11 @@ const T = {
   },
   wireBot: {
     title: 'Bộ não điều khiển bot',
-    text: 'Nối cổng "Nhân vật" của bot đỏ sang cổng "Bot" của mảnh ghép Đánh địch.',
+    text: 'Nối cổng "Đối tượng" của bot đỏ sang cổng "Bot" của mảnh ghép Đánh địch.',
   },
   wireTarget: {
     title: 'Mục tiêu là bạn',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của mảnh ghép Đánh địch.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (bạn) sang cổng "Mục tiêu" của mảnh ghép Đánh địch.',
   },
   wireMove: {
     title: 'Nối hướng đi',

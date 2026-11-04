@@ -180,7 +180,7 @@ describe('level 5 behaviour: fetch, stop, grab, carry, set down', () => {
   });
 
   it('every solution wire is needed: with any one removed the level is not won', () => {
-    // Only "Ô kho 3 -> Tìm vật gần nhất" can go: the level ends the moment the third crate is down, before the finder
+    // Only "Ô kho 3 -> Tìm đồ gần nhất" can go: the level ends the moment the third crate is down, before the finder
     // would look at slot 3 again. The wire keeps the robot calm once the win rule is off (see the settle test).
     for (const w of level05.solution.wires.filter((x) => x.id !== 'sw4')) {
       const cut: PuzzleAnswer = { ...level05.solution, wires: level05.solution.wires.filter((x) => x.id !== w.id) };

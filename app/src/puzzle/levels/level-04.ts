@@ -17,7 +17,7 @@ export const level04: PuzzleLevel | null = {
   order: 4,
   title: 'Hai nút một cửa',
   task: 'Bot A đứng trên nút 1. Bot B phải qua cửa tới nút 2. Rồi bot A đi tới cờ. Cửa phải mở khi bot A đang đứng trên nút 1 HOẶC bot B đã tới nút 2. Bạn tự nối cả mạch.',
-  hint: '"Đi tới" cho B tới nút 2 và cho A tới cờ. A chỉ được đi khi B "Đã tới": nối vào "Cho đi". "Chạm nhau" báo A đứng trên nút 1. "Hoặc" gom hai tín hiệu rồi nối vào "Ẩn suốt lúc bật" của cửa.',
+  hint: '"Di chuyển" cho B tới nút 2 và cho A tới cờ. A chỉ được đi khi B "Đã đến": nối vào "Bật". "Va chạm" báo A đứng trên nút 1. "Hoặc" gom hai tín hiệu rồi nối vào "Ẩn khi bật" của cửa.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.robotLegs, PUZZLE_LOOKS.robotWheel],
   base: {

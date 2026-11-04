@@ -37,7 +37,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
   label: 'Xe',
   category: 'object',
   description:
-    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy". Tàu: chọn "Đầu máy" kéo bằng mảnh ghép "Chạy theo tuyến" (cách chạy "Bám ray"); nối "Xe" của đầu máy vào "Theo xe đầu" của một "Toa tàu" để toa chạy theo sau, và nối tiếp toa sau vào toa trước để thành đoàn tàu.',
+    'Một chiếc xe: xe hơi, xe máy hoặc xe tải nhỏ. Nối "Đi ngang" / "Đi dọc" từ cần điều khiển (hoặc từ mảnh ghép Bộ não của bot) để lái. Xe chỉ chạy khi có người ngồi (dùng mảnh ghép "Lên / Xuống xe"), trừ khi chọn "Tự chạy". Tàu: chọn "Đầu máy" kéo bằng mảnh ghép "Chạy theo tuyến" (cách chạy "Bám ray"); nối "Đối tượng" của đầu máy vào "Theo xe đầu" của một "Toa tàu" để toa chạy theo sau, và nối tiếp toa sau vào toa trước để thành đoàn tàu.',
   inputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
@@ -45,12 +45,12 @@ export const vehicleNode: NodeDef<VehicleState> = {
     { id: 'leader', type: 'object', label: 'Theo xe đầu' },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Xe' },
+    { id: 'self', type: 'object', label: 'Đối tượng' },
     { id: 'hasDriver', type: 'bool', label: 'Có người lái' },
     { id: 'speed', type: 'number', label: 'Tốc độ' },
     { id: 'driver', type: 'object', label: 'Người lái' },
-    { id: 'crashed', type: 'bool', label: 'Vừa va chạm' },
-    { id: 'crashedWith', type: 'object', label: 'Va với' },
+    { id: 'crashed', type: 'bool', label: 'Khi va chạm' },
+    { id: 'crashedWith', type: 'object', label: 'Đối tượng va phải' },
   ],
   params: [
     { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },

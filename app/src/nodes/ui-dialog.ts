@@ -18,15 +18,15 @@ export function dialogAnswers(params: Params): string[] {
 
 export const uiDialogNode: NodeDef<DialogState> = {
   kind: 'ui-dialog',
-  label: 'Hộp hỏi',
+  label: 'Hộp thoại',
   category: 'input',
   description:
     'Mỗi khi "Hỏi" bật lên, hiện một câu hỏi với 2 hoặc 3 nút trả lời. Người chơi bấm nút nào thì cổng "Chọn" tương ứng bật một nhịp rồi hộp đóng lại. Game vẫn chạy trong lúc hộp mở. Để trống "Câu trả lời 3" nếu chỉ cần 2 nút.',
   inputs: [{ id: 'ask', type: 'bool', label: 'Hỏi' }],
   outputs: [
-    { id: 'a1', type: 'bool', label: 'Chọn 1' },
-    { id: 'a2', type: 'bool', label: 'Chọn 2' },
-    { id: 'a3', type: 'bool', label: 'Chọn 3' },
+    { id: 'a1', type: 'bool', label: 'Khi chọn 1' },
+    { id: 'a2', type: 'bool', label: 'Khi chọn 2' },
+    { id: 'a3', type: 'bool', label: 'Khi chọn 3' },
     { id: 'asking', type: 'bool', label: 'Đang hỏi' },
   ],
   params: [

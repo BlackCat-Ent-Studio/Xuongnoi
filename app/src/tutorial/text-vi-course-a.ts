@@ -16,7 +16,7 @@ export const SECRET_DOOR_TEXT = {
   },
   open: {
     title: 'Cửa mở lúc bắt đầu',
-    text: 'Nối "Vừa bắt đầu" của Khi bắt đầu sang cổng "Ẩn đi (1 nhịp)" của Vật thể cánh cửa (hộp nâu cao).',
+    text: 'Nối "Khi bắt đầu" của Khi bắt đầu sang cổng "Ẩn" của Vật thể cánh cửa (hộp nâu cao).',
     explain: 'Hộp bị "ẩn đi" thì biến mất và không còn chắn đường. Chỉ một nhịp ngắn là đủ để cửa mở.',
   },
   not: {
@@ -26,13 +26,13 @@ export const SECRET_DOOR_TEXT = {
   },
   notIn: {
     title: 'Ở trong phòng hay không?',
-    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "Vào" của mảnh ghép Đảo ngược.',
-    explain: 'Khi bạn còn ở trong phòng, "Có ai trong vùng" bật nên Đảo ngược tắt. Khi bạn đi ra khỏi phòng, Đảo ngược bật lên.',
+    text: 'Nối cổng "Đang có đối tượng" của Vùng kích hoạt sang cổng "Đầu vào" của mảnh ghép Đảo ngược.',
+    explain: 'Khi bạn còn ở trong phòng, "Đang có đối tượng" bật nên Đảo ngược tắt. Khi bạn đi ra khỏi phòng, Đảo ngược bật lên.',
   },
   close: {
     title: 'Đi ra thì cửa đóng lại',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Hiện lại (1 nhịp)" của Vật thể cánh cửa.',
-    explain: '"Hiện lại (1 nhịp)" cho cánh cửa hiện ra ở chỗ cũ. Cửa sập lại ngay sau lưng bạn, không quay đầu được nữa!',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "Hiện" của Vật thể cánh cửa.',
+    explain: '"Hiện" cho cánh cửa hiện ra ở chỗ cũ. Cửa sập lại ngay sau lưng bạn, không quay đầu được nữa!',
   },
   play: {
     title: 'Chạy thử',
@@ -55,7 +55,7 @@ export const CHASE_GAME_TEXT = {
   intro: {
     title: 'Hai con bot',
     text: 'Bảng này có bạn (xanh dương), bot đỏ và bot xanh lá. Chạm bot đỏ là thua, chạm bot xanh lá là thắng. Hiện giờ hai bot đứng yên. Ta sẽ cho bot đỏ đuổi bạn, bot xanh lá chạy trốn bạn.',
-    explain: 'Hai chỗ chạm đã nối sẵn bằng Chạm nhau. Phần còn lại là "bộ não" cho hai con bot.',
+    explain: 'Hai chỗ chạm đã nối sẵn bằng Va chạm. Phần còn lại là "bộ não" cho hai con bot.',
   },
   chase: {
     title: 'Thêm Đuổi / Trốn',
@@ -64,7 +64,7 @@ export const CHASE_GAME_TEXT = {
   },
   chaseWires: {
     title: 'Nối bộ não cho bot đỏ',
-    text: 'Nối ba dây: cổng "Nhân vật" của bot đỏ sang "Bot"; cổng "Nhân vật" của bạn (xanh dương) sang "Mục tiêu"; rồi "Đi ngang" của mảnh ghép sang cổng "Đi ngang" của bot đỏ.',
+    text: 'Nối ba dây: cổng "Đối tượng" của bot đỏ sang "Bot"; cổng "Đối tượng" của bạn (xanh dương) sang "Mục tiêu"; rồi "Đi ngang" của mảnh ghép sang cổng "Đi ngang" của bot đỏ.',
     explain: '"Bot" là con được điều khiển, "Mục tiêu" là vật nó để mắt tới. Mặc định cách làm là "Đuổi theo".',
   },
   catchDistance: {
@@ -83,7 +83,7 @@ export const CHASE_GAME_TEXT = {
   },
   fleeWires: {
     title: 'Nối bộ não cho bot xanh lá',
-    text: 'Với mảnh ghép "Tránh xa": nối "Nhân vật" của bot xanh lá sang "Bot", "Nhân vật" của bạn sang "Mục tiêu", và "Đi ngang" của mảnh ghép sang "Đi ngang" của bot xanh lá.',
+    text: 'Với mảnh ghép "Tránh xa": nối "Đối tượng" của bot xanh lá sang "Bot", "Đối tượng" của bạn sang "Mục tiêu", và "Đi ngang" của mảnh ghép sang "Đi ngang" của bot xanh lá.',
   },
   play: {
     title: 'Chơi thử',
@@ -109,26 +109,26 @@ export const COLLIDER_GRAVITY_TEXT = {
     explain: 'Nhân vật, phím, Khiêng đồ và Thắng / Thua đã có sẵn. Mục "Nâng cao" nằm gập ở cuối bảng Thuộc tính, bấm vào để mở ra.',
   },
   touch: {
-    title: 'Thêm Chạm nhau',
-    text: 'Kéo mảnh ghép "Chạm nhau" (nhóm Logic) vào bảng.',
+    title: 'Thêm Va chạm',
+    text: 'Kéo mảnh ghép "Va chạm" (nhóm Logic) vào bảng.',
     explain: 'Nó kiểm tra hai vật có đang chạm nhau không.',
   },
   touchWires: {
     title: 'Thùng và bệ',
-    text: 'Nối cổng "Đồ vật" của cái thùng sang "Vật chính", và cổng "Vật thể" của bệ xanh sang "Vật kia" của Chạm nhau.',
+    text: 'Nối cổng "Đối tượng" của cái thùng sang "Đối tượng A", và cổng "Đối tượng" của bệ xanh sang "Đối tượng B" của Va chạm.',
   },
   win: {
     title: 'Chạm là thắng',
-    text: 'Nối cổng "Đang chạm" của Chạm nhau sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
+    text: 'Nối cổng "Đang chạm" của Va chạm sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   inside: {
     title: 'Phải nằm trọn bên trong',
-    text: 'Chọn Chạm nhau. Ở Thuộc tính, đổi "Tính khi nào" thành "A nằm trọn trong B".',
+    text: 'Chọn Va chạm. Ở Thuộc tính, đổi "Tính khi nào" thành "A nằm trọn trong B".',
     explain: 'Mặc định chỉ cần chạm mép là tính. Chọn "nằm trọn" thì thùng phải lọt hẳn vào trong bệ mới tính. Mảnh ghép Vùng kích hoạt cũng có lựa chọn "Tính khi nào" giống vậy.',
   },
   hold: {
     title: 'Phải nằm yên một lúc',
-    text: 'Vẫn ở Chạm nhau. Đổi "Chạm bao lâu mới tính (giây)" thành 0.5.',
+    text: 'Vẫn ở Va chạm. Đổi "Chạm bao lâu mới tính (giây)" thành 0.5.',
     explain: 'Thùng đang được bạn cầm bay ngang qua bệ thì không tính. Phải nằm yên trong bệ nửa giây mới thắng.',
   },
   heroGravity: {
@@ -201,11 +201,11 @@ export const CONVEYOR_TEXT = {
   min: {
     title: 'Đủ ba thùng mới tính',
     text: 'Vẫn ở Vùng kích hoạt. Đổi "Ít nhất bao nhiêu vật" thành 3.',
-    explain: 'Cổng "Có ai trong vùng" chỉ bật khi có từ 3 vật trở lên trong khu thu.',
+    explain: 'Cổng "Đang có đối tượng" chỉ bật khi có từ 3 vật trở lên trong khu thu.',
   },
   win: {
     title: 'Đủ hàng là thắng',
-    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
+    text: 'Nối cổng "Đang có đối tượng" của Vùng kích hoạt sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Mở băng chuyền',

@@ -25,7 +25,7 @@ const T = {
   addPlatform: {
     title: 'Thêm bệ di chuyển',
     text: 'Kéo mảnh ghép "Bệ di chuyển" (nhóm Vật thể) vào bảng.',
-    explain: 'Bệ chạy từ điểm A tới điểm B rồi quay lại khi cổng "Chạy" được bật (ở bước sau ta nối "Khi bắt đầu" vào đó). Ai đứng trên bệ sẽ đi theo bệ.',
+    explain: 'Bệ chạy từ điểm A tới điểm B rồi quay lại khi cổng "Bật" được bật (ở bước sau ta nối "Khi bắt đầu" vào đó). Ai đứng trên bệ sẽ đi theo bệ.',
   },
   platformA: {
     title: 'Đặt điểm A bên bờ trái',
@@ -52,7 +52,7 @@ const T = {
   },
   wireShooter: {
     title: 'Ai là người bắn?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Người bắn" của mảnh ghép Bắn đạn.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (bạn) sang cổng "Người bắn" của mảnh ghép Bắn đạn.',
   },
   wireFire: {
     title: 'Bấm J để bắn',
@@ -69,22 +69,22 @@ const T = {
     explain: 'Muốn đạn mạnh hơn hay bay xa hơn, chỉnh "Sát thương" và "Bay bao lâu" trong mảnh ghép Bắn đạn.',
   },
   addSpawner: {
-    title: 'Thêm mảnh ghép Tạo vật mới',
-    text: 'Kéo mảnh ghép "Tạo vật mới" (nhóm Hành động) vào bảng.',
-    explain: 'Mỗi lần "Tạo ra" bật, nó tạo thêm một đồ vật (ở đây là hòn đá). Mỗi hòn chỉ tồn tại một lúc rồi biến mất.',
+    title: 'Thêm mảnh ghép Tạo đối tượng',
+    text: 'Kéo mảnh ghép "Tạo đối tượng" (nhóm Hành động) vào bảng.',
+    explain: 'Mỗi lần "Tạo" bật, nó tạo thêm một đồ vật (ở đây là hòn đá). Mỗi hòn chỉ tồn tại một lúc rồi biến mất.',
   },
   spawnerSetup: {
     title: 'Cho đá rơi trên đường tới cổng',
-    text: 'Chọn mảnh ghép Tạo vật mới: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
+    text: 'Chọn mảnh ghép Tạo đối tượng: sửa "Vị trí" thành x = 10.5, y = 6, z = 0 (rơi từ trên cao xuống) và "Sống bao lâu" thành 1.',
     explain: 'Hòn đá có sẵn dáng tròn. Ai chạm vào đá khi nó đang rơi thì thua.',
   },
   wireToucher: {
     title: 'Ai bị đá làm hại?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (bạn) sang cổng "Vật thử chạm" của mảnh ghép Tạo vật mới.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (bạn) sang cổng "Chạm thử với" của mảnh ghép Tạo đối tượng.',
   },
   wireLose: {
     title: 'Chạm đá là thua',
-    text: 'Nối cổng "Đang chạm" của mảnh ghép Tạo vật mới sang cổng còn trống của mảnh ghép Hoặc (cổng B).',
+    text: 'Nối cổng "Đang chạm" của mảnh ghép Tạo đối tượng sang cổng còn trống của mảnh ghép Hoặc (cổng B).',
     explain: 'Mảnh ghép Hoặc đã có sẵn: rơi xuống hố hoặc chạm đá, một trong hai là thua.',
   },
   addTimer: {
@@ -94,7 +94,7 @@ const T = {
   },
   wireSpawn: {
     title: 'Hết giờ là thả đá',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo ra" của mảnh ghép Tạo vật mới.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo" của mảnh ghép Tạo đối tượng.',
   },
   addLoopOr: {
     title: 'Thêm một mảnh ghép Hoặc để lặp',
@@ -107,7 +107,7 @@ const T = {
   },
   wireLoopOut: {
     title: 'Đếm lại mãi mãi',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc mới về cổng "Đếm lại" của Hẹn giờ.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc mới về cổng "Đặt lại" của Hẹn giờ.',
     explain: 'Cứ hết giờ là đếm lại từ đầu, nên cứ 3 giây lại có một hòn đá rơi.',
   },
   addRotating: {
@@ -131,11 +131,11 @@ const T = {
   win: {
     title: 'Tới cờ rồi!',
     text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Dừng" rồi "Chơi" thử lại.',
-    explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Tạo vật mới kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
+    explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Tạo đối tượng kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
   },
   done: {
     title: 'Bạn đã biết làm màn nhảy bắn!',
-    text: 'Bạn đã dùng Bệ di chuyển, Bắn đạn, Tạo vật mới và Bệ xoay. Thử mở game mẫu "Né và bắn" để xem một màn tương tự.',
+    text: 'Bạn đã dùng Bệ di chuyển, Bắn đạn, Tạo đối tượng và Bệ xoay. Thử mở game mẫu "Né và bắn" để xem một màn tương tự.',
   },
 } as const;
 

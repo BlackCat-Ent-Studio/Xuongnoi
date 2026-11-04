@@ -173,7 +173,7 @@ describe('route-follow: ports with the option', () => {
     expect(ids({ pointsFrom: 'objects' })).toEqual(['obj1', 'obj2', 'obj3', 'obj4']);
     expect(ids({ pointsFrom: 'objects', count: 2 })).toEqual(['obj1', 'obj2']);
     expect(ids({ pointsFrom: 'objects', count: 32 })).toHaveLength(8);
-    expect(activeInputs(def(), { pointsFrom: 'objects' }).find((p) => p.id === 'obj1')?.label).toBe('Điểm 1 (vật)');
+    expect(activeInputs(def(), { pointsFrom: 'objects' }).find((p) => p.id === 'obj1')?.label).toBe('Điểm 1');
     expect(activeInputs(def(), { pointsFrom: 'objects' }).every((p) => p.labelEn)).toBe(true);
   });
 

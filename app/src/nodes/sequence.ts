@@ -16,7 +16,7 @@ interface SequenceState {
 const stepPorts: PortDef[] = Array.from({ length: SEQUENCE_MAX_STEPS }, (_, k) => ({
   id: `step${k + 1}`,
   type: 'bool' as const,
-  label: `Việc ${k + 1}`,
+  label: `Bước ${k + 1}`,
 }));
 
 function stepCount(raw: number): number {
@@ -25,21 +25,21 @@ function stepCount(raw: number): number {
 
 export const sequenceNode: NodeDef<SequenceState> = {
   kind: 'sequence',
-  label: 'Chuỗi việc',
+  label: 'Chuỗi bước',
   category: 'brain',
   description:
-    'Làm lần lượt từng việc: mỗi lúc chỉ một "Việc" bật. Khi "Xong việc" bật lên một nhịp thì chuyển sang việc kế tiếp (có thể lặp lại từ đầu). Nối "Việc 1", "Việc 2"... vào cổng "Cho đi" của các mảnh ghép Đi tới.',
+    'Làm lần lượt từng bước: mỗi lúc chỉ một "Bước" bật. Khi "Sang bước kế" bật lên một nhịp thì chuyển sang bước kế tiếp (có thể lặp lại từ đầu). Nối "Bước 1", "Bước 2"... vào cổng "Bật" của các mảnh ghép Di chuyển.',
   inputs: [
-    { id: 'next', type: 'bool', label: 'Xong việc' },
-    { id: 'reset', type: 'bool', label: 'Làm lại từ đầu' },
+    { id: 'next', type: 'bool', label: 'Sang bước kế' },
+    { id: 'reset', type: 'bool', label: 'Đặt lại' },
   ],
   outputs: [
     ...stepPorts,
-    { id: 'index', type: 'number', label: 'Đang làm việc số' },
-    { id: 'finished', type: 'bool', label: 'Đã xong hết' },
+    { id: 'index', type: 'number', label: 'Bước hiện tại' },
+    { id: 'finished', type: 'bool', label: 'Đã hoàn thành' },
   ],
   params: [
-    { id: 'stepCount', label: 'Số việc (2-6)', kind: 'number', default: 2, min: MIN_STEPS, max: SEQUENCE_MAX_STEPS, step: 1 },
+    { id: 'stepCount', label: 'Số bước (2-6)', kind: 'number', default: 2, min: MIN_STEPS, max: SEQUENCE_MAX_STEPS, step: 1 },
     {
       id: 'loop',
       label: 'Làm hết thì',
@@ -47,7 +47,7 @@ export const sequenceNode: NodeDef<SequenceState> = {
       default: 'no',
       options: [
         { value: 'no', label: 'Dừng lại' },
-        { value: 'yes', label: 'Lặp lại từ việc 1' },
+        { value: 'yes', label: 'Lặp lại từ bước 1' },
       ],
     },
   ],

@@ -5,7 +5,7 @@ import { type NodeSpec, type WireSpec, isPlayer, paletteSel, setParamStep, textC
 import type { Lesson } from './types';
 
 /**
- * "Thanh máu đổi màu": a turret shoots the player; Máu -> Đổi thang số -> Thanh đo draws the health bar and
+ * "Thanh máu đổi màu": a turret shoots the player; Máu -> Quy đổi khoảng -> Thanh đo draws the health bar and
  * Chọn theo số turns the health level into a warning. Self-contained: shared builders arrive through `LessonKit`.
  */
 

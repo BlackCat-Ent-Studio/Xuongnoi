@@ -15,7 +15,7 @@ type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: s
 const botParams = (x: number, color: string): Params => ({ position: { x, y: 1, z: 0 }, color, look: 'robot', role: 'bot' });
 const goParams = (x: number): Params => ({ targetPos: { x, y: 1, z: 0 }, stopDistance: 0.5 });
 
-/** Two identical little setups (a bot and its "Đi tới" brick) lying apart on the board, plus a floor. */
+/** Two identical little setups (a bot and its "Di chuyển" brick) lying apart on the board, plus a floor. */
 const NODES: NodeSpec[] = [
   { alias: 'floor', kind: 'block', x: 300, y: 560, params: { size: { x: 24, y: 1, z: 1 }, color: '#65a30d' } },
   { alias: 'bot-a', kind: 'character', x: 40, y: 20, params: botParams(-8, '#f59e0b') },
@@ -38,7 +38,7 @@ const kindOf = (s: Snapshot, id: string): string | undefined => s.graph.nodes.fi
 const firstOf = (s: Snapshot, kind: string): GraphNode | undefined => s.graph.nodes.find((n) => n.kind === kind);
 const groupBox = (id: string): string => `.wc-group[data-id="${id}"]`;
 
-/** Exactly one bot and one "Đi tới" brick are selected. */
+/** Exactly one bot and one "Di chuyển" brick are selected. */
 function pairSelected(s: Snapshot): boolean {
   const ids = s.selectedIds ?? [];
   if (ids.length !== PAIR_SIZE) return false;

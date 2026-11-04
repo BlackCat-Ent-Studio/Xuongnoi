@@ -4,8 +4,8 @@ import { nodesOfKind, paramOf, type NodeFilter } from './graph-checks';
 import type { Lesson, Snapshot, Step, TargetList } from './types';
 
 /**
- * "Every action needs its own wire": a piece such as "Đi tới" or "Đi tuần" does nothing until a signal reaches its
- * "Cho đi" / "Hoạt động" / "Bật" / "Chạy" / "Hiện" input. Lessons that make the learner place such a piece get one
+ * "Every action needs its own wire": a piece such as "Di chuyển" or "Đi tuần" does nothing until a signal reaches its
+ * "Bật" / "Bắt đầu" / "Hiện" input. Lessons that make the learner place such a piece get one
  * extra step right after the step that wires it: connect "Đã bắt đầu" of a "Khi bắt đầu" card (put on the starting board)
  * to that input. The table lives here, away from the lessons, so each lesson file stays about its own idea.
  */
@@ -19,21 +19,21 @@ interface Piece {
 
 /** The pieces whose input needs the start signal, with the names the learner sees on the cards. */
 const PIECES: Record<string, Piece> = {
-  'go-to': { name: 'Đi tới', input: 'Cho đi' },
-  patrol: { name: 'Đi tuần', input: 'Hoạt động' },
+  'go-to': { name: 'Di chuyển', input: 'Bật' },
+  patrol: { name: 'Đi tuần', input: 'Bật' },
   'route-follow': { name: 'Chạy theo tuyến', input: 'Bật' },
-  chase: { name: 'Đuổi / Trốn', input: 'Cho đi' },
-  fight: { name: 'Đánh địch', input: 'Cho đi' },
-  timer: { name: 'Hẹn giờ', input: 'Chạy' },
-  'moving-platform': { name: 'Bệ di chuyển', input: 'Chạy' },
-  'rotating-platform': { name: 'Bệ xoay', input: 'Chạy' },
+  chase: { name: 'Đuổi / Trốn', input: 'Bật' },
+  fight: { name: 'Đánh địch', input: 'Bật' },
+  timer: { name: 'Hẹn giờ', input: 'Bắt đầu' },
+  'moving-platform': { name: 'Bệ di chuyển', input: 'Bật' },
+  'rotating-platform': { name: 'Bệ xoay', input: 'Bật' },
   portal: { name: 'Cổng dịch chuyển', input: 'Bật' },
   camera: { name: 'Máy quay', input: 'Bật' },
   'show-text': { name: 'Hiện chữ', input: 'Hiện' },
   'guide-arrow': { name: 'Mũi tên chỉ đường', input: 'Hiện' },
   'ui-button': { name: 'Nút trên màn hình', input: 'Hiện' },
   'ui-meter': { name: 'Thanh trên màn hình', input: 'Hiện' },
-  block: { name: 'Băng chuyền', input: 'Chạy băng chuyền' },
+  block: { name: 'Băng chuyền', input: 'Bật băng chuyền' },
 };
 
 /** The blocks that are a conveyor belt (the others have nothing to start). */

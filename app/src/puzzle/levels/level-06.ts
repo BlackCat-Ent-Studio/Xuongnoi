@@ -132,7 +132,7 @@ export const level06: PuzzleLevel = {
   order: 6,
   title: 'Lẻn qua mắt lính gác',
   task: 'Mèo nhỏ phải lẻn tới ô xanh, nấp sau từng thùng một. Lính gác đi tuần và nhìn theo hướng đi: bị thấy là thua! Bạn tự lắp bộ não cho mèo: khi nào được chạy sang thùng kế, khi nào phải nấp.',
-  hint: 'Cho mèo đi theo "Chạy theo tuyến" (nối "Đi ngang" và "Đi dọc" về mèo). "Dự đoán tầm nhìn" cho biết "Còn" mấy giây nữa lính gác thấy chặng kế, và "Cần" là số giây mèo chạy hết chặng. Mèo chỉ được chạy khi "Còn" lớn hơn hoặc bằng "Cần": dùng "So sánh" rồi nối vào "Chạy".',
+  hint: 'Cho mèo đi theo "Chạy theo tuyến" (nối "Đi ngang" và "Đi dọc" về mèo). "Dự đoán tầm nhìn" cho biết còn mấy giây nữa lính gác thấy chặng kế (cổng "Giây còn lại"), và "Giây cần thiết" là số giây mèo chạy hết chặng. Mèo chỉ được chạy khi "Giây còn lại" lớn hơn hoặc bằng "Giây cần thiết": dùng "So sánh" rồi nối vào "Chạy".',
   mode: '3d',
   cast: [PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.robotLegs],
   base: { nodes: base.nodes, wires: base.wires },

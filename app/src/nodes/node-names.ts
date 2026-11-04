@@ -14,7 +14,7 @@ interface NodeNames {
   vi: string;
   en: string;
   /** Names the node had before the rename; the palette still finds the node by them. */
-  was?: string;
+  was?: string | string[];
   /** Old English term, kept as a search alias. */
   wasEn?: string;
   ports: PortNames;
@@ -27,13 +27,13 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Cảm biến phía trước',
     ports: {
       in: {
-        'who': ['Vật nhìn', 'Origin'],
+        'who': ['Đối tượng', 'Origin'],
       },
       out: {
-        'blocked': ['Bị chặn', 'Hit'],
+        'blocked': ['Đang bị chặn', 'Blocked'],
         'distance': ['Khoảng cách', 'Distance'],
-        'thing': ['Vật bị chặn', 'Hit object'],
-        'hit': ['Vừa gặp cản', 'Just hit'],
+        'thing': ['Đối tượng bị chặn', 'Hit object'],
+        'hit': ['Khi gặp vật cản', 'On hit'],
       },
     },
   },
@@ -44,16 +44,16 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     wasEn: 'Block',
     ports: {
       in: {
-        'hide': ['Ẩn đi (1 nhịp)', 'Hide'],
-        'show': ['Hiện lại (1 nhịp)', 'Show'],
-        'pick': ['Đổi màu 1-2-3', 'Set color'],
-        'run': ['Chạy băng chuyền', 'Conveyor on'],
+        'hide': ['Ẩn', 'Hide'],
+        'show': ['Hiện', 'Show'],
+        'pick': ['Đặt màu', 'Set color'],
+        'run': ['Bật băng chuyền', 'Conveyor'],
         'reverse': ['Đảo chiều', 'Reverse'],
-        'hiddenWhile': ['Ẩn suốt lúc bật', 'Hide while ON'],
+        'hiddenWhile': ['Ẩn khi bật', 'Hide while on'],
       },
       out: {
-        'self': ['Vật thể', 'Self'],
-        'usedOn': ['Bị dùng lên', 'Used on'],
+        'self': ['Đối tượng', 'Self'],
+        'usedOn': ['Khi bị dùng lên', 'On tool hit'],
         'hidden': ['Đang ẩn', 'Hidden'],
       },
     },
@@ -90,7 +90,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Không',
     ports: {
       in: {
-        'in': ['Vào', 'Input'],
+        'in': ['Đầu vào', 'Input'],
       },
       out: {
         'out': ['Kết quả', 'Result'],
@@ -103,8 +103,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'on': ['Bật', 'Enable'],
-        'target': ['Bám theo vật', 'Follow'],
-        'zoom': ['Phóng to (0 = mặc định)', 'Zoom'],
+        'target': ['Bám theo đối tượng', 'Follow target'],
+        'zoom': ['Thu phóng', 'Zoom'],
         'shake': ['Rung', 'Shake'],
       },
       out: {
@@ -125,10 +125,10 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
       out: {
         'count': ['Số hàng', 'Count'],
-        'loaded': ['Vừa chất', 'Loaded'],
-        'unloaded': ['Vừa dỡ', 'Unloaded'],
+        'loaded': ['Khi chất hàng', 'On loaded'],
+        'unloaded': ['Khi dỡ hàng', 'On unloaded'],
         'top': ['Hàng trên cùng', 'Top item'],
-        'typeCount': ['Số hàng loại này', 'Count of type'],
+        'typeCount': ['Số hàng theo loại', 'Count by type'],
       },
     },
   },
@@ -145,7 +145,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
       out: {
         'holding': ['Đang khiêng', 'Is carrying'],
-        'heldItem': ['Món đang khiêng', 'Carried item'],
+        'heldItem': ['Đồ đang khiêng', 'Carried item'],
       },
     },
   },
@@ -159,8 +159,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'jump': ['Nhảy', 'Jump'],
       },
       out: {
-        'self': ['Nhân vật', 'Self'],
-        'onGround': ['Đang đứng đất', 'On ground'],
+        'self': ['Đối tượng', 'Self'],
+        'onGround': ['Đang trên mặt đất', 'Grounded'],
         'x': ['Vị trí X', 'Position X'],
         'y': ['Vị trí Y', 'Position Y'],
         'z': ['Vị trí Z', 'Position Z'],
@@ -175,7 +175,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'self': ['Bot', 'Agent'],
         'target': ['Mục tiêu', 'Target'],
-        'go': ['Cho đi', 'Go'],
+        'go': ['Bật', 'Enable'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -191,10 +191,10 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Cảm biến màu',
     ports: {
       in: {
-        'who': ['Vật', 'Object'],
+        'who': ['Đối tượng', 'Object'],
       },
       out: {
-        'index': ['Số màu', 'Color #'],
+        'index': ['Chỉ số màu', 'Color index'],
         'match': ['Đúng màu', 'Matches'],
       },
     },
@@ -208,7 +208,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'b': ['Số B', 'B'],
       },
       out: {
-        'out': ['Đúng', 'True'],
+        'out': ['Kết quả', 'Result'],
       },
     },
   },
@@ -218,7 +218,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Hằng số',
     ports: {
       out: {
-        'value': ['Số', 'Value'],
+        'value': ['Giá trị', 'Value'],
       },
     },
   },
@@ -227,17 +227,17 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Counter',
     ports: {
       in: {
-        'up': ['Cộng 1', 'Increment'],
-        'down': ['Trừ 1', 'Decrement'],
-        'reset': ['Về đầu', 'Reset'],
-        'addAmount': ['Số cộng thêm', 'Amount'],
-        'add': ['Cộng số', 'Add'],
-        'setAmount': ['Số đặt', 'New value'],
-        'set': ['Đặt số', 'Set'],
+        'up': ['Tăng 1', 'Increment'],
+        'down': ['Giảm 1', 'Decrement'],
+        'reset': ['Đặt lại', 'Reset'],
+        'addAmount': ['Lượng cộng thêm', 'Amount'],
+        'add': ['Cộng thêm', 'Add'],
+        'setAmount': ['Giá trị mới', 'New value'],
+        'set': ['Đặt giá trị', 'Set value'],
       },
       out: {
         'value': ['Số đếm', 'Count'],
-        'reached': ['Đã đủ', 'Reached'],
+        'reached': ['Đã đạt mục tiêu', 'Reached'],
       },
     },
   },
@@ -247,8 +247,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Khoảng cách',
     ports: {
       in: {
-        'a': ['Vật 1', 'Object A'],
-        'b': ['Vật 2', 'Object B'],
+        'a': ['Đối tượng A', 'Object A'],
+        'b': ['Đối tượng B', 'Object B'],
       },
       out: {
         'distance': ['Khoảng cách', 'Distance'],
@@ -261,14 +261,14 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Enter / Exit Vehicle',
     ports: {
       in: {
-        'character': ['Ai', 'Who'],
+        'character': ['Nhân vật', 'Character'],
         'enter': ['Lên xe', 'Enter'],
         'exit': ['Xuống xe', 'Exit'],
-        'press': ['Bấm', 'Press'],
+        'press': ['Bấm (cũ)', 'Press (legacy)'],
       },
       out: {
-        'inVehicle': ['Đang ngồi trên xe', 'In vehicle'],
-        'vehicle': ['Xe đang ngồi', 'Vehicle'],
+        'inVehicle': ['Đang trên xe', 'In vehicle'],
+        'vehicle': ['Xe đang dùng', 'Current vehicle'],
       },
     },
   },
@@ -280,7 +280,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'self': ['Bot', 'Agent'],
         'target': ['Mục tiêu', 'Target'],
-        'go': ['Cho đi', 'Go'],
+        'go': ['Bật', 'Enable'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
@@ -291,20 +291,21 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'nearest-item': {
-    vi: 'Tìm vật gần nhất',
+    vi: 'Tìm đồ gần nhất',
     en: 'Nearest Item',
+    was: 'Tìm vật gần nhất',
     ports: {
       in: {
-        'who': ['Ai', 'Who'],
+        'who': ['Đối tượng', 'Origin'],
         'pause': ['Tạm nghỉ', 'Pause'],
-        'i1': ['Bỏ qua đồ trên ô 1', 'Ignore slot 1'],
-        'i2': ['Bỏ qua đồ trên ô 2', 'Ignore slot 2'],
-        'i3': ['Bỏ qua đồ trên ô 3', 'Ignore slot 3'],
-        'i4': ['Bỏ qua đồ trên ô 4', 'Ignore slot 4'],
+        'i1': ['Bỏ qua ô 1', 'Ignore slot 1'],
+        'i2': ['Bỏ qua ô 2', 'Ignore slot 2'],
+        'i3': ['Bỏ qua ô 3', 'Ignore slot 3'],
+        'i4': ['Bỏ qua ô 4', 'Ignore slot 4'],
       },
       out: {
-        'item': ['Vật gần nhất', 'Nearest item'],
-        'found': ['Có', 'Found'],
+        'item': ['Đồ gần nhất', 'Nearest item'],
+        'found': ['Đã tìm thấy', 'Found'],
         'distance': ['Khoảng cách', 'Distance'],
       },
     },
@@ -326,24 +327,25 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'go-to': {
-    vi: 'Đi tới',
+    vi: 'Di chuyển',
     en: 'Move To',
+    was: 'Đi tới',
     ports: {
       in: {
         'self': ['Bot', 'Agent'],
-        'target': ['Đích (vật)', 'Destination'],
-        'go': ['Cho đi', 'Go'],
-        'target2': ['Đích 2 (vật)', 'Second destination'],
-        'useTarget2': ['Dùng đích 2', 'Use second'],
+        'target': ['Điểm đến', 'Destination'],
+        'go': ['Bật', 'Enable'],
+        'target2': ['Điểm đến 2', 'Destination 2'],
+        'useTarget2': ['Dùng điểm đến 2', 'Use destination 2'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
         'moveY': ['Đi dọc', 'Move Y'],
         'jump': ['Nhảy', 'Jump'],
-        'arrived': ['Đã tới', 'Arrived'],
-        'arrivedPulse': ['Vừa tới', 'Just arrived'],
-        'arrivedAt1': ['Tới Đích', 'At destination'],
-        'arrivedAt2': ['Tới Đích 2', 'At second destination'],
+        'arrived': ['Đã đến', 'Arrived'],
+        'arrivedPulse': ['Khi đến nơi', 'On arrive'],
+        'arrivedAt1': ['Đã đến điểm đến', 'Arrived at destination'],
+        'arrivedAt2': ['Đã đến điểm đến 2', 'Arrived at destination 2'],
       },
     },
   },
@@ -352,8 +354,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Waypoint Arrow',
     ports: {
       in: {
-        'from': ['Từ', 'From'],
-        'to': ['Tới', 'To'],
+        'from': ['Từ đối tượng', 'From'],
+        'to': ['Đến đối tượng', 'To'],
         'show': ['Hiện', 'Show'],
       },
       out: {
@@ -370,14 +372,14 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'character': ['Nhân vật', 'Character'],
         'equip': ['Cầm', 'Equip'],
         'unequip': ['Cất', 'Unequip'],
-        'toggle': ['Cầm / Cất', 'Equip'],
+        'toggle': ['Cầm / Cất (cũ)', 'Toggle (legacy)'],
         'use': ['Dùng', 'Use'],
       },
       out: {
-        'holding': ['Đang cầm tay', 'Equipped'],
-        'tool': ['Món trên tay', 'Tool'],
-        'used': ['Vừa dùng', 'Used'],
-        'hit': ['Trúng', 'Hit'],
+        'holding': ['Đang cầm', 'Equipped'],
+        'tool': ['Dụng cụ đang cầm', 'Held tool'],
+        'used': ['Khi dùng', 'On use'],
+        'hit': ['Khi trúng', 'On hit'],
       },
     },
   },
@@ -390,8 +392,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'heal': ['Hồi máu', 'Heal'],
       },
       out: {
-        'hp': ['Máu còn', 'HP'],
-        'hurtPulse': ['Vừa bị đánh', 'Damaged'],
+        'hp': ['Máu hiện tại', 'Current HP'],
+        'hurtPulse': ['Khi bị thương', 'On damaged'],
         'dead': ['Hết máu', 'Dead'],
       },
     },
@@ -405,8 +407,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'press': ['Bấm', 'Press'],
       },
       out: {
-        'fired': ['Vừa tương tác', 'Interacted'],
-        'target': ['Món được dùng', 'Target'],
+        'fired': ['Khi tương tác', 'On interact'],
+        'target': ['Đồ được dùng', 'Target'],
       },
     },
   },
@@ -415,15 +417,15 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Item',
     ports: {
       in: {
-        'hide': ['Ẩn đi (1 nhịp)', 'Hide'],
-        'show': ['Hiện lại (1 nhịp)', 'Show'],
+        'hide': ['Ẩn', 'Hide'],
+        'show': ['Hiện', 'Show'],
       },
       out: {
-        'self': ['Đồ vật', 'Self'],
+        'self': ['Đối tượng', 'Self'],
         'held': ['Đang bị khiêng', 'Is carried'],
-        'interacted': ['Vừa được dùng', 'Interacted'],
+        'interacted': ['Khi được tương tác', 'On interact'],
         'inHand': ['Đang cầm tay', 'In hand'],
-        'usedOn': ['Bị dùng lên', 'Used on'],
+        'usedOn': ['Khi bị dùng lên', 'On tool hit'],
       },
     },
   },
@@ -433,7 +435,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       out: {
         'held': ['Đang giữ phím', 'Is held'],
-        'pressed': ['Vừa nhấn', 'Just pressed'],
+        'pressed': ['Khi nhấn phím', 'On press'],
       },
     },
   },
@@ -452,14 +454,15 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'map-range': {
-    vi: 'Đổi thang số',
+    vi: 'Quy đổi khoảng',
     en: 'Map Range',
+    was: 'Đổi thang số',
     ports: {
       in: {
-        'value': ['Số vào', 'Input'],
+        'value': ['Giá trị vào', 'Input'],
       },
       out: {
-        'value': ['Số ra', 'Output'],
+        'value': ['Giá trị ra', 'Output'],
       },
     },
   },
@@ -481,12 +484,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Moving Platform',
     ports: {
       in: {
-        'run': ['Chạy', 'Run'],
+        'run': ['Bật', 'Enable'],
       },
       out: {
-        'self': ['Bệ', 'Self'],
-        'moving': ['Đang chạy', 'Is moving'],
-        'arrived': ['Vừa tới cuối đường', 'Reached end'],
+        'self': ['Đối tượng', 'Self'],
+        'moving': ['Đang di chuyển', 'Is moving'],
+        'arrived': ['Khi tới cuối đường', 'On reach end'],
       },
     },
   },
@@ -495,7 +498,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'On Start',
     ports: {
       out: {
-        'fired': ['Vừa bắt đầu', 'Fired'],
+        'fired': ['Khi bắt đầu', 'On start'],
         'started': ['Đã bắt đầu', 'Started'],
       },
     },
@@ -506,12 +509,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'self': ['Bot', 'Agent'],
-        'on': ['Hoạt động', 'Active'],
+        'on': ['Bật', 'Enable'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
         'moveY': ['Đi dọc', 'Move Y'],
-        'atEnd': ['Vừa tới đầu mút', 'At end'],
+        'atEnd': ['Khi tới điểm cuối', 'On reach end'],
         'route': ['Tuyến đi tuần', 'Patrol route'],
       },
     },
@@ -522,12 +525,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'partner': ['Cổng đối diện', 'Partner'],
-        'on': ['Bật', 'Enabled'],
+        'on': ['Bật', 'Enable'],
       },
       out: {
-        'self': ['Cổng', 'Self'],
-        'used': ['Vừa có người vào', 'Entered'],
-        'who': ['Người vừa vào', 'Who'],
+        'self': ['Đối tượng', 'Self'],
+        'used': ['Khi có người vào', 'On enter'],
+        'who': ['Đối tượng vừa vào', 'Last entered'],
       },
     },
   },
@@ -539,8 +542,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'roll': ['Tung', 'Roll'],
       },
       out: {
-        'value': ['Số', 'Value'],
-        'rolled': ['Vừa tung', 'Rolled'],
+        'value': ['Giá trị', 'Value'],
+        'rolled': ['Khi tung', 'On roll'],
       },
     },
   },
@@ -550,12 +553,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'turn': ['Xoay', 'Rotate'],
-        'run': ['Chạy', 'Run'],
+        'run': ['Bật', 'Enable'],
       },
       out: {
-        'self': ['Hộp xoay', 'Self'],
-        'angle': ['Góc (độ)', 'Angle'],
-        'turned': ['Vừa xoay xong', 'Rotated'],
+        'self': ['Đối tượng', 'Self'],
+        'angle': ['Góc xoay', 'Angle'],
+        'turned': ['Khi xoay xong', 'On rotated'],
       },
     },
   },
@@ -564,29 +567,29 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Follow Path',
     ports: {
       in: {
-        'self': ['Ai', 'Agent'],
+        'self': ['Đối tượng', 'Agent'],
         'on': ['Bật', 'Enable'],
         'stop': ['Dừng', 'Stop'],
         'go': ['Chạy', 'Go'],
-        'obj1': ['Điểm 1 (vật)', 'Point 1 (object)'],
-        'obj2': ['Điểm 2 (vật)', 'Point 2 (object)'],
-        'obj3': ['Điểm 3 (vật)', 'Point 3 (object)'],
-        'obj4': ['Điểm 4 (vật)', 'Point 4 (object)'],
-        'obj5': ['Điểm 5 (vật)', 'Point 5 (object)'],
-        'obj6': ['Điểm 6 (vật)', 'Point 6 (object)'],
-        'obj7': ['Điểm 7 (vật)', 'Point 7 (object)'],
-        'obj8': ['Điểm 8 (vật)', 'Point 8 (object)'],
+        'obj1': ['Điểm 1', 'Waypoint 1'],
+        'obj2': ['Điểm 2', 'Waypoint 2'],
+        'obj3': ['Điểm 3', 'Waypoint 3'],
+        'obj4': ['Điểm 4', 'Waypoint 4'],
+        'obj5': ['Điểm 5', 'Waypoint 5'],
+        'obj6': ['Điểm 6', 'Waypoint 6'],
+        'obj7': ['Điểm 7', 'Waypoint 7'],
+        'obj8': ['Điểm 8', 'Waypoint 8'],
       },
       out: {
         'moveX': ['Đi ngang', 'Move X'],
         'moveY': ['Đi dọc', 'Move Y'],
         'jump': ['Nhảy', 'Jump'],
         'blocked': ['Đang bị chặn', 'Blocked'],
-        'reached': ['Tới điểm', 'Reached point'],
+        'reached': ['Khi tới điểm', 'On reach point'],
         'index': ['Điểm hiện tại', 'Current point'],
         'atPoint': ['Đang ở điểm', 'At point'],
         'route': ['Tuyến chạy', 'Route'],
-        'halted': ['Đã đứng yên', 'Stood still'],
+        'halted': ['Đang đứng yên', 'Halted'],
       },
     },
   },
@@ -595,10 +598,10 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Switch / Select',
     ports: {
       in: {
-        'value': ['Số', 'Value'],
+        'value': ['Giá trị', 'Value'],
       },
       out: {
-        'changed': ['Vừa đổi', 'Changed'],
+        'changed': ['Khi đổi', 'On change'],
         'is1': ['Bằng 1', 'Case 1'],
         'is2': ['Bằng 2', 'Case 2'],
         'is3': ['Bằng 3', 'Case 3'],
@@ -606,19 +609,20 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'sequence': {
-    vi: 'Chuỗi việc',
+    vi: 'Chuỗi bước',
     en: 'Sequence',
+    was: 'Chuỗi việc',
     ports: {
       in: {
-        'next': ['Xong việc', 'Step done'],
-        'reset': ['Làm lại từ đầu', 'Restart'],
+        'next': ['Sang bước kế', 'Next'],
+        'reset': ['Đặt lại', 'Reset'],
       },
       out: {
-        'index': ['Đang làm việc số', 'Current step'],
-        'finished': ['Đã xong hết', 'All done'],
-        'step1': ['Việc 1', 'Step 1'],
-        'step2': ['Việc 2', 'Step 2'],
-        'step3': ['Việc 3', 'Step 3'],
+        'index': ['Bước hiện tại', 'Current step'],
+        'finished': ['Đã hoàn thành', 'Finished'],
+        'step1': ['Bước 1', 'Step 1'],
+        'step2': ['Bước 2', 'Step 2'],
+        'step3': ['Bước 3', 'Step 3'],
       },
     },
   },
@@ -628,12 +632,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'shooter': ['Người bắn', 'Shooter'],
-        'target': ['Ngắm vào (tuỳ chọn)', 'Aim at'],
+        'target': ['Mục tiêu', 'Target'],
         'fire': ['Bắn', 'Fire'],
       },
       out: {
-        'hit': ['Trúng', 'Hit'],
-        'lastHit': ['Vật vừa trúng', 'Hit object'],
+        'hit': ['Khi trúng', 'On hit'],
+        'lastHit': ['Đối tượng bị trúng', 'Hit object'],
       },
     },
   },
@@ -642,7 +646,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Show Number',
     ports: {
       in: {
-        'value': ['Số cần hiện', 'Number'],
+        'value': ['Giá trị', 'Value'],
       },
     },
   },
@@ -652,25 +656,25 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'show': ['Hiện', 'Show'],
-        'anchor': ['Gắn vào vật', 'Attach to'],
+        'anchor': ['Gắn vào đối tượng', 'Anchor'],
       },
     },
   },
   'spawner': {
-    vi: 'Tạo vật mới',
+    vi: 'Tạo đối tượng',
     en: 'Spawner',
-    was: 'Sinh vật thể',
+    was: ['Sinh vật thể', 'Tạo vật mới'],
     ports: {
       in: {
-        'spawn': ['Tạo ra', 'Spawn'],
-        'at': ['Tại vật', 'At'],
-        'toucher': ['Vật thử chạm', 'Touch with'],
+        'spawn': ['Tạo', 'Spawn'],
+        'at': ['Tại đối tượng', 'Spawn at'],
+        'toucher': ['Chạm thử với', 'Touch test'],
       },
       out: {
-        'lastSpawned': ['Vật mới nhất', 'Latest'],
-        'count': ['Đang có', 'Count'],
-        'spawned': ['Vừa tạo', 'Spawned'],
-        'touched': ['Đang chạm vật thử', 'Touching'],
+        'lastSpawned': ['Đối tượng mới nhất', 'Latest'],
+        'count': ['Số đang có', 'Count'],
+        'spawned': ['Khi tạo', 'On spawn'],
+        'touched': ['Đang chạm thử', 'Touching'],
       },
     },
   },
@@ -680,12 +684,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Cảm biến tốc độ',
     ports: {
       in: {
-        'who': ['Vật', 'Object'],
+        'who': ['Đối tượng', 'Object'],
       },
       out: {
         'speed': ['Tốc độ', 'Speed'],
-        'still': ['Đứng yên', 'Is still'],
-        'fast': ['Nhanh quá mức', 'Above limit'],
+        'still': ['Đang đứng yên', 'Is still'],
+        'fast': ['Vượt ngưỡng', 'Above threshold'],
       },
     },
   },
@@ -694,8 +698,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Joystick / Axis',
     ports: {
       out: {
-        'x': ['Ngang (trái-phải)', 'Horizontal'],
-        'y': ['Dọc (xuống-lên)', 'Vertical'],
+        'x': ['Trục ngang', 'Horizontal'],
+        'y': ['Trục dọc', 'Vertical'],
       },
     },
   },
@@ -704,12 +708,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Teleport',
     ports: {
       in: {
-        'who': ['Ai (vật)', 'Who'],
-        'go': ['Đi', 'Go'],
-        'dest': ['Nơi đến (vật)', 'Destination'],
+        'who': ['Đối tượng', 'Target'],
+        'go': ['Dịch chuyển', 'Teleport'],
+        'dest': ['Điểm đến', 'Destination'],
       },
       out: {
-        'done': ['Vừa dịch chuyển', 'Done'],
+        'done': ['Khi dịch chuyển', 'On teleport'],
       },
     },
   },
@@ -718,8 +722,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Timer',
     ports: {
       in: {
-        'run': ['Chạy', 'Start'],
-        'reset': ['Đếm lại', 'Restart'],
+        'run': ['Bắt đầu', 'Start'],
+        'reset': ['Đặt lại', 'Reset'],
       },
       out: {
         'left': ['Giây còn lại', 'Time left'],
@@ -728,18 +732,19 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     },
   },
   'touch': {
-    vi: 'Chạm nhau',
-    en: 'Collision / Touch',
-    was: 'Cảm biến chạm',
+    vi: 'Va chạm',
+    en: 'Collision',
+    was: ['Cảm biến chạm', 'Chạm nhau'],
+    wasEn: 'Collision / Touch',
     ports: {
       in: {
-        'a': ['Vật chính', 'Self'],
-        'b': ['Vật kia', 'Other'],
+        'a': ['Đối tượng A', 'Object A'],
+        'b': ['Đối tượng B', 'Object B'],
       },
       out: {
         'touching': ['Đang chạm', 'Stay'],
-        'began': ['Mới chạm', 'Enter'],
-        'ended': ['Vừa rời', 'Exit'],
+        'began': ['Bắt đầu chạm', 'Enter'],
+        'ended': ['Kết thúc chạm', 'Exit'],
       },
     },
   },
@@ -752,22 +757,24 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'show': ['Hiện', 'Show'],
       },
       out: {
-        'pressed': ['Vừa bấm', 'Pressed'],
-        'held': ['Đang giữ chuột', 'Held'],
+        'pressed': ['Khi bấm', 'On click'],
+        'held': ['Đang giữ nút', 'Held'],
       },
     },
   },
   'ui-dialog': {
-    vi: 'Hộp hỏi',
-    en: 'Dialog / Choice',
+    vi: 'Hộp thoại',
+    en: 'Dialog',
+    was: 'Hộp hỏi',
+    wasEn: 'Dialog / Choice',
     ports: {
       in: {
         'ask': ['Hỏi', 'Ask'],
       },
       out: {
-        'a1': ['Chọn 1', 'Option 1'],
-        'a2': ['Chọn 2', 'Option 2'],
-        'a3': ['Chọn 3', 'Option 3'],
+        'a1': ['Khi chọn 1', 'On option 1'],
+        'a2': ['Khi chọn 2', 'On option 2'],
+        'a3': ['Khi chọn 3', 'On option 3'],
         'asking': ['Đang hỏi', 'Is asking'],
       },
     },
@@ -777,21 +784,22 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     en: 'Progress Bar',
     ports: {
       in: {
-        'value': ['Số cần đo', 'Value'],
-        'anchor': ['Gắn vào vật', 'Attach to'],
+        'value': ['Giá trị', 'Value'],
+        'anchor': ['Gắn vào đối tượng', 'Anchor'],
         'show': ['Hiện', 'Show'],
       },
     },
   },
   'ui-pick': {
-    vi: 'Bấm vào vật',
+    vi: 'Bấm vào đối tượng',
     en: 'Click Object',
+    was: 'Bấm vào vật',
     ports: {
       in: {
-        'target': ['Vật cần bấm', 'Object'],
+        'target': ['Đối tượng', 'Target'],
       },
       out: {
-        'pressed': ['Vừa bấm', 'Clicked'],
+        'pressed': ['Khi bấm', 'On click'],
       },
     },
   },
@@ -817,12 +825,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'leader': ['Theo xe đầu', 'Follow leader'],
       },
       out: {
-        'self': ['Xe', 'Self'],
+        'self': ['Đối tượng', 'Self'],
         'hasDriver': ['Có người lái', 'Has driver'],
         'speed': ['Tốc độ', 'Speed'],
         'driver': ['Người lái', 'Driver'],
-        'crashed': ['Vừa va chạm', 'Crashed'],
-        'crashedWith': ['Va với', 'Hit by'],
+        'crashed': ['Khi va chạm', 'On crash'],
+        'crashedWith': ['Đối tượng va phải', 'Crashed with'],
       },
     },
   },
@@ -837,9 +845,9 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
       out: {
         'seen': ['Đang thấy', 'Can see'],
-        'gained': ['Vừa thấy', 'Spotted'],
-        'lost': ['Vừa mất dấu', 'Lost'],
-        'nearest': ['Vật gần nhất', 'Nearest'],
+        'gained': ['Khi phát hiện', 'On spotted'],
+        'lost': ['Khi mất dấu', 'On lost'],
+        'nearest': ['Đối tượng gần nhất', 'Nearest'],
         'distance': ['Khoảng cách', 'Distance'],
       },
     },
@@ -851,13 +859,13 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'viewer': ['Người nhìn', 'Viewer'],
         'target': ['Mục tiêu', 'Target'],
-        'patrol': ['Đường đi tuần', 'Patrol route'],
+        'patrol': ['Tuyến đi tuần', 'Patrol route'],
         'route': ['Tuyến của Mục tiêu', 'Target route'],
       },
       out: {
-        'window': ['Còn (giây)', 'Time left'],
+        'window': ['Giây còn lại', 'Time left'],
         'safe': ['An toàn', 'Safe'],
-        'need': ['Cần (giây)', 'Time needed'],
+        'need': ['Giây cần thiết', 'Time needed'],
       },
     },
   },
@@ -878,14 +886,14 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     was: 'Cảm biến vùng',
     ports: {
       in: {
-        'follow': ['Gắn vào vật', 'Follow'],
+        'follow': ['Bám theo đối tượng', 'Follow'],
       },
       out: {
-        'inside': ['Có ai trong vùng', 'Is inside'],
-        'entered': ['Vừa vào', 'On enter'],
-        'exited': ['Vừa ra', 'On exit'],
-        'count': ['Số lượng', 'Count'],
-        'first': ['Vật đầu tiên', 'First object'],
+        'inside': ['Đang có đối tượng', 'Occupied'],
+        'entered': ['Khi đối tượng vào', 'Enter'],
+        'exited': ['Khi đối tượng ra', 'Exit'],
+        'count': ['Số đối tượng', 'Count'],
+        'first': ['Đối tượng đầu tiên', 'First'],
       },
     },
   },
@@ -894,7 +902,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */
 export function nodeSearchAliases(kind: string): string[] {
   const n = NODE_NAMES[kind];
-  return n ? [n.en, ...(n.was ? [n.was] : []), ...(n.wasEn ? [n.wasEn] : [])] : [];
+  return n ? [n.en, ...(n.was ? [n.was].flat() : []), ...(n.wasEn ? [n.wasEn] : [])] : [];
 }
 
 /** Extra choice / step ports (4-6) that the review table does not list; they follow the same pattern as 1-3. */
@@ -902,7 +910,7 @@ function extraNames(kind: string, id: string): [string, string] | null {
   const m = /^(is|step)([4-6])$/.exec(id);
   if (!m) return null;
   if (kind === 'select-number' && m[1] === 'is') return [`Bằng ${m[2]}`, `Case ${m[2]}`];
-  if (kind === 'sequence' && m[1] === 'step') return [`Việc ${m[2]}`, `Step ${m[2]}`];
+  if (kind === 'sequence' && m[1] === 'step') return [`Bước ${m[2]}`, `Step ${m[2]}`];
   return null;
 }
 

@@ -18,15 +18,15 @@ export const rotatingPlatformNode: NodeDef<RotatingState> = {
   label: 'Bệ xoay',
   category: 'object',
   description:
-    'Hộp xoay quanh tâm. Kiểu "Xoay từng nấc 90°": hộp rắn, mỗi lần "Xoay" bật (hoặc mỗi "Tự xoay sau" giây) nó quay một góc vuông, rộng và dài đổi chỗ cho nhau; ai đang đứng chỗ nó xoay tới sẽ bị đẩy sang chỗ trống, nếu không có chỗ thì nó chờ. Kiểu "Quay liên tục": hộp không rắn (không chặn đường), quay tròn như cánh quạt hay bẫy; nối Chạm nhau để biết ai bị quét trúng (chạm tính theo đúng hình đang quay). Hộp trong game 2D ngang quay trong mặt phẳng nhìn, còn nhìn từ trên và 3D thì quay quanh trục đứng. Bot tìm đường coi hộp này như chỗ trống.',
+    'Hộp xoay quanh tâm. Kiểu "Xoay từng nấc 90°": hộp rắn, mỗi lần "Xoay" bật (hoặc mỗi "Tự xoay sau" giây) nó quay một góc vuông, rộng và dài đổi chỗ cho nhau; ai đang đứng chỗ nó xoay tới sẽ bị đẩy sang chỗ trống, nếu không có chỗ thì nó chờ. Kiểu "Quay liên tục": hộp không rắn (không chặn đường), quay tròn như cánh quạt hay bẫy; nối Va chạm để biết ai bị quét trúng (chạm tính theo đúng hình đang quay). Hộp trong game 2D ngang quay trong mặt phẳng nhìn, còn nhìn từ trên và 3D thì quay quanh trục đứng. Bot tìm đường coi hộp này như chỗ trống.',
   inputs: [
     { id: 'turn', type: 'bool', label: 'Xoay' },
-    { id: 'run', type: 'bool', label: 'Chạy' },
+    { id: 'run', type: 'bool', label: 'Bật' },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Hộp xoay' },
-    { id: 'angle', type: 'number', label: 'Góc (độ)' },
-    { id: 'turned', type: 'bool', label: 'Vừa xoay xong' },
+    { id: 'self', type: 'object', label: 'Đối tượng' },
+    { id: 'angle', type: 'number', label: 'Góc xoay' },
+    { id: 'turned', type: 'bool', label: 'Khi xoay xong' },
   ],
   params: [
     { id: 'position', label: 'Vị trí (tâm)', kind: 'vec3', default: { x: 0, y: 2, z: 0 } },

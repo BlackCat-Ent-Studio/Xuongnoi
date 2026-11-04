@@ -28,7 +28,7 @@ export const nextFreeSlotNode: NodeDef<null> = {
   label: 'Ô trống kế tiếp',
   category: 'logic',
   description:
-    'Nhìn các ô đánh dấu trên sàn (nối vật thể làm ô vào "Ô 1", "Ô 2"...) và cho biết ô nào còn trống. Ô trống đầu tiên, theo thứ tự Ô 1, Ô 2..., ra ở "Ô trống" để nối vào "Đích" của mảnh Đi tới. Một ô là "có đồ" khi tâm của một món đồ đang nằm yên trên đó; đồ đang được khiêng không tính. Hết ô trống thì "Đầy" bật.',
+    'Nhìn các ô đánh dấu trên sàn (nối vật thể làm ô vào "Ô 1", "Ô 2"...) và cho biết ô nào còn trống. Ô trống đầu tiên, theo thứ tự Ô 1, Ô 2..., ra ở "Ô trống" để nối vào "Đích" của mảnh Di chuyển. Một ô là "có đồ" khi tâm của một món đồ đang nằm yên trên đó; đồ đang được khiêng không tính. Hết ô trống thì "Đầy" bật.',
   inputs: SLOT_PORTS,
   outputs: [
     { id: 'slot', type: 'object', label: 'Ô trống' },

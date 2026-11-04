@@ -7,7 +7,7 @@ const scenery = sceneryMaker();
 /**
  * Level 2 (cua-kho): a door that must stay open. The board shows the bot, the red button, the door and the flag. The
  * player makes the bot walk to the flag, notices when it steps on the button, and keeps that signal on with a memory
- * switch: the door's "Ẩn suốt lúc bật" follows its signal and would close again as soon as the bot steps off the button.
+ * switch: the door's "Ẩn khi bật" follows its signal and would close again as soon as the bot steps off the button.
  * The ground and the win rule (bot touches the flag) are scenery.
  */
 export const level02: PuzzleLevel | null = {
@@ -15,7 +15,7 @@ export const level02: PuzzleLevel | null = {
   order: 2,
   title: 'Cửa kho',
   task: 'Bot muốn đi tới cờ nhưng cửa kho đóng. Bạn tự nối: cho bot đi tới cờ, và khi bot dẫm nút đỏ thì cửa mở và mở mãi.',
-  hint: '"Đi tới" lái bot tới cờ. "Chạm nhau" báo khi bot dẫm nút. Cửa mở khi "Ẩn suốt lúc bật" bật, nên cần "Công tắc nhớ" giữ tín hiệu dù bot đã đi khỏi nút.',
+  hint: '"Di chuyển" lái bot tới cờ. "Va chạm" báo khi bot dẫm nút. Cửa mở khi "Ẩn khi bật" bật, nên cần "Công tắc nhớ" giữ tín hiệu dù bot đã đi khỏi nút.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.robotLegs],
   base: {

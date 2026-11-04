@@ -24,7 +24,7 @@ export const carryNode: NodeDef<CarryState> = {
   ],
   outputs: [
     { id: 'holding', type: 'bool', label: 'Đang khiêng' },
-    { id: 'heldItem', type: 'object', label: 'Món đang khiêng' },
+    { id: 'heldItem', type: 'object', label: 'Đồ đang khiêng' },
   ],
   params: [
     {

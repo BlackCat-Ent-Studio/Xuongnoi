@@ -25,12 +25,12 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
   label: 'Bệ di chuyển',
   category: 'object',
   description:
-    'Một bệ rắn tự chạy từ điểm A (vị trí đặt) tới điểm B rồi quay lại. Nhân vật, đồ vật, xe đứng trên bệ sẽ đi theo; ai đứng cạnh thì bị đẩy đi. Bệ không bao giờ ép ai vào tường: bị kẹt thì nó dừng chờ. Tắt "Chạy" để bệ đứng yên. Bot tìm đường coi bệ này như chỗ trống (không tính là đất cố định).',
-  inputs: [{ id: 'run', type: 'bool', label: 'Chạy' }],
+    'Một bệ rắn tự chạy từ điểm A (vị trí đặt) tới điểm B rồi quay lại. Nhân vật, đồ vật, xe đứng trên bệ sẽ đi theo; ai đứng cạnh thì bị đẩy đi. Bệ không bao giờ ép ai vào tường: bị kẹt thì nó dừng chờ. Tắt "Bật" để bệ đứng yên. Bot tìm đường coi bệ này như chỗ trống (không tính là đất cố định).',
+  inputs: [{ id: 'run', type: 'bool', label: 'Bật' }],
   outputs: [
-    { id: 'self', type: 'object', label: 'Bệ' },
-    { id: 'moving', type: 'bool', label: 'Đang chạy' },
-    { id: 'arrived', type: 'bool', label: 'Vừa tới cuối đường' },
+    { id: 'self', type: 'object', label: 'Đối tượng' },
+    { id: 'moving', type: 'bool', label: 'Đang di chuyển' },
+    { id: 'arrived', type: 'bool', label: 'Khi tới cuối đường' },
   ],
   params: [
     { id: 'position', label: 'Điểm A (xuất phát)', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },

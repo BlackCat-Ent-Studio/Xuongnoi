@@ -10,10 +10,10 @@ export const guideArrowNode: NodeDef<null> = {
   label: 'Mũi tên chỉ đường',
   category: 'output',
   description:
-    'Vẽ một mũi tên lơ lửng phía trên vật "Từ", chỉ hướng về vật "Tới", kèm số khoảng cách (đơn vị game, làm tròn). Mũi tên tự ẩn khi chưa có "Tới", "Tới" bị ẩn, hoặc đã đến gần (dưới 1,5). Nối "Hiện" để bật tắt mũi tên. Xuất ra "Khoảng cách" để bạn dùng tiếp.',
+    'Vẽ một mũi tên lơ lửng phía trên vật "Từ đối tượng", chỉ hướng về vật "Đến đối tượng", kèm số khoảng cách (đơn vị game, làm tròn). Mũi tên tự ẩn khi chưa có "Đến đối tượng", "Đến đối tượng" bị ẩn, hoặc đã đến gần (dưới 1,5). Nối "Hiện" để bật tắt mũi tên. Xuất ra "Khoảng cách" để bạn dùng tiếp.',
   inputs: [
-    { id: 'from', type: 'object', label: 'Từ', required: true },
-    { id: 'to', type: 'object', label: 'Tới' },
+    { id: 'from', type: 'object', label: 'Từ đối tượng', required: true },
+    { id: 'to', type: 'object', label: 'Đến đối tượng' },
     { id: 'show', type: 'bool', label: 'Hiện' },
   ],
   outputs: [{ id: 'distance', type: 'number', label: 'Khoảng cách' }],

@@ -3,8 +3,8 @@ import type { LessonKit } from './lessons-vehicles';
 import type { Lesson } from './types';
 
 /**
- * "Bot tìm thùng gần nhất": one bot, two crates on the floor, one near and one far. "Tìm vật gần nhất" picks the
- * near one and "Đi tới" walks the bot there.
+ * "Bot tìm thùng gần nhất": one bot, two crates on the floor, one near and one far. "Tìm đồ gần nhất" picks the
+ * near one and "Di chuyển" walks the bot there.
  */
 
 type BuildArgs = Parameters<LessonKit['buildBoard']>;
@@ -20,21 +20,21 @@ const T = {
   },
   finder: {
     title: 'Tìm thùng gần nhất',
-    text: 'Kéo mảnh ghép "Tìm vật gần nhất" (nhóm Logic) vào bảng.',
-    explain: 'Nó chỉ ra món đồ nằm rời gần "Ai" nhất. Đồ đang được khiêng thì không tính.',
+    text: 'Kéo mảnh ghép "Tìm đồ gần nhất" (nhóm Logic) vào bảng.',
+    explain: 'Nó chỉ ra món đồ nằm rời gần "Đối tượng" nhất. Đồ đang được khiêng thì không tính.',
   },
   wireWho: {
-    title: 'Nói cho nó biết "Ai"',
-    text: 'Nối "Nhân vật" của bot xanh sang "Ai" của Tìm vật gần nhất.',
+    title: 'Nói cho nó biết "Đối tượng"',
+    text: 'Nối "Đối tượng" của bot xanh sang "Đối tượng" của Tìm đồ gần nhất.',
   },
   goTo: {
     title: 'Cho bot đi',
-    text: 'Kéo mảnh ghép "Đi tới" (nhóm Bộ não) vào bảng.',
+    text: 'Kéo mảnh ghép "Di chuyển" (nhóm Bộ não) vào bảng.',
   },
   wireGo: {
     title: 'Đi tới thùng đó',
-    text: 'Nối "Nhân vật" của bot sang "Bot" của Đi tới, "Vật gần nhất" sang "Đích (vật)", "Có" sang "Cho đi", và "Đi ngang" của Đi tới sang "Đi ngang" của bot.',
-    explain: '"Có" bật khi còn thùng để lấy. Hết thùng thì tắt, và bot đứng yên thay vì đi lung tung.',
+    text: 'Nối "Đối tượng" của bot sang "Bot" của Di chuyển, "Đồ gần nhất" sang "Điểm đến", "Đã tìm thấy" sang "Bật", và "Đi ngang" của Di chuyển sang "Đi ngang" của bot.',
+    explain: '"Đã tìm thấy" bật khi còn thùng để lấy. Hết thùng thì tắt, và bot đứng yên thay vì đi lung tung.',
   },
   play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đi tới thùng bên phải vì nó gần hơn.' },
   done: {
