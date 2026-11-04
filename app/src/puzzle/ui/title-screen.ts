@@ -1,6 +1,7 @@
 import { h } from '../../editor/dom';
 import { createCharacterStage } from './character-stage';
 import { GAME_NAME, PUZZLE_UI_TEXT as T } from './puzzle-text';
+import { enterFullscreenOnTouch } from './fullscreen';
 import { ICONS, createFrame, svg } from './shell-kit';
 
 export interface ShellContext {
@@ -21,7 +22,10 @@ export function mountTitleScreen(root: HTMLElement, ctx: ShellContext): () => vo
   const play = h('button', 'pz-btn pz-play');
   play.type = 'button';
   play.append(svg(ICONS.play), h('span', '', T.play));
-  play.addEventListener('click', () => ctx.go('#/map'));
+  play.addEventListener('click', () => {
+    enterFullscreenOnTouch();
+    ctx.go('#/map');
+  });
 
   const settings = h('button', 'pz-btn pz-second pz-settings-btn');
   settings.type = 'button';
