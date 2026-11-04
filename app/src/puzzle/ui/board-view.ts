@@ -906,11 +906,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   /** Drops a card that was dragged: it slides down if it landed on another card. */
   function settleDropped(id: string): void {
+    // The card stays where it was dropped; if it covers another card it only slides out to the nearest free spot.
     const me = worldPosOf(id);
+    const size = sizeOf(id);
     const others = worldRects().filter((r) => r.id !== id);
-    const res = separateBoxes([{ id, ...me, ...sizeOf(id) }], { w: 1e6, h: 1e6 }, 12, others);
-    const p = res.pos.get(id);
-    if (p) worldPos.set(id, p);
+    worldPos.set(id, freeSpotNear(others, size, { x: me.x + size.w / 2, y: me.y + size.h / 2 }, null, 12, 4));
   }
 
   // ---------- tray ----------
