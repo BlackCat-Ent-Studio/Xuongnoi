@@ -33,14 +33,14 @@ function memory(): Pick<Storage, 'getItem' | 'setItem'> {
 
 describe('hint counter and badge', () => {
   it('counts down the free hints, then turns costly', () => {
-    const l3 = lv(3); // 2 free hints
-    expect(hintBadge(l3, 0)).toEqual({ left: 2, costly: false });
-    expect(hintBadge(l3, 1)).toEqual({ left: 1, costly: false });
-    expect(hintBadge(l3, 2)).toEqual({ left: 0, costly: true });
+    const l3 = lv(3); // 3 free hints
+    expect(hintBadge(l3, 0)).toEqual({ left: 3, costly: false });
+    expect(hintBadge(l3, 1)).toEqual({ left: 2, costly: false });
+    expect(hintBadge(l3, 3)).toEqual({ left: 0, costly: true });
     expect(hintBadge(l3, 5)).toEqual({ left: 0, costly: true });
     expect(hintsLeft(l3, 9)).toBe(0);
-    expect(extraHints(l3, 2)).toBe(0);
-    expect(extraHints(l3, 3)).toBe(1);
+    expect(extraHints(l3, 3)).toBe(0);
+    expect(extraHints(l3, 4)).toBe(1);
   });
 
   it('level 1 has one free hint, then the badge turns costly', () => {
@@ -48,8 +48,9 @@ describe('hint counter and badge', () => {
     expect(hintBadge(lv(1), 1).costly).toBe(true);
   });
 
-  it('three presses on level 3 leave 2 stars for a par solution; no hints on level 6 keep 3', () => {
-    expect(starsFor(lv(3), lv(3).solution, 3)).toBe(2);
+  it('four presses on level 3 leave 2 stars for a par solution; no hints on level 6 keep 3', () => {
+    expect(starsFor(lv(3), lv(3).solution, 3)).toBe(3);
+    expect(starsFor(lv(3), lv(3).solution, 4)).toBe(2);
     expect(starsFor(lv(6), lv(6).solution, 0)).toBe(3);
   });
 });
@@ -65,7 +66,7 @@ describe('counting each revealed step once', () => {
   });
 
   it('a repeated press on the same step keeps the badge where it was', () => {
-    const l = lv(3); // 2 free hints
+    const l = lv(3); // 3 free hints
     const seen = new Set<string>();
     let used = 0;
     const press = (key: string | null): void => {
@@ -74,8 +75,9 @@ describe('counting each revealed step once', () => {
     press('piece:a');
     press('piece:a');
     press('piece:a');
-    expect(hintBadge(l, used)).toEqual({ left: 1, costly: false });
+    expect(hintBadge(l, used)).toEqual({ left: 2, costly: false });
     press('piece:b');
+    press('piece:c');
     expect(hintBadge(l, used).costly).toBe(true);
   });
 
