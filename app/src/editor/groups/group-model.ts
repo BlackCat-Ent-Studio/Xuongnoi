@@ -1,4 +1,4 @@
-import { getNodeDef } from '../../engine/registry';
+import { getNodeDef, knownInputs } from '../../engine/registry';
 import type { Graph, GraphNode, NodeGroup, PortType, Wire } from '../../engine/types';
 
 /**
@@ -159,7 +159,7 @@ export function deriveGroupPorts(graph: Graph, group: NodeGroup): GroupPort[] {
   const touch = (w: Wire, ref: { node: string; port: string }, dir: 'in' | 'out'): void => {
     const node = graph.nodes.find((n) => n.id === ref.node);
     const def = node && getNodeDef(node.kind);
-    const pd = (dir === 'in' ? def?.inputs : def?.outputs)?.find((p) => p.id === ref.port);
+    const pd = (dir === 'in' ? (def ? knownInputs(def) : undefined) : def?.outputs)?.find((p) => p.id === ref.port);
     if (!node || !pd) return;
     const key = `${ref.node}|${ref.port}|${dir}`;
     const have = byKey.get(key);

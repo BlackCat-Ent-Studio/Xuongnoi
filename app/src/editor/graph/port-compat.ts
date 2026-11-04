@@ -1,5 +1,5 @@
 import { CONNECT_FAIL_TEXT } from '../../engine/text-vi';
-import { getNodeDef } from '../../engine/registry';
+import { getNodeDef, knownInputs } from '../../engine/registry';
 import type { Graph, PortRef, PortType } from '../../engine/types';
 import { canConnect } from '../../engine/wiring';
 import { typeMismatchText } from './graph-text-vi';
@@ -11,7 +11,7 @@ export type Compat = { ok: true } | { ok: false; message: string };
 function portInfo(graph: Graph, ref: PortRef, dir: PortDir): { label: string; type: PortType } | null {
   const node = graph.nodes.find((n) => n.id === ref.node);
   const def = node ? getNodeDef(node.kind) : undefined;
-  const p = (dir === 'in' ? def?.inputs : def?.outputs)?.find((x) => x.id === ref.port);
+  const p = (dir === 'in' ? (def ? knownInputs(def) : undefined) : def?.outputs)?.find((x) => x.id === ref.port);
   return p ? { label: p.label, type: p.type } : null;
 }
 

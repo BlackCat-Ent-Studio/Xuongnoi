@@ -1,6 +1,7 @@
 import { h } from '../../editor/dom';
 import type { PuzzleLevel } from '../types';
 import { MAP_HEIGHT, buildStops, newlyUnlocked, starTotals, stopPoints, trailPath, unlockedCount, type MapStop } from './map-state';
+import { enterFullscreenOnTouch } from './fullscreen';
 import type { ProgressMap } from './progress';
 import { PUZZLE_UI_TEXT as T } from './puzzle-text';
 import { ICONS, createFrame, roundButton, starIcon, svg } from './shell-kit';
@@ -92,6 +93,7 @@ export function mountMapScreen(root: HTMLElement, ctx: ShellContext & { levels: 
         btn.classList.add('shake');
         return;
       }
+      enterFullscreenOnTouch();
       ctx.go(`#/level/${stop.id}`);
     });
     list.append(btn);

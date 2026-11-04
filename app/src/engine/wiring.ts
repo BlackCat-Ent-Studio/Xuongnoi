@@ -1,4 +1,4 @@
-import { getNodeDef } from './registry';
+import { getNodeDef, knownInputs } from './registry';
 import type { ConnectResult, Graph, PortRef, Wire } from './types';
 
 type ConnectFailure = Extract<ConnectResult, { ok: false }>;
@@ -13,10 +13,10 @@ export function canConnect(graph: Graph, from: PortRef, to: PortRef): ConnectRes
   if (!fromDef || !toDef) return { ok: false, reason: 'unknown-node' };
 
   const fromOut = fromDef.outputs.find((p) => p.id === from.port);
-  const toIn = toDef.inputs.find((p) => p.id === to.port);
+  const toIn = knownInputs(toDef).find((p) => p.id === to.port);
   if (!fromOut || !toIn) {
     // A port that exists on the opposite side is a direction error; otherwise it is missing.
-    const fromIsInput = !fromOut && fromDef.inputs.some((p) => p.id === from.port);
+    const fromIsInput = !fromOut && knownInputs(fromDef).some((p) => p.id === from.port);
     const toIsOutput = !toIn && toDef.outputs.some((p) => p.id === to.port);
     return { ok: false, reason: fromIsInput || toIsOutput ? 'wrong-direction' : 'unknown-port' };
   }

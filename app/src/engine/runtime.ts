@@ -1,5 +1,5 @@
 import { compileGraph } from './compile';
-import { getNodeDef } from './registry';
+import { activeInputs, getNodeDef } from './registry';
 import {
   PORT_DEFAULTS,
   TICK_DT,
@@ -93,7 +93,7 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
       for (const id of order) {
         const n = nodes.get(id)!;
         const inputs: PortValues = {};
-        for (const p of n.def.inputs) {
+        for (const p of activeInputs(n.def, n.params)) {
           const w = n.wires.get(p.id);
           const src = w ? (backEdges.has(w.id) ? prev : curr).get(w.from.node) : undefined;
           inputs[p.id] = (w ? src?.[w.from.port] : undefined) ?? portDefault(p);

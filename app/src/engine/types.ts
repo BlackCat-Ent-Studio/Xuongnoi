@@ -109,6 +109,12 @@ export interface NodeDef<S = unknown> {
   /** Short Vietnamese help text for the palette tooltip. */
   description: string;
   inputs: PortDef[];
+  /**
+   * Inputs that exist only while a setting is on. `all` lists every id a saved wire may name (so a board saved with the
+   * setting on still loads after it is switched off); `active(params)` is what the card shows and the node reads.
+   * Absent = the node has just `inputs`.
+   */
+  optionalInputs?: { all: PortDef[]; active(params: Params): PortDef[] };
   outputs: PortDef[];
   params: ParamDef[];
   /** Modes where this node appears in the palette. Omit = all modes. */
