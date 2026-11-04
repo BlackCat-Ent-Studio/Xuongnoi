@@ -238,6 +238,8 @@ export interface Runtime {
    * fell back before it. Lets the editor show one-tick pulses. Clears on read.
    */
   takeRisen?(): ReadonlySet<string>;
+  /** Bool outputs (`${node}|${port}`) that went false -> true during the most recent tick only. Does not clear anything. */
+  lastTickRisen?(): ReadonlySet<string>;
   /**
    * Changes params of a running node. Applies every key it can; returns true only when all
    * of them took effect in the running game (false = unknown node / param, or needs a restart).

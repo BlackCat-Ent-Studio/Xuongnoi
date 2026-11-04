@@ -4,6 +4,12 @@
  */
 import type { Board, Graph, InputSnapshot, Runtime, Vec3, ViewMode, GameResult } from './engine/types';
 
+/** See GameView.setStepBreak. */
+export interface StepBreak {
+  accepts(key: string): boolean;
+  onBreak(keys: ReadonlySet<string>): void;
+}
+
 /** Implemented by src/render/game-view.ts → `createGameView(): GameView`. */
 export interface GameView {
   mount(container: HTMLElement): void;
@@ -21,6 +27,13 @@ export interface GameView {
   resume(): void;
   /** While paused: advances exactly one fixed 60 Hz tick on the next frame, then renders. No-op otherwise. */
   stepFrame(): void;
+  /**
+   * Step run (puzzle): right after any tick in which a bool output accepted by `accepts` (key `${node}|${port}`) rose,
+   * the game freezes exactly like pause() and `onBreak` gets every accepted key that rose in that tick (one break per tick).
+   * Only the loop stops: the ticks, their order and the result are the same as without it. `resume()` continues.
+   * A tick that ends the game never breaks. null turns it off; stop() and play() turn it off too.
+   */
+  setStepBreak(rule: StepBreak | null): void;
   /** True only while a play session is frozen. */
   isPaused(): boolean;
   /** Fired when pause state changes, including false when stop()/play() ends a paused session. */

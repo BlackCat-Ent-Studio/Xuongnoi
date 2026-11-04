@@ -80,6 +80,8 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
   }
 
   let risen = new Set<string>();
+  /** Bool outputs that rose during the most recent tick only. */
+  let tickRisen = new Set<string>();
   let tickIndex = 0;
   let lastInput: InputSnapshot = emptyInput;
 
@@ -89,6 +91,7 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     },
     tick(input) {
       lastInput = input;
+      tickRisen = new Set<string>();
       [prev, curr] = [curr, prev];
       for (const id of order) {
         const n = nodes.get(id)!;
@@ -103,7 +106,10 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
         for (const p of n.def.outputs) {
           const v = result?.[p.id] ?? portDefault(p);
           outs[p.id] = v;
-          if (p.type === 'bool' && v === true && prev.get(id)?.[p.id] !== true) risen.add(`${id}|${p.id}`);
+          if (p.type === 'bool' && v === true && prev.get(id)?.[p.id] !== true) {
+            risen.add(`${id}|${p.id}`);
+            tickRisen.add(`${id}|${p.id}`);
+          }
         }
         curr.set(id, outs);
       }
@@ -117,6 +123,9 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     },
     getWireValue(wire) {
       return rt.getOutput(wire.from.node, wire.from.port);
+    },
+    lastTickRisen() {
+      return tickRisen;
     },
     takeRisen() {
       const out = risen;

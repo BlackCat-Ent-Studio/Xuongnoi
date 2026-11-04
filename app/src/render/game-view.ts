@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import type { GameView } from '../app-contracts';
+import type { GameView, StepBreak } from '../app-contracts';
 import {
   TICK_DT,
   type EntityView,
@@ -19,6 +19,7 @@ import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
 import { createAccumulator, createSimPacer } from './game-loop';
 import { TickBlender } from './tick-blend';
+import { stepBreakKeys } from './step-break';
 import { floatingLabels } from './floating-labels';
 import { PULSE_SECONDS, pulseStrength } from './object-highlight';
 import { GuideArrowLayer, guideArrowShapes } from './guide-arrows';
@@ -50,6 +51,8 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   /** Draws the 60 Hz world between its last two ticks so motion stays steady at any screen rate. */
   const blender = new TickBlender();
   const pauseCallbacks: Array<(paused: boolean) => void> = [];
+  /** Step run: pauses the loop after a tick in which an accepted output rose. */
+  let stepBreak: StepBreak | null = null;
   const endCallbacks: Array<(result: GameResult, message: string) => void> = [];
   const restartCallbacks: Array<() => void> = [];
 
@@ -249,8 +252,14 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       for (let i = 0; i < steps && !world.ended; i++) {
         runtime.tick({ ...readInputFn(), ui: i === 0 ? uiBuf.take() : uiBuf.peekHeld() });
         world.step(TICK_DT);
-        // Only the last two steps of a frame matter for the blend.
-        if (i >= steps - 2) blender.capture(world.entities());
+        const fired = stepBreak && !world.ended ? stepBreakKeys(stepBreak, runtime) : null;
+        // Only the last two steps of a frame matter for the blend (the tick that pauses is always the last one).
+        if (i >= steps - 2 || fired) blender.capture(world.entities());
+        if (fired && stepBreak) {
+          setPaused(true);
+          stepBreak.onBreak(fired);
+          break;
+        }
       }
     } catch (err) {
       console.error(err);
@@ -447,6 +456,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     },
 
     play(graph: Graph, m: ViewMode, readInput: () => InputSnapshot): void {
+      stepBreak = null;
       resetSession();
       ensureRig(m);
       sceneView.setGrid(m, false);
@@ -468,6 +478,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     },
 
     stop(): void {
+      stepBreak = null;
       cancelLoop();
       clearPause();
       playing = false;
@@ -497,6 +508,10 @@ export function createGameView(options: GameViewOptions = {}): GameView {
 
     stepFrame(): void {
       if (playing) pacer.requestStep(); // the running loop picks it up on the next frame
+    },
+
+    setStepBreak(rule): void {
+      stepBreak = rule;
     },
 
     isPaused: () => playing && pacer.isPaused(),
