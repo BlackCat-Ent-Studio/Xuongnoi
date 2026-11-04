@@ -50,6 +50,8 @@ export interface Tutorial {
   exit(): void;
   noteGameEnd(result: GameResult): void;
   noteRestart(): void;
+  /** The step run changed (the Từng bước button): lets lessons about it move on. */
+  noteStep(step: { stepping: boolean; waiting: boolean }): void;
 }
 
 export function createTutorial({ state, notify, onStart, revealPaletteItem, revealGraph }: TutorialDeps): Tutorial {
@@ -58,6 +60,7 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
   let runner: Runner | null = null;
   let stash: Board | null = null;
   let ended: GameResult | null = null;
+  let step = { stepping: false, waiting: false, breaks: 0 };
   let pollTimer = 0;
   let revealedStep = '';
 
@@ -79,7 +82,7 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
   });
 
   function snapshot(): Snapshot {
-    return takeSnapshot(state, ended);
+    return takeSnapshot(state, ended, step);
   }
 
   /** While a game runs the play button is disabled, so a step that points at it means the stop button. */
@@ -196,7 +199,10 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
 
   state.subscribe((kind) => {
     if (!runner) return;
-    if (kind === 'playing') ended = null;
+    if (kind === 'playing') {
+      ended = null;
+      step = { stepping: false, waiting: false, breaks: 0 };
+    }
     if (kind === 'graph' || kind === 'params' || kind === 'mode' || kind === 'board' || kind === 'playing' ||
       kind === 'selection' || kind === 'notes' || kind === 'history'
     ) {
@@ -354,6 +360,11 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
     },
     noteRestart() {
       ended = null;
+      step = { stepping: false, waiting: false, breaks: 0 };
+    },
+    noteStep(next) {
+      step = { ...next, breaks: next.waiting && !step.waiting ? step.breaks + 1 : step.breaks };
+      advance();
     },
   };
 }

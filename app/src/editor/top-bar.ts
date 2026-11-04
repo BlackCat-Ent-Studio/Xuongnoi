@@ -17,6 +17,7 @@ export interface TopBarDeps {
   onStop(): void;
   /** Toggles pause/resume; the button label follows `setPaused`. Without it the button stays disabled. */
   onPause?: () => void;
+  /** The 🐢 button: starts a step run, or goes on to the next step while the run is frozen at one. */
   onStep?: () => void;
   /** While playing the Chơi button turns into Chơi lại and calls this. */
   onRestart?: () => void;
@@ -34,6 +35,8 @@ export interface TopBar {
   notify(text: string, kind?: 'info' | 'error'): void;
   /** Switches the pause button between Tạm dừng and Tiếp tục and enables Từng bước. */
   setPaused(paused: boolean): void;
+  /** Step run state: while stepping the 🐢 button reads "▶ Tiếp" and is live only while frozen at a step. */
+  setStepState(state: { stepping: boolean; waiting: boolean }): void;
   /** Insert an extra control at the start of the right-hand cluster. */
   addControl(control: HTMLElement): void;
   /** Keeps the layout select in sync when the preset changes elsewhere. */
@@ -121,7 +124,11 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   playBtn.addEventListener('click', () => (state.isPlaying() ? deps.onRestart?.() : deps.onPlay()));
   const pauseBtn = pbtn(SHELL_TEXT.pause, CONSOLE_TEXT.pauseTip, 'pause');
   const pauseLabel = pauseBtn.querySelector('span') as HTMLSpanElement;
-  const stepBtn = pbtn(SHELL_TEXT.step, CONSOLE_TEXT.stepTip, 'step');
+  const stepBtn = h('button', 'pbtn step-btn');
+  stepBtn.type = 'button';
+  stepBtn.dataset.tut = 'step';
+  stepBtn.append(h('span', '', SHELL_TEXT.step));
+  const stepLabel = stepBtn.querySelector('span') as HTMLSpanElement;
   const stopBtn = pbtn(SHELL_TEXT.stop, SHELL_TEXT.stopTip, 'stop', 'stop');
   stopBtn.addEventListener('click', deps.onStop);
   if (deps.onPause) pauseBtn.addEventListener('click', deps.onPause);
@@ -178,9 +185,15 @@ export function createTopBar(deps: TopBarDeps): TopBar {
 
   // ---------- state sync ----------
   let paused = false;
+  let stepping = false;
+  let stepWaiting = false;
   function sync(): void {
     const playing = state.isPlaying();
-    if (!playing) paused = false;
+    if (!playing) {
+      paused = false;
+      stepping = false;
+      stepWaiting = false;
+    }
     el.classList.toggle('playing', playing);
     el.classList.toggle('paused', paused);
     pstate.textContent = !playing ? SHELL_TEXT.stateEditing : paused ? CONSOLE_TEXT.statePaused : SHELL_TEXT.statePlaying;
@@ -193,7 +206,12 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     pauseLabel.textContent = paused ? CONSOLE_TEXT.resume : SHELL_TEXT.pause;
     pauseBtn.title = paused ? CONSOLE_TEXT.resumeTip : CONSOLE_TEXT.pauseTip;
     pauseBtn.setAttribute('aria-label', pauseLabel.textContent);
-    stepBtn.disabled = !playing || !paused || !deps.onStep;
+    const stepText = stepping ? SHELL_TEXT.stepNext : SHELL_TEXT.step;
+    const stepTip = stepping ? CONSOLE_TEXT.stepNextTip : CONSOLE_TEXT.stepTip;
+    stepLabel.textContent = stepText;
+    stepBtn.title = stepTip;
+    stepBtn.setAttribute('aria-label', stepTip);
+    stepBtn.disabled = !deps.onStep || (stepping && !stepWaiting);
     const mode = state.getMode();
     const locked = playing;
     seg.title = locked ? SHELL_TEXT.modeLockedTip : '';
@@ -230,6 +248,11 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     closeMenus: () => menuBar.close(),
     setPaused(next) {
       paused = next && state.isPlaying();
+      sync();
+    },
+    setStepState(next) {
+      stepping = next.stepping && state.isPlaying();
+      stepWaiting = stepping && next.waiting;
       sync();
     },
     addControl(control) {

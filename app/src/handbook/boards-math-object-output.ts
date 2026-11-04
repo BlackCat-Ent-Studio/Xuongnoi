@@ -188,6 +188,24 @@ function tryBlock(): Board {
   );
 }
 
+/** Advanced "Báo đang ẩn": the extra "Đang ẩn" output is on while the box is hidden; here it calls the win. */
+export function tryBlockHidden(): Board {
+  const b = sideBase({ jump: false });
+  return build(
+    'Thử: Báo đang ẩn',
+    '2d-side',
+    'Vật thể đỏ là bức tường. Mục Nâng cao "Báo đang ẩn" đang bật nên có thêm ô ra "Đang ẩn". Bấm Space để ẩn hộp: "Đang ẩn" bật và nối sang "Thắng". Bấm R hiện lại thì "Đang ẩn" tắt.',
+    [
+      ...b.specs,
+      { id: 'hide-key', kind: 'key', col: 0, row: 1, params: { key: 'Space' } },
+      { id: 'show-key', kind: 'key', col: 0, row: 2, params: { key: 'KeyR' } },
+      { id: 'wall', kind: 'block', col: 1, row: 1, params: { position: v(0, 1.5), size: v(1, 3, 1), color: '#ef4444', showHiddenOut: 'yes' } },
+      { id: 'end', kind: 'win-lose', col: 2, row: 1, params: { winMessage: 'Hộp đang ẩn, bạn thắng!' } },
+    ],
+    [...b.wires, ['hide-key', 'pressed', 'wall', 'hide'], ['show-key', 'pressed', 'wall', 'show'], ['wall', 'hidden', 'end', 'win']],
+  );
+}
+
 function tryItem(): Board {
   const b = sideBase({ jump: false });
   return build(

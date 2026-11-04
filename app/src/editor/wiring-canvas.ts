@@ -28,6 +28,7 @@ import './graph/wire-energy.css';
 import './graph/object-link.css';
 import { createWireEnergy, isEnergyEnabled, onEnergySettingChange } from './graph/wire-energy';
 import { TEXT_VI, formatWireValue } from './text-vi';
+import { createStepLightLayer, type StepLightSet } from './step/step-light-layer';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MIN_MAP_HEIGHT = 480;
@@ -82,6 +83,10 @@ export interface WiringCanvas {
    * Call again whenever the window moves or resizes; zeros (the default) release it.
    */
   setOverlayInsets(insets: { right: number; bottom: number }): void;
+  /** Step run: is this output pin drawn on the board right now? */
+  hasOutPin(nodeId: string, portId: string): boolean;
+  /** Step run: keeps only these cards, wires and pins bright (rest fades) and brings the cards on screen; null clears. */
+  setStepLight(light: StepLightSet | null): void;
 }
 
 interface Deps {
@@ -128,6 +133,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   let moveRaf = 0;
   let pendingMove = new Set<string>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
+  let stepLayer: ReturnType<typeof createStepLightLayer> | null = null;
   const energy = createWireEnergy(wireLayer);
   let energyRaf = 0;
   let energyLast = 0;
@@ -767,6 +773,11 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     setOverlayInsets({ right, bottom }) {
       const ok = (n: number): number => (Number.isFinite(n) && n > 0 ? Math.round(n) : 0);
       overlayBR = { w: ok(right), h: ok(bottom) };
+    },
+    hasOutPin: (nodeId, portId) => portEls.has(portKey(nodeId, portId, 'out')),
+    setStepLight(light) {
+      stepLayer ??= createStepLightLayer({ root: el, wireLayer, nodeEls, portEls, wirePaths, getView: () => view, setView: (v) => { view = v; applyView(); } });
+      stepLayer.set(light);
     },
   };
 }

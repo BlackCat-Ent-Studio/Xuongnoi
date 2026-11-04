@@ -423,6 +423,25 @@
   }
  },
  {
+  "id": "lesson:step-run",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3a8ec9e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3a8ec9e"
+  }
+ },
+ {
   "id": "lesson:carry-use",
   "off": {
    "ended": "running",

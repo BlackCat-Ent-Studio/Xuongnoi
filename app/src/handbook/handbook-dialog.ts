@@ -238,6 +238,16 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
       close();
     });
     bar.append(tryBtn);
+    for (const extra of entry.extraTries ?? []) {
+      const btn = h('button', 'btn', extra.label);
+      btn.type = 'button';
+      btn.dataset.hbAction = 'try-extra';
+      btn.addEventListener('click', () => {
+        deps.openBoard(extra.board());
+        close();
+      });
+      bar.append(btn);
+    }
     const lesson = findLesson(entry.lessonId);
     if (lesson) {
       const lessonBtn = h('button', 'btn', T.learnLesson(lesson.title));

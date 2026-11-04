@@ -15,6 +15,13 @@ export interface Snapshot {
   canRedo?: boolean;
   /** Id of the group the canvas is inside, or null on the main board. */
   scope?: string | null;
+  /* Step run (the Từng bước button), fed by the editor. */
+  /** A step run is on. */
+  stepping?: boolean;
+  /** The step run is frozen at a step. */
+  stepWaiting?: boolean;
+  /** How many steps this play session has frozen at so far. */
+  stepBreaks?: number;
 }
 
 /**

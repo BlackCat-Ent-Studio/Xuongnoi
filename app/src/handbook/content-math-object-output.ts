@@ -1,4 +1,4 @@
-import { TRY_BOARDS_MATH_OBJECT_OUTPUT as TRY } from './boards-math-object-output';
+import { TRY_BOARDS_MATH_OBJECT_OUTPUT as TRY, tryBlockHidden } from './boards-math-object-output';
 import type { HandbookEntry } from './types';
 
 /** Fine-tuning params that every object with a body in the world shares (folded under "Nâng cao"). */
@@ -233,6 +233,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     ],
     lessonId: 'walk-jump',
     tryBoard: TRY.block,
+    extraTries: [{ label: 'Thử: báo đang ẩn', board: tryBlockHidden }],
   },
   {
     kind: 'item',
