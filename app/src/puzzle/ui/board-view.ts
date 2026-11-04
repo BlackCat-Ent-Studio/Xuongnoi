@@ -1,4 +1,4 @@
-import { getNodeDef } from '../../engine/registry';
+import { getNodeDef, knownOutputsOf } from '../../engine/registry';
 import type { GraphNode, ParamDef, PortRef, PortType, Runtime, Wire } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { estimateNodeSize } from '../../editor/graph/graph-geometry';
@@ -506,7 +506,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
 
   function outputType(w: Wire): PortType | null {
     const from = [...level.base.nodes, ...state.placed.map((p) => p.node)].find((n) => n.id === w.from.node);
-    return getNodeDef(from?.kind ?? '')?.outputs.find((p) => p.id === w.from.port)?.type ?? null;
+    return knownOutputsOf(from?.kind ?? '').find((p) => p.id === w.from.port)?.type ?? null;
   }
 
   /** Every wire of the board (the level's locked ones and the player's) whose two pins are on screen. */

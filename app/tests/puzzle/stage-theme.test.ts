@@ -33,7 +33,7 @@ describe('stage roles per level', () => {
   });
 
   it('level 3 is a side view with three stars and the same wooden door', () => {
-    expect(rolesOf('nhat-sao')).toMatchObject({ ground: 'floor-side', 'star-1': 'star', 'star-2': 'star', 'star-3': 'star', gate: 'door', goal: 'flag' });
+    expect(rolesOf('nhat-sao')).toMatchObject({ ground: 'floor-side', 'star-1': 'star', 'star-2': 'star', gate: 'door', goal: 'flag' });
   });
 
   it('level 4: two buttons, one door', () => {

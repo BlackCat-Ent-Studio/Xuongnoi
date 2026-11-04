@@ -1,4 +1,4 @@
-import { activeInputs, getNodeDef } from '../../engine/registry';
+import { activeInputs, activeOutputs, getNodeDef } from '../../engine/registry';
 import { NODE_CATEGORY_LABELS } from '../../nodes';
 import type { GraphNode, NodeCategory, NodeDef, PortDef } from '../../engine/types';
 import { createCardHelpButton } from '../../handbook/card-help-popup';
@@ -82,6 +82,7 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   if (sub) title.append(h('small', 'wc-sub', sub));
   head.append(tile, title);
   const inputs = def ? activeInputs(def, node.params) : [];
+  const outputs = def ? activeOutputs(def, node.params) : [];
   const missing = def ? inputs.filter((p) => missingPorts.has(p.id)).length : 0;
   if (missing > 0) head.append(h('span', 'wc-miss-badge', missingBadge(missing)));
   // Sits on the header's corner without taking room, so the card keeps its footprint.
@@ -89,12 +90,12 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   box.append(head);
 
   const dots = new Map<string, HTMLElement>();
-  if (def && inputs.length + def.outputs.length > 0) {
+  if (def && inputs.length + outputs.length > 0) {
     // Inputs left, outputs right; both columns always exist so outputs never slide left.
     const body = h('div', 'wc-ports-body');
     const sections: [PortDir, PortDef[]][] = [
       ['in', inputs],
-      ['out', def.outputs],
+      ['out', outputs],
     ];
     for (const [dir, ports] of sections) {
       const list = h('div', `wc-ports ${dir}s`);

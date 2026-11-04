@@ -115,6 +115,8 @@ export interface NodeDef<S = unknown> {
    * Absent = the node has just `inputs`.
    */
   optionalInputs?: { all: PortDef[]; active(params: Params): PortDef[] };
+  /** Same idea for outputs: shown only while a setting is on. `evaluate` may always return them; only the active ones are read. */
+  optionalOutputs?: { all: PortDef[]; active(params: Params): PortDef[] };
   outputs: PortDef[];
   params: ParamDef[];
   /** Modes where this node appears in the palette. Omit = all modes. */

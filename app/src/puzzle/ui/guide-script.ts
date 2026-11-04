@@ -1,4 +1,4 @@
-import { getNodeDef } from '../../engine/registry';
+import { getNodeDef, knownInputs, knownOutputs } from '../../engine/registry';
 import type { GraphNode, ParamValue, Wire } from '../../engine/types';
 import { PUZZLE_LEVELS } from '../levels';
 import type { PuzzleLevel } from '../types';
@@ -81,9 +81,16 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
   'nhat-sao': {
     s1: 'Nối Mèo vào Chạy theo tuyến.',
     s2: 'Tuyến lái mèo đi ngang.',
-    s3: 'Mèo tới một sao thì bộ đếm cộng 1.',
-    s4: 'Đếm đủ thì cổng ẩn đi!',
-    s5: 'Khi bắt đầu bật cho tuyến chạy.',
+    s3: 'Khi bắt đầu bật cho tuyến chạy.',
+    t1a: 'Nối Mèo vào mảnh Chạm nhau cho Sao 1.',
+    t1b: 'Sao 1 vào Chạm nhau luôn.',
+    h1: 'Mèo mới chạm thì Sao 1 ẩn đi.',
+    g1: 'Sao 1 đã ẩn thì báo cho mảnh Và.',
+    t2a: 'Nối Mèo vào mảnh Chạm nhau cho Sao 2.',
+    t2b: 'Sao 2 vào Chạm nhau luôn.',
+    h2: 'Mèo mới chạm thì Sao 2 ẩn đi.',
+    g2: 'Sao 2 đã ẩn cũng báo cho mảnh Và.',
+    s4: 'Cả hai sao đã ẩn thì cổng ẩn đi!',
   },
   'du-ba-thung': {
     sw1: 'Nối Rô-bốt vào Tìm vật gần nhất để nó tìm thùng gần rô-bốt.',
@@ -238,7 +245,7 @@ function nodeName(level: PuzzleLevel, nodeId: string, kindOf: Map<string, string
 
 function portLabel(kind: string, port: string, dir: 'in' | 'out'): string {
   const def = getNodeDef(kind);
-  const list = dir === 'in' ? def?.inputs : def?.outputs;
+  const list = def ? (dir === 'in' ? knownInputs(def) : knownOutputs(def)) : undefined;
   return list?.find((p) => p.id === port)?.label ?? port;
 }
 

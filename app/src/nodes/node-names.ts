@@ -54,6 +54,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       out: {
         'self': ['Vật thể', 'Self'],
         'usedOn': ['Bị dùng lên', 'Used on'],
+        'hidden': ['Đang ẩn', 'Hidden'],
       },
     },
   },
@@ -913,7 +914,7 @@ export function applyNodeNames<T extends NodeDef<any>>(def: T): T { // eslint-di
   def.labelEn = names.en;
   for (const dir of ['in', 'out'] as const) {
     const table = names.ports[dir] ?? {};
-    for (const p of dir === 'in' ? [...def.inputs, ...(def.optionalInputs?.all ?? [])] : def.outputs) {
+    for (const p of dir === 'in' ? [...def.inputs, ...(def.optionalInputs?.all ?? [])] : [...def.outputs, ...(def.optionalOutputs?.all ?? [])]) {
       const row = table[p.id] ?? extraNames(def.kind, p.id);
       if (!row) continue;
       p.label = row[0];
