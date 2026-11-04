@@ -10,7 +10,7 @@ const STARS = [
   { id: 'star-2', x: 3 },
 ] as const;
 
-/** Stars are solid blocks: a star that is not hidden blocks the cat, so each one has to be touched and hidden before the cat can pass. They come with the advanced "Báo đang ẩn" output on. The player wires each star to a "Chạm nhau", to its own "Ẩn đi", and its "Đang ẩn" to the gate through "Và". */
+/** Stars are solid blocks: a star that is not hidden blocks the cat, so each one has to be touched and hidden before the cat can pass. They come with the advanced "Báo đang ẩn" output on. The player wires each star to a "Va chạm", to its own "Ẩn", and its "Đang ẩn" to the gate through "Và". */
 const starNodes: GraphNode[] = STARS.map(
   (s, k): GraphNode => ({
     id: s.id,
@@ -32,16 +32,16 @@ const ROUTE_PARAMS: GraphNode['params'] = {
 /**
  * Level 3 (nhat-sao): hide two stars, then open the gate (side view, the same wooden door as level 2). The board shows the
  * cat, the two stars and the gate. The player makes the cat walk the route (its points lie beyond the gate, so the walk
- * carries no star position), then builds the stars' part: one "Chạm nhau" per star (cat + that star) whose "Mới chạm"
+ * carries no star position), then builds the stars' part: one "Va chạm" per star (cat + that star) whose "Bắt đầu chạm"
  * hides the star (a visible star is solid, so the cat stops in front of it until then). Each star shows its "Đang ẩn" output (the general optional output of the block); both go into a "Và"
- * whose result is the gate's "Ẩn suốt lúc bật". The flag and the win rule (cat touches the flag) are scenery.
+ * whose result is the gate's "Ẩn khi bật". The flag and the win rule (cat touches the flag) are scenery.
  */
 export const level03: PuzzleLevel | null = {
   id: 'nhat-sao',
   order: 3,
   title: 'Nhặt sao',
   task: 'Mèo đi qua 2 ngôi sao rồi tới cổng. Cổng chỉ mở khi cả 2 sao đã biến mất. Bạn tự nối mạch: cho mèo đi, mỗi sao mèo chạm vào thì ẩn đi, rồi báo cho cổng khi cả hai sao đã ẩn.',
-  hint: '"Chạy theo tuyến" cho mèo đi. Mỗi sao cần một "Chạm nhau" (mèo + sao đó): "Mới chạm" nối vào "Ẩn đi" của chính sao đó. Rồi "Đang ẩn" của cả hai sao vào "Và", và "Kết quả" của "Và" vào "Ẩn suốt lúc bật" của cổng.',
+  hint: '"Chạy theo tuyến" cho mèo đi. Mỗi sao cần một "Va chạm" (mèo + sao đó): "Bắt đầu chạm" nối vào "Ẩn" của chính sao đó. Rồi "Đang ẩn" của cả hai sao vào "Và", và "Kết quả" của "Và" vào "Ẩn khi bật" của cổng.',
   mode: '2d-side',
   cast: [PUZZLE_LOOKS.catChibi],
   base: {

@@ -6,11 +6,11 @@ export const keyNode: NodeDef<{ prev: boolean }> = {
   label: 'Phím bấm',
   category: 'input',
   description:
-    'Báo khi bạn giữ một phím. "Đang giữ phím" bật suốt lúc giữ; "Vừa nhấn" chỉ bật đúng một nhịp khi mới nhấn xuống.',
+    'Báo khi bạn giữ một phím. "Đang giữ phím" bật suốt lúc giữ; "Khi nhấn phím" chỉ bật đúng một nhịp khi mới nhấn xuống.',
   inputs: [],
   outputs: [
     { id: 'held', type: 'bool', label: 'Đang giữ phím' },
-    { id: 'pressed', type: 'bool', label: 'Vừa nhấn' },
+    { id: 'pressed', type: 'bool', label: 'Khi nhấn phím' },
   ],
   params: [{ id: 'key', label: 'Phím', kind: 'key', default: 'Space' }],
   create: () => ({ prev: false }),

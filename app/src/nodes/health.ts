@@ -17,8 +17,8 @@ export const healthNode: NodeDef<HealthState> = {
     { id: 'heal', type: 'bool', label: 'Hồi máu' },
   ],
   outputs: [
-    { id: 'hp', type: 'number', label: 'Máu còn' },
-    { id: 'hurtPulse', type: 'bool', label: 'Vừa bị đánh' },
+    { id: 'hp', type: 'number', label: 'Máu hiện tại' },
+    { id: 'hurtPulse', type: 'bool', label: 'Khi bị thương' },
     { id: 'dead', type: 'bool', label: 'Hết máu' },
   ],
   params: [

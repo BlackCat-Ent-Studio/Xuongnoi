@@ -37,7 +37,7 @@ const bot = (x: number): Spec => ['bot', 'character', { position: v(x, 1, 0), ro
 const at = (w: World, owner: string): number => w.entities().find((e) => e.ownerNodeId === owner)!.position.x;
 
 describe('Khi bắt đầu', () => {
-  it('keeps "Đã bắt đầu" on from the first tick while "Vừa bắt đầu" is one tick only', () => {
+  it('keeps "Đã bắt đầu" on from the first tick while "Khi bắt đầu" is one tick only', () => {
     const w = makeWorld();
     const out = [0, 1, 2].map((tick) => onStartNode.evaluate(makeCtx(w, { tick }), {}, {}, null));
     expect(out.map((o) => o.fired)).toEqual([true, false, false]);
@@ -52,14 +52,14 @@ describe('inputs that switch a piece on are off until wired', () => {
   ];
   const goTo: Spec = ['go', 'go-to', { targetPos: v(8, 1, 0), pathfind: 'off' }];
 
-  it('go-to stands still with "Cho đi" empty and walks once "Khi bắt đầu" is wired in', () => {
+  it('go-to stands still with "Bật" empty and walks once "Khi bắt đầu" is wired in', () => {
     const idle = play('2d-side', [floor, bot(0), goTo], walk, 120);
     expect(at(idle.world, 'bot')).toBeCloseTo(0, 1);
     const moving = play('2d-side', [floor, bot(0), goTo, ['s', 'on-start']], [...walk, ['s', 'started', 'go', 'go']], 120);
     expect(at(moving.world, 'bot')).toBeGreaterThan(3);
   });
 
-  it('the one-tick pulse "Vừa bắt đầu" is not a standing order: the bot barely moves', () => {
+  it('the one-tick pulse "Khi bắt đầu" is not a standing order: the bot barely moves', () => {
     const pulse = play('2d-side', [floor, bot(0), goTo, ['s', 'on-start']], [...walk, ['s', 'fired', 'go', 'go']], 120);
     expect(at(pulse.world, 'bot')).toBeLessThan(0.5);
   });
@@ -90,7 +90,7 @@ describe('inputs that switch a piece on are off until wired', () => {
     }
   });
 
-  it('chase and fight do nothing until "Cho đi" is on', () => {
+  it('chase and fight do nothing until "Bật" is on', () => {
     const w = createWorld('2d-side');
     const self = w.spawn({ kind: 'character', ownerNodeId: 'a', position: v(0, 0.5, 0), size: v(1, 1, 1), color: '#f00', solid: true, role: 'bot' });
     const target = w.spawn({ kind: 'character', ownerNodeId: 'b', position: v(2, 0.5, 0), size: v(1, 1, 1), color: '#00f', solid: true });
@@ -108,7 +108,7 @@ describe('inputs that switch a piece on are off until wired', () => {
 });
 
 describe('go-to tells which goal it reached', () => {
-  it('"Tới Đích" while heading for the first goal, "Tới Đích 2" while heading for the second', () => {
+  it('"Đã đến điểm đến" while heading for the first goal, "Đã đến điểm đến 2" while heading for the second', () => {
     const w = createWorld('2d-side');
     w.spawn({ kind: 'block', ownerNodeId: 'f', position: v(0, -0.5, 0), size: v(40, 1, 1), color: '#777', solid: true });
     const me = w.spawn({ kind: 'character', ownerNodeId: 'me', position: v(0, 1, 0), size: v(1, 1, 1), color: '#f00', solid: true, role: 'bot' });

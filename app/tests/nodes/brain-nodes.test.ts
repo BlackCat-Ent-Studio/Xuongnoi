@@ -172,7 +172,7 @@ describe('go-to node', () => {
     expect(s.hero().position.x).toBeCloseTo(x, 3);
   });
 
-  it('walks to Đích 2 only while "Dùng đích 2" is on, otherwise to Đích', () => {
+  it('walks to Điểm đến 2 only while "Dùng điểm đến 2" is on, otherwise to Điểm đến', () => {
     const run = (useSecond: boolean): { x: number; arrived: boolean } => {
       const s = sim(
         '2d-side',
@@ -196,7 +196,7 @@ describe('go-to node', () => {
     expect(second.arrived).toBe(true);
   });
 
-  it('Dùng đích 2 on but no Đích 2 to go to: the bot stands still', () => {
+  it('Dùng điểm đến 2 on but no Điểm đến 2 to go to: the bot stands still', () => {
     const s = sim(
       '2d-side',
       [hero(0), floor('f', 0, 40), ['g', 'go-to', { targetPos: v(5, 1, 0), stopDistance: 0.4 }], ['c', 'const', { value: 1 }], ['on', 'compare', { op: 'ge' }]],

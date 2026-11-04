@@ -45,7 +45,7 @@ describe('group model', () => {
       ['c2', 'jump', 'in', 'bool'],
       ['c1', 'self', 'out', 'object'],
     ]);
-    expect(ports.map((p) => p.label)).toEqual(['Nhân vật · Nhảy (1)', 'Nhân vật · Nhảy (2)', 'Nhân vật · Nhân vật']);
+    expect(ports.map((p) => p.label)).toEqual(['Nhân vật · Nhảy (1)', 'Nhân vật · Nhảy (2)', 'Nhân vật · Đối tượng']);
     // c1.self feeds two outside nodes through the same group port.
     expect(ports[2]!.wires.map((w) => w.id)).toEqual(['w3', 'w4']);
   });

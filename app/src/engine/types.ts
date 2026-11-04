@@ -179,7 +179,7 @@ export interface GraphSettings {
   /** "Va chạm thật": characters and loose items are solid bodies (see world/world-options.ts). Only ever stored as `true`. */
   solidBodies?: boolean;
   /**
-   * Set once a board follows "every action needs its own wire" (inputs such as "Cho đi" are off until wired).
+   * Set once a board follows "every action needs its own wire" (inputs such as "Bật" are off until wired).
    * A board without it is an older one: loading it wires a "Khi bắt đầu" card into those inputs. Only ever stored as `true`.
    */
   wireRule?: boolean;

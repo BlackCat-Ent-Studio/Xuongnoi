@@ -12,7 +12,7 @@ beforeAll(() => registerAllNodes());
 
 const BLOCK = { position: { x: 0, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 1 } };
 
-/** A block with two keys: H = "Ẩn đi", S = "Hiện lại"; a probe block reads the block's "Đang ẩn" into its own "Ẩn suốt lúc bật". */
+/** A block with two keys: H = "Ẩn đi", S = "Hiện lại"; a probe block reads the block's "Đang ẩn" into its own "Ẩn khi bật". */
 function setup(blockParams: Params) {
   const graph: Graph = {
     nodes: [
@@ -61,7 +61,7 @@ describe('block: optional output "Đang ẩn"', () => {
     expect(s.probe().visible).toBe(false);
   });
 
-  it('also reports a block hidden by "Ẩn suốt lúc bật"', () => {
+  it('also reports a block hidden by "Ẩn khi bật"', () => {
     const graph: Graph = {
       nodes: [
         { id: 'b', kind: 'block', params: { ...BLOCK, showHiddenOut: 'yes' }, pos: { x: 0, y: 0 } },

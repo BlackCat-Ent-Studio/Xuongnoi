@@ -43,7 +43,7 @@ describe('nearest-item node', () => {
     expect(nearestItemNode.category).toBe('logic');
     expect(nearestItemNode.inputs.map((p) => p.id)).toEqual(['who', 'pause', 'i1', 'i2', 'i3', 'i4']);
     expect(nearestItemNode.outputs.map((p) => p.id)).toEqual(['item', 'found', 'distance']);
-    expect(nearestItemNode.label).toBe('Tìm vật gần nhất');
+    expect(nearestItemNode.label).toBe('Tìm đồ gần nhất');
     expect(nearestItemNode.labelEn).toBe('Nearest Item');
   });
 
@@ -112,7 +112,7 @@ describe('nearest-item node', () => {
     expect(paused.out('item')).toBeNull();
   });
 
-  it('without "Ai" it finds nothing', () => {
+  it('without "Đối tượng" it finds nothing', () => {
     const graph: Graph = {
       nodes: [floor, crate('c', 2), ['find', 'nearest-item', {}] as NodeSpec].map(([id, kind, params]) => ({ id, kind, params: params ?? {}, pos: { x: 0, y: 0 } }) as GraphNode),
       wires: [],

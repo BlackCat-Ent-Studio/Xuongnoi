@@ -16,7 +16,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   who: {
     title: 'Nói xe nào sẽ chạy',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe sang cổng "Ai" của Chạy theo tuyến.',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Xe sang cổng "Đối tượng" của Chạy theo tuyến.',
   },
   move: {
     title: 'Nối tay lái và chân ga',
@@ -33,7 +33,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   timer: {
     title: 'Hẹn giờ đổi đèn',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Cộng 1" của Bộ đếm.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tăng 1" của Bộ đếm.',
     explain: 'Hẹn giờ này đếm ngược 8 giây. Khi hết giờ, Bộ đếm cộng thêm 1: số đếm đổi từ 0 sang 1.',
   },
   color: {
@@ -63,8 +63,8 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   red: {
     title: 'Chưa đủ số là đèn đỏ',
-    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Vào" của mảnh ghép Đảo ngược.',
-    explain: '"Đã đủ" bật khi đèn đã sang xanh. Qua mảnh ghép Đảo ngược, ta được tín hiệu "đèn đang đỏ".',
+    text: 'Nối cổng "Đã đạt mục tiêu" của Bộ đếm sang cổng "Đầu vào" của mảnh ghép Đảo ngược.',
+    explain: '"Đã đạt mục tiêu" bật khi đèn đã sang xanh. Qua mảnh ghép Đảo ngược, ta được tín hiệu "đèn đang đỏ".',
   },
   and: {
     title: 'Thêm mảnh ghép Và',
@@ -73,7 +73,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   rule: {
     title: 'Xe ở vạch và đèn đỏ',
-    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và. Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Đang có đối tượng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và. Nối cổng "Kết quả" của mảnh ghép Đảo ngược sang cổng "B" của mảnh ghép Và.',
   },
   stop: {
     title: 'Đèn đỏ thì dừng xe',
@@ -114,12 +114,12 @@ export const TRAIN_TEXT = {
   },
   tow1: {
     title: 'Toa 1 bám theo đầu máy',
-    text: 'Nối cổng "Xe" của đầu máy sang cổng "Theo xe đầu" của toa đứng ngay sau nó.',
+    text: 'Nối cổng "Đối tượng" của đầu máy sang cổng "Theo xe đầu" của toa đứng ngay sau nó.',
     explain: 'Toa nào có "Theo xe đầu" thì đi theo đúng vết bánh của chiếc xe phía trước và không cần ai lái.',
   },
   tow2: {
     title: 'Toa 2 bám theo toa 1',
-    text: 'Nối cổng "Xe" của toa 1 sang cổng "Theo xe đầu" của toa cuối.',
+    text: 'Nối cổng "Đối tượng" của toa 1 sang cổng "Theo xe đầu" của toa cuối.',
     explain: 'Nối tiếp từng toa vào toa trước nó, đoàn tàu dài bao nhiêu cũng được.',
   },
   route: {
@@ -128,7 +128,7 @@ export const TRAIN_TEXT = {
   },
   who: {
     title: 'Đầu máy chạy theo tuyến',
-    text: 'Nối cổng "Xe" của đầu máy sang cổng "Ai" của Chạy theo tuyến.',
+    text: 'Nối cổng "Đối tượng" của đầu máy sang cổng "Đối tượng" của Chạy theo tuyến.',
   },
   follow: {
     title: 'Chạy bám ray',
@@ -154,8 +154,8 @@ export const TRAIN_TEXT = {
   },
   reached: {
     title: 'Tới ga thì đếm lại',
-    text: 'Nối cổng "Tới điểm" của Chạy theo tuyến sang cổng "Đếm lại" của Hẹn giờ.',
-    explain: '"Tới điểm" bật một nhịp mỗi lần tàu đi qua một điểm. Mỗi nhịp bắt Hẹn giờ đếm lại từ đầu.',
+    text: 'Nối cổng "Khi tới điểm" của Chạy theo tuyến sang cổng "Đặt lại" của Hẹn giờ.',
+    explain: '"Khi tới điểm" bật một nhịp mỗi lần tàu đi qua một điểm. Mỗi nhịp bắt Hẹn giờ đếm lại từ đầu.',
   },
   not: {
     title: 'Thêm mảnh ghép Đảo ngược',
@@ -163,7 +163,7 @@ export const TRAIN_TEXT = {
   },
   waiting: {
     title: 'Chưa hết giờ là còn đỗ',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Vào" của mảnh ghép Đảo ngược.',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Đầu vào" của mảnh ghép Đảo ngược.',
     explain: 'Trong 3 giây đầu, Hẹn giờ chưa hết, mảnh ghép Đảo ngược cho tín hiệu "đang đỗ".',
   },
   stop: {
@@ -196,7 +196,7 @@ export const CARGO_TEXT = {
   },
   vehicle: {
     title: 'Nói xe nào chở hàng',
-    text: 'Nối cổng "Xe" của mảnh ghép Xe (xe tải) sang cổng "Xe" của Chở hàng.',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Xe (xe tải) sang cổng "Xe" của Chở hàng.',
   },
   loadType: {
     title: 'Chỉ chất thùng hàng',
@@ -206,7 +206,7 @@ export const CARGO_TEXT = {
   unloadType: {
     title: 'Chỉ dỡ thùng hàng',
     text: 'Vẫn ở Thuộc tính, gõ chữ thùng vào ô "Loại cần dỡ".',
-    explain: 'Ô này cũng quyết định "Số hàng loại này" đếm loại nào: ở đây là đếm thùng hàng trên xe.',
+    explain: 'Ô này cũng quyết định "Số hàng theo loại" đếm loại nào: ở đây là đếm thùng hàng trên xe.',
   },
   key: {
     title: 'Thêm nút bấm',
@@ -218,7 +218,7 @@ export const CARGO_TEXT = {
   },
   load: {
     title: 'Bấm L để chất hàng',
-    text: 'Nối cổng "Vừa nhấn" của Phím bấm (phím L) sang cổng "Chất" của Chở hàng.',
+    text: 'Nối cổng "Khi nhấn phím" của Phím bấm (phím L) sang cổng "Chất" của Chở hàng.',
     explain: 'Mỗi lần bấm L, xe chất món hàng đúng loại ở gần nhất và trong tầm với.',
   },
   zone: {
@@ -237,11 +237,11 @@ export const CARGO_TEXT = {
   },
   inZone: {
     title: 'Xe đang ở trong bãi',
-    text: 'Nối cổng "Có ai trong vùng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và.',
+    text: 'Nối cổng "Đang có đối tượng" của Vùng kích hoạt sang cổng "A" của mảnh ghép Và.',
   },
   pressL: {
     title: 'Và bạn bấm L',
-    text: 'Nối cổng "Vừa nhấn" của Phím bấm (phím L) sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Khi nhấn phím" của Phím bấm (phím L) sang cổng "B" của mảnh ghép Và.',
   },
   unload: {
     title: 'Trong bãi thì L là dỡ hàng',
@@ -258,7 +258,7 @@ export const CARGO_TEXT = {
   },
   count: {
     title: 'Mỗi lần dỡ là một lần giao',
-    text: 'Nối cổng "Vừa dỡ" của Chở hàng sang cổng "Cộng 1" của Bộ đếm.',
+    text: 'Nối cổng "Khi dỡ hàng" của Chở hàng sang cổng "Tăng 1" của Bộ đếm.',
   },
   show: {
     title: 'Thêm Hiện số',
@@ -266,7 +266,7 @@ export const CARGO_TEXT = {
   },
   showCount: {
     title: 'Hiện số thùng trên xe',
-    text: 'Nối cổng "Số hàng loại này" của Chở hàng sang cổng "Số cần hiện" của Hiện số.',
+    text: 'Nối cổng "Số hàng theo loại" của Chở hàng sang cổng "Giá trị" của Hiện số.',
     explain: 'Trong lúc chơi, góc màn hình cho biết xe đang chở mấy thùng hàng.',
   },
   end: {
@@ -275,7 +275,7 @@ export const CARGO_TEXT = {
   },
   win: {
     title: 'Giao đủ là thắng',
-    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
+    text: 'Nối cổng "Đã đạt mục tiêu" của Bộ đếm sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   play: {
     title: 'Giao hàng thử',
@@ -306,11 +306,11 @@ export const GUIDE_TEXT = {
   },
   from: {
     title: 'Mũi tên xuất phát từ nhân vật',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Từ" của Mũi tên chỉ đường.',
+    text: 'Nối cổng "Đối tượng" của nhân vật sang cổng "Từ đối tượng" của Mũi tên chỉ đường.',
   },
   to: {
     title: 'Mũi tên chỉ về cờ vàng',
-    text: 'Nối cổng "Vật thể" của lá cờ vàng sang cổng "Tới" của Mũi tên chỉ đường.',
+    text: 'Nối cổng "Đối tượng" của lá cờ vàng sang cổng "Đến đối tượng" của Mũi tên chỉ đường.',
     explain: 'Cờ vàng là lá gần nhân vật hơn, nằm bên trái cờ đỏ.',
   },
   watch: {
@@ -327,11 +327,11 @@ export const GUIDE_TEXT = {
   },
   from2: {
     title: 'Mũi tên 2 từ nhân vật',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang cổng "Từ" của mũi tên thứ hai.',
+    text: 'Nối cổng "Đối tượng" của nhân vật sang cổng "Từ đối tượng" của mũi tên thứ hai.',
   },
   to2: {
     title: 'Mũi tên 2 chỉ về cờ đỏ',
-    text: 'Nối cổng "Vật thể" của lá cờ đỏ sang cổng "Tới" của mũi tên thứ hai.',
+    text: 'Nối cổng "Đối tượng" của lá cờ đỏ sang cổng "Đến đối tượng" của mũi tên thứ hai.',
   },
   counter: {
     title: 'Thêm Bộ đếm để nhớ đang đi cờ nào',
@@ -344,8 +344,8 @@ export const GUIDE_TEXT = {
   },
   touch: {
     title: 'Chạm cờ vàng thì đếm',
-    text: 'Nối cổng "Đang chạm" của Chạm nhau (cái chạm cờ vàng) sang cổng "Cộng 1" của Bộ đếm.',
-    explain: 'Hai Chạm nhau đã có sẵn: một cái canh cờ vàng, một cái canh cờ đỏ (cái này đã nối sang Thắng / Thua).',
+    text: 'Nối cổng "Đang chạm" của Va chạm (cái chạm cờ vàng) sang cổng "Tăng 1" của Bộ đếm.',
+    explain: 'Hai Va chạm đã có sẵn: một cái canh cờ vàng, một cái canh cờ đỏ (cái này đã nối sang Thắng / Thua).',
   },
   select: {
     title: 'Thêm Chọn theo số',
@@ -354,7 +354,7 @@ export const GUIDE_TEXT = {
   },
   selectIn: {
     title: 'Số đếm đi vào Chọn theo số',
-    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Số" của Chọn theo số.',
+    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Giá trị" của Chọn theo số.',
   },
   show1: {
     title: 'Số 1 thì hiện mũi tên 1',

@@ -32,18 +32,18 @@ function boxTest(viewA: EntityView, viewB: EntityView, mode: TouchMode, grow: nu
 
 export const touchNode: NodeDef<TouchState> = {
   kind: 'touch',
-  label: 'Chạm nhau',
+  label: 'Va chạm',
   category: 'logic',
   description:
-    'Kiểm tra hai vật có đang chạm nhau không. "Mới chạm" chỉ bật một nhịp ở lúc mới chạm, "Vừa rời" bật một nhịp lúc hết chạm. Có thể nới / thu vùng chạm của vật A, chọn cách tính (chạm mép, tâm A vào trong B, A nằm trọn trong B) và bắt phải chạm đủ lâu mới tính.',
+    'Kiểm tra hai vật có đang chạm nhau không. "Bắt đầu chạm" chỉ bật một nhịp ở lúc mới chạm, "Kết thúc chạm" bật một nhịp lúc hết chạm. Có thể nới / thu vùng chạm của vật A, chọn cách tính (chạm mép, tâm A vào trong B, A nằm trọn trong B) và bắt phải chạm đủ lâu mới tính.',
   inputs: [
-    { id: 'a', type: 'object', label: 'Vật chính', required: true },
-    { id: 'b', type: 'object', label: 'Vật kia', required: true },
+    { id: 'a', type: 'object', label: 'Đối tượng A', required: true },
+    { id: 'b', type: 'object', label: 'Đối tượng B', required: true },
   ],
   outputs: [
     { id: 'touching', type: 'bool', label: 'Đang chạm' },
-    { id: 'began', type: 'bool', label: 'Mới chạm' },
-    { id: 'ended', type: 'bool', label: 'Vừa rời' },
+    { id: 'began', type: 'bool', label: 'Bắt đầu chạm' },
+    { id: 'ended', type: 'bool', label: 'Kết thúc chạm' },
   ],
   params: [
     { id: 'grow', label: 'Nới / thu vùng chạm', kind: 'number', default: 0, min: -5, max: 5, step: 0.1 },

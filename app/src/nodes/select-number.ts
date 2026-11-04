@@ -24,9 +24,9 @@ export const selectNumberNode: NodeDef<SelectNumberState> = {
   label: 'Chọn theo số',
   category: 'logic',
   description:
-    'Nhận một số và bật đúng một cổng "Bằng 1", "Bằng 2"... tương ứng với số đó (làm tròn). Số ngoài khoảng thì không cổng nào bật. "Vừa đổi" báo một nhịp mỗi khi lựa chọn đổi sang cái khác.',
-  inputs: [{ id: 'value', type: 'number', label: 'Số' }],
-  outputs: [...choicePorts, { id: 'changed', type: 'bool', label: 'Vừa đổi' }],
+    'Nhận một số và bật đúng một cổng "Bằng 1", "Bằng 2"... tương ứng với số đó (làm tròn). Số ngoài khoảng thì không cổng nào bật. "Khi đổi" báo một nhịp mỗi khi lựa chọn đổi sang cái khác.',
+  inputs: [{ id: 'value', type: 'number', label: 'Giá trị' }],
+  outputs: [...choicePorts, { id: 'changed', type: 'bool', label: 'Khi đổi' }],
   params: [
     { id: 'choices', label: 'Số lựa chọn (2-6)', kind: 'number', default: 3, min: MIN_CHOICES, max: SELECT_MAX_CHOICES, step: 1 },
   ],

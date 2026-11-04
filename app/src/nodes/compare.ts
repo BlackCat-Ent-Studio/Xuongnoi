@@ -12,7 +12,7 @@ export const compareNode: NodeDef<null> = {
     { id: 'a', type: 'number', label: 'Số A' },
     { id: 'b', type: 'number', label: 'Số B' },
   ],
-  outputs: [{ id: 'out', type: 'bool', label: 'Đúng' }],
+  outputs: [{ id: 'out', type: 'bool', label: 'Kết quả' }],
   params: [
     {
       id: 'op',

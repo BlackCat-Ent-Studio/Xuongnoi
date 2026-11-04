@@ -3,12 +3,12 @@ import { asObject } from './util';
 
 export const uiPickNode: NodeDef<null> = {
   kind: 'ui-pick',
-  label: 'Bấm vào vật',
+  label: 'Bấm vào đối tượng',
   category: 'input',
   description:
-    'Báo một nhịp "Vừa bấm" khi người chơi bấm chuột (hoặc chạm) vào vật được nối ở cổng "Vật cần bấm". Dùng được cả game 2D và 3D. Vật bị ẩn thì không bấm được.',
-  inputs: [{ id: 'target', type: 'object', label: 'Vật cần bấm', required: true }],
-  outputs: [{ id: 'pressed', type: 'bool', label: 'Vừa bấm' }],
+    'Báo một nhịp "Khi bấm" khi người chơi bấm chuột (hoặc chạm) vào vật được nối ở cổng "Đối tượng". Dùng được cả game 2D và 3D. Vật bị ẩn thì không bấm được.',
+  inputs: [{ id: 'target', type: 'object', label: 'Đối tượng', required: true }],
+  outputs: [{ id: 'pressed', type: 'bool', label: 'Khi bấm' }],
   params: [],
   create: () => null,
   evaluate(ctx, i) {

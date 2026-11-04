@@ -7,7 +7,7 @@ export const constNode: NodeDef<null> = {
   category: 'math',
   description: 'Một con số cố định mà bạn tự đặt, để nối vào các nút khác.',
   inputs: [],
-  outputs: [{ id: 'value', type: 'number', label: 'Số' }],
+  outputs: [{ id: 'value', type: 'number', label: 'Giá trị' }],
   params: [{ id: 'value', label: 'Giá trị', kind: 'number', default: 1, step: 1 }],
   evaluate: (_ctx, _i, params) => ({ value: numParam(params, 'value', 1) }),
 };

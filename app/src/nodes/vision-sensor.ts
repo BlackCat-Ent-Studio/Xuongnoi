@@ -52,16 +52,16 @@ export const visionSensorNode: NodeDef<VisionState> = {
   label: 'Tầm nhìn',
   category: 'logic',
   description:
-    'Cho một nhân vật hoặc xe "đôi mắt": nó thấy được vật nằm trong hình quạt phía trước mặt, trong "Tầm xa" và "Góc nhìn". Nối "Mục tiêu" thì chỉ canh đúng vật đó; không nối thì canh mọi vật thuộc loại đã chọn ở "Tính loại nào" (không tính chính nó). Bật "Tường che mắt" thì khối rắn nằm giữa sẽ chặn tầm nhìn. "Vừa thấy" và "Vừa mất dấu" bật một nhịp. Khi chẳng thấy gì, "Khoảng cách" bằng "Tầm xa".',
+    'Cho một nhân vật hoặc xe "đôi mắt": nó thấy được vật nằm trong hình quạt phía trước mặt, trong "Tầm xa" và "Góc nhìn". Nối "Mục tiêu" thì chỉ canh đúng vật đó; không nối thì canh mọi vật thuộc loại đã chọn ở "Tính loại nào" (không tính chính nó). Bật "Tường che mắt" thì khối rắn nằm giữa sẽ chặn tầm nhìn. "Khi phát hiện" và "Khi mất dấu" bật một nhịp. Khi chẳng thấy gì, "Khoảng cách" bằng "Tầm xa".',
   inputs: [
     { id: 'viewer', type: 'object', label: 'Người nhìn', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu' },
   ],
   outputs: [
     { id: 'seen', type: 'bool', label: 'Đang thấy' },
-    { id: 'gained', type: 'bool', label: 'Vừa thấy' },
-    { id: 'lost', type: 'bool', label: 'Vừa mất dấu' },
-    { id: 'nearest', type: 'object', label: 'Vật gần nhất' },
+    { id: 'gained', type: 'bool', label: 'Khi phát hiện' },
+    { id: 'lost', type: 'bool', label: 'Khi mất dấu' },
+    { id: 'nearest', type: 'object', label: 'Đối tượng gần nhất' },
     { id: 'distance', type: 'number', label: 'Khoảng cách' },
   ],
   params: [

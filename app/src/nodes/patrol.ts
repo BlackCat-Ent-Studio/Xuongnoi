@@ -30,15 +30,15 @@ export const patrolNode: NodeDef<PatrolState> = {
   label: 'Đi tuần',
   category: 'brain',
   description:
-    'Cho bot đi qua đi lại giữa hai điểm A và B, dừng chờ một lúc ở mỗi đầu. Nối "Đi ngang" / "Đi dọc" vào nhân vật bot. Phải nối tín hiệu vào "Hoạt động" thì bot mới đi. Có thể quay đầu khi gặp mép vực. "Tuyến đi tuần" nối vào mảnh Dự đoán tầm nhìn để nó biết bot này đi đường nào.',
+    'Cho bot đi qua đi lại giữa hai điểm A và B, dừng chờ một lúc ở mỗi đầu. Nối "Đi ngang" / "Đi dọc" vào nhân vật bot. Phải nối tín hiệu vào "Bật" thì bot mới đi. Có thể quay đầu khi gặp mép vực. "Tuyến đi tuần" nối vào mảnh Dự đoán tầm nhìn để nó biết bot này đi đường nào.',
   inputs: [
     { id: 'self', type: 'object', label: 'Bot', required: true },
-    { id: 'on', type: 'bool', label: 'Hoạt động' },
+    { id: 'on', type: 'bool', label: 'Bật' },
   ],
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
-    { id: 'atEnd', type: 'bool', label: 'Vừa tới đầu mút' },
+    { id: 'atEnd', type: 'bool', label: 'Khi tới điểm cuối' },
     { id: 'route', type: 'object', label: 'Tuyến đi tuần' },
   ],
   params: [

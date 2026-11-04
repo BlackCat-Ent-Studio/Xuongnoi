@@ -6,7 +6,7 @@ import { nextEmptySlot, parkingSpot, slotRects, type SlotRect, type StoreSlotsDe
 
 /**
  * "Đi tuần về kho": a delivery brain for the puzzle levels. Like the patrol it walks between two ends and says
- * "Vừa tới đầu mút" on reaching one, but the store end is not a fixed point: it is the approach point of the next
+ * "Khi tới điểm cuối" on reaching one, but the store end is not a fixed point: it is the approach point of the next
  * EMPTY slot of the store, parked so the crate in the robot's hands is right over that slot's middle. It belongs
  * to the archived workshop level only; that level registers it when it is loaded. It never appears in the editor.
  */

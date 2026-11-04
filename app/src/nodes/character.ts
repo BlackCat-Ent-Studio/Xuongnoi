@@ -13,8 +13,8 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
     { id: 'jump', type: 'bool', label: 'Nhảy' },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Nhân vật' },
-    { id: 'onGround', type: 'bool', label: 'Đang đứng đất' },
+    { id: 'self', type: 'object', label: 'Đối tượng' },
+    { id: 'onGround', type: 'bool', label: 'Đang trên mặt đất' },
     { id: 'x', type: 'number', label: 'Vị trí X' },
     { id: 'y', type: 'number', label: 'Vị trí Y' },
     { id: 'z', type: 'number', label: 'Vị trí Z' },

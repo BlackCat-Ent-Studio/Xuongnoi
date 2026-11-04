@@ -5,10 +5,10 @@ export const onStartNode: NodeDef<null> = {
   label: 'Khi bắt đầu',
   category: 'input',
   description:
-    'Báo ngay khi trò chơi bắt đầu chạy. "Vừa bắt đầu" bật đúng một nhịp; "Đã bắt đầu" bật suốt từ lúc đó (nối vào "Cho đi", "Bật", "Chạy"... của mảnh ghép cần được bật).',
+    'Báo ngay khi trò chơi bắt đầu chạy. "Khi bắt đầu" bật đúng một nhịp; "Đã bắt đầu" bật suốt từ lúc đó (nối vào "Bật", "Bắt đầu"... của mảnh ghép cần được bật).',
   inputs: [],
   outputs: [
-    { id: 'fired', type: 'bool', label: 'Vừa bắt đầu' },
+    { id: 'fired', type: 'bool', label: 'Khi bắt đầu' },
     { id: 'started', type: 'bool', label: 'Đã bắt đầu' },
   ],
   params: [],

@@ -104,7 +104,7 @@ describe('route-follow: rail mode', () => {
     expect(distToPolyline(s.entity('loco').position, TRACK12, true)).toBeLessThan(0.6);
   });
 
-  it('pulses "Tới điểm" at each point it passes (not at the start) and reports the next point', () => {
+  it('pulses "Khi tới điểm" at each point it passes (not at the start) and reports the next point', () => {
     const sq: Vec3[] = [v(-6, -6), v(6, -6), v(6, 6), v(-6, 6)];
     const s = sim([floor, loco(-6, -6), ['route', 'route-follow', trackParams(sq, { speed: 6, lookAhead: 0 })]], attach);
     const log: number[] = [];

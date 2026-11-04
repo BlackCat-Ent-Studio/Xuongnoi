@@ -17,23 +17,23 @@ export const BOT_TOOL_TEXT = {
     text: 'Bấm nút "Dừng" để làm tiếp.',
   },
   sequence: {
-    title: 'Thêm Chuỗi việc',
-    text: 'Kéo mảnh ghép "Chuỗi việc" (nhóm Bộ não) vào bảng.',
-    explain: 'Chuỗi việc làm lần lượt từng việc. Việc 1 là đi tới cuốc, việc 2 là đi tới đá. Hai mảnh ghép "Đi tới" đã có sẵn trên bảng.',
+    title: 'Thêm Chuỗi bước',
+    text: 'Kéo mảnh ghép "Chuỗi bước" (nhóm Bộ não) vào bảng.',
+    explain: 'Chuỗi bước làm lần lượt từng bước. Bước 1 là đi tới cuốc, bước 2 là đi tới đá. Hai mảnh ghép "Di chuyển" đã có sẵn trên bảng.',
   },
   step1: {
-    title: 'Việc 1: đi tới cuốc',
-    text: 'Nối "Việc 1" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới đang dẫn bot về phía cái cuốc (cái đứng gần bot hơn).',
-    explain: '"Cho đi" là công tắc: mảnh ghép Đi tới chỉ làm việc khi nó bật.',
+    title: 'Bước 1: đi tới cuốc',
+    text: 'Nối "Bước 1" của Chuỗi bước sang cổng "Bật" của mảnh ghép Di chuyển đang dẫn bot về phía cái cuốc (cái đứng gần bot hơn).',
+    explain: '"Bật" là công tắc: mảnh ghép Di chuyển chỉ làm việc khi nó bật.',
   },
   step2: {
-    title: 'Việc 2: đi tới đá',
-    text: 'Nối "Việc 2" của Chuỗi việc sang cổng "Cho đi" của mảnh ghép Đi tới còn lại (dẫn bot về phía tảng đá).',
+    title: 'Bước 2: đi tới đá',
+    text: 'Nối "Bước 2" của Chuỗi bước sang cổng "Bật" của mảnh ghép Di chuyển còn lại (dẫn bot về phía tảng đá).',
   },
   next: {
-    title: 'Xong việc thì làm việc tiếp',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc sang cổng "Xong việc" của Chuỗi việc.',
-    explain: 'Mảnh ghép Hoặc gom hai tín hiệu "Vừa tới". Mỗi lần bot tới nơi, Chuỗi việc chuyển sang việc kế tiếp.',
+    title: 'Xong bước này thì sang bước kế',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc sang cổng "Sang bước kế" của Chuỗi bước.',
+    explain: 'Mảnh ghép Hoặc gom hai tín hiệu "Khi đến nơi". Mỗi lần bot tới nơi, Chuỗi bước chuyển sang bước kế tiếp.',
   },
   hand: {
     title: 'Thêm mảnh ghép Cầm dụng cụ',
@@ -42,17 +42,17 @@ export const BOT_TOOL_TEXT = {
   },
   handWho: {
     title: 'Nói bot sẽ cầm',
-    text: 'Nối cổng "Nhân vật" của con bot sang cổng "Nhân vật" của mảnh ghép Cầm dụng cụ.',
+    text: 'Nối cổng "Đối tượng" của con bot sang cổng "Nhân vật" của mảnh ghép Cầm dụng cụ.',
   },
   handToggle: {
     title: 'Tới cuốc thì cầm lên',
-    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía cuốc) sang cổng "Cầm / Cất" của Cầm dụng cụ.',
+    text: 'Nối "Khi đến nơi" của mảnh ghép Di chuyển (về phía cuốc) sang cổng "Cầm / Cất (cũ)" của Cầm dụng cụ.',
     explain: 'Khi bot vừa tới chỗ cuốc, mảnh ghép nhận một nhịp và bot nhặt cuốc lên tay.',
   },
   handUse: {
     title: 'Tới đá thì vung cuốc',
-    text: 'Nối "Vừa tới" của mảnh ghép Đi tới (về phía đá) sang cổng "Dùng" của Cầm dụng cụ.',
-    explain: 'Khi bot vừa tới chỗ đá, nó vung cuốc. Thứ nằm ngay phía trước bot sẽ nhận tín hiệu "Bị dùng lên".',
+    text: 'Nối "Khi đến nơi" của mảnh ghép Di chuyển (về phía đá) sang cổng "Dùng" của Cầm dụng cụ.',
+    explain: 'Khi bot vừa tới chỗ đá, nó vung cuốc. Thứ nằm ngay phía trước bot sẽ nhận tín hiệu "Khi bị dùng lên".',
   },
   and: {
     title: 'Chỉ cuốc mới đập được đá',
@@ -61,15 +61,15 @@ export const BOT_TOOL_TEXT = {
   },
   rockUsed: {
     title: 'Đá vừa bị dùng lên',
-    text: 'Nối cổng "Bị dùng lên" của Vật thể tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
+    text: 'Nối cổng "Khi bị dùng lên" của Vật thể tảng đá (hộp xám cao) sang cổng "A" của mảnh ghép Và.',
   },
   inHand: {
     title: 'Cuốc đang ở trên tay',
-    text: 'Nối cổng "Đang cầm tay" của cái cuốc sang cổng "B" của mảnh ghép Và.',
+    text: 'Nối cổng "Đang cầm" của cái cuốc sang cổng "B" của mảnh ghép Và.',
   },
   rockHide: {
     title: 'Đá bị đập thì vỡ',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn đi (1 nhịp)" của Vật thể tảng đá.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Và sang cổng "Ẩn" của Vật thể tảng đá.',
     explain: 'Đá bị "ẩn đi" thì biến mất, đường được thông.',
   },
   end: {

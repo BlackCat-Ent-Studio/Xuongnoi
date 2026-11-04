@@ -13,20 +13,20 @@ const MAX_ALIVE_LIMIT = 50;
 
 export const spawnerNode: NodeDef<SpawnerState> = {
   kind: 'spawner',
-  label: 'Tạo vật mới',
+  label: 'Tạo đối tượng',
   category: 'action',
   description:
-    'Mỗi lần "Tạo ra" bật, tạo thêm một hộp hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại vật" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Vật mới nhất" vào các node khác (ví dụ Chạm nhau); hoặc nối nhân vật vào "Vật thử chạm" để biết có bản nào đang chạm người đó.',
+    'Mỗi lần "Tạo" bật, tạo thêm một hộp hoặc đồ vật mới (tối đa theo "Số lượng tối đa", mỗi cái tồn tại "Sống bao lâu"). Nối vật vào "Tại đối tượng" thì nó xuất hiện cạnh vật đó (cộng "Vị trí / lệch"). Nối "Đối tượng mới nhất" vào các node khác (ví dụ Va chạm); hoặc nối nhân vật vào "Chạm thử với" để biết có bản nào đang chạm người đó.',
   inputs: [
-    { id: 'spawn', type: 'bool', label: 'Tạo ra', required: true },
-    { id: 'at', type: 'object', label: 'Tại vật' },
-    { id: 'toucher', type: 'object', label: 'Vật thử chạm' },
+    { id: 'spawn', type: 'bool', label: 'Tạo', required: true },
+    { id: 'at', type: 'object', label: 'Tại đối tượng' },
+    { id: 'toucher', type: 'object', label: 'Chạm thử với' },
   ],
   outputs: [
-    { id: 'lastSpawned', type: 'object', label: 'Vật mới nhất' },
-    { id: 'count', type: 'number', label: 'Đang có' },
-    { id: 'spawned', type: 'bool', label: 'Vừa tạo' },
-    { id: 'touched', type: 'bool', label: 'Đang chạm vật thử' },
+    { id: 'lastSpawned', type: 'object', label: 'Đối tượng mới nhất' },
+    { id: 'count', type: 'number', label: 'Số đang có' },
+    { id: 'spawned', type: 'bool', label: 'Khi tạo' },
+    { id: 'touched', type: 'bool', label: 'Đang chạm thử' },
   ],
   params: [
     {
@@ -39,7 +39,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         { value: 'item', label: 'Đồ vật (rơi xuống đất)' },
       ],
     },
-    { id: 'position', label: 'Vị trí / lệch so với "Tại vật"', kind: 'vec3', default: { x: 0, y: 5, z: 0 } },
+    { id: 'position', label: 'Vị trí / lệch so với "Tại đối tượng"', kind: 'vec3', default: { x: 0, y: 5, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 0.7, y: 0.7, z: 0.7 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#ef4444' },
     {

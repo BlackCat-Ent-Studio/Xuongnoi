@@ -31,8 +31,8 @@ describe('node display names', () => {
     const touch = STEP_1_NODES.find((d) => d.kind === 'touch');
     expect(touch?.inputs.map((p) => p.id)).toEqual(['a', 'b']);
     expect(touch?.outputs.map((p) => p.id)).toEqual(['touching', 'began', 'ended']);
-    expect(touch?.label).toBe('Chạm nhau');
-    expect(touch?.inputs.map((p) => p.label)).toEqual(['Vật chính', 'Vật kia']);
+    expect(touch?.label).toBe('Va chạm');
+    expect(touch?.inputs.map((p) => p.label)).toEqual(['Đối tượng A', 'Đối tượng B']);
   });
 
   it('names the extra choice and step ports of the number switch and the sequence', () => {
@@ -55,6 +55,14 @@ describe('finding a renamed node by its old or English name', () => {
     expect(searchItems(items(), 'Cầm tay').map((i) => i.kind)).toContain('hand-tool');
   });
 
+  it('palette search finds each node renamed in the naming overhaul by its previous name', () => {
+    const old: [string, string][] = [
+      ['Đi tới', 'go-to'], ['Chuỗi việc', 'sequence'], ['Chạm nhau', 'touch'], ['Hộp hỏi', 'ui-dialog'],
+      ['Tạo vật mới', 'spawner'], ['Bấm vào vật', 'ui-pick'], ['Tìm vật gần nhất', 'nearest-item'], ['Đổi thang số', 'map-range'],
+    ];
+    for (const [name, kind] of old) expect(searchItems(items(), name).map((i) => i.kind), name).toContain(kind);
+  });
+
   it('palette search finds a node by its English term', () => {
     expect(searchItems(items(), 'raycast')[0]?.kind).toBe('ahead-sensor');
     expect(searchItems(items(), 'trigger zone')[0]?.kind).toBe('zone');
@@ -70,7 +78,7 @@ describe('finding a renamed node by its old or English name', () => {
     const d = listNodeDefs('2d-side').find((x) => x.kind === 'block');
     expect(d?.label).toBe('Vật thể');
     expect(d?.labelEn).toBe('Object');
-    expect(d?.outputs.find((p) => p.id === 'self')?.label).toBe('Vật thể');
+    expect(d?.outputs.find((p) => p.id === 'self')?.label).toBe('Đối tượng');
     expect(searchItems(items(), 'Hộp').map((i) => i.kind)).toContain('block');
     expect(searchItems(items(), 'Block').map((i) => i.kind)).toContain('block');
     const rows = buildRows(listNodeDefs('2d-side'), () => undefined);
@@ -83,7 +91,7 @@ describe('card subtitle', () => {
   const def = (kind: string) => listNodeDefs().find((d) => d.kind === kind);
 
   it('shows the English term on the line the card always had', () => {
-    expect(cardSubtitle(node('touch'), def('touch'))).toBe('Collision / Touch');
+    expect(cardSubtitle(node('touch'), def('touch'))).toBe('Collision');
   });
 
   it('puts the kind on top and the typed name below for object cards', () => {

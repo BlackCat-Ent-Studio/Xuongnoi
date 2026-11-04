@@ -15,19 +15,19 @@ export const counterNode: NodeDef<CounterState> = {
   label: 'Bộ đếm',
   category: 'math',
   description:
-    'Đếm số lần. Mỗi lần "Cộng 1" bật thì +1, "Trừ 1" bật thì −1, "Về đầu" đưa về số bắt đầu. Có thể cộng thêm một số bất kỳ (cả số âm) hoặc đặt thẳng về một số. Báo khi đếm đủ mục tiêu.',
+    'Đếm số lần. Mỗi lần "Tăng 1" bật thì +1, "Giảm 1" bật thì −1, "Đặt lại" đưa về số bắt đầu. Có thể cộng thêm một số bất kỳ (cả số âm) hoặc đặt thẳng về một số. Báo khi đếm đủ mục tiêu.',
   inputs: [
-    { id: 'up', type: 'bool', label: 'Cộng 1' },
-    { id: 'down', type: 'bool', label: 'Trừ 1' },
-    { id: 'reset', type: 'bool', label: 'Về đầu' },
-    { id: 'addAmount', type: 'number', label: 'Số cộng thêm' },
-    { id: 'add', type: 'bool', label: 'Cộng số' },
-    { id: 'setAmount', type: 'number', label: 'Số đặt' },
-    { id: 'set', type: 'bool', label: 'Đặt số' },
+    { id: 'up', type: 'bool', label: 'Tăng 1' },
+    { id: 'down', type: 'bool', label: 'Giảm 1' },
+    { id: 'reset', type: 'bool', label: 'Đặt lại' },
+    { id: 'addAmount', type: 'number', label: 'Lượng cộng thêm' },
+    { id: 'add', type: 'bool', label: 'Cộng thêm' },
+    { id: 'setAmount', type: 'number', label: 'Giá trị mới' },
+    { id: 'set', type: 'bool', label: 'Đặt giá trị' },
   ],
   outputs: [
     { id: 'value', type: 'number', label: 'Số đếm' },
-    { id: 'reached', type: 'bool', label: 'Đã đủ' },
+    { id: 'reached', type: 'bool', label: 'Đã đạt mục tiêu' },
   ],
   params: [
     { id: 'start', label: 'Bắt đầu từ', kind: 'number', default: 0, step: 1 },
@@ -49,7 +49,7 @@ export const counterNode: NodeDef<CounterState> = {
     if (up) s.value += 1;
     if (down) s.value -= 1;
     if (reset) s.value = numParam(params, 'start', 0);
-    // Number-driven edits come last so "Đặt số" wins over the +1/-1 buttons on the same tick.
+    // Number-driven edits come last so "Đặt giá trị" wins over the +1/-1 buttons on the same tick.
     if (risingEdge(s.add, asBool(i.add))) s.value += asNum(i.addAmount);
     if (risingEdge(s.set, asBool(i.set))) s.value = asNum(i.setAmount);
     return { value: s.value, reached: s.value >= numParam(params, 'target', 5) };

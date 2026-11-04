@@ -10,10 +10,10 @@ export const showTextNode: NodeDef<null> = {
   label: 'Hiện chữ',
   category: 'output',
   description:
-    'Hiện một dòng chữ lên màn hình game: ở góc màn hình, hoặc lơ lửng phía trên một vật nếu bạn nối cổng "Gắn vào vật" (chữ đi theo vật, vật bị ẩn thì chữ cũng ẩn). Không nối "Hiện" thì chữ luôn hiện; nối vào để bật tắt chữ.',
+    'Hiện một dòng chữ lên màn hình game: ở góc màn hình, hoặc lơ lửng phía trên một vật nếu bạn nối cổng "Gắn vào đối tượng" (chữ đi theo vật, vật bị ẩn thì chữ cũng ẩn). Không nối "Hiện" thì chữ luôn hiện; nối vào để bật tắt chữ.',
   inputs: [
     { id: 'show', type: 'bool', label: 'Hiện' },
-    { id: 'anchor', type: 'object', label: 'Gắn vào vật' },
+    { id: 'anchor', type: 'object', label: 'Gắn vào đối tượng' },
   ],
   outputs: [],
   params: [

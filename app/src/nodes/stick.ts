@@ -14,8 +14,8 @@ export const stickNode: NodeDef<null> = {
     'Biến 4 phím mũi tên hoặc W-A-S-D thành hướng đi. Phải/lên cho số dương, trái/xuống cho số âm.',
   inputs: [],
   outputs: [
-    { id: 'x', type: 'number', label: 'Ngang (trái-phải)' },
-    { id: 'y', type: 'number', label: 'Dọc (xuống-lên)' },
+    { id: 'x', type: 'number', label: 'Trục ngang' },
+    { id: 'y', type: 'number', label: 'Trục dọc' },
   ],
   params: [
     {

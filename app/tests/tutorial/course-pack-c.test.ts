@@ -96,7 +96,7 @@ function assertTargets(s: Session): void {
 describe.each([
   ['health-color', 'Thanh máu đổi màu'],
   ['start-screen', 'Màn hình mở đầu'],
-  ['ask-dialog', 'Hộp hỏi'],
+  ['ask-dialog', 'Hộp thoại'],
 ])('pack C lesson %s', (id, name) => {
   it('is in the numbers chapter with a valid starter board and ends info-only', () => {
     const lesson = findLesson(id)!;

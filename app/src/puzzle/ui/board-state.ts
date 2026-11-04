@@ -35,7 +35,7 @@ export const EMPTY_BOARD: BoardState = { placed: [], wires: [], overrides: {} };
 export const PUZZLE_TEXT = {
   lockedWire: 'Dây này cố định, không gỡ được',
   lockedInput: 'Cổng này đã có dây cố định',
-  startOnlyEnables: '"Khi bắt đầu" chỉ dùng để bật một mảnh ghép lên (cổng "Cho đi", "Bật", "Chạy"...)',
+  startOnlyEnables: '"Khi bắt đầu" chỉ dùng để bật một mảnh ghép lên (cổng "Bật", "Bắt đầu"...)',
   hiddenPort: 'Cổng này không dùng trong màn này',
   joined: 'Đã nối!',
   removed: 'Đã gỡ dây',

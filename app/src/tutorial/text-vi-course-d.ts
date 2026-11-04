@@ -6,12 +6,12 @@ export const GROUPS_TEXT = {
   boardName: 'Gom nhóm mảnh ghép',
   intro: {
     title: 'Bảng đang bừa bộn',
-    text: 'Bảng này có hai bộ "bot đi tuần" giống nhau, mỗi bộ gồm một nhân vật bot và một mảnh ghép Đi tới. Game to lên thì mảnh ghép nhiều như rừng. Bài này dạy cách gom chúng thành từng khối gọn.',
+    text: 'Bảng này có hai bộ "bot đi tuần" giống nhau, mỗi bộ gồm một nhân vật bot và một mảnh ghép Di chuyển. Game to lên thì mảnh ghép nhiều như rừng. Bài này dạy cách gom chúng thành từng khối gọn.',
     explain: 'Nhóm chỉ để bảng nhìn gọn. Game chạy y hệt như khi các mảnh ghép nằm rời.',
   },
   select: {
     title: 'Chọn một bộ bot',
-    text: 'Chọn mảnh ghép nhân vật bot và mảnh ghép Đi tới đang được nhấp nháy: giữ Shift rồi kéo một khung quanh cả hai, hoặc bấm vào cái này rồi giữ Shift bấm cái kia.',
+    text: 'Chọn mảnh ghép nhân vật bot và mảnh ghép Di chuyển đang được nhấp nháy: giữ Shift rồi kéo một khung quanh cả hai, hoặc bấm vào cái này rồi giữ Shift bấm cái kia.',
     explain: 'Phải chọn đúng hai mảnh ghép này, đừng chọn thừa.',
   },
   group: {
@@ -69,23 +69,23 @@ export const FACTORY_TEXT = {
   },
   startTimer: {
     title: 'Chờ bấm nút mới chạy',
-    text: 'Nối cổng "Đã bắt đầu" của Màn hình mở đầu sang cổng "Chạy" của mảnh ghép Hẹn giờ.',
+    text: 'Nối cổng "Đã bắt đầu" của Màn hình mở đầu sang cổng "Bắt đầu" của mảnh ghép Hẹn giờ.',
     explain: 'Hẹn giờ này cứ 2 giây lại bật một nhịp để nhả một hộp. Giờ nó chỉ đếm khi game đã bắt đầu.',
   },
   timerSpawn: {
     title: 'Hẹn giờ nhả hộp',
-    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo ra" của mảnh ghép Tạo vật mới.',
-    explain: 'Mỗi lần Hẹn giờ kêu, Tạo vật mới tạo thêm một hộp (tối đa 3 hộp).',
+    text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Tạo" của mảnh ghép Tạo đối tượng.',
+    explain: 'Mỗi lần Hẹn giờ kêu, Tạo đối tượng tạo thêm một hộp (tối đa 3 hộp).',
   },
   beltAt: {
     title: 'Nhả hộp lên băng chuyền',
-    text: 'Nối cổng "Vật thể" của băng chuyền sang cổng "Tại vật" của Tạo vật mới.',
+    text: 'Nối cổng "Đối tượng" của băng chuyền sang cổng "Tại đối tượng" của Tạo đối tượng.',
     explain: 'Hộp mới sẽ xuất hiện ngay trên băng chuyền rồi chạy sang phải, tới kho cuối băng.',
   },
   next: {
     title: 'Bot làm xong việc nào, qua việc đó',
-    text: 'Bot đã có Chuỗi việc: lấy thùng đỏ, đặt vào vùng đỏ, lấy thùng xanh, đặt vào vùng xanh. Nối cổng "Kết quả" của mảnh ghép Hoặc ở cuối (hộp Hoặc nằm bên phải, đang nhấp nháy) sang cổng "Xong việc" của Chuỗi việc.',
-    explain: 'Hoặc này gom bốn tín hiệu "Vừa tới", nên bot đi tới đâu là chuyển việc kế tiếp.',
+    text: 'Bot đã có Chuỗi bước: lấy thùng đỏ, đặt vào vùng đỏ, lấy thùng xanh, đặt vào vùng xanh. Nối cổng "Kết quả" của mảnh ghép Hoặc ở cuối (hộp Hoặc nằm bên phải, đang nhấp nháy) sang cổng "Sang bước kế" của Chuỗi bước.',
+    explain: 'Hoặc này gom bốn tín hiệu "Khi đến nơi", nên bot đi tới đâu là chuyển việc kế tiếp.',
   },
   grab: {
     title: 'Tới nơi thì cầm / thả',
@@ -111,7 +111,7 @@ export const FACTORY_TEXT = {
   },
   packed: {
     title: 'Mỗi thùng vào đúng vùng, đếm thêm 1',
-    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc nằm cạnh hai vùng (nó gom hai nhịp "Vừa vào") sang cổng "Cộng 1" của Bộ đếm.',
+    text: 'Nối cổng "Kết quả" của mảnh ghép Hoặc nằm cạnh hai vùng (nó gom hai nhịp "Khi đối tượng vào") sang cổng "Tăng 1" của Bộ đếm.',
     explain: 'Vì vùng chỉ nhận đúng loại hàng, thùng đặt nhầm vùng sẽ không được đếm.',
   },
   meter: {
@@ -125,11 +125,11 @@ export const FACTORY_TEXT = {
   },
   meterWire: {
     title: 'Thanh đo theo dõi bộ đếm',
-    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Số cần đo" của Thanh đo.',
+    text: 'Nối cổng "Số đếm" của Bộ đếm sang cổng "Giá trị" của Thanh đo.',
   },
   reached: {
     title: 'Đếm đủ thì báo',
-    text: 'Nối cổng "Đã đủ" của Bộ đếm sang cổng "A" của mảnh ghép Và (đang nhấp nháy). Cổng "B" của Và đã nối sẵn với vùng kho cuối băng chuyền: kho phải có đủ 3 hộp.',
+    text: 'Nối cổng "Đã đạt mục tiêu" của Bộ đếm sang cổng "A" của mảnh ghép Và (đang nhấp nháy). Cổng "B" của Và đã nối sẵn với vùng kho cuối băng chuyền: kho phải có đủ 3 hộp.',
     explain: 'Muốn thắng phải đủ cả hai: bot phân loại xong và kho cuối băng chuyền có đủ 3 hộp.',
   },
   end: {
@@ -151,6 +151,6 @@ export const FACTORY_TEXT = {
   },
   done: {
     title: 'Xưởng của bạn chạy rồi!',
-    text: 'Bạn đã dùng Màn hình mở đầu, Hẹn giờ, Tạo vật mới, băng chuyền, Chuỗi việc, bot, Khiêng đồ, Vùng kích hoạt, Bộ đếm, Thanh đo và Thắng / Thua trong một game. Chúc mừng, bạn đã làm xong cả khóa!',
+    text: 'Bạn đã dùng Màn hình mở đầu, Hẹn giờ, Tạo đối tượng, băng chuyền, Chuỗi bước, bot, Khiêng đồ, Vùng kích hoạt, Bộ đếm, Thanh đo và Thắng / Thua trong một game. Chúc mừng, bạn đã làm xong cả khóa!',
   },
 } as const;

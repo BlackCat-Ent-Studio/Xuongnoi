@@ -204,7 +204,7 @@ describe('route-follow node: driving a driverless vehicle', () => {
 });
 
 describe('route-follow node: a vehicle crash can stall a car with its own Dừng', () => {
-  it('"Vừa va chạm" pulses once and "Va với" names the other car', () => {
+  it('"Khi va chạm" pulses once and "Đối tượng va phải" names the other car', () => {
     const s = sim(
       '2d-top',
       [
@@ -279,7 +279,7 @@ describe('route-follow node: a character on foot', () => {
 });
 
 describe('route-follow node: unit behaviour', () => {
-  it('is idle without a valid "Ai"', () => {
+  it('is idle without a valid "Đối tượng"', () => {
     const w = makeWorld();
     const params = defaultParams(routeFollowNode);
     const state = routeFollowNode.create!(makeCtx(w), params);

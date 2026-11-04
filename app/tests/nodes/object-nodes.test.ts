@@ -330,7 +330,7 @@ describe('spawner node', () => {
     expect(e.ownerNodeId).toBe('sp');
   });
 
-  it('a copy dropped on the player works with the Chạm nhau node and the Vật thử chạm output', () => {
+  it('a copy dropped on the player works with the Va chạm node and the Chạm thử với output', () => {
     const g = rain({ position: v(0, 4), size: v(0.6, 0.6, 0.6), lifetime: 5 }, [['t', 'touch']], [
       ['me', 'self', 'sp', 'at'],
       ['sp', 'lastSpawned', 't', 'a'],

@@ -27,25 +27,25 @@ const T = {
   },
   viewer: {
     title: 'Ai đang nhìn?',
-    text: 'Nối cổng "Nhân vật" của Bot (nhân vật màu đỏ) sang cổng "Người nhìn" của Tầm nhìn.',
+    text: 'Nối cổng "Đối tượng" của Bot (nhân vật màu đỏ) sang cổng "Người nhìn" của Tầm nhìn.',
   },
   target: {
     title: 'Bot canh ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh (người chơi) sang cổng "Mục tiêu" của Tầm nhìn.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh (người chơi) sang cổng "Mục tiêu" của Tầm nhìn.',
     explain: 'Nối "Mục tiêu" thì bot chỉ canh đúng người đó. Để trống thì bot canh mọi vật thuộc loại đã chọn.',
   },
   speed: {
     title: 'Đo tốc độ',
     text: 'Kéo mảnh ghép "Đo tốc độ" (nhóm Logic) vào bảng.',
-    explain: 'Nó đo vật chạy nhanh bao nhiêu ô mỗi giây. Vượt quá "Ngưỡng" (mặc định 3) thì "Nhanh quá mức" bật.',
+    explain: 'Nó đo vật chạy nhanh bao nhiêu ô mỗi giây. Vượt quá "Ngưỡng" (mặc định 3) thì "Vượt ngưỡng" bật.',
   },
   speedWho: {
     title: 'Đo ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Đo tốc độ.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh sang cổng "Đối tượng" của Đo tốc độ.',
   },
   seenFast: {
     title: 'Thấy VÀ chạy nhanh',
-    text: 'Mảnh "Và" đã có sẵn. Nối "Đang thấy" của Tầm nhìn vào cổng "A", và "Nhanh quá mức" của Đo tốc độ vào cổng "B".',
+    text: 'Mảnh "Và" đã có sẵn. Nối "Đang thấy" của Tầm nhìn vào cổng "A", và "Vượt ngưỡng" của Đo tốc độ vào cổng "B".',
     explain: 'Mảnh "Và" chỉ bật khi cả hai cùng bật: bot thấy bạn và bạn đang chạy nhanh.',
   },
   lose: {
@@ -59,11 +59,11 @@ const T = {
   },
   aheadWho: {
     title: 'Ai nhìn phía trước?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật nhìn" của Dò phía trước.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh sang cổng "Đối tượng" của Dò phía trước.',
   },
   aheadText: {
     title: 'Báo có tường',
-    text: 'Nối "Bị chặn" của Dò phía trước sang cổng "Hiện" của mảnh Hiện chữ. Chữ "Có tường, nhảy lên!" sẽ chỉ hiện khi có tường chắn trước mặt.',
+    text: 'Nối "Đang bị chặn" của Dò phía trước sang cổng "Hiện" của mảnh Hiện chữ. Chữ "Có tường, nhảy lên!" sẽ chỉ hiện khi có tường chắn trước mặt.',
     explain: 'Hiện chữ chỉ hiện khi có tín hiệu bật ở cổng "Hiện". Nối vào thì chữ hiện đúng lúc tín hiệu bật.',
   },
   color: {
@@ -73,7 +73,7 @@ const T = {
   },
   colorWho: {
     title: 'Đọc màu dưới chân ai?',
-    text: 'Nối cổng "Nhân vật" của nhân vật xanh sang cổng "Vật" của Đọc màu.',
+    text: 'Nối cổng "Đối tượng" của nhân vật xanh sang cổng "Đối tượng" của Đọc màu.',
   },
   want: {
     title: 'Màu cần tìm là xanh lá',

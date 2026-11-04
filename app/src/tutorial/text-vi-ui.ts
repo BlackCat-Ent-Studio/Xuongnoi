@@ -9,13 +9,13 @@ export const UI_CHEST_TEXT = {
     explain: 'Từ bài này, game không chỉ dùng bàn phím. Người chơi còn bấm chuột được vào vật và vào nút trên màn hình.',
   },
   pick: {
-    title: 'Thêm mảnh ghép Bấm vào vật',
-    text: 'Kéo mảnh ghép "Bấm vào vật" (nhóm Đầu vào) vào bảng.',
-    explain: 'Nó báo một nhịp "Vừa bấm" mỗi lần người chơi bấm chuột vào đúng vật mà bạn nối cho nó.',
+    title: 'Thêm mảnh ghép Bấm vào đối tượng',
+    text: 'Kéo mảnh ghép "Bấm vào đối tượng" (nhóm Đầu vào) vào bảng.',
+    explain: 'Nó báo một nhịp "Khi bấm" mỗi lần người chơi bấm chuột vào đúng vật mà bạn nối cho nó.',
   },
   wireChest: {
     title: 'Nói vật nào bấm được',
-    text: 'Nối cổng "Vật thể" của mảnh ghép Vật thể có màu nâu (cái rương) sang cổng "Vật cần bấm" của mảnh ghép Bấm vào vật.',
+    text: 'Nối cổng "Đối tượng" của mảnh ghép Vật thể có màu nâu (cái rương) sang cổng "Đối tượng" của mảnh ghép Bấm vào đối tượng.',
   },
   winLose: {
     title: 'Thêm mảnh ghép Thắng / Thua',
@@ -23,12 +23,12 @@ export const UI_CHEST_TEXT = {
   },
   wireWin: {
     title: 'Bấm rương là thắng',
-    text: 'Nối cổng "Vừa bấm" của Bấm vào vật sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
+    text: 'Nối cổng "Khi bấm" của Bấm vào đối tượng sang cổng "Thắng" của mảnh ghép Thắng / Thua.',
   },
   timer: {
     title: 'Thêm đồng hồ đếm ngược',
     text: 'Kéo mảnh ghép "Hẹn giờ" (nhóm Tính toán) vào bảng. Chọn nó, ở Thuộc tính đổi "Số giây" thành 10.',
-    explain: 'Hẹn giờ đếm ngược từ số giây bạn đặt, khi có tín hiệu bật ở cổng "Chạy" (ở bước sau ta nối "Khi bắt đầu" vào đó).',
+    explain: 'Hẹn giờ đếm ngược từ số giây bạn đặt, khi có tín hiệu bật ở cổng "Bắt đầu" (ở bước sau ta nối "Khi bắt đầu" vào đó).',
   },
   meter: {
     title: 'Thêm Thanh đo',
@@ -37,7 +37,7 @@ export const UI_CHEST_TEXT = {
   },
   wireMeter: {
     title: 'Cho thanh đo xem giờ',
-    text: 'Nối cổng "Giây còn lại" của Hẹn giờ sang cổng "Số cần đo" của Thanh đo.',
+    text: 'Nối cổng "Giây còn lại" của Hẹn giờ sang cổng "Giá trị" của Thanh đo.',
   },
   wireLose: {
     title: 'Hết giờ là thua',
@@ -54,6 +54,6 @@ export const UI_CHEST_TEXT = {
   },
   done: {
     title: 'Bạn làm game bấm chuột rồi!',
-    text: 'Bạn đã biết dùng Bấm vào vật và Thanh đo. Hãy thử thêm "Nút bấm" (nhóm Đầu vào), "Hộp hỏi" và "Màn hình mở đầu" để game có thêm nút bấm và màn hình mở đầu.',
+    text: 'Bạn đã biết dùng Bấm vào đối tượng và Thanh đo. Hãy thử thêm "Nút bấm" (nhóm Đầu vào), "Hộp thoại" và "Màn hình mở đầu" để game có thêm nút bấm và màn hình mở đầu.',
   },
 } as const;

@@ -17,7 +17,7 @@ function run(w: W, inputs: Record<string, EntityId | boolean | null>, over: Reco
 }
 
 describe('guide arrow node', () => {
-  it('points from "Từ" to "Tới" with a rounded ground distance', () => {
+  it('points from "Từ đối tượng" to "Đến đối tượng" with a rounded ground distance', () => {
     const w = createWorld('3d');
     const a = thing(w, 0, 0);
     const b = thing(w, 6, 8, 5); // height must not count
@@ -32,7 +32,7 @@ describe('guide arrow node', () => {
     expect(hud.guide?.showDistance).toBe(false);
   });
 
-  it('hides when "Tới" is empty, hidden, "Hiện" is off, or the target is within reach', () => {
+  it('hides when "Đến đối tượng" is empty, hidden, "Hiện" is off, or the target is within reach', () => {
     const w = createWorld('3d');
     const a = thing(w, 0, 0);
     const far = thing(w, 9, 0);

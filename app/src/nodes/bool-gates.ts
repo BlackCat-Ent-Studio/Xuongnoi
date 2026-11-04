@@ -34,7 +34,7 @@ export const notNode: NodeDef<null> = {
   label: 'Đảo ngược',
   category: 'logic',
   description: 'Đảo ngược: đang bật thì thành tắt, đang tắt thì thành bật.',
-  inputs: [{ id: 'in', type: 'bool', label: 'Vào' }],
+  inputs: [{ id: 'in', type: 'bool', label: 'Đầu vào' }],
   outputs: [{ id: 'out', type: 'bool', label: 'Kết quả' }],
   params: [],
   evaluate: (_ctx, i) => ({ out: !asBool(i.in) }),

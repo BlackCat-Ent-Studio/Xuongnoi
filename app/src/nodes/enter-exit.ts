@@ -12,16 +12,16 @@ export const enterExitNode: NodeDef<EnterExitState> = {
   label: 'Lên / Xuống xe',
   category: 'action',
   description:
-    'Nối nhân vật vào "Ai". Mỗi nhịp bật ở "Lên xe": nhân vật đứng gần xe thì lên xe ngồi lái. Mỗi nhịp bật ở "Xuống xe": nhân vật đang ngồi trên xe thì xuống, đứng cạnh xe. "Bấm" là cổng cũ (một cổng làm cả hai việc, lên rồi xuống), chỉ để game cũ vẫn chạy.',
+    'Nối nhân vật vào "Nhân vật". Mỗi nhịp bật ở "Lên xe": nhân vật đứng gần xe thì lên xe ngồi lái. Mỗi nhịp bật ở "Xuống xe": nhân vật đang ngồi trên xe thì xuống, đứng cạnh xe. "Bấm (cũ)" là cổng cũ (một cổng làm cả hai việc, lên rồi xuống), chỉ để game cũ vẫn chạy.',
   inputs: [
-    { id: 'character', type: 'object', label: 'Ai', required: true },
+    { id: 'character', type: 'object', label: 'Nhân vật', required: true },
     { id: 'enter', type: 'bool', label: 'Lên xe' },
     { id: 'exit', type: 'bool', label: 'Xuống xe' },
-    { id: 'press', type: 'bool', label: 'Bấm', legacy: true },
+    { id: 'press', type: 'bool', label: 'Bấm (cũ)', legacy: true },
   ],
   outputs: [
-    { id: 'inVehicle', type: 'bool', label: 'Đang ngồi trên xe' },
-    { id: 'vehicle', type: 'object', label: 'Xe đang ngồi' },
+    { id: 'inVehicle', type: 'bool', label: 'Đang trên xe' },
+    { id: 'vehicle', type: 'object', label: 'Xe đang dùng' },
   ],
   params: [{ id: 'reach', label: 'Với tới xe trong (đơn vị)', kind: 'number', default: 1.5, min: 0.2, max: 10, step: 0.1 }],
   create: () => ({ press: { prev: false }, enter: { prev: false }, exit: { prev: false } }),

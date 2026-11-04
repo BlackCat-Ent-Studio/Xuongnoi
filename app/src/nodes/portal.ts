@@ -12,9 +12,9 @@ export const portalNode: NodeDef<{ id: EntityId }> = {
     { id: 'on', type: 'bool', label: 'Bật' },
   ],
   outputs: [
-    { id: 'self', type: 'object', label: 'Cổng' },
-    { id: 'used', type: 'bool', label: 'Vừa có người vào' },
-    { id: 'who', type: 'object', label: 'Người vừa vào' },
+    { id: 'self', type: 'object', label: 'Đối tượng' },
+    { id: 'used', type: 'bool', label: 'Khi có người vào' },
+    { id: 'who', type: 'object', label: 'Đối tượng vừa vào' },
   ],
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },

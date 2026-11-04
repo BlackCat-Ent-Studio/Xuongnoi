@@ -8,8 +8,8 @@ export const distanceNode: NodeDef<undefined> = {
   description:
     'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). "Trong tầm" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Trong tầm" tắt.',
   inputs: [
-    { id: 'a', type: 'object', label: 'Vật 1', required: true },
-    { id: 'b', type: 'object', label: 'Vật 2', required: true },
+    { id: 'a', type: 'object', label: 'Đối tượng A', required: true },
+    { id: 'b', type: 'object', label: 'Đối tượng B', required: true },
   ],
   outputs: [
     { id: 'distance', type: 'number', label: 'Khoảng cách' },

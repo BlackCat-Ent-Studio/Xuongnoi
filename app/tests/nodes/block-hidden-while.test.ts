@@ -8,7 +8,7 @@ const run = (steps: Record<string, boolean>[]) => {
   return w;
 };
 
-describe('block "Ẩn suốt lúc bật"', () => {
+describe('block "Ẩn khi bật"', () => {
   it('hides while on and shows again when it turns off', () => {
     const w = run([{ hiddenWhile: false }, { hiddenWhile: true }, { hiddenWhile: true }, { hiddenWhile: false }, { hiddenWhile: false }]);
     expect(w.hidden).toHaveLength(1);
@@ -24,7 +24,7 @@ describe('block "Ẩn suốt lúc bật"', () => {
     expect(w.hidden).toHaveLength(0);
     expect(w.shown).toHaveLength(0);
   });
-  it('a "Ẩn đi (1 nhịp)" pulse still hides and is not undone by an unchanged off signal', () => {
+  it('a "Ẩn" pulse still hides and is not undone by an unchanged off signal', () => {
     const w = run([{ hide: true, hiddenWhile: false }, { hiddenWhile: false }, { show: true }]);
     expect(w.hidden).toHaveLength(1);
     expect(w.shown).toHaveLength(1);

@@ -12,7 +12,7 @@ export const cargoNode: NodeDef<CargoState> = {
   label: 'Chở hàng',
   category: 'action',
   description:
-    'Chất đồ vật lên thùng xe rồi dỡ xuống. Mỗi lần "Chất" bật lên một nhịp, xe nhận món đồ gần nhất (không ai đang cầm) trong tầm với. Hàng nằm trên thùng xe và chạy theo xe, người khác không cầm đi được. "Dỡ" đặt món trên cùng xuống cạnh xe (ưu tiên phía sau), "Dỡ hết" dỡ tất cả. Xe đầy (hết "Sức chứa") thì không chất thêm. Ẩn xe thì hàng rơi xuống tại chỗ. Điền "Loại cần dỡ" thì "Dỡ" chỉ lấy món trên cùng thuộc loại đó ("Số hàng loại này" đếm đúng loại ấy); điền "Loại cần chất" thì "Chất" chỉ nhận hàng loại đó. Để trống thì loại nào cũng được.',
+    'Chất đồ vật lên thùng xe rồi dỡ xuống. Mỗi lần "Chất" bật lên một nhịp, xe nhận món đồ gần nhất (không ai đang cầm) trong tầm với. Hàng nằm trên thùng xe và chạy theo xe, người khác không cầm đi được. "Dỡ" đặt món trên cùng xuống cạnh xe (ưu tiên phía sau), "Dỡ hết" dỡ tất cả. Xe đầy (hết "Sức chứa") thì không chất thêm. Ẩn xe thì hàng rơi xuống tại chỗ. Điền "Loại cần dỡ" thì "Dỡ" chỉ lấy món trên cùng thuộc loại đó ("Số hàng theo loại" đếm đúng loại ấy); điền "Loại cần chất" thì "Chất" chỉ nhận hàng loại đó. Để trống thì loại nào cũng được.',
   inputs: [
     { id: 'vehicle', type: 'object', label: 'Xe', required: true },
     { id: 'load', type: 'bool', label: 'Chất' },
@@ -21,10 +21,10 @@ export const cargoNode: NodeDef<CargoState> = {
   ],
   outputs: [
     { id: 'count', type: 'number', label: 'Số hàng' },
-    { id: 'loaded', type: 'bool', label: 'Vừa chất' },
-    { id: 'unloaded', type: 'bool', label: 'Vừa dỡ' },
+    { id: 'loaded', type: 'bool', label: 'Khi chất hàng' },
+    { id: 'unloaded', type: 'bool', label: 'Khi dỡ hàng' },
     { id: 'top', type: 'object', label: 'Hàng trên cùng' },
-    { id: 'typeCount', type: 'number', label: 'Số hàng loại này' },
+    { id: 'typeCount', type: 'number', label: 'Số hàng theo loại' },
   ],
   params: [
     { id: 'capacity', label: 'Sức chứa (số món)', kind: 'number', default: 4, min: 1, max: 12, step: 1 },
@@ -71,7 +71,7 @@ export const cargoNode: NodeDef<CargoState> = {
       }
     }
     const onBoard = veh !== null ? ctx.world.cargoOf(veh) : [];
-    // With an unload type set, "Hàng trên cùng" and "Số hàng loại này" talk about that goods type, like "Dỡ" does.
+    // With an unload type set, "Hàng trên cùng" and "Số hàng theo loại" talk about that goods type, like "Dỡ" does.
     const ofType = unloadType === '' ? onBoard : onBoard.filter((id) => ctx.world.tagOf(id) === unloadType);
     return {
       count: onBoard.length,

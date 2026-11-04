@@ -16,7 +16,7 @@ const CRATE_SIZE = { x: 0.6, y: 0.6, z: 0.6 };
  * hands' reach, and exactly where a crate in its hands lands in the middle of a slot.
  */
 const STOP = Math.round(handReach(CRATE_SIZE) * 100) / 100;
-/** Seconds the robot stands still before it reports "Đã tới", so it never grabs or lets go on the move. */
+/** Seconds the robot stands still before it reports "Đã đến", so it never grabs or lets go on the move. */
 const SETTLE = 0.3;
 
 let sceneryIndex = 0;
@@ -34,8 +34,8 @@ const CARRY_PARAMS: GraphNode['params'] = { mode: 'separate' };
 
 /**
  * Level 5 (du-ba-thung): the first 3D level. Three crates lie scattered on the floor and the legs robot must set
- * each one in its own slot of the store. The player builds the whole circuit from four pieces: "Tìm vật gần nhất"
- * picks the nearest loose crate (not those already in a slot), "Ô trống kế tiếp" picks the slot to fill, "Đi tới"
+ * each one in its own slot of the store. The player builds the whole circuit from four pieces: "Tìm đồ gần nhất"
+ * picks the nearest loose crate (not those already in a slot), "Ô trống kế tiếp" picks the slot to fill, "Di chuyển"
  * walks to the crate and then (second goal) to the slot, and "Khiêng đồ" lifts on one input and puts down on another.
  *
  * On the board only the robot and the three slot marks are drawn. The floor, store mark, crates, the slot zones that
@@ -46,7 +46,7 @@ export const level05: PuzzleLevel = {
   order: 5,
   title: 'Đủ ba thùng',
   task: 'Ba thùng nằm rải rác trên sàn. Hãy nối mạch để rô-bốt chân tự nhặt từng thùng và cất vào kho, mỗi thùng một ô. Đủ ba ô có thùng là thắng!',
-  hint: '"Tìm vật gần nhất" chọn thùng (Ô kho 1, 2, 3 báo thùng nào cất rồi), nối vào "Đích" của "Đi tới". "Ô trống kế tiếp" chọn ô cất, nối vào "Đích 2". Khiêng xong ("Đang khiêng") thì bật "Dùng đích 2". Tới nơi ("Đã tới") thì "Khiêng đồ" nhấc hoặc thả.',
+  hint: '"Tìm đồ gần nhất" chọn thùng (Ô kho 1, 2, 3 báo thùng nào cất rồi), nối vào "Điểm đến" của "Di chuyển". "Ô trống kế tiếp" chọn ô cất, nối vào "Điểm đến 2". Khiêng xong ("Đang khiêng") thì bật "Dùng điểm đến 2". Tới nơi ("Đã đến") thì "Khiêng đồ" nhấc hoặc thả.',
   mode: '3d',
   cast: [PUZZLE_LOOKS.robotLegs],
   storeSlots: STORE,

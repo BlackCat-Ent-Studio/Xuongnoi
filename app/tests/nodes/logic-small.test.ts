@@ -203,7 +203,7 @@ describe('select-number node', () => {
     expect(picked(run([6], 99)[0]!)).toEqual([6]);
   });
 
-  it('"Vừa đổi" pulses when the choice changes, not on the first tick or while steady', () => {
+  it('"Khi đổi" pulses when the choice changes, not on the first tick or while steady', () => {
     const out = run([2, 2, 3, 3, 3.4, 1, 9, 9]);
     expect(out.map((o) => o.changed)).toEqual([false, false, true, false, false, true, true, false]);
   });

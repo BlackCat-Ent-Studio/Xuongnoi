@@ -271,7 +271,7 @@ describe('level 4 (hai-nut-mot-cua)', () => {
     expect(runLevel(level04!, without(sol, 's10')).outcome).toBe('timeout');
     expect(runLevel(level04!, without(sol, 's11')).outcome).toBe('timeout');
   });
-  it('bot A must wait for bot B: without the "Cho đi" wire A leaves its button and the door shuts', () => {
+  it('bot A must wait for bot B: without the "Bật" wire A leaves its button and the door shuts', () => {
     expect(runLevel(level04!, without(sol, 's7')).outcome).toBe('timeout');
   });
   it('both robots are locked with the approved looks', () => {
@@ -286,7 +286,7 @@ describe('level 4 (hai-nut-mot-cua)', () => {
     const b1 = level04!.base.nodes.find((n) => n.id === 'button-a')!.params.position as { x: number };
     expect(a.x).toBe(b1.x);
   });
-  it('the second touch sensor can stand in for "Đã tới" but then the answer costs a piece more', () => {
+  it('the second touch sensor can stand in for "Đã đến" but then the answer costs a piece more', () => {
     const swapped: PuzzleAnswer = {
       nodes: [...sol.nodes, { id: 'p-touch2', kind: 'touch', params: {}, pos: { x: 100, y: 100 } }],
       wires: [

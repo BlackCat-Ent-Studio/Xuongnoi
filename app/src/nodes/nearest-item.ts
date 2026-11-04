@@ -2,19 +2,19 @@ import type { EntityView, NodeDef } from '../engine/types';
 import { SLOT_PORTS, isTaken } from './next-free-slot';
 import { asBool, asObject, strParam } from './util';
 
-/** Ports "Bỏ qua đồ trên ô 1".."4": markers whose resting items are not offered. */
-const IGNORE_PORTS = SLOT_PORTS.map((_, k) => ({ id: `i${k + 1}`, type: 'object' as const, label: `Bỏ qua đồ trên ô ${k + 1}` }));
+/** Ports "Bỏ qua ô 1".."4": markers whose resting items are not offered. */
+const IGNORE_PORTS = SLOT_PORTS.map((_, k) => ({ id: `i${k + 1}`, type: 'object' as const, label: `Bỏ qua ô ${k + 1}` }));
 
 export const nearestItemNode: NodeDef<null> = {
   kind: 'nearest-item',
-  label: 'Tìm vật gần nhất',
+  label: 'Tìm đồ gần nhất',
   category: 'logic',
   description:
-    'Nhìn khắp sàn và chỉ ra món đồ nằm rời, không ai khiêng, gần "Ai" nhất. Món đó ra ở "Vật gần nhất" để nối vào "Đích (vật)" của mảnh Đi tới; "Có" bật khi tìm thấy, "Khoảng cách" là đường tới món đó. Muốn bỏ qua đồ đã cất vào ô đánh dấu thì nối các ô đó vào "Bỏ qua đồ trên ô". "Chỉ tìm loại hàng" lọc theo loại hàng. Bật "Tạm nghỉ" thì nó không tìm gì (Có tắt).',
-  inputs: [{ id: 'who', type: 'object', label: 'Ai', required: true }, { id: 'pause', type: 'bool', label: 'Tạm nghỉ' }, ...IGNORE_PORTS],
+    'Nhìn khắp sàn và chỉ ra món đồ nằm rời, không ai khiêng, gần "Đối tượng" nhất. Món đó ra ở "Đồ gần nhất" để nối vào "Điểm đến" của mảnh Di chuyển; "Đã tìm thấy" bật khi tìm thấy, "Khoảng cách" là đường tới món đó. Muốn bỏ qua đồ đã cất vào ô đánh dấu thì nối các ô đó vào "Bỏ qua đồ trên ô". "Chỉ tìm loại hàng" lọc theo loại hàng. Bật "Tạm nghỉ" thì nó không tìm gì (Có tắt).',
+  inputs: [{ id: 'who', type: 'object', label: 'Đối tượng', required: true }, { id: 'pause', type: 'bool', label: 'Tạm nghỉ' }, ...IGNORE_PORTS],
   outputs: [
-    { id: 'item', type: 'object', label: 'Vật gần nhất' },
-    { id: 'found', type: 'bool', label: 'Có' },
+    { id: 'item', type: 'object', label: 'Đồ gần nhất' },
+    { id: 'found', type: 'bool', label: 'Đã tìm thấy' },
     { id: 'distance', type: 'number', label: 'Khoảng cách' },
   ],
   params: [{ id: 'goods', label: 'Chỉ tìm loại hàng (để trống = mọi món)', kind: 'text', default: '' }],

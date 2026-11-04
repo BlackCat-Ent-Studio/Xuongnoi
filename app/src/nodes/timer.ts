@@ -13,10 +13,10 @@ export const timerNode: NodeDef<TimerState> = {
   kind: 'timer',
   label: 'Hẹn giờ',
   category: 'math',
-  description: 'Đếm ngược số giây đã đặt. Hết giờ thì "Hết giờ" bật. Bật "Đếm lại" để bắt đầu lại từ đầu.',
+  description: 'Đếm ngược số giây đã đặt. Hết giờ thì "Hết giờ" bật. Bật "Đặt lại" để bắt đầu lại từ đầu.',
   inputs: [
-    { id: 'run', type: 'bool', label: 'Chạy' },
-    { id: 'reset', type: 'bool', label: 'Đếm lại' },
+    { id: 'run', type: 'bool', label: 'Bắt đầu' },
+    { id: 'reset', type: 'bool', label: 'Đặt lại' },
   ],
   outputs: [
     { id: 'left', type: 'number', label: 'Giây còn lại' },

@@ -173,7 +173,7 @@ export function deriveGroupPorts(graph: Graph, group: NodeGroup): GroupPort[] {
     else if (b && !a) touch(w, w.to, 'in');
   }
   const ports = [...byKey.values()];
-  // Same label twice (e.g. six "Đồ vật · Ẩn đi"): number them so the stubs and block rows can be told apart.
+  // Same label twice (e.g. six "Đồ vật · Ẩn"): number them so the stubs and block rows can be told apart.
   const total = new Map<string, number>();
   for (const p of ports) total.set(p.label, (total.get(p.label) ?? 0) + 1);
   const seen = new Map<string, number>();

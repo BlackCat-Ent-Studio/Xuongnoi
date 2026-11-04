@@ -12,15 +12,15 @@ export const teleportNode: NodeDef<TeleportState> = {
   label: 'Dịch chuyển',
   category: 'action',
   description:
-    'Đưa nhân vật, đồ vật hoặc xe tới chỗ khác ngay lập tức mỗi khi "Đi" có nhịp. Nối "Nơi đến (vật)" để đến chỗ một vật, hoặc nhập toạ độ. Nếu chỗ đó bị hộp chặn, sẽ tìm chỗ trống gần nhất. Đồ đang cầm đi theo người cầm; người ngồi trên xe thì cả xe được dịch chuyển.',
+    'Đưa nhân vật, đồ vật hoặc xe tới chỗ khác ngay lập tức mỗi khi "Dịch chuyển" có nhịp. Nối "Điểm đến" để đến chỗ một vật, hoặc nhập toạ độ. Nếu chỗ đó bị hộp chặn, sẽ tìm chỗ trống gần nhất. Đồ đang cầm đi theo người cầm; người ngồi trên xe thì cả xe được dịch chuyển.',
   inputs: [
-    { id: 'who', type: 'object', label: 'Ai (vật)', required: true },
-    { id: 'go', type: 'bool', label: 'Đi' },
-    { id: 'dest', type: 'object', label: 'Nơi đến (vật)' },
+    { id: 'who', type: 'object', label: 'Đối tượng', required: true },
+    { id: 'go', type: 'bool', label: 'Dịch chuyển' },
+    { id: 'dest', type: 'object', label: 'Điểm đến' },
   ],
-  outputs: [{ id: 'done', type: 'bool', label: 'Vừa dịch chuyển' }],
+  outputs: [{ id: 'done', type: 'bool', label: 'Khi dịch chuyển' }],
   params: [
-    { id: 'position', label: 'Nơi đến (khi không nối vật)', kind: 'vec3', default: DEFAULT_DEST },
+    { id: 'position', label: 'Vị trí đến (khi không nối Điểm đến)', kind: 'vec3', default: DEFAULT_DEST },
     {
       id: 'keepVelocity',
       label: 'Giữ đà đang chạy / rơi',

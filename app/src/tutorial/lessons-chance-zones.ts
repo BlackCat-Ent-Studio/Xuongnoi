@@ -36,7 +36,7 @@ const T = {
   },
   andIn: {
     title: 'Bấm E và đứng trong vùng',
-    text: 'Nối "Vừa nhấn" của Phím bấm (phím E) sang cổng "A" của mảnh ghép Và. Rồi nối "Có ai trong vùng" của Vùng kích hoạt sang cổng "B".',
+    text: 'Nối "Khi nhấn phím" của Phím bấm (phím E) sang cổng "A" của mảnh ghép Và. Rồi nối "Đang có đối tượng" của Vùng kích hoạt sang cổng "B".',
   },
   roll: {
     title: 'Cho phép tung',
@@ -46,7 +46,7 @@ const T = {
   show: { title: 'Thêm Hiện số', text: 'Kéo mảnh ghép "Hiện số" (nhóm Kết quả) vào bảng.' },
   showWire: {
     title: 'Xem số vừa tung',
-    text: 'Nối cổng "Số" của Số ngẫu nhiên sang cổng "Số cần hiện" của Hiện số.',
+    text: 'Nối cổng "Giá trị" của Số ngẫu nhiên sang cổng "Giá trị" của Hiện số.',
     explain: 'Số trên màn hình bằng 0 cho tới khi bạn tung lần đầu.',
   },
   compare: {
@@ -60,7 +60,7 @@ const T = {
   },
   compareWire: {
     title: 'Số tung có từ 5 trở lên không?',
-    text: 'Nối "Số" của Số ngẫu nhiên sang "Số A" của So sánh. Rồi nối "Số" của Số cố định sang "Số B".',
+    text: 'Nối "Giá trị" của Số ngẫu nhiên sang "Số A" của So sánh. Rồi nối "Giá trị" của Số cố định sang "Số B".',
     explain: 'So sánh bật lên khi Số A lớn hơn hoặc bằng Số B, tức là khi tung được 5 hoặc 6.',
   },
   latch: {
@@ -70,11 +70,11 @@ const T = {
   },
   latchWire: {
     title: 'Tung được số to thì bật nhớ',
-    text: 'Nối "Đúng" của So sánh sang cổng "Bật" của Công tắc nhớ.',
+    text: 'Nối "Kết quả" của So sánh sang cổng "Bật" của Công tắc nhớ.',
   },
   gate: {
     title: 'Mở cổng',
-    text: 'Nối "Đang bật" của Công tắc nhớ sang cổng "Ẩn đi (1 nhịp)" của hộp cổng xám (hộp cao, màu xám).',
+    text: 'Nối "Đang bật" của Công tắc nhớ sang cổng "Ẩn" của hộp cổng xám (hộp cao, màu xám).',
     explain: 'Hộp bị ẩn thì biến mất và không còn chặn đường nữa.',
   },
   playRoll: {
@@ -89,12 +89,12 @@ const T = {
   },
   distanceWire: {
     title: 'Đo từ nhân vật tới cờ',
-    text: 'Nối cổng "Nhân vật" của nhân vật sang "Vật 1", và cổng "Vật thể" của lá cờ đỏ sang "Vật 2" của Đo khoảng cách.',
+    text: 'Nối cổng "Đối tượng" của nhân vật sang "Đối tượng A", và cổng "Đối tượng" của lá cờ đỏ sang "Đối tượng B" của Đo khoảng cách.',
   },
   show2: { title: 'Thêm Hiện số thứ hai', text: 'Kéo thêm một mảnh ghép "Hiện số" nữa vào bảng.' },
   show2Wire: {
     title: 'Xem khoảng cách',
-    text: 'Nối cổng "Khoảng cách" của mảnh ghép Đo khoảng cách sang "Số cần hiện" của Hiện số mới.',
+    text: 'Nối cổng "Khoảng cách" của mảnh ghép Đo khoảng cách sang "Giá trị" của Hiện số mới.',
     explain: 'Con số nhỏ dần khi bạn tiến lại gần cờ. Hai ô số đều tên "Điểm": muốn đổi, chọn mảnh ghép Hiện số rồi sửa "Tên hiển thị".',
   },
   end: { title: 'Thêm mảnh ghép Thắng / Thua', text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.' },
