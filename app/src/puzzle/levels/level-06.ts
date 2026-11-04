@@ -96,11 +96,11 @@ export function stealthBase(l: StealthLayout): { nodes: GraphNode[]; wires: Wire
     scenery('end', 'win-lose', { winMessage: 'Mèo nhỏ tới đích mà không bị thấy!', loseMessage: 'Lính gác thấy mèo nhỏ rồi!' }),
     // Left column: the cat, then the guard with its walk. The eyes (loss plumbing) are scenery.
     { id: 'hero', kind: 'character', params: { name: 'Mèo nhỏ', position: p3(l.start, 1), speed: CAT_SPEED, color: '#f9a8d4', look: PUZZLE_LOOKS.catChibi, role: 'bot' }, pos: { x: 10, y: 10 } },
-    { id: 'guard', kind: 'character', params: { name: 'Lính gác', position: { x: GUARD_LANE.x, y: 1, z: l.guardZ }, speed: GUARD_LANE.speed, color: '#64748b', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 150 } },
-    { id: 'patrol', kind: 'patrol', params: { pointA: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z1 - TURN_SLACK }, pointB: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z2 + TURN_SLACK }, wait: GUARD_LANE.wait, pathfind: 'off' }, pos: { x: 10, y: 230 } },
+    { id: 'guard', kind: 'character', params: { name: 'Lính gác', position: { x: GUARD_LANE.x, y: 1, z: l.guardZ }, speed: GUARD_LANE.speed, color: '#64748b', look: PUZZLE_LOOKS.robotLegs, role: 'bot' }, pos: { x: 10, y: 132 } },
+    { id: 'patrol', kind: 'patrol', params: { pointA: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z1 - TURN_SLACK }, pointB: { x: GUARD_LANE.x, y: 0.5, z: GUARD_LANE.z2 + TURN_SLACK }, wait: GUARD_LANE.wait, pathfind: 'off' }, pos: { x: 10, y: 256 } },
     scenery('eyes', 'vision-sensor', { range: GUARD_EYES.range, angle: GUARD_EYES.angle, walls: 'yes' }),
     // The guard walks only because this locked card switches its walk on; the cat's own walk takes the same signal from it.
-    { id: 'start', kind: 'on-start', params: {}, pos: { x: 10, y: 430 } },
+    { id: 'start', kind: 'on-start', params: {}, pos: { x: 10, y: 462 } },
   ];
   const wires: Wire[] = [
     wire('b1', ['guard', 'self'], ['patrol', 'self']),
@@ -136,11 +136,12 @@ export const level06: PuzzleLevel = {
   mode: '3d',
   cast: [PUZZLE_LOOKS.catChibi, PUZZLE_LOOKS.robotLegs],
   base: { nodes: base.nodes, wires: base.wires },
+  stepMoveBreaks: true,
   shownPorts: {
     ...Object.fromEntries(['floor', 'goal', 'crate-1', 'crate-2', 'crate-3', 'arrive', 'eyes', 'cam', 'end'].map((id) => [id, { in: [], out: [] }])),
     hero: { in: ['moveX', 'moveY'], out: ['self'] },
-    guard: { in: [], out: ['self'] },
-    patrol: { in: ['on'], out: ['atEnd', 'route'] },
+    guard: { in: ['moveX', 'moveY'], out: ['self'] },
+    patrol: { in: ['self', 'on'], out: ['moveX', 'moveY', 'atEnd', 'route'] },
     start: { in: [], out: ['started'] },
   },
   tray: [

@@ -77,14 +77,14 @@ describe('editor step run', () => {
     expect(t.run.state()).toEqual({ stepping: true, waiting: false });
   });
 
-  it('lights the fired pin, its wire and target, then drops the light on continue', () => {
+  it('lights the fired pin, its wire and target and the character it acts on, then drops the light on continue', () => {
     const t = setup();
     t.run.press();
     t.fire(['key|pressed']);
     const light = t.lights.at(-1)!;
     expect(light.pins).toEqual(new Set(['key|pressed']));
-    expect(light.wires).toEqual(new Set(['w1']));
-    expect(light.cards).toEqual(new Set(['key', 'mv']));
+    expect(light.wires).toEqual(new Set(['w1', 'w2'])); // w2: the character the lit card acts on
+    expect(light.cards).toEqual(new Set(['key', 'mv', 'ch']));
     expect(t.run.state()).toEqual({ stepping: true, waiting: true });
     t.run.press();
     expect(t.lights.at(-1)).toBeNull();

@@ -7,6 +7,8 @@ import type { Board, Graph, InputSnapshot, Runtime, Vec3, ViewMode, GameResult }
 /** See GameView.setStepBreak. */
 export interface StepBreak {
   accepts(key: string): boolean;
+  /** Optional number outputs (`${node}|moveX`...) that also break when they go from 0 to moving; each must pass `accepts` too. */
+  moveKeys?: readonly string[];
   onBreak(keys: ReadonlySet<string>): void;
 }
 

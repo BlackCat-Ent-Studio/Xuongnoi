@@ -675,7 +675,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     const litCards = new Set<string>();
     const firedPins = new Set<string>();
     if (stepping && stepFired) {
-      const light = stepLight(stepFired, wireViews, isPickable);
+      const light = stepLight(stepFired, wireViews, isPickable, level.stepMoveBreaks === true);
       for (const c of light.cards) litCards.add(c);
       for (const w of light.wires) litWires.add(w);
       for (const k of light.pins) firedPins.add(portKey(k.slice(0, k.indexOf('|')), 'out', k.slice(k.indexOf('|') + 1)));

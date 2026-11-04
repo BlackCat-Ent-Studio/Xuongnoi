@@ -38,6 +38,29 @@ describe('stepLight', () => {
     const l = stepLight(new Set(['cat|hidden']), [], isObject);
     expect([...l.objects]).toEqual(['cat']);
   });
+
+  it('a lit non-character card also lights the characters wired into or out of it', () => {
+    const l = stepLight(new Set(['hit|enter']), wires, isObject);
+    // latch is lit as the target; no character touches it, but hit (fired) has cat and star wired in.
+    expect([...l.objects].sort()).toEqual(['cat', 'star']);
+    const driven: StepWire[] = [
+      { id: 'a', from: 'cmp', fromPort: 'ok', to: 'route' },
+      { id: 'b', from: 'cat', fromPort: 'self', to: 'route' },
+      { id: 'c', from: 'route', fromPort: 'sideways', to: 'cat' },
+    ];
+    const t = stepLight(new Set(['cmp|ok']), driven, isObject);
+    expect([...t.cards].sort()).toEqual(['cat', 'cmp', 'route']);
+    expect([...t.objects]).toEqual(['cat']);
+    expect([...t.wires].sort()).toEqual(['a', 'b', 'c']);
+  });
+
+  it('why also lights the cards feeding the fired card, only when asked', () => {
+    const chain: StepWire[] = [{ id: 'x', from: 'fore', fromPort: 'left', to: 'cmp' }];
+    expect(stepLight(new Set(['cmp|ok']), chain, isObject).cards.has('fore')).toBe(false);
+    const l = stepLight(new Set(['cmp|ok']), chain, isObject, true);
+    expect([...l.cards].sort()).toEqual(['cmp', 'fore']);
+    expect(l.wires.has('x')).toBe(true);
+  });
 });
 
 describe('frameLit', () => {

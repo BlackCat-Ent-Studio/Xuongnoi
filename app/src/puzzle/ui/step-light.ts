@@ -20,9 +20,16 @@ export interface StepLight {
  * What lights up at a paused step. `fired` = output pins (`node|port`) that just rose.
  * - the fired cards and the wires leaving the fired pins, with the cards those reach (the "what");
  * - any other wire from a fired card straight to a character / object card (an action such as "Đi ngang" to the bot);
- * - object cards wired into a fired card, with those wires (the "who").
+ * - object cards wired into a fired card, with those wires (the "who");
+ * - then every lit card that is not an object also lights the objects wired straight into or out of it (light is only added);
+ * - `why`: the cards one step before a fired card (the sources of the wires into it) light too, before that last step.
  */
-export function stepLight(fired: ReadonlySet<string>, wires: readonly StepWire[], isObject: (nodeId: string) => boolean): StepLight {
+export function stepLight(
+  fired: ReadonlySet<string>,
+  wires: readonly StepWire[],
+  isObject: (nodeId: string) => boolean,
+  why = false,
+): StepLight {
   const firedCards = new Set([...fired].map((k) => k.slice(0, k.indexOf('|'))));
   const out: StepLight = { cards: new Set(firedCards), wires: new Set(), pins: fired, objects: new Set() };
   const add = (wireId: string, card: string): void => {
@@ -36,6 +43,12 @@ export function stepLight(fired: ReadonlySet<string>, wires: readonly StepWire[]
     if (firedCards.has(w.to) && isObject(w.from)) add(w.id, w.from);
   }
   for (const c of firedCards) if (isObject(c)) out.objects.add(c);
+  if (why) for (const w of wires) if (firedCards.has(w.to) && !isObject(w.from)) add(w.id, w.from);
+  const lit = [...out.cards];
+  for (const w of wires) {
+    if (isObject(w.to) && !isObject(w.from) && lit.includes(w.from)) add(w.id, w.to);
+    if (isObject(w.from) && !isObject(w.to) && lit.includes(w.to)) add(w.id, w.from);
+  }
   return out;
 }
 

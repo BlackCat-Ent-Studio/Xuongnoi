@@ -6,6 +6,7 @@ import { starsFor, timeIsUp } from '../run-level';
 import { STAGE_CHARACTER_SCALE } from '../stage/cozy-stage';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
+import { moveKeysOf } from '../../render/step-break';
 import { graphOf, toAnswer } from './board-state';
 import { createGuide, type Guide } from './guide';
 import { isFloorLike } from './object-cards';
@@ -484,6 +485,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
           const cut = key.indexOf('|');
           return live.hasWiredOutput(key.slice(0, cut), key.slice(cut + 1));
         },
+        ...(level.stepMoveBreaks ? { moveKeys: moveKeysOf(graphOf(level, board.state()).nodes.map((n) => n.id)) } : {}),
         onBreak: onStep,
       });
     }

@@ -53,6 +53,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   const pauseCallbacks: Array<(paused: boolean) => void> = [];
   /** Step run: pauses the loop after a tick in which an accepted output rose. */
   let stepBreak: StepBreak | null = null;
+  let stepMoving = new Set<string>();
   const endCallbacks: Array<(result: GameResult, message: string) => void> = [];
   const restartCallbacks: Array<() => void> = [];
 
@@ -252,7 +253,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       for (let i = 0; i < steps && !world.ended; i++) {
         runtime.tick({ ...readInputFn(), ui: i === 0 ? uiBuf.take() : uiBuf.peekHeld() });
         world.step(TICK_DT);
-        const fired = stepBreak && !world.ended ? stepBreakKeys(stepBreak, runtime) : null;
+        const fired = stepBreak && !world.ended ? stepBreakKeys(stepBreak, runtime, stepMoving) : null;
         // Only the last two steps of a frame matter for the blend (the tick that pauses is always the last one).
         if (i >= steps - 2 || fired) blender.capture(world.entities());
         if (fired && stepBreak) {
@@ -512,6 +513,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
 
     setStepBreak(rule): void {
       stepBreak = rule;
+      stepMoving = new Set();
     },
 
     isPaused: () => playing && pacer.isPaused(),

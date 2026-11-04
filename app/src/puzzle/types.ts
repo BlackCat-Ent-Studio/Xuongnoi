@@ -27,6 +27,8 @@ export interface PuzzleLevel {
    * Only ports listed here can be wired by the player on that node.
    */
   shownPorts?: Record<string, { in?: string[]; out?: string[] }>;
+  /** Step run: also pause when a drawn move pin goes from 0 to moving, and light the cards one step before the fired card. */
+  stepMoveBreaks?: boolean;
   /** Marked slots on the store pad: the delivering robot sets one crate in each, filling them in order. Level-side, never wired by the player. */
   storeSlots?: StoreSlotsDef;
   /** Pieces the player may place. Each placed copy becomes a node of `kind` with these params. */

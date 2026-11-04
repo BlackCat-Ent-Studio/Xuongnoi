@@ -29,7 +29,7 @@ export interface StepRunSession {
 export function createStepSession(
   level: PuzzleLevel,
   answer: PuzzleAnswer,
-  rule: Pick<StepBreak, 'accepts'>,
+  rule: Pick<StepBreak, 'accepts' | 'moveKeys'>,
   timeLimit = level.timeLimit,
 ): StepRunSession {
   registerAllNodes();
@@ -37,6 +37,7 @@ export function createStepSession(
   const rt = createRuntime(buildPlayGraph(level, answer), world, level.mode);
   const maxTicks = Math.ceil(timeLimit / TICK_DT);
   let ticks = 0;
+  const moving = new Set<string>();
   const finish = (): StepRunEvent => {
     const ended = world.ended;
     const seconds = ticks * TICK_DT;
@@ -50,7 +51,7 @@ export function createStepSession(
         rt.tick(NO_KEYS);
         world.step(TICK_DT);
         ticks++;
-        const fired = world.ended ? null : stepBreakKeys(rule, rt);
+        const fired = world.ended ? null : stepBreakKeys(rule, rt, moving);
         if (fired) return { kind: 'pause', tick: ticks - 1, fired };
       }
       return finish();

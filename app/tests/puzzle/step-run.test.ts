@@ -2,12 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { createAccumulator, createSimPacer } from '../../src/render/game-loop';
 import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
 import { runLevel, timeIsUp } from '../../src/puzzle/run-level';
+import { stepLight } from '../../src/puzzle/ui/step-light';
+import { moveKeysOf } from '../../src/render/step-break';
 import { createStepSession, type StepRunEvent } from '../../src/puzzle/step-run';
 import { isPortShown, isSceneryNode } from '../../src/puzzle/ui/board-state';
 import type { PuzzleAnswer, PuzzleLevel } from '../../src/puzzle/types';
 import { TICK_DT } from '../../src/engine/types';
 
-type Rule = { accepts(key: string): boolean };
+type Rule = { accepts(key: string): boolean; moveKeys?: readonly string[] };
 
 /** An output pin the board shows: placed pieces with every port, locked cards that are not scenery with their shown output ports. */
 function shownRule(level: PuzzleLevel, answer: PuzzleAnswer): Rule {
@@ -32,6 +34,7 @@ function wiredRule(level: PuzzleLevel, answer: PuzzleAnswer): Rule {
       const [node = '', port = ''] = key.split('|');
       return shown.accepts(key) && wires.some((w) => w.from.node === node && w.from.port === port && inShown(w.to.node, w.to.port));
     },
+    ...(level.stepMoveBreaks ? { moveKeys: moveKeysOf([...level.base.nodes, ...answer.nodes].map((n) => n.id)) } : {}),
   };
 }
 const everything: Rule = { accepts: () => true };
@@ -190,5 +193,48 @@ describe('the time limit counts game time only', () => {
     expect(stepped.pauses.length).toBeGreaterThan(0);
     expect(stepped.end).toEqual(normal);
     expect(stepped.end.seconds).toBeCloseTo(0.5, 5);
+  });
+});
+
+// Measured on main before the move rule: 38 pauses.
+const L7_PAUSE_TICKS = [0, 1, 9, 49, 50, 58, 111, 116, 117, 125, 126, 243, 342, 383, 384, 392, 445, 450, 451, 459, 460, 528, 626, 702, 774, 815, 816, 824, 877, 882, 883, 891, 892, 958, 1030, 1069, 1070, 1105];
+
+describe('level 6 and 7 step pauses', () => {
+  const l6 = PUZZLE_LEVELS[5]!;
+  const l7 = PUZZLE_LEVELS[6]!;
+
+  it('level 6 draws the guard-patrol wires', () => {
+    for (const [node, port, dir] of [['guard', 'moveX', 'in'], ['guard', 'moveY', 'in'], ['patrol', 'self', 'in'], ['patrol', 'moveX', 'out'], ['patrol', 'moveY', 'out']] as const) {
+      expect(isPortShown(l6, node, port, dir)).toBe(true);
+    }
+  });
+
+  it('level 6 pauses when the patrol or the cat starts moving, and never at the patrol end', () => {
+    const { pauses } = stepThrough(l6, l6.solution);
+    expect(pauses.length).toBeGreaterThanOrEqual(8);
+    expect(pauses.length).toBeLessThanOrEqual(14);
+    const firedPins = pauses.flatMap((p) => [...p.fired]);
+    expect(firedPins.some((k) => k.startsWith('patrol|move'))).toBe(true);
+    expect(firedPins.some((k) => k.startsWith('s-route|move'))).toBe(true);
+    expect(firedPins.some((k) => k === 'patrol|atEnd')).toBe(false);
+    expect([...pauses[0]!.fired].some((k) => k.startsWith('patrol|move'))).toBe(true);
+  });
+
+  it('level 6: every pause lights a character, the first one both the guard and the cat', () => {
+    const placed = new Set(l6.solution.nodes.map((n) => n.id));
+    const drawn = (id: string, port: string, dir: 'in' | 'out'): boolean => placed.has(id) || (!isSceneryNode(l6, id) && isPortShown(l6, id, port, dir));
+    const wires = [...l6.base.wires, ...l6.solution.wires]
+      .filter((w) => drawn(w.from.node, w.from.port, 'out') && drawn(w.to.node, w.to.port, 'in'))
+      .map((w) => ({ id: w.id, from: w.from.node, fromPort: w.from.port, to: w.to.node }));
+    const isObject = (id: string): boolean => l6.base.nodes.some((n) => n.id === id && n.kind === 'character');
+    const { pauses } = stepThrough(l6, l6.solution);
+    expect(pauses.length).toBeGreaterThanOrEqual(8);
+    for (const p of pauses) expect(stepLight(p.fired, wires, isObject, true).objects.size).toBeGreaterThan(0);
+    expect([...stepLight(pauses[0]!.fired, wires, isObject, true).objects].sort()).toEqual(['guard', 'hero']);
+  });
+
+  it('level 7 pauses exactly where they were before the move rule existed', () => {
+    const { pauses } = stepThrough(l7, l7.solution);
+    expect(pauses.map((p) => p.tick)).toEqual(L7_PAUSE_TICKS);
   });
 });
