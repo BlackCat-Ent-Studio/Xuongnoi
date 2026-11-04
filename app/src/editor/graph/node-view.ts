@@ -1,4 +1,4 @@
-import { getNodeDef } from '../../engine/registry';
+import { activeInputs, getNodeDef } from '../../engine/registry';
 import { NODE_CATEGORY_LABELS } from '../../nodes';
 import type { GraphNode, NodeCategory, NodeDef, PortDef } from '../../engine/types';
 import { createCardHelpButton } from '../../handbook/card-help-popup';
@@ -81,18 +81,19 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   const sub = cardSubtitle(node, def);
   if (sub) title.append(h('small', 'wc-sub', sub));
   head.append(tile, title);
-  const missing = def ? def.inputs.filter((p) => missingPorts.has(p.id)).length : 0;
+  const inputs = def ? activeInputs(def, node.params) : [];
+  const missing = def ? inputs.filter((p) => missingPorts.has(p.id)).length : 0;
   if (missing > 0) head.append(h('span', 'wc-miss-badge', missingBadge(missing)));
   // Sits on the header's corner without taking room, so the card keeps its footprint.
   if (def) head.append(createCardHelpButton(node.kind, def.label));
   box.append(head);
 
   const dots = new Map<string, HTMLElement>();
-  if (def && def.inputs.length + def.outputs.length > 0) {
+  if (def && inputs.length + def.outputs.length > 0) {
     // Inputs left, outputs right; both columns always exist so outputs never slide left.
     const body = h('div', 'wc-ports-body');
     const sections: [PortDir, PortDef[]][] = [
-      ['in', def.inputs],
+      ['in', inputs],
       ['out', def.outputs],
     ];
     for (const [dir, ports] of sections) {

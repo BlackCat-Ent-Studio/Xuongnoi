@@ -1,4 +1,4 @@
-import type { EntityView, NodeDef, ParamDef, PortValues, Vec3, WorldApi } from '../engine/types';
+import type { EntityView, NodeDef, ParamDef, Params, PortDef, PortValues, Vec3, WorldApi } from '../engine/types';
 import {
   hasArrived,
   moveForDirection,
@@ -11,11 +11,17 @@ import { buildRail, nearestS, railAt, upcomingPoint, type Rail } from './route-r
 import { GRAB_REACH } from './carry';
 import { legsEvaluate } from './route-legs';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
+import { visiblePosition } from './steering';
 
 export const ROUTE_MAX_POINTS = 32;
 /** Points 1..8 as they always were; points 9..32 are folded under "Nâng cao". */
 const CLASSIC_POINTS = 8;
 const ROUTE_MIN_POINTS = 2;
+/**
+ * "Lấy điểm từ vật" gives the first 8 points an object input each. Capped at the classic points: a card with 32 extra
+ * object rows would be taller than the screen, and a route that follows 8 objects already covers every board so far.
+ */
+const OBJECT_POINTS = CLASSIC_POINTS;
 /** A vehicle counts as "at" a route point inside this planar distance (it never stops there, it just turns for the next one). */
 const VEHICLE_ARRIVE = 1.2;
 /** Walkers stop this close to a point before heading to the next. */
@@ -46,6 +52,8 @@ interface RouteState {
   /** "Chạy từng chặng" only: standing at a point or dashing to the next. */
   phase: 'wait' | 'ready' | 'dash' | null;
   readyLeft: number;
+  /** "Lấy điểm từ vật" only: last place each wired object was seen, kept for when it is hidden or gone. */
+  seen: (Vec3 | null)[];
 }
 
 /** Rail mode lets go of its place on the track when the body is this far off it (blocked by a wall, say). */
@@ -72,6 +80,32 @@ function readPoints(params: Parameters<typeof numParam>[0]): Vec3[] {
   const out: Vec3[] = [];
   for (let k = 0; k < n; k++) out.push(vec3Param(params, `p${k + 1}`, DEFAULT_POINTS[k]!));
   return out;
+}
+
+const objectPortId = (k: number): string => `obj${k + 1}`;
+
+const OBJECT_PORTS: PortDef[] = Array.from({ length: OBJECT_POINTS }, (_, k) => ({
+  id: objectPortId(k),
+  type: 'object',
+  label: `Điểm ${k + 1} (vật)`,
+  labelEn: `Point ${k + 1} (object)`,
+}));
+
+function pointsFromObjects(params: Params): boolean {
+  return strParam(params, 'pointsFrom', 'preset') === 'objects';
+}
+
+/**
+ * With "Lấy điểm từ vật" on, point k is where its wired object is right now (read every tick, so a moved crate moves the
+ * point). A hidden or removed object keeps its last seen place; one never seen, or not wired, uses the preset point.
+ */
+function livePoints(world: WorldApi, inputs: PortValues, s: RouteState, presets: readonly Vec3[]): Vec3[] {
+  return presets.map((preset, k) => {
+    if (k >= OBJECT_POINTS) return preset;
+    const at = visiblePosition(world, asObject(inputs[objectPortId(k)]));
+    if (at) s.seen[k] = { x: at.x, y: at.y, z: at.z };
+    return s.seen[k] ?? preset;
+  });
 }
 
 function nearestIndex(world: WorldApi, from: Vec3, points: readonly Vec3[]): number {
@@ -230,6 +264,11 @@ const routeFollowCore: NodeDef<RouteState> = {
     { id: 'stop', type: 'bool', label: 'Dừng' },
     { id: 'go', type: 'bool', label: 'Chạy' },
   ],
+  // Only while "Lấy điểm từ vật" is on: one object input per point (up to 8). The default card does not change.
+  optionalInputs: {
+    all: OBJECT_PORTS,
+    active: (params) => (pointsFromObjects(params) ? OBJECT_PORTS.slice(0, Math.round(clamp(numParam(params, 'count', 4), ROUTE_MIN_POINTS, OBJECT_POINTS))) : []),
+  },
   outputs: [
     { id: 'moveX', type: 'number', label: 'Đi ngang' },
     { id: 'moveY', type: 'number', label: 'Đi dọc' },
@@ -263,6 +302,17 @@ const routeFollowCore: NodeDef<RouteState> = {
       ],
     },
     { id: 'speed', label: 'Tốc độ', kind: 'number', default: 5, min: 0.5, max: 30, step: 0.5 },
+    {
+      id: 'pointsFrom',
+      label: 'Lấy điểm từ vật',
+      kind: 'select',
+      default: 'preset',
+      options: [
+        { value: 'preset', label: 'Không (dùng toạ độ Điểm 1, 2, 3... đã đặt)' },
+        { value: 'objects', label: 'Có (hiện ô "Điểm 1 (vật)"... nối vật vào, bot đi tới chỗ vật đang đứng; ô nào chưa nối thì dùng toạ độ đã đặt; tối đa 8 điểm đầu)' },
+      ],
+      advanced: true,
+    },
     {
       id: 'lookAhead',
       label: 'Dừng khi có vật phía trước (đơn vị)',
@@ -310,12 +360,13 @@ const routeFollowCore: NodeDef<RouteState> = {
       advanced: true,
     },
   ],
-  create: () => ({ idx: null, dir: 1, rail: null, pos: null, waitLeft: 0, turnPending: false, phase: null, readyLeft: 0 }),
+  create: () => ({ idx: null, dir: 1, rail: null, pos: null, waitLeft: 0, turnPending: false, phase: null, readyLeft: 0, seen: [] }),
   evaluate(ctx, i, params, s): PortValues {
     const world = ctx.world;
     const self = liveCharacter(world, asObject(i.self));
     if (!self) return { ...IDLE };
-    const points = readPoints(params);
+    const presets = readPoints(params);
+    const points = pointsFromObjects(params) ? livePoints(world, i, s, presets) : presets;
     if (s.idx === null || s.idx >= points.length) s.idx = nearestIndex(world, self.position, points);
     const shown = (): number => (s.idx ?? 0) + 1;
     if (!asBool(i.on)) {
