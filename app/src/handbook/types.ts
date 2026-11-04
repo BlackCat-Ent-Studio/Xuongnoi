@@ -23,4 +23,6 @@ export interface HandbookEntry {
   lessonId: string;
   /** "Thử ngay": a small ready-wired board showing the node working; called each time it opens. */
   tryBoard: () => Board;
+  /** More "Thử" boards for the advanced options (one extra button each); the main `tryBoard` stays as it is. */
+  extraTries?: readonly { label: string; board: () => Board }[];
 }

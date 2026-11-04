@@ -2,6 +2,7 @@ import { createChaseGameLesson } from './lesson-chase-game';
 import { createColliderGravityLesson } from './lesson-collider-gravity';
 import { createConveyorLesson } from './lesson-conveyor';
 import { createSecretDoorLesson } from './lesson-secret-door';
+import { createStepRunLesson } from './lesson-step-run';
 import type { LessonKit } from './lessons-vehicles';
 import type { Lesson } from './types';
 
@@ -15,5 +16,6 @@ export function createCoursePackA(kit: LessonKit): Lesson[] {
     createChaseGameLesson(kit),
     createColliderGravityLesson(kit),
     createConveyorLesson(kit),
+    createStepRunLesson(kit),
   ];
 }

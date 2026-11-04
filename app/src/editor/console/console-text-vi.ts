@@ -21,7 +21,8 @@ export const CONSOLE_TEXT = {
   resume: 'Tiếp tục',
   resumeTip: 'Chạy tiếp từ chỗ đang dừng',
   pauseTip: 'Tạm dừng để xem giá trị trên dây',
-  stepTip: 'Chạy đúng 1 khung hình (chỉ khi đang tạm dừng)',
+  stepTip: 'Chạy từng bước: tự dừng mỗi khi một mảnh có dây nối ra vừa chạy',
+  stepNextTip: 'Chạy tiếp tới bước kế',
   statePaused: 'Tạm dừng',
 
   // log lines
@@ -30,7 +31,8 @@ export const CONSOLE_TEXT = {
   logRestart: 'Chơi lại từ đầu',
   logPause: 'Tạm dừng',
   logResume: 'Chạy tiếp',
-  logStep: 'Chạy 1 khung hình',
+  logStep: 'Chạy từng bước',
+  logStepBreak: 'Dừng ở một bước',
   logWin: (msg: string) => (msg ? `Thắng: ${msg}` : 'Thắng!'),
   logLose: (msg: string) => (msg ? `Thua: ${msg}` : 'Thua rồi'),
   logLiveApplied: 'Đã đổi giá trị khi đang chơi',

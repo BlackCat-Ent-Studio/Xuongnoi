@@ -14,7 +14,7 @@ export interface Chapter {
  * chapter can name lessons before they are written. Registered lessons missing from this list go last.
  */
 export const COURSE: readonly Chapter[] = [
-  { id: 'basics', title: 'Làm quen', lessonIds: ['walk-jump', 'collect-stars', 'win-lose', 'secret-door'] },
+  { id: 'basics', title: 'Làm quen', lessonIds: ['walk-jump', 'collect-stars', 'win-lose', 'secret-door', 'step-run'] },
   { id: 'items', title: 'Đồ vật', lessonIds: ['carry-use', 'hand-tools', 'ui-chest'] },
   { id: 'bots', title: 'Bot', lessonIds: ['make-bot', 'chores', 'chores-place', 'bot-pickaxe', 'chase-game', 'bot-senses', 'tidy-bot', 'nearest-bot', 'two-goals-bot', 'sight-forecast'] },
   { id: 'fighting', title: 'Đánh nhau', lessonIds: ['combat', 'platforms-shooting'] },

@@ -11,6 +11,7 @@ import {
   interactBoard,
   patrolBoard,
   routeFollowBoard,
+  routeObjectsBoard,
   sequenceBoard,
   shooterBoard,
   spawnerBoard,
@@ -409,6 +410,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ],
     lessonId: 'route-traffic',
     tryBoard: routeFollowBoard,
+    extraTries: [{ label: 'Thử: tuyến theo vật', board: routeObjectsBoard }],
   },
   {
     kind: 'chase',

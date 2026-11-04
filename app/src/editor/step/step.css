@@ -1,0 +1,11 @@
+/* Step run on the wiring board: only what just ran stays bright. Applies only while a step is paused (.step-on). */
+.wc.step-on .wc-node:not(.step-lit) { opacity: .2; }
+.wc.step-on .wc-wires:not(.wc-step-wires) { opacity: .1; }
+.wc.step-on .wc-badges { opacity: .1; }
+.wc .wc-step-wires { z-index: 1; }
+.wc .wc-step-wires .step-wire { fill: none; stroke: var(--pc); stroke-width: 4; stroke-linecap: round; }
+.wc .wc-node .wc-dot.step-pin { transform: scale(1.6); box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--accent); animation: step-pin-pulse 1.1s ease-in-out infinite; }
+@keyframes step-pin-pulse { 50% { box-shadow: 0 0 0 4px #fff, 0 0 20px 8px var(--accent); } }
+@media (prefers-reduced-motion: reduce) { .wc .wc-node .wc-dot.step-pin { animation: none; } }
+/* the step button keeps its words even on narrow bars (its label is the 🐢 / ▶) */
+.pbtn.step-btn > span { display: inline !important; }

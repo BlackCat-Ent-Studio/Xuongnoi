@@ -3,7 +3,7 @@ import type { GameResult } from '../engine/types';
 import type { Snapshot } from './types';
 
 /** What step checks see: the editor's current state, read fresh each time. */
-export function takeSnapshot(state: EditorState, ended: GameResult | null): Snapshot {
+export function takeSnapshot(state: EditorState, ended: GameResult | null, step?: { stepping: boolean; waiting: boolean; breaks: number }): Snapshot {
   return {
     graph: state.getGraph(),
     mode: state.getMode(),
@@ -13,5 +13,6 @@ export function takeSnapshot(state: EditorState, ended: GameResult | null): Snap
     notes: state.getNotes(),
     canRedo: state.canRedo(),
     scope: state.getScope(),
+    ...(step ? { stepping: step.stepping, stepWaiting: step.waiting, stepBreaks: step.breaks } : {}),
   };
 }

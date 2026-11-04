@@ -52,6 +52,8 @@ import { createTutorial } from '../tutorial/controller';
 import { takeStash } from '../tutorial/storage';
 import { TUTORIAL_UI } from '../tutorial/text-vi';
 import { createWiringCanvas } from './wiring-canvas';
+import { createStepRun } from './step/step-run';
+import { enterFullscreenOnTouch } from '../puzzle/ui/fullscreen';
 
 export { DOCK_CONSOLE_ID, DOCK_LESSONS_ID, DOCK_SCENE_ID };
 
@@ -469,12 +471,16 @@ export function mountEditor(root: HTMLElement): void {
   const topBar = createTopBar({
     state,
     menus,
-    onPlay: () => state.setPlaying(true),
+    onPlay: () => {
+      enterFullscreenOnTouch();
+      state.setPlaying(true);
+    },
     onStop: () => state.setPlaying(false),
     onPause: () => (gameView.isPaused() ? gameView.resume() : gameView.pause()),
     onStep: () => {
-      gameView.stepFrame();
-      logThrottled('step', 400, 'info', CONSOLE_TEXT.logStep);
+      if (!state.isPlaying()) enterFullscreenOnTouch();
+      if (!stepRun.state().stepping) log('info', CONSOLE_TEXT.logStep);
+      stepRun.press();
     },
     onRestart: restartPlay,
     onNotify: (text, kind) => log(kind, text),
@@ -482,6 +488,19 @@ export function mountEditor(root: HTMLElement): void {
     onModeChange: changeMode,
     onPresetChange: (p) => layout.setPreset(p),
     initialPreset: layout.preset(),
+  });
+  const stepRun = createStepRun({
+    isPlaying: () => state.isPlaying(),
+    startPlay: () => state.setPlaying(true),
+    getGraph: () => state.getGraph(),
+    restingHighlight: () => state.getMulti(),
+    view: gameView,
+    board: canvas,
+    onChange: (s) => {
+      topBar.setStepState(s);
+      tutorial.noteStep(s);
+      if (s.waiting) log('info', CONSOLE_TEXT.logStepBreak);
+    },
   });
   layout.onPrefsChange(() => {
     topBar.setPreset(layout.preset());
@@ -615,6 +634,7 @@ export function mountEditor(root: HTMLElement): void {
   }
   function stopPlay(): void {
     gameView.stop();
+    stepRun.reset();
     keyboard.detach();
     showPreview();
   }
@@ -622,11 +642,13 @@ export function mountEditor(root: HTMLElement): void {
   function restartPlay(): void {
     if (!state.isPlaying()) return;
     gameView.stop();
+    stepRun.reset();
     startPlay();
     log('info', CONSOLE_TEXT.logRestart);
   }
 
   gameView.onGameEnd((result, message) => {
+    stepRun.reset();
     tutorial.noteGameEnd(result);
     if (result === 'win') log('ok', CONSOLE_TEXT.logWin(message));
     else log('warn', CONSOLE_TEXT.logLose(message));
@@ -634,6 +656,7 @@ export function mountEditor(root: HTMLElement): void {
   gameView.onPauseChange((paused) => {
     root.classList.toggle('paused', paused);
     topBar.setPaused(paused);
+    if (!paused) stepRun.noteResume();
     pip.setStatus(state.isPlaying(), paused);
     if (state.isPlaying()) log('info', paused ? CONSOLE_TEXT.logPause : CONSOLE_TEXT.logResume);
   });

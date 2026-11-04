@@ -265,6 +265,32 @@ export const routeFollowBoard = (): Board =>
     'green',
   );
 
+/** Advanced "Lấy điểm từ vật": the route points are the bot (you steer it), and two boxes; the car drives to wherever they stand. */
+export const routeObjectsBoard = (): Board =>
+  build(
+    'Thử: Tuyến theo vật',
+    '2d-top',
+    [
+      STICK,
+      hero(-6, -4),
+      { alias: 'markA', kind: 'block', x: 300, y: 400, params: { type: 'pickup', position: { x: 6, y: 0.5, z: -4 }, size: { x: 1, y: 0.4, z: 1 }, color: '#0ea5e9' } },
+      { alias: 'markB', kind: 'block', x: 300, y: 560, params: { type: 'pickup', position: { x: 0, y: 0.5, z: 5 }, size: { x: 1, y: 0.4, z: 1 }, color: '#f43f5e' } },
+      { alias: 'car', kind: 'vehicle', x: 560, y: 400, params: { position: { x: 0, y: 0.5, z: 0 } } },
+      { alias: 'route', kind: 'route-follow', x: 560, y: 20, params: { count: 3, style: 'loop', follow: 'steer', speed: 4, pointsFrom: 'objects' } },
+    ],
+    [
+      ...MOVE,
+      ['car', 'self', 'route', 'self'],
+      ['hero', 'self', 'route', 'obj1'],
+      ['markA', 'self', 'route', 'obj2'],
+      ['markB', 'self', 'route', 'obj3'],
+      ['route', 'moveX', 'car', 'moveX'],
+      ['route', 'moveY', 'car', 'moveY'],
+    ],
+    'Chơi: xe chạy vòng qua 3 điểm: bạn (nhân vật), ô xanh và ô đỏ. Dùng W A S D đi chỗ khác thì điểm 1 dời theo bạn và đường xe chạy đổi theo.',
+    'green',
+  );
+
 export const chaseBoard = (): Board =>
   build(
     'Thử: Đuổi theo',
