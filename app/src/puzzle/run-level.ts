@@ -30,6 +30,11 @@ export function starsFor(level: PuzzleLevel, answer: PuzzleAnswer, hintsUsed: nu
   return Math.max(1, base - over) as 1 | 2 | 3;
 }
 
+/** True once the game clock (ticks run, never wall time) has reached the level's time limit; a paused game does not run out. */
+export function timeIsUp(ticksRun: number, timeLimit: number): boolean {
+  return ticksRun * TICK_DT >= timeLimit;
+}
+
 /**
  * Plays the level headlessly with the same engine and world the game uses, no rendering.
  * Used by tests to prove each level is solvable and has no shortcut.
