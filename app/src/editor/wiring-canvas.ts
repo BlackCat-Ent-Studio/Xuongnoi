@@ -1,4 +1,4 @@
-import { getNodeDef } from '../engine/registry';
+import { getNodeDef, knownOutputsOf } from '../engine/registry';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
@@ -271,7 +271,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function wireType(wire: Wire): PortType | null {
     const from = state.getGraph().nodes.find((n) => n.id === wire.from.node);
-    return (from && getNodeDef(from.kind)?.outputs.find((p) => p.id === wire.from.port)?.type) || null;
+    return (from && knownOutputsOf(from.kind).find((p) => p.id === wire.from.port)?.type) || null;
   }
 
   function drawWires(): void {

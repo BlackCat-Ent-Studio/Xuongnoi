@@ -27,7 +27,23 @@ export function knownInputs(def: NodeDef<any>): PortDef[] {
   return def.optionalInputs ? [...def.inputs, ...def.optionalInputs.all] : def.inputs;
 }
 
+/** Outputs a node shows and produces right now: its fixed ones plus any optional ones its settings switch on. */
+export function activeOutputs(def: NodeDef<any>, params: Params): PortDef[] {
+  return def.optionalOutputs ? [...def.outputs, ...def.optionalOutputs.active(params)] : def.outputs;
+}
+
+/** Every output id a saved wire may name, switched on or not. */
+export function knownOutputs(def: NodeDef<any>): PortDef[] {
+  return def.optionalOutputs ? [...def.outputs, ...def.optionalOutputs.all] : def.outputs;
+}
+
 /** Test helper: clears the registry. */
 export function clearRegistry(): void {
   defs.clear();
+}
+
+/** Every output a saved wire may name on a node of this kind (empty for an unknown kind). */
+export function knownOutputsOf(kind: string): PortDef[] {
+  const def = defs.get(kind);
+  return def ? knownOutputs(def) : [];
 }

@@ -1,4 +1,4 @@
-import { activeInputs, getNodeDef } from '../../engine/registry';
+import { activeInputs, activeOutputs, getNodeDef } from '../../engine/registry';
 import type { Graph, GraphNode } from '../../engine/types';
 
 export const MIN_ZOOM = 0.3;
@@ -83,8 +83,9 @@ export function estimateNodeSize(node: GraphNode): Size {
   if (!def) return { w: 168, h: 70 };
   // Card metrics (node-cards.css): ~40px header band, then one 26px row per input and per output.
   const inputs = activeInputs(def, node.params);
-  const longest = LEGACY_LONGEST_LABEL[def.kind] ?? Math.max(def.label.length, ...inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
-  const rows = inputs.length + def.outputs.length;
+  const outputs = activeOutputs(def, node.params);
+  const longest = LEGACY_LONGEST_LABEL[def.kind] ?? Math.max(def.label.length, ...inputs.map((p) => p.label.length), ...outputs.map((p) => p.label.length));
+  const rows = inputs.length + outputs.length;
   return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
 }
 

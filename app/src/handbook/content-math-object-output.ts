@@ -217,6 +217,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       color1: 'Màu thứ nhất của Đèn giao thông (mặc định đỏ). Chọn bằng cổng "Đổi màu 1-2-3" = 1.',
       color2: 'Màu thứ hai (mặc định vàng). Chọn bằng cổng "Đổi màu 1-2-3" = 2.',
       color3: 'Màu thứ ba (mặc định xanh). Chọn bằng cổng "Đổi màu 1-2-3" = 3.',
+      showHiddenOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Đang ẩn" (bật suốt lúc hộp đang ẩn, dù ẩn bằng "Ẩn đi" hay "Ẩn suốt lúc bật"). Mặc định "Không": mảnh y như cũ.',
       beltSpeed:
         'Nâng cao. Tốc độ băng chuyền. Khác 0 thì hộp trở thành băng chuyền, đưa đồ nằm trên mặt đi theo; số âm chạy ngược. Để 0 là tắt, trừ kiểu "Băng chuyền" thì tự chạy tốc độ 2 dọc cạnh dài.',
       beltDir: 'Nâng cao. Hướng băng chạy: theo hay ngược trục X, theo hay ngược trục Z. Game nhìn ngang luôn chạy dọc trục X.',
@@ -225,7 +226,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     },
     example: 'Phím Space "Vừa nhấn" → "Ẩn đi (1 nhịp)" của một Vật thể đang là bức tường: bấm là tường biến mất cho nhân vật đi qua.',
     tips: [
-      'Dùng "Ẩn suốt lúc bật" để làm cửa mở theo tín hiệu: nối Chạm nhau (hoặc Hoặc/Và) vào đó, cửa mở khi tín hiệu bật và đóng lại khi tín hiệu tắt.',
+      'Dùng "Ẩn suốt lúc bật" để làm cửa mở theo tín hiệu: nối Chạm nhau (hoặc Hoặc/Và) vào đó, cửa mở khi tín hiệu bật và đóng lại khi tín hiệu tắt. Muốn biết hộp đã ẩn chưa: bật "Báo đang ẩn" (Nâng cao), mảnh hiện thêm ô ra "Đang ẩn"; hai hộp đã ẩn hết thì nối cả hai vào Và.',
       'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Vật thể) "Mới chạm" → "Ẩn đi (1 nhịp)" của chính hộp đó. Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
       'Băng chuyền: chọn kiểu "Băng chuyền" là chạy ngay, hoặc để kiểu thường và đặt "Tốc độ băng chuyền" khác 0 trong mục Nâng cao.',
       'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',

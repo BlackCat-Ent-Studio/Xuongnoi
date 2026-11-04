@@ -1,5 +1,5 @@
 import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf } from '../engine/block-styles';
-import type { EntityId, NodeDef, Params, Vec3, ViewMode } from '../engine/types';
+import type { EntityId, NodeDef, Params, PortDef, Vec3, ViewMode } from '../engine/types';
 import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
 import { asBool, asNum, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
@@ -39,6 +39,9 @@ interface BlockState {
   belt?: number | null;
 }
 
+/** Only while "Báo đang ẩn" is on: a signal that is on for as long as the block is hidden. The default card does not change. */
+const HIDDEN_PORTS: PortDef[] = [{ id: 'hidden', type: 'bool', label: 'Đang ẩn' }];
+
 export const blockNode: NodeDef<BlockState> = {
   kind: 'block',
   label: 'Vật thể',
@@ -57,6 +60,7 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'self', type: 'object', label: 'Vật thể' },
     { id: 'usedOn', type: 'bool', label: 'Bị dùng lên' },
   ],
+  optionalOutputs: { all: HIDDEN_PORTS, active: (params) => (strParam(params, 'showHiddenOut', 'no') === 'yes' ? HIDDEN_PORTS : []) },
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 1, y: 1, z: 1 } },
@@ -82,6 +86,17 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'color1', label: 'Màu 1', kind: 'color', default: TRAFFIC_COLORS[0] },
     { id: 'color2', label: 'Màu 2', kind: 'color', default: TRAFFIC_COLORS[1] },
     { id: 'color3', label: 'Màu 3', kind: 'color', default: TRAFFIC_COLORS[2] },
+    {
+      id: 'showHiddenOut',
+      label: 'Báo đang ẩn',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (hiện ô ra "Đang ẩn": bật suốt lúc hộp đang ẩn)' },
+      ],
+      advanced: true,
+    },
     {
       id: 'beltSpeed',
       label: 'Tốc độ băng chuyền (0 = tắt)',
@@ -173,6 +188,6 @@ export const blockNode: NodeDef<BlockState> = {
     if (s.belt != null) {
       ctx.world.setBeltSpeed(s.id, asBool(i.run) ? (asBool(i.reverse) ? -s.belt : s.belt) : 0);
     }
-    return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id) };
+    return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id), ...(strParam(params, 'showHiddenOut', 'no') === 'yes' ? { hidden: s.hidden } : {}) };
   },
 };

@@ -252,7 +252,7 @@ describe('physics invariants: a win comes for the stated reason', () => {
     'nhat-sao': (b) => {
       const bad: string[] = [];
       if (!touching(b, 'cat', 'goal')) bad.push('cat is not at the flag');
-      for (const s of ['star-1', 'star-2', 'star-3']) if (by(b, s).visible) bad.push(`${s} is still there`);
+      for (const s of ['star-1', 'star-2']) if (by(b, s).visible) bad.push(`${s} is still there`);
       if (by(b, 'cat').pos.x < by(b, 'gate').pos.x) bad.push('cat is still before the gate');
       return bad;
     },

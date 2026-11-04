@@ -1,5 +1,5 @@
 import { compileGraph } from './compile';
-import { activeInputs, getNodeDef } from './registry';
+import { activeInputs, activeOutputs, getNodeDef, knownOutputs } from './registry';
 import {
   PORT_DEFAULTS,
   TICK_DT,
@@ -30,7 +30,7 @@ const portDefault = (p: PortDef): PortValue => p.default ?? PORT_DEFAULTS[p.type
 
 function defaultOutputs(def: NodeDef<any>): PortValues {
   const out: PortValues = {};
-  for (const p of def.outputs) out[p.id] = portDefault(p);
+  for (const p of knownOutputs(def)) out[p.id] = portDefault(p);
   return out;
 }
 
@@ -100,7 +100,7 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
         }
         const result = n.def.evaluate(makeCtx(id, tickIndex, input), inputs, n.params, n.state);
         const outs: PortValues = {};
-        for (const p of n.def.outputs) {
+        for (const p of activeOutputs(n.def, n.params)) {
           const v = result?.[p.id] ?? portDefault(p);
           outs[p.id] = v;
           if (p.type === 'bool' && v === true && prev.get(id)?.[p.id] !== true) risen.add(`${id}|${p.id}`);
@@ -112,7 +112,8 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     getOutput(nodeId, portId) {
       const v = curr.get(nodeId)?.[portId];
       if (v !== undefined) return v;
-      const port = nodes.get(nodeId)?.def.outputs.find((p) => p.id === portId);
+      const nd = nodes.get(nodeId)?.def;
+      const port = nd ? knownOutputs(nd).find((p) => p.id === portId) : undefined;
       return port ? portDefault(port) : null;
     },
     getWireValue(wire) {

@@ -132,12 +132,12 @@ describe('guide steps', () => {
     });
   });
 
-  it('asks for the non-default number where the solution needs one', () => {
+  it('asks for the non-default number where the solution needs one (levels 6 and 7 yes, 1 and 3 no)', () => {
     const level3 = GUIDED.find((l) => l.order === 3);
     const level6 = GUIDED.find((l) => l.order === 6);
     const level7 = GUIDED.find((l) => l.order === 7);
     const params = (l: typeof level3) => (l ? solutionSteps(l).filter((s) => s.type === 'param') : []);
-    expect(params(level3).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['target', 3]]);
+    expect(params(level3)).toEqual([]);
     expect(params(level6)).toEqual([]);
     expect(params(level7).map((s) => (s.type === 'param' ? [s.paramId, s.value] : null))).toEqual([['want', 2]]);
     expect(params(GUIDED.find((l) => l.order === 1))).toEqual([]);

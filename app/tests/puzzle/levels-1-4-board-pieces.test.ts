@@ -23,7 +23,7 @@ const BOARD: { level: PuzzleLevel; visible: string[]; hidden: string[] }[] = [
   { level: level02!, visible: ['bot', 'button', 'door', 'flag'], hidden: ['end', 'ground', 'touch-flag'] },
   {
     level: level03!,
-    visible: ['cat', 'gate', 'star-1', 'star-2', 'star-3'],
+    visible: ['cat', 'gate', 'star-1', 'star-2'],
     hidden: ['end', 'goal', 'ground', 'touch-goal'],
   },
   {

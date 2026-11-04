@@ -1,4 +1,4 @@
-import { getNodeDef } from '../../engine/registry';
+import { getNodeDef, knownInputs, knownOutputs } from '../../engine/registry';
 import type { GraphNode, ParamValue, Wire } from '../../engine/types';
 import { PUZZLE_LEVELS } from '../levels';
 import type { PuzzleLevel } from '../types';
@@ -85,18 +85,12 @@ const WIRE_LINES: Record<string, Record<string, string>> = {
     t1a: 'Nối Mèo vào mảnh Chạm nhau cho Sao 1.',
     t1b: 'Sao 1 vào Chạm nhau luôn.',
     h1: 'Mèo mới chạm thì Sao 1 ẩn đi.',
+    g1: 'Sao 1 đã ẩn thì báo cho mảnh Và.',
     t2a: 'Nối Mèo vào mảnh Chạm nhau cho Sao 2.',
     t2b: 'Sao 2 vào Chạm nhau luôn.',
     h2: 'Mèo mới chạm thì Sao 2 ẩn đi.',
-    t3a: 'Nối Mèo vào mảnh Chạm nhau cho Sao 3.',
-    t3b: 'Sao 3 vào Chạm nhau luôn.',
-    h3: 'Mèo mới chạm thì Sao 3 ẩn đi.',
-    c1: 'Sao 1 chạm thì báo cho Hoặc thứ nhất.',
-    c2: 'Sao 2 chạm cũng báo cho Hoặc đó.',
-    c3: 'Hoặc thứ nhất báo tiếp cho Hoặc thứ hai.',
-    c4: 'Sao 3 chạm cũng báo cho Hoặc thứ hai.',
-    c5: 'Sao nào chạm thì bộ đếm cộng 1.',
-    s4: 'Đếm đủ thì cổng ẩn đi!',
+    g2: 'Sao 2 đã ẩn cũng báo cho mảnh Và.',
+    s4: 'Cả hai sao đã ẩn thì cổng ẩn đi!',
   },
   'du-ba-thung': {
     sw1: 'Nối Rô-bốt vào Tìm vật gần nhất để nó tìm thùng gần rô-bốt.',
@@ -251,7 +245,7 @@ function nodeName(level: PuzzleLevel, nodeId: string, kindOf: Map<string, string
 
 function portLabel(kind: string, port: string, dir: 'in' | 'out'): string {
   const def = getNodeDef(kind);
-  const list = dir === 'in' ? def?.inputs : def?.outputs;
+  const list = def ? (dir === 'in' ? knownInputs(def) : knownOutputs(def)) : undefined;
   return list?.find((p) => p.id === port)?.label ?? port;
 }
 
