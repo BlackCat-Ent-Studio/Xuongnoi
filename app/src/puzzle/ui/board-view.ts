@@ -5,6 +5,7 @@ import { estimateNodeSize } from '../../editor/graph/graph-geometry';
 import { createCardHelpButton } from '../../handbook/card-help-popup';
 import { buildNodeView } from '../../editor/graph/node-view';
 import type { PortDir } from '../../editor/graph/port-compat';
+import { frameLit, stepLight } from './step-light';
 import { createWireEnergy, isEnergyEnabled } from '../../editor/graph/wire-energy';
 import type { PuzzleLevel } from '../types';
 import {
@@ -119,13 +120,14 @@ export interface BoardView {
   setRunning(on: boolean, getRuntime?: () => Runtime | null): void;
   /** Stops animating but keeps the lit wires (the game ended). */
   freezeEnergy(): void;
-  /** Whether this output pin is on screen (its card is shown and the pin is not hidden). */
-  isOutputShown(nodeId: string, portId: string): boolean;
+  /** Whether this output pin is on screen and at least one drawn wire leaves it (a real effect). */
+  hasWiredOutput(nodeId: string, portId: string): boolean;
   /**
    * Step run, paused: lights the cards whose output pins (`node|port`) fired, the wires leaving those pins and the cards
-   * the wires reach, and fades the rest like a tapped card. null puts the look back. Only has an effect while running.
+   * the wires reach, plus the objects wired into those cards (the who) and the object cards they act on; the fired pins
+   * glow and the rest fades. Returns the object ids involved (for the stage glow). null puts the look back.
    */
-  setStepLit(fired: ReadonlySet<string> | null): void;
+  setStepLit(fired: ReadonlySet<string> | null): ReadonlySet<string>;
   refit(): void;
   /** Pans the board (never zooms) so this pin / row of a card is on screen. Does nothing for other elements. */
   ensureVisible(el: HTMLElement): void;
@@ -213,6 +215,8 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   let hoverWire: string | null = null;
   /** Step run, while paused: the output pins (`node|port`) that just fired. Their wires and the cards those reach are lit. */
   let stepFired: ReadonlySet<string> | null = null;
+  /** Characters / objects the paused step involves (they glow on the stage). */
+  let stepObjects: ReadonlySet<string> = new Set();
   let routes = new Map<string, WireRoute>();
   let wireViews: { id: string; from: string; fromPort: string; to: string; g: SVGGElement }[] = [];
   let lastWireTap: { id: string; t: number; x: number; y: number } | null = null;
@@ -341,6 +345,26 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** The view that shows every card (zoom between 0.70 and 1; past that, the start of the cards) and keeps clear of the corner window. */
   function fitAll(): FitView {
     return fitFree(boundsOf(worldRects()), area, avoidBox());
+  }
+
+  /** Step run: brings the lit cards on screen (panning, or zooming out when they are spread wider than the screen). */
+  function frameLitCards(): void {
+    let box: Box | null = null;
+    for (const [id, c] of cards) {
+      const p = placedAt.get(id);
+      if (!p || c.classList.contains('pz-faded')) continue;
+      const w = c.offsetWidth * cardScale;
+      const h = c.offsetHeight * cardScale;
+      box = box ? { x: Math.min(box.x, p.x), y: Math.min(box.y, p.y), w: Math.max(box.x + box.w, p.x + w) - Math.min(box.x, p.x), h: Math.max(box.y + box.h, p.y + h) - Math.min(box.y, p.y) } : { x: p.x, y: p.y, w, h };
+    }
+    if (!box) return;
+    const next = frameLit(view, box, area, 24, MIN_VIEW_K);
+    if (next === view) return;
+    stopAnim();
+    view = next;
+    viewMoved = true;
+    layout();
+    drawWires();
   }
 
   /** Pans the view (no zoom change) so a pin or row of a card is on screen; the guide calls this before it points at it. */
@@ -649,13 +673,13 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     board.classList.toggle('pz-stepping', stepFired !== null);
     const litWires = new Set<string>();
     const litCards = new Set<string>();
+    const firedPins = new Set<string>();
     if (stepping && stepFired) {
-      for (const key of stepFired) litCards.add(key.slice(0, key.indexOf('|')));
-      for (const v of wireViews) {
-        if (!stepFired.has(`${v.from}|${v.fromPort}`)) continue;
-        litWires.add(v.id);
-        litCards.add(v.to);
-      }
+      const light = stepLight(stepFired, wireViews, isPickable);
+      for (const c of light.cards) litCards.add(c);
+      for (const w of light.wires) litWires.add(w);
+      for (const k of light.pins) firedPins.add(portKey(k.slice(0, k.indexOf('|')), 'out', k.slice(k.indexOf('|') + 1)));
+      stepObjects = light.objects;
     } else if (focusing) {
       for (const v of wireViews) {
         if (focusId !== null ? v.from === focusId || v.to === focusId : v.id === selWire) {
@@ -670,6 +694,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       v.g.classList.toggle('pz-lit', litWires.has(v.id));
       v.g.classList.toggle('pz-hover', !running && hoverWire === v.id);
     }
+    for (const [key, entry] of ports) entry.dot.classList.toggle('pz-fired-pin', firedPins.has(key));
     for (const [id, box] of cards) box.classList.toggle('pz-faded', focusing && !litCards.has(id));
     for (const el of knotLayer.children) {
       const id = (el as SVGElement).dataset.knot ?? '';
@@ -1348,10 +1373,13 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       }
     },
     freezeEnergy: stopEnergyLoop,
-    isOutputShown: (nodeId, portId) => ports.has(portKey(nodeId, 'out', portId)),
+    hasWiredOutput: (nodeId, portId) => ports.has(portKey(nodeId, 'out', portId)) && wireViews.some((v) => v.from === nodeId && v.fromPort === portId),
     setStepLit(fired) {
       stepFired = fired;
+      stepObjects = new Set();
       applyLook();
+      if (fired) frameLitCards();
+      return stepObjects;
     },
     refit() {
       layout();

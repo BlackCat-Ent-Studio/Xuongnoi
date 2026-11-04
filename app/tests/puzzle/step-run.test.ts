@@ -9,7 +9,7 @@ import { TICK_DT } from '../../src/engine/types';
 
 type Rule = { accepts(key: string): boolean };
 
-/** What the board shows: placed pieces with every port, locked cards that are not scenery with their shown output ports. */
+/** An output pin the board shows: placed pieces with every port, locked cards that are not scenery with their shown output ports. */
 function shownRule(level: PuzzleLevel, answer: PuzzleAnswer): Rule {
   const placed = new Set(answer.nodes.map((n) => n.id));
   return {
@@ -20,11 +20,25 @@ function shownRule(level: PuzzleLevel, answer: PuzzleAnswer): Rule {
     },
   };
 }
+
+/** The step rule: a shown output pin that has at least one drawn wire (both ends on screen) going out. */
+function wiredRule(level: PuzzleLevel, answer: PuzzleAnswer): Rule {
+  const shown = shownRule(level, answer);
+  const placed = new Set(answer.nodes.map((n) => n.id));
+  const wires = [...level.base.wires, ...answer.wires];
+  const inShown = (node: string, port: string): boolean => placed.has(node) || (!isSceneryNode(level, node) && isPortShown(level, node, port, 'in'));
+  return {
+    accepts: (key) => {
+      const [node = '', port = ''] = key.split('|');
+      return shown.accepts(key) && wires.some((w) => w.from.node === node && w.from.port === port && inShown(w.to.node, w.to.port));
+    },
+  };
+}
 const everything: Rule = { accepts: () => true };
 
 /** Steps through every pause; returns the pauses, the end and the world as it was at each pause. */
-function stepThrough(level: PuzzleLevel, answer: PuzzleAnswer, rule: Rule = shownRule(level, answer)) {
-  const session = createStepSession(level, answer, rule);
+function stepThrough(level: PuzzleLevel, answer: PuzzleAnswer, rule: Rule = wiredRule(level, answer), limit = level.timeLimit) {
+  const session = createStepSession(level, answer, rule, limit);
   const pauses: Extract<StepRunEvent, { kind: 'pause' }>[] = [];
   const entityAt = new Map<number, string>();
   for (;;) {
@@ -88,10 +102,28 @@ describe('step run is the same run, only frozen at the pauses', () => {
 });
 
 describe('what makes a pause', () => {
-  it('the first pause is the start card firing at tick 0', () => {
-    const { pauses } = stepThrough(tiny, startOnly);
+  it('the first pause is the wired start card firing at tick 0', () => {
+    const level = PUZZLE_LEVELS[1]!;
+    const start = level.solution.nodes.find((n) => n.kind === 'on-start' && level.solution.wires.some((w) => w.from.node === n.id));
+    const { pauses } = stepThrough(level, level.solution);
     expect(pauses[0]?.tick).toBe(0);
-    expect([...(pauses[0]?.fired ?? [])].every((k) => k.startsWith('p1|'))).toBe(true);
+    expect([...(pauses[0]?.fired ?? [])].some((k) => k.startsWith(`${start?.id}|`))).toBe(true);
+  });
+
+  it('a rising output with no wire out never pauses', () => {
+    // Without a wire the start card only feeds the hidden win plumbing, so nothing is worth a pause.
+    expect(stepThrough(tiny, tiny.solution).pauses).toHaveLength(0);
+    expect(stepThrough(tiny, startOnly, everything).pauses.length).toBeGreaterThan(0);
+    let fewer = false;
+    for (const level of PUZZLE_LEVELS) {
+      const wired = wiredRule(level, level.solution);
+      const wiredPauses = stepThrough(level, level.solution);
+      const shownPauses = stepThrough(level, level.solution, shownRule(level, level.solution));
+      for (const p of wiredPauses.pauses) for (const k of p.fired) expect(wired.accepts(k)).toBe(true);
+      if (shownPauses.pauses.length > wiredPauses.pauses.length) fewer = true;
+      expect(wiredPauses.end).toEqual(shownPauses.end);
+    }
+    expect(fewer).toBe(true);
   });
 
   it('hidden scenery never pauses, though its outputs do rise', () => {
@@ -151,11 +183,12 @@ describe('the time limit counts game time only', () => {
   });
 
   it('a run with pauses ends at exactly the limit, the same as without pauses', () => {
-    const normal = runLevel(tiny, startOnly);
-    const stepped = stepThrough(tiny, startOnly);
+    const level = PUZZLE_LEVELS[1]!;
+    const normal = runLevel(level, level.solution, 0.5);
+    const stepped = stepThrough(level, level.solution, undefined, 0.5);
     expect(normal.outcome).toBe('timeout');
     expect(stepped.pauses.length).toBeGreaterThan(0);
     expect(stepped.end).toEqual(normal);
-    expect(stepped.end.seconds).toBeCloseTo(2, 5);
+    expect(stepped.end.seconds).toBeCloseTo(0.5, 5);
   });
 });

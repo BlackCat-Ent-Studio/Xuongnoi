@@ -90,6 +90,9 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .pz-board .wc-node { transition: box-shadow .25s, border-color .25s, opacity .25s; }
 .pz-board .wc-node.pz-faded { opacity: .62; }
 .pz-board.pz-stepping .wc-node.pz-faded { opacity: .2; }
+.pz-board .wc-node .wc-dot.pz-fired-pin { transform: scale(1.6); box-shadow: 0 0 0 3px #fff, 0 0 12px 4px var(--sun); animation: pz-pin-pulse 1.1s ease-in-out infinite; }
+@keyframes pz-pin-pulse { 50% { box-shadow: 0 0 0 4px #fff, 0 0 20px 8px var(--sun); } }
+@media (prefers-reduced-motion: reduce) { .pz-board .wc-node .wc-dot.pz-fired-pin { animation: none; } }
 .pz-board.pz-stepping.pz-focusing .pz-wire:not(.pz-lit) { opacity: .1; }
 /* reroute knots */
 .pz-board .pz-knots { z-index: 5; }

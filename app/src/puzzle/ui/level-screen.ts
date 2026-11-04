@@ -366,7 +366,8 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   function onStep(fired: ReadonlySet<string>): void {
     if (phase !== 'run' || !stepping) return;
     stepWait = true;
-    board?.setStepLit(fired);
+    const involved = board?.setStepLit(fired);
+    if (involved) stage.view.setHighlight(involved);
     syncStepBtn();
   }
 
@@ -374,6 +375,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     if (phase !== 'run' || !stepping || !stepWait) return;
     stepWait = false;
     board?.setStepLit(null);
+    lightObject(null);
     syncStepBtn();
     stage.view.resume();
   }
@@ -480,7 +482,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       stage.view.setStepBreak({
         accepts: (key) => {
           const cut = key.indexOf('|');
-          return live.isOutputShown(key.slice(0, cut), key.slice(cut + 1));
+          return live.hasWiredOutput(key.slice(0, cut), key.slice(cut + 1));
         },
         onBreak: onStep,
       });
