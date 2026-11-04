@@ -141,9 +141,10 @@ describe.each(LEVELS.map((l) => [l.order, l] as const))('puzzle level %i', (_ord
     expect(spares).toHaveLength(1);
     const spare = spares[0] ? { id: 'spare', kind: spares[0], params: {}, pos: { x: 0, y: 0 } } : null;
     const result = searchCheaperWins(level, spare, level.timeLimit);
-    // Level 3 has one known shortcut family (a touch signal also feeds the other star's "Ẩn đi"); see the level 3 tests.
-    const fanOut = /^without p-touch\d( \+ spare)? \+ p-touch\d\.(touching|began|ended)>star-\d\.hide$/;
-    const unexpected = level.id === 'nhat-sao' ? result.wins.filter((w) => !fanOut.test(w)) : result.wins;
+    // Level 3 has two known shortcut families (a touch signal also feeds the other star's "Ẩn đi"; the route's "Nhảy" pulse
+    // while blocked by a star hides it); see the level 3 tests.
+    const known = /^without p-touch\d( \+ spare)? \+ (p-touch\d\.(touching|began|ended)|p-route\.jump)>star-\d\.hide$/;
+    const unexpected = level.id === 'nhat-sao' ? result.wins.filter((w) => !known.test(w)) : result.wins;
     expect(unexpected).toEqual([]);
     expect(result.tried).toBeGreaterThan(level.order === 1 ? 1 : 50);
   }, 300_000);
@@ -230,17 +231,28 @@ describe('level 3 (nhat-sao)', () => {
     for (const id of [`t${k}a`, `t${k}b`, `h${k}`, `g${k}`]) expect(runLevel(level03!, without(sol, id)).outcome, `without ${id}`).toBe('timeout');
     expect(runLevel(level03!, withoutNode(sol, `p-touch${k}`)).outcome).toBe('timeout');
   });
-  it('known shortcuts (inherent to wiring a sensor to more than one thing): one touch can hide both stars, and one star alone can open the gate', () => {
+  it('stars are solid: without a hide wire the cat is stopped in front of that star and never wins', () => {
+    for (const id of STAR_IDS) expect(level03!.base.nodes.find((n) => n.id === id)!.params.type).toBe('solid');
+    for (const k of [1, 2]) expect(runLevel(level03!, without(sol, `h${k}`)).outcome, `without h${k}`).toBe('timeout');
+  });
+  it('a star alone cannot open the gate: its "Đang ẩn" straight into the gate does not win', () => {
+    const direct: PuzzleAnswer = {
+      nodes: sol.nodes.filter((n) => n.id === 'p-start' || n.id === 'p-route' || n.id === 'p-touch1'),
+      wires: [...sol.wires.filter((w) => ['s1', 's2', 's3', 't1a', 't1b', 'h1'].includes(w.id)), { id: 'x', from: { node: 'star-1', port: 'hidden' }, to: { node: 'gate', port: 'hiddenWhile' } }],
+    };
+    expect(runLevel(level03!, direct).outcome).toBe('timeout');
+  });
+  it('known shortcuts (a signal can feed more than one input): one touch hides both stars; the route "Nhảy" pulse can stand in for a touch', () => {
     const fan: PuzzleAnswer = {
       nodes: sol.nodes.filter((n) => n.id !== 'p-touch2'),
       wires: [...sol.wires.filter((w) => !['t2a', 't2b', 'h2'].includes(w.id)), { id: 'x', from: { node: 'p-touch1', port: 'began' }, to: { node: 'star-2', port: 'hide' } }],
     };
     expect(runLevel(level03!, fan).outcome).toBe('win');
-    const direct: PuzzleAnswer = {
-      nodes: sol.nodes.filter((n) => n.id === 'p-start' || n.id === 'p-route' || n.id === 'p-touch1'),
-      wires: [...sol.wires.filter((w) => ['s1', 's2', 's3', 't1a', 't1b', 'h1'].includes(w.id)), { id: 'x', from: { node: 'star-1', port: 'hidden' }, to: { node: 'gate', port: 'hiddenWhile' } }],
+    const jump: PuzzleAnswer = {
+      nodes: sol.nodes.filter((n) => n.id !== 'p-touch2'),
+      wires: [...sol.wires.filter((w) => !['t2a', 't2b', 'h2'].includes(w.id)), { id: 'x', from: { node: 'p-route', port: 'jump' }, to: { node: 'star-2', port: 'hide' } }],
     };
-    expect(runLevel(level03!, direct).outcome).toBe('win');
+    expect(runLevel(level03!, jump).outcome).toBe('win');
   });
   it.each(STAR_IDS)('%s: taking the star out of the world means the gate never opens', (id) => {
     const level: PuzzleLevel = { ...level03!, base: { ...level03!.base, nodes: level03!.base.nodes.filter((n) => n.id !== id) } };

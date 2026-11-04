@@ -10,12 +10,12 @@ const STARS = [
   { id: 'star-2', x: 3 },
 ] as const;
 
-/** Stars are blocks of type "pickup" so the cat walks through them, with the advanced "Báo đang ẩn" output on. The player wires each star to a "Chạm nhau", to its own "Ẩn đi", and its "Đang ẩn" to the gate through "Và". */
+/** Stars are solid blocks: a star that is not hidden blocks the cat, so each one has to be touched and hidden before the cat can pass. They come with the advanced "Báo đang ẩn" output on. The player wires each star to a "Chạm nhau", to its own "Ẩn đi", and its "Đang ẩn" to the gate through "Và". */
 const starNodes: GraphNode[] = STARS.map(
   (s, k): GraphNode => ({
     id: s.id,
     kind: 'block',
-    params: { name: `Sao ${k + 1}`, position: { x: s.x, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'pickup', showHiddenOut: 'yes' },
+    params: { name: `Sao ${k + 1}`, position: { x: s.x, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', type: 'solid', showHiddenOut: 'yes' },
     pos: { x: 10, y: 150 + k * 130 },
   }),
 );
@@ -33,7 +33,7 @@ const ROUTE_PARAMS: GraphNode['params'] = {
  * Level 3 (nhat-sao): hide two stars, then open the gate (side view, the same wooden door as level 2). The board shows the
  * cat, the two stars and the gate. The player makes the cat walk the route (its points lie beyond the gate, so the walk
  * carries no star position), then builds the stars' part: one "Chạm nhau" per star (cat + that star) whose "Mới chạm"
- * hides the star. Each star shows its "Đang ẩn" output (the general optional output of the block); both go into a "Và"
+ * hides the star (a visible star is solid, so the cat stops in front of it until then). Each star shows its "Đang ẩn" output (the general optional output of the block); both go into a "Và"
  * whose result is the gate's "Ẩn suốt lúc bật". The flag and the win rule (cat touches the flag) are scenery.
  */
 export const level03: PuzzleLevel | null = {
