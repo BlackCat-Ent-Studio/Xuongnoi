@@ -188,6 +188,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** Where every card sits in the world (px at zoom 1, top-left). The board shows it through `view`. */
   const worldPos = new Map<string, Pt>();
   let view: FitView = { k: 1, x: 0, y: 0 };
+  /** The view the wires and knots were last drawn for (a pan or zoom only moves them until the next draw). */
+  let drawnView: FitView = { ...view };
+  let redrawFrame = 0;
   /** The player moved the view by hand: a resize then keeps it. */
   let viewMoved = false;
   /** The cards got their first size and the opening view was fitted. */
@@ -540,13 +543,27 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     return {};
   }
 
-  function drawWires(fast = false): void {
+  /**
+   * Draws every wire. `fast` = plain curves (cheap, for slides).
+   * `only` = something is being dragged: only the wires it picks are routed again, every other wire keeps its tidy path.
+   */
+  function drawWires(fast = false, only?: (wire: Wire) => boolean): void {
     wireLayer.replaceChildren();
     energy.reset();
     wireViews = [];
+    drawnView = { ...view };
+    for (const l of [wireLayer, knotLayer]) l.style.transform = '';
     const rects = cardRects();
     const list = shownWires();
-    routes = routeWires(rects, list.map((w) => wireSpec(w.wire, w.out, w.inn)), { unit: clampUnit(cardScale), fast, ...routeBounds() });
+    const opts = { unit: clampUnit(cardScale), fast, ...routeBounds() };
+    if (only !== undefined) {
+      const redo = list.filter((w) => only(w.wire) || !routes.has(w.wire.id));
+      const next = new Map(routes);
+      for (const [id, r] of routeWires(rects, redo.map((w) => wireSpec(w.wire, w.out, w.inn)), opts)) next.set(id, r);
+      routes = next;
+    } else {
+      routes = routeWires(rects, list.map((w) => wireSpec(w.wire, w.out, w.inn)), opts);
+    }
     for (const { wire, locked, out, inn, type } of list) {
       const route = routes.get(wire.id);
       if (!route) continue;
@@ -572,6 +589,30 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   }
 
   /** The guide's dotted line from where a wire starts to where it ends; the pins are never touched. */
+  /** While the board is panned or zoomed, the drawn wires and knots just move and scale with the cards: no curves, no rerouting. */
+  function followView(): void {
+    const s = view.k / drawnView.k;
+    const t = `translate(${view.x - drawnView.x * s}px, ${view.y - drawnView.y * s}px) scale(${s})`;
+    for (const l of [wireLayer, knotLayer]) {
+      l.style.transformOrigin = '0 0';
+      l.style.transform = t;
+    }
+  }
+
+  /** Reroutes only the picked wires, at most once per frame (used while something is dragged). */
+  function redrawSoon(only: (wire: Wire) => boolean): void {
+    if (redrawFrame) return;
+    redrawFrame = requestAnimationFrame(() => {
+      redrawFrame = 0;
+      drawWires(false, only);
+    });
+  }
+
+  function cancelRedraw(): void {
+    if (redrawFrame) cancelAnimationFrame(redrawFrame);
+    redrawFrame = 0;
+  }
+
   function drawGhost(rects: RouteCard[]): void {
     if (!ghost || running) return;
     const out = ports.get(portKey(ghost.from.node, 'out', ghost.from.port));
@@ -1059,7 +1100,9 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       viewMoved = true;
       closePopover();
       layout();
-      drawWires(!done);
+      // While the hand is still on the board the wires only slide/scale with it; they are drawn again when it lets go.
+      if (done) drawWires();
+      else followView();
     },
     minK: MIN_VIEW_K,
     maxK: MAX_VIEW_K,
@@ -1082,16 +1125,21 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
     head.setPointerCapture(e.pointerId);
     box.classList.add('pz-dragging');
     const move = (ev: PointerEvent): void => {
-      if (Math.hypot(ev.clientX - startX, ev.clientY - startY) > TAP_SLOP) dragged = true;
+      // A hand never holds perfectly still: small wobbles are still a tap, so nothing moves or redraws.
+      if (!dragged && Math.hypot(ev.clientX - startX, ev.clientY - startY) <= TAP_SLOP) return;
+      dragged = true;
       // The world has no edge to stop at.
       const x = start.x + ev.clientX - startX;
       const y = start.y + ev.clientY - startY;
       worldPos.set(id, toLayout({ x, y }));
+      placedAt.set(id, { ...start, x, y });
       box.style.left = `${Math.round(x)}px`;
       box.style.top = `${Math.round(y)}px`;
-      drawWires(true);
+      // Only the dragged card's wires are routed again, at most once per frame; the rest stay tidy.
+      redrawSoon((w) => w.from.node === id || w.to.node === id);
     };
     const end = (up: PointerEvent): void => {
+      cancelRedraw();
       head.removeEventListener('pointermove', move);
       head.removeEventListener('pointerup', end);
       head.removeEventListener('pointercancel', end);
