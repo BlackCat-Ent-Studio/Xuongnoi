@@ -1,8 +1,8 @@
 import type { GameView } from '../../app-contracts';
-import { TICK_DT, type GameResult } from '../../engine/types';
+import type { GameResult } from '../../engine/types';
 import { h } from '../../editor/dom';
 import { viewPitch } from '../../nodes/camera';
-import { starsFor } from '../run-level';
+import { starsFor, timeIsUp } from '../run-level';
 import { STAGE_CHARACTER_SCALE } from '../stage/cozy-stage';
 import type { PuzzleLevel } from '../types';
 import { createBoardView, type BoardView } from './board-view';
@@ -82,6 +82,10 @@ function starsEl(count: 0 | 1 | 2 | 3, className: string): HTMLElement {
 export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): () => void {
   const { level, stage } = ctx;
   let phase: Phase = 'edit';
+  /** A step run is in progress (started with the step button): the board stays big and the game freezes whenever a shown piece fires. */
+  let stepping = false;
+  /** The step run is frozen at a step and waits for the continue button. */
+  let stepWait = false;
   /** "?" presses that revealed a step; the free ones are `level.freeHints`. */
   let hintsUsed = 0;
   /** Solution steps already revealed by "?" this visit: pressing "?" again on one of them is not counted. */
@@ -154,8 +158,10 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
   resetBtn.title = T.reset;
   const runBtn = h('button', 'pz-btn run', T.run);
   runBtn.type = 'button';
+  const stepBtn = h('button', 'pz-btn small pz-step-btn', T.stepRun);
+  stepBtn.type = 'button';
   const actions = h('div', 'pz-actions');
-  actions.append(hintBtn, resetBtn, runBtn);
+  actions.append(hintBtn, resetBtn, stepBtn, runBtn);
   hud.append(back, badge, taskBtn, hudStars, gear, actions);
 
   // ----- stage layer -----
@@ -345,11 +351,40 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     previewTimer = window.setTimeout(showPreview, 40);
   }
 
+  /** Step button while editing; continue button during a step run (live only while it waits); gone in a normal run and after the end. */
+  function syncStepBtn(): void {
+    const editing = phase === 'edit';
+    stepBtn.hidden = !editing && !stepping;
+    stepBtn.textContent = stepping ? T.stepNext : T.stepRun;
+    const label = stepping ? T.stepNextAria : T.stepRunAria;
+    stepBtn.setAttribute('aria-label', label);
+    stepBtn.title = label;
+    stepBtn.disabled = stepping && !stepWait;
+  }
+
+  /** The game froze after a tick in which shown pieces fired: light them, their wires and what the wires reach. */
+  function onStep(fired: ReadonlySet<string>): void {
+    if (phase !== 'run' || !stepping) return;
+    stepWait = true;
+    board?.setStepLit(fired);
+    syncStepBtn();
+  }
+
+  function continueStep(): void {
+    if (phase !== 'run' || !stepping || !stepWait) return;
+    stepWait = false;
+    board?.setStepLit(null);
+    syncStepBtn();
+    stage.view.resume();
+  }
+
   function setPhase(next: Phase): void {
     phase = next;
     runBtn.textContent = next === 'edit' ? T.run : T.stop;
     runBtn.classList.toggle('stop', next !== 'edit');
     resetBtn.disabled = next !== 'edit';
+    if (next !== 'run') stepping = stepWait = false;
+    syncStepBtn();
     frameStage();
     guide?.refresh();
   }
@@ -409,7 +444,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     watchRaf = 0;
     if (phase !== 'run') return;
     const rt = stage.view.getRuntime();
-    if (rt && rt.tickIndex * TICK_DT >= level.timeLimit) {
+    if (rt && timeIsUp(rt.tickIndex, level.timeLimit)) {
       stage.view.stop();
       board?.freezeEnergy();
       setPhase('ended');
@@ -421,7 +456,7 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     watchRaf = requestAnimationFrame(watchTime);
   }
 
-  function run(): void {
+  function run(step = false): void {
     if (!board) return;
     window.clearTimeout(previewTimer);
     try {
@@ -434,10 +469,22 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
       showPreview();
       return;
     }
+    stepping = step;
     setPhase('run');
     setTaskOpen(false);
-    setFocus('stage');
+    // A normal run puts the stage in front; a step run keeps the board big (the stage is the corner window).
+    setFocus(step ? 'board' : 'stage');
     board.setRunning(true, () => stage.view.getRuntime());
+    if (step) {
+      const live = board;
+      stage.view.setStepBreak({
+        accepts: (key) => {
+          const cut = key.indexOf('|');
+          return live.isOutputShown(key.slice(0, cut), key.slice(cut + 1));
+        },
+        onBreak: onStep,
+      });
+    }
     watchRaf = requestAnimationFrame(watchTime);
   }
 
@@ -451,6 +498,19 @@ export function mountLevelScreen(root: HTMLElement, ctx: LevelScreenContext): ()
     playSfx(phase === 'edit' ? 'run' : 'stop');
     if (phase === 'edit') run();
     else backToEdit();
+  });
+  stepBtn.addEventListener('click', () => {
+    if (phase === 'run') {
+      continueStep();
+      return;
+    }
+    if (phase !== 'edit') return;
+    if (guide?.active) {
+      board?.toast(T.guideFollow);
+      return;
+    }
+    playSfx('run');
+    run(true);
   });
   pipHit.addEventListener('click', () => {
     // While the guide leads, the board stays in front: the cat points at it.

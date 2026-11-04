@@ -152,6 +152,8 @@ button:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset:
 .pz-btn.run { background: var(--sun); color: var(--ink-dark); font-size: max(16px, 2.6cqw); padding: .8cqw 2.6cqw; }
 .pz-btn.run.stop { background: #ff8fb1; }
 .pz-btn.small { background: #3a4a92; color: var(--ink); font-size: max(16px, 1.9cqw); width: max(40px, 4.4cqw); height: max(40px, 4.4cqw); padding: 0; border-radius: 50%; }
+.pz-btn.small.pz-step-btn { width: auto; padding: 0 max(10px, 1.4cqw); border-radius: 99px; font-size: max(12px, 1.6cqw); white-space: nowrap; }
+.pz-step-btn[hidden] { display: none; }
 .pz-hint-btn { position: relative; }
 .pz-hint-badge { position: absolute; right: -.5cqw; top: -.6cqw; min-width: max(18px, 2cqw); height: max(18px, 2cqw); padding: 0 3px; box-sizing: border-box; display: grid; place-items: center; border-radius: 99px; background: var(--sun); color: var(--ink-dark); font: 800 max(11px, 1.3cqw)/1 var(--display); pointer-events: none; }
 .pz-hint-btn.costly .pz-hint-badge { background: #e5484d; color: #fff; }

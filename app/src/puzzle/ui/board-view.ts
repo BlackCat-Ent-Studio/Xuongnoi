@@ -119,6 +119,13 @@ export interface BoardView {
   setRunning(on: boolean, getRuntime?: () => Runtime | null): void;
   /** Stops animating but keeps the lit wires (the game ended). */
   freezeEnergy(): void;
+  /** Whether this output pin is on screen (its card is shown and the pin is not hidden). */
+  isOutputShown(nodeId: string, portId: string): boolean;
+  /**
+   * Step run, paused: lights the cards whose output pins (`node|port`) fired, the wires leaving those pins and the cards
+   * the wires reach, and fades the rest like a tapped card. null puts the look back. Only has an effect while running.
+   */
+  setStepLit(fired: ReadonlySet<string> | null): void;
   refit(): void;
   /** Pans the board (never zooms) so this pin / row of a card is on screen. Does nothing for other elements. */
   ensureVisible(el: HTMLElement): void;
@@ -204,8 +211,10 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** A wire the player tapped (lit until they tap elsewhere). */
   let selWire: string | null = null;
   let hoverWire: string | null = null;
+  /** Step run, while paused: the output pins (`node|port`) that just fired. Their wires and the cards those reach are lit. */
+  let stepFired: ReadonlySet<string> | null = null;
   let routes = new Map<string, WireRoute>();
-  let wireViews: { id: string; from: string; to: string; g: SVGGElement }[] = [];
+  let wireViews: { id: string; from: string; fromPort: string; to: string; g: SVGGElement }[] = [];
   let lastWireTap: { id: string; t: number; x: number; y: number } | null = null;
   let lastKnotTap: { id: string; t: number } | null = null;
   let wireTapTimer = 0;
@@ -580,7 +589,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       hit.addEventListener('pointerdown', (e) => onWirePress(e, wire.id));
       g.append(path, hit);
       wireLayer.append(g);
-      wireViews.push({ id: wire.id, from: wire.from.node, to: wire.to.node, g });
+      wireViews.push({ id: wire.id, from: wire.from.node, fromPort: wire.from.port, to: wire.to.node, g });
       if (isEnergyEnabled()) energy.addWire(wire, type, path, out.dot, inn.dot, running);
     }
     drawKnots(new Map(list.map((w) => [w.wire.id, w.type])));
@@ -633,11 +642,19 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
   /** Lights the wires of the tapped card (or wire) and fades everything else. */
   function applyLook(): void {
     if (focusId !== null && !cards.has(focusId)) focusId = null;
-    const focusing = !running && (focusId !== null || selWire !== null);
+    const stepping = running && stepFired !== null;
+    const focusing = stepping || (!running && (focusId !== null || selWire !== null));
     board.classList.toggle('pz-focusing', focusing);
     const litWires = new Set<string>();
     const litCards = new Set<string>();
-    if (focusing) {
+    if (stepping && stepFired) {
+      for (const key of stepFired) litCards.add(key.slice(0, key.indexOf('|')));
+      for (const v of wireViews) {
+        if (!stepFired.has(`${v.from}|${v.fromPort}`)) continue;
+        litWires.add(v.id);
+        litCards.add(v.to);
+      }
+    } else if (focusing) {
       for (const v of wireViews) {
         if (focusId !== null ? v.from === focusId || v.to === focusId : v.id === selWire) {
           litWires.add(v.id);
@@ -1313,6 +1330,7 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       window.clearTimeout(wireTapTimer);
       lastWireTap = null;
       focusId = selWire = hoverWire = null;
+      stepFired = null;
       for (const btn of toolButtons) btn.disabled = on;
       board.classList.toggle('readonly', on);
       board.classList.remove('wiring');
@@ -1328,6 +1346,11 @@ export function createBoardView(opts: BoardViewOptions): BoardView {
       }
     },
     freezeEnergy: stopEnergyLoop,
+    isOutputShown: (nodeId, portId) => ports.has(portKey(nodeId, 'out', portId)),
+    setStepLit(fired) {
+      stepFired = fired;
+      applyLook();
+    },
     refit() {
       layout();
       drawWires();
