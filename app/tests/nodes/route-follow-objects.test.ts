@@ -178,7 +178,7 @@ describe('route-follow: ports with the option', () => {
   });
 
   it('a saved wire on an object input loads whether the option is on or off, and keeps its place', () => {
-    for (const params of [{ pointsFrom: 'objects' }, {}]) {
+    for (const params of [{ pointsFrom: 'objects' }, {}] as Params[]) {
       const s = setup({ route: params });
       const text = serializeBoard({ name: 'x', mode: '3d', graph: s.graph });
       const back = parseBoard(text);
