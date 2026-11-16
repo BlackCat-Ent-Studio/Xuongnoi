@@ -17,6 +17,7 @@ import cityDelivery from '../samples/city-delivery.json';
 import cityDelivery3d from '../samples/city-delivery-3d.json';
 import robotLineFollow from '../samples/robot-line-follow.json';
 import { createRobotArmBoard } from '../samples/robot-arm-board';
+import { createAgvBoard } from '../samples/agv-board';
 import { parseBoard, serializeBoard } from './save-format';
 
 /**
@@ -25,6 +26,7 @@ import { parseBoard, serializeBoard } from './save-format';
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, nhìn từ trên)', json: robotLineFollow },
   { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
+  { id: 'agv-shuttle', label: 'Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)', json: JSON.parse(serializeBoard(createAgvBoard())) },
 ];
 
 /** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */
