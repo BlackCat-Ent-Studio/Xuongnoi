@@ -7,6 +7,9 @@ import { blockStyleOf } from '../engine/block-styles';
 import { buildBlockLook, type BlockLookFigure } from './block-looks';
 import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
+import { RobotFigure } from './robot-models';
+import { LINE_DOT_LOOK, LINE_TRACK_LOOK } from '../world/line-track';
+import { LineDotFigure, LineTrackFigure } from './line-track-figure';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
 import { damagedView, tintDamaged } from './damaged-look';
@@ -36,7 +39,10 @@ type Entry =
       color: string;
     }
   | { type: 'vehicle'; figure: VehicleFigure; model: string }
+  | { type: 'robot'; figure: RobotFigure }
   | { type: 'portal'; figure: PortalFigure }
+  | { type: 'track'; figure: LineTrackFigure }
+  | { type: 'dot'; figure: LineDotFigure }
   | { type: 'stage'; figure: StageFigure; role: string };
 
 /** Length along x, head along z, resting on its side: yaw a quarter turn, then lay the long axis down. */
@@ -59,10 +65,13 @@ function styleOf(e: EntityView): string {
 function matches(entry: Entry, e: EntityView): boolean {
   if (entry.type === 'stage') return false; // decided by the role, see sync
   if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
-  if (entry.type === 'block') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === 'box';
+  if (entry.type === 'track') return e.kind === 'block' && e.look === LINE_TRACK_LOOK;
+  if (entry.type === 'dot') return e.kind === 'block' && e.look === LINE_DOT_LOOK;
+  if (entry.type === 'block') return e.kind === 'block' && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && styleOf(e) === 'box';
   if (entry.type === 'look') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === entry.style;
   if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
   if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
+  if (entry.type === 'robot') return e.kind === 'robot';
   return e.kind === 'character' && entry.look === resolveLook(e.look);
 }
 
@@ -130,7 +139,7 @@ export class SceneView {
       if (entry.type === 'character') entry.figure.setMode(mode);
     }
     // Portals and stage props are drawn differently per view; they are rebuilt on the next sync.
-    for (const [id, entry] of [...this.entries]) if (entry.type === 'portal' || entry.type === 'stage') this.removeEntry(id, entry);
+    for (const [id, entry] of [...this.entries]) if (entry.type === 'portal' || entry.type === 'stage' || entry.type === 'track' || entry.type === 'dot') this.removeEntry(id, entry);
   }
 
   /** Items riding on a character, by item id: the stage draws them at the figure's scale instead of the box position. */
@@ -202,8 +211,16 @@ export class SceneView {
         entry.figure.update(e);
         continue;
       }
+      if (entry.type === 'robot') {
+        entry.figure.update(e);
+        continue;
+      }
       if (entry.type === 'portal') {
         entry.figure.update(e, dt);
+        continue;
+      }
+      if (entry.type === 'track' || entry.type === 'dot') {
+        entry.figure.update(e);
         continue;
       }
       if (entry.type === 'look') {
@@ -334,6 +351,12 @@ export class SceneView {
       this.group.add(figure.object);
       return { type: 'vehicle', figure, model: figure.model };
     }
+    if (e.kind === 'robot') {
+      const figure = new RobotFigure(e.color);
+      castShadows(figure.object);
+      this.group.add(figure.object);
+      return { type: 'robot', figure };
+    }
     if (e.kind === 'character') {
       const figure = new Humanoid(e.color, this.mode, e.look);
       if (this.stage) figure.setStageLook(this.stage.characterScale, true);
@@ -361,6 +384,16 @@ export class SceneView {
       this.group.add(figure.object);
       return { type: 'portal', figure };
     }
+    if (e.kind === 'block' && e.look === LINE_TRACK_LOOK && e.track) {
+      const figure = new LineTrackFigure(e, this.mode);
+      this.group.add(figure.object);
+      return { type: 'track', figure };
+    }
+    if (e.kind === 'block' && e.look === LINE_DOT_LOOK) {
+      const figure = new LineDotFigure(e, this.mode);
+      this.group.add(figure.object);
+      return { type: 'dot', figure };
+    }
     const style = styleOf(e);
     if (style !== 'box') {
       const figure = buildBlockLook(blockStyleOf(style), e.color, e.size, e.label ?? '', e.ownerNodeId);
@@ -383,10 +416,10 @@ export class SceneView {
     if (entry.type === 'stage') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
-    } else if (entry.type === 'portal') {
+    } else if (entry.type === 'portal' || entry.type === 'track' || entry.type === 'dot') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
-    } else if (entry.type === 'vehicle') {
+    } else if (entry.type === 'vehicle' || entry.type === 'robot') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'character') {

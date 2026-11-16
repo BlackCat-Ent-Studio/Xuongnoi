@@ -33,7 +33,7 @@ export const gripperNode: NodeDef<GripperState> = {
   labelEn: 'Gripper',
   category: 'action',
   description:
-    'Tay kẹp cuối cánh tay. Gắn vào đầu thanh nối hoặc đầu khớp. Khi "Kẹp" bật, nó kẹp món đồ vật gần nhất trong "Tầm với" mà bề ngang không quá "Độ mở". Mỗi ngón ép với "Lực kẹp" (N; chưa nối thì lấy lực mặc định, không vượt lực tối đa). Ma sát kẹp μ = số nhỏ hơn giữa μ của ngón và μ của món đồ. Kẹp giữ được khi số ngón × μ × lực mỗi ngón ≥ trọng lượng m × 9,81; nếu không món đồ TUỘT và rơi xuống (xung "Khi vật tuột"); phải nhả rồi kẹp lại. Tổng lực ép = số ngón × lực mỗi ngón; vượt "Lực chịu nén tối đa" của món đồ thì nó bị HỎNG (méo, sẫm màu; xung "Khi làm hỏng vật") nhưng vẫn kẹp được. Món đang kẹp đi theo tay và khối lượng của nó đè lên mọi khớp phía sau. Món đồ đang nằm trên bàn thì bàn đỡ, chưa cần ma sát cho tới khi nhấc lên. Chưa tính gia tốc của tay.',
+    'Tay kẹp cuối cánh tay: kẹp món đồ vật gần nhất trong tầm với bằng hai ngón với lực bạn chọn. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng.',
   inputs: [
     { id: 'base', type: 'object', label: 'Gắn vào', required: true },
     { id: 'close', type: 'bool', label: 'Kẹp' },

@@ -1,0 +1,560 @@
+{
+ "format_version": 1,
+ "name": "Robot dò đường",
+ "mode": "2d-top",
+ "graph": {
+  "nodes": [
+   {
+    "id": "duong",
+    "kind": "line-track",
+    "params": {
+     "shape": "eight",
+     "center": {
+      "x": 0,
+      "y": 0.5,
+      "z": 0
+     },
+     "length": 12.0,
+     "breadth": 5.0,
+     "width": 0.3
+    },
+    "pos": {
+     "x": 40,
+     "y": 40
+    }
+   },
+   {
+    "id": "than",
+    "kind": "robot-body",
+    "params": {
+     "position": {
+      "x": 4.243,
+      "y": 0.3,
+      "z": 2.5
+     },
+     "length": 0.9,
+     "width": 0.7,
+     "color": "#3b82f6"
+    },
+    "pos": {
+     "x": 40,
+     "y": 360
+    }
+   },
+   {
+    "id": "mat-trai",
+    "kind": "line-sensor",
+    "params": {
+     "side": -0.2,
+     "forward": 0.6,
+     "spot": 0.2
+    },
+    "pos": {
+     "x": 400,
+     "y": 40
+    }
+   },
+   {
+    "id": "mat-giua",
+    "kind": "line-sensor",
+    "params": {
+     "side": 0,
+     "forward": 0.6,
+     "spot": 0.2
+    },
+    "pos": {
+     "x": 400,
+     "y": 360
+    }
+   },
+   {
+    "id": "mat-phai",
+    "kind": "line-sensor",
+    "params": {
+     "side": 0.2,
+     "forward": 0.6,
+     "spot": 0.2
+    },
+    "pos": {
+     "x": 400,
+     "y": 680
+    }
+   },
+   {
+    "id": "lech",
+    "kind": "math",
+    "params": {
+     "op": "sub"
+    },
+    "pos": {
+     "x": 760,
+     "y": 40
+    }
+   },
+   {
+    "id": "toc-do",
+    "kind": "math",
+    "params": {
+     "op": "mul"
+    },
+    "pos": {
+     "x": 760,
+     "y": 360
+    }
+   },
+   {
+    "id": "he-so",
+    "kind": "const",
+    "params": {
+     "value": 1.3
+    },
+    "pos": {
+     "x": 760,
+     "y": 660
+    }
+   },
+   {
+    "id": "pid",
+    "kind": "pid",
+    "params": {
+     "kp": 3.0,
+     "ki": 0.0,
+     "kd": 0.0,
+     "target": 0,
+     "outMin": -1,
+     "outMax": 1
+    },
+    "pos": {
+     "x": 1120,
+     "y": 40
+    }
+   },
+   {
+    "id": "cong-trai",
+    "kind": "math",
+    "params": {
+     "op": "add"
+    },
+    "pos": {
+     "x": 1120,
+     "y": 420
+    }
+   },
+   {
+    "id": "tru-phai",
+    "kind": "math",
+    "params": {
+     "op": "sub"
+    },
+    "pos": {
+     "x": 1120,
+     "y": 700
+    }
+   },
+   {
+    "id": "dc-trai",
+    "kind": "motor",
+    "params": {
+     "side": -0.4
+    },
+    "pos": {
+     "x": 1480,
+     "y": 40
+    }
+   },
+   {
+    "id": "dc-phai",
+    "kind": "motor",
+    "params": {
+     "side": 0.4
+    },
+    "pos": {
+     "x": 1480,
+     "y": 360
+    }
+   },
+   {
+    "id": "do-thi",
+    "kind": "signal-plot",
+    "params": {
+     "title": "Sai lệch và lệnh lái",
+     "labelA": "Sai lệch",
+     "labelB": "Lệnh lái",
+     "labelC": "Tốc độ",
+     "corner": "top-right"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 680
+    }
+   },
+   {
+    "id": "hien-toc-do",
+    "kind": "show-number",
+    "params": {
+     "label": "Tốc độ (m/s)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 760,
+     "y": 940
+    }
+   },
+   {
+    "id": "khi-bat-dau",
+    "kind": "on-start",
+    "params": {},
+    "pos": {
+     "x": 40,
+     "y": 940
+    }
+   },
+   {
+    "id": "may-quay",
+    "kind": "camera",
+    "params": {
+     "mode": "follow",
+     "zoom": 0.8
+    },
+    "pos": {
+     "x": 40,
+     "y": 680
+    }
+   }
+  ],
+  "wires": [
+   {
+    "id": "w1",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-trai",
+     "port": "who"
+    }
+   },
+   {
+    "id": "w2",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-giua",
+     "port": "who"
+    }
+   },
+   {
+    "id": "w3",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-phai",
+     "port": "who"
+    }
+   },
+   {
+    "id": "w4",
+    "from": {
+     "node": "duong",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-trai",
+     "port": "track"
+    }
+   },
+   {
+    "id": "w5",
+    "from": {
+     "node": "duong",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-giua",
+     "port": "track"
+    }
+   },
+   {
+    "id": "w6",
+    "from": {
+     "node": "duong",
+     "port": "self"
+    },
+    "to": {
+     "node": "mat-phai",
+     "port": "track"
+    }
+   },
+   {
+    "id": "w7",
+    "from": {
+     "node": "mat-trai",
+     "port": "level"
+    },
+    "to": {
+     "node": "lech",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w8",
+    "from": {
+     "node": "mat-phai",
+     "port": "level"
+    },
+    "to": {
+     "node": "lech",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w9",
+    "from": {
+     "node": "lech",
+     "port": "out"
+    },
+    "to": {
+     "node": "pid",
+     "port": "measured"
+    }
+   },
+   {
+    "id": "w10",
+    "from": {
+     "node": "mat-giua",
+     "port": "level"
+    },
+    "to": {
+     "node": "toc-do",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w11",
+    "from": {
+     "node": "he-so",
+     "port": "value"
+    },
+    "to": {
+     "node": "toc-do",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w12",
+    "from": {
+     "node": "toc-do",
+     "port": "out"
+    },
+    "to": {
+     "node": "cong-trai",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w13",
+    "from": {
+     "node": "pid",
+     "port": "out"
+    },
+    "to": {
+     "node": "cong-trai",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w14",
+    "from": {
+     "node": "toc-do",
+     "port": "out"
+    },
+    "to": {
+     "node": "tru-phai",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w15",
+    "from": {
+     "node": "pid",
+     "port": "out"
+    },
+    "to": {
+     "node": "tru-phai",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w16",
+    "from": {
+     "node": "cong-trai",
+     "port": "out"
+    },
+    "to": {
+     "node": "dc-trai",
+     "port": "power"
+    }
+   },
+   {
+    "id": "w17",
+    "from": {
+     "node": "tru-phai",
+     "port": "out"
+    },
+    "to": {
+     "node": "dc-phai",
+     "port": "power"
+    }
+   },
+   {
+    "id": "w18",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "dc-trai",
+     "port": "body"
+    }
+   },
+   {
+    "id": "w19",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "dc-phai",
+     "port": "body"
+    }
+   },
+   {
+    "id": "w20",
+    "from": {
+     "node": "pid",
+     "port": "error"
+    },
+    "to": {
+     "node": "do-thi",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w21",
+    "from": {
+     "node": "pid",
+     "port": "out"
+    },
+    "to": {
+     "node": "do-thi",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w22",
+    "from": {
+     "node": "than",
+     "port": "speed"
+    },
+    "to": {
+     "node": "do-thi",
+     "port": "c"
+    }
+   },
+   {
+    "id": "w23",
+    "from": {
+     "node": "than",
+     "port": "speed"
+    },
+    "to": {
+     "node": "hien-toc-do",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w24",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "may-quay",
+     "port": "target"
+    }
+   },
+   {
+    "id": "w25",
+    "from": {
+     "node": "khi-bat-dau",
+     "port": "started"
+    },
+    "to": {
+     "node": "may-quay",
+     "port": "on"
+    }
+   }
+  ],
+  "settings": {
+   "wireRule": true
+  }
+ },
+ "notes": [
+  {
+   "id": "n1",
+   "text": "Robot dò đường: robot tự chạy quanh đường line đen. Bấm Chơi và xem.",
+   "color": "yellow",
+   "pos": {
+    "x": 40,
+    "y": 1040
+   },
+   "size": {
+    "w": 300,
+    "h": 120
+   }
+  },
+  {
+   "id": "n2",
+   "text": "3 mắt dò line (trái, giữa, phải) nhìn xuống sàn. Mắt giữa thấy line càng rõ thì robot chạy càng nhanh.",
+   "color": "green",
+   "pos": {
+    "x": 400,
+    "y": 1040
+   },
+   "size": {
+    "w": 300,
+    "h": 130
+   }
+  },
+  {
+   "id": "n3",
+   "text": "Sai lệch = mắt trái trừ mắt phải. Bộ PID đổi sai lệch thành lệnh lái: động cơ trái cộng lệnh, động cơ phải trừ lệnh.",
+   "color": "blue",
+   "pos": {
+    "x": 760,
+    "y": 1160
+   },
+   "size": {
+    "w": 320,
+    "h": 130
+   }
+  },
+  {
+   "id": "n4",
+   "text": "Thử chỉnh Kp trong Bộ PID: Kp = 0 thì robot không lái nữa và đi lệch khỏi line. Rút bất kỳ dây nào thì robot hỏng.",
+   "color": "pink",
+   "pos": {
+    "x": 1120,
+    "y": 1040
+   },
+   "size": {
+    "w": 320,
+    "h": 130
+   }
+  }
+ ]
+}

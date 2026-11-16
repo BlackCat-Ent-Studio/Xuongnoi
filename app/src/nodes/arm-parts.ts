@@ -73,7 +73,8 @@ export function baseFrame(ctx: EvalCtx, baseId: EntityId | null, mount: Vec3): F
   } else {
     const view = ctx.world.getEntity(baseId);
     if (!view || !view.visible) return null;
-    frame = { pos: view.position, yaw: 0, pitch: 0 };
+    // A robot chassis turns clockwise seen from above (heading 0 = +x); the arm frame turns the other way round, and the side view has no turning.
+    frame = { pos: view.position, yaw: view.robot && ctx.mode !== '2d-side' ? -view.robot.heading : 0, pitch: 0 };
   }
   return { pos: localToWorld(frame, mount), yaw: frame.yaw, pitch: frame.pitch };
 }

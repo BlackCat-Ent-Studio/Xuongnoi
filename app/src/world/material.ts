@@ -9,7 +9,7 @@ import type { Entity } from './entity';
  */
 
 /** Mass in kg when a node leaves "Khối lượng" at its default. */
-export const DEFAULT_MASS_KG: Record<EntityKind, number> = { block: 10, item: 1, character: 60, vehicle: 1000 };
+export const DEFAULT_MASS_KG: Record<EntityKind, number> = { block: 10, item: 1, character: 60, vehicle: 1000, robot: 2 };
 /** Friction coefficient of the surface by default. */
 export const DEFAULT_MU = 0.5;
 export const MAX_MASS_KG = 100000;

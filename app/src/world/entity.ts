@@ -8,8 +8,10 @@ import type {
   HitReaction,
   HoldStyle,
   ItemShape,
+  LineTrackSpec,
   Vec3,
 } from '../engine/types';
+import type { RobotBody } from './robot-drive';
 import type { VehicleBody } from './vehicles';
 import { turnAngle, type TurnState } from './platforms';
 import type { BulletState } from './projectiles';
@@ -65,6 +67,8 @@ export interface Entity {
   thrownBy?: string | null;
   /** Vehicles: dynamics state. */
   vehicle?: VehicleBody;
+  /** Robot chassis: drive state and mounted wheels. */
+  robot?: RobotBody;
   /** Characters: id of the vehicle this one sits in, else null. */
   seatedIn: string | null;
   /** Blocks: set once a node moved or turned it; it then no longer counts as static terrain for path planning. */
@@ -80,6 +84,8 @@ export interface Entity {
   label?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
+  /** Blocks: a painted line (see LineTrackSpec). */
+  track?: LineTrackSpec;
   /** Solid-body worlds: where this character or item started; a fall off the tray brings it back here. */
   home?: Vec3;
 
@@ -129,8 +135,21 @@ export function toView(e: Entity): EntityView {
           vehicle: { model: e.vehicle.spec.model, speed: e.vehicle.speed, wheelSpin: e.vehicle.wheelSpin, heading: e.vehicle.heading, driver: e.vehicle.driver, hitSeq: e.vehicle.hitSeq, hitWith: e.vehicle.hitWith, steerMode: e.vehicle.spec.steerMode },
         }
       : {}),
+    ...(e.robot
+      ? {
+          robot: {
+            length: e.robot.spec.length,
+            width: e.robot.spec.width,
+            speed: e.robot.speed,
+            heading: e.robot.heading,
+            turnRate: e.robot.turnRate,
+            wheels: [...e.robot.wheels.values()].map((w) => ({ side: w.side, forward: w.forward, radius: w.radius, spin: w.spin })),
+          },
+        }
+      : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
     ...(e.zone ? { zone: true } : {}),
+    ...(e.track ? { track: e.track } : {}),
     ...(e.belt ? { belt: { axis: beltAxis(e), speed: e.belt.speed, phase: e.belt.phase } } : {}),
     ...turnAngle(e),
     ...(e.collider ? { collider: colliderView(e) } : {}),

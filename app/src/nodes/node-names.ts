@@ -458,6 +458,31 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'line-sensor': {
+    vi: 'Cảm biến dò line',
+    en: 'Line Sensor',
+    ports: {
+      in: {
+        'who': ['Đối tượng', 'Mounted on'],
+        'track': ['Đường line', 'Track'],
+      },
+      out: {
+        'onLine': ['Thấy line', 'On line'],
+        'level': ['Độ đậm', 'Level'],
+        'entered': ['Khi gặp line', 'On enter'],
+        'left': ['Khi rời line', 'On leave'],
+      },
+    },
+  },
+  'line-track': {
+    vi: 'Đường line',
+    en: 'Line Track',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+      },
+    },
+  },
   'map-range': {
     vi: 'Quy đổi khoảng',
     en: 'Map Range',
@@ -521,6 +546,38 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'moveY': ['Đi dọc', 'Move Y'],
         'atEnd': ['Khi tới điểm cuối', 'On reach end'],
         'route': ['Tuyến đi tuần', 'Patrol route'],
+      },
+    },
+  },
+  'pid': {
+    vi: 'Bộ điều khiển PID',
+    en: 'PID Controller',
+    ports: {
+      in: {
+        'measured': ['Giá trị đo', 'Measured value'],
+        'target': ['Giá trị đặt', 'Setpoint'],
+        'enable': ['Bật', 'Enable'],
+        'reset': ['Đặt lại', 'Reset'],
+      },
+      out: {
+        'out': ['Điều khiển', 'Control output'],
+        'error': ['Sai lệch', 'Error'],
+        'saturated': ['Chạm giới hạn', 'Saturated'],
+        'p': ['Phần tỉ lệ (P)', 'P term'],
+        'i': ['Phần tích lũy (I)', 'I term'],
+        'd': ['Phần dự đoán (D)', 'D term'],
+      },
+    },
+  },
+  'signal-plot': {
+    vi: 'Đồ thị tín hiệu',
+    en: 'Signal Plot / Scope',
+    ports: {
+      in: {
+        'a': ['Tín hiệu 1', 'Signal 1'],
+        'b': ['Tín hiệu 2', 'Signal 2'],
+        'c': ['Tín hiệu 3', 'Signal 3'],
+        'pause': ['Dừng vẽ', 'Pause'],
       },
     },
   },
@@ -915,6 +972,32 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'lost': ['Khi mất dấu', 'On lost'],
         'nearest': ['Đối tượng gần nhất', 'Nearest'],
         'distance': ['Khoảng cách', 'Distance'],
+      },
+    },
+  },
+  'robot-body': {
+    vi: 'Thân robot',
+    en: 'Robot Chassis',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+        'speed': ['Tốc độ', 'Speed'],
+        'heading': ['Hướng', 'Heading'],
+        'turnRate': ['Tốc độ quay', 'Turn rate'],
+      },
+    },
+  },
+  'motor': {
+    vi: 'Động cơ',
+    en: 'Motor',
+    ports: {
+      in: {
+        'body': ['Thân', 'Chassis'],
+        'power': ['Công suất', 'Power'],
+      },
+      out: {
+        'rpm': ['Vòng quay', 'RPM'],
+        'turning': ['Đang quay', 'Spinning'],
       },
     },
   },

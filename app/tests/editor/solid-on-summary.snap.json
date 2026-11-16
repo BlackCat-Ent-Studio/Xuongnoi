@@ -339,6 +339,25 @@
   }
  },
  {
+  "id": "sample:robot-line-follow",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff6c93e3"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff6c93e3"
+  }
+ },
+ {
   "id": "sample:robot-arm",
   "off": {
    "ended": "running",
@@ -839,25 +858,6 @@
   }
  },
  {
-  "id": "lesson:weight-force",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b3f8a76f"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b3f8a76f"
-  }
- },
- {
   "id": "lesson:vehicles",
   "off": {
    "ended": "running",
@@ -934,6 +934,101 @@
   }
  },
  {
+  "id": "lesson:two-motor-robot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  }
+ },
+ {
+  "id": "lesson:line-eyes",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  }
+ },
+ {
+  "id": "lesson:pid-control",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  }
+ },
+ {
+  "id": "lesson:weight-force",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  }
+ },
+ {
+  "id": "lesson:robot-arm",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "25d74ad5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "25d74ad5"
+  }
+ },
+ {
   "id": "lesson:cargo-delivery",
   "off": {
    "ended": "running",
@@ -973,25 +1068,6 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "d2d6a01b"
-  }
- },
- {
-  "id": "lesson:robot-arm",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "25d74ad5"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "25d74ad5"
   }
  },
  {
@@ -2224,6 +2300,120 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "66d87cad"
+  }
+ },
+ {
+  "id": "handbook:robot-body",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c6e51c6d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c6e51c6d"
+  }
+ },
+ {
+  "id": "handbook:motor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "abcdfe78"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "abcdfe78"
+  }
+ },
+ {
+  "id": "handbook:line-track",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  }
+ },
+ {
+  "id": "handbook:line-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  }
+ },
+ {
+  "id": "handbook:pid",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "351dba8a"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "351dba8a"
+  }
+ },
+ {
+  "id": "handbook:signal-plot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c999eb29"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c999eb29"
   }
  },
  {

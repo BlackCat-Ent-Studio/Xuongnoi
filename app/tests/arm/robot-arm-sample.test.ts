@@ -260,3 +260,24 @@ describe('robot arm sample controls', () => {
     expect(s.out('gripper', 'gripForce')).toBe(30);
   });
 });
+
+describe('joint mounted on a robot chassis', () => {
+  it('top view: the servo and its link ride along with the chassis and turn with its heading', () => {
+    const r = rig(
+      [
+        ['body', 'robot-body', { position: { x: 0, y: 0.5, z: 0 }, heading: 90 }],
+        ['go', 'on-start'],
+        ['j', 'joint', { axis: 'yaw', min: -180, max: 180, start: 0 }],
+        ['l', 'link', { length: 2 }],
+      ],
+      [['body', 'self', 'j', 'base'], ['go', 'started', 'j', 'power'], ['j', 'tip', 'l', 'base']],
+      '2d-top',
+    );
+    r.tick(5);
+    const beam = r.world.entities().find((e) => e.ownerNodeId === 'l')!;
+    const body = r.world.entities().find((e) => e.ownerNodeId === 'body')!;
+    // heading 90 deg clockwise from above = toward +z: the 2 m link lies from the chassis centre along +z
+    expect(beam.position.x).toBeCloseTo(body.position.x, 3);
+    expect(beam.position.z - body.position.z).toBeCloseTo(1, 3);
+  });
+});

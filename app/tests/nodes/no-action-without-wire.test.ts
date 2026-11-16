@@ -52,12 +52,14 @@ const ACTION_BY_ARGS: Record<string, (a: Args) => boolean> = {
   },
   setVehicleInput: (a) => a[1] !== 0 || a[2] !== 0,
   setVehicleTow: (a) => a[1] !== null,
+  setRobotWheel: (a) => a[2] !== null && (a[2] as { rpm: number }).rpm !== 0,
   setCamera: (a) => a[1] !== null,
 };
 
 /** Kinds allowed to make a world call without a wire, each with the reason. Keep this list short and honest. */
 const ALLOWED_CALLS: Record<string, { calls: string[]; why: string }> = {
   zone: { calls: ['hide'], why: 'hides its own editor marker box on the first tick (never a thing the game shows)' },
+  'line-sensor': { calls: ['spawn', 'show', 'hide'], why: 'makes, shows and hides its own marker dot under the eye; the dot is a mark, never a thing the game reads' },
 };
 
 /** Kinds allowed to show a HUD item with no wire. */
@@ -176,7 +178,7 @@ const kinds = (): string[] => listNodeDefs().map((d) => d.kind);
 
 describe('no action without its wire', () => {
   it('covers every registered node kind', () => {
-    expect(kinds().length).toBeGreaterThanOrEqual(57);
+    expect(kinds().length).toBeGreaterThanOrEqual(63);
   });
 
   for (const kind of kinds()) {

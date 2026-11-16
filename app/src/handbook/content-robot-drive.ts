@@ -1,0 +1,136 @@
+import type { Board } from '../engine/types';
+import { build, v } from './boards-math-object-output';
+import type { HandbookEntry } from './types';
+
+/** Handbook pages for the robot drive train: the chassis ("Thân robot") and its wheel motors ("Động cơ"). */
+
+const BODY_PARAM_TEXT = {
+  colliderSize:
+    'Nâng cao. Cỡ của "vùng va chạm" vô hình dùng để chạm tường và khối. Để 0, 0, 0 thì vùng va chạm là hình vuông có cạnh bằng cạnh dài nhất của thân (để robot quay mà không kẹt góc). Đặt nhỏ hơn thì lọt khe hẹp dễ hơn.',
+  colliderOffset: 'Nâng cao. Dịch vùng va chạm lệch khỏi tâm của thân (ngang, cao, sâu). Để 0, 0, 0 là nằm chính giữa.',
+  gravityScale: 'Nâng cao. Mức bị kéo xuống: 1 là bình thường, 0 là lơ lửng. Chỉ có tác dụng khi game có trọng lực (nhìn ngang hoặc 3D).',
+} as const;
+
+/** Chassis with two motors that are driven by two constants: they differ, so the robot drives a circle. */
+function tryRobotBody(): Board {
+  return build(
+    'Thử: Thân robot',
+    '2d-top',
+    'Nhìn từ trên xuống. Hai Động cơ gắn vào Thân robot, mỗi cái nhận một Số cố định làm công suất: bánh trái 1, bánh phải 0.5, nên robot chạy vòng tròn. Chỉnh "Khối lượng" hoặc "Độ bám" của Thân rồi chơi lại để thấy robot nặng hơn thì ì hơn, sàn trơn hơn thì trượt xa hơn.',
+    [
+      { id: 'left-power', kind: 'const', col: 0, row: 0, params: { value: 1 } },
+      { id: 'right-power', kind: 'const', col: 0, row: 1, params: { value: 0.5 } },
+      { id: 'body', kind: 'robot-body', col: 1, row: 0, params: { position: v(-3, 0.5, 2) } },
+      { id: 'left-motor', kind: 'motor', col: 2, row: 0, params: { side: -0.4 } },
+      { id: 'right-motor', kind: 'motor', col: 2, row: 1, params: { side: 0.4 } },
+      { id: 'speed', kind: 'show-number', col: 3, row: 0, params: { label: 'Tốc độ (m/s)' } },
+      { id: 'turn', kind: 'show-number', col: 3, row: 1, params: { label: 'Tốc độ quay (độ/giây)', corner: 'top-right' } },
+    ],
+    [
+      ['left-power', 'value', 'left-motor', 'power'],
+      ['right-power', 'value', 'right-motor', 'power'],
+      ['body', 'self', 'left-motor', 'body'],
+      ['body', 'self', 'right-motor', 'body'],
+      ['body', 'speed', 'speed', 'value'],
+      ['body', 'turnRate', 'turn', 'value'],
+    ],
+  );
+}
+
+/** Chassis with two motors; the arrow keys are mixed into a left and a right power (tank control). */
+function tryMotor(): Board {
+  return build(
+    'Thử: Động cơ',
+    '2d-top',
+    'Nhìn từ trên xuống. Mũi tên lên/xuống là công suất chung của hai bánh, trái/phải làm hai bánh chạy lệch nhau: bánh trái = lên + phải, bánh phải = lên − phải. Bấm mũi tên lên để chạy thẳng, thêm phải để rẽ. Thử đổi "Chiều quay" của một động cơ, hoặc đặt "Vị trí ngang" của nó về 0.',
+    [
+      { id: 'stick', kind: 'stick', col: 0, row: 0 },
+      { id: 'left-mix', kind: 'math', col: 1, row: 0, params: { op: 'add' } },
+      { id: 'right-mix', kind: 'math', col: 1, row: 1, params: { op: 'sub' } },
+      { id: 'body', kind: 'robot-body', col: 2, row: 0, params: { position: v(-4, 0.5, 0) } },
+      { id: 'left-motor', kind: 'motor', col: 3, row: 0, params: { side: -0.4 } },
+      { id: 'right-motor', kind: 'motor', col: 3, row: 1, params: { side: 0.4 } },
+      { id: 'rpm', kind: 'show-number', col: 4, row: 0, params: { label: 'Vòng quay bánh trái' } },
+      { id: 'wall', kind: 'block', col: 2, row: 2, params: { position: v(6, 0.5, 0), size: v(1, 1, 8), color: '#737373' } },
+    ],
+    [
+      ['stick', 'y', 'left-mix', 'a'],
+      ['stick', 'x', 'left-mix', 'b'],
+      ['stick', 'y', 'right-mix', 'a'],
+      ['stick', 'x', 'right-mix', 'b'],
+      ['left-mix', 'out', 'left-motor', 'power'],
+      ['right-mix', 'out', 'right-motor', 'power'],
+      ['body', 'self', 'left-motor', 'body'],
+      ['body', 'self', 'right-motor', 'body'],
+      ['left-motor', 'rpm', 'rpm', 'value'],
+    ],
+  );
+}
+
+export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
+  {
+    kind: 'robot-body',
+    purpose: 'Thân của một robot: một khối nằm trên mặt đất có khối lượng và độ bám thật. Tự nó không chạy; chỉ các Động cơ gắn lên nó mới đẩy nó đi.',
+    whenToUse:
+      'Làm robot tự hành, xe dò đường, robot giao hàng, bất kỳ cỗ máy nào có bánh. Thân cho biết robot đang chạy nhanh bao nhiêu, đang hướng về đâu và đang quay nhanh bao nhiêu để các mảnh ghép khác (cảm biến, bộ điều khiển) dùng.',
+    ports: {
+      self: 'Ra (vật): chính Thân này. Nối vào cổng "Thân" của từng Động cơ để gắn bánh lên nó.',
+      speed: 'Ra (số): tốc độ chạy tới, đơn vị mét trên giây. Dương là chạy tới, âm là đang lùi.',
+      heading: 'Ra (số): hướng mũi robot, đơn vị độ. 0 là sang phải, 90 là xuống dưới (nhìn từ trên), tăng dần theo chiều kim đồng hồ. Nhìn ngang thì luôn là 0.',
+      turnRate: 'Ra (số): tốc độ quay, độ trên giây. Dương là đang rẽ phải (cùng chiều kim đồng hồ), âm là rẽ trái.',
+    },
+    params: {
+      position: 'Chỗ robot xuất hiện lúc bắt đầu chơi (tâm của thân).',
+      heading: 'Mũi robot quay về đâu lúc bắt đầu, tính bằng độ: 0 là sang phải, 90 là xuống dưới.',
+      length: 'Chiều dài thân, tính bằng mét (theo hướng mũi).',
+      width: 'Chiều rộng thân, tính bằng mét. Hai bánh đặt ở hai bên nên bề ngang thường hơn "Vị trí ngang" của bánh một chút.',
+      height: 'Chiều cao thân, tính bằng mét.',
+      mass: 'Khối lượng, kg. Càng nặng thì mỗi lần ga hay phanh robot càng ì: lực đẩy của các Động cơ chia cho khối lượng. Chỉnh được ngay khi đang chơi.',
+      friction:
+        'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chơi.',
+      color: 'Màu thân robot. Đổi được ngay khi đang chơi.',
+      solid: '"Có" thì người đi bộ không đi xuyên qua robot.',
+      ...BODY_PARAM_TEXT,
+    },
+    example:
+      'Thân robot "Đối tượng" → "Thân" của hai Động cơ (một bên trái, một bên phải); Số cố định 1 → "Công suất" của cả hai động cơ thì robot chạy thẳng; "Tốc độ" của Thân → Hiện số để xem robot chạy nhanh bao nhiêu.',
+    tips: [
+      'Thân không có cổng vào: nó chỉ chạy khi có Động cơ gắn vào và Động cơ có dây "Công suất". Không có động cơ nào thì robot đứng yên mãi.',
+      'Kích thước, màu, vị trí chỉ đọc lúc bắt đầu chơi (màu thì đổi được ngay); "Khối lượng" và "Độ bám" sửa được cả khi đang chơi.',
+      'Để robot quay mà không kẹt góc, vùng va chạm là hình vuông cạnh bằng chiều dài (hoặc rộng) lớn nhất. Muốn khác thì chỉnh "Cỡ vùng va chạm" trong Nâng cao.',
+      'Đơn vị là mét, kg, giây, độ. Nhìn ngang thì robot chỉ chạy theo trục ngang, không quay.',
+    ],
+    lessonId: 'two-motor-robot',
+    tryBoard: tryRobotBody,
+  },
+  {
+    kind: 'motor',
+    purpose: 'Một động cơ có bánh xe, gắn lên Thân robot. Công suất bạn nối vào quyết định bánh quay nhanh hay chậm, tiến hay lùi.',
+    whenToUse:
+      'Mỗi bánh một Động cơ. Hai động cơ hai bên chạy bằng nhau thì robot chạy thẳng; chạy lệch nhau thì rẽ; ngược chiều nhau thì quay tại chỗ. Một động cơ lệch khỏi giữa thì robot đi vòng tròn. Dùng cho robot dò đường, xe tự hành, mọi cỗ máy có bánh.',
+    ports: {
+      body: 'Vào (vật): nối "Đối tượng" của Thân robot muốn gắn bánh lên. Không nối thì bánh quay trơ, không đẩy ai.',
+      power: 'Vào (số): công suất từ -1 đến 1. 1 là quay hết tốc độ tới, -1 là hết tốc độ lùi, 0 là đứng yên. Không nối dây thì tính là 0 nên bánh không quay.',
+      rpm: 'Ra (số): vòng quay thật của bánh lúc này, tính bằng vòng mỗi phút. Dương là đẩy robot tới. Bánh tăng tốc từ từ nên số này đuổi theo công suất chứ không nhảy ngay.',
+      turning: 'Ra: bật khi bánh đang quay.',
+    },
+    params: {
+      side: 'Chỗ gắn bánh theo bề ngang thân, tính bằng mét tính từ đường giữa: số âm là bên trái, số dương là bên phải. Hai bánh càng xa nhau thì robot rẽ càng chậm mà chắc. Một bánh gắn lệch tâm sẽ làm robot đi vòng.',
+      forward: 'Chỗ gắn bánh theo chiều dọc thân, mét: số dương là phía trước, số âm là phía sau. Chỉ để vẽ bánh đúng chỗ; chuyển động chỉ phụ thuộc vị trí ngang.',
+      wheelRadius: 'Bán kính bánh, mét. Bánh to đi được xa hơn cho mỗi vòng quay: tốc độ = vòng quay × 2π × bán kính ÷ 60.',
+      maxRpm: 'Tốc độ tối đa của động cơ khi công suất là 1, vòng mỗi phút. Mặc định 120 vòng/phút với bánh 0.15 m ra khoảng 1.9 m/s.',
+      accel: 'Độ tăng tốc của động cơ, vòng/phút mỗi giây. Nhỏ thì bánh ì khi bắt đầu quay và khi dừng; lớn thì đổi tốc độ gần như tức thì.',
+      reverse: '"Đảo chiều" thì công suất dương làm bánh quay lùi. Dùng khi động cơ bên kia lắp ngược chiều.',
+    },
+    example:
+      'Cần điều khiển → hai Phép tính (lên + phải cho bánh trái, lên − phải cho bánh phải) → "Công suất" của hai Động cơ; "Đối tượng" của Thân robot → "Thân" của cả hai.',
+    tips: [
+      'Đừng quên dây "Công suất": không có nó thì bánh không quay và robot không chạy, đúng như động cơ không có điện.',
+      'Chuyển động của robot do TẤT CẢ động cơ trên Thân cùng quyết định: tốc độ tới là trung bình các bánh, độ quay là chênh lệch giữa bánh bên trái và bên phải chia cho bề rộng giữa hai bánh.',
+      'Một động cơ không nối công suất vẫn tính là một bánh đứng yên: nó hãm bên đó nên robot vòng về phía bánh ấy.',
+      'Nhìn ngang thì robot chỉ chạy theo trục ngang, trung bình tốc độ các bánh, không quay.',
+    ],
+    lessonId: 'two-motor-robot',
+    tryBoard: tryMotor,
+  },
+];

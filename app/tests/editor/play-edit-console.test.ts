@@ -86,6 +86,22 @@ describe('computeIssues', () => {
     expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).not.toContain('no-character');
   });
 
+  it('does not ask for a Nhân vật when a robot chassis is the thing to play', () => {
+    const s = createEditorState(emptyBoard());
+    s.addNode('key', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-top').map((i) => i.key)).toContain('no-character');
+    s.addNode('robot-body', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-top').map((i) => i.key)).not.toContain('no-character');
+  });
+
+  it('does not ask for a Nhân vật when a joint (arm) is the thing to play', () => {
+    const s = createEditorState(emptyBoard());
+    s.addNode('key', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).toContain('no-character');
+    s.addNode('joint', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).not.toContain('no-character');
+  });
+
   it('lists unconnected required inputs with their node id', () => {
     const s = createEditorState(emptyBoard());
     s.addNode('character', { x: 0, y: 0 });
