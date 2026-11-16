@@ -113,5 +113,8 @@
  "handbook:motor": "abcdfe78:900",
  "lesson:line-eyes": "84812efc:900",
  "handbook:line-track": "e50e2334:900",
- "handbook:line-sensor": "e50e2334:900"
+ "handbook:line-sensor": "e50e2334:900",
+ "lesson:pid-control": "a49da133:900",
+ "handbook:pid": "351dba8a:900",
+ "handbook:signal-plot": "c999eb29:900"
 }

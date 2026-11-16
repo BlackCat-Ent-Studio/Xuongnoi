@@ -544,6 +544,38 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'pid': {
+    vi: 'Bộ điều khiển PID',
+    en: 'PID Controller',
+    ports: {
+      in: {
+        'measured': ['Giá trị đo', 'Measured value'],
+        'target': ['Giá trị đặt', 'Setpoint'],
+        'enable': ['Bật', 'Enable'],
+        'reset': ['Đặt lại', 'Reset'],
+      },
+      out: {
+        'out': ['Điều khiển', 'Control output'],
+        'error': ['Sai lệch', 'Error'],
+        'saturated': ['Chạm giới hạn', 'Saturated'],
+        'p': ['Phần tỉ lệ (P)', 'P term'],
+        'i': ['Phần tích lũy (I)', 'I term'],
+        'd': ['Phần dự đoán (D)', 'D term'],
+      },
+    },
+  },
+  'signal-plot': {
+    vi: 'Đồ thị tín hiệu',
+    en: 'Signal Plot / Scope',
+    ports: {
+      in: {
+        'a': ['Tín hiệu 1', 'Signal 1'],
+        'b': ['Tín hiệu 2', 'Signal 2'],
+        'c': ['Tín hiệu 3', 'Signal 3'],
+        'pause': ['Dừng vẽ', 'Pause'],
+      },
+    },
+  },
   'portal': {
     vi: 'Cổng dịch chuyển',
     en: 'Portal',

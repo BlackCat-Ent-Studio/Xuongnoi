@@ -553,11 +553,21 @@ export interface SolidBox {
 
 export type HudCorner = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 
+/** One line of a plot widget: samples oldest first, and the latest value for the legend. */
+export interface PlotTrace {
+  label: string;
+  color: string;
+  values: number[];
+  current: number;
+}
+
 /** An interactive or graphical widget drawn by the HUD instead of a plain text line. */
 export type HudWidget =
   | { type: 'button'; text: string }
   /** `fraction` is 0..1. The row shows `label` and `value` next to the bar. */
   | { type: 'bar'; fraction: number }
+  /** A scrolling line chart; `rev` changes whenever the picture needs redrawing. */
+  | { type: 'plot'; title: string; width: number; height: number; min: number; max: number; legend: boolean; points: number; traces: PlotTrace[]; rev: number }
   | { type: 'dialog'; question: string; answers: string[] }
   | { type: 'start'; title: string; buttonText: string; pauseMenu: boolean };
 

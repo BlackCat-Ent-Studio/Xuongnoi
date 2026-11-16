@@ -59,6 +59,8 @@ import { robotBodyNode } from './robot-body';
 import { motorNode } from './motor';
 import { lineSensorNode } from './line-sensor';
 import { lineTrackNode } from './line-track';
+import { pidNode } from './pid';
+import { signalPlotNode } from './signal-plot';
 import { applyNodeNames } from './node-names';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
@@ -135,6 +137,8 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   motorNode,
   lineTrackNode,
   lineSensorNode,
+  pidNode,
+  signalPlotNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.

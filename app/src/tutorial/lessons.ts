@@ -32,6 +32,7 @@ import { createCoursePackD } from './course-pack-d';
 import { createCoursePackE } from './course-pack-e';
 import { createCoursePackF } from './course-pack-f';
 import { createCoursePackG } from './course-pack-g';
+import { createCoursePackH } from './course-pack-h';
 
 // ---------- target helpers ----------
 
@@ -1228,7 +1229,7 @@ export const LESSONS: readonly Lesson[] = arrangeCourse([
   lesson1, lesson2, lesson3, lesson4, lesson5, lesson6, lesson7, lesson8, combatLesson, lessonVehicles, lessonBotDriver,
   lessonChanceZones, platformsShootingLesson, lessonCameraPortals, lessonEditorTools, lessonBotTool, lessonUiChest,
   ...createCoursePackA(KIT), ...createCoursePackB(KIT), ...createCoursePackC(KIT), ...createCoursePackD(KIT), ...createCoursePackE(KIT),
-  ...createCoursePackF(KIT), ...createCoursePackG(KIT),
+  ...createCoursePackF(KIT), ...createCoursePackG(KIT), ...createCoursePackH(KIT),
 ]);
 
 export function findLesson(id: string): Lesson | undefined {
