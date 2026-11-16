@@ -506,7 +506,7 @@
  "notes": [
   {
    "id": "n1",
-   "text": "Robot dò đường: robot tự chạy quanh đường line đen. Bấm Chơi và xem.",
+   "text": "Robot dò đường: robot tự chạy quanh đường line đen. Bấm Chạy và xem.",
    "color": "yellow",
    "pos": {
     "x": 40,

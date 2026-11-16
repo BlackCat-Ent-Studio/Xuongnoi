@@ -75,12 +75,12 @@ export const HEALTH_COLOR_TEXT = {
   },
   play: {
     title: 'Xem máu tụt',
-    text: 'Bấm "Chơi" và đứng yên. Mỗi viên đạn trúng làm thanh đo ngắn lại, còn 1 máu thì lời cảnh báo hiện lên.',
+    text: 'Bấm "Chạy" và đứng yên. Mỗi viên đạn trúng làm thanh đo ngắn lại, còn 1 máu thì lời cảnh báo hiện lên.',
     explain: 'Lần này bạn cứ đứng yên để bị bắn, cho thấy rõ thanh máu tụt và lời cảnh báo hiện lên.',
   },
   lost: {
     title: 'Hết máu rồi',
-    text: 'Chơi tới khi bạn hết máu. Nếu muốn xem lại, bấm "Chơi lại" trên bảng kết quả.',
+    text: 'Chạy tới khi bạn hết máu. Nếu muốn xem lại, bấm "Chạy lại" trên bảng kết quả.',
   },
   done: {
     title: 'Bạn biết đổi số thành hình rồi!',
@@ -133,13 +133,13 @@ export const START_SCREEN_TEXT = {
     text: 'Nối cổng "Hết giờ" của Hẹn giờ sang cổng "Thua" của mảnh ghép Thắng / Thua.',
   },
   play: {
-    title: 'Thử chơi',
-    text: 'Bấm "Chơi". Bấm nút trên Màn hình mở đầu, rồi bấm nút "Mở cửa" và chạy tới ngôi sao bằng mũi tên.',
-    explain: 'Nhấn Esc khi đang chơi để tạm dừng. Menu tạm dừng bật tắt được ở Thuộc tính của Màn hình mở đầu.',
+    title: 'Chạy thử',
+    text: 'Bấm "Chạy". Bấm nút trên Màn hình mở đầu, rồi bấm nút "Mở cửa" và chạy tới ngôi sao bằng mũi tên.',
+    explain: 'Nhấn Esc khi đang chạy để tạm dừng. Menu tạm dừng bật tắt được ở Thuộc tính của Màn hình mở đầu.',
   },
   win: {
     title: 'Chạm ngôi sao',
-    text: 'Chơi tiếp cho tới khi chạm ngôi sao. Nếu hết giờ, bấm "Chơi lại" trên bảng kết quả.',
+    text: 'Chạy tiếp cho tới khi chạm ngôi sao. Nếu hết giờ, bấm "Chạy lại" trên bảng kết quả.',
   },
   done: {
     title: 'Game của bạn có màn hình mở đầu!',
@@ -194,11 +194,11 @@ export const ASK_DIALOG_TEXT = {
   },
   play: {
     title: 'Thử trả lời',
-    text: 'Bấm "Chơi". Đi sang phải tới chỗ bot, bấm câu trả lời bạn chọn trên hộp hỏi hiện ra, rồi chạy tới ngôi sao.',
+    text: 'Bấm "Chạy". Đi sang phải tới chỗ bot, bấm câu trả lời bạn chọn trên hộp hỏi hiện ra, rồi chạy tới ngôi sao.',
   },
   win: {
     title: 'Tới ngôi sao',
-    text: 'Chơi tiếp cho tới khi chạm ngôi sao. Nếu lỡ thua, bấm "Chơi lại" và chọn câu khác.',
+    text: 'Chạy tiếp cho tới khi chạm ngôi sao. Nếu lỡ thua, bấm "Chạy lại" và chọn câu khác.',
   },
   done: {
     title: 'Bạn biết hỏi người chơi rồi!',

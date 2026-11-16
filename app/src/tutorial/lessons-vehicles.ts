@@ -60,7 +60,7 @@ const T = {
   },
   play: {
     title: 'Thử lái xe',
-    text: 'Bấm "Chơi". Đi sang phải bằng mũi tên cho tới gần xe, bấm E để lên xe, rồi dùng mũi tên trái/phải để lái. Bấm E nữa để xuống xe.',
+    text: 'Bấm "Chạy". Đi sang phải bằng mũi tên cho tới gần xe, bấm E để lên xe, rồi dùng mũi tên trái/phải để lái. Bấm E nữa để xuống xe.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -68,7 +68,7 @@ const T = {
   },
   model: {
     title: 'Đổi loại xe',
-    text: 'Chọn mảnh ghép Xe. Ở Thuộc tính, đổi "Loại xe" sang Xe máy hoặc Xe tải nhỏ rồi bấm "Chơi" thử lại.',
+    text: 'Chọn mảnh ghép Xe. Ở Thuộc tính, đổi "Loại xe" sang Xe máy hoặc Xe tải nhỏ rồi bấm "Chạy" thử lại.',
     explain: 'Xe tải to và nặng hơn, xe máy gọn và quay đầu nhanh. Nếu đổi "Cách lái" sang "Ga - Lái" thì mũi tên lên là ga, xuống là lùi.',
   },
   done: {

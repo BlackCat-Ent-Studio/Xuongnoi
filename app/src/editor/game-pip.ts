@@ -241,7 +241,7 @@ export function createGamePip(opts: GamePipOptions): GamePip {
     grip.addEventListener('pointercancel', end);
   });
 
-  // ---------- drag the Màn chơi tab out onto the canvas area ----------
+  // ---------- drag the Mô phỏng tab out onto the canvas area ----------
 
   let suppressClick = false;
   gameTab.addEventListener(

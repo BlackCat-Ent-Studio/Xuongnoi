@@ -19,7 +19,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
     },
     params: {
       axis: 'Ngang: gập lên xuống trong mặt phẳng đứng (thấy rõ ở nhìn ngang và 3D). Đứng: xoay quanh trục đứng (thấy ở nhìn từ trên và 3D). Mỗi kiểu nhìn chỉ vẽ trục nó thấy được.',
-      start: 'Góc lúc bắt đầu chơi, tính bằng độ so với vật gắn.',
+      start: 'Góc lúc bắt đầu chạy, tính bằng độ so với vật gắn.',
       min: 'Góc nhỏ nhất khớp được phép tới (độ).',
       max: 'Góc lớn nhất khớp được phép tới (độ).',
       maxTorque: 'Sức quay tối đa (N·m). Servo nhỏ vài N·m, servo công nghiệp hàng trăm N·m. Mặc định 50.',

@@ -36,7 +36,7 @@ export const SECRET_DOOR_TEXT = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi". Dùng phím mũi tên đi sang phải, ra khỏi phòng và chạm lá cờ vàng. Nhớ nhìn cánh cửa sập lại sau lưng.',
+    text: 'Bấm "Chạy". Dùng phím mũi tên đi sang phải, ra khỏi phòng và chạm lá cờ vàng. Nhớ nhìn cánh cửa sập lại sau lưng.',
   },
   win: {
     title: 'Chạm lá cờ',
@@ -86,8 +86,8 @@ export const CHASE_GAME_TEXT = {
     text: 'Với mảnh ghép "Tránh xa": nối "Đối tượng" của bot xanh lá sang "Bot", "Đối tượng" của bạn sang "Mục tiêu", và "Đi ngang" của mảnh ghép sang "Đi ngang" của bot xanh lá.',
   },
   play: {
-    title: 'Chơi thử',
-    text: 'Bấm "Chơi". Dùng phím mũi tên chạy sang phải đuổi bot xanh lá, và đừng để bot đỏ bắt được bạn nhé!',
+    title: 'Chạy thử',
+    text: 'Bấm "Chạy". Dùng phím mũi tên chạy sang phải đuổi bot xanh lá, và đừng để bot đỏ bắt được bạn nhé!',
   },
   win: {
     title: 'Bắt được bot xanh lá',
@@ -148,7 +148,7 @@ export const COLLIDER_GRAVITY_TEXT = {
   },
   play: {
     title: 'Mang thùng lên bệ',
-    text: 'Bấm "Chơi". Đứng cạnh thùng, bấm G để cầm. Đi sang phải tới dưới bệ xanh, nhảy lên và bấm G để thả thùng vào trong bệ.',
+    text: 'Bấm "Chạy". Đứng cạnh thùng, bấm G để cầm. Đi sang phải tới dưới bệ xanh, nhảy lên và bấm G để thả thùng vào trong bệ.',
   },
   won: {
     title: 'Thùng nằm trọn trong bệ',
@@ -209,7 +209,7 @@ export const CONVEYOR_TEXT = {
   },
   play: {
     title: 'Mở băng chuyền',
-    text: 'Bấm "Chơi" và xem các thùng chạy về bên trái. Thử giữ phím Cách để băng chạy ngược.',
+    text: 'Bấm "Chạy" và xem các thùng chạy về bên trái. Thử giữ phím Cách để băng chạy ngược.',
   },
   won: {
     title: 'Chờ hàng về',

@@ -62,9 +62,9 @@ export interface GameView {
   pickEntityOwner(clientX: number, clientY: number, opts?: { slopPx?: number; ignore?: ReadonlySet<string> }): string | null;
   /** Point on the mode's editing plane under the pointer (side: z=0 plane; top / 3d: y = planeY). */
   screenToPlane(clientX: number, clientY: number, planeY?: number): Vec3 | null;
-  /** Fired once when win/lose triggers. The view shows its own overlay with a "Chơi lại" button. */
+  /** Fired once when win/lose triggers. The view shows its own overlay with a "Chạy lại" button. */
   onGameEnd(cb: (result: GameResult, message: string) => void): void;
-  /** Fired when the user presses "Chơi lại" on the end overlay. */
+  /** Fired when the user presses "Chạy lại" on the end overlay. */
   onRestartRequest(cb: () => void): void;
   /**
    * Puzzle stage look: no editor grid, mint backdrop, and a fixed camera that frames the whole scene inside the

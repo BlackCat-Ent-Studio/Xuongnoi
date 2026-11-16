@@ -122,7 +122,7 @@ const NOTES: Note[] = [
     pos: { x: 20, y: 1500 },
     size: { w: 320, h: 260 },
     text:
-      'Điều khiển (bấm Chơi):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách.',
+      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách.',
   },
   {
     id: 'note2',
@@ -146,7 +146,7 @@ const NOTES: Note[] = [
     pos: { x: 1120, y: 1500 },
     size: { w: 360, h: 260 },
     text:
-      'Thử 3: thùng đỏ nặng 6 kg cần ≥ 58,9 N mỗi ngón, và vai (tối đa 120 N·m) KHÔNG nâng nổi: hiện "Vai quá tải" rồi tay sụp dần. Chọn mảnh Khớp xoay "vai", mở Thuộc tính, tăng "Mô-men tối đa" lên 250 rồi chơi lại. Mô-men = khối lượng × 9,81 × khoảng cách ngang tới khớp.',
+      'Thử 3: thùng đỏ nặng 6 kg cần ≥ 58,9 N mỗi ngón, và vai (tối đa 120 N·m) KHÔNG nâng nổi: hiện "Vai quá tải" rồi tay sụp dần. Chọn mảnh Khớp xoay "vai", mở Thuộc tính, tăng "Mô-men tối đa" lên 250 rồi chạy lại. Mô-men = khối lượng × 9,81 × khoảng cách ngang tới khớp.',
   },
 ];
 

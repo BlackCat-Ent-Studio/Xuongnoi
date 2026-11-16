@@ -59,7 +59,7 @@ const SHOULDER_WIRES: WireSpec[] = [
 export const tryJoint = (): Board =>
   build(
     'Khớp xoay (Servo)',
-    'Bấm Chơi, rồi bấm mũi tên lên / xuống: khớp quay theo góc đặt. Thanh nặng 8 kg, trọng tâm cách khớp 0,5 m cần 8 × 9,81 × 0,5 = 39 N·m, hơn mô-men tối đa 30 của khớp, nên khi thanh gần nằm ngang chữ "Quá tải" hiện lên và thanh sụp dần. Chọn khớp, tăng "Mô-men tối đa" lên 50 để nâng nổi.',
+    'Bấm Chạy, rồi bấm mũi tên lên / xuống: khớp quay theo góc đặt. Thanh nặng 8 kg, trọng tâm cách khớp 0,5 m cần 8 × 9,81 × 0,5 = 39 N·m, hơn mô-men tối đa 30 của khớp, nên khi thanh gần nằm ngang chữ "Quá tải" hiện lên và thanh sụp dần. Chọn khớp, tăng "Mô-men tối đa" lên 50 để nâng nổi.',
     [
       ...PILLAR,
       ...SHOULDER_CONTROL,
@@ -74,7 +74,7 @@ export const tryJoint = (): Board =>
 export const tryLink = (): Board =>
   build(
     'Thanh nối',
-    'Bấm Chơi, rồi bấm mũi tên lên / xuống. Thanh nối chỉ đi theo khớp: đầu kia là "Đầu thanh", nơi gắn thanh khác hoặc tay kẹp. Chọn thanh, đổi "Chiều dài" hoặc "Khối lượng" rồi chơi lại: thanh càng dài và nặng thì số Mô-men đang chịu càng lớn.',
+    'Bấm Chạy, rồi bấm mũi tên lên / xuống. Thanh nối chỉ đi theo khớp: đầu kia là "Đầu thanh", nơi gắn thanh khác hoặc tay kẹp. Chọn thanh, đổi "Chiều dài" hoặc "Khối lượng" rồi chạy lại: thanh càng dài và nặng thì số Mô-men đang chịu càng lớn.',
     [
       ...PILLAR,
       ...SHOULDER_CONTROL,
@@ -88,7 +88,7 @@ export const tryLink = (): Board =>
 export const tryGripper = (): Board =>
   build(
     'Tay kẹp',
-    'Bấm Chơi. Mũi tên xuống hạ tay tới thùng 5 kg, giữ phím Cách để kẹp, rồi mũi tên lên để nhấc. Lực 20 N mỗi ngón không đủ (cần 5 × 9,81 ÷ (2 × 0,5) = 49 N): thùng tuột. Chọn tay kẹp, đặt "Lực kẹp mặc định" 50 rồi chơi lại thì giữ được.',
+    'Bấm Chạy. Mũi tên xuống hạ tay tới thùng 5 kg, giữ phím Cách để kẹp, rồi mũi tên lên để nhấc. Lực 20 N mỗi ngón không đủ (cần 5 × 9,81 ÷ (2 × 0,5) = 49 N): thùng tuột. Chọn tay kẹp, đặt "Lực kẹp mặc định" 50 rồi chạy lại thì giữ được.',
     [
       ...PILLAR,
       { alias: 'table', kind: 'block', x: 20, y: 520, params: { position: { x: -0.7, y: 0.3, z: 0 }, size: { x: 1.4, y: 0.6, z: 1 }, color: '#78716c' } },

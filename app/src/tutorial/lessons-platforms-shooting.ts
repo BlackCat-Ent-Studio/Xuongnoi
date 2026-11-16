@@ -39,7 +39,7 @@ const T = {
   },
   playRide: {
     title: 'Đi nhờ bệ',
-    text: 'Bấm "Chơi". Đi sang phải (mũi tên), đợi bệ vào sát bờ rồi bước lên. Đứng yên trên bệ, nó sẽ đưa bạn sang bờ bên kia.',
+    text: 'Bấm "Chạy". Đi sang phải (mũi tên), đợi bệ vào sát bờ rồi bước lên. Đứng yên trên bệ, nó sẽ đưa bạn sang bờ bên kia.',
   },
   back1: {
     title: 'Quay lại sửa',
@@ -61,7 +61,7 @@ const T = {
   },
   playShoot: {
     title: 'Bắn mục tiêu',
-    text: 'Bấm "Chơi". Qua hố bằng bệ, đứng trên bờ phải, quay mặt về phía mục tiêu rồi bấm J ba lần. Đừng chạy tới cờ vội, còn bước mở cổng nữa.',
+    text: 'Bấm "Chạy". Qua hố bằng bệ, đứng trên bờ phải, quay mặt về phía mục tiêu rồi bấm J ba lần. Đừng chạy tới cờ vội, còn bước mở cổng nữa.',
   },
   hitTarget: {
     title: 'Bắn đủ ba phát',
@@ -125,12 +125,12 @@ const T = {
     text: 'Nối cổng "Hết máu" của mảnh ghép Máu (của mục tiêu) sang cổng "Xoay" của Bệ xoay.',
   },
   playFinal: {
-    title: 'Chơi cả ván',
-    text: 'Bấm "Chơi". Qua hố bằng bệ, bắn mục tiêu ba phát, đợi cổng nằm ngang rồi chạy bên dưới tới lá cờ. Chạy ngay sau khi một hòn đá biến mất để khỏi bị đá rơi trúng.',
+    title: 'Chạy cả ván',
+    text: 'Bấm "Chạy". Qua hố bằng bệ, bắn mục tiêu ba phát, đợi cổng nằm ngang rồi chạy bên dưới tới lá cờ. Chạy ngay sau khi một hòn đá biến mất để khỏi bị đá rơi trúng.',
   },
   win: {
     title: 'Tới cờ rồi!',
-    text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Dừng" rồi "Chơi" thử lại.',
+    text: 'Bạn đã bắc cầu, bắn hạ mục tiêu, tránh đá và qua cổng. Nếu thua, bấm "Dừng" rồi "Chạy" thử lại.',
     explain: 'Bệ di chuyển, Bệ xoay, Bắn đạn và Tạo đối tượng kết hợp lại là đủ làm một màn nhảy bắn hoàn chỉnh.',
   },
   done: {

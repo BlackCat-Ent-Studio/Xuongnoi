@@ -10,8 +10,8 @@ export const STEP_RUN_TEXT = {
     explain: 'Game chạy rất nhanh nên mắt khó thấy dây nào vừa làm việc. Nút "Từng bước" giúp bạn xem chậm lại.',
   },
   play: {
-    title: 'Bấm Chơi',
-    text: 'Bấm nút "Chơi" để bot bắt đầu đi.',
+    title: 'Bấm Chạy',
+    text: 'Bấm nút "Chạy" để bot bắt đầu đi.',
   },
   step: {
     title: 'Bấm Từng bước',
@@ -21,7 +21,7 @@ export const STEP_RUN_TEXT = {
   wait: {
     title: 'Game đã dừng',
     text: 'Chờ một chút, game sẽ tự dừng. Nhìn bảng: chấm nhấp nháy là cổng vừa báo, dây sáng là dây vừa chạy, các mảnh khác mờ đi.',
-    explain: 'Mảnh nào sáng lên thì mảnh đó vừa làm việc. Nhân vật sáng trên màn chơi là người được mảnh đó điều khiển.',
+    explain: 'Mảnh nào sáng lên thì mảnh đó vừa làm việc. Nhân vật sáng trên khung mô phỏng là người được mảnh đó điều khiển.',
   },
   next: {
     title: 'Bấm Tiếp',

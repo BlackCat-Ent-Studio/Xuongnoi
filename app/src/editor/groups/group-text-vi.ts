@@ -12,7 +12,7 @@ export const GROUP_VI = {
     'too-few': 'Chọn ít nhất 2 mảnh ghép rồi mới gom nhóm được',
     'has-group': 'Đang chọn cả một nhóm. Chưa gom nhóm vào trong nhóm được, hãy bung nhóm trước',
     'in-group': 'Đang ở trong một nhóm. Hãy quay ra bảng chính để gom nhóm',
-    locked: 'Đang chạy game nên chưa gom được. Bấm Dừng rồi thử lại',
+    locked: 'Đang chạy mô phỏng nên chưa gom được. Bấm Dừng rồi thử lại',
   } satisfies Record<GroupFail | 'in-group' | 'locked', string>,
   inspector: {
     name: 'Tên nhóm',

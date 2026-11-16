@@ -31,7 +31,7 @@ export const HANDBOOK_ROBOT_LINE: readonly HandbookEntry[] = [
     example: 'Mảnh Đường line (bầu dục) "Đối tượng" → "Đường line" của Cảm biến dò line; Nhân vật "Đối tượng" → "Đối tượng" của Cảm biến.',
     tips: [
       'Vạch là hình vẽ phẳng trên sàn: nhân vật và xe đi qua bình thường, không bị vướng hay bị chặn.',
-      'Đổi dạng, bề rộng hay điểm xong phải bấm Chơi lại mới có hiệu lực; chỉ có màu đổi được ngay lúc đang chơi.',
+      'Đổi dạng, bề rộng hay điểm xong phải bấm Chạy lại mới có hiệu lực; chỉ có màu đổi được ngay lúc đang chạy.',
       'Muốn đường riêng của mình: chọn "Tự vẽ", đặt số điểm rồi gõ x, z từng điểm. Bật "Bo tròn góc" để khúc cua mềm.',
       'Vạch chỉ là một chỗ để đọc. Muốn biết vật có đang đứng trên vạch không, hãy dùng mảnh Cảm biến dò line.',
     ],
@@ -61,7 +61,7 @@ export const HANDBOOK_ROBOT_LINE: readonly HandbookEntry[] = [
     tips: [
       'Đặt hai mắt lệch trái và phải một chút (ví dụ -0,25 và 0,25) để vạch nằm giữa hai mắt: mắt nào chạm vạch trước cho biết xe đang lệch về phía đó.',
       'Vật phải có hướng quay mặt (nhân vật đã đi, xe, thân robot) thì mắt mới xoay theo. Nhân vật chưa nhúc nhích nhìn về bên phải.',
-      'Một chấm tròn nhỏ dưới vật cho thấy chỗ mắt đang đọc; chấm xanh lá khi thấy line, xám khi không. Chấm chỉ hiện lúc đang chơi và to bằng cỡ vòng đọc lúc mắt bắt đầu đọc.',
+      'Một chấm tròn nhỏ dưới vật cho thấy chỗ mắt đang đọc; chấm xanh lá khi thấy line, xám khi không. Chấm chỉ hiện lúc đang chạy và to bằng cỡ vòng đọc lúc mắt bắt đầu đọc.',
       'Nếu "Độ đậm" chỉ nhích nhẹ rồi tụt, vạch đang quá mảnh so với vòng đọc: tăng bề rộng vạch hoặc giảm cỡ vòng đọc.',
     ],
     lessonId: 'line-eyes',

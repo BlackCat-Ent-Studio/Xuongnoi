@@ -17,12 +17,12 @@ const T = {
     text: 'Bảng này có nhân vật, bệ vàng giữa sàn, một cổng xám chắn đường và lá cờ đỏ phía sau. Ta sẽ làm trò đổ xúc xắc: đứng trên bệ, bấm E, được 5 hoặc 6 thì cổng mở.',
     explain: 'Bảng đã có sẵn phím E. Phần còn lại ta tự nối.',
   },
-  watch: { title: 'Xem thử trước', text: 'Bấm "Chơi", thử chạy sang phải. Cổng chặn đường, chưa qua được.' },
+  watch: { title: 'Xem thử trước', text: 'Bấm "Chạy", thử chạy sang phải. Cổng chặn đường, chưa qua được.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng" để làm tiếp.' },
   zone: {
     title: 'Thêm Vùng kích hoạt',
     text: 'Kéo mảnh ghép "Vùng kích hoạt" (nhóm Logic) vào bảng. Một hộp xanh mờ sẽ hiện quanh bệ vàng.',
-    explain: 'Vùng kích hoạt là một hộp vô hình, nó biết có ai đang đứng trong hộp hay không. Lúc chơi hộp biến mất, chỉ còn tín hiệu.',
+    explain: 'Vùng kích hoạt là một hộp vô hình, nó biết có ai đang đứng trong hộp hay không. Lúc chạy hộp biến mất, chỉ còn tín hiệu.',
   },
   random: {
     title: 'Thêm Số ngẫu nhiên',
@@ -79,7 +79,7 @@ const T = {
   },
   playRoll: {
     title: 'Thử đổ xúc xắc',
-    text: 'Bấm "Chơi". Đứng trên bệ vàng và bấm E. Chưa được 5 hoặc 6 thì cứ bấm E tung lại, tới khi cổng biến mất.',
+    text: 'Bấm "Chạy". Đứng trên bệ vàng và bấm E. Chưa được 5 hoặc 6 thì cứ bấm E tung lại, tới khi cổng biến mất.',
   },
   edit2: { title: 'Quay lại sửa', text: 'Bấm nút "Dừng". Ta sẽ làm lá cờ chiến thắng.' },
   distance: {
@@ -100,8 +100,8 @@ const T = {
   end: { title: 'Thêm mảnh ghép Thắng / Thua', text: 'Kéo mảnh ghép "Thắng / Thua" (nhóm Kết quả) vào bảng.' },
   win: { title: 'Tới gần cờ là thắng', text: 'Nối "Trong tầm" của Đo khoảng cách sang cổng "Thắng" của Thắng / Thua.' },
   play: {
-    title: 'Chơi tới cờ',
-    text: 'Bấm "Chơi", đứng trên bệ, bấm E cho tới khi cổng mở, rồi chạy tới lá cờ đỏ.',
+    title: 'Chạy tới cờ',
+    text: 'Bấm "Chạy", đứng trên bệ, bấm E cho tới khi cổng mở, rồi chạy tới lá cờ đỏ.',
   },
   won: { title: 'Chạy tới lá cờ', text: 'Khi bạn tới đủ gần lá cờ, trò chơi báo thắng.' },
   done: {

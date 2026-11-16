@@ -26,7 +26,7 @@ export const PUSH_TRIGGER_WIRES: WireSpec[] = [
 export const tryLinearActuator = (): Board =>
   build(
     'Xi lanh đẩy',
-    'Bấm Chơi: vùng kích hoạt thấy thùng 10 kg trên bệ, xi lanh đẩy thùng rơi khỏi mép. Cần lực 0,5 × 10 × 9,81 = 49 N, xi lanh có tới 100 N. Chọn thùng, đổi "Khối lượng" thành 30 kg rồi chơi lại: cần 147 N, lớn hơn 100 N nên xi lanh đứng lại và hiện "Quá tải". Chọn xi lanh, nâng "Lực đẩy tối đa" lên 150 thì đẩy được. Gỡ dây nối vào "Đẩy ra" thì xi lanh nằm im.',
+    'Bấm Chạy: vùng kích hoạt thấy thùng 10 kg trên bệ, xi lanh đẩy thùng rơi khỏi mép. Cần lực 0,5 × 10 × 9,81 = 49 N, xi lanh có tới 100 N. Chọn thùng, đổi "Khối lượng" thành 30 kg rồi chạy lại: cần 147 N, lớn hơn 100 N nên xi lanh đứng lại và hiện "Quá tải". Chọn xi lanh, nâng "Lực đẩy tối đa" lên 150 thì đẩy được. Gỡ dây nối vào "Đẩy ra" thì xi lanh nằm im.',
     [
       ...pushScene(10),
       { alias: 'piston', kind: 'linear-actuator', x: 860, y: 20 },

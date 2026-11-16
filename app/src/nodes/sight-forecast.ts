@@ -119,7 +119,7 @@ export const sightForecastNode: NodeDef<ForecastState> = {
   label: 'Dự đoán tầm nhìn',
   category: 'logic',
   description:
-    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn) và "Mục tiêu". Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Tuyến đi tuần" thì nó mới biết người nhìn đi đâu (không nối thì coi như người nhìn đứng yên). Nó chơi thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" (nối "Tuyến chạy" của mảnh Chạy theo tuyến vào "Tuyến của Mục tiêu") để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
+    'Đoán trước xem bao lâu nữa người nhìn sẽ thấy một chỗ, mà không cần chờ tới lúc đó. Nối "Người nhìn" (nhân vật có mảnh Tầm nhìn) và "Mục tiêu". Nối "Tuyến đi tuần" của mảnh Đi tuần vào "Tuyến đi tuần" thì nó mới biết người nhìn đi đâu (không nối thì coi như người nhìn đứng yên). Nó chạy thử trước đường đi tuần và tầm nhìn của người đó bằng đúng luật của mảnh Tầm nhìn (xa, góc, tường che). "Còn" là số giây tới lần đầu người nhìn thấy chỗ đó; "An toàn" bật khi trong thời gian dự đoán vẫn chưa bị thấy. Chọn "Chặng kế của Mục tiêu" (nối "Tuyến chạy" của mảnh Chạy theo tuyến vào "Tuyến của Mục tiêu") để canh cả chặng đường kế tiếp mà Mục tiêu (đang chạy từng chặng) sắp chạy; lúc đó "Cần" là số giây Mục tiêu cần để chạy hết chặng đó.',
   inputs: [
     { id: 'viewer', type: 'object', label: 'Người nhìn', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu' },

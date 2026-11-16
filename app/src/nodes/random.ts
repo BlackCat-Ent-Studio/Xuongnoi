@@ -42,7 +42,7 @@ export const randomNode: NodeDef<RandomState> = {
   label: 'Số ngẫu nhiên',
   category: 'math',
   description:
-    'Tung ra một số ngẫu nhiên trong khoảng bạn chọn, như tung xúc xắc. Chọn lúc nào tung: mỗi lần "Tung" bật, liên tục mỗi nhịp, hoặc một lần lúc bắt đầu (chưa tung lần nào thì ra 0). Để "Hạt giống" = 0 thì mỗi lần chơi ra số khác nhau; đặt số khác 0 thì lần nào cũng ra y hệt.',
+    'Tung ra một số ngẫu nhiên trong khoảng bạn chọn, như tung xúc xắc. Chọn lúc nào tung: mỗi lần "Tung" bật, liên tục mỗi nhịp, hoặc một lần lúc bắt đầu (chưa tung lần nào thì ra 0). Để "Hạt giống" = 0 thì mỗi lần chạy ra số khác nhau; đặt số khác 0 thì lần nào cũng ra y hệt.',
   inputs: [{ id: 'roll', type: 'bool', label: 'Tung' }],
   outputs: [
     { id: 'value', type: 'number', label: 'Giá trị' },
@@ -72,7 +72,7 @@ export const randomNode: NodeDef<RandomState> = {
         { value: 'start', label: 'Một lần lúc bắt đầu' },
       ],
     },
-    { id: 'seed', label: 'Hạt giống (0 = mỗi lần chơi khác nhau)', kind: 'number', default: 0, step: 1 },
+    { id: 'seed', label: 'Hạt giống (0 = mỗi lần chạy khác nhau)', kind: 'number', default: 0, step: 1 },
   ],
   createOnly: ['seed'],
   create(ctx, params) {

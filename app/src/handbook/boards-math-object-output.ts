@@ -162,7 +162,7 @@ function tryCharacter(): Board {
   return build(
     'Thử: Nhân vật',
     '2d-side',
-    'Mũi tên trái/phải để đi, Space để nhảy. Nhân vật chỉ nhảy được khi đang chạm đất. Thử đổi "Kiểu dáng", "Tốc độ chạy" và "Sức nhảy" rồi chơi lại.',
+    'Mũi tên trái/phải để đi, Space để nhảy. Nhân vật chỉ nhảy được khi đang chạm đất. Thử đổi "Kiểu dáng", "Tốc độ chạy" và "Sức nhảy" rồi chạy lại.',
     [
       ...b.specs,
       { id: 'step', kind: 'block', col: 1, row: 4, params: { position: v(3, 0.75), size: v(3, 0.5, 1), color: '#a16207' } },

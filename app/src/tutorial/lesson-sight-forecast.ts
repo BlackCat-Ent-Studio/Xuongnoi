@@ -25,7 +25,7 @@ const T = {
   add: {
     title: 'Thêm mảnh đoán trước',
     text: 'Kéo mảnh ghép "Dự đoán tầm nhìn" (nhóm Logic) vào bảng.',
-    explain: 'Nó chơi thử trước đường đi tuần và tầm nhìn của lính gác, bằng đúng luật của mảnh "Tầm nhìn".',
+    explain: 'Nó chạy thử trước đường đi tuần và tầm nhìn của lính gác, bằng đúng luật của mảnh "Tầm nhìn".',
   },
   viewer: {
     title: 'Ai đang nhìn?',
@@ -42,7 +42,7 @@ const T = {
     text: 'Nối "Giây còn lại" sang mảnh hiện số, và "An toàn" sang mảnh hiện chữ.',
     explain: '"Giây còn lại" là số giây tới lần đầu lính gác thấy chỗ đó, bằng 0 nếu đang bị thấy. Số 99 là chưa bị thấy trong 12 giây tới, và lúc đó "An toàn" bật.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Số ở góc phải đếm ngược tới lúc lính gác quay lại nhìn thấy nhân vật xanh.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Số ở góc phải đếm ngược tới lúc lính gác quay lại nhìn thấy nhân vật xanh.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút Dừng để quay lại bảng lắp ghép.' },
   done: {
     title: 'Xong rồi!',

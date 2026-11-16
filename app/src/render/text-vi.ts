@@ -2,7 +2,7 @@
 export const TEXT_VI = {
   win: 'Thắng!',
   lose: 'Thua!',
-  restart: 'Chơi lại',
+  restart: 'Chạy lại',
   resume: 'Tiếp tục',
   paused: 'Tạm dừng',
   resetCamera: '🎯 Về giữa',

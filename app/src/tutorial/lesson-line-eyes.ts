@@ -42,10 +42,10 @@ const T = {
   },
   side: {
     title: 'Dời mắt sang một bên',
-    text: 'Chọn mảnh Cảm biến dò line, tìm ô "Lệch ngang" trong Thuộc tính và đặt 0,25 (sang phải) hoặc -0,25 (sang trái). Mắt đặt bên phải thì lúc chơi hãy lái nhân vật lệch sang trái vạch một chút, để vạch lọt xuống dưới mắt.',
+    text: 'Chọn mảnh Cảm biến dò line, tìm ô "Lệch ngang" trong Thuộc tính và đặt 0,25 (sang phải) hoặc -0,25 (sang trái). Mắt đặt bên phải thì lúc chạy hãy lái nhân vật lệch sang trái vạch một chút, để vạch lọt xuống dưới mắt.',
     explain: 'Xe dò đường thường có hai hoặc ba mắt lệch trái, phải: mắt nào chạm vạch trước cho biết xe đang lệch về phía nào.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi, rồi đi bằng phím mũi tên dọc theo vạch. Nhìn số "Độ đậm" đổi và chấm xanh dưới chân nhân vật sáng lên khi mắt thấy vạch.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy, rồi đi bằng phím mũi tên dọc theo vạch. Nhìn số "Độ đậm" đổi và chấm xanh dưới chân nhân vật sáng lên khi mắt thấy vạch.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút Dừng để quay lại bảng lắp ghép.' },
   done: {
     title: 'Xong rồi!',

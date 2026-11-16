@@ -36,7 +36,7 @@ const T = {
     text: 'Nối "Đối tượng" của bot sang "Bot" của Di chuyển, "Đồ gần nhất" sang "Điểm đến", "Đã tìm thấy" sang "Bật", và "Đi ngang" của Di chuyển sang "Đi ngang" của bot.',
     explain: '"Đã tìm thấy" bật khi còn thùng để lấy. Hết thùng thì tắt, và bot đứng yên thay vì đi lung tung.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đi tới thùng bên phải vì nó gần hơn.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Bot đi tới thùng bên phải vì nó gần hơn.' },
   done: {
     title: 'Xong rồi!',
     text: 'Ghép thêm "Khiêng đồ" và "Ô trống kế tiếp" là bot tự nhặt từng thùng gần nhất rồi cất vào kho. Xem thêm trong Sổ tay.',

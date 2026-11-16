@@ -44,7 +44,7 @@ function tryPid(): Board {
   return build(
     'Thử: Bộ điều khiển PID',
     '2d-side',
-    'Rô-bốt tự đuổi theo vị trí đặt: cứ 4 giây vị trí đặt nhảy từ -5 sang 5 rồi quay lại. Nhìn Đồ thị: đường vàng (rô-bốt) bám theo đường xanh (giá trị đặt). Bấm vào mảnh PID, đổi Kp, Ki, Kd rồi chơi lại để thấy khác biệt.',
+    'Rô-bốt tự đuổi theo vị trí đặt: cứ 4 giây vị trí đặt nhảy từ -5 sang 5 rồi quay lại. Nhìn Đồ thị: đường vàng (rô-bốt) bám theo đường xanh (giá trị đặt). Bấm vào mảnh PID, đổi Kp, Ki, Kd rồi chạy lại để thấy khác biệt.',
     [
       ...c.specs,
       {

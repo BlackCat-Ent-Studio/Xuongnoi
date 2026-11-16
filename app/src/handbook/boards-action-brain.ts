@@ -57,7 +57,7 @@ export const carryBoard = (): Board =>
     '2d-top',
     [STICK, hero(-3, 0), key('grab', 'KeyE', 190), key('drop', 'KeyQ', 330), key('toss', 'KeyF', 470), { alias: 'carry', kind: 'carry', x: 560, y: 20 }, thing('ball', -1.5, 0, { shape: 'ball' })],
     [...MOVE, ['hero', 'self', 'carry', 'character'], ['grab', 'pressed', 'carry', 'grab'], ['drop', 'pressed', 'carry', 'drop'], ['toss', 'pressed', 'carry', 'throw']],
-    'Chơi: đi tới quả bóng bằng W A S D, bấm E để cầm, Q để thả, F để ném.',
+    'Chạy: đi tới quả bóng bằng W A S D, bấm E để cầm, Q để thả, F để ném.',
   );
 
 export const interactBoard = (): Board =>
@@ -73,7 +73,7 @@ export const interactBoard = (): Board =>
       { alias: 'door', kind: 'block', x: 800, y: 20, params: { position: { x: 3, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 4 }, color: '#92400e' } },
     ],
     [...MOVE, ['hero', 'self', 'act', 'character'], ['use', 'pressed', 'act', 'press'], ['button', 'interacted', 'door', 'hide']],
-    'Chơi: đi tới ô xanh lá, bấm E. Ô xanh "được dùng" và cánh cửa nâu biến mất.',
+    'Chạy: đi tới ô xanh lá, bấm E. Ô xanh "được dùng" và cánh cửa nâu biến mất.',
   );
 
 export const handToolBoard = (): Board =>
@@ -91,7 +91,7 @@ export const handToolBoard = (): Board =>
       { alias: 'gate', kind: 'block', x: 800, y: 200, params: { position: { x: 3, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 4 }, color: '#92400e' } },
     ],
     [...MOVE, ['hero', 'self', 'hand', 'character'], ['take', 'pressed', 'hand', 'toggle'], ['swing', 'pressed', 'hand', 'use'], ['rock', 'usedOn', 'gate', 'hide']],
-    'Chơi: nhặt cái cuốc nâu bằng E, đi tới sát tảng đá xám rồi bấm F để vung. Đá bị đập thì cánh cổng nâu biến mất.',
+    'Chạy: nhặt cái cuốc nâu bằng E, đi tới sát tảng đá xám rồi bấm F để vung. Đá bị đập thì cánh cổng nâu biến mất.',
   );
 
 export const healthBoard = (): Board =>
@@ -120,7 +120,7 @@ export const healthBoard = (): Board =>
       ['foe', 'self', 'hand', 'character'],
       ['fight', 'attack', 'hand', 'use'],
     ],
-    'Chơi: bot đỏ chạy tới đấm bạn, thanh máu trên đầu và số "Máu" tụt dần. Bấm H để hồi máu.',
+    'Chạy: bot đỏ chạy tới đấm bạn, thanh máu trên đầu và số "Máu" tụt dần. Bấm H để hồi máu.',
     'pink',
   );
 
@@ -136,7 +136,7 @@ export const enterExitBoard = (): Board =>
       { alias: 'car', kind: 'vehicle', x: 560, y: 260, params: { position: { x: 0, y: 0.5, z: 0 } } },
     ],
     [...MOVE, ['stick', 'x', 'car', 'moveX'], ['stick', 'y', 'car', 'moveY'], ['hero', 'self', 'ride', 'character'], ['seat', 'pressed', 'ride', 'press']],
-    'Chơi: đi tới sát chiếc xe, bấm E để lên, lái bằng W A S D, bấm E lần nữa để xuống.',
+    'Chạy: đi tới sát chiếc xe, bấm E để lên, lái bằng W A S D, bấm E lần nữa để xuống.',
   );
 
 export const cargoBoard = (): Board =>
@@ -155,7 +155,7 @@ export const cargoBoard = (): Board =>
       thing('box2', 3.5, 2, { shape: 'box', color: '#f59e0b' }),
     ],
     [...MOVE, ['truck', 'self', 'cargo', 'vehicle'], ['load', 'pressed', 'cargo', 'load'], ['unload', 'pressed', 'cargo', 'unload'], ['cargo', 'count', 'show', 'value']],
-    'Chơi: đi tới gần xe tải và các thùng vàng, bấm E để chất từng thùng lên xe, Q để dỡ xuống. Số hàng hiện ở góc.',
+    'Chạy: đi tới gần xe tải và các thùng vàng, bấm E để chất từng thùng lên xe, Q để dỡ xuống. Số hàng hiện ở góc.',
   );
 
 export const cameraBoard = (): Board =>
@@ -171,7 +171,7 @@ export const cameraBoard = (): Board =>
       { alias: 'mark2', kind: 'block', x: 800, y: 190, params: { position: { x: -5, y: 0.5, z: 3 }, size: { x: 1, y: 1, z: 1 }, color: '#f43f5e' } },
     ],
     [...MOVE, ['hero', 'self', 'cam', 'target'], ['shake', 'pressed', 'cam', 'shake']],
-    'Chơi: màn hình phóng to và bám theo bạn. Bấm E để rung màn hình. Đi tới hai khối màu để thấy cảnh trượt mượt.',
+    'Chạy: màn hình phóng to và bám theo bạn. Bấm E để rung màn hình. Đi tới hai khối màu để thấy cảnh trượt mượt.',
   );
 
 export const teleportBoard = (): Board =>
@@ -186,7 +186,7 @@ export const teleportBoard = (): Board =>
       { alias: 'tp', kind: 'teleport', x: 560, y: 20 },
     ],
     [...MOVE, ['hero', 'self', 'tp', 'who'], ['go', 'pressed', 'tp', 'go'], ['pad', 'self', 'tp', 'dest']],
-    'Chơi: bấm E, nhân vật nhảy ngay sang tấm bệ tím ở bên phải, không cần đi bộ.',
+    'Chạy: bấm E, nhân vật nhảy ngay sang tấm bệ tím ở bên phải, không cần đi bộ.',
   );
 
 export const shooterBoard = (): Board =>
@@ -202,7 +202,7 @@ export const shooterBoard = (): Board =>
       { alias: 'hp', kind: 'health', x: 560, y: 260, params: { maxHp: 4 } },
     ],
     [...MOVE, ['hero', 'self', 'gun', 'shooter'], ['dummy', 'self', 'gun', 'target'], ['fire', 'pressed', 'gun', 'fire'], ['dummy', 'self', 'hp', 'self']],
-    'Chơi: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Mục tiêu" để đạn bay theo hướng bạn nhìn.',
+    'Chạy: bấm F để bắn bot đỏ đứng yên. Mỗi viên trúng làm nó mất 1 máu. Gỡ dây "Mục tiêu" để đạn bay theo hướng bạn nhìn.',
     'blue',
   );
 
@@ -224,7 +224,7 @@ export const spawnerBoard = (): Board =>
       { alias: 'show', kind: 'show-number', x: 800, y: 20, params: { label: 'Đang có' } },
     ],
     [...MOVE, ['hero', 'self', 'maker', 'at'], ['make', 'pressed', 'maker', 'spawn'], ['maker', 'count', 'show', 'value']],
-    'Chơi: bấm E, một quả bóng đỏ xuất hiện cạnh bạn. Tối đa 4 quả, mỗi quả biến mất sau 8 giây.',
+    'Chạy: bấm E, một quả bóng đỏ xuất hiện cạnh bạn. Tối đa 4 quả, mỗi quả biến mất sau 8 giây.',
   );
 
 export const patrolBoard = (): Board =>
@@ -233,7 +233,7 @@ export const patrolBoard = (): Board =>
     '2d-top',
     [bot('guard', -4, 0), { alias: 'walk', kind: 'patrol', x: 560, y: 20, params: { pointA: { x: -4, y: 0.5, z: 0 }, pointB: { x: 4, y: 0.5, z: 0 }, wait: 1 } }],
     [['guard', 'self', 'walk', 'self'], ['walk', 'moveX', 'guard', 'moveX'], ['walk', 'moveY', 'guard', 'moveY']],
-    'Chơi: bot đỏ tự đi qua đi lại giữa hai đầu, dừng 1 giây ở mỗi đầu.',
+    'Chạy: bot đỏ tự đi qua đi lại giữa hai đầu, dừng 1 giây ở mỗi đầu.',
     'green',
   );
 
@@ -248,7 +248,7 @@ export const goToBoard = (): Board =>
       { alias: 'go', kind: 'go-to', x: 560, y: 20 },
     ],
     [['walker', 'self', 'go', 'self'], ['goal', 'self', 'go', 'target'], ['go', 'moveX', 'walker', 'moveX'], ['go', 'moveY', 'walker', 'moveY'], ['go', 'arrivedPulse', 'goal', 'hide']],
-    'Chơi: bot đỏ tự đi vòng qua bức tường xám tới ô xanh, tới nơi thì ô xanh biến mất.',
+    'Chạy: bot đỏ tự đi vòng qua bức tường xám tới ô xanh, tới nơi thì ô xanh biến mất.',
     'green',
   );
 
@@ -261,7 +261,7 @@ export const routeFollowBoard = (): Board =>
       { alias: 'route', kind: 'route-follow', x: 560, y: 20, params: { count: 4, style: 'loop', follow: 'rail', speed: 5 } },
     ],
     [['car', 'self', 'route', 'self'], ['route', 'moveX', 'car', 'moveX'], ['route', 'moveY', 'car', 'moveY']],
-    'Chơi: chiếc xe không có người lái tự chạy vòng quanh 4 góc hình vuông, bám đúng đường nối các điểm.',
+    'Chạy: chiếc xe không có người lái tự chạy vòng quanh 4 góc hình vuông, bám đúng đường nối các điểm.',
     'green',
   );
 
@@ -287,7 +287,7 @@ export const routeObjectsBoard = (): Board =>
       ['route', 'moveX', 'car', 'moveX'],
       ['route', 'moveY', 'car', 'moveY'],
     ],
-    'Chơi: xe chạy vòng qua 3 điểm: bạn (nhân vật), ô xanh và ô đỏ. Dùng W A S D đi chỗ khác thì điểm 1 dời theo bạn và đường xe chạy đổi theo.',
+    'Chạy: xe chạy vòng qua 3 điểm: bạn (nhân vật), ô xanh và ô đỏ. Dùng W A S D đi chỗ khác thì điểm 1 dời theo bạn và đường xe chạy đổi theo.',
     'green',
   );
 
@@ -302,7 +302,7 @@ export const chaseBoard = (): Board =>
       { alias: 'chase', kind: 'chase', x: 560, y: 20, params: { mode: 'chase', sightRange: 8, giveUpRange: 12 } },
     ],
     [...MOVE, ['hunter', 'self', 'chase', 'self'], ['hero', 'self', 'chase', 'target'], ['chase', 'moveX', 'hunter', 'moveX'], ['chase', 'moveY', 'hunter', 'moveY']],
-    'Chơi: bot đỏ thấy bạn trong tầm 8 nên chạy tới. Chạy ra xa quá 12 thì nó bỏ cuộc. Đổi "Cách làm" thành Tránh xa để nó chạy trốn bạn.',
+    'Chạy: bot đỏ thấy bạn trong tầm 8 nên chạy tới. Chạy ra xa quá 12 thì nó bỏ cuộc. Đổi "Cách làm" thành Tránh xa để nó chạy trốn bạn.',
     'pink',
   );
 
@@ -334,7 +334,7 @@ export const sequenceBoard = (): Board =>
       ['sumX', 'out', 'worker', 'moveX'],
       ['sumY', 'out', 'worker', 'moveY'],
     ],
-    'Chơi: bot đỏ làm hai việc lần lượt: đi tới góc trên phải, xong rồi mới đi góc dưới phải, rồi lặp lại.',
+    'Chạy: bot đỏ làm hai việc lần lượt: đi tới góc trên phải, xong rồi mới đi góc dưới phải, rồi lặp lại.',
     'green',
   );
 
@@ -360,6 +360,6 @@ export const fightBoard = (): Board =>
       ['brawler', 'self', 'hand', 'character'],
       ['fight', 'attack', 'hand', 'use'],
     ],
-    'Chơi: bot đỏ chạy tới, đấm, lùi lại một chút rồi vào tiếp. Bạn bị mất máu mỗi đòn trúng. Chạy ra xa quá 8 bước thì nó dừng lại.',
+    'Chạy: bot đỏ chạy tới, đấm, lùi lại một chút rồi vào tiếp. Bạn bị mất máu mỗi đòn trúng. Chạy ra xa quá 8 bước thì nó dừng lại.',
     'pink',
   );

@@ -10,7 +10,7 @@ export type NodeFilterFn = (n: GraphNode) => boolean;
 /** Finds the node that plays a role on the current board; undefined while it is not there yet. */
 export type Resolve = (g: Graph) => GraphNode | undefined;
 
-/** The top-bar button that leaves play mode (the Chơi button turns into a restart button while playing). */
+/** The top-bar button that leaves play mode (the Chạy button turns into a restart button while playing). */
 export const STOP_BUTTON = '.play .pbtn.stop';
 
 export const paramSel = (id: string): string => `.prop-row[data-param="${id}"]`;

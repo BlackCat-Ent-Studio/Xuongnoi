@@ -3,7 +3,7 @@ import { STEP_RUN_TEXT as T } from './text-vi-step-run';
 import type { Lesson } from './types';
 
 /**
- * "Xem dây chạy từng bước": a bot patrols and a counter adds one at every end of the road. The learner presses Chơi, then
+ * "Xem dây chạy từng bước": a bot patrols and a counter adds one at every end of the road. The learner presses Chạy, then
  * "Từng bước", sees the lit circuit at the first stop and goes on with "Tiếp". Nothing is wired by the learner.
  */
 

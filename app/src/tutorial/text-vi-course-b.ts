@@ -25,7 +25,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   watch: {
     title: 'Xem xe chạy',
-    text: 'Bấm "Chơi". Xe chạy vòng quanh bốn góc đường và không bao giờ dừng.',
+    text: 'Bấm "Chạy". Xe chạy vòng quanh bốn góc đường và không bao giờ dừng.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -49,7 +49,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   place: {
     title: 'Đặt vạch dừng lên đường',
     text: 'Chọn Vùng kích hoạt. Ở Thuộc tính, sửa ô "Tâm vùng" cho vùng nằm trên đoạn đường phía trên: để X = 0 và Z = -6.',
-    explain: 'Lúc mới thêm, vùng nằm giữa bảng, không nằm trên đường nào. Khi chỉnh sửa bạn thấy vùng là hộp xanh mờ, lúc chơi thì nó vô hình.',
+    explain: 'Lúc mới thêm, vùng nằm giữa bảng, không nằm trên đường nào. Khi chỉnh sửa bạn thấy vùng là hộp xanh mờ, lúc chạy thì nó vô hình.',
   },
   filter: {
     title: 'Chỉ đếm xe',
@@ -82,7 +82,7 @@ export const ROUTE_TRAFFIC_TEXT = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi". Xe chạy tới vạch dừng và đứng chờ. Khoảng 8 giây sau đèn chuyển xanh và xe chạy tiếp.',
+    text: 'Bấm "Chạy". Xe chạy tới vạch dừng và đứng chờ. Khoảng 8 giây sau đèn chuyển xanh và xe chạy tiếp.',
   },
   done: {
     title: 'Xe biết chờ đèn đỏ rồi!',
@@ -137,7 +137,7 @@ export const TRAIN_TEXT = {
   },
   watch: {
     title: 'Xem tàu chạy',
-    text: 'Bấm "Chơi". Đầu máy kéo hai toa chạy vòng quanh đường ray và không bao giờ dừng.',
+    text: 'Bấm "Chạy". Đầu máy kéo hai toa chạy vòng quanh đường ray và không bao giờ dừng.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -172,7 +172,7 @@ export const TRAIN_TEXT = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi". Tàu đỗ 3 giây, chạy tới góc kế tiếp, đỗ lại 3 giây, và cứ thế vòng quanh.',
+    text: 'Bấm "Chạy". Tàu đỗ 3 giây, chạy tới góc kế tiếp, đỗ lại 3 giây, và cứ thế vòng quanh.',
   },
   done: {
     title: 'Chuyến tàu đã sẵn sàng!',
@@ -267,7 +267,7 @@ export const CARGO_TEXT = {
   showCount: {
     title: 'Hiện số thùng trên xe',
     text: 'Nối cổng "Số hàng theo loại" của Chở hàng sang cổng "Giá trị" của Hiện số.',
-    explain: 'Trong lúc chơi, góc màn hình cho biết xe đang chở mấy thùng hàng.',
+    explain: 'Trong lúc chạy, góc màn hình cho biết xe đang chở mấy thùng hàng.',
   },
   end: {
     title: 'Thêm mảnh ghép Thắng / Thua',
@@ -279,7 +279,7 @@ export const CARGO_TEXT = {
   },
   play: {
     title: 'Giao hàng thử',
-    text: 'Bấm "Chơi". Bấm E để lên xe, lái sang phải tới gần hai thùng hàng, bấm L hai lần để chất. Lái tiếp vào bãi giữa đường rồi bấm L hai lần để dỡ.',
+    text: 'Bấm "Chạy". Bấm E để lên xe, lái sang phải tới gần hai thùng hàng, bấm L hai lần để chất. Lái tiếp vào bãi giữa đường rồi bấm L hai lần để dỡ.',
   },
   won: {
     title: 'Giao đủ hai thùng',
@@ -315,7 +315,7 @@ export const GUIDE_TEXT = {
   },
   watch: {
     title: 'Xem mũi tên',
-    text: 'Bấm "Chơi". Mũi tên chỉ về cờ vàng. Đi tới đó: khi đến gần, mũi tên tự biến mất.',
+    text: 'Bấm "Chạy". Mũi tên chỉ về cờ vàng. Đi tới đó: khi đến gần, mũi tên tự biến mất.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -367,7 +367,7 @@ export const GUIDE_TEXT = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi". Đi theo mũi tên tới cờ vàng, rồi theo mũi tên mới tới cờ đỏ.',
+    text: 'Bấm "Chạy". Đi theo mũi tên tới cờ vàng, rồi theo mũi tên mới tới cờ đỏ.',
   },
   won: {
     title: 'Theo mũi tên tới cờ đỏ',

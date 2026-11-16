@@ -46,10 +46,10 @@ const T = {
     text: 'Chọn Đồ vật màu đỏ, mở mục Nâng cao trong Thuộc tính và đặt "Khối lượng (kg)" thành 10.',
     explain: 'Hai thùng kia đã được đặt sẵn 2 kg và 5 kg. Thùng đỏ để mặc định 1 kg.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Ba thùng rơi xuống bàn cân và các con số hiện ở góc màn hình.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Ba thùng rơi xuống bàn cân và các con số hiện ở góc màn hình.' },
   read: {
     title: 'Đọc số',
-    text: 'Khối lượng phải là 2 + 5 + 10 = 17 kg, và lực là 17 × 9,81 = 166,77 N. Bấm Dừng, đổi khối lượng một thùng rồi chơi lại để xem số đổi theo.',
+    text: 'Khối lượng phải là 2 + 5 + 10 = 17 kg, và lực là 17 × 9,81 = 166,77 N. Bấm Dừng, đổi khối lượng một thùng rồi chạy lại để xem số đổi theo.',
   },
   done: {
     title: 'Xong rồi!',

@@ -16,7 +16,7 @@ function tryRobotBody(): Board {
   return build(
     'Thử: Thân robot',
     '2d-top',
-    'Nhìn từ trên xuống. Hai Động cơ gắn vào Thân robot, mỗi cái nhận một Số cố định làm công suất: bánh trái 1, bánh phải 0.5, nên robot chạy vòng tròn. Chỉnh "Khối lượng" hoặc "Độ bám" của Thân rồi chơi lại để thấy robot nặng hơn thì ì hơn, sàn trơn hơn thì trượt xa hơn.',
+    'Nhìn từ trên xuống. Hai Động cơ gắn vào Thân robot, mỗi cái nhận một Số cố định làm công suất: bánh trái 1, bánh phải 0.5, nên robot chạy vòng tròn. Chỉnh "Khối lượng" hoặc "Độ bám" của Thân rồi chạy lại để thấy robot nặng hơn thì ì hơn, sàn trơn hơn thì trượt xa hơn.',
     [
       { id: 'left-power', kind: 'const', col: 0, row: 0, params: { value: 1 } },
       { id: 'right-power', kind: 'const', col: 0, row: 1, params: { value: 0.5 } },
@@ -86,19 +86,19 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       overloaded: 'Ra (bật/tắt, chỉ hiện khi bật "Hiện ô Khối lượng chở"): bật khi hàng đang chở nặng hơn "Tải tối đa" nên động cơ không đẩy nổi.',
     },
     params: {
-      position: 'Chỗ robot xuất hiện lúc bắt đầu chơi (tâm của thân).',
+      position: 'Chỗ robot xuất hiện lúc bắt đầu chạy (tâm của thân).',
       heading: 'Mũi robot quay về đâu lúc bắt đầu, tính bằng độ: 0 là sang phải, 90 là xuống dưới.',
       length: 'Chiều dài thân, tính bằng mét (theo hướng mũi).',
       width: 'Chiều rộng thân, tính bằng mét. Hai bánh đặt ở hai bên nên bề ngang thường hơn "Vị trí ngang" của bánh một chút.',
       height: 'Chiều cao thân, tính bằng mét.',
-      mass: 'Khối lượng, kg. Càng nặng thì mỗi lần ga hay phanh robot càng ì: lực đẩy của các Động cơ chia cho khối lượng. Chỉnh được ngay khi đang chơi.',
+      mass: 'Khối lượng, kg. Càng nặng thì mỗi lần ga hay phanh robot càng ì: lực đẩy của các Động cơ chia cho khối lượng. Chỉnh được ngay khi đang chạy.',
       maxPayload:
-        'Nâng cao. Tải tối đa, kg. Hàng nằm trên thân nặng hơn mức này thì động cơ không đẩy nổi, robot đứng yên (đang chạy thì phanh lại) cho tới khi bớt hàng. Để 0 là không giới hạn. Chỉnh được ngay khi đang chơi.',
+        'Nâng cao. Tải tối đa, kg. Hàng nằm trên thân nặng hơn mức này thì động cơ không đẩy nổi, robot đứng yên (đang chạy thì phanh lại) cho tới khi bớt hàng. Để 0 là không giới hạn. Chỉnh được ngay khi đang chạy.',
       showDistance: 'Nâng cao. Bật để hiện thêm ô ra "Quãng đường" và ô vào "Đặt lại quãng đường". Tắt thì thẻ Thân giữ nguyên như cũ.',
       showPayload: 'Nâng cao. Bật để hiện thêm hai ô ra "Khối lượng đang chở" và "Quá tải". Tắt thì thẻ Thân giữ nguyên như cũ.',
       friction:
-        'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chơi.',
-      color: 'Màu thân robot. Đổi được ngay khi đang chơi.',
+        'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chạy.',
+      color: 'Màu thân robot. Đổi được ngay khi đang chạy.',
       solid: '"Có" thì người đi bộ không đi xuyên qua robot.',
       ...BODY_PARAM_TEXT,
     },
@@ -106,7 +106,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       'Thân robot "Đối tượng" → "Thân" của hai Động cơ (một bên trái, một bên phải); Số cố định 1 → "Công suất" của cả hai động cơ thì robot chạy thẳng; "Tốc độ" của Thân → Hiện số để xem robot chạy nhanh bao nhiêu.',
     tips: [
       'Thân không có cổng vào: nó chỉ chạy khi có Động cơ gắn vào và Động cơ có dây "Công suất". Không có động cơ nào thì robot đứng yên mãi.',
-      'Kích thước, màu, vị trí chỉ đọc lúc bắt đầu chơi (màu thì đổi được ngay); "Khối lượng" và "Độ bám" sửa được cả khi đang chơi.',
+      'Kích thước, màu, vị trí chỉ đọc lúc bắt đầu chạy (màu thì đổi được ngay); "Khối lượng" và "Độ bám" sửa được cả khi đang chạy.',
       'Để robot quay mà không kẹt góc, vùng va chạm là hình vuông cạnh bằng chiều dài (hoặc rộng) lớn nhất. Muốn khác thì chỉnh "Cỡ vùng va chạm" trong Nâng cao.',
       'Đơn vị là mét, kg, giây, độ; nhìn ngang thì robot chỉ chạy theo trục ngang, không quay. Chở hàng: đồ vật đặt trên mặt trên của thân sẽ đi và quay cùng robot (nhìn ngang hoặc 3D; nhìn từ trên xuống thì đồ không xếp chồng nên không tính). Hàng càng nặng thì robot càng ì, quá "Tải tối đa" thì đứng yên.',
     ],

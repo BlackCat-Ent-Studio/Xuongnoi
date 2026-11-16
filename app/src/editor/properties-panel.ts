@@ -311,7 +311,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     return b;
   }
 
-  /** The "Va chạm thật" switch of this game (also in the Tệp menu). Applies on the next Chơi. */
+  /** The "Va chạm thật" switch of this game (also in the Tệp menu). Applies on the next Chạy. */
   function solidBodiesToggle(): HTMLElement {
     const playing = state.isPlaying();
     const row = h('div', 'pn-setting');

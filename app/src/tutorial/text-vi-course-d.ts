@@ -44,7 +44,7 @@ export const GROUPS_TEXT = {
   },
   library: {
     title: 'Cất game vào Kho',
-    text: 'Xưởng Nối tự lưu game của bạn vào "Kho game của tôi". Mở menu Tệp, chọn "Kho game của tôi…" để xem, đổi tên, nhân đôi hoặc mở lại game cũ. Bấm "Tiếp" khi xong.',
+    text: 'Xưởng Nối tự lưu game của bạn vào "Kho mô phỏng của tôi". Mở menu Tệp, chọn "Kho mô phỏng của tôi…" để xem, đổi tên, nhân đôi hoặc mở lại game cũ. Bấm "Tiếp" khi xong.',
     explain: 'Muốn giữ bản dự phòng, dùng "Xuất ra file" trong menu Tệp.',
   },
   done: {
@@ -142,7 +142,7 @@ export const FACTORY_TEXT = {
   },
   play: {
     title: 'Mở cửa xưởng',
-    text: 'Bấm "Chơi", rồi bấm nút "Bấm để chơi" trên màn hình. Xem hộp chạy trên băng chuyền và bot phân loại hàng.',
+    text: 'Bấm "Chạy", rồi bấm nút "Bấm để chơi" trên màn hình. Xem hộp chạy trên băng chuyền và bot phân loại hàng.',
     explain: 'Nếu chưa thắng, bấm "Dừng" rồi kiểm tra lại các dây nối từng bước.',
   },
   won: {

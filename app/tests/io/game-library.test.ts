@@ -277,7 +277,7 @@ describe('game library', () => {
         throw new Error('QuotaExceededError');
       };
       const res = saveCurrentGame(game('B'));
-      expect(res && !res.ok && res.error).toContain('Kho game');
+      expect(res && !res.ok && res.error).toContain('Kho mô phỏng');
       expect([...storage.data.keys()].sort()).toEqual([...before.keys()].sort());
       expect(listGames().map((e) => e.name)).toEqual(['A']);
     });
@@ -351,7 +351,7 @@ describe('game library', () => {
       };
       scheduleAutosave(game('A'));
       expect(() => tick()).not.toThrow();
-      expect(takeAutosaveProblem()).toContain('Kho game');
+      expect(takeAutosaveProblem()).toContain('Kho mô phỏng');
       expect(storage.data.has(AUTOSAVE_KEY)).toBe(true);
     });
 

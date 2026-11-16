@@ -19,7 +19,7 @@ const T = {
   },
   watch: {
     title: 'Xem thử trước',
-    text: 'Bấm "Chơi". Bot đứng yên, xe đứng yên: chưa ai bảo chúng làm gì.',
+    text: 'Bấm "Chạy". Bot đứng yên, xe đứng yên: chưa ai bảo chúng làm gì.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -104,7 +104,7 @@ const T = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi" và xem bot đi tới xe, lên xe rồi lái qua khúc cua tới cờ.',
+    text: 'Bấm "Chạy" và xem bot đi tới xe, lên xe rồi lái qua khúc cua tới cờ.',
   },
   won: {
     title: 'Chờ bot tới cờ',

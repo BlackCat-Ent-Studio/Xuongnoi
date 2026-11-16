@@ -10,7 +10,7 @@ export const BOT_TOOL_TEXT = {
   },
   watch: {
     title: 'Xem thử trước',
-    text: 'Bấm "Chơi". Bot đứng yên vì chưa ai bảo nó làm gì.',
+    text: 'Bấm "Chạy". Bot đứng yên vì chưa ai bảo nó làm gì.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -82,7 +82,7 @@ export const BOT_TOOL_TEXT = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi" và xem bot đi nhặt cuốc, cầm lên tay rồi đập vỡ tảng đá.',
+    text: 'Bấm "Chạy" và xem bot đi nhặt cuốc, cầm lên tay rồi đập vỡ tảng đá.',
   },
   won: {
     title: 'Chờ bot đập đá',

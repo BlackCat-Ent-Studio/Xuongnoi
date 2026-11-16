@@ -16,13 +16,13 @@ export const SHELL_TEXT = {
   menuHelp: 'Trợ giúp',
 
   // Tệp
-  fileNew: 'Tạo game mới',
+  fileNew: 'Tạo mô phỏng mới',
   fileSamples: 'Bài mẫu',
-  fileLibrary: 'Kho game của tôi…',
+  fileLibrary: 'Kho mô phỏng của tôi…',
   fileOpen: 'Mở file…',
   fileSave: 'Lưu',
   fileExport: 'Xuất ra file',
-  fileGameSettings: 'Cài đặt game',
+  fileGameSettings: 'Cài đặt mô phỏng',
   savedLocal: 'Đã lưu trong trình duyệt',
 
   // Sửa
@@ -35,9 +35,9 @@ export const SHELL_TEXT = {
   editFit: 'Vừa màn hình',
 
   // Xem
-  viewGame: 'Màn chơi',
+  viewGame: 'Mô phỏng',
   viewGraph: 'Bảng nối',
-  viewMaximize: 'Phóng to màn chơi',
+  viewMaximize: 'Phóng to mô phỏng',
   viewLayout: 'Bố cục',
   viewLeftDock: 'Hiện dock trái',
   viewWireEnergy: 'Hiệu ứng dòng điện',
@@ -48,7 +48,7 @@ export const SHELL_TEXT = {
   helpHandbook: 'Sổ tay mảnh ghép',
 
   // View-mode segmented control
-  modeGroupAria: 'Góc nhìn của game',
+  modeGroupAria: 'Góc nhìn của mô phỏng',
   modeLockedTip: 'Bấm Dừng để đổi góc nhìn',
   modeKind: { '2d': '2D', '3d': '3D' } as Record<ViewKind, string>,
   /** The small switch beside the 2D button: which 2D view the button opens. */
@@ -57,18 +57,18 @@ export const SHELL_TEXT = {
   sub2dShort: { '2d-side': '↔', '2d-top': '↓' } as Record<Mode2d, string>,
 
   // Top bar
-  gameNameLabel: 'Tên game',
-  playGroupAria: 'Điều khiển chơi thử',
-  play: 'Chơi',
-  playTip: 'Chơi thử game',
+  gameNameLabel: 'Tên mô phỏng',
+  playGroupAria: 'Điều khiển chạy thử',
+  play: 'Chạy',
+  playTip: 'Chạy thử mô phỏng',
   pause: 'Tạm dừng',
   pauseTip: 'Sắp có: tạm dừng để xem giá trị trên dây',
   step: '🐢 Từng bước',
   stepNext: '▶ Tiếp',
   stop: 'Dừng',
-  stopTip: 'Dừng chơi, quay lại chỉnh sửa',
+  stopTip: 'Dừng chạy, quay lại chỉnh sửa',
   stateEditing: 'Đang sửa',
-  statePlaying: 'Đang chơi',
+  statePlaying: 'Đang chạy',
   layoutLabel: 'Bố cục',
   layoutPrefix: 'Bố cục: ',
   saveStatusSaved: 'Đã lưu tự động',
@@ -80,7 +80,7 @@ export const SHELL_TEXT = {
   // Docks
   tabScene: 'Cảnh',
   tabPalette: 'Mảnh ghép',
-  tabGame: 'Màn chơi',
+  tabGame: 'Mô phỏng',
   tabGraph: 'Bảng nối',
   tabProps: 'Thuộc tính',
   tabConsole: 'Bảng tin',
@@ -92,7 +92,7 @@ export const SHELL_TEXT = {
   scenePlaceholder: 'Danh sách vật trong cảnh sẽ hiện ở đây.',
   consolePlaceholder: 'Bảng tin sẽ hiện ở đây.',
   lessonsPlaceholder: 'Bài học sẽ hiện ở đây.',
-  liveChip: 'Đang chơi',
+  liveChip: 'Đang chạy',
 
   // Splitters
   splitterLeft: 'Kéo để đổi độ rộng dock trái (bấm đúp để về mặc định)',
@@ -108,8 +108,8 @@ export const SHELL_TEXT = {
     ['Ctrl + C / V / D', 'Sao chép / Dán / Nhân đôi mảnh ghép'],
     ['Delete', 'Xóa mảnh ghép hoặc dây đang chọn'],
     ['?', 'Mở bảng phím tắt'],
-    ['F', 'Phóng to màn chơi'],
-    ['Esc', 'Thu màn chơi về lại'],
-    ['Mũi tên, Cách', 'Điều khiển khi đang chơi'],
+    ['F', 'Phóng to mô phỏng'],
+    ['Esc', 'Thu mô phỏng về lại'],
+    ['Mũi tên, Cách', 'Điều khiển khi đang chạy'],
   ] as ReadonlyArray<readonly [string, string]>,
 } as const;

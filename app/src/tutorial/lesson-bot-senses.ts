@@ -89,8 +89,8 @@ const T = {
     explain: 'Ngưỡng của Đo tốc độ là 3, nên đi với tốc độ 2 thì không bị tính là chạy nhanh.',
   },
   play: {
-    title: 'Chơi thử',
-    text: 'Bấm Chơi. Giữ mũi tên phải để đi, bấm phím Cách để nhảy qua tường. Đi tới dải xanh lá là thắng.',
+    title: 'Chạy thử',
+    text: 'Bấm Chạy. Giữ mũi tên phải để đi, bấm phím Cách để nhảy qua tường. Đi tới dải xanh lá là thắng.',
   },
   won: { title: 'Thắng!', text: 'Bạn đã lẻn qua bot gác. Hãy thử lại với "Tốc độ chạy" bằng 5 để xem bot bắt gặp bạn.' },
   done: {

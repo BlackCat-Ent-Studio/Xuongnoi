@@ -67,11 +67,11 @@ function ovalWithTwoEyes(label: string, mode: ViewMode, note: string): Board {
 }
 
 const TRY_NOTE =
-  'Bấm Chơi, rồi lái nhân vật bằng phím mũi tên hoặc WASD và đi dọc theo vạch đen. Hai mắt nằm lệch trái và phải mũi nhân vật: mắt nào bắt đầu chạm vạch thì Độ đậm tăng từ 0 lên 1 và chữ của mắt đó sáng lên. Chấm nhỏ dưới chân nhân vật là chỗ mắt đang đọc, sáng xanh khi thấy line.';
+  'Bấm Chạy, rồi lái nhân vật bằng phím mũi tên hoặc WASD và đi dọc theo vạch đen. Hai mắt nằm lệch trái và phải mũi nhân vật: mắt nào bắt đầu chạm vạch thì Độ đậm tăng từ 0 lên 1 và chữ của mắt đó sáng lên. Chấm nhỏ dưới chân nhân vật là chỗ mắt đang đọc, sáng xanh khi thấy line.';
 
 export const tryLineTrack = (): Board => ovalWithTwoEyes('Đường line', '2d-top', TRY_NOTE);
 
 export const tryLineSensor = (): Board => ovalWithTwoEyes('Cảm biến dò line', '2d-top', TRY_NOTE);
 
 export const tryLineSensor3d = (): Board =>
-  ovalWithTwoEyes('Cảm biến dò line (3D)', '3d', 'Giống bảng chính nhưng chơi trong 3D: vạch được sơn trên sàn. Lái nhân vật dọc theo vạch và nhìn hai số Độ đậm đổi.');
+  ovalWithTwoEyes('Cảm biến dò line (3D)', '3d', 'Giống bảng chính nhưng chạy trong 3D: vạch được sơn trên sàn. Lái nhân vật dọc theo vạch và nhìn hai số Độ đậm đổi.');

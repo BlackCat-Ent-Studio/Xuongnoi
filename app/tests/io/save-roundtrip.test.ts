@@ -25,7 +25,7 @@ describe('save format', () => {
   it('roundtrips an empty board for every mode', () => {
     for (const mode of ['2d-side', '2d-top', '3d'] as const) {
       const board = createEmptyBoard(mode);
-      expect(board.name).toBe('Game mới');
+      expect(board.name).toBe('Mô phỏng mới');
       expect(ok(serializeBoard(board))).toEqual(board);
     }
   });
@@ -66,7 +66,7 @@ describe('save format', () => {
   });
 
   it('rejects bad mode', () => {
-    expect(fail(sampleJson((o) => (o.mode = 'vr')))).toContain('Kiểu game');
+    expect(fail(sampleJson((o) => (o.mode = 'vr')))).toContain('Kiểu mô phỏng');
   });
 
   it('rejects unknown node kind', () => {

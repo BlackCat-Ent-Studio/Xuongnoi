@@ -34,7 +34,7 @@ const T = {
     text: 'Chọn Chạy theo tuyến, mở mục "Nâng cao" trong Thuộc tính và đặt "Dừng ở mỗi điểm" thành 1 giây hoặc hơn.',
     explain: 'Trong lúc dừng, cổng "Đang ở điểm" bật lên. Bạn có thể nối nó vào mảnh khác, ví dụ để chỉ cho nhặt đồ khi bot đang đứng yên.',
   },
-  watch: { title: 'Xem bot gác', text: 'Bấm Chơi. Bot đỏ đi tới đầu sàn, đứng lại một chút rồi quay lại.' },
+  watch: { title: 'Xem bot gác', text: 'Bấm Chạy. Bot đỏ đi tới đầu sàn, đứng lại một chút rồi quay lại.' },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút Dừng để quay lại bảng lắp ghép.' },
   picker: {
     title: 'Tìm ô trống',
@@ -54,7 +54,7 @@ const T = {
     text: 'Nối "Đối tượng" của bot xanh sang "Bot" của Di chuyển, "Ô trống" sang "Điểm đến", và "Đi ngang" của Di chuyển sang "Đi ngang" của bot xanh.',
     explain: 'Ô thứ nhất đã có thùng nên "Ô trống" chỉ vào ô thứ hai. Cất thùng vào ô thứ nhất thì nó sẽ chỉ sang ô thứ hai.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đỏ đi tuần và dừng ở mỗi điểm, còn bot xanh đi thẳng tới ô vàng thứ hai.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Bot đỏ đi tuần và dừng ở mỗi điểm, còn bot xanh đi thẳng tới ô vàng thứ hai.' },
   done: {
     title: 'Xong rồi!',
     text: 'Bạn đã dùng "Dừng ở mỗi điểm", "Ô trống kế tiếp" và "Di chuyển". Ghép chúng với "Khiêng đồ" là bot tự lấy thùng và cất vào kho. Xem thêm trong Sổ tay.',

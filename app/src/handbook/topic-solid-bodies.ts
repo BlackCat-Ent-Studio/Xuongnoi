@@ -21,7 +21,7 @@ export const SOLID_BODIES_PAGE: HandbookTopic = {
       items: [
         'Menu Tệp, mục "Cài đặt game", bấm "Va chạm thật".',
         'Hoặc ô tick "Va chạm thật" trong bảng Thuộc tính khi chưa chọn mảnh ghép nào.',
-        'Đổi xong thì bấm Chơi: cài đặt có tác dụng từ lần chơi tiếp theo. Đang chơi thì không đổi được.',
+        'Đổi xong thì bấm Chạy: cài đặt có tác dụng từ lần chạy tiếp theo. Đang chạy thì không đổi được.',
         'Game mới tạo bật sẵn. Game mẫu, bài học, ví dụ "Thử ngay" và game cũ đã lưu vẫn tắt, chạy y như trước.',
       ],
     },

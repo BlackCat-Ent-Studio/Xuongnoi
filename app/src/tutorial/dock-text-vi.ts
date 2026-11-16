@@ -3,7 +3,7 @@ export const DOCK_TEXT = {
   listAria: 'Danh sách bài học',
   listDone: 'Đã học',
   idleTitle: 'Chọn một bài học để bắt đầu',
-  idleText: 'Bài học chạy trên một bảng riêng, game của bạn được giữ nguyên. Bấm một bài ở danh sách bên trái.',
+  idleText: 'Bài học chạy trên một bảng riêng, mô phỏng của bạn được giữ nguyên. Bấm một bài ở danh sách bên trái.',
   lessonStep: (lessonTitle: string, n: number, total: number) => `${lessonTitle}, bước ${n} trên ${total}`,
   stepsAria: (n: number, total: number) => `Bước ${n} trên ${total}`,
   show: 'Chỉ cho tôi',
@@ -14,7 +14,7 @@ export const DOCK_TEXT = {
   skipTitle: 'Bỏ qua bước này mà không làm',
   finish: 'Hoàn thành',
   exit: 'Thoát bài',
-  exitTitle: 'Thoát bài học và về game của bạn',
+  exitTitle: 'Thoát bài học và về mô phỏng của bạn',
 } as const;
 
 export const LAUNCHPAD_TEXT = {
@@ -24,8 +24,8 @@ export const LAUNCHPAD_TEXT = {
   learnHint: 'Bài 1: cho nhân vật chạy và nhảy.',
   sample: 'Mở bài mẫu',
   sampleHint: 'Mở một máy đã nối sẵn để xem và sửa.',
-  library: 'Game của tôi',
-  libraryHint: 'Mở lại một game bạn đã làm trước đó.',
+  library: 'Mô phỏng của tôi',
+  libraryHint: 'Mở lại một mô phỏng bạn đã làm trước đó.',
   blank: 'Tự làm',
   blankHint: 'Tự tìm mảnh ghép đầu tiên trong cột bên trái.',
   samplesTitle: 'Chọn một bài mẫu',

@@ -49,7 +49,7 @@ const WALKER_WIRES: WireSpec[] = [['stick', 'x', 'hero', 'moveX']];
 export const tryKey = (): Board =>
   build(
     'Phím bấm',
-    'Bấm Chơi, rồi giữ phím Cách (Space). Chữ trên hiện khi giữ; chữ dưới hiện và ở lại sau lần bấm đầu tiên.',
+    'Bấm Chạy, rồi giữ phím Cách (Space). Chữ trên hiện khi giữ; chữ dưới hiện và ở lại sau lần bấm đầu tiên.',
     [keyNode('key', 20, 'Space'), { alias: 'latch', kind: 'latch', x: 300, y: 200 }, text('held', 300, 20, 'Đang giữ phím Cách'), text('seen', 600, 200, 'Bạn đã bấm phím Cách rồi!', 'bottom-left')],
     [['key', 'held', 'held', 'show'], ['key', 'pressed', 'latch', 'set'], ['latch', 'on', 'seen', 'show']],
   );
@@ -57,7 +57,7 @@ export const tryKey = (): Board =>
 export const tryStick = (): Board =>
   build(
     'Cần điều khiển',
-    'Bấm Chơi, rồi bấm các phím mũi tên. Số Ngang đổi giữa -1, 0 và 1; số Dọc cũng vậy.',
+    'Bấm Chạy, rồi bấm các phím mũi tên. Số Ngang đổi giữa -1, 0 và 1; số Dọc cũng vậy.',
     [
       { alias: 'stick', kind: 'stick', x: 20, y: 20 },
       { alias: 'nx', kind: 'show-number', x: 300, y: 20, params: { label: 'Ngang', corner: 'top-left' } },
@@ -69,7 +69,7 @@ export const tryStick = (): Board =>
 export const tryOnStart = (): Board =>
   build(
     'Khi bắt đầu',
-    'Bấm Chơi: dòng chữ hiện ngay lập tức, vì mảnh ghép Khi bắt đầu bật một nhịp rồi Công tắc nhớ giữ lại.',
+    'Bấm Chạy: dòng chữ hiện ngay lập tức, vì mảnh ghép Khi bắt đầu bật một nhịp rồi Công tắc nhớ giữ lại.',
     [{ alias: 'start', kind: 'on-start', x: 20, y: 20 }, { alias: 'latch', kind: 'latch', x: 300, y: 20 }, text('hi', 600, 20, 'Game đã bắt đầu!')],
     [['start', 'fired', 'latch', 'set'], ['latch', 'on', 'hi', 'show']],
   );
@@ -77,7 +77,7 @@ export const tryOnStart = (): Board =>
 export const tryUiButton = (): Board =>
   build(
     'Nút bấm',
-    'Bấm Chơi, rồi bấm nút ở góc dưới phải. Mỗi lần bấm, dòng chữ hiện hoặc ẩn đi.',
+    'Bấm Chạy, rồi bấm nút ở góc dưới phải. Mỗi lần bấm, dòng chữ hiện hoặc ẩn đi.',
     [{ alias: 'btn', kind: 'ui-button', x: 20, y: 20, params: { text: 'Bật / tắt chữ' } }, { alias: 'latch', kind: 'latch', x: 300, y: 20 }, text('hi', 600, 20, 'Bạn vừa bấm nút!')],
     [['btn', 'pressed', 'latch', 'toggle'], ['latch', 'on', 'hi', 'show']],
   );
@@ -85,7 +85,7 @@ export const tryUiButton = (): Board =>
 export const tryUiPick = (): Board =>
   build(
     'Bấm vào đối tượng',
-    'Bấm Chơi, rồi bấm chuột vào hộp cam ở giữa màn hình. Mỗi lần bấm trúng, dòng chữ hiện hoặc ẩn đi.',
+    'Bấm Chạy, rồi bấm chuột vào hộp cam ở giữa màn hình. Mỗi lần bấm trúng, dòng chữ hiện hoặc ẩn đi.',
     [
       { alias: 'box', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: 2, z: 0 }, size: { x: 2, y: 2, z: 1 }, color: '#f97316' } },
       { alias: 'pick', kind: 'ui-pick', x: 300, y: 20 },
@@ -98,7 +98,7 @@ export const tryUiPick = (): Board =>
 export const tryUiDialog = (): Board =>
   build(
     'Hộp thoại',
-    'Bấm Chơi: hộp hỏi hiện ra ngay. Chọn "Có" hoặc "Không" và xem dòng chữ thay đổi.',
+    'Bấm Chạy: hộp hỏi hiện ra ngay. Chọn "Có" hoặc "Không" và xem dòng chữ thay đổi.',
     [
       { alias: 'start', kind: 'on-start', x: 20, y: 20 },
       { alias: 'ask', kind: 'ui-dialog', x: 300, y: 20, params: { question: 'Bạn thích kẹo không?' } },
@@ -113,7 +113,7 @@ export const tryUiDialog = (): Board =>
 export const tryUiStart = (): Board =>
   build(
     'Màn hình mở đầu',
-    'Bấm Chơi: màn hình mở đầu hiện ra. Bấm nút "Bấm để chơi" thì dòng chữ mới xuất hiện. Thử nhấn Esc để mở menu tạm dừng.',
+    'Bấm Chạy: màn hình mở đầu hiện ra. Bấm nút "Bấm để chơi" thì dòng chữ mới xuất hiện. Thử nhấn Esc để mở menu tạm dừng.',
     [{ alias: 'start', kind: 'ui-start', x: 20, y: 20 }, text('hi', 300, 20, 'Game đang chạy!')],
     [['start', 'started', 'hi', 'show']],
   );
@@ -121,7 +121,7 @@ export const tryUiStart = (): Board =>
 export const tryAnd = (): Board =>
   build(
     'Và',
-    'Bấm Chơi. Giữ phím Cách thì chưa đủ, giữ thêm phím E cùng lúc thì chữ mới hiện.',
+    'Bấm Chạy. Giữ phím Cách thì chưa đủ, giữ thêm phím E cùng lúc thì chữ mới hiện.',
     [keyNode('a', 20, 'Space'), keyNode('b', 190, 'KeyE'), { alias: 'and', kind: 'and', x: 300, y: 100 }, text('hi', 560, 100, 'Cả hai phím đang được giữ!')],
     [['a', 'held', 'and', 'a'], ['b', 'held', 'and', 'b'], ['and', 'out', 'hi', 'show']],
   );
@@ -129,7 +129,7 @@ export const tryAnd = (): Board =>
 export const tryOr = (): Board =>
   build(
     'Hoặc',
-    'Bấm Chơi. Giữ phím Cách, hoặc phím E, hoặc cả hai: chữ hiện khi có ít nhất một phím đang giữ.',
+    'Bấm Chạy. Giữ phím Cách, hoặc phím E, hoặc cả hai: chữ hiện khi có ít nhất một phím đang giữ.',
     [keyNode('a', 20, 'Space'), keyNode('b', 190, 'KeyE'), { alias: 'or', kind: 'or', x: 300, y: 100 }, text('hi', 560, 100, 'Có ít nhất một phím đang giữ!')],
     [['a', 'held', 'or', 'a'], ['b', 'held', 'or', 'b'], ['or', 'out', 'hi', 'show']],
   );
@@ -137,7 +137,7 @@ export const tryOr = (): Board =>
 export const tryNot = (): Board =>
   build(
     'Đảo ngược',
-    'Bấm Chơi. Chữ hiện sẵn; giữ phím Cách thì chữ biến mất, thả ra thì hiện lại.',
+    'Bấm Chạy. Chữ hiện sẵn; giữ phím Cách thì chữ biến mất, thả ra thì hiện lại.',
     [keyNode('key', 20, 'Space'), { alias: 'not', kind: 'not', x: 300, y: 20 }, text('hi', 560, 20, 'Bạn không giữ phím Cách')],
     [['key', 'held', 'not', 'in'], ['not', 'out', 'hi', 'show']],
   );
@@ -145,7 +145,7 @@ export const tryNot = (): Board =>
 export const tryCompare = (): Board =>
   build(
     'So sánh',
-    'Bấm Chơi, rồi bấm mũi tên phải. Số Ngang lớn hơn 0 thì chữ hiện. Thử đổi "Kiểu so sánh" trong Thuộc tính.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Số Ngang lớn hơn 0 thì chữ hiện. Thử đổi "Kiểu so sánh" trong Thuộc tính.',
     [
       { alias: 'stick', kind: 'stick', x: 20, y: 20 },
       { alias: 'zero', kind: 'const', x: 20, y: 200, params: { value: 0 } },
@@ -159,7 +159,7 @@ export const tryCompare = (): Board =>
 export const tryTouch = (): Board =>
   build(
     'Va chạm',
-    'Bấm Chơi, rồi bấm mũi tên phải để nhân vật đi tới bức tường đỏ. Chạm tới thì chữ hiện.',
+    'Bấm Chạy, rồi bấm mũi tên phải để nhân vật đi tới bức tường đỏ. Chạm tới thì chữ hiện.',
     [
       ...WALKER,
       { alias: 'wall', kind: 'block', x: 300, y: 500, params: { position: { x: 3, y: 1.5, z: 0 }, size: { x: 1, y: 2, z: 1 }, color: '#dc2626' } },
@@ -172,7 +172,7 @@ export const tryTouch = (): Board =>
 export const trySelectNumber = (): Board =>
   build(
     'Chọn theo số',
-    'Bấm Chơi: chỉ một dòng chữ hiện, ứng với số 2. Dừng game, đổi "Giá trị" của mảnh Số thành 1 hoặc 3 rồi Chơi lại.',
+    'Bấm Chạy: chỉ một dòng chữ hiện, ứng với số 2. Dừng game, đổi "Giá trị" của mảnh Số thành 1 hoặc 3 rồi Chạy lại.',
     [
       { alias: 'num', kind: 'const', x: 20, y: 20, params: { value: 2 } },
       { alias: 'sel', kind: 'select-number', x: 300, y: 20 },
@@ -186,7 +186,7 @@ export const trySelectNumber = (): Board =>
 export const tryLatch = (): Board =>
   build(
     'Công tắc nhớ',
-    'Bấm Chơi. Bấm phím Cách một lần để bật chữ lên (thả tay vẫn còn). Bấm phím R để tắt.',
+    'Bấm Chạy. Bấm phím Cách một lần để bật chữ lên (thả tay vẫn còn). Bấm phím R để tắt.',
     [keyNode('on', 20, 'Space'), keyNode('off', 190, 'KeyR'), { alias: 'latch', kind: 'latch', x: 300, y: 100 }, text('hi', 560, 100, 'Công tắc đang bật')],
     [['on', 'pressed', 'latch', 'set'], ['off', 'pressed', 'latch', 'reset'], ['latch', 'on', 'hi', 'show']],
   );
@@ -194,7 +194,7 @@ export const tryLatch = (): Board =>
 export const tryZone = (): Board =>
   build(
     'Vùng kích hoạt',
-    'Bấm Chơi, rồi bấm mũi tên phải. Vùng vô hình nằm quanh chỗ x = 4: nhân vật bước vào thì chữ hiện và số lượng thành 1.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Vùng vô hình nằm quanh chỗ x = 4: nhân vật bước vào thì chữ hiện và số lượng thành 1.',
     [
       ...WALKER,
       { alias: 'zone', kind: 'zone', x: 600, y: 20, params: { center: { x: 4, y: 1, z: 0 }, size: { x: 6, y: 3, z: 3 } } },
@@ -207,7 +207,7 @@ export const tryZone = (): Board =>
 export const tryDistance = (): Board =>
   build(
     'Đo khoảng cách',
-    'Bấm Chơi, rồi bấm mũi tên phải. Con số giảm dần khi nhân vật đến gần cờ xanh; còn 3 ô trở xuống thì chữ hiện.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Con số giảm dần khi nhân vật đến gần cờ xanh; còn 3 ô trở xuống thì chữ hiện.',
     [
       ...WALKER,
       { alias: 'flag', kind: 'block', x: 300, y: 500, params: { type: 'pickup', position: { x: 6, y: 1, z: 0 }, size: { x: 1, y: 1, z: 1 }, color: '#2563eb' } },
@@ -221,7 +221,7 @@ export const tryDistance = (): Board =>
 export const trySpeedSensor = (): Board =>
   build(
     'Đo tốc độ',
-    'Bấm Chơi, rồi bấm mũi tên phải. Số tốc độ lên khoảng 5 khi nhân vật chạy; lớn hơn 3 thì chữ hiện, đứng lại thì số về 0.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Số tốc độ lên khoảng 5 khi nhân vật chạy; lớn hơn 3 thì chữ hiện, đứng lại thì số về 0.',
     [
       ...WALKER,
       { alias: 'speed', kind: 'speed-sensor', x: 600, y: 20 },
@@ -234,7 +234,7 @@ export const trySpeedSensor = (): Board =>
 export const tryForceSensor = (): Board =>
   build(
     'Cảm biến lực / Cân',
-    'Bấm Chơi: ba thùng 2 kg, 5 kg và 10 kg rơi xuống bàn cân, số hiện 17 kg và 166,77 N. Bấm phím Cách để làm thùng 10 kg biến mất: số tụt còn 7 kg. Chọn một thùng, đổi "Khối lượng" trong Nâng cao rồi chơi lại để xem số đổi theo.',
+    'Bấm Chạy: ba thùng 2 kg, 5 kg và 10 kg rơi xuống bàn cân, số hiện 17 kg và 166,77 N. Bấm phím Cách để làm thùng 10 kg biến mất: số tụt còn 7 kg. Chọn một thùng, đổi "Khối lượng" trong Nâng cao rồi chạy lại để xem số đổi theo.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 20, y: 1, z: 1 }, color: '#78716c' } },
       { alias: 'scale', kind: 'block', x: 20, y: 250, params: { position: { x: 0, y: 0.7, z: 0 }, size: { x: 4, y: 0.4, z: 1 }, color: '#0ea5e9' } },
@@ -252,7 +252,7 @@ export const tryForceSensor = (): Board =>
 export const tryAheadSensor = (): Board =>
   build(
     'Dò phía trước',
-    'Bấm Chơi, rồi bấm mũi tên phải. Khi cách bức tường còn 3 ô, chữ hiện lên và số khoảng cách giảm dần khi bạn tiến sát.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Khi cách bức tường còn 3 ô, chữ hiện lên và số khoảng cách giảm dần khi bạn tiến sát.',
     [
       ...WALKER,
       { alias: 'wall', kind: 'block', x: 300, y: 500, params: { position: { x: 0, y: 1.5, z: 0 }, size: { x: 1, y: 2, z: 1 }, color: '#a8a29e' } },
@@ -266,7 +266,7 @@ export const tryAheadSensor = (): Board =>
 export const tryVisionSensor = (): Board =>
   build(
     'Tầm nhìn',
-    'Bấm Chơi, rồi bấm mũi tên phải. Bot đứng bên trái, quay mặt sang phải: nó thấy bạn lúc đầu, bạn chạy xa quá 6 ô thì mất dấu.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Bot đứng bên trái, quay mặt sang phải: nó thấy bạn lúc đầu, bạn chạy xa quá 6 ô thì mất dấu.',
     [
       ...WALKER,
       { alias: 'bot', kind: 'character', x: 300, y: 500, params: { position: { x: -9, y: 1, z: 0 }, role: 'bot', color: '#ef4444' } },
@@ -280,7 +280,7 @@ export const tryVisionSensor = (): Board =>
 export const tryColorSensor = (): Board =>
   build(
     'Đọc màu',
-    'Bấm Chơi, rồi bấm mũi tên phải. Nhân vật đứng trên ô đỏ nên Số màu là 1; bước sang ô xanh lá thì thành 3. Chỉ ba màu của bảng màu (đỏ, vàng, xanh lá) mới có số; màu khác ra 0.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Nhân vật đứng trên ô đỏ nên Số màu là 1; bước sang ô xanh lá thì thành 3. Chỉ ba màu của bảng màu (đỏ, vàng, xanh lá) mới có số; màu khác ra 0.',
     [
       { alias: 'stick', kind: 'stick', x: 20, y: 20 },
       { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 } } },
@@ -296,7 +296,7 @@ export const tryColorSensor = (): Board =>
 export const tryNextFreeSlot = (): Board =>
   build(
     'Ô trống kế tiếp',
-    'Bấm Chơi: ô vàng thứ nhất đã có thùng nên bot đi tới ô vàng thứ hai. Dừng game, xóa thùng đi rồi Chơi lại: bot sẽ đi tới ô thứ nhất.',
+    'Bấm Chạy: ô vàng thứ nhất đã có thùng nên bot đi tới ô vàng thứ hai. Dừng game, xóa thùng đi rồi Chạy lại: bot sẽ đi tới ô thứ nhất.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
       { alias: 'bot', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 }, role: 'bot', color: '#ef4444', speed: 4 } },
@@ -320,7 +320,7 @@ export const tryNextFreeSlot = (): Board =>
 export const trySightForecast = (): Board =>
   build(
     'Dự đoán tầm nhìn',
-    'Bấm Chơi: bot đỏ đi tuần qua lại và nhìn theo hướng đi, bạn đứng yên bên phải. Số "Giây còn lại" đếm ngược tới lúc bot thấy bạn, và hiện ra trước cả khi bị thấy. Số 99 nghĩa là chưa bị thấy trong 12 giây tới.',
+    'Bấm Chạy: bot đỏ đi tuần qua lại và nhìn theo hướng đi, bạn đứng yên bên phải. Số "Giây còn lại" đếm ngược tới lúc bot thấy bạn, và hiện ra trước cả khi bị thấy. Số 99 nghĩa là chưa bị thấy trong 12 giây tới.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
       { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: 5, y: 1, z: 0 }, role: 'bot', color: '#3b82f6' } },
@@ -346,7 +346,7 @@ export const trySightForecast = (): Board =>
 export const tryNearestItem = (): Board =>
   build(
     'Tìm đồ gần nhất',
-    'Bấm Chơi: hai thùng nằm hai phía của bot, bot đi tới thùng gần hơn. Dừng game, kéo thùng bên kia lại gần bot hơn rồi Chơi lại: bot đổi sang thùng đó.',
+    'Bấm Chạy: hai thùng nằm hai phía của bot, bot đi tới thùng gần hơn. Dừng game, kéo thùng bên kia lại gần bot hơn rồi Chạy lại: bot đổi sang thùng đó.',
     [
       { alias: 'floor', kind: 'block', x: 20, y: 330, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
       { alias: 'bot', kind: 'character', x: 300, y: 20, params: { position: { x: 0, y: 1, z: 0 }, role: 'bot', color: '#ef4444', speed: 4 } },

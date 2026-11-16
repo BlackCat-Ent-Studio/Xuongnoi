@@ -47,12 +47,12 @@ const T = {
   },
   play: {
     title: 'Lái thử',
-    text: 'Bấm Chơi. Mũi tên lên để chạy tới, xuống để lùi, trái hoặc phải để rẽ. Chỉ bấm trái hoặc phải mà không bấm lên thì robot quay tại chỗ.',
+    text: 'Bấm Chạy. Mũi tên lên để chạy tới, xuống để lùi, trái hoặc phải để rẽ. Chỉ bấm trái hoặc phải mà không bấm lên thì robot quay tại chỗ.',
   },
   edit: { title: 'Quay lại sửa', text: 'Bấm nút Dừng để quay lại bảng lắp ghép.' },
   heavy: {
     title: 'Làm robot nặng hơn',
-    text: 'Chọn Thân robot và đặt "Khối lượng" thành 10 kg hoặc hơn, rồi chơi lại.',
+    text: 'Chọn Thân robot và đặt "Khối lượng" thành 10 kg hoặc hơn, rồi chạy lại.',
     explain: 'Robot nặng thì cùng một lực đẩy cho gia tốc nhỏ hơn: nó ì khi bắt đầu chạy và khi dừng.',
   },
   done: {

@@ -69,14 +69,14 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     purpose: 'Báo ngay khi trò chơi bắt đầu chạy: một nhịp "Khi bắt đầu", và "Đã bắt đầu" bật suốt từ đó.',
     whenToUse: 'Khi muốn làm gì đó một lần lúc mở game: hiện lời chào, hỏi người chơi một câu, bật sẵn một công tắc.',
     ports: {
-      fired: 'Chỉ bật ở nhịp đầu tiên khi bấm Chơi, sau đó tắt mãi.',
-      started: 'Bật suốt từ lúc bấm Chơi. Nối vào "Bật", "Bắt đầu"... của mảnh cần được bật từ đầu game (Di chuyển, Đi tuần, Hẹn giờ...).',
+      fired: 'Chỉ bật ở nhịp đầu tiên khi bấm Chạy, sau đó tắt mãi.',
+      started: 'Bật suốt từ lúc bấm Chạy. Nối vào "Bật", "Bắt đầu"... của mảnh cần được bật từ đầu game (Di chuyển, Đi tuần, Hẹn giờ...).',
     },
     params: {},
     example: 'Khi bắt đầu "Khi bắt đầu" → Công tắc nhớ "Bật" → Hiện chữ: lời chào hiện ra và ở lại suốt game.',
     tips: [
       'Nó chỉ bật một nhịp rất ngắn nên thường phải nối qua Công tắc nhớ nếu muốn thứ gì đó ở lại.',
-      'Chỉ bật lúc bấm Chơi. Muốn làm lại lần nữa thì phải bấm Dừng rồi Chơi lại.',
+      'Chỉ bật lúc bấm Chạy. Muốn làm lại lần nữa thì phải bấm Dừng rồi Chạy lại.',
     ],
     lessonId: 'secret-door',
     tryBoard: tryOnStart,
@@ -157,7 +157,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     params: {
       title: 'Tên game in lớn trên màn hình mở đầu.',
       buttonText: 'Chữ trên nút bắt đầu.',
-      pauseMenu: 'Chọn Có thì nhấn Esc khi đang chơi sẽ hiện menu "Tiếp tục" và "Chơi lại". Chọn Không thì tắt menu này.',
+      pauseMenu: 'Chọn Có thì nhấn Esc khi đang chạy sẽ hiện menu "Tiếp tục" và "Chạy lại". Chọn Không thì tắt menu này.',
     },
     example: 'Màn hình mở đầu "Đã bắt đầu" → Đồng hồ đếm "Bắt đầu": đồng hồ chỉ bắt đầu đếm khi người chơi bấm nút.',
     tips: [
@@ -306,7 +306,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nếu "Bật" và "Tắt" cùng lúc thì "Tắt" thắng.',
       'Chỉ phản ứng ở lúc tín hiệu vừa chuyển từ tắt sang bật, nên giữ tín hiệu bật mãi cũng không bật lại.',
-      'Đổi "Lúc đầu" chỉ có tác dụng khi bắt đầu một lần chơi mới: hãy bấm Dừng rồi Chơi lại.',
+      'Đổi "Lúc đầu" chỉ có tác dụng khi bắt đầu một lần chạy mới: hãy bấm Dừng rồi Chạy lại.',
     ],
     lessonId: 'chance-zones',
     tryBoard: tryLatch,
@@ -331,13 +331,13 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
       goods: 'Chỉ tính đồ vật có đúng loại hàng này (để trống là tính mọi loại). Phải gõ giống hệt tên loại hàng đã đặt.',
       rule: 'Cách tính: "Chạm mép" (chạm là tính), "Tâm vật vào trong" (tâm lọt vào vùng), hoặc "Nằm trọn bên trong".',
       minCount: 'Cần ít nhất bao nhiêu vật trong vùng thì "Đang có đối tượng" mới bật. Mặc định là 1.',
-      color: 'Màu của hộp mờ khi bạn chỉnh sửa, để dễ nhìn vùng. Lúc chơi vùng vô hình.',
+      color: 'Màu của hộp mờ khi bạn chỉnh sửa, để dễ nhìn vùng. Lúc chạy vùng vô hình.',
     },
     example: 'Vùng kích hoạt quanh lá cờ, "Đang có đối tượng" → "Thắng" của Thắng / Thua: nhân vật bước vào vùng là thắng.',
     tips: [
       '"Chỉ tính loại hàng" phải gõ khớp chính xác với loại hàng của đồ vật (kể cả dấu và chữ hoa), nếu sai thì vùng không đếm được gì.',
-      'Lúc chỉnh sửa bạn thấy hộp mờ, nhưng lúc chơi vùng hoàn toàn vô hình. Muốn người chơi thấy thì đặt thêm một Vật thể màu ở đó.',
-      '"Tâm vùng", "Kích thước vùng" và "Màu vùng" chỉ áp dụng lúc bắt đầu chơi; đổi giữa chừng thì phải Chơi lại mới thấy.',
+      'Lúc chỉnh sửa bạn thấy hộp mờ, nhưng lúc chạy vùng hoàn toàn vô hình. Muốn người chơi thấy thì đặt thêm một Vật thể màu ở đó.',
+      '"Tâm vùng", "Kích thước vùng" và "Màu vùng" chỉ áp dụng lúc bắt đầu chạy; đổi giữa chừng thì phải Chạy lại mới thấy.',
       'Ở game nhìn ngang hoặc nhìn từ trên, trục không nhìn thấy bị bỏ qua nên vùng mỏng vẫn bắt được nhân vật.',
     ],
     lessonId: 'secret-door',
@@ -346,7 +346,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   {
     kind: 'distance',
     purpose: 'Đo khoảng cách giữa hai vật và báo khi chúng đủ gần nhau.',
-    whenToUse: 'Quái chỉ đuổi khi người chơi lại gần, hiện gợi ý khi đến gần người lạ hay gần đích.',
+    whenToUse: 'Quái chỉ đuổi khi người chạy lại gần, hiện gợi ý khi đến gần người lạ hay gần đích.',
     ports: {
       a: 'Vật thứ nhất (bắt buộc).',
       b: 'Vật thứ hai (bắt buộc).',
@@ -461,7 +461,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nhìn từ bên cạnh thì hình quạt hướng sang trái hoặc phải theo hướng nhân vật quay mặt; nhìn từ trên và 3D thì theo hướng mặt trên mặt đất.',
       'Người nhìn không bao giờ thấy chính nó, và vật bị ẩn hay đang ngồi trên xe thì không được tính.',
-      'Lúc bấm Chơi (3D), mỗi nhân vật có Tầm nhìn hiện hình quạt vàng trên sàn; hình quạt đổi sang đỏ khi nó đang thấy gì đó.',
+      'Lúc bấm Chạy (3D), mỗi nhân vật có Tầm nhìn hiện hình quạt vàng trên sàn; hình quạt đổi sang đỏ khi nó đang thấy gì đó.',
       'Bot đứng yên luôn quay về một hướng, nên người chơi đi vòng ra sau lưng là thoát khỏi tầm nhìn.',
     ],
     lessonId: 'bot-senses',
@@ -517,7 +517,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   },
   {
     kind: 'sight-forecast',
-    purpose: 'Đoán trước bao nhiêu giây nữa một người nhìn sẽ thấy một chỗ, bằng cách chơi thử trước đường đi tuần và tầm nhìn của họ.',
+    purpose: 'Đoán trước bao nhiêu giây nữa một người nhìn sẽ thấy một chỗ, bằng cách chạy thử trước đường đi tuần và tầm nhìn của họ.',
     whenToUse: 'Bot lẻn vào chỉ chạy khi chắc chắn chưa bị lính gác thấy: tính xem còn kịp chạy qua một đoạn hở hay phải nấp.',
     ports: {
       viewer: 'Người nhìn: nhân vật có mảnh Tầm nhìn. Bắt buộc nối. Mảnh này đọc luật nhìn (tầm xa, góc, tường che) của người đó.',

@@ -42,7 +42,7 @@ const T = {
     title: 'Vẽ ba đường',
     text: 'Nối "Giá trị ra" của Quy đổi khoảng sang "Tín hiệu 1", "Vị trí ngang" của rô-bốt sang "Tín hiệu 2", và "Điều khiển" của PID sang "Tín hiệu 3".',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Rô-bốt đuổi theo vị trí đặt, và đồ thị ở góc phải cho thấy đường vị trí bám theo đường giá trị đặt.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Rô-bốt đuổi theo vị trí đặt, và đồ thị ở góc phải cho thấy đường vị trí bám theo đường giá trị đặt.' },
   done: {
     title: 'Xong rồi!',
     text: 'Bấm vào mảnh PID rồi thử đổi Kp (nhỏ hơn thì chậm và êm, lớn hơn thì nhanh). Xem thêm Ki, Kd và các ô nâng cao trong Sổ tay.',

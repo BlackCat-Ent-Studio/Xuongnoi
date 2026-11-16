@@ -30,7 +30,7 @@ export const ENGINEERING_PHYSICS_PAGE: HandbookTopic = {
     {
       heading: 'Kẹp quá mạnh thì hỏng',
       items: [
-        '"Lực chịu nén tối đa" (N) là lực ép lớn nhất mà vật chịu được. Ép mạnh hơn thì vật bị hỏng: nó bị bẹp xuống và ngả màu đỏ sẫm, và hỏng luôn cho đến khi chơi lại.',
+        '"Lực chịu nén tối đa" (N) là lực ép lớn nhất mà vật chịu được. Ép mạnh hơn thì vật bị hỏng: nó bị bẹp xuống và ngả màu đỏ sẫm, và hỏng luôn cho đến khi chạy lại.',
         'Để 0 nghĩa là vật không bao giờ hỏng (mặc định).',
         'Vì vậy kẹp phải đủ mạnh để không tuột, nhưng không quá mạnh để không làm hỏng: lực kẹp tốt nằm giữa hai mức đó.',
       ],

@@ -65,7 +65,7 @@ const T = {
   },
   play1: {
     title: 'Thử gắp',
-    text: 'Bấm Chơi. Giữ mũi tên xuống để hạ tay tới thùng, giữ phím Cách để kẹp, rồi thả mũi tên xuống và giữ mũi tên lên. Thùng sẽ tuột!',
+    text: 'Bấm Chạy. Giữ mũi tên xuống để hạ tay tới thùng, giữ phím Cách để kẹp, rồi thả mũi tên xuống và giữ mũi tên lên. Thùng sẽ tuột!',
     explain: 'Lực kẹp mặc định là 20 N mỗi ngón. Thùng 2,5 kg nặng 2,5 × 9,81 = 24,5 N, mà 2 ngón × 0,5 (ma sát) × 20 N chỉ giữ được 20 N.',
   },
   force: {
@@ -73,7 +73,7 @@ const T = {
     text: 'Bấm Dừng. Chọn Tay kẹp và đặt "Lực kẹp mặc định" thành 25 N hoặc hơn.',
     explain: 'Giữ được khi: số ngón × ma sát × lực ≥ khối lượng × 9,81, tức 2 × 0,5 × lực ≥ 24,5 N. Kẹp quá mạnh thì thùng dễ vỡ sẽ hỏng, nên đừng đặt quá cao.',
   },
-  play2: { title: 'Gắp lại', text: 'Bấm Chơi và gắp lại: lần này thùng được nhấc lên và giữ chặt.' },
+  play2: { title: 'Gắp lại', text: 'Bấm Chạy và gắp lại: lần này thùng được nhấc lên và giữ chặt.' },
   done: {
     title: 'Xong rồi!',
     text: 'Bạn đã làm một cánh tay máy thật. Trong bài mẫu "Tay máy gắp thùng" có thêm vai, khuỷu, thùng 6 kg làm khớp quá tải và thùng dễ vỡ. Thử xem!',

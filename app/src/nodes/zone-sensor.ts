@@ -49,7 +49,7 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
   label: 'Vùng kích hoạt',
   category: 'logic',
   description:
-    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chơi thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Khi đối tượng vào" / "Khi đối tượng ra" bật một nhịp; "Số đối tượng" đếm số vật trong vùng. Nối "Bám theo đối tượng" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng". Bật "Xoay theo vật" để vùng quay theo hướng vật (chỉ ở 3D và nhìn từ trên). "Chỉ tính loại hàng" lọc đồ vật theo loại hàng; "Tính khi nào" chọn chạm mép, tâm vật vào trong hay nằm trọn bên trong; "Ít nhất bao nhiêu vật" là số vật tối thiểu để "Đang có đối tượng" bật.',
+    'Một vùng hình hộp vô hình: biết có ai đang đứng trong đó không. Khi chỉnh sửa bạn thấy vùng là hộp mờ, lúc chạy thì nó vô hình. Chọn loại nào được tính (nhân vật, người chơi, bot, đồ vật, xe). "Khi đối tượng vào" / "Khi đối tượng ra" bật một nhịp; "Số đối tượng" đếm số vật trong vùng. Nối "Bám theo đối tượng" để vùng đi theo vật đó (ví dụ chiếc xe): lúc này "Tâm vùng" chỉ là độ lệch so với vật; không nối thì vùng đứng yên ở "Tâm vùng". Bật "Xoay theo vật" để vùng quay theo hướng vật (chỉ ở 3D và nhìn từ trên). "Chỉ tính loại hàng" lọc đồ vật theo loại hàng; "Tính khi nào" chọn chạm mép, tâm vật vào trong hay nằm trọn bên trong; "Ít nhất bao nhiêu vật" là số vật tối thiểu để "Đang có đối tượng" bật.',
   inputs: [{ id: 'follow', type: 'object', label: 'Bám theo đối tượng' }],
   outputs: [
     { id: 'inside', type: 'bool', label: 'Đang có đối tượng' },

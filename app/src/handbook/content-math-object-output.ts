@@ -13,12 +13,12 @@ const BODY_PARAM_TEXT = {
     'Nâng cao. Khối lượng thật, tính bằng kg (mặc định: vật thể 10, đồ vật 1, nhân vật 60, xe 1000). Không làm vật rơi hay chạy khác đi; Cảm biến lực / Cân, càng kẹp, khớp và "Sức nâng tối đa" của Khiêng đồ đọc con số này. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
   mu: 'Nâng cao. Hệ số ma sát của bề mặt: 0 là trơn như băng, 0,5 bình thường, 1,5 rất nhám như cao su. Càng kẹp dùng nó để biết kẹp bao nhiêu lực thì vật không tuột (2 × μ × F ≥ m × g).',
   crushLimit:
-    'Nâng cao. Lực ép lớn nhất (niutơn) mà vật chịu được. Ép mạnh hơn thì vật bị hỏng: bẹp xuống và ngả đỏ sẫm, hỏng luôn đến khi chơi lại. Để 0 là không bao giờ hỏng (mặc định).',
+    'Nâng cao. Lực ép lớn nhất (niutơn) mà vật chịu được. Ép mạnh hơn thì vật bị hỏng: bẹp xuống và ngả đỏ sẫm, hỏng luôn đến khi chạy lại. Để 0 là không bao giờ hỏng (mặc định).',
 } as const;
 
 /** The two optional outputs that report the material, on Vật thể and Đồ vật (optional ports are explained here, not in the port list). */
 const MATERIAL_OUT_PARAM_TEXT = {
-  showDamagedOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Bị hỏng": bật khi vật bị ép quá "Lực chịu nén tối đa", rồi bật mãi tới khi chơi lại. Mặc định "Không": mảnh y như cũ.',
+  showDamagedOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Bị hỏng": bật khi vật bị ép quá "Lực chịu nén tối đa", rồi bật mãi tới khi chạy lại. Mặc định "Không": mảnh y như cũ.',
   showWeightOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Trọng lượng (N)" = khối lượng × 9,81. Mặc định "Không": mảnh y như cũ.',
 } as const;
 
@@ -30,12 +30,12 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     purpose: 'Giữ một con số cố định do bạn tự đặt, để cắm vào các mảnh ghép khác cần một con số.',
     whenToUse:
       'Khi một mảnh ghép cần số mà không có ô để gõ ngay trên nó: ví dụ so sánh điểm với 5, nhân với 2, hay đẩy nhân vật đi với tốc độ cố định.',
-    ports: { value: 'Ra: con số bạn đã đặt ở ô "Giá trị". Con số này không tự đổi khi đang chơi.' },
+    ports: { value: 'Ra: con số bạn đã đặt ở ô "Giá trị". Con số này không tự đổi khi đang chạy.' },
     params: { value: 'Con số bạn muốn giữ. Có thể là số âm (-1) hoặc số lẻ (0.5). Mặc định là 1.' },
     example: 'Số cố định "Giá trị" = 1 → "Đi ngang" của Nhân vật: nhân vật tự đi sang phải mãi. Đổi thành -1 thì đi sang trái.',
     tips: [
       'Số cố định chỉ là một con số đứng yên. Muốn số thay đổi theo thời gian hay theo điểm, hãy dùng Bộ đếm hoặc Phép tính.',
-      'Sửa "Giá trị" ngay khi đang chơi thì game dùng số mới ngay, không cần chạy lại.',
+      'Sửa "Giá trị" ngay khi đang chạy thì game dùng số mới ngay, không cần chạy lại.',
       'Hay dùng với Phép so sánh: "Số đếm" của Bộ đếm so với một Số cố định để biết đã đủ chưa.',
     ],
     lessonId: 'win-lose',
@@ -78,13 +78,13 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       reached: 'Ra: bật khi số đếm bằng hoặc lớn hơn "Mục tiêu".',
     },
     params: {
-      start: 'Số bắt đầu, và cũng là số được đưa về khi "Đặt lại" bật. Chỉ đọc khi bắt đầu chơi.',
+      start: 'Số bắt đầu, và cũng là số được đưa về khi "Đặt lại" bật. Chỉ đọc khi bắt đầu chạy.',
       target: 'Số cần đạt để "Đã đạt mục tiêu" bật. Đếm vượt qua mục tiêu thì "Đã đạt mục tiêu" vẫn bật.',
     },
     example: 'Nhân vật chạm sao: Chạm "Bắt đầu chạm" → "Tăng 1"; "Số đếm" → Hiện số; "Đã đạt mục tiêu" → "Thắng" của Thắng / Thua.',
     tips: [
       'Bộ đếm chỉ đếm lúc tín hiệu chuyển từ tắt sang bật. Tín hiệu "Đang chạm" bật liên tục chỉ đếm một lần; muốn đếm mỗi lần chạm thì dùng "Bắt đầu chạm".',
-      'Đổi "Bắt đầu từ" khi đang chơi không có tác dụng; hãy dừng rồi chơi lại.',
+      'Đổi "Bắt đầu từ" khi đang chạy không có tác dụng; hãy dừng rồi chạy lại.',
       'Cần trừ điểm thì nối "Giảm 1", hoặc cộng số âm bằng "Lượng cộng thêm".',
     ],
     lessonId: 'collect-stars',
@@ -101,7 +101,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       done: 'Ra: bật khi đã hết giờ (còn 0 giây) và giữ bật.',
     },
     params: {
-      seconds: 'Tổng số giây đếm ngược. Mặc định 30. Đổi khi đang chơi thì giữ nguyên phần thời gian đã trôi.',
+      seconds: 'Tổng số giây đếm ngược. Mặc định 30. Đổi khi đang chạy thì giữ nguyên phần thời gian đã trôi.',
       repeat: 'Tự lặp lại: Không (mặc định) thì đếm một lần rồi đứng ở 0. Có thì hết giờ, "Hết giờ" bật một nhịp rồi đồng hồ tự đếm lại từ đầu.',
     },
     example: 'Hẹn giờ 10 giây: "Giây còn lại" → Thanh đo hoặc Hiện số; "Hết giờ" → "Thua" của Thắng / Thua.',
@@ -117,7 +117,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
   {
     kind: 'random',
     purpose: 'Tung ra một con số ngẫu nhiên trong khoảng bạn chọn, giống như tung xúc xắc.',
-    whenToUse: 'Đổ xúc xắc, chọn ngẫu nhiên một phần thưởng hay một lối đi, làm cho mỗi lần chơi hơi khác nhau.',
+    whenToUse: 'Đổ xúc xắc, chọn ngẫu nhiên một phần thưởng hay một lối đi, làm cho mỗi lần chạy hơi khác nhau.',
     ports: {
       roll: 'Vào: ở kiểu "Mỗi lần bấm Tung", mỗi lần chuyển từ tắt sang bật thì tung một số mới.',
       value: 'Ra: số vừa tung. Ở kiểu "Mỗi lần bấm Tung" thì ra 0 cho tới lần tung đầu tiên.',
@@ -127,8 +127,8 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       min: 'Số nhỏ nhất có thể ra. Mặc định 1.',
       max: 'Số lớn nhất có thể ra. Mặc định 6. Đặt ngược (nhỏ nhất lớn hơn lớn nhất) cũng được, game tự đổi chỗ.',
       whole: 'Chọn "Có" thì chỉ ra số nguyên (1, 2, 3...). Chọn "Không" thì ra cả số lẻ như 2.37.',
-      mode: 'Tung khi nào: mỗi lần "Tung" bật, liên tục mỗi nhịp (số đổi hoài), hoặc đúng một lần lúc bắt đầu chơi.',
-      seed: 'Hạt giống. Để 0 thì mỗi lần chơi ra số khác nhau. Đặt số khác 0 thì lần nào chơi cũng ra y hệt dãy số đó. Chỉ đọc khi bắt đầu chơi.',
+      mode: 'Tung khi nào: mỗi lần "Tung" bật, liên tục mỗi nhịp (số đổi hoài), hoặc đúng một lần lúc bắt đầu chạy.',
+      seed: 'Hạt giống. Để 0 thì mỗi lần chạy ra số khác nhau. Đặt số khác 0 thì lần nào chạy cũng ra y hệt dãy số đó. Chỉ đọc khi bắt đầu chạy.',
     },
     example: 'Phím Space "Khi nhấn phím" → "Tung"; "Giá trị" → Hiện số để xem xúc xắc. Nối "Giá trị" vào Phép so sánh để mỗi mặt làm một việc khác.',
     tips: [
@@ -182,10 +182,10 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       z: 'Ra (số): vị trí chiều sâu (dùng trong game nhìn từ trên và 3D).',
     },
     params: {
-      position: 'Chỗ nhân vật xuất hiện lúc bắt đầu chơi (ngang, cao, sâu). Đặt hơi cao hơn đất để nhân vật rơi nhẹ xuống.',
+      position: 'Chỗ nhân vật xuất hiện lúc bắt đầu chạy (ngang, cao, sâu). Đặt hơi cao hơn đất để nhân vật rơi nhẹ xuống.',
       speed: 'Tốc độ chạy. Mặc định 5.',
       jumpPower: 'Sức nhảy: càng lớn nhảy càng cao. Mặc định 10.',
-      color: 'Màu của nhân vật. Đổi được ngay khi đang chơi.',
+      color: 'Màu của nhân vật. Đổi được ngay khi đang chạy.',
       look: 'Kiểu dáng: người khối, rô-bốt, mèo, gà con, thạch nhún, khủng long nhỏ, rô-bốt bánh xe, rô-bốt chân ngắn, Mèo Mun chibi, Mèo Mun bốn chân. Chỉ là hình dáng, không đổi cách chơi. Hai Mèo Mun luôn màu đen nên ô "Màu" không đổi được màu lông.',
       role: 'Người chơi: camera đi theo nhân vật này. Bot: nhân vật do mảnh ghép Bộ não điều khiển, camera không theo.',
       invulnSeconds: 'Nâng cao. Sau khi trúng đòn, nhân vật được bất tử bao nhiêu giây để không bị đánh liên tục.',
@@ -196,7 +196,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     example: 'Cần điều khiển "Trục ngang" → "Đi ngang"; Phím Space "Đang giữ phím" → "Nhảy"; "Vị trí X" → Hiện số để xem mình đang ở đâu.',
     tips: [
       'Nhân vật rơi mãi xuống vực thì chưa có Vật thể rắn làm đất dưới chân. Thêm một Vật thể.',
-      'Chỉ "Màu" và "Kiểu dáng" đổi được ngay khi đang chơi; các ô khác như vị trí, vai trò phải chơi lại mới có tác dụng.',
+      'Chỉ "Màu" và "Kiểu dáng" đổi được ngay khi đang chạy; các ô khác như vị trí, vai trò phải chạy lại mới có tác dụng.',
       'Game nhìn ngang bỏ qua "Đi dọc"; chỉ game nhìn từ trên và 3D mới dùng.',
       'Một game nên có đúng một nhân vật vai "Người chơi" để camera biết theo ai.',
     ],
@@ -221,9 +221,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     params: {
       position: 'Vị trí tâm của hộp (ngang, cao, sâu).',
       size: 'Kích thước (rộng, cao, sâu). Mặt đất thường là hộp rất rộng và cao 1.',
-      color: 'Màu của hộp. Đổi được ngay khi đang chơi. Kiểu dáng là mô hình có sẵn màu (nhà, cây, đường, hàng rào...) thì không đổi theo màu này; riêng Đèn giao thông dùng màu để chọn đèn nào sáng.',
+      color: 'Màu của hộp. Đổi được ngay khi đang chạy. Kiểu dáng là mô hình có sẵn màu (nhà, cây, đường, hàng rào...) thì không đổi theo màu này; riêng Đèn giao thông dùng màu để chọn đèn nào sáng.',
       type: '"Rắn" thì đứng lên được và chặn đường. "Vật nhặt" thì đi xuyên qua, dùng cho sao, xu để nhặt.',
-      style: 'Hình dạng đẹp thay cho hộp trơn: nhà, cây, đèn giao thông, hàng rào, băng chuyền, đường ray... Đường ray chỉ để trang trí. Nhà, cửa hàng, cây, xe... có nhiều mẫu: mỗi hộp tự giữ một mẫu, lần chơi nào cũng giống nhau.',
+      style: 'Hình dạng đẹp thay cho hộp trơn: nhà, cây, đèn giao thông, hàng rào, băng chuyền, đường ray... Đường ray chỉ để trang trí. Nhà, cửa hàng, cây, xe... có nhiều mẫu: mỗi hộp tự giữ một mẫu, lần chạy nào cũng giống nhau.',
       signText: 'Chữ ghi trên biển. Chỉ hiện khi "Kiểu dáng" là Biển tên.',
       color1: 'Màu thứ nhất của Đèn giao thông (mặc định đỏ). Chọn bằng cổng "Đặt màu" = 1.',
       color2: 'Màu thứ hai (mặc định vàng). Chọn bằng cổng "Đặt màu" = 2.',
@@ -241,7 +241,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       'Dùng "Ẩn khi bật" để làm cửa mở theo tín hiệu: nối Va chạm (hoặc Hoặc/Và) vào đó, cửa mở khi tín hiệu bật và đóng lại khi tín hiệu tắt. Muốn biết hộp đã ẩn chưa: bật "Báo đang ẩn" (Nâng cao), mảnh hiện thêm ô ra "Đang ẩn"; hai hộp đã ẩn hết thì nối cả hai vào Và.',
       'Chỉ hộp "Rắn" mới đứng lên được. "Vật nhặt" thì đi xuyên qua: muốn nhặt thì nối Chạm (Nhân vật và Vật thể) "Bắt đầu chạm" → "Ẩn" của chính hộp đó. Bot tìm đường coi hộp đã ẩn là chỗ trống nên có thể đi qua.',
       'Băng chuyền: chọn kiểu "Băng chuyền" là chạy ngay, hoặc để kiểu thường và đặt "Tốc độ băng chuyền" khác 0 trong mục Nâng cao.',
-      'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',
+      'Vị trí, kích thước, loại, kiểu dáng chỉ đọc lúc bắt đầu chạy; sửa xong phải chạy lại mới thấy. Riêng "Màu" đổi được ngay (với hộp trơn, biển tên, băng chuyền, đường ray và đèn giao thông).',
     ],
     lessonId: 'walk-jump',
     tryBoard: TRY.block,
@@ -262,9 +262,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       usedOn: 'Ra: bật một nhịp khi nhân vật vung dụng cụ trúng món đồ.',
     },
     params: {
-      position: 'Chỗ món đồ xuất hiện lúc bắt đầu chơi.',
+      position: 'Chỗ món đồ xuất hiện lúc bắt đầu chạy.',
       size: 'Kích thước (rộng, cao, sâu). Mặc định nhỏ, 0.6.',
-      color: 'Màu của món đồ. Đổi được ngay khi đang chơi. Thùng, bó rau, cục quặng, xô nước, quả bóng và chìa khoá là mô hình có sẵn màu nên không đổi theo.',
+      color: 'Màu của món đồ. Đổi được ngay khi đang chạy. Thùng, bó rau, cục quặng, xô nước, quả bóng và chìa khoá là mô hình có sẵn màu nên không đổi theo.',
       shape: 'Hình dạng: hộp, chìa khoá, quả bóng, thùng, kiếm, cuốc, búa, đuốc, gậy phép, xô nước, ổ khoá, bó rau, cục quặng.',
       carryable: '"Cầm được" thì nhân vật nhấc lên được. "Cố định" thì nằm yên, chỉ để bấm "Tương tác" (ví dụ ổ khoá).',
       holdStyle: '"Khiêng trên đầu" cho thùng hàng. "Cầm trên tay" cho dụng cụ như kiếm, cuốc, dùng với mảnh ghép Cầm dụng cụ.',
@@ -279,7 +279,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     tips: [
       'Đồ vật không chặn đường người; nó rơi xuống đất và nằm đó. Muốn bức tường thì dùng Vật thể.',
       'Dụng cụ cầm tay (kiếm, cuốc): chọn "Cách cầm" là "Cầm trên tay" rồi nối với mảnh ghép Cầm dụng cụ.',
-      'Hình dạng, kích thước, độ nảy... chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại. Riêng "Màu" đổi được ngay.',
+      'Hình dạng, kích thước, độ nảy... chỉ đọc lúc bắt đầu chạy; sửa xong phải chạy lại. Riêng "Màu" đổi được ngay.',
       'Tự nó không nhấc lên được: nhân vật cần các mảnh ghép như Khiêng đồ / Tương tác thì mới cầm được.',
     ],
     lessonId: 'carry-use',
@@ -303,12 +303,12 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       crashedWith: 'Ra (vật): thứ mà xe vừa đâm vào.',
     },
     params: {
-      position: 'Chỗ xe xuất hiện lúc bắt đầu chơi.',
+      position: 'Chỗ xe xuất hiện lúc bắt đầu chạy.',
       model: 'Loại xe: xe hơi, xe máy, xe tải nhỏ, đầu máy (tàu), toa tàu. Quyết định cả hình dáng lẫn kích thước.',
       steerMode: '"Theo hướng": bấm hướng nào xe quay hướng đó. "Ga - Lái": lên là ga, xuống là lùi, trái/phải là đánh lái, giống lái xe thật.',
       maxSpeed: 'Tốc độ tối đa. Mặc định 9.',
       accel: 'Độ tăng tốc: càng lớn xe càng mau đạt tốc độ tối đa.',
-      color: 'Màu thân đầu máy và toa tàu. Đổi được ngay khi đang chơi. Xe hơi, xe máy, xe tải là mô hình có sẵn màu: mỗi xe tự giữ một mẫu và không đổi theo màu này.',
+      color: 'Màu thân đầu máy và toa tàu. Đổi được ngay khi đang chạy. Xe hơi, xe máy, xe tải là mô hình có sẵn màu: mỗi xe tự giữ một mẫu và không đổi theo màu này.',
       solid: '"Có" thì người đi bộ không đi xuyên qua xe.',
       control: '"Người ngồi trên xe": chỉ chạy khi có người ngồi (dùng mảnh ghép Lên / Xuống xe). "Tự chạy": xe chạy theo lệnh lái luôn, không cần người ngồi.',
       collide: '"Có" thì xe đụng nhau, không đi xuyên qua nhau. "Không" thì xe đi xuyên qua xe khác.',
@@ -326,7 +326,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       'Xe để "Người ngồi trên xe" mà không ai ngồi thì đứng im. Dùng Lên / Xuống xe, hoặc đổi sang "Tự chạy".',
       'Đoàn tàu: chọn "Đầu máy" cho xe đầu, "Toa tàu" cho các xe sau; nối "Đối tượng" của đầu máy vào "Theo xe đầu" của toa 1, "Đối tượng" của toa 1 vào "Theo xe đầu" của toa 2. Đầu máy chạy theo tuyến bằng mảnh ghép Chạy theo tuyến (cách chạy "Bám ray").',
       'Toa bị kéo bỏ qua lệnh lái của chính nó; chỉ xe đầu mới cần lái.',
-      'Loại xe, tốc độ, cách lái... chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại. Riêng "Màu" đổi được ngay.',
+      'Loại xe, tốc độ, cách lái... chỉ đọc lúc bắt đầu chạy; sửa xong phải chạy lại. Riêng "Màu" đổi được ngay.',
     ],
     lessonId: 'vehicles',
     tryBoard: TRY.vehicle,
@@ -343,9 +343,9 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       who: 'Ra (vật): người, đồ vật hoặc xe vừa đi vào cổng.',
     },
     params: {
-      position: 'Chỗ cổng đứng lúc bắt đầu chơi.',
+      position: 'Chỗ cổng đứng lúc bắt đầu chạy.',
       size: 'Kích thước cổng (rộng, cao, sâu). Mặc định 1.2 × 2 × 1.2.',
-      color: 'Màu cổng. Đổi được ngay khi đang chơi.',
+      color: 'Màu cổng. Đổi được ngay khi đang chạy.',
       pair: 'Mã cặp: hai cổng có cùng mã (ví dụ "a") thì tự nối với nhau, khỏi cần dây "Cổng đối diện". Để trống nếu ghép bằng dây.',
       cooldown: 'Sau khi dùng, cổng nghỉ bao nhiêu giây mới dùng lại được, để không bị bật qua bật lại mãi.',
     },
@@ -373,7 +373,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       position: 'Điểm A: chỗ bệ xuất phát.',
       to: 'Điểm B: chỗ bệ chạy tới. Trong game nhìn ngang, độ sâu coi như giữ nguyên; nhìn từ trên thì độ cao giữ nguyên.',
       size: 'Kích thước bệ (rộng, cao, sâu).',
-      color: 'Màu bệ. Đổi được ngay khi đang chơi.',
+      color: 'Màu bệ. Đổi được ngay khi đang chạy.',
       speed: 'Tốc độ chạy, tính theo ô trong một giây.',
       wait: 'Bệ nghỉ bao nhiêu giây ở mỗi đầu.',
       loop: '"Qua lại mãi" thì chạy A → B → A... mãi. "Một chiều" thì tới B là dừng hẳn.',
@@ -382,7 +382,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     tips: [
       'Ai đứng trên bệ sẽ đi theo. Ai đứng cạnh thì bị đẩy, nhưng bệ không ép ai vào tường: bị kẹt thì nó dừng chờ.',
       'Bot tìm đường coi bệ là chỗ trống, không tính bệ là đường đi, nên bot không dựa vào bệ để qua vực.',
-      'Điểm A, điểm B, kích thước chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại. Riêng "Màu" đổi được ngay.',
+      'Điểm A, điểm B, kích thước chỉ đọc lúc bắt đầu chạy; sửa xong phải chạy lại. Riêng "Màu" đổi được ngay.',
       'Muốn bệ đứng yên lúc nào đó thì nối "Bật" vào một điều kiện rồi tắt nó.',
     ],
     lessonId: 'platforms-shooting',
@@ -402,7 +402,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
     params: {
       position: 'Vị trí tâm của hộp, cũng là tâm xoay.',
       size: 'Kích thước (rộng, cao, sâu). Khi xoay 90 độ thì rộng và cao đổi chỗ cho nhau.',
-      color: 'Màu hộp. Đổi được ngay khi đang chơi.',
+      color: 'Màu hộp. Đổi được ngay khi đang chạy.',
       mode: '"Xoay từng nấc 90°": hộp rắn, chặn đường. "Quay liên tục": hộp không rắn, quay tròn như cánh quạt, dùng để chạm bẫy.',
       every: 'Kiểu từng nấc: tự xoay một nấc sau mỗi bấy nhiêu giây. 0 nghĩa là chỉ xoay khi "Xoay" bật.',
       speed: 'Kiểu quay liên tục: tốc độ quay, tính bằng độ mỗi giây. Số âm quay ngược chiều.',
@@ -412,7 +412,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       'Nấc xoay mà có người đứng ở chỗ hộp xoay tới thì họ bị đẩy sang chỗ trống; không có chỗ thì hộp chờ.',
       'Kiểu "Quay liên tục" không rắn nên không đẩy được ai. Muốn biết ai bị quét trúng thì nối "Đối tượng" vào mảnh ghép Chạm.',
       'Trong game nhìn ngang hộp quay trong mặt phẳng nhìn; nhìn từ trên và 3D thì quay quanh trục đứng.',
-      'Kiểu xoay chỉ đọc lúc bắt đầu chơi; sửa xong phải chơi lại.',
+      'Kiểu xoay chỉ đọc lúc bắt đầu chạy; sửa xong phải chạy lại.',
     ],
     lessonId: 'platforms-shooting',
     tryBoard: TRY['rotating-platform'],

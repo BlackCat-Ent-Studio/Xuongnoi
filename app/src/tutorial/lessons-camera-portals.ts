@@ -16,11 +16,11 @@ const T = {
   intro: {
     title: 'Vực quá rộng để nhảy',
     text: 'Nhân vật đang đứng trên vách đá. Bên kia vực là một hòn đảo có lá cờ xanh, nhưng vực rộng quá, nhảy không tới. Ta sẽ dùng cổng dịch chuyển để sang đảo.',
-    explain: 'Bảng này đã nối sẵn phím mũi tên để chạy và phím Space để nhảy. Nếu rơi xuống vực, cứ bấm Dừng rồi Chơi lại.',
+    explain: 'Bảng này đã nối sẵn phím mũi tên để chạy và phím Space để nhảy. Nếu rơi xuống vực, cứ bấm Dừng rồi Chạy lại.',
   },
   watch: {
     title: 'Thử nhảy trước',
-    text: 'Bấm "Chơi", chạy tới mép vực và thử nhảy. Bạn sẽ thấy không sang được.',
+    text: 'Bấm "Chạy", chạy tới mép vực và thử nhảy. Bạn sẽ thấy không sang được.',
   },
   edit: {
     title: 'Quay lại sửa',
@@ -43,7 +43,7 @@ const T = {
   },
   tryPortals: {
     title: 'Đi qua cổng',
-    text: 'Bấm "Chơi" và chạy sang phải, chạm vào cổng ở vách đá. Bạn sẽ xuất hiện bên cổng ở đảo!',
+    text: 'Bấm "Chạy" và chạy sang phải, chạm vào cổng ở vách đá. Bạn sẽ xuất hiện bên cổng ở đảo!',
     explain: 'Muốn đi lại, bước ra khỏi cổng rồi chạm lại. Cổng nghỉ nửa giây giữa hai lần dùng.',
   },
   edit2: {
@@ -67,7 +67,7 @@ const T = {
   camera: {
     title: 'Thêm Máy quay',
     text: 'Kéo mảnh ghép "Máy quay" (nhóm Hành động) vào bảng.',
-    explain: 'Máy quay điều khiển góc nhìn khi chơi. Khi nó bật, nó quyết định phóng to hay thu nhỏ; khi tắt, góc nhìn trở lại như thường.',
+    explain: 'Máy quay điều khiển góc nhìn khi chạy. Khi nó bật, nó quyết định phóng to hay thu nhỏ; khi tắt, góc nhìn trở lại như thường.',
   },
   cameraOn: {
     title: 'Gần cờ thì bật máy quay',
@@ -113,7 +113,7 @@ const T = {
   },
   play: {
     title: 'Chạy thử',
-    text: 'Bấm "Chơi". Chạy vào cổng, xem màn hình rung rồi phóng to khi tới đảo. Bấm R nếu muốn về nhà thử lại.',
+    text: 'Bấm "Chạy". Chạy vào cổng, xem màn hình rung rồi phóng to khi tới đảo. Bấm R nếu muốn về nhà thử lại.',
   },
   won: {
     title: 'Chạm lá cờ',

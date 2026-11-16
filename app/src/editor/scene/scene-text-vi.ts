@@ -1,8 +1,8 @@
 /** Strings for the scene tree dock. */
 export const SCENE_TEXT = {
-  treeAria: 'Cây cảnh: các vật thể trong màn chơi',
+  treeAria: 'Cây cảnh: các vật thể trong màn mô phỏng',
   empty: 'Chưa có vật thể nào. Thêm mảnh ghép Nhân vật hoặc Vật thể từ tab Kho mảnh ghép.',
-  groupLevel: 'Màn chơi',
+  groupLevel: 'Màn mô phỏng',
   groupUi: 'Giao diện',
   groupCharacters: 'Nhân vật',
   groupObjects: 'Vật thể',

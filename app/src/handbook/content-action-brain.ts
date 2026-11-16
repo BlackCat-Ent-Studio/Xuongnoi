@@ -188,7 +188,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
   },
   {
     kind: 'camera',
-    purpose: 'Điều khiển góc nhìn lúc chơi: bám theo một vật hoặc đứng yên, phóng to thu nhỏ và rung màn hình.',
+    purpose: 'Điều khiển góc nhìn lúc chạy: bám theo một vật hoặc đứng yên, phóng to thu nhỏ và rung màn hình.',
     whenToUse: 'Phóng to khi vào hầm, rung màn hình khi nổ hoặc bị đánh, đứng yên nhìn cả sân, đổi góc nhìn ở bản 3D.',
     ports: {
       on: 'Bật thì Máy quay này được dùng. Không nối thì máy quay không làm gì; nối "Đã bắt đầu" của Khi bắt đầu để dùng ngay từ đầu game.',
@@ -208,7 +208,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     },
     example: '"Đối tượng" của Nhân vật → "Bám theo" của Máy quay; phím E "Khi nhấn phím" → "Rung".',
     tips: [
-      'Máy quay chỉ đổi góc nhìn lúc chơi, không đổi khi bạn chỉnh sửa.',
+      'Máy quay chỉ đổi góc nhìn lúc chạy, không đổi khi bạn chỉnh sửa.',
       'Nhiều Máy quay cùng bật thì cái bật sau cùng được dùng. Không có cái nào thì máy tự bám nhân vật.',
       'Muốn đổi góc theo tình huống, nối một tín hiệu vào "Bật" của từng Máy quay.',
       '"Góc nhìn" chỉ có tác dụng ở bản 3D.',
@@ -273,7 +273,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
   {
     kind: 'spawner',
     purpose: 'Mỗi lần "Tạo" bật, tạo thêm một hộp hoặc đồ vật mới. Có giới hạn số lượng và thời gian tồn tại.',
-    whenToUse: 'Thả đá rơi, sinh thêm thùng hàng, quả bóng, trái cây rơi, hay bất cứ thứ gì cần xuất hiện giữa lúc chơi.',
+    whenToUse: 'Thả đá rơi, sinh thêm thùng hàng, quả bóng, trái cây rơi, hay bất cứ thứ gì cần xuất hiện giữa lúc chạy.',
     ports: {
       spawn: 'Mỗi lần bật lên là sinh một vật mới (nếu chưa đủ số lượng tối đa).',
       at: 'Tuỳ chọn: vật làm gốc. Vật mới xuất hiện cạnh vật này, cộng thêm "Vị trí / lệch".',

@@ -20,7 +20,7 @@ export interface TopBarDeps {
   onPause?: () => void;
   /** The 🐢 button: starts a step run, or goes on to the next step while the run is frozen at one. */
   onStep?: () => void;
-  /** While playing the Chơi button turns into Chơi lại and calls this. */
+  /** While playing the Chạy button turns into Chạy lại and calls this. */
   onRestart?: () => void;
   /** Every notify() is also reported here (the console log). */
   onNotify?: (text: string, kind: 'info' | 'error') => void;

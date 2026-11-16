@@ -88,7 +88,7 @@ function startStep(w: StartWire): Step {
     id: `start-${w.kind}-${w.port}`,
     title: `Bật "${piece.name}" lên`,
     text: `Mảnh "${piece.name}" chỉ làm việc khi có một dây bật nó lên. Nối cổng "Đã bắt đầu" của mảnh "Khi bắt đầu" (có sẵn bên trái bảng) sang cổng "${piece.input}" của "${piece.name}".`,
-    explain: 'Mỗi việc cần dây riêng của nó: không có dây thì mảnh ghép đứng yên. "Khi bắt đầu" bật ngay khi bấm Chơi và giữ bật suốt trò chơi.',
+    explain: 'Mỗi việc cần dây riêng của nó: không có dây thì mảnh ghép đứng yên. "Khi bắt đầu" bật ngay khi bấm Chạy và giữ bật suốt trò chơi.',
     target: (snap: Snapshot): TargetList => {
       const start = startPort(snap.graph);
       const node = missing(snap.graph)[0] ?? nodesOfKind(snap.graph, w.kind, w.where)[0];

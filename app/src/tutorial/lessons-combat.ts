@@ -36,7 +36,7 @@ const T = {
   },
   playWin: {
     title: 'Đánh bại bot',
-    text: 'Bấm "Chơi". Đi sang phải (mũi tên). Bấm F để đấm; bấm E gần thanh kiếm để cầm nó, kiếm đánh đau hơn tay không.',
+    text: 'Bấm "Chạy". Đi sang phải (mũi tên). Bấm F để đấm; bấm E gần thanh kiếm để cầm nó, kiếm đánh đau hơn tay không.',
   },
   won: {
     title: 'Bot gục rồi!',
@@ -71,7 +71,7 @@ const T = {
   },
   playFight: {
     title: 'Đánh thử với bot',
-    text: 'Bấm "Chơi". Lần này bot sẽ lao vào đánh bạn! Nhìn thanh máu trên đầu, đánh bại nó trước khi bạn gục.',
+    text: 'Bấm "Chạy". Lần này bot sẽ lao vào đánh bạn! Nhìn thanh máu trên đầu, đánh bại nó trước khi bạn gục.',
   },
   result: {
     title: 'Có người gục rồi',

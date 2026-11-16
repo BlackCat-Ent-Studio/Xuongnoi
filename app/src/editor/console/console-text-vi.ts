@@ -13,10 +13,10 @@ export const CONSOLE_TEXT = {
   clearTip: 'Xóa nhật ký',
   filterAria: 'Lọc nhật ký',
   missingWire: (node: string, port: string) => `${node}: chưa nối dây vào "${port}"`,
-  noCharacter: 'Chưa có mảnh ghép Nhân vật nên chưa có ai để chơi',
+  noCharacter: 'Chưa có mảnh ghép Nhân vật nên chưa có gì để chạy',
 
   // play controls
-  restart: 'Chơi lại',
+  restart: 'Chạy lại',
   restartTip: 'Bắt đầu lại từ đầu (Ctrl+Enter để dừng)',
   resume: 'Tiếp tục',
   resumeTip: 'Chạy tiếp từ chỗ đang dừng',
@@ -26,16 +26,16 @@ export const CONSOLE_TEXT = {
   statePaused: 'Tạm dừng',
 
   // log lines
-  logPlayStart: 'Bắt đầu chơi',
-  logPlayStop: 'Đã dừng chơi',
-  logRestart: 'Chơi lại từ đầu',
+  logPlayStart: 'Bắt đầu chạy',
+  logPlayStop: 'Đã dừng chạy',
+  logRestart: 'Chạy lại từ đầu',
   logPause: 'Tạm dừng',
   logResume: 'Chạy tiếp',
   logStep: 'Chạy từng bước',
   logStepBreak: 'Dừng ở một bước',
   logWin: (msg: string) => (msg ? `Thắng: ${msg}` : 'Thắng!'),
   logLose: (msg: string) => (msg ? `Thua: ${msg}` : 'Thua rồi'),
-  logLiveApplied: 'Đã đổi giá trị khi đang chơi',
-  logLiveDeferred: 'Sẽ áp dụng khi chơi lại',
+  logLiveApplied: 'Đã đổi giá trị khi đang chạy',
+  logLiveDeferred: 'Sẽ áp dụng khi chạy lại',
   blockedStructure: 'Bấm Dừng để thêm/xóa/nối',
 } as const;

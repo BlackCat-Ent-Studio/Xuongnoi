@@ -2,10 +2,10 @@
 
 export const TUTORIAL_UI = {
   button: '📘 Hướng dẫn',
-  menuTitle: 'Học làm game',
-  menuHint: 'Mỗi bài có một bảng riêng. Game của bạn được giữ nguyên.',
+  menuTitle: 'Bài học',
+  menuHint: 'Mỗi bài có bảng riêng. Mô phỏng của bạn không bị đổi.',
   done: 'Đã học',
-  inviteText: 'Bạn muốn học cách làm game không?',
+  inviteText: 'Bạn muốn học cách làm mô phỏng không?',
   inviteYes: 'Có',
   inviteNo: 'Không',
   stepOf: (n: number, total: number) => `Bước ${n}/${total}`,
@@ -14,12 +14,12 @@ export const TUTORIAL_UI = {
   nextHeld: 'Tiếp ▶',
   skip: 'Bỏ qua bước này',
   exit: 'Thoát',
-  exitTitle: 'Thoát bài học và về game của bạn',
+  exitTitle: 'Thoát bài học và về mô phỏng của bạn',
   finish: 'Hoàn thành',
   finished: (title: string) => `Bạn đã xong bài "${title}"!`,
-  exited: 'Đã về game của bạn',
-  restored: 'Đã khôi phục game của bạn',
-  saveBlocked: 'Đang học: hãy bấm Thoát để về game của bạn rồi mới lưu.',
+  exited: 'Đã về mô phỏng của bạn',
+  restored: 'Đã khôi phục mô phỏng của bạn',
+  saveBlocked: 'Đang học: hãy bấm Thoát để về mô phỏng của bạn rồi mới lưu.',
   backAtPlay: 'Bạn đang ở bước này rồi. Bấm Tiếp để đi tiếp.',
   nextLesson: 'Bài tiếp theo',
 } as const;
@@ -50,8 +50,8 @@ export const LESSON_TEXT = {
       explain: 'Nhân vật là người bạn điều khiển. Nó nhận lệnh đi và nhảy qua các cổng bên trái.',
     },
     play: {
-      title: 'Thử chơi',
-      text: 'Bấm nút "Chơi" ở trên cùng.',
+      title: 'Chạy thử',
+      text: 'Bấm nút "Chạy" ở trên cùng.',
       explain: 'Nhân vật rơi xuống và đứng trên sàn. Nhưng chưa điều khiển được vì chưa nối dây.',
     },
     edit: {
@@ -79,8 +79,8 @@ export const LESSON_TEXT = {
       explain: 'Cổng "Đang giữ phím" bật lên khi bạn giữ phím. Lúc đó nhân vật sẽ nhảy.',
     },
     playMove: {
-      title: 'Chơi thử nào',
-      text: 'Bấm "Chơi". Dùng phím mũi tên để chạy, phím Cách để nhảy.',
+      title: 'Chạy thử nào',
+      text: 'Bấm "Chạy". Dùng phím mũi tên để chạy, phím Cách để nhảy.',
     },
     done: {
       title: 'Giỏi lắm!',
@@ -143,7 +143,7 @@ export const LESSON_TEXT = {
     show: {
       title: 'Hiện điểm lên màn hình',
       text: 'Kéo mảnh ghép "Hiện số" vào bảng.',
-      explain: 'Mảnh ghép này vẽ một con số trên góc màn hình lúc chơi.',
+      explain: 'Mảnh ghép này vẽ một con số trên góc màn hình lúc chạy.',
     },
     wireShow: {
       title: 'Nối số đếm ra màn hình',
@@ -151,7 +151,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Đi nhặt sao',
-      text: 'Bấm "Chơi", chạy sang phải và chạm vào ngôi sao. Xem điểm tăng lên!',
+      text: 'Bấm "Chạy", chạy sang phải và chạm vào ngôi sao. Xem điểm tăng lên!',
     },
     done: {
       title: 'Tuyệt vời!',
@@ -214,8 +214,8 @@ export const LESSON_TEXT = {
       explain: 'Khi độ cao nhỏ hơn -5, cổng "Kết quả" bật lên và game báo thua.',
     },
     play: {
-      title: 'Chơi thử',
-      text: 'Bấm "Chơi".',
+      title: 'Chạy thử',
+      text: 'Bấm "Chạy".',
     },
     win: {
       title: 'Nhặt sao để thắng',
@@ -271,7 +271,7 @@ export const LESSON_TEXT = {
     },
     playCarry: {
       title: 'Thử cầm chìa',
-      text: 'Bấm "Chơi". Đi sang phải tới chiếc chìa rồi bấm E. Chìa sẽ nằm trên đầu bạn.',
+      text: 'Bấm "Chạy". Đi sang phải tới chiếc chìa rồi bấm E. Chìa sẽ nằm trên đầu bạn.',
     },
     edit: {
       title: 'Quay lại sửa',
@@ -319,7 +319,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Mở cửa nào',
-      text: 'Bấm "Chơi". Nhặt chìa bằng E, mang tới sát cánh cửa rồi bấm F.',
+      text: 'Bấm "Chạy". Nhặt chìa bằng E, mang tới sát cánh cửa rồi bấm F.',
     },
     win: {
       title: 'Đi tới đích',
@@ -391,7 +391,7 @@ export const LESSON_TEXT = {
     },
     playTool: {
       title: 'Thử vung cuốc',
-      text: 'Bấm "Chơi". Đi sang phải tới chiếc cuốc, bấm E để cầm, rồi bấm F để vung thử.',
+      text: 'Bấm "Chạy". Đi sang phải tới chiếc cuốc, bấm E để cầm, rồi bấm F để vung thử.',
     },
     edit: {
       title: 'Quay lại sửa',
@@ -417,7 +417,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Đập đá nào',
-      text: 'Bấm "Chơi". Nhặt cuốc bằng E, đi sát tảng đá rồi bấm F.',
+      text: 'Bấm "Chạy". Nhặt cuốc bằng E, đi sát tảng đá rồi bấm F.',
     },
     win: {
       title: 'Đi tới đích',
@@ -464,7 +464,7 @@ export const LESSON_TEXT = {
     },
     playPatrol: {
       title: 'Xem bot đi tuần',
-      text: 'Bấm "Chơi". Bot sẽ tự đi qua đi lại trên sàn.',
+      text: 'Bấm "Chạy". Bot sẽ tự đi qua đi lại trên sàn.',
     },
     edit: {
       title: 'Quay lại sửa',
@@ -492,7 +492,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Để bot bắt thử',
-      text: 'Bấm "Chơi". Đi sang phải về phía bot cho nó chạm vào bạn.',
+      text: 'Bấm "Chạy". Đi sang phải về phía bot cho nó chạm vào bạn.',
     },
     caught: {
       title: 'Bị bắt rồi!',
@@ -515,7 +515,7 @@ export const LESSON_TEXT = {
     },
     watch: {
       title: 'Xem chuyện gì xảy ra',
-      text: 'Bấm "Chơi" để xem bot lúc chưa có ai chỉ huy.',
+      text: 'Bấm "Chạy" để xem bot lúc chưa có ai chỉ huy.',
       explain: 'Cả 3 mảnh ghép Di chuyển cùng kéo bot về những hướng khác nhau nên bot đi lung tung, không làm việc nào ra việc nào.',
     },
     edit: {
@@ -552,7 +552,7 @@ export const LESSON_TEXT = {
     },
     playOrder: {
       title: 'Xem bot làm theo thứ tự',
-      text: 'Bấm "Chơi". Bot đi tới thùng, rồi ra bệ xanh, rồi đi về. Nhưng nó chưa biết cầm hay quăng thùng.',
+      text: 'Bấm "Chạy". Bot đi tới thùng, rồi ra bệ xanh, rồi đi về. Nhưng nó chưa biết cầm hay quăng thùng.',
     },
     edit2: {
       title: 'Quay lại sửa',
@@ -584,7 +584,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Xem bot làm việc',
-      text: 'Bấm "Chơi" và chờ bot: tới thùng, cầm lên, mang ra bệ xanh, quăng thùng bay đi, rồi đi về chỗ cũ.',
+      text: 'Bấm "Chạy" và chờ bot: tới thùng, cầm lên, mang ra bệ xanh, quăng thùng bay đi, rồi đi về chỗ cũ.',
     },
     win: {
       title: 'Bot làm xong rồi!',
@@ -607,7 +607,7 @@ export const LESSON_TEXT = {
     },
     watchThrow: {
       title: 'Xem thùng bay đi',
-      text: 'Bấm "Chơi". Nhìn thùng bay qua khỏi bệ xanh và game không báo thắng.',
+      text: 'Bấm "Chạy". Nhìn thùng bay qua khỏi bệ xanh và game không báo thắng.',
       explain: 'Bot làm xong cả ba việc nhưng thùng không nằm trên bệ, nên Va chạm không bật. Mảnh ghép "Và" cần cả hai tín hiệu cùng bật mới cho thắng.',
     },
     edit: {
@@ -625,7 +625,7 @@ export const LESSON_TEXT = {
     },
     play: {
       title: 'Xem bot đặt thùng',
-      text: 'Bấm "Chơi" và chờ bot: cầm thùng, ra bệ xanh, thả thùng xuống bệ, rồi đi về chỗ cũ.',
+      text: 'Bấm "Chạy" và chờ bot: cầm thùng, ra bệ xanh, thả thùng xuống bệ, rồi đi về chỗ cũ.',
     },
     win: {
       title: 'Thùng nằm trên bệ rồi!',

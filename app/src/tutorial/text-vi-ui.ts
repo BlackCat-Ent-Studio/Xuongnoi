@@ -45,12 +45,12 @@ export const UI_CHEST_TEXT = {
   },
   play: {
     title: 'Thử mở rương',
-    text: 'Bấm "Chơi". Bấm chuột vào chiếc rương nâu trước khi thanh đo cạn.',
-    explain: 'Nếu hết giờ, bạn thua. Bấm "Chơi lại" trên bảng kết quả để thử lại.',
+    text: 'Bấm "Chạy". Bấm chuột vào chiếc rương nâu trước khi thanh đo cạn.',
+    explain: 'Nếu hết giờ, bạn thua. Bấm "Chạy lại" trên bảng kết quả để thử lại.',
   },
   win: {
     title: 'Mở được rương!',
-    text: 'Chơi tiếp cho tới khi bấm trúng rương. Nếu lỡ thua, bấm "Chơi lại" trên bảng kết quả rồi thử lại.',
+    text: 'Chạy tiếp cho tới khi bấm trúng rương. Nếu lỡ thua, bấm "Chạy lại" trên bảng kết quả rồi thử lại.',
   },
   done: {
     title: 'Bạn làm game bấm chuột rồi!',

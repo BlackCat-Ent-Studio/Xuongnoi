@@ -22,7 +22,7 @@ export const cameraNode: NodeDef<CameraState> = {
   label: 'Máy quay',
   category: 'action',
   description:
-    'Điều khiển góc nhìn khi chơi (không đổi góc nhìn lúc chỉnh sửa). Có thể bám theo một vật hoặc đứng yên nhìn một điểm, phóng to / thu nhỏ, và rung màn hình khi có nhịp "Rung". Nhiều Máy quay cùng bật thì cái mới bật sau cùng được dùng; không có cái nào bật thì camera tự bám nhân vật như thường.',
+    'Điều khiển góc nhìn khi chạy (không đổi góc nhìn lúc chỉnh sửa). Có thể bám theo một vật hoặc đứng yên nhìn một điểm, phóng to / thu nhỏ, và rung màn hình khi có nhịp "Rung". Nhiều Máy quay cùng bật thì cái mới bật sau cùng được dùng; không có cái nào bật thì camera tự bám nhân vật như thường.',
   inputs: [
     { id: 'on', type: 'bool', label: 'Bật' },
     { id: 'target', type: 'object', label: 'Bám theo đối tượng' },

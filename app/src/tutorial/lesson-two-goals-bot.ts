@@ -28,7 +28,7 @@ const T = {
     text: 'Nối "Đang giữ phím" của Phím bấm sang "Dùng điểm đến 2" của Di chuyển.',
     explain: 'Không giữ phím thì bot đi tới Điểm đến. Giữ phím thì bot quay sang Điểm đến 2.',
   },
-  play: { title: 'Chơi thử', text: 'Bấm Chơi. Bot đi tới ô xanh lá. Giữ Space là nó quay sang ô vàng.' },
+  play: { title: 'Chạy thử', text: 'Bấm Chạy. Bot đi tới ô xanh lá. Giữ Space là nó quay sang ô vàng.' },
   done: { title: 'Xong rồi!', text: 'Điểm đến 2 hợp với việc đi lấy rồi đi cất: nối "Đang khiêng" vào "Dùng điểm đến 2". Xem thêm trong Sổ tay.' },
 };
 

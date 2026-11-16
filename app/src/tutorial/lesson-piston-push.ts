@@ -38,7 +38,7 @@ const T = {
   },
   play1: {
     title: 'Thử đẩy',
-    text: 'Bấm Chơi. Xi lanh chạm thùng rồi đứng lại, và báo "Quá tải".',
+    text: 'Bấm Chạy. Xi lanh chạm thùng rồi đứng lại, và báo "Quá tải".',
     explain: 'Lực cần để đẩy: F = μ × m × 9,81 = 0,5 × 30 × 9,81 = 147 N. Xi lanh chỉ có 100 N nên không đẩy nổi.',
   },
   force: {
@@ -46,7 +46,7 @@ const T = {
     text: 'Bấm Dừng. Chọn Xi lanh đẩy và đặt "Lực đẩy tối đa" thành 150 N hoặc hơn.',
     explain: 'Đẩy được khi lực tối đa ≥ μ × m × 9,81 = 147 N. Thùng nhẹ hơn thì cần ít lực hơn.',
   },
-  play2: { title: 'Đẩy lại', text: 'Bấm Chơi: lần này xi lanh đẩy thùng rơi khỏi bệ.' },
+  play2: { title: 'Đẩy lại', text: 'Bấm Chạy: lần này xi lanh đẩy thùng rơi khỏi bệ.' },
   done: {
     title: 'Xong rồi!',
     text: 'Bạn đã làm một cơ cấu đẩy tự động: cảm biến thấy thùng, xi lanh đẩy, rồi tự dừng khi ra hết. Thử gắn tay kẹp vào "Đầu đẩy" hoặc đặt thùng nặng hơn!',
