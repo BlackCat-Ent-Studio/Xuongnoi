@@ -1029,6 +1029,25 @@
   }
  },
  {
+  "id": "lesson:piston-push",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ae9ca2d5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ae9ca2d5"
+  }
+ },
+ {
   "id": "lesson:cargo-delivery",
   "off": {
    "ended": "running",
@@ -2475,6 +2494,25 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "8ad1cc30"
+  }
+ },
+ {
+  "id": "handbook:linear-actuator",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58564bc7"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58564bc7"
   }
  }
 ]

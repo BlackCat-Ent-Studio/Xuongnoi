@@ -3,10 +3,10 @@ import { migrateBoardWireRule } from '../editor/graph/wire-rule-migration';
 import { addWire } from '../engine/wiring';
 import type { Board, Graph, Note, Params } from '../engine/types';
 
-type NodeSpec = { alias: string; kind: string; x: number; y: number; params?: Params };
-type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: string];
+export type NodeSpec = { alias: string; kind: string; x: number; y: number; params?: Params };
+export type WireSpec = [fromAlias: string, fromPort: string, toAlias: string, toPort: string];
 
-function build(label: string, note: string, nodes: NodeSpec[], wires: WireSpec[]): Board {
+export function build(label: string, note: string, nodes: NodeSpec[], wires: WireSpec[], mode: Board['mode'] = '2d-side'): Board {
   let graph: Graph = { nodes: [], wires: [] };
   const ids = new Map<string, string>();
   for (const spec of nodes) {
@@ -25,7 +25,7 @@ function build(label: string, note: string, nodes: NodeSpec[], wires: WireSpec[]
     graph = res;
   }
   const notes: Note[] = [{ id: 'note-1', text: note, color: 'yellow', pos: { x: 20, y: 860 }, size: { w: 340, h: 190 } }];
-  return migrateBoardWireRule({ name: `Thử: ${label}`, mode: '2d-side', graph, notes });
+  return migrateBoardWireRule({ name: `Thử: ${label}`, mode, graph, notes });
 }
 
 const text = (alias: string, x: number, y: number, t: string, corner = 'top-right'): NodeSpec => ({

@@ -42,6 +42,7 @@ import { forceSensorNode } from './force-sensor';
 import { gripperNode } from './gripper';
 import { jointNode } from './joint';
 import { linkNode } from './link';
+import { linearActuatorNode } from './linear-actuator';
 import { speedSensorNode } from './speed-sensor';
 import { aheadSensorNode } from './ahead-sensor';
 import { visionSensorNode } from './vision-sensor';
@@ -134,6 +135,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   jointNode,
   linkNode,
   gripperNode,
+  linearActuatorNode,
   shooterNode,
   spawnerNode,
   uiButtonNode,

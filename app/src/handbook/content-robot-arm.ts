@@ -15,6 +15,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       angleNow: 'Góc khớp đang có (độ), có thể còn đang trên đường tới "Góc đặt".',
       load: 'Mô-men khớp đang phải chịu để giữ mọi thứ phía sau (N·m). Khớp trục đứng luôn ra 0 vì trọng lực không có tay đòn.',
       overloaded: 'Bật khi mô-men cần giữ lớn hơn "Mô-men tối đa" (hoặc servo chưa được bật). Lúc đó khớp trễ dần xuống.',
+      reached: 'Bật khi góc hiện tại nằm trong "Sai số cho phép" quanh "Góc đặt" và khớp không quá tải. Dùng để nối sang bước kế tiếp của chuỗi: khớp tới nơi rồi mới kẹp.',
     },
     params: {
       axis: 'Ngang: gập lên xuống trong mặt phẳng đứng (thấy rõ ở nhìn ngang và 3D). Đứng: xoay quanh trục đứng (thấy ở nhìn từ trên và 3D). Mỗi kiểu nhìn chỉ vẽ trục nó thấy được.',
@@ -23,6 +24,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       max: 'Góc lớn nhất khớp được phép tới (độ).',
       maxTorque: 'Sức quay tối đa (N·m). Servo nhỏ vài N·m, servo công nghiệp hàng trăm N·m. Mặc định 50.',
       maxSpeed: 'Tốc độ quay tối đa khi khớp còn đủ sức (độ mỗi giây). Mặc định 90.',
+      tolerance: 'Sai số cho phép (độ) để "Đã tới góc" bật. Mặc định 1.',
       mount: 'Dời điểm gắn khỏi tâm của vật (mét, theo chiều dọc / lên / ngang của vật). Ví dụ gắn lên mặt trên của cột cao 1,6 m thì đặt "lên" 0,8.',
       color: 'Màu hình hộp nhỏ vẽ tại khớp.',
     },
@@ -72,6 +74,8 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       gripForce: 'Lực mỗi ngón đang ép (N), 0 khi tay đang mở.',
       slipped: 'Một nhịp lúc món đồ tuột khỏi tay vì lực kẹp không đủ. Phải nhả rồi kẹp lại.',
       crushedOut: 'Một nhịp lúc món đồ bị hỏng vì kẹp quá mạnh (nó méo và sẫm màu, vẫn kẹp được).',
+      inReach: 'Bật khi có món đồ vật kẹp được ngay: nằm trong tầm với và bề ngang vừa độ mở. Giữ nguyên trạng thái, không phải một nhịp. Nối vào "Kẹp" để tay tự kẹp khi tới nơi.',
+      candidate: 'Món đồ vật đó (món gần nhất kẹp được). Khi đang giữ thì là món đang giữ.',
     },
     params: {
       defaultForce: 'Lực kẹp mỗi ngón khi chưa nối "Lực kẹp" (N). Mặc định 20.',

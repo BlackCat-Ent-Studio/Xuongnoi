@@ -102,6 +102,14 @@ describe('computeIssues', () => {
     expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).not.toContain('no-character');
   });
 
+  it('does not ask for a Nhân vật when a linear actuator (piston) is the thing to play', () => {
+    const s = createEditorState(emptyBoard());
+    s.addNode('key', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).toContain('no-character');
+    s.addNode('linear-actuator', { x: 0, y: 0 });
+    expect(computeIssues(s.getGraph(), '2d-side').map((i) => i.key)).not.toContain('no-character');
+  });
+
   it('lists unconnected required inputs with their node id', () => {
     const s = createEditorState(emptyBoard());
     s.addNode('character', { x: 0, y: 0 });
