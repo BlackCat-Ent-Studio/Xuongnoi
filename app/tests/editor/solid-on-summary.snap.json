@@ -339,6 +339,25 @@
   }
  },
  {
+  "id": "sample:robot-arm",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f96030ac"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f96030ac"
+  }
+ },
+ {
   "id": "sample:robot-line-follow",
   "off": {
    "ended": "running",
@@ -358,14 +377,37 @@
   }
  },
  {
-  "id": "sample:robot-arm",
+  "id": "sample:auto-arm",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "sensor-without-contact x3 from 2.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2c2acb78"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "sensor-without-contact x3 from 2.9s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2c2acb78"
+  }
+ },
+ {
+  "id": "sample:auto-door",
   "off": {
    "ended": "running",
    "ticks": 900,
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "f96030ac"
+   "hash": "db061049"
   },
   "on": {
    "ended": "running",
@@ -373,7 +415,26 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "f96030ac"
+   "hash": "db061049"
+  }
+ },
+ {
+  "id": "sample:weight-sorter",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9b4485c6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9b4485c6"
   }
  },
  {
