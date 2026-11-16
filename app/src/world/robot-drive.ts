@@ -135,6 +135,8 @@ export interface MountedWheel extends DriveWheel {
   spin: number;
   /** Set by the motor node each tick; a wheel not refreshed by the next step is removed (motor unplugged or gone). */
   fresh: boolean;
+  /** Push force (N) this wheel gives now: set by the motor node, its maximum scaled by |power|. */
+  pushN: number;
 }
 
 export interface RobotBody {
@@ -149,6 +151,10 @@ export interface RobotBody {
   payload: number;
   /** True while the payload is above `spec.maxPayload`: the motors then cannot move the chassis. */
   overloaded: boolean;
+  /** True while the chassis shoves, or is stalled against, a loose item (set by the physics step). */
+  pushing: boolean;
+  /** Newtons of that push: what the pushed chain needs, or what the motors give when they stall. */
+  pushForce: number;
   wheels: Map<string, MountedWheel>;
 }
 
@@ -166,6 +172,8 @@ export function createRobotBody(spec: RobotSpec | undefined, heading = 0): Robot
     turnRate: 0,
     payload: 0,
     overloaded: false,
+    pushing: false,
+    pushForce: 0,
     wheels: new Map(),
   };
 }
@@ -177,6 +185,7 @@ export function sanitizeRobotSpec(spec: Partial<RobotSpec>): RobotSpec {
     mass: positive(spec.mass, DEFAULT_ROBOT.mass),
     friction: positive(spec.friction, DEFAULT_ROBOT.friction),
     maxPayload: positive(spec.maxPayload, 0),
+    ...(spec.pushObjects === true ? { pushObjects: true } : {}),
   };
 }
 
@@ -186,10 +195,10 @@ export function setWheel(body: RobotBody, id: string, wheel: RobotWheelSpec | nu
     body.wheels.delete(id);
     return;
   }
-  const { side, forward, radius, rpm } = wheel;
+  const { side, forward, radius, rpm, pushN } = wheel;
   if (![side, forward, radius, rpm].every(Number.isFinite) || radius <= 0) return;
   const old = body.wheels.get(id);
-  body.wheels.set(id, { side, forward, radius, rpm, spin: old?.spin ?? 0, fresh: true });
+  body.wheels.set(id, { side, forward, radius, rpm, spin: old?.spin ?? 0, fresh: true, pushN: pushN !== undefined && Number.isFinite(pushN) && pushN > 0 ? pushN : 0 });
 }
 
 /** True when `payload` kg is more than the chassis may carry (a maximum of 0 means no limit). */
@@ -207,6 +216,8 @@ export function isOverloaded(spec: Pick<RobotSpec, 'maxPayload'>, payload: numbe
 export function driveRobot(body: RobotBody, dt: number, sideView: boolean, payload = 0): { x: number; z: number } {
   for (const [id, w] of body.wheels) if (!w.fresh) body.wheels.delete(id);
   const wheels = [...body.wheels.values()];
+  body.pushing = false;
+  body.pushForce = 0;
   body.payload = Number.isFinite(payload) && payload > 0 ? payload : 0;
   body.overloaded = isOverloaded(body.spec, body.payload);
   const ask = body.overloaded ? { speed: 0, turn: 0 } : solveDrive(wheels);

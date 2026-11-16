@@ -20,8 +20,17 @@ const PAYLOAD_PORTS: PortDef[] = [
   { id: 'overloaded', type: 'bool', label: 'Quá tải' },
 ];
 
+const PUSH_PORTS: PortDef[] = [
+  { id: 'pushing', type: 'bool', label: 'Đang đẩy vật' },
+  { id: 'pushForce', type: 'number', label: 'Lực đang đẩy' },
+];
+
 const showsDistance = (params: Params): boolean => strParam(params, 'showDistance', 'no') === 'yes';
 const showsPayload = (params: Params): boolean => strParam(params, 'showPayload', 'no') === 'yes';
+/** Whether the chassis shoves loose items; the default is the one value that keeps every older board unchanged. */
+const PUSH_DEFAULT = 'yes';
+const pushes = (params: Params): boolean => strParam(params, 'pushObjects', PUSH_DEFAULT) === 'yes';
+const showsPush = (params: Params): boolean => strParam(params, 'showPush', 'no') === 'yes';
 
 /**
  * The chassis of a robot: a rigid box on the ground that never moves by itself. Motors mounted on it (the "Motor"
@@ -44,8 +53,12 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
     { id: 'turnRate', type: 'number', label: 'Tốc độ quay' },
   ],
   optionalOutputs: {
-    all: [DISTANCE_PORT, ...PAYLOAD_PORTS],
-    active: (params) => [...(showsDistance(params) ? [DISTANCE_PORT] : []), ...(showsPayload(params) ? PAYLOAD_PORTS : [])],
+    all: [DISTANCE_PORT, ...PAYLOAD_PORTS, ...PUSH_PORTS],
+    active: (params) => [
+      ...(showsDistance(params) ? [DISTANCE_PORT] : []),
+      ...(showsPayload(params) ? PAYLOAD_PORTS : []),
+      ...(showsPush(params) ? PUSH_PORTS : []),
+    ],
   },
   params: [
     { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
@@ -98,6 +111,28 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       ],
       advanced: true,
     },
+    {
+      id: 'pushObjects',
+      label: 'Đẩy được vật (thùng, đồ vật nằm trên sàn chắn đường)',
+      kind: 'select',
+      default: PUSH_DEFAULT,
+      options: [
+        { value: 'yes', label: 'Có (đẩy vật đi theo; vật nặng quá thì robot đứng lại, cần "Lực kéo tối đa" của động cơ)' },
+        { value: 'no', label: 'Không (robot đi xuyên qua vật như cũ)' },
+      ],
+      advanced: true,
+    },
+    {
+      id: 'showPush',
+      label: 'Hiện ô "Đang đẩy vật" và "Lực đang đẩy"',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (robot có đang đẩy vật không, và đẩy bằng bao nhiêu N)' },
+      ],
+      advanced: true,
+    },
     ...BODY_PARAMS,
   ],
   createOnly: ['position', 'heading', 'length', 'width', 'height', 'color', 'solid', ...BODY_PARAM_IDS],
@@ -115,7 +150,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       size: { x: Math.max(length, width), y: Math.max(0.1, numParam(params, 'height', 0.3)), z: Math.max(length, width) },
       color: strParam(params, 'color', '#3b82f6'),
       solid: strParam(params, 'solid', 'yes') !== 'no',
-      robot: { length, width, mass: numParam(params, 'mass', 2), friction: numParam(params, 'friction', 0.8) },
+      robot: { length, width, mass: numParam(params, 'mass', 2), friction: numParam(params, 'friction', 0.8), ...(pushes(params) ? { pushObjects: true } : {}) },
       heading: numParam(params, 'heading', 0) / DEG,
       ...bodySpec(params),
     });
@@ -127,6 +162,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       mass: numParam(params, 'mass', 2),
       friction: numParam(params, 'friction', 0.8),
       maxPayload: Math.max(0, numParam(params, 'maxPayload', 0)),
+      pushObjects: pushes(params),
     });
     const entity = ctx.world.getEntity(s.id);
     const view = entity?.robot;
@@ -143,6 +179,8 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       distance: s.distance,
       payload: view?.payload ?? 0,
       overloaded: view?.overloaded === true,
+      pushing: view?.pushing === true,
+      pushForce: view?.pushForce ?? 0,
     };
   },
 };

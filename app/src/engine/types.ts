@@ -320,6 +320,8 @@ export interface RobotSpec {
   friction: number;
   /** Most weight (kg) the chassis can carry and still be moved by its motors; 0 or absent = no limit. */
   maxPayload?: number;
+  /** True: the chassis shoves loose items on the floor ahead of it (needs motor push force); absent/false: it drives through them. */
+  pushObjects?: boolean;
 }
 
 /** One motor's wheel as seen by the chassis it is mounted on. */
@@ -332,6 +334,8 @@ export interface RobotWheelSpec {
   radius: number;
   /** Current wheel speed, revolutions per minute; positive pushes the chassis forward. */
   rpm: number;
+  /** Push force (N) this wheel can give at its current speed (its maximum scaled by |power|); absent = 0. */
+  pushN?: number;
 }
 
 /** Look of an item entity (built from boxes by the renderer). */
@@ -555,6 +559,10 @@ export interface EntityView {
     payload?: number;
     /** True while the payload is above the chassis's maximum (the motors then cannot move it); absent otherwise. */
     overloaded?: boolean;
+    /** True while the chassis shoves (or is stalled against) a loose item; absent otherwise. */
+    pushing?: boolean;
+    /** Force (N) of that push: what the pushed chain needs, or what the motors give when they stall; absent when not pushing. */
+    pushForce?: number;
   };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
@@ -818,7 +826,7 @@ export interface WorldApi {
    */
   setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void;
   /** Changes the mass and ground grip of a robot chassis while it runs (unusable numbers keep the old value). */
-  setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number }): void;
+  setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */

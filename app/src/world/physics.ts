@@ -8,6 +8,7 @@ import { isSpinner, spinnerTouches } from './platforms';
 import { massOn } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
 import { driveRobot, settleRobot } from './robot-drive';
+import { beginShove, finishShove, restsOnChassis } from './robot-push';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
@@ -311,7 +312,9 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entit
   if (mode === '2d-top') r.vel.y = 0;
   else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r) * dt);
   if (mode === '2d-side') r.pos.z = 0;
+  const shove = beginShove(r, entities, solids, dt, mode);
   r.onGround = integrate(r, dt, mode, solids);
+  if (shove) finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode);
   settleRobot(body, r.vel, mode === '2d-side');
 }
 
@@ -352,16 +355,9 @@ function crashInto(
   if (mode !== '2d-side') moveAxis(other, 'z', dz * push, solids, around);
 }
 
-/** How far below a chassis's top an item's bottom may sit and still be held up by it. */
-const SUPPORT_SINK = 0.02;
-
 /** The solid robot chassis that an item lying on (or landing on) its top rests on. Items pass through everything else of a chassis. */
 function supportsOf(item: Entity, robots: readonly Entity[]): Entity[] {
-  const bottom = colliderBox(item).pos.y - colliderBox(item).size.y / 2;
-  return robots.filter((r) => {
-    const rb = colliderBox(r);
-    return bottom >= rb.pos.y + rb.size.y / 2 - SUPPORT_SINK && boxOverlap(item, r, 'x') > SKIN && boxOverlap(item, r, 'z') > SKIN;
-  });
+  return robots.filter((r) => restsOnChassis(item, r));
 }
 
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */

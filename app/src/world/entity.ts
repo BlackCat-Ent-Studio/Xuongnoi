@@ -146,6 +146,7 @@ export function toView(e: Entity): EntityView {
             wheels: [...e.robot.wheels.values()].map((w) => ({ side: w.side, forward: w.forward, radius: w.radius, spin: w.spin })),
             ...(e.robot.payload > 0 ? { payload: e.robot.payload } : {}),
             ...(e.robot.overloaded ? { overloaded: true } : {}),
+            ...(e.robot.pushing ? { pushing: true, pushForce: e.robot.pushForce } : {}),
           },
         }
       : {}),

@@ -1012,6 +1012,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'distance': ['Quãng đường', 'Distance'],
         'payload': ['Khối lượng đang chở', 'Payload'],
         'overloaded': ['Quá tải', 'Overloaded'],
+        'pushing': ['Đang đẩy vật', 'Pushing'],
+        'pushForce': ['Lực đang đẩy', 'Push force'],
       },
     },
   },

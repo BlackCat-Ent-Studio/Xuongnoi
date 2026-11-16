@@ -47,6 +47,7 @@ export const motorNode: NodeDef<MotorState> = {
     { id: 'wheelRadius', label: 'Bán kính bánh (m)', kind: 'number', default: 0.15, min: 0.02, max: 2, step: 0.01 },
     { id: 'maxRpm', label: 'Tốc độ tối đa (vòng/phút)', kind: 'number', default: 120, min: 1, max: 2000, step: 5 },
     { id: 'accel', label: 'Độ tăng tốc (vòng/phút mỗi giây)', kind: 'number', default: 400, min: 10, max: 10000, step: 10 },
+    { id: 'maxForce', label: 'Lực kéo tối đa (N, khi robot đẩy vật; nhân với công suất)', kind: 'number', default: 30, min: 0, max: 1000000, step: 5 },
     {
       id: 'reverse',
       label: 'Chiều quay',
@@ -83,7 +84,9 @@ export const motorNode: NodeDef<MotorState> = {
     if (risingEdge(s.reset, asBool(i.resetTurns))) s.turns = 0;
     else s.turns += (s.rpm / 60) * ctx.dt;
     if (body !== null) {
+      const maxRpm = Math.max(1, numParam(params, 'maxRpm', 120));
       ctx.world.setRobotWheel(body, ctx.nodeId, {
+        pushN: Math.max(0, numParam(params, 'maxForce', 30)) * Math.min(1, Math.abs(s.rpm) / maxRpm),
         side: numParam(params, 'side', 0.4),
         forward: numParam(params, 'forward', 0),
         radius: Math.max(0.02, numParam(params, 'wheelRadius', 0.15)),
