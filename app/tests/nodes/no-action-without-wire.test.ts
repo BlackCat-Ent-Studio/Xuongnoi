@@ -176,7 +176,7 @@ const kinds = (): string[] => listNodeDefs().map((d) => d.kind);
 
 describe('no action without its wire', () => {
   it('covers every registered node kind', () => {
-    expect(kinds().length).toBeGreaterThanOrEqual(57);
+    expect(kinds().length).toBeGreaterThanOrEqual(59);
   });
 
   for (const kind of kinds()) {

@@ -1,4 +1,5 @@
 import type { HudCorner, HudItem } from '../engine/types';
+import { paintPlot } from './hud-plot';
 
 export const HUD_CORNER_LIST: HudCorner[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
@@ -87,9 +88,10 @@ export class CornerWidgets {
     const live = new Set<string>();
     for (const item of items) {
       const w = item.widget;
-      if (!w || (w.type !== 'button' && w.type !== 'bar')) continue;
+      if (!w || (w.type !== 'button' && w.type !== 'bar' && w.type !== 'plot')) continue;
       live.add(item.key);
-      const sig = JSON.stringify([w, item.label, item.value, item.color]);
+      // A plot repaints only when its revision changes; hashing every sample each frame would defeat the point.
+      const sig = w.type === 'plot' ? `plot|${w.rev}|${item.label}|${w.width}|${w.height}` : JSON.stringify([w, item.label, item.value, item.color]);
       let entry = this.els.get(item.key);
       if (entry && entry.sig === sig && entry.corner === item.corner) continue;
       if (!entry) {
@@ -102,6 +104,7 @@ export class CornerWidgets {
         this.columns.get(item.corner)?.appendChild(entry.el);
       }
       if (w.type === 'button') this.paintButton(entry.el, w.text, item.color ?? '#2b6cff');
+      else if (w.type === 'plot') paintPlot(entry.el, item, w);
       else this.paintBar(entry.el, item, w.fraction);
     }
     for (const [key, entry] of this.els) {

@@ -5,9 +5,9 @@ import type { Board, GraphNode, Graph, Params, ViewMode } from '../engine/types'
 
 /** Ready-wired "Thử ngay" boards for the math, object and output handbook pages. */
 
-type Wire = readonly [fromNode: string, fromPort: string, toNode: string, toPort: string];
+export type Wire = readonly [fromNode: string, fromPort: string, toNode: string, toPort: string];
 
-interface Spec {
+export interface Spec {
   id: string;
   kind: string;
   /** Column (0 = inputs, 1 = world, 2 = outputs) and row on the canvas. */
@@ -22,7 +22,7 @@ function node(s: Spec): GraphNode {
   return { id: s.id, kind: s.kind, params: s.params ?? {}, pos: { x: 40 + s.col * 280, y: 40 + s.row * 170 } };
 }
 
-function build(name: string, mode: ViewMode, note: string, specs: Spec[], wires: Wire[]): Board {
+export function build(name: string, mode: ViewMode, note: string, specs: Spec[], wires: Wire[]): Board {
   registerAllNodes();
   let graph: Graph = { nodes: specs.map(node), wires: [] };
   for (const [fn, fp, tn, tp] of wires) {

@@ -22,6 +22,7 @@ export const COURSE: readonly Chapter[] = [
   { id: 'vehicles', title: 'Xe cộ', lessonIds: ['vehicles', 'bot-driver', 'route-traffic', 'train'] },
   { id: 'delivery', title: 'Giao hàng', lessonIds: ['cargo-delivery', 'guide-arrow'] },
   { id: 'numbers-ui', title: 'Số và giao diện', lessonIds: ['health-color', 'start-screen', 'ask-dialog'] },
+  { id: 'robots', title: 'Rô-bốt', lessonIds: ['pid-control'] },
   { id: 'real-games', title: 'Làm game thật', lessonIds: ['editor-tools', 'groups', 'capstone-factory'] },
 ];
 

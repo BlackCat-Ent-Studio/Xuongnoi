@@ -999,6 +999,25 @@
   }
  },
  {
+  "id": "lesson:pid-control",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  }
+ },
+ {
   "id": "lesson:editor-tools",
   "off": {
    "ended": "running",
@@ -2148,6 +2167,44 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "66d87cad"
+  }
+ },
+ {
+  "id": "handbook:pid",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "351dba8a"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "351dba8a"
+  }
+ },
+ {
+  "id": "handbook:signal-plot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c999eb29"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c999eb29"
   }
  }
 ]
