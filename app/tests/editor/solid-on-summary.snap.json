@@ -339,6 +339,25 @@
   }
  },
  {
+  "id": "sample:robot-line-follow",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff6c93e3"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff6c93e3"
+  }
+ },
+ {
   "id": "lesson:walk-jump",
   "off": {
    "ended": "running",
