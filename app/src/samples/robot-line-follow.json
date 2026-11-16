@@ -214,7 +214,7 @@
     "kind": "camera",
     "params": {
      "mode": "follow",
-     "zoom": 1.2
+     "zoom": 0.8
     },
     "pos": {
      "x": 40,
