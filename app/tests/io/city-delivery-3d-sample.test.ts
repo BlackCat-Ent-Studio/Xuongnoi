@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type EntityView, type InputSnapshot, type Runtime } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { findPlanePath, planeGridFor } from '../../src/world/navigation';
 import { createWorld } from '../../src/world/world';
@@ -20,7 +20,7 @@ const keys = (...k: string[]): InputSnapshot => ({ keysDown: new Set(k) });
 
 type Pt = { x: number; z: number };
 
-const board = (): Board => listSamples().find((s) => s.id === 'city-delivery-3d')!.board;
+const board = (): Board => listAllSamples().find((s) => s.id === 'city-delivery-3d')!.board;
 
 interface Options {
   /** Pins the order dice so every run asks for the same houses (the real game rolls fresh numbers). */
@@ -182,7 +182,7 @@ describe('city-delivery-3d: board', () => {
   const b = board();
 
   it('is registered as a 3D sample with groups', () => {
-    const s = listSamples().find((x) => x.id === 'city-delivery-3d')!;
+    const s = listAllSamples().find((x) => x.id === 'city-delivery-3d')!;
     expect(s.label).toBe('Thành phố giao hàng 3D (nhiều khu, xe cộ, đèn giao thông)');
     expect(s.board.mode).toBe('3d');
     expect(b.graph.groups!.length).toBeGreaterThanOrEqual(25);

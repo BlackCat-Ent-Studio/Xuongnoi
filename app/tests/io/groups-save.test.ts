@@ -3,7 +3,7 @@ import { createEditorState } from '../../src/editor/editor-state';
 import { buildClip } from '../../src/editor/clipboard';
 import { createGroup } from '../../src/editor/groups/group-model';
 import type { Board } from '../../src/engine/types';
-import { listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { listAllSamples, parseBoard, serializeBoard } from '../../src/io';
 import { fixture } from '../editor/groups-fixture';
 
 function ok(text: string): Board {
@@ -35,7 +35,7 @@ describe('groups in save files', () => {
   });
 
   it('loads every sample unchanged: the old ones without groups, the 3D city with its groups', () => {
-    for (const s of listSamples()) {
+    for (const s of listAllSamples()) {
       const loaded = ok(serializeBoard(s.board));
       if (s.id === 'city-delivery-3d') expect(loaded.graph.groups!.length).toBeGreaterThan(20);
       else expect(loaded.graph.groups).toBeUndefined();

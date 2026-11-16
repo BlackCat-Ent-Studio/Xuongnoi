@@ -2,14 +2,14 @@ import { beforeAll, describe, expect, it } from 'vitest';
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { distanceToPath, presetPath } from '../../src/world/line-track';
 import { createWorld } from '../../src/world/world';
 
 beforeAll(() => registerAllNodes());
 
-const sample = (): Board => structuredClone(listSamples().find((s) => s.id === 'robot-line-follow')!.board);
+const sample = (): Board => structuredClone(listAllSamples().find((s) => s.id === 'robot-line-follow')!.board);
 
 const ALLOWED = new Set(['line-track', 'on-start', 'robot-body', 'line-sensor', 'math', 'const', 'pid', 'motor', 'signal-plot', 'show-number', 'camera']);
 

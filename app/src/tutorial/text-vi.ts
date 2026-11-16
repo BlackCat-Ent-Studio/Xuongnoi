@@ -501,7 +501,7 @@ export const LESSON_TEXT = {
     },
     done: {
       title: 'Bạn tạo được bot rồi!',
-      text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng Va chạm để thua khi bị bắt. Hãy thử hai game mẫu "Lính gác" và "Bot dọn dẹp" để xem các bộ não khác nhé.',
+      text: 'Bạn đã biết đặt vai trò Bot, gắn bộ não Đi tuần và dùng Va chạm để thua khi bị bắt. Hãy thử các bộ não khác trong Sổ tay mảnh ghép nhé.',
     },
   },
   l7: {

@@ -5,7 +5,7 @@ import { createWorld } from '../../src/world/world';
 import { getNodeDef } from '../../src/engine/registry';
 import { registerAllNodes } from '../../src/nodes';
 import { createRuntime } from '../../src/engine/runtime';
-import { listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { listAllSamples, parseBoard, serializeBoard } from '../../src/io';
 import { CHARACTER_STYLES, resolveLook } from '../../src/render/character-styles';
 import { jellySize } from '../../src/render/character-styles/jelly';
 import { Humanoid } from '../../src/render/humanoid-model';
@@ -186,7 +186,7 @@ describe('character styles', () => {
 
 describe('look pass-through', () => {
   function boardWithLook(look?: string) {
-    const board = structuredClone(listSamples()[0]!.board);
+    const board = structuredClone(listAllSamples()[0]!.board);
     const node = board.graph.nodes.find((n) => n.kind === 'character')!;
     if (look === undefined) delete node.params.look;
     else node.params.look = look;

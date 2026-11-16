@@ -73,7 +73,7 @@ const T = {
   },
   done: {
     title: 'Bạn lái được xe rồi!',
-    text: 'Bạn đã biết thêm xe, cho nhân vật lên xuống xe và lái. Hãy thử game mẫu "Đua xe về đích" để xem một bot cũng tự lái xe được.',
+    text: 'Bạn đã biết thêm xe, cho nhân vật lên xuống xe và lái. Hãy thử gắn bộ não cho một bot để nó tự lái xe nhé.',
   },
 } as const;
 

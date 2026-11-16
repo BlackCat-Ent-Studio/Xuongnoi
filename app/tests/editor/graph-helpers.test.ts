@@ -5,7 +5,7 @@ import { listMissingWires } from '../../src/editor/graph/missing-wires';
 import { findFreeNodeSpot, occupiedBoxes } from '../../src/editor/graph/node-placement';
 import { findFreeNoteSpot } from '../../src/editor/note-placement';
 import { checkPortPair } from '../../src/editor/graph/port-compat';
-import { listSamples } from '../../src/io/samples';
+import { listAllSamples } from '../../src/io/samples';
 import { createNode } from '../../src/editor/editor-state';
 import { registerAllNodes } from '../../src/nodes';
 import type { Graph } from '../../src/engine/types';
@@ -41,7 +41,7 @@ describe('listMissingWires', () => {
   });
 
   it('finds nothing missing in any bundled sample', () => {
-    for (const sample of listSamples()) {
+    for (const sample of listAllSamples()) {
       expect(listMissingWires(sample.board.graph), sample.id).toEqual([]);
     }
   });

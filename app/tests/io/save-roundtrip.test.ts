@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createEmptyBoard, listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { createEmptyBoard, listAllSamples, parseBoard, serializeBoard } from '../../src/io';
 import { migrations } from '../../src/io/migrations';
 import type { Board } from '../../src/engine/types';
 
@@ -16,7 +16,7 @@ function fail(text: string): string {
 }
 
 function sampleJson(patch: (o: any) => void): string {
-  const o = JSON.parse(serializeBoard(listSamples()[0]!.board));
+  const o = JSON.parse(serializeBoard(listAllSamples()[0]!.board));
   patch(o);
   return JSON.stringify(o);
 }
@@ -31,7 +31,7 @@ describe('save format', () => {
   });
 
   it('roundtrips every sample', () => {
-    for (const s of listSamples()) {
+    for (const s of listAllSamples()) {
       expect(ok(serializeBoard(s.board))).toEqual(s.board);
     }
   });

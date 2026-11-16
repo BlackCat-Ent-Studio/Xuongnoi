@@ -62,9 +62,9 @@ function loadInitialBoard(): Board {
     const saved = loadAutosave();
     // First run after the library was added: the single old autosave becomes the first library entry.
     ensureLibrary(saved);
-    return takeStash() ?? saved ?? createEmptyBoard('2d-side');
+    return takeStash() ?? saved ?? createEmptyBoard('3d');
   } catch {
-    return createEmptyBoard('2d-side');
+    return createEmptyBoard('3d');
   }
 }
 

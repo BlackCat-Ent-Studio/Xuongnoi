@@ -1,5 +1,5 @@
 /** Vietnamese strings for the editor shell: top bar, menus, docks, layout presets, help. */
-import type { ViewMode } from '../engine/types';
+import type { ViewKind, Mode2d } from './view-switch';
 import type { LayoutPreset } from './layout-model';
 
 export const PRESET_LABELS: Record<LayoutPreset, string> = {
@@ -17,7 +17,7 @@ export const SHELL_TEXT = {
 
   // Tệp
   fileNew: 'Tạo game mới',
-  fileSamples: 'Mở game mẫu',
+  fileSamples: 'Bài mẫu',
   fileLibrary: 'Kho game của tôi…',
   fileOpen: 'Mở file…',
   fileSave: 'Lưu',
@@ -50,8 +50,11 @@ export const SHELL_TEXT = {
   // View-mode segmented control
   modeGroupAria: 'Góc nhìn của game',
   modeLockedTip: 'Bấm Dừng để đổi góc nhìn',
-  modeShort: { '2d-side': '2D↔', '2d-top': '2D↓', '3d': '3D' } as Record<ViewMode, string>,
-  modeFull: { '2d-side': '2D ngang', '2d-top': '2D trên', '3d': '3D' } as Record<ViewMode, string>,
+  modeKind: { '2d': '2D', '3d': '3D' } as Record<ViewKind, string>,
+  /** The small switch beside the 2D button: which 2D view the button opens. */
+  sub2dAria: 'Kiểu nhìn của 2D',
+  sub2dFull: { '2d-side': 'Nhìn ngang', '2d-top': 'Nhìn từ trên' } as Record<Mode2d, string>,
+  sub2dShort: { '2d-side': '↔', '2d-top': '↓' } as Record<Mode2d, string>,
 
   // Top bar
   gameNameLabel: 'Tên game',

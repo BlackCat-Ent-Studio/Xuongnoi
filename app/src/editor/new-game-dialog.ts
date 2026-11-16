@@ -1,4 +1,4 @@
-import { VIEW_MODES, type ViewMode } from '../engine/types';
+import type { ViewMode } from '../engine/types';
 import { h } from './dom';
 import { MODE_HINTS, MODE_LABELS, TEXT_VI } from './text-vi';
 
@@ -6,6 +6,9 @@ export interface NewGameDialog {
   open(): void;
   close(): void;
 }
+
+/** 3D first (and focused when the dialog opens); both 2D views stay available. */
+const CHOICE_ORDER: readonly ViewMode[] = ['3d', '2d-side', '2d-top'];
 
 export function createNewGameDialog(onPick: (mode: ViewMode) => void): NewGameDialog {
   const overlay = h('div', 'modal-overlay');
@@ -16,7 +19,7 @@ export function createNewGameDialog(onPick: (mode: ViewMode) => void): NewGameDi
   box.append(h('h2', 'modal-title', TEXT_VI.newGameTitle), h('p', 'modal-note', TEXT_VI.newGameWarning));
 
   const choices = h('div', 'modal-choices');
-  for (const mode of VIEW_MODES) {
+  for (const mode of CHOICE_ORDER) {
     const btn = h('button', 'mode-choice');
     btn.type = 'button';
     btn.dataset.mode = mode;
