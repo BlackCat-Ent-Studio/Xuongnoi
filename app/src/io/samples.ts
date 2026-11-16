@@ -16,6 +16,8 @@ import dodgeShoot from '../samples/dodge-shoot.json';
 import cityDelivery from '../samples/city-delivery.json';
 import cityDelivery3d from '../samples/city-delivery-3d.json';
 import robotLineFollow from '../samples/robot-line-follow.json';
+import robotSquare from '../samples/robot-square.json';
+import robotAvoid from '../samples/robot-avoid.json';
 import { createRobotArmBoard } from '../samples/robot-arm-board';
 import { parseBoard, serializeBoard } from './save-format';
 
@@ -23,8 +25,10 @@ import { parseBoard, serializeBoard } from './save-format';
  * Samples shown in the menus and the launchpad: automation machines only. Append one line per new sample.
  */
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
-  { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, nhìn từ trên)', json: robotLineFollow },
+  { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)', json: robotLineFollow },
   { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
+  { id: 'robot-avoid', label: 'Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)', json: robotAvoid },
+  { id: 'robot-square', label: 'Robot đi hình vuông (bộ đếm quãng đường và hướng, chuỗi bước, 3D)', json: robotSquare },
 ];
 
 /** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */

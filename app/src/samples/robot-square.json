@@ -1,0 +1,1100 @@
+{
+ "format_version": 1,
+ "name": "Robot đi hình vuông",
+ "mode": "3d",
+ "graph": {
+  "nodes": [
+   {
+    "id": "than",
+    "kind": "robot-body",
+    "params": {
+     "position": {
+      "x": -1,
+      "y": 0.8,
+      "z": -1
+     },
+     "heading": 0,
+     "length": 0.9,
+     "width": 0.7,
+     "color": "#3b82f6",
+     "showDistance": "yes"
+    },
+    "pos": {
+     "x": 40,
+     "y": 40
+    }
+   },
+   {
+    "id": "dc-trai",
+    "kind": "motor",
+    "params": {
+     "side": -0.4,
+     "showTurns": "yes"
+    },
+    "pos": {
+     "x": 1840,
+     "y": 40
+    }
+   },
+   {
+    "id": "dc-phai",
+    "kind": "motor",
+    "params": {
+     "side": 0.4
+    },
+    "pos": {
+     "x": 1840,
+     "y": 380
+    }
+   },
+   {
+    "id": "buoc",
+    "kind": "sequence",
+    "params": {
+     "stepCount": 2,
+     "loop": "yes"
+    },
+    "pos": {
+     "x": 400,
+     "y": 40
+    }
+   },
+   {
+    "id": "c-canh",
+    "kind": "const",
+    "params": {
+     "value": 2
+    },
+    "pos": {
+     "x": 40,
+     "y": 380
+    }
+   },
+   {
+    "id": "so-dai",
+    "kind": "compare",
+    "params": {
+     "op": "ge"
+    },
+    "pos": {
+     "x": 760,
+     "y": 40
+    }
+   },
+   {
+    "id": "di-xong",
+    "kind": "and",
+    "params": {},
+    "pos": {
+     "x": 1120,
+     "y": 40
+    }
+   },
+   {
+    "id": "giu-huong",
+    "kind": "counter",
+    "params": {
+     "start": 0,
+     "target": 1
+    },
+    "pos": {
+     "x": 400,
+     "y": 720
+    }
+   },
+   {
+    "id": "lech-goc",
+    "kind": "math",
+    "params": {
+     "op": "sub"
+    },
+    "pos": {
+     "x": 760,
+     "y": 380
+    }
+   },
+   {
+    "id": "c-goc",
+    "kind": "const",
+    "params": {
+     "value": 89
+    },
+    "pos": {
+     "x": 40,
+     "y": 720
+    }
+   },
+   {
+    "id": "c-360",
+    "kind": "const",
+    "params": {
+     "value": 360
+    },
+    "pos": {
+     "x": 40,
+     "y": 1060
+    }
+   },
+   {
+    "id": "c-am180",
+    "kind": "const",
+    "params": {
+     "value": -180
+    },
+    "pos": {
+     "x": 40,
+     "y": 1400
+    }
+   },
+   {
+    "id": "goc-vong",
+    "kind": "math",
+    "params": {
+     "op": "sub"
+    },
+    "pos": {
+     "x": 760,
+     "y": 720
+    }
+   },
+   {
+    "id": "du-goc",
+    "kind": "compare",
+    "params": {
+     "op": "ge"
+    },
+    "pos": {
+     "x": 1120,
+     "y": 380
+    }
+   },
+   {
+    "id": "qua-vong",
+    "kind": "compare",
+    "params": {
+     "op": "ge"
+    },
+    "pos": {
+     "x": 760,
+     "y": 1060
+    }
+   },
+   {
+    "id": "dang-vong",
+    "kind": "compare",
+    "params": {
+     "op": "lt"
+    },
+    "pos": {
+     "x": 760,
+     "y": 1400
+    }
+   },
+   {
+    "id": "vong-xong",
+    "kind": "and",
+    "params": {},
+    "pos": {
+     "x": 1120,
+     "y": 720
+    }
+   },
+   {
+    "id": "quay-ok",
+    "kind": "or",
+    "params": {},
+    "pos": {
+     "x": 1120,
+     "y": 1060
+    }
+   },
+   {
+    "id": "quay-xong",
+    "kind": "and",
+    "params": {},
+    "pos": {
+     "x": 1120,
+     "y": 1400
+    }
+   },
+   {
+    "id": "tiep",
+    "kind": "or",
+    "params": {},
+    "pos": {
+     "x": 1480,
+     "y": 40
+    }
+   },
+   {
+    "id": "tien",
+    "kind": "map-range",
+    "params": {
+     "inMin": 1,
+     "inMax": 2,
+     "outMin": 0.6,
+     "outMax": 0,
+     "clamp": "yes"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 380
+    }
+   },
+   {
+    "id": "xoay",
+    "kind": "map-range",
+    "params": {
+     "inMin": 1,
+     "inMax": 2,
+     "outMin": 0,
+     "outMax": 0.1,
+     "clamp": "yes"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 720
+    }
+   },
+   {
+    "id": "cong-trai",
+    "kind": "math",
+    "params": {
+     "op": "add"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 1060
+    }
+   },
+   {
+    "id": "tru-phai",
+    "kind": "math",
+    "params": {
+     "op": "sub"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 1400
+    }
+   },
+   {
+    "id": "dem-canh",
+    "kind": "counter",
+    "params": {
+     "start": 0,
+     "target": 4
+    },
+    "pos": {
+     "x": 400,
+     "y": 1400
+    }
+   },
+   {
+    "id": "chia-bon",
+    "kind": "math",
+    "params": {
+     "op": "div"
+    },
+    "pos": {
+     "x": 1840,
+     "y": 1060
+    }
+   },
+   {
+    "id": "c-bon",
+    "kind": "const",
+    "params": {
+     "value": 4
+    },
+    "pos": {
+     "x": 1840,
+     "y": 720
+    }
+   },
+   {
+    "id": "hien-canh",
+    "kind": "show-number",
+    "params": {
+     "label": "Số cạnh đã đi",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 40,
+     "y": 1740
+    }
+   },
+   {
+    "id": "hien-vuong",
+    "kind": "show-number",
+    "params": {
+     "label": "Số hình vuông (4 cạnh = 1)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 400,
+     "y": 1740
+    }
+   },
+   {
+    "id": "hien-qd",
+    "kind": "show-number",
+    "params": {
+     "label": "Quãng đường cạnh này (m)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 760,
+     "y": 1740
+    }
+   },
+   {
+    "id": "hien-huong",
+    "kind": "show-number",
+    "params": {
+     "label": "Hướng (độ)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 1120,
+     "y": 1740
+    }
+   },
+   {
+    "id": "hien-vong",
+    "kind": "show-number",
+    "params": {
+     "label": "Vòng bánh trái",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 1480,
+     "y": 1740
+    }
+   },
+   {
+    "id": "do-thi",
+    "kind": "signal-plot",
+    "params": {
+     "title": "Hướng robot (độ)",
+     "labelA": "Hướng",
+     "corner": "top-right",
+     "windowSeconds": 30
+    },
+    "pos": {
+     "x": 1840,
+     "y": 1740
+    }
+   },
+   {
+    "id": "chu-thang",
+    "kind": "show-text",
+    "params": {
+     "text": "Đang đi thẳng: đến khi quãng đường đủ 2 m",
+     "color": "#15803d",
+     "corner": "bottom-left"
+    },
+    "pos": {
+     "x": 40,
+     "y": 2080
+    }
+   },
+   {
+    "id": "chu-quay",
+    "kind": "show-text",
+    "params": {
+     "text": "Đang quay tại chỗ: đến khi hướng đổi 90 độ",
+     "color": "#9a3412",
+     "corner": "bottom-left"
+    },
+    "pos": {
+     "x": 400,
+     "y": 2080
+    }
+   },
+   {
+    "id": "khi-bat-dau",
+    "kind": "on-start",
+    "params": {},
+    "pos": {
+     "x": 760,
+     "y": 2080
+    }
+   },
+   {
+    "id": "may-quay",
+    "kind": "camera",
+    "params": {
+     "mode": "follow",
+     "zoom": 0.9,
+     "view": "tilted",
+     "smoothness": 5
+    },
+    "pos": {
+     "x": 1120,
+     "y": 2080
+    }
+   },
+   {
+    "id": "san",
+    "kind": "block",
+    "params": {
+     "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "size": {
+      "x": 24,
+      "y": 1,
+      "z": 16
+     },
+     "color": "#d6d3d1"
+    },
+    "pos": {
+     "x": 40,
+     "y": 2420
+    }
+   },
+   {
+    "id": "hinh-mau",
+    "kind": "line-track",
+    "params": {
+     "shape": "custom",
+     "center": {
+      "x": 0,
+      "y": 0.5,
+      "z": 0
+     },
+     "width": 0.08,
+     "color": "#0ea5e9",
+     "count": 4,
+     "closed": "yes",
+     "smooth": "no",
+     "p1": {
+      "x": -1,
+      "y": 0,
+      "z": -1
+     },
+     "p2": {
+      "x": 1,
+      "y": 0,
+      "z": -1
+     },
+     "p3": {
+      "x": 1,
+      "y": 0,
+      "z": 1
+     },
+     "p4": {
+      "x": -1,
+      "y": 0,
+      "z": 1
+     }
+    },
+    "pos": {
+     "x": 400,
+     "y": 2420
+    }
+   }
+  ],
+  "wires": [
+   {
+    "id": "w1",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "dc-trai",
+     "port": "body"
+    }
+   },
+   {
+    "id": "w2",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "dc-phai",
+     "port": "body"
+    }
+   },
+   {
+    "id": "w3",
+    "from": {
+     "node": "than",
+     "port": "self"
+    },
+    "to": {
+     "node": "may-quay",
+     "port": "target"
+    }
+   },
+   {
+    "id": "w4",
+    "from": {
+     "node": "khi-bat-dau",
+     "port": "started"
+    },
+    "to": {
+     "node": "may-quay",
+     "port": "on"
+    }
+   },
+   {
+    "id": "w5",
+    "from": {
+     "node": "than",
+     "port": "distance"
+    },
+    "to": {
+     "node": "so-dai",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w6",
+    "from": {
+     "node": "c-canh",
+     "port": "value"
+    },
+    "to": {
+     "node": "so-dai",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w7",
+    "from": {
+     "node": "buoc",
+     "port": "step1"
+    },
+    "to": {
+     "node": "di-xong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w8",
+    "from": {
+     "node": "so-dai",
+     "port": "out"
+    },
+    "to": {
+     "node": "di-xong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w9",
+    "from": {
+     "node": "buoc",
+     "port": "step1"
+    },
+    "to": {
+     "node": "giu-huong",
+     "port": "set"
+    }
+   },
+   {
+    "id": "w10",
+    "from": {
+     "node": "than",
+     "port": "heading"
+    },
+    "to": {
+     "node": "giu-huong",
+     "port": "setAmount"
+    }
+   },
+   {
+    "id": "w11",
+    "from": {
+     "node": "than",
+     "port": "heading"
+    },
+    "to": {
+     "node": "lech-goc",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w12",
+    "from": {
+     "node": "giu-huong",
+     "port": "value"
+    },
+    "to": {
+     "node": "lech-goc",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w13",
+    "from": {
+     "node": "lech-goc",
+     "port": "out"
+    },
+    "to": {
+     "node": "du-goc",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w14",
+    "from": {
+     "node": "c-goc",
+     "port": "value"
+    },
+    "to": {
+     "node": "du-goc",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w15",
+    "from": {
+     "node": "c-goc",
+     "port": "value"
+    },
+    "to": {
+     "node": "goc-vong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w16",
+    "from": {
+     "node": "c-360",
+     "port": "value"
+    },
+    "to": {
+     "node": "goc-vong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w17",
+    "from": {
+     "node": "lech-goc",
+     "port": "out"
+    },
+    "to": {
+     "node": "qua-vong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w18",
+    "from": {
+     "node": "goc-vong",
+     "port": "out"
+    },
+    "to": {
+     "node": "qua-vong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w19",
+    "from": {
+     "node": "lech-goc",
+     "port": "out"
+    },
+    "to": {
+     "node": "dang-vong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w20",
+    "from": {
+     "node": "c-am180",
+     "port": "value"
+    },
+    "to": {
+     "node": "dang-vong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w21",
+    "from": {
+     "node": "qua-vong",
+     "port": "out"
+    },
+    "to": {
+     "node": "vong-xong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w22",
+    "from": {
+     "node": "dang-vong",
+     "port": "out"
+    },
+    "to": {
+     "node": "vong-xong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w23",
+    "from": {
+     "node": "du-goc",
+     "port": "out"
+    },
+    "to": {
+     "node": "quay-ok",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w24",
+    "from": {
+     "node": "vong-xong",
+     "port": "out"
+    },
+    "to": {
+     "node": "quay-ok",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w25",
+    "from": {
+     "node": "buoc",
+     "port": "step2"
+    },
+    "to": {
+     "node": "quay-xong",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w26",
+    "from": {
+     "node": "quay-ok",
+     "port": "out"
+    },
+    "to": {
+     "node": "quay-xong",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w27",
+    "from": {
+     "node": "di-xong",
+     "port": "out"
+    },
+    "to": {
+     "node": "tiep",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w28",
+    "from": {
+     "node": "quay-xong",
+     "port": "out"
+    },
+    "to": {
+     "node": "tiep",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w29",
+    "from": {
+     "node": "tiep",
+     "port": "out"
+    },
+    "to": {
+     "node": "buoc",
+     "port": "next"
+    }
+   },
+   {
+    "id": "w30",
+    "from": {
+     "node": "buoc",
+     "port": "step2"
+    },
+    "to": {
+     "node": "than",
+     "port": "resetDistance"
+    }
+   },
+   {
+    "id": "w31",
+    "from": {
+     "node": "buoc",
+     "port": "index"
+    },
+    "to": {
+     "node": "tien",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w32",
+    "from": {
+     "node": "buoc",
+     "port": "index"
+    },
+    "to": {
+     "node": "xoay",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w33",
+    "from": {
+     "node": "tien",
+     "port": "value"
+    },
+    "to": {
+     "node": "cong-trai",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w34",
+    "from": {
+     "node": "xoay",
+     "port": "value"
+    },
+    "to": {
+     "node": "cong-trai",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w35",
+    "from": {
+     "node": "tien",
+     "port": "value"
+    },
+    "to": {
+     "node": "tru-phai",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w36",
+    "from": {
+     "node": "xoay",
+     "port": "value"
+    },
+    "to": {
+     "node": "tru-phai",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w37",
+    "from": {
+     "node": "cong-trai",
+     "port": "out"
+    },
+    "to": {
+     "node": "dc-trai",
+     "port": "power"
+    }
+   },
+   {
+    "id": "w38",
+    "from": {
+     "node": "tru-phai",
+     "port": "out"
+    },
+    "to": {
+     "node": "dc-phai",
+     "port": "power"
+    }
+   },
+   {
+    "id": "w39",
+    "from": {
+     "node": "di-xong",
+     "port": "out"
+    },
+    "to": {
+     "node": "dem-canh",
+     "port": "up"
+    }
+   },
+   {
+    "id": "w40",
+    "from": {
+     "node": "dem-canh",
+     "port": "value"
+    },
+    "to": {
+     "node": "chia-bon",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w41",
+    "from": {
+     "node": "c-bon",
+     "port": "value"
+    },
+    "to": {
+     "node": "chia-bon",
+     "port": "b"
+    }
+   },
+   {
+    "id": "w42",
+    "from": {
+     "node": "dem-canh",
+     "port": "value"
+    },
+    "to": {
+     "node": "hien-canh",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w43",
+    "from": {
+     "node": "chia-bon",
+     "port": "out"
+    },
+    "to": {
+     "node": "hien-vuong",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w44",
+    "from": {
+     "node": "than",
+     "port": "distance"
+    },
+    "to": {
+     "node": "hien-qd",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w45",
+    "from": {
+     "node": "than",
+     "port": "heading"
+    },
+    "to": {
+     "node": "hien-huong",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w46",
+    "from": {
+     "node": "dc-trai",
+     "port": "turns"
+    },
+    "to": {
+     "node": "hien-vong",
+     "port": "value"
+    }
+   },
+   {
+    "id": "w47",
+    "from": {
+     "node": "than",
+     "port": "heading"
+    },
+    "to": {
+     "node": "do-thi",
+     "port": "a"
+    }
+   },
+   {
+    "id": "w48",
+    "from": {
+     "node": "buoc",
+     "port": "step1"
+    },
+    "to": {
+     "node": "chu-thang",
+     "port": "show"
+    }
+   },
+   {
+    "id": "w49",
+    "from": {
+     "node": "buoc",
+     "port": "step2"
+    },
+    "to": {
+     "node": "chu-quay",
+     "port": "show"
+    }
+   }
+  ],
+  "settings": {
+   "wireRule": true
+  }
+ },
+ "notes": [
+  {
+   "id": "n1",
+   "text": "Robot đi hình vuông: robot tự đi một cạnh dài 2 m, dừng lại, quay tại chỗ 90 độ, rồi đi cạnh tiếp theo. Cứ thế lặp lại. Bấm Chạy và xem. Đường xanh trên sàn là hình vuông mẫu để so.",
+   "color": "yellow",
+   "pos": {
+    "x": 40,
+    "y": 3100
+   },
+   "size": {
+    "w": 300,
+    "h": 130
+   }
+  },
+  {
+   "id": "n2",
+   "text": "Robot không có mắt: nó chỉ tự đếm. \"Quãng đường\" của Thân robot đếm mét đã đi (như đồng hồ đo quãng đường). \"Hướng\" cho biết robot đang quay mặt về đâu (độ). \"Vòng bánh trái\" đếm số vòng bánh đã quay (bộ mã hóa, encoder).",
+   "color": "green",
+   "pos": {
+    "x": 400,
+    "y": 3100
+   },
+   "size": {
+    "w": 330,
+    "h": 170
+   }
+  },
+  {
+   "id": "n3",
+   "text": "Chuỗi bước có 2 bước: bước 1 đi thẳng, bước 2 quay tại chỗ. Đi đủ 2 m thì sang bước 2. Hướng đã đổi đủ 90 độ so với đầu cạnh thì sang bước 1 lại. Hướng chạy vòng từ -180 đến 180 nên cần thêm vài ô So sánh để xử lý chỗ vòng. Quãng đường được đặt lại về 0 mỗi lần bắt đầu quay.",
+   "color": "blue",
+   "pos": {
+    "x": 760,
+    "y": 3100
+   },
+   "size": {
+    "w": 340,
+    "h": 190
+   }
+  },
+  {
+   "id": "n4",
+   "text": "Thử đổi thông số: (1) Số cố định đang là 2 (độ dài cạnh) đổi thành 3: hình vuông to hơn. (2) Số cố định đang là 89 (góc quay) đổi thành 80: robot quay thiếu, đi hình lệch và không khép lại. (Là 89 chứ không phải 90 vì robot còn quay thêm một chút do quán tính.) (3) Rút dây Quãng đường thì robot đi thẳng mãi; rút dây Hướng thì robot quay mãi.",
+   "color": "pink",
+   "pos": {
+    "x": 1120,
+    "y": 3100
+   },
+   "size": {
+    "w": 360,
+    "h": 210
+   }
+  }
+ ]
+}

@@ -1,7 +1,7 @@
 {
  "format_version": 1,
  "name": "Robot dò đường",
- "mode": "2d-top",
+ "mode": "3d",
  "graph": {
   "nodes": [
    {
@@ -14,8 +14,8 @@
       "y": 0.5,
       "z": 0
      },
-     "length": 12.0,
-     "breadth": 5.0,
+     "length": 12,
+     "breadth": 5,
      "width": 0.3
     },
     "pos": {
@@ -29,7 +29,7 @@
     "params": {
      "position": {
       "x": 4.243,
-      "y": 0.3,
+      "y": 0.8,
       "z": 2.5
      },
      "length": 0.9,
@@ -117,9 +117,9 @@
     "id": "pid",
     "kind": "pid",
     "params": {
-     "kp": 3.0,
-     "ki": 0.0,
-     "kd": 0.0,
+     "kp": 3,
+     "ki": 0,
+     "kd": 0,
      "target": 0,
      "outMin": -1,
      "outMax": 1
@@ -214,11 +214,34 @@
     "kind": "camera",
     "params": {
      "mode": "follow",
-     "zoom": 0.8
+     "zoom": 0.7,
+     "view": "tilted",
+     "smoothness": 5
     },
     "pos": {
      "x": 40,
      "y": 680
+    }
+   },
+   {
+    "id": "san",
+    "kind": "block",
+    "params": {
+     "position": {
+      "x": 0,
+      "y": 0,
+      "z": 0
+     },
+     "size": {
+      "x": 24,
+      "y": 1,
+      "z": 16
+     },
+     "color": "#d6d3d1"
+    },
+    "pos": {
+     "x": 1120,
+     "y": 940
     }
    }
   ],
@@ -545,15 +568,15 @@
   },
   {
    "id": "n4",
-   "text": "Thử chỉnh Kp trong Bộ PID: Kp = 0 thì robot không lái nữa và đi lệch khỏi line. Rút bất kỳ dây nào thì robot hỏng.",
+   "text": "Thử đổi thông số: (1) Bộ PID, Kp từ 3 xuống 0: robot không lái nữa và đi lệch khỏi line. (2) Phép nhân \"Số cố định\" đang là 1.3 (hệ số tốc độ) đổi thành 2: chạy nhanh hơn, có thể văng khỏi line. (3) Mắt trái và mắt phải, \"Lệch ngang\" 0.2 đổi thành 0.35: robot cảm nhận line thô hơn.",
    "color": "pink",
    "pos": {
     "x": 1120,
     "y": 1040
    },
    "size": {
-    "w": 320,
-    "h": 130
+    "w": 360,
+    "h": 170
    }
   }
  ]

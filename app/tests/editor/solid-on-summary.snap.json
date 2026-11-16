@@ -346,7 +346,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "ff6c93e3"
+   "hash": "2857517b"
   },
   "on": {
    "ended": "running",
@@ -354,7 +354,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "ff6c93e3"
+   "hash": "2857517b"
   }
  },
  {
@@ -374,6 +374,44 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "f96030ac"
+  }
+ },
+ {
+  "id": "sample:robot-avoid",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58d8376"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "58d8376"
+  }
+ },
+ {
+  "id": "sample:robot-square",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "d6963b32"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "d6963b32"
   }
  },
  {
