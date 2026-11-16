@@ -464,9 +464,9 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const e = byId.get(id);
       return e ? materialOf(e) : null;
     },
-    applySqueeze(id: EntityId, forceN: number): boolean {
+    applySqueeze(id: EntityId, forceN: number, direction?: Vec3): boolean {
       const e = byId.get(id);
-      return !!e && e.visible && squeeze(e, forceN);
+      return !!e && e.visible && squeeze(e, forceN, direction);
     },
     massOn(id: EntityId): number {
       const e = byId.get(id);

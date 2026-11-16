@@ -2,6 +2,7 @@ import type { EntityId, EntityView, NodeDef, Vec3, ViewMode } from '../engine/ty
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
 import { actuatorFrame, approach, exceeds, planPush, targetLength, type PushBody, type PushOrient } from '../world/linear-actuator';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
+import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 interface PistonState {
@@ -110,7 +111,12 @@ export const linearActuatorNode: NodeDef<PistonState> = {
       ctx.world.spawn({ kind: 'block', ownerNodeId: ctx.nodeId, position: { x: 0, y: -1000, z: 0 }, size: { x: length, y: thick, z: thick }, color, solid: false });
     const barrel = barrelLen(stroke);
     const thick = housingThick(size);
-    return { head, housing: part(barrel, thick), rod: part(barrel * ROD_SHARE, thick * 0.4), len: 0 };
+    const housing = part(barrel, thick);
+    const rod = part(barrel * ROD_SHARE, thick * 0.4);
+    setArmHint(ctx.nodeId, head, { part: 'head' });
+    setArmHint(ctx.nodeId, housing, { part: 'housing' });
+    setArmHint(ctx.nodeId, rod, { part: 'rod' });
+    return { head, housing, rod, len: 0 };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;

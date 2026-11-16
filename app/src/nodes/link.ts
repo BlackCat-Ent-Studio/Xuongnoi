@@ -1,6 +1,7 @@
 import type { EntityId, NodeDef } from '../engine/types';
 import { advance, localToWorld } from '../world/arm-kinematics';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
+import { setArmHint } from '../engine/render-hints';
 import { asObject, numParam, strParam } from './util';
 
 interface LinkState {
@@ -38,6 +39,7 @@ export const linkNode: NodeDef<LinkState> = {
       color: strParam(params, 'color', '#a3a3a3'),
       solid: false,
     });
+    setArmHint(ctx.nodeId, id, { part: 'link' });
     return { id };
   },
   evaluate(ctx, i, params, s) {

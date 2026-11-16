@@ -2,6 +2,7 @@ import type { EntityId, NodeDef } from '../engine/types';
 import { DEG, rotateFrame, sagDirection, stepJoint, horizontalArm, type Frame } from '../world/arm-kinematics';
 import { jointCanLift } from '../world/mechanics';
 import { armRegistry, baseFrame, massesBeyond, placeBox } from './arm-parts';
+import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 interface JointState {
@@ -69,6 +70,7 @@ export const jointNode: NodeDef<JointState> = {
       color: strParam(params, 'color', '#8b5cf6'),
       solid: false,
     });
+    setArmHint(ctx.nodeId, id, { part: 'joint', axis: strParam(params, 'axis', 'pitch') === 'yaw' ? 'yaw' : 'pitch' });
     return { id, angle: clamp(numParam(params, 'start', 0), lo, hi) };
   },
   evaluate(ctx, i, params, s) {
@@ -108,6 +110,8 @@ export const jointNode: NodeDef<JointState> = {
       dt: ctx.dt,
     });
     s.angle = step.angle;
+    // Drawing only: the renderer shows the servo's axis and a warning while it is overloaded.
+    setArmHint(ctx.nodeId, s.id, { part: 'joint', axis, overloaded: step.overloaded });
 
     const out: Frame = rotateFrame(base, axis, s.angle * DEG, ctx.mode);
     reg.frames.set(s.id, out);

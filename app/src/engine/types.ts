@@ -577,6 +577,8 @@ export interface EntityView {
   crushLimit?: number;
   /** Present (true) once a squeeze above the crush limit broke it; stays until the game restarts. The renderer draws it squashed and darker. */
   damaged?: boolean;
+  /** Present only on a damaged body that was squeezed sideways: the horizontal axis it is flattened along. Absent = flattened in height. */
+  squeezeAxis?: 'x' | 'z';
   visible: boolean;
 }
 
@@ -658,8 +660,9 @@ export interface WorldApi {
   /**
    * Presses the body with `forceN` newtons. When the force is above its crush limit (limit > 0) it becomes damaged for the
    * rest of the run. Returns whether the body is damaged now. Unknown ids, hidden bodies and bad numbers change nothing.
+   * `direction` (optional) is the way the fingers pressed; the renderer then flattens the body along that axis instead of its height.
    */
-  applySqueeze(id: EntityId, forceN: number): boolean;
+  applySqueeze(id: EntityId, forceN: number, direction?: Vec3): boolean;
   /** Total mass (kg) standing on the body: everything whose underside rests on its top face, and what is stacked on those in turn. */
   massOn(id: EntityId): number;
   /** Mass (kg) of what the character carries (above the head plus in hand); 0 for anything else. */

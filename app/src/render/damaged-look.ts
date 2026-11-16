@@ -17,9 +17,23 @@ export function damagedColor(color: string): string {
   return `#${ch.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
 }
 
-/** What the renderer draws for a body: the entity itself, or for a damaged one a squashed, darker copy that keeps its underside in place. Collision is untouched. */
+/**
+ * What the renderer draws for a body: the entity itself, or for a damaged one a squashed, darker copy that keeps its underside in place.
+ * A body the gripper broke is flattened along the way the fingers pressed (`squeezeAxis`) and bulges a little in the other directions;
+ * otherwise it is flattened in height. Collision is untouched.
+ */
 export function damagedView(e: EntityView): EntityView {
   if (!e.damaged) return e;
+  if (e.squeezeAxis) {
+    const x = e.squeezeAxis === 'x';
+    const height = e.size.y * DAMAGED_WIDEN;
+    return {
+      ...e,
+      size: { x: e.size.x * (x ? DAMAGED_HEIGHT : DAMAGED_WIDEN), y: height, z: e.size.z * (x ? DAMAGED_WIDEN : DAMAGED_HEIGHT) },
+      position: { x: e.position.x, y: e.position.y - e.size.y / 2 + height / 2, z: e.position.z },
+      color: damagedColor(e.color),
+    };
+  }
   const height = e.size.y * DAMAGED_HEIGHT;
   const floor = e.position.y - e.size.y / 2;
   return {
