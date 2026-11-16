@@ -57,6 +57,8 @@ import { uiPickNode } from './ui-pick';
 import { uiStartNode } from './ui-start';
 import { robotBodyNode } from './robot-body';
 import { motorNode } from './motor';
+import { lineSensorNode } from './line-sensor';
+import { lineTrackNode } from './line-track';
 import { applyNodeNames } from './node-names';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
@@ -131,6 +133,8 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   uiStartNode,
   robotBodyNode,
   motorNode,
+  lineTrackNode,
+  lineSensorNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.

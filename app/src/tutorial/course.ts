@@ -23,6 +23,7 @@ export const COURSE: readonly Chapter[] = [
   { id: 'robots', title: 'Robot', lessonIds: ['two-motor-robot'] },
   { id: 'delivery', title: 'Giao hàng', lessonIds: ['cargo-delivery', 'guide-arrow'] },
   { id: 'numbers-ui', title: 'Số và giao diện', lessonIds: ['health-color', 'start-screen', 'ask-dialog'] },
+  { id: 'robots', title: 'Robot', lessonIds: ['line-eyes'] },
   { id: 'real-games', title: 'Làm game thật', lessonIds: ['editor-tools', 'groups', 'capstone-factory'] },
 ];
 

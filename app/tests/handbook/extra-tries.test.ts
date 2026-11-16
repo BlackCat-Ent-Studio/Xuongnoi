@@ -11,8 +11,8 @@ registerAllNodes();
 const extras = HANDBOOK.flatMap((e) => (e.extraTries ?? []).map((t) => ({ kind: e.kind, ...t })));
 
 describe('handbook extra try-boards', () => {
-  it('exist for route-follow pointsFrom and block showHiddenOut', () => {
-    expect(extras.map((e) => e.kind).sort()).toEqual(['block', 'route-follow']);
+  it('exist for route-follow pointsFrom, block showHiddenOut and the line sensor in 3D', () => {
+    expect(extras.map((e) => e.kind).sort()).toEqual(['block', 'line-sensor', 'route-follow']);
   });
 
   for (const extra of extras) {

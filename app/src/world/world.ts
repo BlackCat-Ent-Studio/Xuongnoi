@@ -333,6 +333,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         ...(spec.kind === 'block' && spec.zone ? { zone: true } : {}),
         ...(spec.kind === 'block' && spec.blockStyle && spec.blockStyle !== 'box' ? { blockStyle: spec.blockStyle } : {}),
         ...(spec.kind === 'block' && spec.label ? { label: spec.label } : {}),
+        ...(spec.kind === 'block' && spec.track ? { track: spec.track } : {}),
         ...(spec.kind === 'item' && spec.tag ? { tag: spec.tag } : {}),
         visible: true,
         onGround: false,

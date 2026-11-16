@@ -110,5 +110,8 @@
  "lesson:step-run": "b3a8ec9e:900",
  "lesson:two-motor-robot": "2124dd11:900",
  "handbook:robot-body": "c6e51c6d:900",
- "handbook:motor": "abcdfe78:900"
+ "handbook:motor": "abcdfe78:900",
+ "lesson:line-eyes": "84812efc:900",
+ "handbook:line-track": "e50e2334:900",
+ "handbook:line-sensor": "e50e2334:900"
 }
