@@ -21,6 +21,7 @@ export const COURSE: readonly Chapter[] = [
   { id: 'world', title: 'Thế giới', lessonIds: ['chance-zones', 'camera-portals', 'collider-gravity', 'conveyor', 'weight-force'] },
   { id: 'vehicles', title: 'Xe cộ', lessonIds: ['vehicles', 'bot-driver', 'route-traffic', 'train'] },
   { id: 'delivery', title: 'Giao hàng', lessonIds: ['cargo-delivery', 'guide-arrow'] },
+  { id: 'robots', title: 'Robot', lessonIds: ['robot-arm'] },
   { id: 'numbers-ui', title: 'Số và giao diện', lessonIds: ['health-color', 'start-screen', 'ask-dialog'] },
   { id: 'real-games', title: 'Làm game thật', lessonIds: ['editor-tools', 'groups', 'capstone-factory'] },
 ];

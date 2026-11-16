@@ -109,5 +109,10 @@
  "handbook:nearest-item": "d23d21a4:900",
  "lesson:step-run": "b3a8ec9e:900",
  "lesson:weight-force": "b3f8a76f:900",
- "handbook:force-sensor": "c4d66dd8:900"
+ "handbook:force-sensor": "c4d66dd8:900",
+ "sample:robot-arm": "f96030ac:900",
+ "lesson:robot-arm": "25d74ad5:900",
+ "handbook:joint": "38c1a148:900",
+ "handbook:link": "d61bda73:900",
+ "handbook:gripper": "8ad1cc30:900"
 }

@@ -697,6 +697,53 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'joint': {
+    vi: 'Khớp xoay (Servo)',
+    en: 'Revolute Joint / Servo',
+    ports: {
+      in: {
+        'base': ['Gắn vào', 'Mounted on'],
+        'angle': ['Góc đặt', 'Target angle'],
+        'power': ['Bật', 'Enable'],
+      },
+      out: {
+        'tip': ['Đầu khớp', 'Joint tip'],
+        'angleNow': ['Góc hiện tại', 'Current angle'],
+        'load': ['Mô-men đang chịu', 'Torque load'],
+        'overloaded': ['Quá tải', 'Overloaded'],
+      },
+    },
+  },
+  'link': {
+    vi: 'Thanh nối',
+    en: 'Link / Arm Segment',
+    ports: {
+      in: {
+        'base': ['Gắn vào', 'Mounted on'],
+      },
+      out: {
+        'tip': ['Đầu thanh', 'Link tip'],
+      },
+    },
+  },
+  'gripper': {
+    vi: 'Tay kẹp',
+    en: 'Gripper',
+    ports: {
+      in: {
+        'base': ['Gắn vào', 'Mounted on'],
+        'close': ['Kẹp', 'Close'],
+        'force': ['Lực kẹp', 'Grip force'],
+      },
+      out: {
+        'holding': ['Đang giữ', 'Holding'],
+        'held': ['Vật đang giữ', 'Held object'],
+        'gripForce': ['Lực đang kẹp', 'Grip force'],
+        'slipped': ['Khi vật tuột', 'On slip'],
+        'crushedOut': ['Khi làm hỏng vật', 'On crush'],
+      },
+    },
+  },
   'speed-sensor': {
     vi: 'Đo tốc độ',
     en: 'Speed',

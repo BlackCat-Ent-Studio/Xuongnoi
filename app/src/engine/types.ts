@@ -494,6 +494,8 @@ export interface EntityView {
    * Solid blocks: how far the picture still lags behind the snapped quarter turn. Non-solid blocks: the full spin angle.
    */
   angle?: number;
+  /** Non-solid blocks only: pitch in radians (3D view), absent when level. */
+  tilt?: number;
   /** Collision box (center and full size), present only when it differs from `position` / `size`. */
   collider?: { position: Vec3; size: Vec3 };
   /** Present only when set to something other than the default of its kind; WorldApi.materialOf always gives the effective values. */
@@ -722,6 +724,8 @@ export interface WorldApi {
    * touch through their real rotated outline.
    */
   setBlockAngle(id: EntityId, rad: number): boolean;
+  /** Pitches a non-solid block about its own width axis (radians). Drawn in the 3D view only; the other views ignore it. */
+  setBlockTilt(id: EntityId, rad: number): void;
   /** Sets the live signed surface speed (units/s along the belt axis) of a conveyor block; ignored for other entities. 0 = stopped. */
   setBeltSpeed(id: EntityId, speed: number): void;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */

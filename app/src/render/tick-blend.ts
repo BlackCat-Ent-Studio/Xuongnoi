@@ -9,10 +9,11 @@ interface Pose {
   y: number;
   z: number;
   angle: number | undefined;
+  tilt: number | undefined;
 }
 
 function poseOf(e: EntityView): Pose {
-  return { x: e.position.x, y: e.position.y, z: e.position.z, angle: e.angle };
+  return { x: e.position.x, y: e.position.y, z: e.position.z, angle: e.angle, tilt: e.tilt };
 }
 
 /**
@@ -50,12 +51,13 @@ export class TickBlender {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const dz = to.z - from.z;
-      if (dx === 0 && dy === 0 && dz === 0 && from.angle === to.angle) return e;
+      if (dx === 0 && dy === 0 && dz === 0 && from.angle === to.angle && from.tilt === to.tilt) return e;
       if (Math.hypot(dx, dy, dz) > BLEND_MAX_STEP) return e;
       const out: EntityView = { ...e, position: { x: from.x + dx * a, y: from.y + dy * a, z: from.z + dz * a } };
       if (from.angle !== undefined && to.angle !== undefined) {
         out.angle = from.angle + shortestAngle(to.angle - from.angle) * a;
       }
+      if (from.tilt !== undefined && to.tilt !== undefined) out.tilt = from.tilt + (to.tilt - from.tilt) * a;
       return out;
     });
   }

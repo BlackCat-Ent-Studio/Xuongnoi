@@ -1,0 +1,90 @@
+import type { EntityId, EvalCtx, Vec3, WorldApi } from '../engine/types';
+import { localToWorld, type Frame } from '../world/arm-kinematics';
+
+/**
+ * What the arm pieces of one running game know about each other. Wires carry only "an object" between pieces, so the
+ * pose of every link and the weight hanging beyond every joint travel through this table (one per world). Pieces
+ * evaluate base-first, so a piece always sees the frame of whatever it is mounted on from the same tick; the loads
+ * flow the other way and are the ones the pieces beyond wrote on the previous tick.
+ */
+
+/** A mass hanging somewhere on the arm. */
+export interface ArmMass {
+  kg: number;
+  point: Vec3;
+}
+
+export interface ArmPart {
+  /** Last tick this part wrote its record. */
+  tick: number;
+  /** The object it is mounted on (a joint tip, a link tip or a plain entity). */
+  baseId: EntityId | null;
+  /** Its own entity: the handle of its `tip` output (grippers have none). */
+  tipId: EntityId | null;
+  masses: ArmMass[];
+}
+
+export interface ArmRegistry {
+  /** Output frame of every joint and link, by the entity id its `tip` output carries. */
+  frames: Map<EntityId, Frame>;
+  parts: Map<string, ArmPart>;
+}
+
+const registries = new WeakMap<object, ArmRegistry>();
+
+export function armRegistry(world: WorldApi): ArmRegistry {
+  let r = registries.get(world);
+  if (!r) {
+    r = { frames: new Map(), parts: new Map() };
+    registries.set(world, r);
+  }
+  return r;
+}
+
+/** A record older than this many ticks belongs to a piece that stopped running. */
+const STALE_TICKS = 3;
+
+/** Every mass mounted beyond `tipId` (links, grippers, what they hold, further joints), at the places they were last drawn. */
+export function massesBeyond(reg: ArmRegistry, tipId: EntityId, tick: number): ArmMass[] {
+  const out: ArmMass[] = [];
+  const seen = new Set<EntityId>([tipId]);
+  const queue: EntityId[] = [tipId];
+  while (queue.length > 0) {
+    const at = queue.shift()!;
+    for (const part of reg.parts.values()) {
+      if (part.baseId !== at || tick - part.tick > STALE_TICKS) continue;
+      out.push(...part.masses);
+      if (part.tipId !== null && !seen.has(part.tipId)) {
+        seen.add(part.tipId);
+        queue.push(part.tipId);
+      }
+    }
+  }
+  return out;
+}
+
+/** Frame of what a piece is mounted on, shifted by `mount` (local x along, y up, z sideways). Null when the object is unknown or hidden. */
+export function baseFrame(ctx: EvalCtx, baseId: EntityId | null, mount: Vec3): Frame | null {
+  if (baseId === null) return null;
+  const known = armRegistry(ctx.world).frames.get(baseId);
+  let frame: Frame;
+  if (known) {
+    frame = known;
+  } else {
+    const view = ctx.world.getEntity(baseId);
+    if (!view || !view.visible) return null;
+    frame = { pos: view.position, yaw: 0, pitch: 0 };
+  }
+  return { pos: localToWorld(frame, mount), yaw: frame.yaw, pitch: frame.pitch };
+}
+
+/** Puts a drawn (non-solid) box at `centre` with the arm's heading. The flat views read one turn: the side view pitch, the top view yaw. */
+export function placeBox(world: WorldApi, mode: EvalCtx['mode'], id: EntityId, centre: Vec3, frame: Frame): void {
+  world.moveBlock(id, centre);
+  if (mode === '2d-side') {
+    world.setBlockAngle(id, frame.pitch);
+  } else {
+    world.setBlockAngle(id, frame.yaw);
+    if (mode === '3d') world.setBlockTilt(id, frame.pitch);
+  }
+}

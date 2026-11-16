@@ -38,6 +38,8 @@ export interface TurnState {
   spin: number;
   /** True = spin is live, so touches use the rotated outline. */
   spinning: boolean;
+  /** Extra tilt in radians about the block's own width axis (non-solid blocks; the 3D view pitches the beam with it). */
+  tilt?: number;
   /** Plane the turn happens in: x/y in the side view, x/z otherwise. */
   plane: 'xy' | 'xz';
 }
@@ -206,6 +208,11 @@ export function spinBlockTo(p: Entity, rad: number, mode: ViewMode): void {
   t.spinning = true;
 }
 
+/** Sets the tilt (pitch) of a non-solid block, drawn in the 3D view. */
+export function tiltBlockTo(p: Entity, rad: number, mode: ViewMode): void {
+  ensureTurn(p, mode).tilt = finiteOr(rad, 0);
+}
+
 /** Lets the picture of turned solid blocks catch up with their snapped orientation. */
 export function settleTurns(list: readonly Entity[], dt: number): void {
   for (const e of list) {
@@ -217,10 +224,10 @@ export function settleTurns(list: readonly Entity[], dt: number): void {
 }
 
 /** The renderer-facing angle of a block (empty when there is nothing to turn). */
-export function turnAngle(e: Entity): { angle?: number } {
+export function turnAngle(e: Entity): { angle?: number; tilt?: number } {
   const t = e.turn;
   if (!t) return {};
-  if (!e.solid) return t.spinning ? { angle: t.spin } : {};
+  if (!e.solid) return { ...(t.spinning ? { angle: t.spin } : {}), ...(t.tilt ? { tilt: t.tilt } : {}) };
   return Math.abs(t.offset) > 1e-4 ? { angle: t.offset } : {};
 }
 

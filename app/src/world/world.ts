@@ -17,7 +17,7 @@ import type {
 } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { toView, type Entity } from './entity';
-import { moveBlockTo, settleTurns, spinBlockTo, turnSolidTo } from './platforms';
+import { moveBlockTo, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDropSpot } from './solid-bodies';
@@ -718,6 +718,12 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (e.solid) return turnSolidTo(list, e, angle / (Math.PI / 2), mode);
       spinBlockTo(e, angle, mode);
       return true;
+    },
+    setBlockTilt(id: EntityId, rad: number): void {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'block' || !e.visible || e.solid) return;
+      markMover(e);
+      tiltBlockTo(e, finiteOr(rad, 0), mode);
     },
     shoot(shooter: EntityId, spec: ShotSpec): EntityId | null {
       const s = byId.get(shooter);

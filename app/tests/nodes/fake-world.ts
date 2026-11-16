@@ -107,6 +107,7 @@ export function makeWorld(): FakeWorld {
     setBeltSpeed: () => undefined,
     moveBlock: () => true,
     setBlockAngle: () => true,
+    setBlockTilt: () => undefined,
     shoot: () => null,
     shotHits: () => [],
   };

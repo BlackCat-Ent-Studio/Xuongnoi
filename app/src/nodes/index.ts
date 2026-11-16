@@ -39,6 +39,9 @@ import { zoneSensorNode } from './zone-sensor';
 import { cargoNode } from './cargo';
 import { distanceNode } from './distance';
 import { forceSensorNode } from './force-sensor';
+import { gripperNode } from './gripper';
+import { jointNode } from './joint';
+import { linkNode } from './link';
 import { speedSensorNode } from './speed-sensor';
 import { aheadSensorNode } from './ahead-sensor';
 import { visionSensorNode } from './vision-sensor';
@@ -122,6 +125,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   portalNode,
   movingPlatformNode,
   rotatingPlatformNode,
+  jointNode,
+  linkNode,
+  gripperNode,
   shooterNode,
   spawnerNode,
   uiButtonNode,

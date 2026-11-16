@@ -15,7 +15,8 @@ import portalCamera from '../samples/portal-camera.json';
 import dodgeShoot from '../samples/dodge-shoot.json';
 import cityDelivery from '../samples/city-delivery.json';
 import cityDelivery3d from '../samples/city-delivery-3d.json';
-import { parseBoard } from './save-format';
+import { createRobotArmBoard } from '../samples/robot-arm-board';
+import { parseBoard, serializeBoard } from './save-format';
 
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'side-stars', label: 'Nhặt sao (nhảy 2D)', json: side },
@@ -34,6 +35,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'dodge-shoot', label: 'Né và bắn (bệ di chuyển, bệ xoay, bắn đạn, đá rơi, 2D)', json: dodgeShoot },
   { id: 'city-delivery', label: 'Thành phố giao hàng (lái xe tải giao hàng, nhìn từ trên)', json: cityDelivery },
   { id: 'city-delivery-3d', label: 'Thành phố giao hàng 3D (nhiều khu, xe cộ, đèn giao thông)', json: cityDelivery3d },
+  { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
 ];
 
 /** Fresh copies on every call, so callers may mutate the boards freely. */
