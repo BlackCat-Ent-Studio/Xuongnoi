@@ -394,6 +394,14 @@ export interface EntitySpec {
   friction?: number;
   /** Items only: 0..1 share of the fall speed given back on landing. Omitted / 0 = no bounce. */
   bounce?: number;
+
+  // ---- material in SI units (omitted = the default for the kind; none of it moves anything in the game physics) ----
+  /** Mass in kg. Omitted = block 10, item 1, character 60, vehicle 1000. */
+  mass?: number;
+  /** Surface friction coefficient, 0..1.5. Omitted = 0.5. */
+  mu?: number;
+  /** Largest squeeze in N the body survives (see WorldApi.applySqueeze). 0 / omitted = never breaks. */
+  crushLimit?: number;
 }
 
 /** How a shot leaves a shooter. */
@@ -488,6 +496,12 @@ export interface EntityView {
   angle?: number;
   /** Collision box (center and full size), present only when it differs from `position` / `size`. */
   collider?: { position: Vec3; size: Vec3 };
+  /** Present only when set to something other than the default of its kind; WorldApi.materialOf always gives the effective values. */
+  mass?: number;
+  mu?: number;
+  crushLimit?: number;
+  /** Present (true) once a squeeze above the crush limit broke it; stays until the game restarts. The renderer draws it squashed and darker. */
+  damaged?: boolean;
   visible: boolean;
 }
 
@@ -551,6 +565,20 @@ export interface WorldApi {
   setEntityStyle(id: EntityId, style: { color?: string; look?: string }): void;
   /** Free-text goods type of an item ("Loại hàng"); '' when unset or the id is unknown. */
   tagOf(id: EntityId): string;
+
+  // ---- material in SI units (kg, N): read by scales, grippers and joints ----
+
+  /** Mass (kg), surface friction coefficient, crush limit (N, 0 = never) and damaged state of a body; null for an unknown id. */
+  materialOf(id: EntityId): { massKg: number; mu: number; crushLimitN: number; damaged: boolean } | null;
+  /**
+   * Presses the body with `forceN` newtons. When the force is above its crush limit (limit > 0) it becomes damaged for the
+   * rest of the run. Returns whether the body is damaged now. Unknown ids, hidden bodies and bad numbers change nothing.
+   */
+  applySqueeze(id: EntityId, forceN: number): boolean;
+  /** Total mass (kg) standing on the body: everything whose underside rests on its top face, and what is stacked on those in turn. */
+  massOn(id: EntityId): number;
+  /** Mass (kg) of what the character carries (above the head plus in hand); 0 for anything else. */
+  massHeld(id: EntityId): number;
   isOnGround(id: EntityId): boolean;
   /** Contact state from the last physics step (works for solid and non-solid). */
   isTouching(a: EntityId, b: EntityId): boolean;
@@ -561,8 +589,13 @@ export interface WorldApi {
 
   // ---- items: carry / drop / throw / interact (applied immediately, positions settle on the next step) ----
 
-  /** Picks up the nearest free carryable item within `reach` (prefers the facing side). One item per character. */
-  grab(character: EntityId, reach: number): EntityId | null;
+  /**
+   * Picks up the nearest free carryable item within `reach` (prefers the facing side). One item per character.
+   * `maxMassKg` > 0: an item heavier than that cannot be lifted (returns null); omitted / 0 = no weight limit.
+   */
+  grab(character: EntityId, reach: number, maxMassKg?: number): EntityId | null;
+  /** True when the item `grab` would pick is too heavy for `maxMassKg` (> 0), so a failed grab was caused by weight. */
+  tooHeavyToGrab(character: EntityId, reach: number, maxMassKg: number): boolean;
   /** Puts the held item down in front of the character (`distance` = center-to-center offset; omitted = just clear of the body). Returns the item, or null when nothing was held. */
   drop(character: EntityId, distance?: number): EntityId | null;
   /** Releases the held item with a forward-and-up velocity. Returns the item, or null when nothing was held. */

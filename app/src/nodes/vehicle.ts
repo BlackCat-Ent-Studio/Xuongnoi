@@ -1,7 +1,7 @@
 import type { EntityId, NodeDef, SteerMode, VehicleModel, VehicleSpec } from '../engine/types';
 import { VEHICLE_MODELS } from '../engine/types';
 import { vehicleSize } from '../world/vehicles';
-import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
+import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { asBool, asNum, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 function modelParam(raw: string): VehicleModel {
@@ -134,10 +134,11 @@ export const vehicleNode: NodeDef<VehicleState> = {
       advanced: true,
     },
     ...BODY_PARAMS,
+    ...materialParams('vehicle'),
   ],
   createOnly: [
     'model', 'position', 'color', 'solid', 'steerMode', 'maxSpeed', 'accel', 'collide',
-    'brake', 'reverseShare', 'crashSpeed', 'shove', ...BODY_PARAM_IDS,
+    'brake', 'reverseShare', 'crashSpeed', 'shove', ...BODY_PARAM_IDS, ...MATERIAL_PARAM_IDS,
   ],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
@@ -160,6 +161,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
         ...tuning(params),
       },
       ...bodySpec(params),
+      ...materialSpec(params, 'vehicle'),
     });
     return { id, seenHits: 0 };
   },

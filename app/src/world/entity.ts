@@ -91,6 +91,16 @@ export interface Entity {
   friction?: number;
   /** Items: 0..1 landing bounce; unset = none. */
   bounce?: number;
+
+  // ---- material (SI); unset = the default of the kind, see material.ts ----
+  /** Mass in kg. */
+  mass?: number;
+  /** Surface friction coefficient. */
+  mu?: number;
+  /** Largest squeeze in N it survives; unset = never breaks. */
+  crushLimit?: number;
+  /** Broken by a squeeze; stays so until the game restarts. */
+  damaged?: boolean;
 }
 
 function colliderView(e: Entity): { position: Vec3; size: Vec3 } {
@@ -124,6 +134,10 @@ export function toView(e: Entity): EntityView {
     ...(e.belt ? { belt: { axis: beltAxis(e), speed: e.belt.speed, phase: e.belt.phase } } : {}),
     ...turnAngle(e),
     ...(e.collider ? { collider: colliderView(e) } : {}),
+    ...(e.mass !== undefined ? { mass: e.mass } : {}),
+    ...(e.mu !== undefined ? { mu: e.mu } : {}),
+    ...(e.crushLimit !== undefined ? { crushLimit: e.crushLimit } : {}),
+    ...(e.damaged ? { damaged: true } : {}),
     visible: e.visible,
   };
 }

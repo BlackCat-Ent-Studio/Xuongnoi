@@ -1,5 +1,6 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
-import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
+import { MATERIAL_OUT_PARAMS, materialPortValues, materialPortsActive, DAMAGED_PORT, WEIGHT_PORT } from './material-ports';
+import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { DEFAULT_ITEM_FRICTION } from '../world/physics';
 import { asBool, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
@@ -51,6 +52,7 @@ export const itemNode: NodeDef<ItemState> = {
     { id: 'inHand', type: 'bool', label: 'Đang cầm tay' },
     { id: 'usedOn', type: 'bool', label: 'Khi bị dùng lên' },
   ],
+  optionalOutputs: { all: [DAMAGED_PORT, WEIGHT_PORT], active: materialPortsActive },
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 0.6, y: 0.6, z: 0.6 } },
@@ -85,10 +87,12 @@ export const itemNode: NodeDef<ItemState> = {
     { id: 'damage', label: 'Sát thương (0 = tuỳ loại)', kind: 'number', default: 0, min: 0, max: 100, step: 1 },
     { id: 'tag', label: 'Loại hàng (chữ, để trống nếu không cần)', kind: 'text', default: '' },
     ...BODY_PARAMS,
+    ...materialParams('item'),
+    ...MATERIAL_OUT_PARAMS,
     { id: 'friction', label: 'Độ trượt (càng lớn càng mau dừng)', kind: 'number', default: DEFAULT_ITEM_FRICTION, min: 0, max: 40, step: 1, advanced: true },
     { id: 'bounce', label: 'Độ nảy (0 = không nảy, 1 = nảy lại hết)', kind: 'number', default: 0, min: 0, max: 1, step: 0.05, advanced: true },
   ],
-  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage', 'tag', ...BODY_PARAM_IDS, 'friction', 'bounce'],
+  createOnly: ['position', 'size', 'color', 'shape', 'carryable', 'holdStyle', 'damage', 'tag', ...BODY_PARAM_IDS, ...MATERIAL_PARAM_IDS, 'friction', 'bounce'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -106,12 +110,13 @@ export const itemNode: NodeDef<ItemState> = {
       damage: numParam(params, 'damage', 0),
       tag: strParam(params, 'tag', '').trim(),
       ...bodySpec(params),
+      ...materialSpec(params, 'item'),
       friction: numParam(params, 'friction', DEFAULT_ITEM_FRICTION),
       bounce: numParam(params, 'bounce', 0),
     });
     return { id, hide: { prev: false }, show: { prev: false }, hidden: false };
   },
-  evaluate(ctx, i, _params, s) {
+  evaluate(ctx, i, params, s) {
     if (risingEdge(s.hide, asBool(i.hide)) && !s.hidden) {
       s.hidden = true;
       ctx.world.hide(s.id);
@@ -127,6 +132,7 @@ export const itemNode: NodeDef<ItemState> = {
       interacted: ctx.world.wasInteracted(s.id),
       inHand: ctx.world.isInHand(s.id),
       usedOn: ctx.world.wasUsedOn(s.id),
+      ...materialPortValues(ctx, s.id, params),
     };
   },
 };

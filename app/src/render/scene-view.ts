@@ -9,6 +9,7 @@ import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
+import { damagedView, tintDamaged } from './damaged-look';
 import { ObjectHighlight } from './object-highlight';
 import { VisionFanLayer, type FanSpec } from './vision-fan';
 import type { StageFigure, StageTheme } from './stage-theme';
@@ -172,7 +173,8 @@ export class SceneView {
     stage?.observe(entities);
     const carried = stage ? this.findCarried(entities) : null;
     const hidden = new Set<string>();
-    for (const e of entities) {
+    for (const original of entities) {
+      const e = damagedView(original);
       if (!e.visible) hidden.add(e.id);
       // A tool in hand is drawn on its holder's figure, not as a separate object.
       if (!e.visible || e.inHand) continue;
@@ -186,6 +188,10 @@ export class SceneView {
       if (!entry) {
         entry = this.createEntry(e, role, entities);
         this.entries.set(e.id, entry);
+      }
+      if (original.damaged && entry.type !== 'block') {
+        const root = this.rootOf(entry);
+        if (root) tintDamaged(root);
       }
       if (entry.type === 'stage') {
         const holder = carried?.get(e.id);
@@ -233,7 +239,8 @@ export class SceneView {
           entry.figure.setColor(e.color);
           entry.color = e.color;
         }
-        entry.figure.update?.(e);
+        // The model is laid out for the whole body; the squashed object scale then flattens it instead of shrinking it.
+        entry.figure.update?.(original);
         entry.pose.updateMatrixWorld(true);
         continue;
       }

@@ -231,6 +231,24 @@ export const trySpeedSensor = (): Board =>
     [...WALKER_WIRES, ['hero', 'self', 'speed', 'who'], ['speed', 'speed', 'num', 'value'], ['speed', 'fast', 'hi', 'show']],
   );
 
+export const tryForceSensor = (): Board =>
+  build(
+    'Cảm biến lực / Cân',
+    'Bấm Chơi: ba thùng 2 kg, 5 kg và 10 kg rơi xuống bàn cân, số hiện 17 kg và 166,77 N. Bấm phím Cách để làm thùng 10 kg biến mất: số tụt còn 7 kg. Chọn một thùng, đổi "Khối lượng" trong Nâng cao rồi chơi lại để xem số đổi theo.',
+    [
+      { alias: 'floor', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: 0, z: 0 }, size: { x: 20, y: 1, z: 1 }, color: '#78716c' } },
+      { alias: 'scale', kind: 'block', x: 20, y: 250, params: { position: { x: 0, y: 0.7, z: 0 }, size: { x: 4, y: 0.4, z: 1 }, color: '#0ea5e9' } },
+      { alias: 'light', kind: 'item', x: 300, y: 20, params: { shape: 'crate', position: { x: -1.2, y: 3, z: 0 }, color: '#a16207', mass: 2 } },
+      { alias: 'mid', kind: 'item', x: 300, y: 250, params: { shape: 'crate', position: { x: 0, y: 3, z: 0 }, color: '#a16207', mass: 5 } },
+      { alias: 'heavy', kind: 'item', x: 300, y: 480, params: { shape: 'crate', position: { x: 1.2, y: 3, z: 0 }, color: '#ef4444', mass: 10 } },
+      keyNode('key', 480, 'Space'),
+      { alias: 'sensor', kind: 'force-sensor', x: 600, y: 20 },
+      { alias: 'kg', kind: 'show-number', x: 900, y: 20, params: { label: 'Khối lượng (kg)', corner: 'top-left' } },
+      { alias: 'newton', kind: 'show-number', x: 900, y: 200, params: { label: 'Lực (N)', corner: 'top-left' } },
+    ],
+    [['scale', 'self', 'sensor', 'who'], ['sensor', 'mass', 'kg', 'value'], ['sensor', 'force', 'newton', 'value'], ['key', 'pressed', 'heavy', 'hide']],
+  );
+
 export const tryAheadSensor = (): Board =>
   build(
     'Dò phía trước',

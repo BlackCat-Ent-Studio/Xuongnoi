@@ -4,6 +4,8 @@ export const SOLID_BODIES_TOPIC = 'topic:solid-bodies';
 export interface HandbookTopic {
   id: string;
   title: string;
+  /** Small label next to the title; omitted = the shared "Công tắc" label. */
+  tag?: string;
   intro: string;
   blocks: { heading: string; items: string[] }[];
 }

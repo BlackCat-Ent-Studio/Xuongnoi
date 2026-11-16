@@ -83,7 +83,7 @@ describe('block: optional output "Đang ẩn"', () => {
     const on: GraphNode = { id: 'y', kind: 'block', params: { showHiddenOut: 'yes' }, pos: { x: 0, y: 0 } };
     expect(activeOutputs(def, off.params).map((p) => p.id)).toEqual(['self', 'usedOn']);
     expect(activeOutputs(def, on.params).map((p) => p.id)).toEqual(['self', 'usedOn', 'hidden']);
-    expect(knownOutputs(def).map((p) => p.id)).toEqual(['self', 'usedOn', 'hidden']);
+    expect(knownOutputs(def).map((p) => p.id)).toEqual(['self', 'usedOn', 'hidden', 'damaged', 'weight']);
     expect(estimateNodeSize(on).h - estimateNodeSize(off).h).toBe(26);
     const g: Graph = { nodes: [off, { id: 'z', kind: 'block', params: {}, pos: { x: 0, y: 0 } }], wires: [] };
     expect(canConnect(g, { node: 'x', port: 'hidden' }, { node: 'z', port: 'hiddenWhile' })).toEqual({ ok: true });

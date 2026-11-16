@@ -1,6 +1,7 @@
 import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf } from '../engine/block-styles';
 import type { EntityId, NodeDef, Params, PortDef, Vec3, ViewMode } from '../engine/types';
-import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
+import { MATERIAL_OUT_PARAMS, materialPortValues, materialPortsActive, DAMAGED_PORT, WEIGHT_PORT } from './material-ports';
+import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { asBool, asNum, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 /** Surface speed of a belt-styled block whose speed param is left at 0. */
@@ -60,7 +61,10 @@ export const blockNode: NodeDef<BlockState> = {
     { id: 'self', type: 'object', label: 'Đối tượng' },
     { id: 'usedOn', type: 'bool', label: 'Khi bị dùng lên' },
   ],
-  optionalOutputs: { all: HIDDEN_PORTS, active: (params) => (strParam(params, 'showHiddenOut', 'no') === 'yes' ? HIDDEN_PORTS : []) },
+  optionalOutputs: {
+    all: [...HIDDEN_PORTS, DAMAGED_PORT, WEIGHT_PORT],
+    active: (params) => [...(strParam(params, 'showHiddenOut', 'no') === 'yes' ? HIDDEN_PORTS : []), ...materialPortsActive(params)],
+  },
   params: [
     { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 1, y: 1, z: 1 } },
@@ -132,8 +136,10 @@ export const blockNode: NodeDef<BlockState> = {
       advanced: true,
     },
     ...BODY_PARAMS,
+    ...materialParams('block'),
+    ...MATERIAL_OUT_PARAMS,
   ],
-  createOnly: ['position', 'size', 'color', 'type', 'style', 'signText', 'beltSpeed', 'beltDir', 'beltWalls', ...BODY_PARAM_IDS],
+  createOnly: ['position', 'size', 'color', 'type', 'style', 'signText', 'beltSpeed', 'beltDir', 'beltWalls', ...BODY_PARAM_IDS, ...MATERIAL_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -152,6 +158,7 @@ export const blockNode: NodeDef<BlockState> = {
       label: strParam(params, 'signText', '').trim(),
       ...(belt ? { belt: { axis: belt.axis, walls: belt.walls } } : {}),
       ...bodySpec(params),
+      ...materialSpec(params, 'block'),
     });
     return { id, pick: 0, hide: { prev: false }, show: { prev: false }, whilePrev: false, hidden: false, belt: belt ? belt.speed : null };
   },
@@ -188,6 +195,6 @@ export const blockNode: NodeDef<BlockState> = {
     if (s.belt != null) {
       ctx.world.setBeltSpeed(s.id, asBool(i.run) ? (asBool(i.reverse) ? -s.belt : s.belt) : 0);
     }
-    return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id), ...(strParam(params, 'showHiddenOut', 'no') === 'yes' ? { hidden: s.hidden } : {}) };
+    return { self: s.id, usedOn: ctx.world.wasUsedOn(s.id), ...(strParam(params, 'showHiddenOut', 'no') === 'yes' ? { hidden: s.hidden } : {}), ...materialPortValues(ctx, s.id, params) };
   },
 };

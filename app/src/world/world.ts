@@ -24,6 +24,7 @@ import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDro
 import type { WorldOptions } from './world-options';
 import { createPhysicsWatch } from '../dev/physics-watch';
 import { bodyTuning } from './body-tuning';
+import { massHeld, massOn, materialOf, materialTuning, squeeze } from './material';
 import { colliderBox, normalizeCollider } from './collider';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
@@ -348,6 +349,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
         ...bodyTuning(spec),
+        ...materialTuning(spec),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
@@ -429,17 +431,40 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     endGame(result: GameResult, message: string): void {
       if (!ended) ended = { result, message };
     },
-    grab(character: EntityId, reach: number): EntityId | null {
+    grab(character: EntityId, reach: number, maxMassKg?: number): EntityId | null {
       const c = liveCharacter(character);
       if (!c || c.holding !== null) return null;
       const item = nearestItem(c, reach, (it) => it.carryable && it.heldBy === null && it.holdStyle === 'head' && !(rules && isCovered(it, list)));
       if (!item) return null;
+      if (maxMassKg !== undefined && maxMassKg > 0 && materialOf(item).massKg > maxMassKg) return null;
       item.heldBy = c.id;
       c.holding = item.id;
       if (rules) turnToward(c, item);
       else Object.assign(item.pos, carryAt(c, item, mode, rules));
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
+    },
+    tooHeavyToGrab(character: EntityId, reach: number, maxMassKg: number): boolean {
+      const c = liveCharacter(character);
+      if (!c || c.holding !== null || !(maxMassKg > 0)) return false;
+      const item = nearestItem(c, reach, (it) => it.carryable && it.heldBy === null && it.holdStyle === 'head' && !(rules && isCovered(it, list)));
+      return !!item && materialOf(item).massKg > maxMassKg;
+    },
+    materialOf(id: EntityId) {
+      const e = byId.get(id);
+      return e ? materialOf(e) : null;
+    },
+    applySqueeze(id: EntityId, forceN: number): boolean {
+      const e = byId.get(id);
+      return !!e && e.visible && squeeze(e, forceN);
+    },
+    massOn(id: EntityId): number {
+      const e = byId.get(id);
+      return e && e.visible ? massOn(list, e) : 0;
+    },
+    massHeld(id: EntityId): number {
+      const e = byId.get(id);
+      return e && e.visible ? massHeld(byId, e) : 0;
     },
     drop(character: EntityId, distance?: number): EntityId | null {
       const c = liveCharacter(character);

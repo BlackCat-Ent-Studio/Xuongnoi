@@ -820,6 +820,25 @@
   }
  },
  {
+  "id": "lesson:weight-force",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  }
+ },
+ {
   "id": "lesson:vehicles",
   "off": {
    "ended": "running",
@@ -1378,6 +1397,25 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "74b21d90"
+  }
+ },
+ {
+  "id": "handbook:force-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c4d66dd8"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c4d66dd8"
   }
  },
  {

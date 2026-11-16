@@ -10,7 +10,12 @@ import { findLesson } from '../tutorial/lessons';
 import { handbookEntry, type HandbookEntry } from './index';
 import { buildRows, filterRows, levelOf, sectionsByCategory, sectionsByLevel, type HandbookRow } from './handbook-model';
 import { HANDBOOK_TEXT as T } from './handbook-text-vi';
-import { SOLID_BODIES_PAGE, SOLID_BODIES_TOPIC } from './topic-solid-bodies';
+import { SOLID_BODIES_PAGE, type HandbookTopic } from './topic-solid-bodies';
+import { ENGINEERING_PHYSICS_PAGE } from './topic-engineering-physics';
+
+/** Topic pages shown above the node lists. */
+const TOPICS: readonly HandbookTopic[] = [SOLID_BODIES_PAGE, ENGINEERING_PHYSICS_PAGE];
+const isTopic = (id: string): boolean => TOPICS.some((t) => t.id === id);
 import './handbook-dialog.css';
 import './handbook-standalone.css';
 
@@ -146,18 +151,22 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
   /** The "Va chạm thật" topic sits above the node lists; while searching it shows only when the words match. */
   function topicSection(): HTMLElement | null {
     const q = normalizeText(search.value);
-    if (q !== '' && !normalizeText(SOLID_BODIES_PAGE.title).includes(q)) return null;
+    const shown = TOPICS.filter((t) => q === '' || normalizeText(t.title).includes(q));
+    if (shown.length === 0) return null;
     const sec = h('section', 'hb-sec');
     sec.dataset.section = 'topics';
-    const on = selected === SOLID_BODIES_TOPIC;
-    const b = h('button', 'hb-row hb-topic' + (on ? ' selected' : ''));
-    b.type = 'button';
-    b.dataset.kind = SOLID_BODIES_TOPIC;
-    b.setAttribute('role', 'option');
-    b.setAttribute('aria-selected', String(on));
-    b.append(h('span', 'hb-row-label', SOLID_BODIES_PAGE.title), h('span', 'hb-tag', T.topicTag));
-    b.addEventListener('click', () => select(SOLID_BODIES_TOPIC));
-    sec.append(h('h3', 'hb-sec-h', T.topicsHeading), b);
+    sec.append(h('h3', 'hb-sec-h', T.topicsHeading));
+    for (const topic of shown) {
+      const on = selected === topic.id;
+      const b = h('button', 'hb-row hb-topic' + (on ? ' selected' : ''));
+      b.type = 'button';
+      b.dataset.kind = topic.id;
+      b.setAttribute('role', 'option');
+      b.setAttribute('aria-selected', String(on));
+      b.append(h('span', 'hb-row-label', topic.title), h('span', 'hb-tag', topic.tag ?? T.topicTag));
+      b.addEventListener('click', () => select(topic.id));
+      sec.append(b);
+    }
     return sec;
   }
 
@@ -262,13 +271,13 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
     return bar;
   }
 
-  function renderTopic(): void {
+  function renderTopic(topic: HandbookTopic): void {
     const title = h('div', 'hb-title');
     const names = h('div', 'hb-names');
-    names.append(h('h3', 'hb-node-name', SOLID_BODIES_PAGE.title), h('div', 'hb-meta', T.topicTag));
+    names.append(h('h3', 'hb-node-name', topic.title), h('div', 'hb-meta', topic.tag ?? T.topicTag));
     title.append(names);
-    const nodes: HTMLElement[] = [title, h('p', '', SOLID_BODIES_PAGE.intro)];
-    for (const block of SOLID_BODIES_PAGE.blocks) {
+    const nodes: HTMLElement[] = [title, h('p', '', topic.intro)];
+    for (const block of topic.blocks) {
       const ul = h('ul', 'hb-tips');
       for (const item of block.items) ul.append(h('li', '', item));
       nodes.push(section(block.heading, ul));
@@ -278,8 +287,9 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
   }
 
   function renderPage(): void {
-    if (selected === SOLID_BODIES_TOPIC) {
-      renderTopic();
+    const topic = TOPICS.find((t) => t.id === selected);
+    if (topic) {
+      renderTopic(topic);
       return;
     }
     const def: NodeDef | undefined = getNodeDef(selected);
@@ -334,8 +344,8 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
   function open(kind?: string): void {
     loadRows();
     search.value = '';
-    if (kind && (kind === SOLID_BODIES_TOPIC || getNodeDef(kind))) selected = kind;
-    else if (!selected || (selected !== SOLID_BODIES_TOPIC && !getNodeDef(selected))) selected = rows[0]?.kind ?? '';
+    if (kind && (isTopic(kind) || getNodeDef(kind))) selected = kind;
+    else if (!selected || (!isTopic(selected) && !getNodeDef(selected))) selected = rows[0]?.kind ?? '';
     renderList();
     renderPage();
     overlay.hidden = false;

@@ -107,5 +107,7 @@
  "lesson:nearest-bot": "70c8b34f:900",
  "lesson:two-goals-bot": "2abb091d:900",
  "handbook:nearest-item": "d23d21a4:900",
- "lesson:step-run": "b3a8ec9e:900"
+ "lesson:step-run": "b3a8ec9e:900",
+ "lesson:weight-force": "b3f8a76f:900",
+ "handbook:force-sensor": "c4d66dd8:900"
 }

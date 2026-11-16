@@ -4,6 +4,7 @@ import {
   tryColorSensor,
   tryCompare,
   tryDistance,
+  tryForceSensor,
   tryKey,
   tryLatch,
   tryNearestItem,
@@ -385,6 +386,29 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     ],
     lessonId: 'bot-senses',
     tryBoard: trySpeedSensor,
+  },
+  {
+    kind: 'force-sensor',
+    purpose: 'Cân và đo lực: cho biết trên một vật đang có bao nhiêu kg (và bao nhiêu niutơn) đè lên, hoặc nhân vật đang khiêng món nặng bao nhiêu.',
+    whenToUse: 'Làm cân cho nhà máy, chỉ cho cổng mở khi thùng đủ nặng, kiểm tra cánh tay máy có đang nhấc quá sức không.',
+    ports: {
+      who: 'Vật cần đo. Kiểu "Cân": thường là một Vật thể phẳng làm bàn cân. Kiểu "Lực đang giữ": một Nhân vật. Bắt buộc nối.',
+      force: 'Lực (niutơn, N) = khối lượng × 9,81: sức mà tải đè xuống bàn cân hoặc kéo vào tay.',
+      mass: 'Khối lượng (kg) của tải: cộng mọi thứ nằm trên vật (kể cả thùng chồng lên thùng), hoặc món đang được khiêng.',
+      loaded: 'Bật khi có bất kỳ tải nào. Chưa nối vật thì tắt.',
+    },
+    params: {
+      mode: '"Cân vật đặt lên": cộng khối lượng mọi thứ nằm trên mặt trên của vật. "Lực đang giữ": lấy khối lượng món mà nhân vật đang khiêng hoặc cầm (vật không phải nhân vật thì ra 0).',
+      smoothing: 'Số giây để số đo đuổi kịp tải mới. 0 là đo tức thì; 0,5 thì số trượt dần lên, đỡ nhảy khi vừa đặt tải xuống. "Có tải" luôn phản ứng ngay.',
+    },
+    example: 'Vật thể (bàn cân) "Đối tượng" → Cảm biến lực / Cân "Đối tượng"; "Khối lượng (kg)" → Hiện số "Giá trị". Thả thùng lên bàn thì số tăng.',
+    tips: [
+      'Khối lượng đặt ở mục Nâng cao của Đồ vật, Vật thể, Nhân vật và Xe (mặc định: đồ vật 1 kg, nhân vật 60 kg).',
+      'Một thùng phải nằm trên mặt trên của bàn cân mới được tính; thùng đang bay trên không hoặc đứng cạnh bàn thì không.',
+      'Số kg và N khác nhau: 1 kg đè khoảng 9,8 N. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
+    ],
+    lessonId: 'weight-force',
+    tryBoard: tryForceSensor,
   },
   {
     kind: 'ahead-sensor',

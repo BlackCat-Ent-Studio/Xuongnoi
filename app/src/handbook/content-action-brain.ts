@@ -47,6 +47,8 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       throwPower: 'Ném mạnh hay yếu. Số càng lớn đồ bay càng xa.',
       dropDistance: 'Nâng cao: thả cách người bao xa. 0 nghĩa là thả sát người. Game 3D bật "Va chạm thật" thì món đồ rơi ngay chỗ tay giữ và số này không dùng.',
       throwLift: 'Nâng cao: độ ném hướng lên. 0 là ném thẳng, số lớn thì đồ bay vòng cao hơn.',
+      strength: 'Nâng cao: sức nâng tối đa, tính bằng kg. Món đồ nặng hơn (xem "Khối lượng" của Đồ vật; trang "Vật lý kỹ thuật" ở đầu Sổ tay) thì nhấc không nổi. 0 là không giới hạn, như trước.',
+      showTooHeavyOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Quá nặng": bật sau một lần định nhấc món nặng hơn "Sức nâng tối đa", tắt khi nhấc được món khác hoặc thả. Mặc định "Không": mảnh y như cũ.',
     },
     example: 'Phím E "Khi nhấn phím" → "Nhấc lên" của Khiêng đồ; phím Q "Khi nhấn phím" → "Thả"; "Đối tượng" của Nhân vật → "Nhân vật" của Khiêng đồ.',
     tips: [

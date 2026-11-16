@@ -9,6 +9,17 @@ const BODY_PARAM_TEXT = {
     'Nâng cao. Dịch vùng va chạm lệch khỏi tâm hình nhìn thấy (ngang, cao, sâu). Để 0, 0, 0 là vùng va chạm nằm chính giữa. Chỉ cần khi hình vẽ và chỗ chạm không khớp nhau.',
   gravityScale:
     'Nâng cao. Mức bị kéo xuống: 1 là bình thường, 0 là bay lơ lửng không rơi, 2 là rơi nhanh và nặng hơn. Chỉ có tác dụng khi game có trọng lực (nhìn ngang hoặc 3D).',
+  mass:
+    'Nâng cao. Khối lượng thật, tính bằng kg (mặc định: vật thể 10, đồ vật 1, nhân vật 60, xe 1000). Không làm vật rơi hay chạy khác đi; Cảm biến lực / Cân, càng kẹp, khớp và "Sức nâng tối đa" của Khiêng đồ đọc con số này. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
+  mu: 'Nâng cao. Hệ số ma sát của bề mặt: 0 là trơn như băng, 0,5 bình thường, 1,5 rất nhám như cao su. Càng kẹp dùng nó để biết kẹp bao nhiêu lực thì vật không tuột (2 × μ × F ≥ m × g).',
+  crushLimit:
+    'Nâng cao. Lực ép lớn nhất (niutơn) mà vật chịu được. Ép mạnh hơn thì vật bị hỏng: bẹp xuống và ngả đỏ sẫm, hỏng luôn đến khi chơi lại. Để 0 là không bao giờ hỏng (mặc định).',
+} as const;
+
+/** The two optional outputs that report the material, on Vật thể and Đồ vật (optional ports are explained here, not in the port list). */
+const MATERIAL_OUT_PARAM_TEXT = {
+  showDamagedOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Bị hỏng": bật khi vật bị ép quá "Lực chịu nén tối đa", rồi bật mãi tới khi chơi lại. Mặc định "Không": mảnh y như cũ.',
+  showWeightOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Trọng lượng (N)" = khối lượng × 9,81. Mặc định "Không": mảnh y như cũ.',
 } as const;
 
 /** Handbook pages for the math, object and output node groups. */
@@ -217,6 +228,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       color1: 'Màu thứ nhất của Đèn giao thông (mặc định đỏ). Chọn bằng cổng "Đặt màu" = 1.',
       color2: 'Màu thứ hai (mặc định vàng). Chọn bằng cổng "Đặt màu" = 2.',
       color3: 'Màu thứ ba (mặc định xanh). Chọn bằng cổng "Đặt màu" = 3.',
+      ...MATERIAL_OUT_PARAM_TEXT,
       showHiddenOut: 'Nâng cao: "Có" thì mảnh hiện thêm ô ra "Đang ẩn" (bật suốt lúc hộp đang ẩn, dù ẩn bằng "Ẩn" hay "Ẩn khi bật"). Mặc định "Không": mảnh y như cũ.',
       beltSpeed:
         'Nâng cao. Tốc độ băng chuyền. Khác 0 thì hộp trở thành băng chuyền, đưa đồ nằm trên mặt đi theo; số âm chạy ngược. Để 0 là tắt, trừ kiểu "Băng chuyền" thì tự chạy tốc độ 2 dọc cạnh dài.',
@@ -259,6 +271,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       damage: 'Sát thương khi dùng đánh. 0 nghĩa là tuỳ theo hình dạng.',
       tag: 'Chữ ghi loại hàng, ví dụ "rau". Dùng với các mảnh ghép giao hàng để phân biệt loại. Để trống nếu không cần.',
       friction: 'Nâng cao. Độ trượt: càng lớn món đồ trượt càng mau dừng.',
+      ...MATERIAL_OUT_PARAM_TEXT,
       bounce: 'Nâng cao. Độ nảy: 0 là không nảy, 1 là nảy lại gần hết sức.',
       ...BODY_PARAM_TEXT,
     },

@@ -38,6 +38,7 @@ import { mapRangeNode } from './map-range';
 import { zoneSensorNode } from './zone-sensor';
 import { cargoNode } from './cargo';
 import { distanceNode } from './distance';
+import { forceSensorNode } from './force-sensor';
 import { speedSensorNode } from './speed-sensor';
 import { aheadSensorNode } from './ahead-sensor';
 import { visionSensorNode } from './vision-sensor';
@@ -109,6 +110,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   zoneSensorNode,
   distanceNode,
   speedSensorNode,
+  forceSensorNode,
   aheadSensorNode,
   visionSensorNode,
   sightForecastNode,

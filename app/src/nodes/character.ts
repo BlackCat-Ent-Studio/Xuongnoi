@@ -1,5 +1,5 @@
 import type { EntityId, NodeDef } from '../engine/types';
-import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
+import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { asBool, asNum, clamp, numParam, strParam, vec3Param } from './util';
 
 export const characterNode: NodeDef<{ id: EntityId }> = {
@@ -56,8 +56,9 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
     { id: 'knockSpeed', label: 'Lực bị đẩy lùi', kind: 'number', default: 7, min: 0, max: 30, step: 0.5, advanced: true },
     { id: 'knockLift', label: 'Độ bật lên khi trúng đòn', kind: 'number', default: 5, min: 0, max: 20, step: 0.5, advanced: true },
     ...BODY_PARAMS,
+    ...materialParams('character'),
   ],
-  createOnly: ['position', 'color', 'look', 'role', 'invulnSeconds', 'knockSpeed', 'knockLift', ...BODY_PARAM_IDS],
+  createOnly: ['position', 'color', 'look', 'role', 'invulnSeconds', 'knockSpeed', 'knockLift', ...BODY_PARAM_IDS, ...MATERIAL_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
     look: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { look: String(p.look) }),
@@ -78,6 +79,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
         knockLift: numParam(params, 'knockLift', 5),
       },
       ...bodySpec(params),
+      ...materialSpec(params, 'character'),
     });
     return { id };
   },

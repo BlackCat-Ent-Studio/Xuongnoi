@@ -55,6 +55,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'self': ['Đối tượng', 'Self'],
         'usedOn': ['Khi bị dùng lên', 'On tool hit'],
         'hidden': ['Đang ẩn', 'Hidden'],
+        'damaged': ['Bị hỏng', 'Damaged'],
+        'weight': ['Trọng lượng (N)', 'Weight (N)'],
       },
     },
   },
@@ -146,6 +148,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       out: {
         'holding': ['Đang khiêng', 'Is carrying'],
         'heldItem': ['Đồ đang khiêng', 'Carried item'],
+        'tooHeavy': ['Quá nặng', 'Too heavy'],
       },
     },
   },
@@ -426,6 +429,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'interacted': ['Khi được tương tác', 'On interact'],
         'inHand': ['Đang cầm tay', 'In hand'],
         'usedOn': ['Khi bị dùng lên', 'On tool hit'],
+        'damaged': ['Bị hỏng', 'Damaged'],
+        'weight': ['Trọng lượng (N)', 'Weight (N)'],
       },
     },
   },
@@ -675,6 +680,20 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'count': ['Số đang có', 'Count'],
         'spawned': ['Khi tạo', 'On spawn'],
         'touched': ['Đang chạm thử', 'Touching'],
+      },
+    },
+  },
+  'force-sensor': {
+    vi: 'Cảm biến lực / Cân',
+    en: 'Force Sensor / Scale',
+    ports: {
+      in: {
+        'who': ['Đối tượng', 'Object'],
+      },
+      out: {
+        'force': ['Lực (N)', 'Force (N)'],
+        'mass': ['Khối lượng (kg)', 'Mass (kg)'],
+        'loaded': ['Có tải', 'Loaded'],
       },
     },
   },
