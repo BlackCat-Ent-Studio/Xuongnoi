@@ -19,6 +19,9 @@ import robotLineFollow from '../samples/robot-line-follow.json';
 import robotSquare from '../samples/robot-square.json';
 import robotAvoid from '../samples/robot-avoid.json';
 import { createRobotArmBoard } from '../samples/robot-arm-board';
+import { createAutoDoorBoard } from '../samples/auto-door-board';
+import { createAutoArmBoard } from '../samples/auto-arm-board';
+import { createWeightSorterBoard } from '../samples/weight-sorter-board';
 import { parseBoard, serializeBoard } from './save-format';
 
 /**
@@ -26,9 +29,11 @@ import { parseBoard, serializeBoard } from './save-format';
  */
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)', json: robotLineFollow },
-  { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
   { id: 'robot-avoid', label: 'Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)', json: robotAvoid },
   { id: 'robot-square', label: 'Robot đi hình vuông (bộ đếm quãng đường và hướng, chuỗi bước, 3D)', json: robotSquare },
+  { id: 'auto-door', label: 'Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn)', json: JSON.parse(serializeBoard(createAutoDoorBoard())) },
+  { id: 'auto-arm', label: 'Tay máy tự gắp và đặt (chuỗi bước, góc dạy sẵn, lực kẹp, thùng dễ vỡ)', json: JSON.parse(serializeBoard(createAutoArmBoard())) },
+  { id: 'weight-sorter', label: 'Băng chuyền phân loại theo cân nặng (cân, so sánh, xi lanh đẩy)', json: JSON.parse(serializeBoard(createWeightSorterBoard())) },
 ];
 
 /** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */
@@ -49,6 +54,7 @@ const ARCHIVED_SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'dodge-shoot', label: 'Né và bắn (bệ di chuyển, bệ xoay, bắn đạn, đá rơi, 2D)', json: dodgeShoot },
   { id: 'city-delivery', label: 'Thành phố giao hàng (lái xe tải giao hàng, nhìn từ trên)', json: cityDelivery },
   { id: 'city-delivery-3d', label: 'Thành phố giao hàng 3D (nhiều khu, xe cộ, đèn giao thông)', json: cityDelivery3d },
+  { id: 'robot-arm', label: 'Tay máy gắp thùng bằng phím (khớp, thanh nối, tay kẹp; 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
 ];
 
 type Sample = { id: string; label: string; board: Board };
