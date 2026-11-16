@@ -11,7 +11,7 @@ beforeAll(() => registerAllNodes());
 
 const sample = (): Board => structuredClone(listAllSamples().find((s) => s.id === 'robot-line-follow')!.board);
 
-const ALLOWED = new Set(['line-track', 'on-start', 'robot-body', 'line-sensor', 'math', 'const', 'pid', 'motor', 'signal-plot', 'show-number', 'camera']);
+const ALLOWED = new Set(['block', 'line-track', 'on-start', 'robot-body', 'line-sensor', 'math', 'const', 'pid', 'motor', 'signal-plot', 'show-number', 'camera']);
 
 interface Run {
   laps: number;
@@ -28,8 +28,8 @@ const PERIMETER = TRACK.path.reduce((sum, p, i) => {
 
 /** Plays the board; laps = driven distance / length of the figure eight, maxOff = worst distance of the robot centre from the line (m). */
 function run(board: Board, seconds: number): Run {
-  const world = createWorld('2d-top');
-  const rt = createRuntime(board.graph, world, '2d-top');
+  const world = createWorld(board.mode);
+  const rt = createRuntime(board.graph, world, board.mode);
   let travelled = 0;
   let maxOff = 0;
   let sumOff = 0;
@@ -71,10 +71,13 @@ describe('sample Robot dò đường', () => {
   it('follows the line for more than two laps by itself; camera on the robot, plot and speed on screen', { timeout: 120_000 }, () => {
     const b = sample();
     const r = run(b, 60);
+    expect(b.mode).toBe('3d');
+    expect(b.graph.nodes.some((n) => n.kind === 'block'), 'a floor').toBe(true);
+    expect(b.graph.nodes.find((n) => n.kind === 'camera')!.params.view).toBe('tilted');
     expect(r.laps).toBeGreaterThan(2);
     expect(r.maxOff).toBeLessThan(0.2);
-    const world = createWorld('2d-top');
-    const rt = createRuntime(b.graph, world, '2d-top');
+    const world = createWorld(b.mode);
+    const rt = createRuntime(b.graph, world, b.mode);
     for (let i = 0; i < 300; i++) {
       rt.tick({ keysDown: new Set() });
       world.step(TICK_DT);

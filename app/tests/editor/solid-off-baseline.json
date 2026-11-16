@@ -15,7 +15,7 @@
  "sample:dodge-shoot": "58b32a17:155",
  "sample:city-delivery": "7a61300:900",
  "sample:city-delivery-3d": "855d15e7:900",
- "sample:robot-line-follow": "ff6c93e3:900",
+ "sample:robot-line-follow": "2857517b:900",
  "lesson:walk-jump": "6d02f185:900",
  "lesson:collect-stars": "644eb15e:900",
  "lesson:win-lose": "cb722355:900",
@@ -126,5 +126,7 @@
  "handbook:link": "d61bda73:900",
  "handbook:gripper": "8ad1cc30:900",
  "lesson:piston-push": "ae9ca2d5:900",
- "handbook:linear-actuator": "58564bc7:900"
+ "handbook:linear-actuator": "58564bc7:900",
+ "sample:robot-avoid": "58d8376:900",
+ "sample:robot-square": "d6963b32:900"
 }
