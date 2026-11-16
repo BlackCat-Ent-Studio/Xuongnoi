@@ -45,6 +45,14 @@ export const ENGINEERING_PHYSICS_PAGE: HandbookTopic = {
       ],
     },
     {
+      heading: 'Đẩy bằng xi lanh',
+      items: [
+        'Đẩy một vật trượt trên mặt phẳng cần lực thắng ma sát: F ≥ μ × m × 9,81. Ví dụ thùng 10 kg, μ = 0,5: F = 0,5 × 10 × 9,81 = 49,05 N.',
+        'Đẩy nhiều vật thì cộng lực của từng vật; vật chồng lên nhau thì khối lượng bên trên ép xuống cho vật dưới. Đẩy thẳng lên thì cộng thêm trọng lượng m × 9,81.',
+        'Xi lanh đẩy có "Lực đẩy tối đa": cần nhiều hơn thế thì thanh đứng lại và báo "Quá tải".',
+      ],
+    },
+    {
       heading: 'Khiêng đồ theo cân nặng',
       items: [
         'Mảnh Khiêng đồ có ô "Sức nâng tối đa (kg)" trong mục Nâng cao. Để 0 là nhấc được mọi thứ như cũ. Đặt 10 thì món nặng hơn 10 kg không nhấc nổi.',

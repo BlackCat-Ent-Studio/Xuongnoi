@@ -31,6 +31,7 @@ export const jointNode: NodeDef<JointState> = {
     { id: 'angleNow', type: 'number', label: 'Góc hiện tại' },
     { id: 'load', type: 'number', label: 'Mô-men đang chịu' },
     { id: 'overloaded', type: 'bool', label: 'Quá tải' },
+    { id: 'reached', type: 'bool', label: 'Đã tới góc' },
   ],
   params: [
     {
@@ -48,6 +49,7 @@ export const jointNode: NodeDef<JointState> = {
     { id: 'max', label: 'Góc lớn nhất (độ)', kind: 'number', default: 90, min: -180, max: 180, step: 5 },
     { id: 'maxTorque', label: 'Mô-men tối đa (N·m)', kind: 'number', default: 50, min: 0, max: 100000, step: 1 },
     { id: 'maxSpeed', label: 'Tốc độ tối đa (độ/giây)', kind: 'number', default: 90, min: 1, max: 720, step: 5 },
+    { id: 'tolerance', label: 'Sai số cho phép (độ)', kind: 'number', default: 1, min: 0, max: 90, step: 0.5, advanced: true },
     { id: 'mount', label: 'Lệch so với vật gắn (dọc / lên / ngang, m)', kind: 'vec3', default: { x: 0, y: 0, z: 0 }, advanced: true },
     { id: 'color', label: 'Màu', kind: 'color', default: '#8b5cf6', advanced: true },
   ],
@@ -75,7 +77,7 @@ export const jointNode: NodeDef<JointState> = {
     if (!base) {
       reg.parts.delete(ctx.nodeId);
       reg.frames.delete(s.id);
-      return { tip: null, angleNow: s.angle, load: 0, overloaded: false };
+      return { tip: null, angleNow: s.angle, load: 0, overloaded: false, reached: false };
     }
     const axis = strParam(params, 'axis', 'pitch') === 'yaw' ? 'yaw' : 'pitch';
     const lo = Math.min(numParam(params, 'min', -90), numParam(params, 'max', 90));
@@ -111,6 +113,7 @@ export const jointNode: NodeDef<JointState> = {
     reg.frames.set(s.id, out);
     reg.parts.set(ctx.nodeId, { tick: ctx.tick, baseId: asObject(i.base), tipId: s.id, masses: [] });
     placeBox(ctx.world, ctx.mode, s.id, out.pos, out);
-    return { tip: s.id, angleNow: s.angle, load: required, overloaded: step.overloaded };
+    const reached = !step.overloaded && Math.abs(s.angle - target) <= Math.max(0, numParam(params, 'tolerance', 1)) + 1e-9;
+    return { tip: s.id, angleNow: s.angle, load: required, overloaded: step.overloaded, reached };
   },
 };

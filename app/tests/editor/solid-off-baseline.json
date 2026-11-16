@@ -124,5 +124,7 @@
  "lesson:robot-arm": "25d74ad5:900",
  "handbook:joint": "38c1a148:900",
  "handbook:link": "d61bda73:900",
- "handbook:gripper": "8ad1cc30:900"
+ "handbook:gripper": "8ad1cc30:900",
+ "lesson:piston-push": "ae9ca2d5:900",
+ "handbook:linear-actuator": "58564bc7:900"
 }

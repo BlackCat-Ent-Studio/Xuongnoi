@@ -4,7 +4,7 @@ import { listMissingWires } from '../graph/missing-wires';
 import { CONSOLE_TEXT } from './console-text-vi';
 
 /** Pieces that give the board something to play: a character, or a robot chassis / vehicle that wires drive. */
-const PLAYABLE_KINDS: ReadonlySet<string> = new Set(['character', 'robot-body', 'vehicle', 'joint']);
+const PLAYABLE_KINDS: ReadonlySet<string> = new Set(['character', 'robot-body', 'vehicle', 'joint', 'linear-actuator']);
 
 export interface Issue {
   key: string;

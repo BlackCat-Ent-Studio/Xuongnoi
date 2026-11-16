@@ -1,4 +1,4 @@
-import type { EntityId, NodeDef, Vec3 } from '../engine/types';
+import type { EntityId, EntityView, NodeDef, Vec3 } from '../engine/types';
 import { extentAlong, lateralOf, localToWorld, normalOf } from '../world/arm-kinematics';
 import { gripHolds, weight } from '../world/mechanics';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
@@ -27,6 +27,21 @@ export function combinedMu(fingerMu: number, objectMu: number): number {
   return Math.min(Math.max(0, fingerMu), Math.max(0, objectMu));
 }
 
+/** The free item closest to the grasp point that is within `reach` and no wider than the opening (`width`) along `axis`. */
+function nearestGrippable(entities: readonly EntityView[], grasp: Vec3, axis: Vec3, reach: number, width: number): { id: EntityId; d: number; offset: Vec3 } | null {
+  let best: { id: EntityId; d: number; offset: Vec3 } | null = null;
+  for (const e of entities) {
+    if (e.kind !== 'item' || !e.visible || e.carried || e.inHand) continue;
+    const dx = e.position.x - grasp.x;
+    const dy = e.position.y - grasp.y;
+    const dz = e.position.z - grasp.z;
+    const d = Math.hypot(dx, dy, dz);
+    if (d > reach || extentAlong(axis, e.size) > width + 1e-9) continue;
+    if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz } };
+  }
+  return best;
+}
+
 export const gripperNode: NodeDef<GripperState> = {
   kind: 'gripper',
   label: 'Tay kẹp',
@@ -45,6 +60,8 @@ export const gripperNode: NodeDef<GripperState> = {
     { id: 'gripForce', type: 'number', label: 'Lực đang kẹp' },
     { id: 'slipped', type: 'bool', label: 'Khi vật tuột' },
     { id: 'crushedOut', type: 'bool', label: 'Khi làm hỏng vật' },
+    { id: 'inReach', type: 'bool', label: 'Có vật trong tầm' },
+    { id: 'candidate', type: 'object', label: 'Vật trong tầm' },
   ],
   params: [
     { id: 'defaultForce', label: 'Lực kẹp mặc định (N mỗi ngón)', kind: 'number', default: 20, min: 0, max: 100000, step: 1 },
@@ -80,7 +97,7 @@ export const gripperNode: NodeDef<GripperState> = {
     const reg = armRegistry(world);
     const baseId = asObject(i.base);
     const base = baseFrame(ctx, baseId, { x: 0, y: 0, z: 0 });
-    const idle = { holding: false, held: null, gripForce: 0, slipped: false, crushedOut: false };
+    const idle = { holding: false, held: null, gripForce: 0, slipped: false, crushedOut: false, inReach: false, candidate: null };
     if (!base) {
       reg.parts.delete(ctx.nodeId);
       s.held = null;
@@ -103,19 +120,9 @@ export const gripperNode: NodeDef<GripperState> = {
       s.latched = false;
     }
 
-    // Look for something to grab: the nearest free object inside reach whose width fits between the open fingers.
+    // The nearest free object inside reach whose width fits between the open fingers: what closing would grab right now.
+    const best = nearestGrippable(world.listEntities(), grasp, axis, Math.max(0, numParam(params, 'reach', 0.5)), width);
     if (closeCmd && s.held === null && !s.latched) {
-      const reach = Math.max(0, numParam(params, 'reach', 0.5));
-      let best: { id: EntityId; d: number; offset: Vec3 } | null = null;
-      for (const e of world.listEntities()) {
-        if (e.kind !== 'item' || !e.visible || e.carried || e.inHand) continue;
-        const dx = e.position.x - grasp.x;
-        const dy = e.position.y - grasp.y;
-        const dz = e.position.z - grasp.z;
-        const d = Math.hypot(dx, dy, dz);
-        if (d > reach || extentAlong(axis, e.size) > width + 1e-9) continue;
-        if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz } };
-      }
       if (best) {
         s.held = best.id;
         s.offset = best.offset;
@@ -172,6 +179,9 @@ export const gripperNode: NodeDef<GripperState> = {
       gripForce: closeCmd ? force : 0,
       slipped,
       crushedOut,
+      // While holding, the held object is the one in reach; otherwise whatever closing would grab now.
+      inReach: s.held !== null || best !== null,
+      candidate: s.held ?? best?.id ?? null,
     };
   },
 };

@@ -5,12 +5,13 @@ import { HANDBOOK_ROBOT_DRIVE } from './content-robot-drive';
 import { HANDBOOK_ROBOT_LINE } from './content-robot-line';
 import { HANDBOOK_ROBOT_CTRL } from './content-robot-ctrl';
 import { HANDBOOK_ROBOT_ARM } from './content-robot-arm';
+import { HANDBOOK_LINEAR_ACTUATOR } from './content-linear-actuator';
 import type { HandbookEntry } from './types';
 
 export type { HandbookEntry } from './types';
 
 /** Every handbook page, in no particular order (the handbook view sorts them). */
-export const HANDBOOK: readonly HandbookEntry[] = [...HANDBOOK_INPUT_LOGIC, ...HANDBOOK_MATH_OBJECT_OUTPUT, ...HANDBOOK_ACTION_BRAIN, ...HANDBOOK_ROBOT_DRIVE, ...HANDBOOK_ROBOT_LINE, ...HANDBOOK_ROBOT_CTRL, ...HANDBOOK_ROBOT_ARM];
+export const HANDBOOK: readonly HandbookEntry[] = [...HANDBOOK_INPUT_LOGIC, ...HANDBOOK_MATH_OBJECT_OUTPUT, ...HANDBOOK_ACTION_BRAIN, ...HANDBOOK_ROBOT_DRIVE, ...HANDBOOK_ROBOT_LINE, ...HANDBOOK_ROBOT_CTRL, ...HANDBOOK_ROBOT_ARM, ...HANDBOOK_LINEAR_ACTUATOR];
 
 /** The handbook page for a node kind, if written. */
 export function handbookEntry(kind: string): HandbookEntry | undefined {

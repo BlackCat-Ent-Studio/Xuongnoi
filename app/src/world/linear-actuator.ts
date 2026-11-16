@@ -1,0 +1,261 @@
+import type { EntityId, Vec3, ViewMode } from '../engine/types';
+import { DEG, type Frame } from './arm-kinematics';
+import { frictionForce, weight } from './mechanics';
+
+/**
+ * Pure maths of the linear actuator (piston): where the rod points, what its head pushes along one step and how much force
+ * that takes. No world access and no randomness, so the same inputs always give the same plan.
+ *
+ * The head is a solid cube. Whatever it meets is pushed ahead of it, and so is whatever those bodies meet in turn; bodies
+ * standing on a pushed body ride along (their weight loads the friction under it). Pushing needs a force:
+ *   F = Σ μ · (m + load above) · g        (every pushed body slides on its own surface)
+ *       + Σ (m + load above) · g          (extra, when the rod pushes straight up: it lifts them)
+ * If F is above the actuator's maximum the rod stalls where it is; if the next step would put the head or anything it
+ * pushes inside a solid (a wall, the floor) the rod stops just short of it. Nothing is ever pulled back.
+ */
+
+export type PushOrient = 'ground' | 'up' | 'down';
+
+export interface Box {
+  /** Centre. */
+  pos: Vec3;
+  /** Full size. */
+  size: Vec3;
+}
+
+export interface PushBody {
+  id: EntityId;
+  box: Box;
+  massKg: number;
+  /** Surface friction coefficient against what it slides on. */
+  mu: number;
+}
+
+export interface PushInput {
+  /** The head's box where it is now. */
+  head: Box;
+  /** Unit vector the head moves along this step (already signed: retracting is the opposite of extending). */
+  dir: Vec3;
+  /** Distance (m) the head is asked to move, above 0. */
+  step: number;
+  bodies: readonly PushBody[];
+  /** Static solids (floor, walls). */
+  solids: readonly Box[];
+  /** The axis the view does not show; its extents are ignored (the side view has no z, the top view no y). */
+  flat?: 'y' | 'z' | null;
+  /** True when the rod points straight up: pushed bodies are lifted, not slid. */
+  lifting?: boolean;
+}
+
+export interface PushMove {
+  id: EntityId;
+  /** Where the body goes, as a displacement from now. */
+  delta: Vec3;
+  /** 'pushed' = touched by the head or by something it pushes; 'rider' = standing on a pushed body. */
+  role: 'pushed' | 'rider';
+}
+
+export interface PushPlan {
+  /** Distance (m) the head can really move: the step, or less when a solid is in the way. */
+  advance: number;
+  /** True when a solid stops the head (or something it pushes) before the full step. */
+  blocked: boolean;
+  /** Force (N) pushing the full step would take. */
+  requiredN: number;
+  /** Displacements at `advance`; bodies listed front first (largest distance along `dir` first). */
+  moves: PushMove[];
+}
+
+const AXES = ['x', 'y', 'z'] as const;
+/** Boxes overlapping less than this count as touching. */
+const TOUCH = 1e-6;
+/** Across the direction of travel a solid has to be entered deeper than this to count as in the way (a body resting on the floor rubs by a hair). */
+const SOLID_TOL = 0.01;
+/** A body whose underside is this close to another's top stands on it. */
+const RIDE_GAP = 0.06;
+const BISECT = 12;
+
+function overlapAlong(a: Box, b: Box, axis: 'x' | 'y' | 'z'): number {
+  return (a.size[axis] + b.size[axis]) / 2 - Math.abs(a.pos[axis] - b.pos[axis]);
+}
+
+function axesOf(flat: PushInput['flat']): readonly ('x' | 'y' | 'z')[] {
+  return AXES.filter((a) => a !== flat);
+}
+
+function overlaps(a: Box, b: Box, axes: readonly ('x' | 'y' | 'z')[], tol: number): boolean {
+  return axes.every((ax) => overlapAlong(a, b, ax) > tol);
+}
+
+function shifted(b: Box, d: Vec3): Box {
+  return { pos: { x: b.pos.x + d.x, y: b.pos.y + d.y, z: b.pos.z + d.z }, size: b.size };
+}
+
+/** Distance along `dir` that the box `body` must move to be clear of `pusher` (0 when it cannot be separated that way). */
+function clearance(pusher: Box, body: Box, dir: Vec3, axes: readonly ('x' | 'y' | 'z')[]): number {
+  let best = Infinity;
+  for (const ax of axes) {
+    const d = dir[ax];
+    if (Math.abs(d) < 1e-9) continue;
+    // Only an axis on which the body lies ahead of the pusher can push it clear.
+    if (Math.sign(body.pos[ax] - pusher.pos[ax]) !== Math.sign(d)) continue;
+    best = Math.min(best, overlapAlong(pusher, body, ax) / Math.abs(d));
+  }
+  return Number.isFinite(best) ? Math.max(0, best) : 0;
+}
+
+/** Who moves when the head advances `d`: bodies the head meets, bodies those meet in turn, and what stands on them. */
+function contactSet(input: PushInput, d: number): { pushed: Map<EntityId, Vec3>; riderOf: Map<EntityId, EntityId> } {
+  const axes = axesOf(input.flat);
+  const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
+  const pushers: Box[] = [shifted(input.head, move)];
+  const pushed = new Map<EntityId, Vec3>();
+  const boxes = new Map<EntityId, Box>();
+  for (let again = true; again; ) {
+    again = false;
+    for (const b of input.bodies) {
+      if (pushed.has(b.id)) continue;
+      const hit = pushers.find((p) => overlaps(p, b.box, axes, TOUCH));
+      if (!hit) continue;
+      const t = clearance(hit, b.box, input.dir, axes);
+      const delta = { x: input.dir.x * t, y: input.dir.y * t, z: input.dir.z * t };
+      pushed.set(b.id, delta);
+      const moved = shifted(b.box, delta);
+      boxes.set(b.id, moved);
+      pushers.push(moved);
+      again = true;
+    }
+  }
+  // Riders: bodies not pushed that stand on a pushed body (or on another rider) follow it.
+  const riderOf = new Map<EntityId, EntityId>();
+  const carriers = new Map<EntityId, Vec3>(pushed);
+  const carrierBox = new Map<EntityId, Box>(input.bodies.filter((b) => pushed.has(b.id)).map((b) => [b.id, b.box]));
+  for (let again = input.flat !== 'y'; again; ) {
+    again = false;
+    for (const b of input.bodies) {
+      if (carriers.has(b.id)) continue;
+      for (const [cid, cbox] of carrierBox) {
+        const standsOn =
+          Math.abs(b.box.pos.y - b.box.size.y / 2 - (cbox.pos.y + cbox.size.y / 2)) <= RIDE_GAP &&
+          axes.filter((a) => a !== 'y').every((a) => overlapAlong(b.box, cbox, a) > TOUCH);
+        if (!standsOn) continue;
+        riderOf.set(b.id, cid);
+        carriers.set(b.id, carriers.get(cid)!);
+        carrierBox.set(b.id, b.box);
+        again = true;
+        break;
+      }
+    }
+  }
+  return { pushed: new Map([...pushed, ...[...riderOf.keys()].map((id) => [id, carriers.get(id)!] as const)]), riderOf };
+}
+
+/** Force (N) to push the given set: friction of every pushed body under its own load, plus the weight when lifting. */
+function forceFor(input: PushInput, pushed: Map<EntityId, Vec3>, riderOf: Map<EntityId, EntityId>): number {
+  const byId = new Map(input.bodies.map((b) => [b.id, b]));
+  // The whole load carried by each directly pushed body: itself plus every rider above it (stacks count).
+  const rootOf = (id: EntityId): EntityId => {
+    let at = id;
+    for (let n = 0; riderOf.has(at) && n < 64; n++) at = riderOf.get(at)!;
+    return at;
+  };
+  const load = new Map<EntityId, number>();
+  for (const id of pushed.keys()) {
+    const root = rootOf(id);
+    load.set(root, (load.get(root) ?? 0) + (byId.get(id)?.massKg ?? 0));
+  }
+  let total = 0;
+  for (const [root, kg] of load) {
+    const body = byId.get(root);
+    if (!body) continue;
+    total += frictionForce(body.mu, weight(kg));
+    if (input.lifting) total += weight(kg);
+  }
+  return total;
+}
+
+/** True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it). */
+function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3): boolean {
+  return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : SOLID_TOL));
+}
+
+function clearOfSolids(input: PushInput, d: number): boolean {
+  const axes = axesOf(input.flat);
+  const { pushed } = contactSet(input, d);
+  const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
+  const head = shifted(input.head, move);
+  const byId = new Map(input.bodies.map((b) => [b.id, b]));
+  for (const s of input.solids) {
+    if (inSolid(head, s, axes, input.dir)) return false;
+    for (const [id, delta] of pushed) {
+      const b = byId.get(id);
+      if (b && inSolid(shifted(b.box, delta), s, axes, input.dir)) return false;
+    }
+  }
+  return true;
+}
+
+/** One step of the head: what moves, how far the head may go, and how much force the full step needs. */
+export function planPush(input: PushInput): PushPlan {
+  const step = Math.max(0, Number.isFinite(input.step) ? input.step : 0);
+  const full = contactSet(input, step);
+  const requiredN = forceFor(input, full.pushed, full.riderOf);
+  let advance = step;
+  let blocked = false;
+  if (step > 0 && !clearOfSolids(input, step)) {
+    blocked = true;
+    let lo = 0;
+    let hi = step;
+    for (let i = 0; i < BISECT; i++) {
+      const mid = (lo + hi) / 2;
+      if (clearOfSolids(input, mid)) lo = mid;
+      else hi = mid;
+    }
+    advance = lo;
+  }
+  const set = advance === step ? full : contactSet(input, advance);
+  const ahead = (id: EntityId): number => {
+    const b = input.bodies.find((x) => x.id === id)!;
+    return b.box.pos.x * input.dir.x + b.box.pos.y * input.dir.y + b.box.pos.z * input.dir.z;
+  };
+  const moves: PushMove[] = [...set.pushed]
+    .map(([id, delta]): PushMove => ({ id, delta, role: set.riderOf.has(id) ? 'rider' : 'pushed' }))
+    .sort((a, b) => ahead(b.id) - ahead(a.id));
+  return { advance, blocked, requiredN, moves };
+}
+
+/** True when `requiredN` is more than `maxN` can supply (a hair of tolerance for floating point). */
+export function exceeds(requiredN: number, maxN: number): boolean {
+  return requiredN > Math.max(0, maxN) + 1e-9;
+}
+
+/** Rod length after one tick toward `target`, ignoring what it meets: speed-limited, never beyond 0..stroke. */
+export function approach(length: number, target: number, stroke: number, speed: number, dt: number): number {
+  const t = Math.min(stroke, Math.max(0, target));
+  const step = Math.max(0, speed) * dt;
+  const d = t - length;
+  return Math.abs(d) <= step ? t : length + Math.sign(d) * step;
+}
+
+/** The rod length the inputs ask for (m): "Vị trí đặt" (0..1 of the stroke) wins over "Đẩy ra". Unwired = retracted. */
+export function targetLength(stroke: number, extend: boolean, position: number | null): number {
+  const s = Math.max(0, stroke);
+  if (position !== null && Number.isFinite(position)) return Math.min(1, Math.max(0, position)) * s;
+  return extend ? s : 0;
+}
+
+/**
+ * Frame of the rod: `base` is where it is mounted (position and the heading of what it is mounted on), `directionDeg` the push
+ * direction on the ground plane (0 = +x, grows clockwise seen from above, like a robot heading). The side view only knows
+ * forward / backward along x and up / down, the top view only the ground plane.
+ */
+export function actuatorFrame(base: Frame, directionDeg: number, orient: PushOrient, mode: ViewMode): Frame {
+  const deg = Number.isFinite(directionDeg) ? directionDeg : 0;
+  const pitchOpt = orient === 'up' ? Math.PI / 2 : orient === 'down' ? -Math.PI / 2 : 0;
+  if (mode === '2d-side') {
+    const backward = Math.cos(deg * DEG) < -1e-9;
+    return { pos: base.pos, yaw: 0, pitch: orient === 'ground' ? (backward ? Math.PI : 0) : pitchOpt };
+  }
+  if (mode === '2d-top') return { pos: base.pos, yaw: base.yaw - deg * DEG, pitch: 0 };
+  return { pos: base.pos, yaw: base.yaw - deg * DEG, pitch: base.pitch + pitchOpt };
+}
