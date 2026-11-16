@@ -19,7 +19,7 @@ interface SensorState {
 }
 
 /**
- * Unit direction on the ground plane the object faces: a character's facing, a vehicle's nose, else along +x.
+ * Unit direction on the ground plane the object faces: a character's facing, a vehicle's or robot chassis's nose, else along +x.
  * In the side view only left or right counts.
  */
 export function headingOf(view: EntityView, mode: ViewMode): { x: number; z: number } {
@@ -31,6 +31,9 @@ export function headingOf(view: EntityView, mode: ViewMode): { x: number; z: num
   } else if (view.vehicle && Number.isFinite(view.vehicle.heading)) {
     x = Math.cos(view.vehicle.heading);
     z = Math.sin(view.vehicle.heading);
+  } else if (view.robot && Number.isFinite(view.robot.heading)) {
+    x = Math.cos(view.robot.heading);
+    z = Math.sin(view.robot.heading);
   }
   if (mode === '2d-side') return { x: x < 0 ? -1 : 1, z: 0 };
   const len = Math.hypot(x, z);
