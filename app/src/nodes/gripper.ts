@@ -2,6 +2,7 @@ import type { EntityId, EntityView, NodeDef, Vec3 } from '../engine/types';
 import { extentAlong, lateralOf, localToWorld, normalOf } from '../world/arm-kinematics';
 import { gripHolds, weight } from '../world/mechanics';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
+import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam } from './util';
 
 interface GripperState {
@@ -90,6 +91,9 @@ export const gripperNode: NodeDef<GripperState> = {
     const palm = spawn(palmSize);
     const f1 = spawn({ x: FINGER_LEN, y: FINGER_T, z: FINGER_T });
     const f2 = spawn({ x: FINGER_LEN, y: FINGER_T, z: FINGER_T });
+    setArmHint(ctx.nodeId, palm, { part: 'palm' });
+    setArmHint(ctx.nodeId, f1, { part: 'finger', side: 1 });
+    setArmHint(ctx.nodeId, f2, { part: 'finger', side: -1 });
     return { palm, fingers: [f1, f2], held: null, offset: { x: 0, y: 0, z: 0 }, latched: false };
   },
   evaluate(ctx, i, params, s) {
@@ -146,7 +150,7 @@ export const gripperNode: NodeDef<GripperState> = {
           slipped = true;
         } else {
           const wasDamaged = mat.damaged;
-          const nowDamaged = world.applySqueeze(s.held, fingers * force);
+          const nowDamaged = world.applySqueeze(s.held, fingers * force, axis);
           crushedOut = nowDamaged && !wasDamaged;
           carriedKg = supported ? 0 : mat.massKg;
           gap = extentAlong(axis, view.size) / 2;

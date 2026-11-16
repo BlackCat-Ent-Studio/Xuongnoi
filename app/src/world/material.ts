@@ -1,4 +1,4 @@
-import type { EntityKind, EntitySpec } from '../engine/types';
+import type { EntityKind, EntitySpec, Vec3 } from '../engine/types';
 import { boxOverlap, colliderBox } from './collider';
 import type { Entity } from './entity';
 
@@ -49,9 +49,22 @@ export function materialOf(e: Entity): MaterialView {
 }
 
 /** Squeeze force on a body: damaged once it exceeds the limit (never when the limit is 0). Returns true when it is damaged now. */
-export function squeeze(e: Entity, forceN: number): boolean {
-  if (!e.damaged && typeof forceN === 'number' && Number.isFinite(forceN) && e.crushLimit !== undefined && forceN > e.crushLimit) e.damaged = true;
+export function squeeze(e: Entity, forceN: number, direction?: Vec3): boolean {
+  if (!e.damaged && typeof forceN === 'number' && Number.isFinite(forceN) && e.crushLimit !== undefined && forceN > e.crushLimit) {
+    e.damaged = true;
+    const axis = squeezeAxisOf(direction);
+    if (axis) e.squeezeAxis = axis;
+  }
   return e.damaged === true;
+}
+
+/** The horizontal axis a squeeze direction points along; null for no direction, a mostly vertical one or bad numbers (the body is then flattened in height). */
+function squeezeAxisOf(d: Vec3 | undefined): 'x' | 'z' | null {
+  if (!d || !Number.isFinite(d.x) || !Number.isFinite(d.y) || !Number.isFinite(d.z)) return null;
+  const ax = Math.abs(d.x);
+  const az = Math.abs(d.z);
+  if (Math.abs(d.y) >= Math.max(ax, az)) return null;
+  return ax >= az ? 'x' : 'z';
 }
 
 /** How far (m of game units) a bottom face may be from a top face and still count as resting on it. */

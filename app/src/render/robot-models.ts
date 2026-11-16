@@ -1,22 +1,59 @@
 import * as THREE from 'three';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 import type { EntityView } from '../engine/types';
-import { shade } from './item-shapes';
+import { toonMat } from './arm-part-models';
 
 /**
- * A robot chassis drawn from boxes: a body in the entity colour, a darker top plate, a light "eye" strip on the nose so
- * the heading can be read from above, and one wheel per mounted motor (a dark tyre with a light hub bar, so the turning
- * shows). Built in real units around the entity centre (floor at -height/2, nose toward +x, right-hand side toward +z).
- * The scene only moves and turns the group; it is never scaled.
+ * A robot chassis in the cartoon-factory look: a rounded body in the entity colour, a dark deck, a dark bumper with a
+ * yellow strip on the nose (so the heading can be read from above), and one wheel per mounted motor (a black tyre with a
+ * yellow hub and a dark bar, so the turning shows). Built in real units around the entity centre (floor at -height/2,
+ * nose toward +x, right-hand side toward +z). The scene only moves and turns the group; it is never scaled.
+ * Geometry is cached by size and materials by colour, so every chassis shares them.
  */
 
-const UNIT_BOX = new THREE.BoxGeometry(1, 1, 1);
-const WHEEL_COLOR = '#1f2937';
-const HUB_COLOR = '#d1d5db';
-const EYE_COLOR = '#fde68a';
+/** The colour the node had before this look existed: a chassis still carrying it is drawn in the look's orange. */
+const OLD_DEFAULT_COLOR = '#3b82f6';
+const LOOK_COLOR = '#ff9f2e';
+const DECK_COLOR = '#4a4f58';
+const BUMPER_COLOR = '#23252b';
+const WHEEL_COLOR = '#23252b';
+const HUB_COLOR = '#ffd23f';
 /** Wheel thickness across the chassis, metres. */
 const WHEEL_WIDTH = 0.1;
 /** The chassis is lifted this far off the ground so the wheels carry it, metres. */
 const GROUND_GAP = 0.04;
+
+const geos = new Map<string, THREE.BufferGeometry>();
+const q = (v: number): string => (Math.round(v * 1000) / 1000).toString();
+function geo(key: string, make: () => THREE.BufferGeometry): THREE.BufferGeometry {
+  let g = geos.get(key);
+  if (!g) {
+    g = make();
+    geos.set(key, g);
+  }
+  return g;
+}
+const box = (w: number, h: number, d: number): THREE.BufferGeometry => geo(`b|${q(w)}|${q(h)}|${q(d)}`, () => new THREE.BoxGeometry(w, h, d));
+const rbox = (w: number, h: number, d: number, r: number, seg: number): THREE.BufferGeometry =>
+  geo(`rb|${q(w)}|${q(h)}|${q(d)}|${q(r)}|${seg}`, () => new RoundedBoxGeometry(w, h, d, seg, Math.max(0.002, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3))));
+const zcyl = (r: number, len: number, seg: number): THREE.BufferGeometry =>
+  geo(`cz|${q(r)}|${q(len)}|${seg}`, () => {
+    const g = new THREE.CylinderGeometry(r, r, len, seg);
+    g.rotateX(Math.PI / 2);
+    return g;
+  });
+
+function part(parent: THREE.Object3D, g: THREE.BufferGeometry, color: string, at: [number, number, number]): void {
+  const mesh = new THREE.Mesh(g, toonMat(color));
+  mesh.position.set(at[0], at[1], at[2]);
+  mesh.castShadow = true;
+  parent.add(mesh);
+}
+
+/** The colour a chassis is drawn in: the user's, or the look's own while the param still holds the old default. */
+export function robotBodyColor(color: string): string {
+  return color.toLowerCase() === OLD_DEFAULT_COLOR ? LOOK_COLOR : color;
+}
 
 interface WheelMesh {
   group: THREE.Group;
@@ -27,9 +64,6 @@ export class RobotFigure {
 
   private readonly body = new THREE.Group();
   private readonly wheelGroup = new THREE.Group();
-  private readonly mats = new Map<string, THREE.MeshLambertMaterial>();
-  private readonly mainMat: THREE.MeshLambertMaterial;
-  private readonly darkMat: THREE.MeshLambertMaterial;
   private wheels: WheelMesh[] = [];
   private wheelKey = '';
   private sizeKey = '';
@@ -37,36 +71,21 @@ export class RobotFigure {
 
   constructor(color: string) {
     this.colorHex = color;
-    this.mainMat = this.mat(color);
-    this.darkMat = this.mat(shade(color));
     this.object.add(this.body, this.wheelGroup);
   }
 
-  private mat(color: string): THREE.MeshLambertMaterial {
-    const existing = this.mats.get(color);
-    if (existing) return existing;
-    const m = new THREE.MeshLambertMaterial({ color });
-    this.mats.set(color, m);
-    return m;
-  }
-
-  private box(parent: THREE.Object3D, size: [number, number, number], at: [number, number, number], material: THREE.MeshLambertMaterial): void {
-    const mesh = new THREE.Mesh(UNIT_BOX, material);
-    mesh.scale.set(size[0], size[1], size[2]);
-    mesh.position.set(at[0], at[1], at[2]);
-    mesh.castShadow = true;
-    parent.add(mesh);
-  }
-
-  /** Rebuilds the chassis boxes when its size changes. `floor` is the y of the chassis bottom relative to the centre. */
+  /** Rebuilds the chassis parts when its size or colour changes. */
   private buildBody(length: number, width: number, height: number): void {
-    for (const c of [...this.body.children]) this.body.remove(c);
+    this.body.clear();
     const floor = -height / 2 + GROUND_GAP;
     const slab = Math.max(0.05, height * 0.6 - GROUND_GAP);
-    this.box(this.body, [length, slab, width], [0, floor + slab / 2, 0], this.mainMat);
+    const main = robotBodyColor(this.colorHex);
+    part(this.body, rbox(length, slab, width, Math.min(0.1, slab * 0.4, width * 0.2), 2), main, [0, floor + slab / 2, 0]);
     const plate = Math.max(0.03, height * 0.25);
-    this.box(this.body, [length * 0.6, plate, width * 0.7], [-length * 0.05, floor + slab + plate / 2, 0], this.darkMat);
-    this.box(this.body, [0.06, Math.max(0.04, slab * 0.35), width * 0.6], [length / 2 - 0.02, floor + slab * 0.6, 0], this.mat(EYE_COLOR));
+    part(this.body, box(length * 0.6, plate, width * 0.7), DECK_COLOR, [-length * 0.05, floor + slab + plate / 2, 0]);
+    const bumperH = Math.max(0.04, slab * 0.6);
+    part(this.body, rbox(0.07, bumperH, width * 1.02, 0.025, 1), BUMPER_COLOR, [length / 2 + 0.01, floor + slab * 0.5, 0]);
+    part(this.body, box(0.04, Math.max(0.03, bumperH * 0.4), width * 0.7), HUB_COLOR, [length / 2 + 0.05, floor + slab * 0.5, 0]);
   }
 
   private buildWheels(view: EntityView): void {
@@ -76,13 +95,9 @@ export class RobotFigure {
     for (const w of view.robot?.wheels ?? []) {
       const group = new THREE.Group();
       group.position.set(w.forward, floor + w.radius, w.side);
-      const tire = new THREE.Mesh(UNIT_BOX, this.mat(WHEEL_COLOR));
-      tire.scale.set(w.radius * 2, w.radius * 2, WHEEL_WIDTH);
-      const hub = new THREE.Mesh(UNIT_BOX, this.mat(HUB_COLOR));
-      hub.scale.set(w.radius * 1.5, w.radius * 0.4, WHEEL_WIDTH * 1.15);
-      tire.castShadow = true;
-      hub.castShadow = true;
-      group.add(tire, hub);
+      part(group, zcyl(w.radius, WHEEL_WIDTH, 18), WHEEL_COLOR, [0, 0, 0]);
+      part(group, zcyl(w.radius * 0.55, WHEEL_WIDTH * 1.2, 12), HUB_COLOR, [0, 0, 0]);
+      part(group, box(w.radius * 0.95, w.radius * 0.2, WHEEL_WIDTH * 1.3), WHEEL_COLOR, [0, 0, 0]);
       this.wheelGroup.add(group);
       this.wheels.push({ group });
     }
@@ -91,14 +106,14 @@ export class RobotFigure {
   setColor(color: string): void {
     if (color === this.colorHex) return;
     this.colorHex = color;
-    this.mainMat.color.set(color);
-    this.darkMat.color.set(shade(color));
+    this.sizeKey = ''; // rebuilt on the next update
   }
 
   /** Follow the entity: position, nose direction, wheel mounts and turning, colour, owner (for clicking in the game view). */
   update(view: EntityView): void {
     const r = view.robot;
     const p = view.position;
+    this.setColor(view.color);
     this.object.position.set(p.x, p.y, p.z);
     this.object.rotation.y = -(r?.heading ?? 0);
     const sizeKey = `${r?.length}|${r?.width}|${view.size.y}`;
@@ -116,15 +131,15 @@ export class RobotFigure {
       const mesh = this.wheels[i];
       if (mesh) mesh.group.rotation.z = -w.spin;
     });
-    this.setColor(view.color);
     this.object.traverse((o) => {
       o.userData.ownerNodeId = view.ownerNodeId;
     });
     this.object.updateMatrixWorld(true);
   }
 
+  /** Geometry and materials are shared, so there is nothing per-figure to free. */
   dispose(): void {
-    for (const m of this.mats.values()) m.dispose();
-    this.mats.clear();
+    this.body.clear();
+    this.wheelGroup.clear();
   }
 }

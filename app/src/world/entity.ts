@@ -107,6 +107,8 @@ export interface Entity {
   crushLimit?: number;
   /** Broken by a squeeze; stays so until the game restarts. */
   damaged?: boolean;
+  /** Horizontal axis the breaking squeeze acted along (renderer flattens that way); unset = flattened in height. */
+  squeezeAxis?: 'x' | 'z';
 }
 
 function colliderView(e: Entity): { position: Vec3; size: Vec3 } {
@@ -160,6 +162,7 @@ export function toView(e: Entity): EntityView {
     ...(e.mu !== undefined ? { mu: e.mu } : {}),
     ...(e.crushLimit !== undefined ? { crushLimit: e.crushLimit } : {}),
     ...(e.damaged ? { damaged: true } : {}),
+    ...(e.damaged && e.squeezeAxis ? { squeezeAxis: e.squeezeAxis } : {}),
     visible: e.visible,
   };
 }

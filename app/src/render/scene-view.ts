@@ -14,6 +14,9 @@ import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
 import { damagedView, tintDamaged } from './damaged-look';
 import { ObjectHighlight } from './object-highlight';
+import { ArmPartFigure } from './arm-part-models';
+import { LoadTagLayer } from './load-tag';
+import { armHintOf, type ArmPartKind } from '../engine/render-hints';
 import { VisionFanLayer, type FanSpec } from './vision-fan';
 import type { StageFigure, StageTheme } from './stage-theme';
 
@@ -38,6 +41,7 @@ type Entry =
       shape: string;
       color: string;
     }
+  | { type: 'arm'; figure: ArmPartFigure; part: ArmPartKind }
   | { type: 'vehicle'; figure: VehicleFigure; model: string }
   | { type: 'robot'; figure: RobotFigure }
   | { type: 'portal'; figure: PortalFigure }
@@ -67,7 +71,8 @@ function matches(entry: Entry, e: EntityView): boolean {
   if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
   if (entry.type === 'track') return e.kind === 'block' && e.look === LINE_TRACK_LOOK;
   if (entry.type === 'dot') return e.kind === 'block' && e.look === LINE_DOT_LOOK;
-  if (entry.type === 'block') return e.kind === 'block' && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && styleOf(e) === 'box';
+  if (entry.type === 'arm') return e.kind === 'block' && armHintOf(e.ownerNodeId, e.id)?.part === entry.part;
+  if (entry.type === 'block') return e.kind === 'block' && !armHintOf(e.ownerNodeId, e.id) && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && styleOf(e) === 'box';
   if (entry.type === 'look') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === entry.style;
   if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
   if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
@@ -99,6 +104,7 @@ export class SceneView {
   private readonly healthBars = new HealthBarLayer(this.group);
   private readonly colliderFrames = new ColliderFrames(this.group);
   private readonly visionFans = new VisionFanLayer(this.group);
+  private readonly loadTags = new LoadTagLayer(this.group);
   private readonly highlight = new ObjectHighlight();
   private grid: THREE.GridHelper | null = null;
   private readonly raycaster = new THREE.Raycaster();
@@ -207,6 +213,10 @@ export class SceneView {
         entry.figure.update(holder ? this.carriedView(e, holder) : e, dt);
         continue;
       }
+      if (entry.type === 'arm') {
+        entry.figure.update(e, this.mode, armHintOf(e.ownerNodeId, e.id) ?? { part: entry.part }, performance.now());
+        continue;
+      }
       if (entry.type === 'vehicle') {
         entry.figure.update(e);
         continue;
@@ -284,6 +294,7 @@ export class SceneView {
       }
     }
     this.healthBars.sync(entities);
+    this.loadTags.sync(entities, this.mode);
   }
 
   /** Sight fans of the characters that have a "Tầm nhìn" sensor (none when the list is empty). `boxes` is only asked for when there is a fan. */
@@ -394,6 +405,12 @@ export class SceneView {
       this.group.add(figure.object);
       return { type: 'dot', figure };
     }
+    const armHint = e.kind === 'block' && !e.zone ? armHintOf(e.ownerNodeId, e.id) : undefined;
+    if (armHint) {
+      const figure = new ArmPartFigure(armHint.part);
+      this.group.add(figure.object);
+      return { type: 'arm', figure, part: armHint.part };
+    }
     const style = styleOf(e);
     if (style !== 'box') {
       const figure = buildBlockLook(blockStyleOf(style), e.color, e.size, e.label ?? '', e.ownerNodeId);
@@ -419,7 +436,7 @@ export class SceneView {
     } else if (entry.type === 'portal' || entry.type === 'track' || entry.type === 'dot') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
-    } else if (entry.type === 'vehicle' || entry.type === 'robot') {
+    } else if (entry.type === 'vehicle' || entry.type === 'robot' || entry.type === 'arm') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'character') {
@@ -525,6 +542,7 @@ export class SceneView {
     this.clear();
     this.healthBars.dispose();
     this.colliderFrames.dispose();
+    this.loadTags.dispose();
     this.highlight.dispose();
     this.setGrid('3d', false);
     this.geometry.dispose();
