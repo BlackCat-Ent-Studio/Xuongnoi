@@ -10,7 +10,7 @@ import { movable, standsOn } from './platforms';
  *   view, lies on its footprint; there the belt is a floor strip and need not be solid) is moved by that speed on top of its
  *   own movement.
  * - Side walls of a belt (3D view only) are ordinary thin solid blocks that follow it, so they block like any wall.
- * - A solid vehicle carries the characters and items resting on it with its translation and turn.
+ * - A solid vehicle or robot chassis carries the characters and items resting on it with its translation and turn.
  * Every displacement goes through the caller's collision-aware move, so nobody is pushed into a solid.
  */
 
@@ -122,13 +122,13 @@ export interface VehicleRide {
   facing: Vec3;
 }
 
-/** Before vehicles move: who rides on which solid vehicle. Empty in the top-down view (nobody stands on top there). */
+/** Before vehicles and robot chassis move: who rides on which solid one. Empty in the top-down view (nobody stands on top there). */
 export function vehicleRides(list: readonly Entity[], mode: ViewMode): VehicleRide[] {
   if (mode === '2d-top') return [];
   const out: VehicleRide[] = [];
   let bodies: Entity[] | null = null;
   for (const v of list) {
-    if (v.kind !== 'vehicle' || !v.visible || !v.solid) continue;
+    if ((v.kind !== 'vehicle' && v.kind !== 'robot') || !v.visible || !v.solid) continue;
     bodies ??= list.filter((e) => (e.kind === 'character' || e.kind === 'item') && movable(e));
     const riders = bodies.filter((b) => standsOn(b, v, mode));
     if (riders.length > 0) out.push({ vehicle: v, riders, from: { ...v.pos }, facing: { ...v.facing } });

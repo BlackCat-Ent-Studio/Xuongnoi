@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
-import { getNodeDef } from '../../src/engine/registry';
+import { getNodeDef, knownInputs, knownOutputs } from '../../src/engine/registry';
 import { TICK_DT, type InputSnapshot } from '../../src/engine/types';
 import { handbookEntry } from '../../src/handbook';
 import { HANDBOOK_ROBOT_DRIVE } from '../../src/handbook/content-robot-drive';
@@ -27,7 +27,7 @@ describe('handbook: robot drive pages', () => {
       it('explains every port and every parameter of the node definition', () => {
         expect(def).toBeDefined();
         if (!def) return;
-        expect(sorted(Object.keys(entry.ports))).toEqual(sorted(new Set([...def.inputs, ...def.outputs].map((p) => p.id))));
+        expect(sorted(Object.keys(entry.ports))).toEqual(sorted(new Set([...knownInputs(def), ...knownOutputs(def)].map((p) => p.id))));
         expect(sorted(Object.keys(entry.params))).toEqual(sorted(def.params.map((p) => p.id)));
       });
 

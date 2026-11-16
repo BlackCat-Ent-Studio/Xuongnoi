@@ -145,6 +145,10 @@ export interface RobotBody {
   speed: number;
   /** Turn rate in rad/s, positive = right. */
   turnRate: number;
+  /** Kilograms resting on the chassis in the last step (it loads the motors on top of the chassis's own mass). */
+  payload: number;
+  /** True while the payload is above `spec.maxPayload`: the motors then cannot move the chassis. */
+  overloaded: boolean;
   wheels: Map<string, MountedWheel>;
 }
 
@@ -160,6 +164,8 @@ export function createRobotBody(spec: RobotSpec | undefined, heading = 0): Robot
     heading: Number.isFinite(heading) ? heading : 0,
     speed: 0,
     turnRate: 0,
+    payload: 0,
+    overloaded: false,
     wheels: new Map(),
   };
 }
@@ -170,6 +176,7 @@ export function sanitizeRobotSpec(spec: Partial<RobotSpec>): RobotSpec {
     width: positive(spec.width, DEFAULT_ROBOT.width),
     mass: positive(spec.mass, DEFAULT_ROBOT.mass),
     friction: positive(spec.friction, DEFAULT_ROBOT.friction),
+    maxPayload: positive(spec.maxPayload, 0),
   };
 }
 
@@ -185,16 +192,27 @@ export function setWheel(body: RobotBody, id: string, wheel: RobotWheelSpec | nu
   body.wheels.set(id, { side, forward, radius, rpm, spin: old?.spin ?? 0, fresh: true });
 }
 
+/** True when `payload` kg is more than the chassis may carry (a maximum of 0 means no limit). */
+export function isOverloaded(spec: Pick<RobotSpec, 'maxPayload'>, payload: number): boolean {
+  const max = spec.maxPayload ?? 0;
+  return max > 0 && payload > max;
+}
+
 /**
  * One tick of drive: drops wheels that were not refreshed, fits the wheels, lets the chassis follow within its limits
- * and turns the heading (side view: no turning, the robot only rolls along x). Returns the velocity on the ground plane.
+ * and turns the heading (side view: no turning, the robot only rolls along x). `payload` is the weight (kg) resting on
+ * the chassis: it adds to the mass the motors must push, and above the chassis's maximum the motors ask for no motion.
+ * Returns the velocity on the ground plane.
  */
-export function driveRobot(body: RobotBody, dt: number, sideView: boolean): { x: number; z: number } {
+export function driveRobot(body: RobotBody, dt: number, sideView: boolean, payload = 0): { x: number; z: number } {
   for (const [id, w] of body.wheels) if (!w.fresh) body.wheels.delete(id);
   const wheels = [...body.wheels.values()];
-  const ask = solveDrive(wheels);
+  body.payload = Number.isFinite(payload) && payload > 0 ? payload : 0;
+  body.overloaded = isOverloaded(body.spec, body.payload);
+  const ask = body.overloaded ? { speed: 0, turn: 0 } : solveDrive(wheels);
   if (sideView) ask.turn = 0;
-  const next = followWheels({ speed: body.speed, turn: body.turnRate }, ask, body.spec, wheels.length, dt);
+  const loaded = body.payload > 0 ? { ...body.spec, mass: body.spec.mass + body.payload } : body.spec;
+  const next = followWheels({ speed: body.speed, turn: body.turnRate }, ask, loaded, wheels.length, dt);
   body.speed = next.speed;
   body.turnRate = next.turn;
   for (const w of wheels) {

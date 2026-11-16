@@ -9,6 +9,7 @@ import type {
   HudItem,
   PlayCameraCommand,
   PortalLink,
+  ProbeAim,
   RobotWheelSpec,
   ShotSpec,
   SolidBox,
@@ -51,6 +52,11 @@ export const SWING_SECONDS = 0.3;
 const USE_MIN_VERTICAL_OVERLAP = 0.1;
 /** Sideways slack (beyond the swinger's half width) for what counts as "in front". */
 const USE_LATERAL_SLACK = 0.1;
+
+/** A sensor aim with every unusable number replaced by 0 (the middle of the body, looking straight ahead). */
+function cleanAim(aim: ProbeAim): ProbeAim {
+  return { side: finiteOr(aim.side ?? 0, 0), forward: finiteOr(aim.forward ?? 0, 0), angle: finiteOr(aim.angle ?? 0, 0), beam: Math.max(0, finiteOr(aim.beam ?? 0, 0)) };
+}
 
 function finiteOr(n: number, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
@@ -339,7 +345,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         visible: true,
         onGround: false,
         intent: null,
-        facing: { x: 1, y: 0, z: 0 },
+        facing: spec.kind === 'robot' && mode !== '2d-side' ? { x: Math.cos(spec.heading ?? 0), y: 0, z: Math.sin(spec.heading ?? 0) } : { x: 1, y: 0, z: 0 },
         holding: null,
         handHolding: null,
         swingTime: -1,
@@ -628,10 +634,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       }
       body.tow = { leader: lead.id, distance: Number.isFinite(distance) ? Math.max(0, distance) : 0 };
     },
-    probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null {
+    probeAhead(id: EntityId, reach: number, aim?: ProbeAim): { id: EntityId; distance: number } | null {
       const e = byId.get(id);
       if (!e || !e.visible) return null;
-      return probeAhead(list, e, finiteOr(reach, 0));
+      return probeAhead(list, e, finiteOr(reach, 0), aim ? cleanAim(aim) : undefined, mode);
     },
     lineOfSight(fromId: EntityId, toId: EntityId): boolean {
       return lineOfSight(list, mode, byId.get(fromId), byId.get(toId));
@@ -714,10 +720,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const robot = byId.get(body)?.robot;
       if (robot) setWheel(robot, wheelId, wheel);
     },
-    setRobotTuning(body: EntityId, tuning: { mass: number; friction: number }): void {
+    setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number }): void {
       const robot = byId.get(body)?.robot;
       if (!robot) return;
-      const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction });
+      const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction, maxPayload: tuning.maxPayload ?? robot.spec.maxPayload });
       robot.spec = next;
     },
     setBeltSpeed(id: EntityId, speed: number): void {

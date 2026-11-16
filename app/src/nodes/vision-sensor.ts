@@ -1,4 +1,5 @@
 import type { EntityId, EntityView, NodeDef, ViewMode } from '../engine/types';
+import { groundHeading } from '../world/heading';
 import { asObject, clamp, numParam, strParam } from './util';
 import { noteVision, type VisionNote } from './sight-notes';
 import { matchesFilter } from './zone-sensor';
@@ -12,16 +13,8 @@ const ANGLE_SLACK = 1e-6;
 
 /** Where the viewer looks as a unit vector on the plane the view shows (x/y from the side, x/z otherwise). */
 export function lookDirection(e: EntityView, mode: ViewMode): { a: number; b: number } {
-  let fx = 1;
-  let fz = 0;
-  if (e.vehicle) {
-    fx = Math.cos(e.vehicle.heading);
-    fz = Math.sin(e.vehicle.heading);
-  } else if (e.facing && Math.hypot(e.facing.x, e.facing.z) > 1e-6) {
-    fx = e.facing.x;
-    fz = e.facing.z;
-  }
-  return directionOf(fx, fz, mode);
+  const h = groundHeading(e);
+  return directionOf(h.x, h.z, mode);
 }
 
 /** A facing (x, z) as the unit look direction on the plane the view shows. */
@@ -52,7 +45,7 @@ export const visionSensorNode: NodeDef<VisionState> = {
   label: 'Tầm nhìn',
   category: 'logic',
   description:
-    'Cho một nhân vật hoặc xe "đôi mắt": nó thấy được vật nằm trong hình quạt phía trước mặt, trong "Tầm xa" và "Góc nhìn". Nối "Mục tiêu" thì chỉ canh đúng vật đó; không nối thì canh mọi vật thuộc loại đã chọn ở "Tính loại nào" (không tính chính nó). Bật "Tường che mắt" thì khối rắn nằm giữa sẽ chặn tầm nhìn. "Khi phát hiện" và "Khi mất dấu" bật một nhịp. Khi chẳng thấy gì, "Khoảng cách" bằng "Tầm xa".',
+    'Cho một nhân vật, xe hoặc thân robot "đôi mắt": nó thấy được vật nằm trong hình quạt phía trước mặt, trong "Tầm xa" và "Góc nhìn". Nối "Mục tiêu" thì chỉ canh đúng vật đó; không nối thì canh mọi vật thuộc loại đã chọn ở "Tính loại nào" (không tính chính nó). Bật "Tường che mắt" thì khối rắn nằm giữa sẽ chặn tầm nhìn. "Khi phát hiện" và "Khi mất dấu" bật một nhịp. Khi chẳng thấy gì, "Khoảng cách" bằng "Tầm xa".',
   inputs: [
     { id: 'viewer', type: 'object', label: 'Người nhìn', required: true },
     { id: 'target', type: 'object', label: 'Mục tiêu' },
@@ -88,6 +81,7 @@ export const visionSensorNode: NodeDef<VisionState> = {
         { value: 'bot', label: 'Bot' },
         { value: 'item', label: 'Đồ vật' },
         { value: 'vehicle', label: 'Phương tiện' },
+        { value: 'robot', label: 'Robot' },
       ],
     },
   ],

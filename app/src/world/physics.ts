@@ -5,6 +5,7 @@ import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
+import { massOn } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
 import { driveRobot, settleRobot } from './robot-drive';
 import { sameTrain } from './vehicle-train';
@@ -296,11 +297,14 @@ function stepVehicle(
   if (rivals) for (const other of rivals.hit) crashInto(v, other, wanted, dt, mode, solids, colliders);
 }
 
-/** One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks. */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): void {
+/**
+ * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
+ * What rests on top loads the motors (nothing rests on a chassis in the top-down view).
+ */
+function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], entities: readonly Entity[]): void {
   const body = r.robot;
   if (!body) return;
-  const flat = driveRobot(body, dt, mode === '2d-side');
+  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r));
   r.vel.x = flat.x;
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
@@ -348,6 +352,18 @@ function crashInto(
   if (mode !== '2d-side') moveAxis(other, 'z', dz * push, solids, around);
 }
 
+/** How far below a chassis's top an item's bottom may sit and still be held up by it. */
+const SUPPORT_SINK = 0.02;
+
+/** The solid robot chassis that an item lying on (or landing on) its top rests on. Items pass through everything else of a chassis. */
+function supportsOf(item: Entity, robots: readonly Entity[]): Entity[] {
+  const bottom = colliderBox(item).pos.y - colliderBox(item).size.y / 2;
+  return robots.filter((r) => {
+    const rb = colliderBox(r);
+    return bottom >= rb.pos.y + rb.size.y / 2 - SUPPORT_SINK && boxOverlap(item, r, 'x') > SKIN && boxOverlap(item, r, 'z') > SKIN;
+  });
+}
+
 /** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
 export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number, rules: BodyRules | null = null): void {
   const byId = new Map(entities.map((e) => [e.id, e]));
@@ -380,7 +396,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids, colliders);
   }
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, solids);
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, solids, entities);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {
@@ -409,6 +425,8 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   }
 
   const cargo = cargoPositions(entities, mode);
+  // Loose items rest on the top of a solid robot chassis; they pass through it everywhere else.
+  const chassis = mode === '2d-top' ? [] : entities.filter((e) => e.kind === 'robot' && e.visible && e.solid);
   for (const item of entities) {
     if (item.kind !== 'item' || !item.visible || item.bullet) continue;
     const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
@@ -423,7 +441,8 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
       item.vel.z = 0;
       item.onGround = false;
     } else {
-      stepFreeItem(item, dt, mode, solids, extrasFor(item));
+      const held = chassis.length > 0 ? supportsOf(item, chassis) : [];
+      stepFreeItem(item, dt, mode, held.length > 0 ? [...solids, ...held] : solids, extrasFor(item));
     }
   }
 }

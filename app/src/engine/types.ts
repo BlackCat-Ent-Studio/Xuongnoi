@@ -294,6 +294,21 @@ export interface VehicleSpec {
   shoveShare?: number;
 }
 
+/**
+ * Where a ranging sensor sits on its body and which way it looks. All zero = the middle of the body looking along its nose.
+ * Side grows to the right of the nose, forward ahead of it; angle turns the look direction clockwise seen from above.
+ */
+export interface ProbeAim {
+  /** Metres to the right of the centre line (negative = left). */
+  side?: number;
+  /** Metres ahead of the centre (negative = behind). */
+  forward?: number;
+  /** Degrees the look direction is turned from the nose; positive = to the right. */
+  angle?: number;
+  /** Width of the beam in metres; 0 or absent = as wide as the body. */
+  beam?: number;
+}
+
 /** A robot chassis: a rigid body that moves only when motors mounted on it turn their wheels (set when it spawns). */
 export interface RobotSpec {
   /** Length (along the nose) and width of the drawn chassis, metres. */
@@ -303,6 +318,8 @@ export interface RobotSpec {
   mass: number;
   /** Ground grip: how quickly the chassis can speed up and stop (about 0.8 for rubber, 0.1 for ice). */
   friction: number;
+  /** Most weight (kg) the chassis can carry and still be moved by its motors; 0 or absent = no limit. */
+  maxPayload?: number;
 }
 
 /** One motor's wheel as seen by the chassis it is mounted on. */
@@ -534,6 +551,10 @@ export interface EntityView {
     heading: number;
     turnRate: number;
     wheels: readonly { side: number; forward: number; radius: number; spin: number }[];
+    /** Kilograms resting on the chassis; absent when nothing rides on it. */
+    payload?: number;
+    /** True while the payload is above the chassis's maximum (the motors then cannot move it); absent otherwise. */
+    overloaded?: boolean;
   };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
@@ -726,10 +747,11 @@ export interface WorldApi {
    */
   setVehicleTow(vehicle: EntityId, leader: EntityId | null, distance?: number): void;
   /**
-   * The nearest visible solid block, vehicle or character in front of the entity (along its facing, as wide as the entity)
-   * whose gap to the entity is at most `reach`. Items, zones and riders are ignored. Null when the way is clear.
+   * The nearest visible solid block, vehicle, robot chassis or character in front of the entity (along its facing, as wide as
+   * the entity) whose gap to the entity is at most `reach`. Items, zones and riders are ignored. Null when the way is clear.
+   * `aim` moves the sensor off the middle of the body and turns it (see `ProbeAim`); left out, the sensor sits in the middle.
    */
-  probeAhead(id: EntityId, reach: number): { id: EntityId; distance: number } | null;
+  probeAhead(id: EntityId, reach: number, aim?: ProbeAim): { id: EntityId; distance: number } | null;
   /**
    * True when no visible solid block crosses the straight line between the centres of the two entities (their own
    * bodies never block). False when either one is unknown or hidden. Flat views ignore the axis they do not show.
@@ -796,7 +818,7 @@ export interface WorldApi {
    */
   setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void;
   /** Changes the mass and ground grip of a robot chassis while it runs (unusable numbers keep the old value). */
-  setRobotTuning(body: EntityId, tuning: { mass: number; friction: number }): void;
+  setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number }): void;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */

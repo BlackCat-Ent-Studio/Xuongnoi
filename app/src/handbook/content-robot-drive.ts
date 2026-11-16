@@ -78,6 +78,12 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       speed: 'Ra (số): tốc độ chạy tới, đơn vị mét trên giây. Dương là chạy tới, âm là đang lùi.',
       heading: 'Ra (số): hướng mũi robot, đơn vị độ. 0 là sang phải, 90 là xuống dưới (nhìn từ trên), tăng dần theo chiều kim đồng hồ. Nhìn ngang thì luôn là 0.',
       turnRate: 'Ra (số): tốc độ quay, độ trên giây. Dương là đang rẽ phải (cùng chiều kim đồng hồ), âm là rẽ trái.',
+      distance:
+        'Ra (số, chỉ hiện khi bật "Hiện ô Quãng đường"): quãng đường robot đã đi được trên mặt đất tính từ lúc bắt đầu, đơn vị mét, như đồng hồ đo quãng đường. Chạy vòng thì tính theo chiều dài đường cong, quay tại chỗ thì gần như không tăng.',
+      resetDistance: 'Vào (bật/tắt, chỉ hiện khi bật "Hiện ô Quãng đường"): mỗi lần bật lên một nhịp thì đặt "Quãng đường" về 0 rồi đếm lại từ đầu.',
+      payload:
+        'Ra (số, chỉ hiện khi bật "Hiện ô Khối lượng chở"): tổng khối lượng (kg) của những thứ đang nằm trên mặt trên của thân, kể cả thứ chồng lên thứ đó. Khối lượng này cộng vào khối lượng thân khi động cơ phải đẩy.',
+      overloaded: 'Ra (bật/tắt, chỉ hiện khi bật "Hiện ô Khối lượng chở"): bật khi hàng đang chở nặng hơn "Tải tối đa" nên động cơ không đẩy nổi.',
     },
     params: {
       position: 'Chỗ robot xuất hiện lúc bắt đầu chơi (tâm của thân).',
@@ -86,6 +92,10 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       width: 'Chiều rộng thân, tính bằng mét. Hai bánh đặt ở hai bên nên bề ngang thường hơn "Vị trí ngang" của bánh một chút.',
       height: 'Chiều cao thân, tính bằng mét.',
       mass: 'Khối lượng, kg. Càng nặng thì mỗi lần ga hay phanh robot càng ì: lực đẩy của các Động cơ chia cho khối lượng. Chỉnh được ngay khi đang chơi.',
+      maxPayload:
+        'Nâng cao. Tải tối đa, kg. Hàng nằm trên thân nặng hơn mức này thì động cơ không đẩy nổi, robot đứng yên (đang chạy thì phanh lại) cho tới khi bớt hàng. Để 0 là không giới hạn. Chỉnh được ngay khi đang chơi.',
+      showDistance: 'Nâng cao. Bật để hiện thêm ô ra "Quãng đường" và ô vào "Đặt lại quãng đường". Tắt thì thẻ Thân giữ nguyên như cũ.',
+      showPayload: 'Nâng cao. Bật để hiện thêm hai ô ra "Khối lượng đang chở" và "Quá tải". Tắt thì thẻ Thân giữ nguyên như cũ.',
       friction:
         'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chơi.',
       color: 'Màu thân robot. Đổi được ngay khi đang chơi.',
@@ -98,7 +108,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       'Thân không có cổng vào: nó chỉ chạy khi có Động cơ gắn vào và Động cơ có dây "Công suất". Không có động cơ nào thì robot đứng yên mãi.',
       'Kích thước, màu, vị trí chỉ đọc lúc bắt đầu chơi (màu thì đổi được ngay); "Khối lượng" và "Độ bám" sửa được cả khi đang chơi.',
       'Để robot quay mà không kẹt góc, vùng va chạm là hình vuông cạnh bằng chiều dài (hoặc rộng) lớn nhất. Muốn khác thì chỉnh "Cỡ vùng va chạm" trong Nâng cao.',
-      'Đơn vị là mét, kg, giây, độ. Nhìn ngang thì robot chỉ chạy theo trục ngang, không quay.',
+      'Đơn vị là mét, kg, giây, độ; nhìn ngang thì robot chỉ chạy theo trục ngang, không quay. Chở hàng: đồ vật đặt trên mặt trên của thân sẽ đi và quay cùng robot (nhìn ngang hoặc 3D; nhìn từ trên xuống thì đồ không xếp chồng nên không tính). Hàng càng nặng thì robot càng ì, quá "Tải tối đa" thì đứng yên.',
     ],
     lessonId: 'two-motor-robot',
     tryBoard: tryRobotBody,
@@ -113,6 +123,9 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       power: 'Vào (số): công suất từ -1 đến 1. 1 là quay hết tốc độ tới, -1 là hết tốc độ lùi, 0 là đứng yên. Không nối dây thì tính là 0 nên bánh không quay.',
       rpm: 'Ra (số): vòng quay thật của bánh lúc này, tính bằng vòng mỗi phút. Dương là đẩy robot tới. Bánh tăng tốc từ từ nên số này đuổi theo công suất chứ không nhảy ngay.',
       turning: 'Ra: bật khi bánh đang quay.',
+      turns:
+        'Ra (số, chỉ hiện khi bật "Hiện bộ đếm vòng"): tổng số vòng bánh đã quay từ lúc bắt đầu, như bộ mã hóa vòng quay (encoder). Có dấu: quay tới thì tăng, quay lùi thì giảm. Số vòng × 2π × bán kính bánh là quãng đường bánh đã lăn (nếu robot không bị kẹt).',
+      resetTurns: 'Vào (bật/tắt, chỉ hiện khi bật "Hiện bộ đếm vòng"): mỗi lần bật lên một nhịp thì đặt "Số vòng đã quay" về 0 rồi đếm lại.',
     },
     params: {
       side: 'Chỗ gắn bánh theo bề ngang thân, tính bằng mét tính từ đường giữa: số âm là bên trái, số dương là bên phải. Hai bánh càng xa nhau thì robot rẽ càng chậm mà chắc. Một bánh gắn lệch tâm sẽ làm robot đi vòng.',
@@ -121,6 +134,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       maxRpm: 'Tốc độ tối đa của động cơ khi công suất là 1, vòng mỗi phút. Mặc định 120 vòng/phút với bánh 0.15 m ra khoảng 1.9 m/s.',
       accel: 'Độ tăng tốc của động cơ, vòng/phút mỗi giây. Nhỏ thì bánh ì khi bắt đầu quay và khi dừng; lớn thì đổi tốc độ gần như tức thì.',
       reverse: '"Đảo chiều" thì công suất dương làm bánh quay lùi. Dùng khi động cơ bên kia lắp ngược chiều.',
+      showTurns: 'Nâng cao. Bật để hiện thêm ô ra "Số vòng đã quay" và ô vào "Đặt lại vòng". Tắt thì thẻ Động cơ giữ nguyên như cũ.',
     },
     example:
       'Cần điều khiển → hai Phép tính (lên + phải cho bánh trái, lên − phải cho bánh phải) → "Công suất" của hai Động cơ; "Đối tượng" của Thân robot → "Thân" của cả hai.',
@@ -128,7 +142,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       'Đừng quên dây "Công suất": không có nó thì bánh không quay và robot không chạy, đúng như động cơ không có điện.',
       'Chuyển động của robot do TẤT CẢ động cơ trên Thân cùng quyết định: tốc độ tới là trung bình các bánh, độ quay là chênh lệch giữa bánh bên trái và bên phải chia cho bề rộng giữa hai bánh.',
       'Một động cơ không nối công suất vẫn tính là một bánh đứng yên: nó hãm bên đó nên robot vòng về phía bánh ấy.',
-      'Nhìn ngang thì robot chỉ chạy theo trục ngang, trung bình tốc độ các bánh, không quay.',
+      'Nhìn ngang thì robot chỉ chạy theo trục ngang, không quay. Bộ đếm vòng đếm vòng quay của bánh, kể cả lúc robot bị tường chặn mà bánh vẫn quay trượt. Muốn biết robot thật sự đi được bao xa thì dùng "Quãng đường" của Thân robot.',
     ],
     lessonId: 'two-motor-robot',
     tryBoard: tryMotor,

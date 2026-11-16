@@ -326,7 +326,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     params: {
       center: 'Vị trí tâm của vùng (x, y, z). Khi có nối "Gắn vào đối tượng" thì đây là độ lệch so với vật.',
       size: 'Chiều rộng, cao, sâu của vùng.',
-      filter: 'Loại nào được tính: mọi nhân vật, người chơi, bot, đồ vật hoặc phương tiện.',
+      filter: 'Loại nào được tính: mọi nhân vật, người chơi, bot, đồ vật, phương tiện hoặc robot.',
       rotate: 'Chọn Có thì vùng xoay theo hướng của vật đang bám theo. Chỉ có tác dụng ở 3D và nhìn từ trên.',
       goods: 'Chỉ tính đồ vật có đúng loại hàng này (để trống là tính mọi loại). Phải gõ giống hệt tên loại hàng đã đặt.',
       rule: 'Cách tính: "Chạm mép" (chạm là tính), "Tâm vật vào trong" (tâm lọt vào vùng), hoặc "Nằm trọn bên trong".',
@@ -412,19 +412,26 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   },
   {
     kind: 'ahead-sensor',
-    purpose: 'Nhìn thẳng phía trước mặt của một nhân vật hoặc xe xem có gì chắn đường không, và còn cách bao xa.',
+    purpose: 'Nhìn thẳng phía trước mặt của một nhân vật, xe hoặc robot xem có gì chắn đường không, và còn cách bao xa.',
     whenToUse: 'Bot tự quay đầu khi sắp đâm tường, xe tự phanh khi có xe khác phía trước, nhân vật dừng lại trước vật cản.',
     ports: {
-      who: 'Nhân vật hoặc xe cần nhìn. Nó nhìn về hướng đang quay mặt. Bắt buộc nối.',
-      blocked: 'Bật khi có tường, khối rắn, xe hoặc nhân vật khác nằm phía trước trong "Tầm xa".',
+      who: 'Nhân vật, xe hoặc Thân robot cần nhìn. Nó nhìn về hướng đang quay mặt (robot quay thế nào thì tia quay theo). Bắt buộc nối.',
+      blocked: 'Bật khi có tường, khối rắn, xe, robot hoặc nhân vật khác nằm phía trước trong "Tầm xa".',
       distance: 'Chỗ trống còn lại từ mép của vật tới vật cản, tính bằng ô. Khi phía trước thoáng thì bằng đúng "Tầm xa".',
       thing: 'Vật cản gần nhất phía trước, có thể nối tiếp vào mảnh khác. Trống nếu phía trước thoáng.',
       hit: 'Chỉ bật một nhịp lúc vừa có vật cản xuất hiện phía trước.',
     },
-    params: { reach: 'Nhìn xa tối đa bao nhiêu ô, tính từ mép của vật. Mặc định 3.' },
+    params: {
+      reach: 'Nhìn xa tối đa bao nhiêu ô, tính từ mép của vật. Mặc định 3.',
+      mountSide: 'Nâng cao. Gắn cảm biến lệch khỏi đường giữa của thân, mét: số âm là bên trái, số dương là bên phải. Mặc định 0 là ở giữa.',
+      mountForward: 'Nâng cao. Gắn cảm biến lệch dọc thân, mét: số dương là về phía mũi, số âm là ra sau. Mặc định 0.',
+      lookAngle: 'Nâng cao. Xoay hướng nhìn so với mũi, độ: 0 là nhìn thẳng, 90 là nhìn sang phải, -90 là nhìn sang trái, 180 là nhìn phía sau. Dùng để gắn mắt siêu âm nhìn ngang. Nhìn ngang (2D) thì bỏ qua.',
+      beam: 'Nâng cao. Độ rộng của tia, mét. 0 là rộng bằng thân vật (như cũ); đặt nhỏ như 0.05 để thành tia mảnh như mắt siêu âm.',
+    },
     example: 'Bot "Đối tượng" → Dò phía trước "Đối tượng"; "Đang bị chặn" → mảnh quay đầu hoặc dừng lại của bot.',
     tips: [
-      'Cảm biến chỉ nhìn thẳng một đường rộng bằng thân vật, vật nằm lệch sang bên hoặc phía sau không tính.',
+      'Cảm biến chỉ nhìn thẳng một đường rộng bằng thân vật, vật nằm lệch sang bên hoặc phía sau không tính. Với robot quay theo mọi hướng, đường nhìn tính chính xác ở góc bất kỳ.',
+      'Robot chạy tới tường: nối "Khoảng cách" vào Hiện số để xem còn cách bao xa; "Đang bị chặn" nối ngược về công suất để dừng. Mặc định "Khoảng cách" tính từ mép thân; khi dời chỗ gắn hay xoay hướng nhìn thì tính từ chỗ tia ra khỏi thân.',
       'Sàn đang đứng, đồ vật nhặt được và vùng mờ không bị coi là vật cản.',
       '"Khoảng cách" khi thoáng bằng "Tầm xa" chứ không phải 0, nên so sánh "nhỏ hơn" sẽ không báo nhầm.',
     ],
@@ -433,10 +440,10 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   },
   {
     kind: 'vision-sensor',
-    purpose: 'Cho nhân vật hoặc xe đôi mắt: thấy vật nằm trong hình quạt phía trước mặt, trong tầm xa, và không bị tường che.',
+    purpose: 'Cho nhân vật, xe hoặc robot đôi mắt: thấy vật nằm trong hình quạt phía trước mặt, trong tầm xa, và không bị tường che.',
     whenToUse: 'Bot canh gác chỉ đuổi khi nhìn thấy người chơi, cảnh báo "bị phát hiện", bot mất dấu thì quay về chỗ cũ.',
     ports: {
-      viewer: 'Người nhìn: nhân vật hoặc xe. Hình quạt hướng theo phía nó đang quay mặt. Bắt buộc nối.',
+      viewer: 'Người nhìn: nhân vật, xe hoặc Thân robot. Hình quạt hướng theo phía nó đang quay mặt (robot thì theo hướng mũi). Bắt buộc nối.',
       target: 'Không bắt buộc. Nối một vật thì chỉ canh đúng vật đó; để trống thì canh mọi vật thuộc loại đã chọn ở "Tính loại nào".',
       seen: 'Bật khi có ít nhất một vật nằm trong tầm nhìn.',
       gained: 'Chỉ bật một nhịp lúc vừa thấy.',
@@ -448,7 +455,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
       range: 'Nhìn xa tối đa bao nhiêu ô, tính từ tâm người nhìn tới tâm vật. Mặc định 6.',
       angle: 'Độ rộng hình quạt, tính bằng độ. 90 là nhìn lệch mỗi bên 45 độ; 360 là nhìn quanh. Mặc định 90.',
       walls: 'Có: khối rắn nằm giữa sẽ che mắt. Không: nhìn xuyên tường.',
-      filter: 'Khi chưa nối "Mục tiêu": loại nào được canh (người chơi, bot, mọi nhân vật, đồ vật, phương tiện). Mặc định là người chơi.',
+      filter: 'Khi chưa nối "Mục tiêu": loại nào được canh (người chơi, bot, mọi nhân vật, đồ vật, phương tiện, robot). Mặc định là người chơi.',
     },
     example: 'Bot "Đối tượng" → Tầm nhìn "Người nhìn"; "Đang thấy" → Đuổi theo "Bật"; "Đối tượng gần nhất" → Đuổi theo "Mục tiêu".',
     tips: [
@@ -462,7 +469,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   },
   {
     kind: 'color-sensor',
-    purpose: 'Đọc màu của hộp mà vật đang đứng trên, hoặc hộp ngay phía trước mặt, ra một số 1, 2 hoặc 3.',
+    purpose: 'Đọc màu của hộp mà vật (nhân vật hoặc Thân robot) đang đứng trên, hoặc hộp ngay phía trước mặt, ra một số 1, 2 hoặc 3.',
     whenToUse: 'Ô sàn đổi màu làm công tắc, đường đua có vạch màu, ô giao thông đỏ vàng xanh, trò chơi đứng đúng màu.',
     ports: {
       who: 'Vật cần đọc màu (thường là nhân vật). Bắt buộc nối.',

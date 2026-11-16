@@ -1,5 +1,6 @@
 import { TRAFFIC_COLORS } from '../engine/block-styles';
 import type { EntityId, EntityView, LineTrackSpec, NodeDef, ViewMode, WorldApi } from '../engine/types';
+import { groundHeading } from '../world/heading';
 import { LINE_DOT_LOOK, trackCoverage } from '../world/line-track';
 import { asObject, clamp, numParam, strParam } from './util';
 
@@ -23,21 +24,8 @@ interface SensorState {
  * In the side view only left or right counts.
  */
 export function headingOf(view: EntityView, mode: ViewMode): { x: number; z: number } {
-  let x = 1;
-  let z = 0;
-  if (view.facing && Math.hypot(view.facing.x, view.facing.z) > 1e-6) {
-    x = view.facing.x;
-    z = view.facing.z;
-  } else if (view.vehicle && Number.isFinite(view.vehicle.heading)) {
-    x = Math.cos(view.vehicle.heading);
-    z = Math.sin(view.vehicle.heading);
-  } else if (view.robot && Number.isFinite(view.robot.heading)) {
-    x = Math.cos(view.robot.heading);
-    z = Math.sin(view.robot.heading);
-  }
-  if (mode === '2d-side') return { x: x < 0 ? -1 : 1, z: 0 };
-  const len = Math.hypot(x, z);
-  return { x: x / len, z: z / len };
+  const h = groundHeading(view);
+  return mode === '2d-side' ? { x: h.x < 0 ? -1 : 1, z: 0 } : h;
 }
 
 /**

@@ -18,6 +18,8 @@ export function matchesFilter(e: EntityView, filter: string): boolean {
       return e.kind === 'item';
     case 'vehicle':
       return e.kind === 'vehicle';
+    case 'robot':
+      return e.kind === 'robot';
     default:
       return e.kind === 'character';
   }
@@ -26,6 +28,7 @@ export function matchesFilter(e: EntityView, filter: string): boolean {
 /** Yaw (radians, 0 = +X, toward +Z positive) a followed entity points at; 0 when it has no direction. */
 function yawOf(e: EntityView): number {
   if (e.vehicle) return e.vehicle.heading;
+  if (e.robot) return e.robot.heading;
   if (e.facing) return Math.atan2(e.facing.z, e.facing.x);
   return 0;
 }
@@ -69,6 +72,7 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
         { value: 'bot', label: 'Bot' },
         { value: 'item', label: 'Đồ vật' },
         { value: 'vehicle', label: 'Phương tiện' },
+        { value: 'robot', label: 'Robot' },
       ],
     },
     {

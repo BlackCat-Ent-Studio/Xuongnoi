@@ -1,12 +1,27 @@
-import type { EntityId, NodeDef } from '../engine/types';
+import type { EntityId, NodeDef, Params, PortDef } from '../engine/types';
 import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
-import { numParam, strParam, vec3Param } from './util';
+import { asBool, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 const DEG = 180 / Math.PI;
 
 interface RobotBodyState {
   id: EntityId;
+  /** Metres the chassis has travelled since the start or the last reset. */
+  distance: number;
+  /** Where the chassis was last tick, to measure how far it moved (null before the first tick). */
+  last: { x: number; z: number } | null;
+  reset: EdgeState;
 }
+
+const DISTANCE_PORT: PortDef = { id: 'distance', type: 'number', label: 'Quãng đường' };
+const RESET_DISTANCE_PORT: PortDef = { id: 'resetDistance', type: 'bool', label: 'Đặt lại quãng đường' };
+const PAYLOAD_PORTS: PortDef[] = [
+  { id: 'payload', type: 'number', label: 'Khối lượng đang chở' },
+  { id: 'overloaded', type: 'bool', label: 'Quá tải' },
+];
+
+const showsDistance = (params: Params): boolean => strParam(params, 'showDistance', 'no') === 'yes';
+const showsPayload = (params: Params): boolean => strParam(params, 'showPayload', 'no') === 'yes';
 
 /**
  * The chassis of a robot: a rigid box on the ground that never moves by itself. Motors mounted on it (the "Motor"
@@ -20,12 +35,18 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
   description:
     'Thân của một robot: một khối nằm trên mặt đất, tự nó không chạy. Gắn các mảnh ghép "Động cơ" (mỗi bánh một cái) vào Thân, nối "Công suất" cho từng động cơ thì Thân mới chạy và quay. Có khối lượng, độ bám mặt đất và kích thước để chỉnh.',
   inputs: [],
+  // Only while the matching setting below is on, so a chassis card keeps its size on every old board.
+  optionalInputs: { all: [RESET_DISTANCE_PORT], active: (params) => (showsDistance(params) ? [RESET_DISTANCE_PORT] : []) },
   outputs: [
     { id: 'self', type: 'object', label: 'Đối tượng' },
     { id: 'speed', type: 'number', label: 'Tốc độ' },
     { id: 'heading', type: 'number', label: 'Hướng' },
     { id: 'turnRate', type: 'number', label: 'Tốc độ quay' },
   ],
+  optionalOutputs: {
+    all: [DISTANCE_PORT, ...PAYLOAD_PORTS],
+    active: (params) => [...(showsDistance(params) ? [DISTANCE_PORT] : []), ...(showsPayload(params) ? PAYLOAD_PORTS : [])],
+  },
   params: [
     { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
     { id: 'heading', label: 'Hướng mũi lúc đầu (độ, 0 = sang phải, 90 = xuống dưới)', kind: 'number', default: 0, min: -360, max: 360, step: 5 },
@@ -44,6 +65,38 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
         { value: 'yes', label: 'Có (không đi xuyên qua robot)' },
         { value: 'no', label: 'Không' },
       ],
+    },
+    {
+      id: 'maxPayload',
+      label: 'Tải tối đa (kg, 0 = không giới hạn; chở nặng hơn thì động cơ không đẩy nổi)',
+      kind: 'number',
+      default: 0,
+      min: 0,
+      max: 500,
+      step: 0.5,
+      advanced: true,
+    },
+    {
+      id: 'showDistance',
+      label: 'Hiện ô "Quãng đường" và "Đặt lại quãng đường"',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (đếm quãng đường robot đã đi, như đồng hồ đo quãng đường)' },
+      ],
+      advanced: true,
+    },
+    {
+      id: 'showPayload',
+      label: 'Hiện ô "Khối lượng đang chở" và "Quá tải"',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (cân hàng đang nằm trên thân robot)' },
+      ],
+      advanced: true,
     },
     ...BODY_PARAMS,
   ],
@@ -66,17 +119,30 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       heading: numParam(params, 'heading', 0) / DEG,
       ...bodySpec(params),
     });
-    return { id };
+    return { id, distance: 0, last: null, reset: { prev: false } };
   },
-  evaluate(ctx, _i, params, s) {
-    // Mass and grip can be changed while playing.
-    ctx.world.setRobotTuning(s.id, { mass: numParam(params, 'mass', 2), friction: numParam(params, 'friction', 0.8) });
-    const view = ctx.world.getEntity(s.id)?.robot;
+  evaluate(ctx, i, params, s) {
+    // Mass, grip and the load limit can be changed while playing.
+    ctx.world.setRobotTuning(s.id, {
+      mass: numParam(params, 'mass', 2),
+      friction: numParam(params, 'friction', 0.8),
+      maxPayload: Math.max(0, numParam(params, 'maxPayload', 0)),
+    });
+    const entity = ctx.world.getEntity(s.id);
+    const view = entity?.robot;
+    // Odometer: the ground path the chassis really covered (turning on the spot adds nothing).
+    const at = entity ? { x: entity.position.x, z: ctx.mode === '2d-side' ? 0 : entity.position.z } : null;
+    if (risingEdge(s.reset, asBool(i.resetDistance))) s.distance = 0;
+    else if (at && s.last) s.distance += Math.hypot(at.x - s.last.x, at.z - s.last.z);
+    s.last = at;
     return {
       self: s.id,
       speed: view?.speed ?? 0,
       heading: (view?.heading ?? 0) * DEG,
       turnRate: (view?.turnRate ?? 0) * DEG,
+      distance: s.distance,
+      payload: view?.payload ?? 0,
+      overloaded: view?.overloaded === true,
     };
   },
 };

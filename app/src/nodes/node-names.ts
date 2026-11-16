@@ -979,11 +979,17 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     vi: 'Thân robot',
     en: 'Robot Chassis',
     ports: {
+      in: {
+        'resetDistance': ['Đặt lại quãng đường', 'Reset distance'],
+      },
       out: {
         'self': ['Đối tượng', 'Self'],
         'speed': ['Tốc độ', 'Speed'],
         'heading': ['Hướng', 'Heading'],
         'turnRate': ['Tốc độ quay', 'Turn rate'],
+        'distance': ['Quãng đường', 'Distance'],
+        'payload': ['Khối lượng đang chở', 'Payload'],
+        'overloaded': ['Quá tải', 'Overloaded'],
       },
     },
   },
@@ -994,10 +1000,12 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       in: {
         'body': ['Thân', 'Chassis'],
         'power': ['Công suất', 'Power'],
+        'resetTurns': ['Đặt lại vòng', 'Reset turns'],
       },
       out: {
         'rpm': ['Vòng quay', 'RPM'],
         'turning': ['Đang quay', 'Spinning'],
+        'turns': ['Số vòng đã quay', 'Turns'],
       },
     },
   },
