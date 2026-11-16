@@ -461,7 +461,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nhìn từ bên cạnh thì hình quạt hướng sang trái hoặc phải theo hướng nhân vật quay mặt; nhìn từ trên và 3D thì theo hướng mặt trên mặt đất.',
       'Người nhìn không bao giờ thấy chính nó, và vật bị ẩn hay đang ngồi trên xe thì không được tính.',
-      'Lúc bấm Chạy (3D), mỗi nhân vật có Tầm nhìn hiện hình quạt vàng trên sàn; hình quạt đổi sang đỏ khi nó đang thấy gì đó.',
+      'Lúc bấm Chạy (3D), mỗi nhân vật hoặc Thân robot có Tầm nhìn hiện hình quạt vàng trên sàn; hình quạt đổi sang đỏ khi nó đang thấy gì đó. Quạt của robot quay theo hướng mũi: robot rẽ thì quạt quay theo.',
       'Bot đứng yên luôn quay về một hướng, nên người chơi đi vòng ra sau lưng là thoát khỏi tầm nhìn.',
     ],
     lessonId: 'bot-senses',

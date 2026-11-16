@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import type { EntityId, EntityView, SolidBox, World } from '../engine/types';
 import { liveVisionNotes } from '../nodes/sight-notes';
+import { groundHeading } from '../world/heading';
 
 /** Fan colours: yellow while nothing is seen, red when the sensor sees something. */
 const CALM = 0xffe033;
@@ -36,8 +37,9 @@ export function fanSpecs(world: World, tick: number, entities: readonly EntityVi
   const out: FanSpec[] = [];
   for (const { viewer, note } of liveVisionNotes(world, tick)) {
     const e = entities.find((x) => x.id === viewer);
-    if (!e || !e.visible || e.kind !== 'character' || e.seatedIn !== undefined || e.fallen !== undefined) continue;
-    const f = e.facing && Math.hypot(e.facing.x, e.facing.z) > 1e-6 ? e.facing : { x: 1, z: 0 };
+    if (!e || !e.visible || (e.kind !== 'character' && e.kind !== 'robot') || e.seatedIn !== undefined || e.fallen !== undefined) continue;
+    // A robot chassis looks along its nose (the same heading the sensor measures with); a character along its facing.
+    const f = e.kind === 'robot' ? groundHeading(e) : e.facing && Math.hypot(e.facing.x, e.facing.z) > 1e-6 ? e.facing : { x: 1, z: 0 };
     out.push({
       id: viewer,
       x: e.position.x,
@@ -110,7 +112,7 @@ interface Fan {
 }
 
 /**
- * Translucent sight fans on the floor, one per character that has a "Tầm nhìn" sensor reporting. Drawn from the
+ * Translucent sight fans on the floor, one per character or robot chassis that has a "Tầm nhìn" sensor reporting. Drawn from the
  * sensor's own numbers and the viewer's facing, cut at solid blocks, so what is painted is what the sensor sees.
  */
 export class VisionFanLayer {

@@ -720,10 +720,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const robot = byId.get(body)?.robot;
       if (robot) setWheel(robot, wheelId, wheel);
     },
-    setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number }): void {
+    setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void {
       const robot = byId.get(body)?.robot;
       if (!robot) return;
-      const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction, maxPayload: tuning.maxPayload ?? robot.spec.maxPayload });
+      const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction, maxPayload: tuning.maxPayload ?? robot.spec.maxPayload, pushObjects: tuning.pushObjects ?? robot.spec.pushObjects });
       robot.spec = next;
     },
     setBeltSpeed(id: EntityId, speed: number): void {
