@@ -453,6 +453,31 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'line-sensor': {
+    vi: 'Cảm biến dò line',
+    en: 'Line Sensor',
+    ports: {
+      in: {
+        'who': ['Đối tượng', 'Mounted on'],
+        'track': ['Đường line', 'Track'],
+      },
+      out: {
+        'onLine': ['Thấy line', 'On line'],
+        'level': ['Độ đậm', 'Level'],
+        'entered': ['Khi gặp line', 'On enter'],
+        'left': ['Khi rời line', 'On leave'],
+      },
+    },
+  },
+  'line-track': {
+    vi: 'Đường line',
+    en: 'Line Track',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+      },
+    },
+  },
   'map-range': {
     vi: 'Quy đổi khoảng',
     en: 'Map Range',

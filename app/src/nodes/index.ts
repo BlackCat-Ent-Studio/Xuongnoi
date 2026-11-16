@@ -55,6 +55,8 @@ import { uiDialogNode } from './ui-dialog';
 import { uiMeterNode } from './ui-meter';
 import { uiPickNode } from './ui-pick';
 import { uiStartNode } from './ui-start';
+import { lineSensorNode } from './line-sensor';
+import { lineTrackNode } from './line-track';
 import { applyNodeNames } from './node-names';
 
 export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
@@ -127,6 +129,8 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   uiMeterNode,
   uiDialogNode,
   uiStartNode,
+  lineTrackNode,
+  lineSensorNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.

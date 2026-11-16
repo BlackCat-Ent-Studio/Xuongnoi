@@ -8,6 +8,7 @@ import type {
   HitReaction,
   HoldStyle,
   ItemShape,
+  LineTrackSpec,
   Vec3,
 } from '../engine/types';
 import type { VehicleBody } from './vehicles';
@@ -80,6 +81,8 @@ export interface Entity {
   label?: string;
   /** Dropped from the world for good once hidden. */
   disposable?: boolean;
+  /** Blocks: a painted line (see LineTrackSpec). */
+  track?: LineTrackSpec;
   /** Solid-body worlds: where this character or item started; a fall off the tray brings it back here. */
   home?: Vec3;
 
@@ -121,6 +124,7 @@ export function toView(e: Entity): EntityView {
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),
     ...(e.zone ? { zone: true } : {}),
+    ...(e.track ? { track: e.track } : {}),
     ...(e.belt ? { belt: { axis: beltAxis(e), speed: e.belt.speed, phase: e.belt.phase } } : {}),
     ...turnAngle(e),
     ...(e.collider ? { collider: colliderView(e) } : {}),

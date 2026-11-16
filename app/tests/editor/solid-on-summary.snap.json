@@ -999,6 +999,25 @@
   }
  },
  {
+  "id": "lesson:line-eyes",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  }
+ },
+ {
   "id": "lesson:editor-tools",
   "off": {
    "ended": "running",
@@ -2148,6 +2167,44 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "66d87cad"
+  }
+ },
+ {
+  "id": "handbook:line-track",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  }
+ },
+ {
+  "id": "handbook:line-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e50e2334"
   }
  }
 ]

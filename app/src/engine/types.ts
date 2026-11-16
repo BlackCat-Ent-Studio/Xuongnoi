@@ -382,6 +382,8 @@ export interface EntitySpec {
   tag?: string;
   /** True = the entity is dropped from the world for good once hidden (shots, spawner copies). */
   disposable?: boolean;
+  /** Blocks only: a line painted on the floor (look 'line-track'); read back by line sensors. */
+  track?: LineTrackSpec;
 
   // ---- collision and body tuning (all optional; omitted = the plain visual box and normal physics) ----
   /** Size of the collision box; an axis of 0 (or omitted) uses the same axis of `size`. */
@@ -394,6 +396,18 @@ export interface EntitySpec {
   friction?: number;
   /** Items only: 0..1 share of the fall speed given back on landing. Omitted / 0 = no bounce. */
   bounce?: number;
+}
+
+/**
+ * A line painted on the floor ("Đường line"): a centre line of points and a width. Points use the plane the view shows:
+ * u = x and v = z in the top-down and 3D views, u = x and v = height in the side view. It never collides with anything.
+ */
+export interface LineTrackSpec {
+  path: readonly { u: number; v: number }[];
+  /** True = the last point joins back to the first. */
+  closed: boolean;
+  /** Full width in metres. */
+  width: number;
 }
 
 /** How a shot leaves a shooter. */
@@ -481,6 +495,8 @@ export interface EntityView {
   seatedIn?: EntityId;
   /** Blocks only; true for a zone marker (drawn translucent). */
   zone?: boolean;
+  /** Blocks only; present for a painted line (see LineTrackSpec). */
+  track?: LineTrackSpec;
   /**
    * Blocks only: extra turn in radians for the renderer (about Z in the side view, about the vertical axis elsewhere).
    * Solid blocks: how far the picture still lags behind the snapped quarter turn. Non-solid blocks: the full spin angle.

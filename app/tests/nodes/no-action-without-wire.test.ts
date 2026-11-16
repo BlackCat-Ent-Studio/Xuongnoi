@@ -58,6 +58,7 @@ const ACTION_BY_ARGS: Record<string, (a: Args) => boolean> = {
 /** Kinds allowed to make a world call without a wire, each with the reason. Keep this list short and honest. */
 const ALLOWED_CALLS: Record<string, { calls: string[]; why: string }> = {
   zone: { calls: ['hide'], why: 'hides its own editor marker box on the first tick (never a thing the game shows)' },
+  'line-sensor': { calls: ['spawn', 'show', 'hide'], why: 'makes, shows and hides its own marker dot under the eye; the dot is a mark, never a thing the game reads' },
 };
 
 /** Kinds allowed to show a HUD item with no wire. */
