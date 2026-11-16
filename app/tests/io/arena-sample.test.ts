@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type InputSnapshot } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { createWorld } from '../../src/world/world';
 
@@ -9,7 +9,7 @@ const keys = (...k: string[]): InputSnapshot => ({ keysDown: new Set(k) });
 
 function play() {
   registerAllNodes();
-  const board = listSamples().find((s) => s.id === 'arena')!.board;
+  const board = listAllSamples().find((s) => s.id === 'arena')!.board;
   const world = createWorld(board.mode);
   const rt = createRuntime(board.graph, world, board.mode);
   const step = (...k: string[]): void => {

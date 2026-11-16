@@ -4,7 +4,7 @@ import { addStartCard, FORMERLY_ON_BY_DEFAULT, migrateBoardWireRule, migrateWire
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
 import { compileGraph } from '../../src/engine/compile';
 import type { Board, Graph, GraphNode, NodeGroup } from '../../src/engine/types';
-import { createEmptyBoard, listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { createEmptyBoard, listAllSamples, parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { createNode } from '../../src/editor/editor-state';
 
@@ -114,7 +114,7 @@ describe('every way a board comes in is migrated', () => {
     const parsed = parseBoard(file);
     expect(parsed.ok && parsed.board.graph.nodes.map((n) => n.kind).sort()).toEqual(['go-to', 'on-start']);
 
-    const samples = listSamples();
+    const samples = listAllSamples();
     expect(samples.length).toBeGreaterThanOrEqual(16);
     for (const s of samples) expect(s.board.graph.settings?.wireRule, s.id).toBe(true);
     const guard = samples.find((s) => s.id === 'guard-patrol')!;

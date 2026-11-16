@@ -4,12 +4,12 @@ import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type EntityView, type InputSnapshot, type Runtime } from '../../src/engine/types';
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { findPlanePath, planeGridFor } from '../../src/world/navigation';
 import { createWorld } from '../../src/world/world';
 
-const board = (): Board => listSamples().find((s) => s.id === 'city-delivery')!.board;
+const board = (): Board => listAllSamples().find((s) => s.id === 'city-delivery')!.board;
 
 const START_CLICK: InputSnapshot = {
   keysDown: new Set(),

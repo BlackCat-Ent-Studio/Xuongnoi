@@ -2,7 +2,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type InputSnapshot } from '../../src/engine/types';
 import { HANDBOOK } from '../../src/handbook';
 import { registerAllNodes } from '../../src/nodes';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { LESSONS } from '../../src/tutorial/lessons';
 import { createWorld } from '../../src/world/world';
 import type { WorldOptions } from '../../src/world/world-options';
@@ -19,7 +19,7 @@ export interface NamedBoard {
 export function allBoards(): NamedBoard[] {
   registerAllNodes();
   const out: NamedBoard[] = [];
-  for (const s of listSamples()) out.push({ id: `sample:${s.id}`, group: 'sample', board: s.board });
+  for (const s of listAllSamples()) out.push({ id: `sample:${s.id}`, group: 'sample', board: s.board });
   for (const l of LESSONS) out.push({ id: `lesson:${l.id}`, group: 'lesson', board: l.createBoard() });
   for (const e of HANDBOOK) out.push({ id: `handbook:${e.kind}`, group: 'handbook', board: e.tryBoard() });
   return out;

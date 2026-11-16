@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type EntityView } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { worldOptionsForGraph } from '../../src/world/graph-world-options';
 import { createWorld } from '../../src/world/world';
 
@@ -25,7 +25,7 @@ const near = (ents: readonly EntityView[], ownerSuffix: string, hero: EntityView
 
 function play(id: string, steps: readonly Step[], on: boolean): { result: string; step: number } {
   registerAllNodes();
-  const board = listSamples().find((s) => s.id === id)!.board;
+  const board = listAllSamples().find((s) => s.id === id)!.board;
   const world = createWorld(board.mode, on ? worldOptionsForGraph({ nodes: [], wires: [], settings: { solidBodies: true } }) : undefined);
   const rt = createRuntime(board.graph, world, board.mode);
   let n = 0;

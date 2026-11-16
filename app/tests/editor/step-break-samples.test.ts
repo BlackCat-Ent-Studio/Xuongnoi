@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { stepBreakKeys } from '../../src/render/step-break';
 import { createWorld } from '../../src/world/world';
@@ -12,7 +12,7 @@ registerAllNodes();
 describe('step break on the editor samples', () => {
   it('every sample pauses on a wired output, and only on wired outputs', () => {
     const none: string[] = [];
-    for (const s of listSamples()) {
+    for (const s of listAllSamples()) {
       const { graph, mode } = s.board;
       const wired = new Set(graph.wires.map((w) => `${w.from.node}|${w.from.port}`));
       const rule = { accepts: (key: string): boolean => wired.has(key) };

@@ -34,9 +34,7 @@
 .seg-opt[aria-checked='true'] { background: var(--accent-soft); color: var(--accent); box-shadow: inset 0 0 0 1px rgba(62, 207, 142, 0.4); font-weight: 600; }
 .seg-opt:disabled { cursor: not-allowed; color: #626a75; }
 .seg-opt[aria-checked='true']:disabled { color: #4f9f7e; }
-.seg-short { display: none; }
 @media (max-width: 1180px) {
-  .seg-full { display: none; }
-  .seg-short { display: inline; }
   .seg-opt { padding: 0 7px; }
+  .sub2d { flex: none; width: 42px; padding: 0 2px; }
 }

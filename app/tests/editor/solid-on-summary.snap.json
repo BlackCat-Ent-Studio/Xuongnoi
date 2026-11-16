@@ -480,6 +480,120 @@
   }
  },
  {
+  "id": "lesson:two-motor-robot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  }
+ },
+ {
+  "id": "lesson:line-eyes",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  }
+ },
+ {
+  "id": "lesson:pid-control",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  }
+ },
+ {
+  "id": "lesson:weight-force",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b3f8a76f"
+  }
+ },
+ {
+  "id": "lesson:robot-arm",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "25d74ad5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "25d74ad5"
+  }
+ },
+ {
+  "id": "lesson:piston-push",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ae9ca2d5"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ae9ca2d5"
+  }
+ },
+ {
   "id": "lesson:carry-use",
   "off": {
    "ended": "running",
@@ -735,47 +849,6 @@
   }
  },
  {
-  "id": "lesson:combat",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [
-    "character-in-character x1 from 2.0s",
-    "character-in-item x1 from 1.0s"
-   ],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "c8d638c1"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "9a8d2062"
-  }
- },
- {
-  "id": "lesson:platforms-shooting",
-  "off": {
-   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
-   "ticks": 195,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "9a0db6c4"
-  },
-  "on": {
-   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
-   "ticks": 195,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "9a0db6c4"
-  }
- },
- {
   "id": "lesson:chance-zones",
   "off": {
    "ended": "running",
@@ -931,120 +1004,6 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "b006c903"
-  }
- },
- {
-  "id": "lesson:two-motor-robot",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "2124dd11"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "2124dd11"
-  }
- },
- {
-  "id": "lesson:line-eyes",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "84812efc"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "84812efc"
-  }
- },
- {
-  "id": "lesson:pid-control",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "a49da133"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "a49da133"
-  }
- },
- {
-  "id": "lesson:weight-force",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b3f8a76f"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b3f8a76f"
-  }
- },
- {
-  "id": "lesson:robot-arm",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "25d74ad5"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "25d74ad5"
-  }
- },
- {
-  "id": "lesson:piston-push",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "ae9ca2d5"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "ae9ca2d5"
   }
  },
  {
@@ -1207,6 +1166,47 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "7c0cee95"
+  }
+ },
+ {
+  "id": "lesson:combat",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "character-in-character x1 from 2.0s",
+    "character-in-item x1 from 1.0s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c8d638c1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a8d2062"
+  }
+ },
+ {
+  "id": "lesson:platforms-shooting",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 195,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a0db6c4"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Bạn rơi xuống hố hoặc bị đá rơi trúng!\"}",
+   "ticks": 195,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9a0db6c4"
   }
  },
  {

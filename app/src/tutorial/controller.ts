@@ -6,7 +6,7 @@ import { DOCK_TEXT as D } from './dock-text-vi';
 import { createHighlighter } from './highlight';
 import { paletteKinds, pointsAtCanvas } from './palette-targets';
 import './lessons-dock.css';
-import { chapterOf, type Chapter } from './course';
+import { chapterOf, isArchivedLesson, type Chapter } from './course';
 import { LESSONS } from './lessons';
 import { createStepPanel } from './panel';
 import { createRunner, type Runner } from './runner';
@@ -24,6 +24,9 @@ import type { Lesson, Snapshot, TargetList } from './types';
 
 const PLAY_SEL = '[data-tut="play"]';
 const STOP_SEL = '.pbtn.stop';
+
+/** What the menus offer: every lesson except those of archived chapters (those stay startable by id). */
+const SHOWN_LESSONS = LESSONS.filter((l) => !isArchivedLesson(l.id));
 
 export interface TutorialDeps {
   state: EditorState;
@@ -219,7 +222,7 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
 
   function renderList(): void {
     list.replaceChildren();
-    for (const lesson of LESSONS) {
+    for (const lesson of SHOWN_LESSONS) {
       const isDone = done.has(lesson.id);
       const isCur = runner?.lesson.id === lesson.id;
       const item = h('button', `ld-item${isDone ? ' done' : ''}${isCur ? ' cur' : ''}`);
@@ -254,25 +257,25 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
   el.append(button, menu, invite);
 
   function renderMenu(): void {
-    const doneCount = LESSONS.filter((l) => done.has(l.id)).length;
+    const doneCount = SHOWN_LESSONS.filter((l) => done.has(l.id)).length;
     const head = h('div', 'tut-menu-head');
     const headText = h('div', 'tut-menu-head-text');
     headText.append(h('div', 'tut-menu-title', T.menuTitle), h('div', 'tut-menu-hint', T.menuHint));
     const progress = h('div', 'tut-menu-progress');
     const bar = h('div', 'tut-menu-bar');
     const fill = h('div', 'tut-menu-bar-fill');
-    fill.style.width = `${(doneCount / LESSONS.length) * 100}%`;
+    fill.style.width = `${(doneCount / SHOWN_LESSONS.length) * 100}%`;
     bar.append(fill);
-    progress.append(bar, h('span', 'tut-menu-count', `${doneCount}/${LESSONS.length}`));
+    progress.append(bar, h('span', 'tut-menu-count', `${doneCount}/${SHOWN_LESSONS.length}`));
     head.append(headText, progress);
     const list = h('div', 'tut-menu-list');
     let chapter: Chapter | undefined;
-    for (const lesson of LESSONS) {
+    for (const lesson of SHOWN_LESSONS) {
       const ch = chapterOf(lesson.id);
       if (ch && ch !== chapter) {
         // One heading per chapter, with how many of its lessons are done.
         chapter = ch;
-        const ids = LESSONS.filter((l) => chapterOf(l.id) === ch).map((l) => l.id);
+        const ids = SHOWN_LESSONS.filter((l) => chapterOf(l.id) === ch).map((l) => l.id);
         const sec = h('div', 'tut-chapter');
         sec.dataset.chapter = ch.id;
         sec.append(h('span', 'tut-chapter-title', ch.title), h('span', 'tut-chapter-count', `${ids.filter((id) => done.has(id)).length}/${ids.length}`));

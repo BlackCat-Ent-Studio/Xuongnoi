@@ -19,7 +19,16 @@ import robotLineFollow from '../samples/robot-line-follow.json';
 import { createRobotArmBoard } from '../samples/robot-arm-board';
 import { parseBoard, serializeBoard } from './save-format';
 
+/**
+ * Samples shown in the menus and the launchpad: automation machines only. Append one line per new sample.
+ */
 const SAMPLES: { id: string; label: string; json: unknown }[] = [
+  { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, nhìn từ trên)', json: robotLineFollow },
+  { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
+];
+
+/** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */
+const ARCHIVED_SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'side-stars', label: 'Nhặt sao (nhảy 2D)', json: side },
   { id: 'top-collect', label: 'Thu thập (nhìn từ trên)', json: top },
   { id: '3d-hop', label: 'Nhảy cóc 3D', json: hop },
@@ -36,15 +45,29 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'dodge-shoot', label: 'Né và bắn (bệ di chuyển, bệ xoay, bắn đạn, đá rơi, 2D)', json: dodgeShoot },
   { id: 'city-delivery', label: 'Thành phố giao hàng (lái xe tải giao hàng, nhìn từ trên)', json: cityDelivery },
   { id: 'city-delivery-3d', label: 'Thành phố giao hàng 3D (nhiều khu, xe cộ, đèn giao thông)', json: cityDelivery3d },
-  { id: 'robot-line-follow', label: 'Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, nhìn từ trên)', json: robotLineFollow },
-  { id: 'robot-arm', label: 'Tay máy gắp thùng (khớp, thanh nối, tay kẹp; kg, N, mô-men, 2D)', json: JSON.parse(serializeBoard(createRobotArmBoard())) },
 ];
 
-/** Fresh copies on every call, so callers may mutate the boards freely. */
-export function listSamples(): { id: string; label: string; board: Board }[] {
-  return SAMPLES.map(({ id, label, json }) => {
+type Sample = { id: string; label: string; board: Board };
+
+function build(list: { id: string; label: string; json: unknown }[]): Sample[] {
+  return list.map(({ id, label, json }) => {
     const res = parseBoard(JSON.stringify(json));
-    if (!res.ok) throw new Error(`Game mẫu "${id}" bị hỏng: ${res.error}`);
+    if (!res.ok) throw new Error(`Bài mẫu "${id}" bị hỏng: ${res.error}`);
     return { id, label, board: res.board };
   });
+}
+
+/** Fresh copies on every call, so callers may mutate the boards freely. The menu list: automation samples only. */
+export function listSamples(): Sample[] {
+  return build(SAMPLES);
+}
+
+/** The archived game samples (not in any menu). */
+export function listArchivedSamples(): Sample[] {
+  return build(ARCHIVED_SAMPLES);
+}
+
+/** Every board in its original order (archived games, then the menu samples): for tests and tools. */
+export function listAllSamples(): Sample[] {
+  return [...listArchivedSamples(), ...listSamples()];
 }

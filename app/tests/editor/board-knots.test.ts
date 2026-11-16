@@ -3,7 +3,7 @@ import { knotKey, pruneGraphKnots, sanitizeKnots, wireIdOfKnotKey, withKnots } f
 import { settleDrop } from '../../src/editor/graph/drop-settle';
 import { createEditorState } from '../../src/editor/editor-state';
 import type { Board } from '../../src/engine/types';
-import { listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { listAllSamples, parseBoard, serializeBoard } from '../../src/io';
 import { addKnot, emptyKnots } from '../../src/puzzle/ui/wire-knots';
 import { fixture } from './groups-fixture';
 
@@ -36,7 +36,7 @@ describe('knots in save files', () => {
   });
 
   it('every sample loads and saves exactly as before: no knots key appears', () => {
-    for (const s of listSamples()) {
+    for (const s of listAllSamples()) {
       const text = serializeBoard(s.board);
       expect(text).not.toContain('"knots"');
       expect(serializeBoard(load(text))).toBe(text);

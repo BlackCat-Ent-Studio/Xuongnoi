@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type EntityView, type InputSnapshot } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { distanceNode } from '../../src/nodes/distance';
 import { latchNode } from '../../src/nodes/latch';
@@ -176,7 +176,7 @@ describe('zone sensor node', () => {
 });
 
 describe('dice-zones sample', () => {
-  const board = (): Board => listSamples().find((s) => s.id === 'dice-zones')!.board;
+  const board = (): Board => listAllSamples().find((s) => s.id === 'dice-zones')!.board;
 
   function start() {
     registerAllNodes();

@@ -76,7 +76,7 @@ const T = {
   play2: { title: 'Gắp lại', text: 'Bấm Chơi và gắp lại: lần này thùng được nhấc lên và giữ chặt.' },
   done: {
     title: 'Xong rồi!',
-    text: 'Bạn đã làm một cánh tay máy thật. Trong game mẫu "Tay máy gắp thùng" có thêm vai, khuỷu, thùng 6 kg làm khớp quá tải và thùng dễ vỡ. Thử xem!',
+    text: 'Bạn đã làm một cánh tay máy thật. Trong bài mẫu "Tay máy gắp thùng" có thêm vai, khuỷu, thùng 6 kg làm khớp quá tải và thùng dễ vỡ. Thử xem!',
   },
 };
 

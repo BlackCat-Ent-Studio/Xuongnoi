@@ -5,7 +5,7 @@ import { registerAllNodes } from '../../src/nodes';
 import { pickFollowTarget } from '../../src/render/cameras';
 import { findPlanePath, planeGridFor } from '../../src/world/navigation';
 import { createWorld } from '../../src/world/world';
-import { listSamples, parseBoard, serializeBoard } from '../../src/io';
+import { listAllSamples, listArchivedSamples, listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { safeFileName } from '../../src/io/file-io';
 
 const keys = (...k: string[]): InputSnapshot => ({ keysDown: new Set(k) });
@@ -22,7 +22,7 @@ function start(board: Board) {
 }
 
 describe('samples', () => {
-  const samples = listSamples();
+  const samples = listAllSamples();
 
   it('lists the samples with distinct ids and the expected modes', () => {
     expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot', 'city-delivery', 'city-delivery-3d', 'robot-line-follow', 'robot-arm']);
@@ -30,9 +30,15 @@ describe('samples', () => {
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
+  it('the menu list holds automation samples only, the archived list holds the 16 game samples', () => {
+    expect(listSamples().map((s) => s.id)).toEqual(['robot-line-follow', 'robot-arm']);
+    expect(listArchivedSamples().map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot', 'city-delivery', 'city-delivery-3d']);
+    expect(listAllSamples()).toHaveLength(listSamples().length + listArchivedSamples().length);
+  });
+
   it('returns independent copies', () => {
-    listSamples()[0]!.board.name = 'changed';
-    expect(listSamples()[0]!.board.name).not.toBe('changed');
+    listAllSamples()[0]!.board.name = 'changed';
+    expect(listAllSamples()[0]!.board.name).not.toBe('changed');
   });
 
   for (const s of samples) {
@@ -94,7 +100,7 @@ describe('samples', () => {
 });
 
 describe('key-door sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'key-door')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'key-door')!.board;
 
   it('is not won without opening the door', () => {
     const { world, step } = start(board());
@@ -134,7 +140,7 @@ describe('key-door sample', () => {
 });
 
 describe('pickaxe-rock sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'pickaxe-rock')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'pickaxe-rock')!.board;
 
   function play() {
     const g = start(board());
@@ -197,7 +203,7 @@ describe('pickaxe-rock sample', () => {
 });
 
 describe('guard-patrol sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'guard-patrol')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'guard-patrol')!.board;
   const withPlayerAt = (x: number, z: number) => {
     const b = board();
     b.graph.nodes.find((n) => n.id === 'player')!.params.position = { x, y: 0.5, z };
@@ -250,7 +256,7 @@ describe('guard-patrol sample', () => {
 });
 
 describe('cleaner-bot sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'cleaner-bot')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'cleaner-bot')!.board;
 
   it('delivers all three crates unattended and wins', () => {
     const g = start(board());
@@ -275,7 +281,7 @@ describe('cleaner-bot sample', () => {
 });
 
 describe('maze-chase sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'maze-chase')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'maze-chase')!.board;
 
   it('the bot finds its way through the walls and catches a player who stands still', () => {
     const g = start(board());
@@ -320,7 +326,7 @@ describe('maze-chase sample', () => {
 });
 
 describe('platform-bot sample', () => {
-  const board = () => listSamples().find((s) => s.id === 'platform-bot')!.board;
+  const board = () => listAllSamples().find((s) => s.id === 'platform-bot')!.board;
 
   it('the bot drops down, climbs the ledges, leaps the gap and takes the star', () => {
     const g = start(board());
@@ -346,7 +352,7 @@ describe('file names', () => {
 
 describe('key-door sample polish', () => {
   it('uses the padlock shape for the lock and floats a hint above it', () => {
-    const board = listSamples().find((s) => s.id === 'key-door')!.board;
+    const board = listAllSamples().find((s) => s.id === 'key-door')!.board;
     const { world, step } = start(board);
     for (let i = 0; i < 5; i++) step(keys());
     const lock = world.entities().find((e) => e.ownerNodeId === 'lock-1')!;

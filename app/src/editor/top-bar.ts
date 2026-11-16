@@ -1,4 +1,4 @@
-import { VIEW_MODES, type ViewMode } from '../engine/types';
+import type { ViewMode } from '../engine/types';
 import { AUTOSAVE_DELAY_MS } from '../io/autosave';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
@@ -8,6 +8,7 @@ import { createMenuBar, type MenuDef } from './menu-bar';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { CONSOLE_TEXT } from './console/console-text-vi';
 import { MODE_LABELS, TEXT_VI } from './text-vi';
+import { DEFAULT_2D, MODES_2D, VIEW_KINDS, modeForKind, remember2d, viewKindOf, type Mode2d } from './view-switch';
 
 export interface TopBarDeps {
   state: EditorState;
@@ -24,7 +25,7 @@ export interface TopBarDeps {
   /** Every notify() is also reported here (the console log). */
   onNotify?: (text: string, kind: 'info' | 'error') => void;
   onHelp(): void;
-  /** User picked a view mode in the segmented control (never called while playing). */
+  /** User picked a view (2D button, 3D button or the 2D kind switch); never called while playing. */
   onModeChange(mode: ViewMode): void;
   onPresetChange(preset: LayoutPreset): void;
   initialPreset: LayoutPreset;
@@ -77,19 +78,21 @@ export function createTopBar(deps: TopBarDeps): TopBar {
       state.setName(TEXT_VI.defaultBoardName);
     }
   });
-  // View-mode segmented control: ARIA radiogroup, arrows move and select, locked while playing.
+  // View segmented control: [2D] [3D]. The small select beside it picks which 2D view the 2D button uses.
+  let last2d: Mode2d = remember2d(state.getMode(), DEFAULT_2D);
   const seg = h('div', 'seg');
   seg.setAttribute('role', 'radiogroup');
   seg.setAttribute('aria-label', SHELL_TEXT.modeGroupAria);
-  const segOpts = VIEW_MODES.map((m) => {
+  const segOpts = VIEW_KINDS.map((kind) => {
     const b = h('button', 'seg-opt');
     b.type = 'button';
-    b.dataset.mode = m;
+    b.dataset.mode = kind;
+    b.dataset.tut = `view-${kind}`;
     b.setAttribute('role', 'radio');
-    b.setAttribute('aria-label', MODE_LABELS[m]);
-    b.append(h('span', 'seg-full', SHELL_TEXT.modeFull[m]), h('span', 'seg-short', SHELL_TEXT.modeShort[m]));
+    b.textContent = SHELL_TEXT.modeKind[kind];
     b.addEventListener('click', () => {
-      if (!state.isPlaying() && state.getMode() !== m) deps.onModeChange(m);
+      if (state.isPlaying() || viewKindOf(state.getMode()) === kind) return;
+      deps.onModeChange(modeForKind(kind, last2d));
     });
     return b;
   });
@@ -98,13 +101,37 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
     if (dir === 0 || state.isPlaying()) return;
     e.preventDefault();
-    const next = segOpts[(VIEW_MODES.indexOf(state.getMode()) + dir + segOpts.length) % segOpts.length]!;
+    const next = segOpts[(VIEW_KINDS.indexOf(viewKindOf(state.getMode())) + dir + segOpts.length) % segOpts.length]!;
     next.focus();
     next.click();
   });
 
+  const sub2d = h('select', 'sel-ui sub2d');
+  sub2d.setAttribute('aria-label', SHELL_TEXT.sub2dAria);
+  sub2d.dataset.tut = 'view-2d-kind';
+  const sub2dOpts = MODES_2D.map((m) => {
+    const o = h('option', '');
+    o.value = m;
+    sub2d.append(o);
+    return o;
+  });
+  const narrow = window.matchMedia('(max-width: 1180px)');
+  const labelSub2d = (): void => {
+    MODES_2D.forEach((m, i) => {
+      sub2dOpts[i]!.textContent = (narrow.matches ? SHELL_TEXT.sub2dShort : SHELL_TEXT.sub2dFull)[m];
+    });
+  };
+  labelSub2d();
+  narrow.addEventListener('change', labelSub2d);
+  sub2d.addEventListener('change', () => {
+    if (state.isPlaying()) return;
+    last2d = sub2d.value as Mode2d;
+    if (viewKindOf(state.getMode()) === '2d' && state.getMode() !== last2d) deps.onModeChange(last2d);
+    sync();
+  });
+
   const left = h('div', 'tb-left');
-  left.append(brand, menuBar.el, nameInput, seg);
+  left.append(brand, menuBar.el, nameInput, seg, sub2d);
 
   // ---------- centre: play cluster ----------
   const pstate = h('span', 'pstate');
@@ -214,20 +241,29 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     stepBtn.disabled = !deps.onStep || (stepping && !stepWaiting);
     const mode = state.getMode();
     const locked = playing;
+    last2d = remember2d(mode, last2d);
     seg.title = locked ? SHELL_TEXT.modeLockedTip : '';
     seg.classList.toggle('locked', locked);
     segOpts.forEach((b, i) => {
-      const on = VIEW_MODES[i] === mode;
+      const kind = VIEW_KINDS[i]!;
+      const on = viewKindOf(mode) === kind;
       b.setAttribute('aria-checked', String(on));
       b.tabIndex = on ? 0 : -1;
       b.disabled = locked;
-      b.title = locked ? SHELL_TEXT.modeLockedTip : MODE_LABELS[VIEW_MODES[i]!];
+      const target = modeForKind(kind, last2d);
+      b.title = locked ? SHELL_TEXT.modeLockedTip : MODE_LABELS[target];
+      b.setAttribute('aria-label', MODE_LABELS[target]);
     });
+    sub2d.value = last2d;
+    sub2d.disabled = locked;
+    sub2d.hidden = viewKindOf(mode) !== '2d';
+    sub2d.title = locked ? SHELL_TEXT.modeLockedTip : SHELL_TEXT.sub2dAria;
     undoBtn.disabled = !state.canUndo();
     redoBtn.disabled = !state.canRedo();
     if (document.activeElement !== nameInput) nameInput.value = state.getBoard().name;
   }
   state.subscribe((k) => {
+    if (k === 'board') last2d = DEFAULT_2D;
     if (k === 'playing' || k === 'board' || k === 'name' || k === 'history' || k === 'mode') sync();
   });
   sync();
