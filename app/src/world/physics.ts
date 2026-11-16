@@ -6,6 +6,7 @@ import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
+import { driveRobot, settleRobot } from './robot-drive';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
@@ -295,6 +296,21 @@ function stepVehicle(
   if (rivals) for (const other of rivals.hit) crashInto(v, other, wanted, dt, mode, solids, colliders);
 }
 
+/** One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks. */
+function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entity[]): void {
+  const body = r.robot;
+  if (!body) return;
+  const flat = driveRobot(body, dt, mode === '2d-side');
+  r.vel.x = flat.x;
+  r.vel.z = flat.z;
+  r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
+  if (mode === '2d-top') r.vel.y = 0;
+  else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r) * dt);
+  if (mode === '2d-side') r.pos.z = 0;
+  r.onGround = integrate(r, dt, mode, solids);
+  settleRobot(body, r.vel, mode === '2d-side');
+}
+
 /** Seconds a contact must stay broken before the same pair can crash again. */
 const CRASH_COOLDOWN = 0.5;
 
@@ -338,7 +354,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
   // Solid vehicles stop people on foot (but not the vehicles themselves, which only hit blocks).
-  const vehicleSolids = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.solid);
+  const vehicleSolids = entities.filter((e) => (e.kind === 'vehicle' || e.kind === 'robot') && e.visible && e.solid);
   const walkSolids = vehicleSolids.length > 0 ? [...solids, ...vehicleSolids] : solids;
 
   // Belts and moving vehicles carry what rests on them, before the riders move on their own.
@@ -362,6 +378,9 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
   const colliders = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.vehicle?.spec.collide !== false);
   for (const c of entities) {
     if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids, colliders);
+  }
+  for (const c of entities) {
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, solids);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {

@@ -10,6 +10,7 @@ import type {
   ItemShape,
   Vec3,
 } from '../engine/types';
+import type { RobotBody } from './robot-drive';
 import type { VehicleBody } from './vehicles';
 import { turnAngle, type TurnState } from './platforms';
 import type { BulletState } from './projectiles';
@@ -65,6 +66,8 @@ export interface Entity {
   thrownBy?: string | null;
   /** Vehicles: dynamics state. */
   vehicle?: VehicleBody;
+  /** Robot chassis: drive state and mounted wheels. */
+  robot?: RobotBody;
   /** Characters: id of the vehicle this one sits in, else null. */
   seatedIn: string | null;
   /** Blocks: set once a node moved or turned it; it then no longer counts as static terrain for path planning. */
@@ -117,6 +120,18 @@ export function toView(e: Entity): EntityView {
     ...(e.vehicle
       ? {
           vehicle: { model: e.vehicle.spec.model, speed: e.vehicle.speed, wheelSpin: e.vehicle.wheelSpin, heading: e.vehicle.heading, driver: e.vehicle.driver, hitSeq: e.vehicle.hitSeq, hitWith: e.vehicle.hitWith, steerMode: e.vehicle.spec.steerMode },
+        }
+      : {}),
+    ...(e.robot
+      ? {
+          robot: {
+            length: e.robot.spec.length,
+            width: e.robot.spec.width,
+            speed: e.robot.speed,
+            heading: e.robot.heading,
+            turnRate: e.robot.turnRate,
+            wheels: [...e.robot.wheels.values()].map((w) => ({ side: w.side, forward: w.forward, radius: w.radius, spin: w.spin })),
+          },
         }
       : {}),
     ...(e.seatedIn !== null ? { seatedIn: e.seatedIn } : {}),

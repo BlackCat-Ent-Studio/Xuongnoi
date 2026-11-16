@@ -259,7 +259,7 @@ export interface Runtime {
 
 // ---------- world API (implemented in src/world) ----------
 
-export type EntityKind = 'character' | 'block' | 'item' | 'vehicle';
+export type EntityKind = 'character' | 'block' | 'item' | 'vehicle' | 'robot';
 
 /** Optional cargo tuning a cargo node passes on: items per layer on the bed (1, 2, 4 or 6) and the gap left when unloading. */
 export interface CargoLayout {
@@ -292,6 +292,29 @@ export interface VehicleSpec {
   crashSpeed?: number;
   /** Share of the closing speed passed on to the vehicle that was hit. Omitted = 0.25. */
   shoveShare?: number;
+}
+
+/** A robot chassis: a rigid body that moves only when motors mounted on it turn their wheels (set when it spawns). */
+export interface RobotSpec {
+  /** Length (along the nose) and width of the drawn chassis, metres. */
+  length: number;
+  width: number;
+  /** Kilograms: how hard the chassis is to speed up. */
+  mass: number;
+  /** Ground grip: how quickly the chassis can speed up and stop (about 0.8 for rubber, 0.1 for ice). */
+  friction: number;
+}
+
+/** One motor's wheel as seen by the chassis it is mounted on. */
+export interface RobotWheelSpec {
+  /** Metres to the right of the centre line (negative = left). */
+  side: number;
+  /** Metres ahead of the centre (negative = behind). */
+  forward: number;
+  /** Wheel radius, metres. */
+  radius: number;
+  /** Current wheel speed, revolutions per minute; positive pushes the chassis forward. */
+  rpm: number;
 }
 
 /** Look of an item entity (built from boxes by the renderer). */
@@ -370,6 +393,10 @@ export interface EntitySpec {
   hitReaction?: HitReaction;
   /** Vehicles only (kind 'vehicle'). */
   vehicle?: VehicleSpec;
+  /** Robot chassis only (kind 'robot'). */
+  robot?: RobotSpec;
+  /** Robot chassis only: starting nose direction in radians (0 = +x, grows clockwise seen from above). */
+  heading?: number;
   /** Blocks only: a zone marker, drawn translucent so the area can be seen while editing. */
   zone?: boolean;
   /** Blocks only: how the block is drawn (a BlockStyle id). Omitted = plain box. Collision is unaffected. */
@@ -476,6 +503,15 @@ export interface EntityView {
     /** The vehicle hit in the latest crash. */
     hitWith?: EntityId | null;
     steerMode?: SteerMode;
+  };
+  /** Robot chassis only: size, motion and the mounted wheels (for drawing). Heading and turn rate grow clockwise seen from above. */
+  robot?: {
+    length: number;
+    width: number;
+    speed: number;
+    heading: number;
+    turnRate: number;
+    wheels: readonly { side: number; forward: number; radius: number; spin: number }[];
   };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
@@ -691,6 +727,13 @@ export interface WorldApi {
   setBlockAngle(id: EntityId, rad: number): boolean;
   /** Sets the live signed surface speed (units/s along the belt axis) of a conveyor block; ignored for other entities. 0 = stopped. */
   setBeltSpeed(id: EntityId, speed: number): void;
+  /**
+   * Mounts, refreshes (call every tick) or removes (null) the wheel of motor `wheelId` on a robot chassis. A wheel that is
+   * not refreshed for a tick is dropped. Ignored when `body` is not a robot chassis.
+   */
+  setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void;
+  /** Changes the mass and ground grip of a robot chassis while it runs (unusable numbers keep the old value). */
+  setRobotTuning(body: EntityId, tuning: { mass: number; friction: number }): void;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */

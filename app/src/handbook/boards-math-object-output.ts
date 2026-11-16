@@ -16,13 +16,13 @@ interface Spec {
   params?: Params;
 }
 
-const v = (x: number, y: number, z = 0) => ({ x, y, z });
+export const v = (x: number, y: number, z = 0) => ({ x, y, z });
 
 function node(s: Spec): GraphNode {
   return { id: s.id, kind: s.kind, params: s.params ?? {}, pos: { x: 40 + s.col * 280, y: 40 + s.row * 170 } };
 }
 
-function build(name: string, mode: ViewMode, note: string, specs: Spec[], wires: Wire[]): Board {
+export function build(name: string, mode: ViewMode, note: string, specs: Spec[], wires: Wire[]): Board {
   registerAllNodes();
   let graph: Graph = { nodes: specs.map(node), wires: [] };
   for (const [fn, fp, tn, tp] of wires) {

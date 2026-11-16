@@ -852,6 +852,32 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'robot-body': {
+    vi: 'Thân robot',
+    en: 'Robot Chassis',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+        'speed': ['Tốc độ', 'Speed'],
+        'heading': ['Hướng', 'Heading'],
+        'turnRate': ['Tốc độ quay', 'Turn rate'],
+      },
+    },
+  },
+  'motor': {
+    vi: 'Động cơ',
+    en: 'Motor',
+    ports: {
+      in: {
+        'body': ['Thân', 'Chassis'],
+        'power': ['Công suất', 'Power'],
+      },
+      out: {
+        'rpm': ['Vòng quay', 'RPM'],
+        'turning': ['Đang quay', 'Spinning'],
+      },
+    },
+  },
   'sight-forecast': {
     vi: 'Dự đoán tầm nhìn',
     en: 'Sight Forecast',

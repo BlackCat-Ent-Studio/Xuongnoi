@@ -896,6 +896,25 @@
   }
  },
  {
+  "id": "lesson:two-motor-robot",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "2124dd11"
+  }
+ },
+ {
   "id": "lesson:cargo-delivery",
   "off": {
    "ended": "running",
@@ -2148,6 +2167,44 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "66d87cad"
+  }
+ },
+ {
+  "id": "handbook:robot-body",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c6e51c6d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "c6e51c6d"
+  }
+ },
+ {
+  "id": "handbook:motor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "abcdfe78"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "abcdfe78"
   }
  }
 ]

@@ -52,6 +52,7 @@ const ACTION_BY_ARGS: Record<string, (a: Args) => boolean> = {
   },
   setVehicleInput: (a) => a[1] !== 0 || a[2] !== 0,
   setVehicleTow: (a) => a[1] !== null,
+  setRobotWheel: (a) => a[2] !== null && (a[2] as { rpm: number }).rpm !== 0,
   setCamera: (a) => a[1] !== null,
 };
 
@@ -176,7 +177,7 @@ const kinds = (): string[] => listNodeDefs().map((d) => d.kind);
 
 describe('no action without its wire', () => {
   it('covers every registered node kind', () => {
-    expect(kinds().length).toBeGreaterThanOrEqual(57);
+    expect(kinds().length).toBeGreaterThanOrEqual(59);
   });
 
   for (const kind of kinds()) {

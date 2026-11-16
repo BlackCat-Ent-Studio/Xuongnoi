@@ -9,6 +9,7 @@ import type {
   HudItem,
   PlayCameraCommand,
   PortalLink,
+  RobotWheelSpec,
   ShotSpec,
   SolidBox,
   Vec3,
@@ -31,6 +32,7 @@ import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
 import { createTeleporter } from './teleport';
 import { lineOfSight } from './line-of-sight';
 import { probeAhead } from './probe-ahead';
+import { createRobotBody, sanitizeRobotSpec, setWheel } from './robot-drive';
 import { createVehicleBody, seatPosition } from './vehicles';
 import { prepareTrains } from './vehicle-train';
 
@@ -348,6 +350,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         seatedIn: null,
         ...(spec.disposable ? { disposable: true } : {}),
         ...bodyTuning(spec),
+        ...(spec.kind === 'robot' ? { robot: createRobotBody(spec.robot, spec.heading) } : {}),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
@@ -680,6 +683,16 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!e || e.kind !== 'block' || !e.visible) return false;
       markMover(e);
       return moveBlockTo(list, e, to, mode);
+    },
+    setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
+      const robot = byId.get(body)?.robot;
+      if (robot) setWheel(robot, wheelId, wheel);
+    },
+    setRobotTuning(body: EntityId, tuning: { mass: number; friction: number }): void {
+      const robot = byId.get(body)?.robot;
+      if (!robot) return;
+      const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction });
+      robot.spec = next;
     },
     setBeltSpeed(id: EntityId, speed: number): void {
       const e = byId.get(id);
