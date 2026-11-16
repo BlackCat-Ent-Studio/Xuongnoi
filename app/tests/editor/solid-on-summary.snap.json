@@ -915,6 +915,44 @@
   }
  },
  {
+  "id": "lesson:line-eyes",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "84812efc"
+  }
+ },
+ {
+  "id": "lesson:pid-control",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "a49da133"
+  }
+ },
+ {
   "id": "lesson:cargo-delivery",
   "off": {
    "ended": "running",
@@ -2208,25 +2246,6 @@
   }
  },
  {
-  "id": "lesson:line-eyes",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "84812efc"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "84812efc"
-  }
- },
- {
   "id": "handbook:line-track",
   "off": {
    "ended": "running",
@@ -2262,25 +2281,6 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "e50e2334"
-  }
- },
- {
-  "id": "lesson:pid-control",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "a49da133"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "a49da133"
   }
  },
  {
