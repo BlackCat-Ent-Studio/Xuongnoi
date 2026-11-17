@@ -422,7 +422,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "db061049"
+   "hash": "ce91e88a"
   },
   "on": {
    "ended": "running",
@@ -430,7 +430,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "db061049"
+   "hash": "ce91e88a"
   }
  },
  {
@@ -439,21 +439,21 @@
    "ended": "running",
    "ticks": 900,
    "breaks": [
-    "sensor-without-contact x3 from 2.9s"
+    "sensor-without-contact x3 from 3.6s"
    ],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "2c2acb78"
+   "hash": "d97d3862"
   },
   "on": {
    "ended": "running",
    "ticks": 900,
    "breaks": [
-    "sensor-without-contact x3 from 2.9s"
+    "sensor-without-contact x3 from 3.6s"
    ],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "2c2acb78"
+   "hash": "d97d3862"
   }
  },
  {
@@ -464,7 +464,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "9b4485c6"
+   "hash": "f6c9b640"
   },
   "on": {
    "ended": "running",
@@ -472,7 +472,7 @@
    "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "9b4485c6"
+   "hash": "f6c9b640"
   }
  },
  {
@@ -690,6 +690,25 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "25d74ad5"
+  }
+ },
+ {
+  "id": "lesson:arm-steps",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ebcad3b9"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ebcad3b9"
   }
  },
  {
