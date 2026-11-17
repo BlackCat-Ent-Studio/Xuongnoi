@@ -227,6 +227,37 @@ export const spawnerBoard = (): Board =>
     'Chạy: bấm E, một quả bóng đỏ xuất hiện cạnh bạn. Tối đa 4 quả, mỗi quả biến mất sau 8 giây.',
   );
 
+export const spawnerWeightBoard = (): Board =>
+  build(
+    'Thử: thùng nặng nhẹ ngẫu nhiên',
+    '2d-side',
+    [
+      { alias: 'start', kind: 'on-start', x: 20, y: 20 },
+      { alias: 'clock', kind: 'timer', x: 20, y: 190, params: { seconds: 2, repeat: 'yes' } },
+      { alias: 'dice', kind: 'random', x: 300, y: 190, params: { min: 1, max: 20, whole: 'yes' } },
+      {
+        alias: 'maker',
+        kind: 'spawner',
+        x: 580,
+        y: 20,
+        params: { template: 'item', shape: 'crate', color: '#a16207', position: { x: 0, y: 4, z: 0 }, size: { x: 0.8, y: 0.8, z: 0.8 }, maxAlive: 3, lifetime: 7, wireMaterial: 'yes' },
+      },
+      { alias: 'floor', kind: 'block', x: 20, y: 400, params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 12, y: 1, z: 1 }, color: '#78716c' } },
+      { alias: 'scale', kind: 'block', x: 300, y: 400, params: { position: { x: 0, y: 0.2, z: 0 }, size: { x: 3, y: 0.4, z: 1 }, color: '#0ea5e9' } },
+      { alias: 'sensor', kind: 'force-sensor', x: 580, y: 400 },
+      { alias: 'kg', kind: 'show-number', x: 860, y: 400, params: { label: 'Cân (kg)', corner: 'top-left' } },
+    ],
+    [
+      ['start', 'started', 'clock', 'run'],
+      ['clock', 'done', 'dice', 'roll'],
+      ['clock', 'done', 'maker', 'spawn'],
+      ['dice', 'value', 'maker', 'mass'],
+      ['scale', 'self', 'sensor', 'who'],
+      ['sensor', 'mass', 'kg', 'value'],
+    ],
+    'Chạy: cứ 2 giây một thùng rơi xuống bàn cân, mỗi thùng nặng ngẫu nhiên 1 đến 20 kg vì "Số ngẫu nhiên" được nối vào ô "Khối lượng" của Tạo đối tượng. Số trên cân là tổng các thùng đang nằm trên bàn. Mỗi thùng sống 7 giây rồi biến mất.',
+  );
+
 export const patrolBoard = (): Board =>
   build(
     'Thử: Đi tuần',

@@ -1,5 +1,6 @@
-import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef } from '../engine/types';
+import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type Params, type PortDef, type PortValue } from '../engine/types';
 import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
+import { materialParams, materialSpec } from './body-params';
 import { ITEM_SHAPE_LABELS } from './item';
 import { asBool, asObject, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
@@ -10,6 +11,14 @@ interface SpawnerState {
 }
 
 const MAX_ALIVE_LIMIT = 50;
+
+const MASS_PORT: PortDef = { id: 'mass', type: 'number', label: 'Khối lượng' };
+const CRUSH_PORT: PortDef = { id: 'crushLimit', type: 'number', label: 'Lực chịu nén' };
+/** The default "Khối lượng" of the params; a block left on it keeps the 10 kg every older block has. */
+const ITEM_DEFAULT_MASS = 1;
+
+const takesWiredMaterial = (params: Params): boolean => strParam(params, 'wireMaterial', 'no') === 'yes';
+const wired = (v: PortValue | undefined): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 
 export const spawnerNode: NodeDef<SpawnerState> = {
   kind: 'spawner',
@@ -22,6 +31,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     { id: 'at', type: 'object', label: 'Tại đối tượng' },
     { id: 'toucher', type: 'object', label: 'Chạm thử với' },
   ],
+  // Only while "Nhận khối lượng từ dây" is on, so a spawner card keeps its size on every old board.
+  optionalInputs: { all: [MASS_PORT, CRUSH_PORT], active: (params) => (takesWiredMaterial(params) ? [MASS_PORT, CRUSH_PORT] : []) },
   outputs: [
     { id: 'lastSpawned', type: 'object', label: 'Đối tượng mới nhất' },
     { id: 'count', type: 'number', label: 'Số đang có' },
@@ -71,6 +82,18 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     },
     { id: 'maxAlive', label: 'Số lượng tối đa', kind: 'number', default: 3, min: 1, max: MAX_ALIVE_LIMIT, step: 1 },
     { id: 'lifetime', label: 'Sống bao lâu (giây, 0 = mãi)', kind: 'number', default: 5, min: 0, max: 600, step: 0.5 },
+    ...materialParams('item'),
+    {
+      id: 'wireMaterial',
+      label: 'Hiện ô "Khối lượng" và "Lực chịu nén" (nối dây để mỗi vật mới một khác)',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (giá trị trên dây lúc tạo thay cho ô nhập)' },
+      ],
+      advanced: true,
+    },
   ],
   create: () => ({ pool: createSpawnPool(), spawn: { prev: false }, last: null }),
   evaluate(ctx, i, params, s) {
@@ -87,6 +110,13 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         const base = anchorView ? anchorView.position : { x: 0, y: 0, z: 0 };
         const isBlock = strParam(params, 'template', 'item') === 'block';
         const shapeRaw = strParam(params, 'shape', 'ball');
+        const material = materialSpec(params, isBlock ? 'block' : 'item');
+        // A block left on the default mass keeps the block default (10 kg), so older boards stay identical.
+        if (isBlock && material.mass === ITEM_DEFAULT_MASS) material.mass = undefined;
+        if (takesWiredMaterial(params)) {
+          material.mass = wired(i.mass) ?? material.mass;
+          material.crushLimit = wired(i.crushLimit) ?? material.crushLimit;
+        }
         const id = world.spawn({
           kind: isBlock ? 'block' : 'item',
           ownerNodeId: ctx.nodeId,
@@ -100,6 +130,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
                 shape: ((ITEM_SHAPES as readonly string[]).includes(shapeRaw) ? shapeRaw : 'ball') as ItemShape,
                 carryable: strParam(params, 'carryable', 'no') === 'yes',
               }),
+          ...material,
           disposable: true,
         });
         addToSpawnPool(s.pool, id, numParam(params, 'lifetime', 5));

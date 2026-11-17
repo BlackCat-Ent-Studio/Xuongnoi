@@ -1,4 +1,4 @@
-import { TRY_BOARDS_MATH_OBJECT_OUTPUT as TRY, tryBlockHidden } from './boards-math-object-output';
+import { TRY_BOARDS_MATH_OBJECT_OUTPUT as TRY, tryBlockHidden, tryChangingText } from './boards-math-object-output';
 import type { HandbookEntry } from './types';
 
 /** Fine-tuning params that every object with a body in the world shares (folded under "Nâng cao"). */
@@ -470,15 +470,17 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       text: 'Dòng chữ cần hiện. Dài quá 120 ký tự thì bị cắt bớt.',
       color: 'Màu chữ.',
       corner: 'Góc màn hình để hiện chữ khi không gắn vào vật nào.',
+      lines: 'Nâng cao: nhiều câu, mỗi dòng một câu. Có ghi câu ở đây thì hiện thêm ô "Dòng số"; nối số vào đó để chọn câu nào hiện (1 là dòng đầu). Số ngoài phạm vi thì thẻ không hiện gì. Để trống thì thẻ chỉ hiện ô "Chữ" như bình thường.',
     },
     example: '"Đồ vật" chìa khoá → "Gắn vào đối tượng" của Hiện chữ "Nhặt tôi!". Nối thêm Phím Space "Đang giữ phím" → "Hiện" nếu muốn chữ chỉ hiện khi giữ phím.',
     tips: [
       'Nối "Hiện" với một điều kiện để chữ chỉ hiện đúng lúc cần, ví dụ khi nhân vật đứng gần.',
       'Nhiều chữ hiện cùng chỗ sẽ chồng nhau khó đọc; để ở các góc khác nhau hoặc gắn vào các vật khác nhau.',
-      'Chỉ hiện được chữ cố định bạn gõ. Muốn hiện con số thay đổi thì dùng Hiện số.',
+      'Muốn hiện con số thay đổi thì dùng Hiện số. Muốn chữ đổi theo trạng thái máy thì ghi nhiều câu vào "Các dòng chữ" rồi nối số bước (ví dụ "Bước hiện tại" của Chuỗi bước) vào "Dòng số".',
     ],
     lessonId: 'platforms-shooting',
     tryBoard: TRY['show-text'],
+    extraTries: [{ label: 'Thử: chữ đổi theo bước', board: tryChangingText }],
   },
   {
     kind: 'guide-arrow',

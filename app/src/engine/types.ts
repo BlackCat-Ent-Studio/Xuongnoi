@@ -64,6 +64,8 @@ export interface ParamDef {
   step?: number;
   /** Fine-tuning setting: shown folded under "Nâng cao" in the properties panel. */
   advanced?: boolean;
+  /** For kind 'text': a several-line box (one message per line) instead of a one-line field. */
+  multiline?: boolean;
 }
 
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */

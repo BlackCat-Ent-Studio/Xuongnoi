@@ -42,4 +42,41 @@ describe('show-text node', () => {
     expect(w.huds[0]?.corner).toBe('top-left');
     expect(w.huds[0]?.text).toHaveLength(SHOW_TEXT_MAX_LENGTH);
   });
+
+  describe('changing lines', () => {
+    const lines = 'Chờ\nChạy\nDừng';
+    const text = (line: number | undefined, over: Record<string, string> = {}) => {
+      const w = makeWorld();
+      const params = defaultParams(showTextNode, { text: 'Cố định', lines, ...over });
+      showTextNode.evaluate(makeCtx(w, { nodeId: 't1' }), { show: true, ...(line === undefined ? {} : { line }) }, params, null);
+      return w.huds[0]?.text;
+    };
+
+    it('shows the 1-based wired line, rounded', () => {
+      expect(text(1)).toBe('Chờ');
+      expect(text(2.4)).toBe('Chạy');
+      expect(text(3)).toBe('Dừng');
+    });
+
+    it('shows nothing when the line is out of range', () => {
+      expect(text(0)).toBe('');
+      expect(text(4)).toBe('');
+      expect(text(-2)).toBe('');
+      const w = makeWorld();
+      showTextNode.evaluate(makeCtx(w, { nodeId: 't1' }), { show: true, line: 9 }, defaultParams(showTextNode, { lines }), null);
+      expect(w.huds[0]?.hidden).toBe(true);
+    });
+
+    it('falls back to the "Chữ" param when nothing is wired or the lines are empty', () => {
+      expect(text(undefined)).toBe('Cố định');
+      expect(text(2, { lines: '' })).toBe('Cố định');
+      expect(text(2, { lines: '  \n ' })).toBe('Cố định');
+    });
+
+    it('splits on CRLF too and only shows the port while lines exist', () => {
+      expect(text(2, { lines: 'a\r\nb' })).toBe('b');
+      expect(showTextNode.optionalInputs!.active({ lines: '' })).toEqual([]);
+      expect(showTextNode.optionalInputs!.active({ lines: 'a' }).map((p) => p.id)).toEqual(['line']);
+    });
+  });
 });

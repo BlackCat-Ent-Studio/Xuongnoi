@@ -219,6 +219,16 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
           live: true,
         };
       case 'text': {
+        if (def.multiline) {
+          const area = h('textarea', 'prop-input pn-text');
+          area.rows = 4;
+          area.style.height = 'auto';
+          area.style.padding = '6px 9px';
+          area.setAttribute('aria-label', def.label);
+          area.value = typeof raw === 'string' ? raw : '';
+          area.addEventListener('input', () => commitParam(node, def.id, area.value));
+          return { control: area, inline: false, live: false };
+        }
         const input = h('input', 'prop-input pn-text');
         input.type = 'text';
         input.setAttribute('aria-label', def.label);

@@ -342,6 +342,23 @@ function tryShowText(): Board {
   );
 }
 
+export function tryChangingText(): Board {
+  const b = sideBase({ jump: false });
+  return build(
+    'Thử: chữ đổi theo bước',
+    '2d-side',
+    'Hẹn giờ cứ 2 giây bật một nhịp, Chuỗi bước chuyển sang bước kế và đưa số bước vào "Dòng số" của Hiện chữ. Hiện chữ chỉ có một thẻ nhưng đổi câu theo từng bước. Thử sửa các câu trong ô "Các dòng chữ" (Nâng cao).',
+    [
+      ...b.specs.filter((s) => s.id !== 'stick'),
+      { id: 'start', kind: 'on-start', col: 0, row: 0 },
+      { id: 'clock', kind: 'timer', col: 0, row: 1, params: { seconds: 2, repeat: 'yes' } },
+      { id: 'steps', kind: 'sequence', col: 1, row: 1, params: { stepCount: 3, loop: 'yes' } },
+      { id: 'status', kind: 'show-text', col: 2, row: 0, params: { text: 'Chờ', lines: ['Đang chờ hàng', 'Đang chạy', 'Đã dừng'].join(String.fromCharCode(10)) } },
+    ],
+    [['start', 'started', 'clock', 'run'], ['clock', 'done', 'steps', 'next'], ['steps', 'index', 'status', 'line']],
+  );
+}
+
 function tryGuideArrow(): Board {
   const b = sideBase({ jump: true });
   return build(

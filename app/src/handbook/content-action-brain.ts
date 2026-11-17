@@ -15,6 +15,7 @@ import {
   sequenceBoard,
   shooterBoard,
   spawnerBoard,
+  spawnerWeightBoard,
   teleportBoard,
 } from './boards-action-brain';
 import type { HandbookEntry } from './types';
@@ -293,6 +294,10 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       carryable: 'Chỉ khi sinh Đồ vật: nhân vật cầm được hay không.',
       maxAlive: 'Cùng lúc tồn tại tối đa bao nhiêu cái. Đủ rồi thì không sinh thêm.',
       lifetime: 'Mỗi cái sống bao lâu (giây). 0 nghĩa là mãi mãi.',
+      mass: 'Nâng cao: khối lượng mỗi vật mới (kg). Cân, kẹp, piston và robot chở hàng đều đọc số này. Mặc định 1 kg (Vật thể mặc định 10 kg). Đặt lên bàn cân thì Cảm biến lực / Cân đọc ra đúng số này.',
+      mu: 'Nâng cao: hệ số ma sát bề mặt của vật mới (0 = trơn, 1,5 = rất nhám).',
+      crushLimit: 'Nâng cao: lực ép lớn nhất (N) mà vật mới chịu được. Bị kẹp mạnh hơn thì hỏng. 0 nghĩa là không bao giờ hỏng.',
+      wireMaterial: 'Nâng cao: bật thì hiện thêm hai ô nhập "Khối lượng" và "Lực chịu nén" để nối dây, giá trị trên dây lúc tạo thay cho ô nhập tương ứng. Nối "Số ngẫu nhiên" vào "Khối lượng" để có thùng nặng nhẹ lẫn lộn.',
     },
     example: 'Phím E "Khi nhấn phím" → "Tạo"; "Đối tượng" → "Tại đối tượng"; "Số đang có" → Hiện số.',
     tips: [
@@ -303,6 +308,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ],
     lessonId: 'platforms-shooting',
     tryBoard: spawnerBoard,
+    extraTries: [{ label: 'Thử: thùng nặng nhẹ ngẫu nhiên', board: spawnerWeightBoard }],
   },
   {
     kind: 'patrol',
