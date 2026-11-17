@@ -1,6 +1,6 @@
 import type { EntityId, EntityView, NodeDef, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
-import { actuatorFrame, approach, exceeds, planPush, targetLength, type PushBody, type PushOrient } from '../world/linear-actuator';
+import { actuatorFrame, approach, exceeds, planPush, RIGID_CROSS_TOL, targetLength, type PushBody, type PushMove, type PushOrient } from '../world/linear-actuator';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
@@ -49,9 +49,21 @@ function pushBodiesOf(world: WorldApi): PushBody[] {
   for (const e of world.listEntities()) {
     if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
     const mat = world.materialOf(e.id);
-    if (mat) bodies.push({ id: e.id, box: boxOf(e), massKg: mat.massKg, mu: mat.mu });
+    if (mat) bodies.push({ id: e.id, box: boxOf(e), massKg: mat.massKg, mu: mat.mu, ...(world.isRigidCrate(e.id) ? { crossTol: RIGID_CROSS_TOL } : {}) });
   }
   return bodies;
+}
+
+/**
+ * Puts the bodies a push plan moved where it says. A rigid crate (real physics on) is not displaced: the plan only decided
+ * whether the pusher has the force and room to go on, and the head's own motion pushes the crate through the engine.
+ */
+export function shoveBodies(world: WorldApi, moves: readonly PushMove[]): void {
+  for (const m of moves) {
+    const e = world.getEntity(m.id);
+    if (!e || world.isRigidCrate(m.id)) continue;
+    world.teleport(m.id, { x: e.position.x + m.delta.x, y: e.position.y + m.delta.y, z: e.position.z + m.delta.z }, false);
+  }
 }
 
 interface FollowResult {
@@ -100,10 +112,7 @@ function followChassis(world: WorldApi, headId: EntityId, baseId: EntityId, want
       forceN = availableN;
       break;
     }
-    for (const m of plan.moves) {
-      const e = world.getEntity(m.id);
-      if (e) world.teleport(m.id, { x: e.position.x + m.delta.x, y: e.position.y + m.delta.y, z: e.position.z + m.delta.z }, false);
-    }
+    shoveBodies(world, plan.moves);
     forceN = Math.max(forceN, plan.requiredN);
     const at = boxOf(now).pos;
     world.moveBlock(headId, { x: at.x + dir.x * plan.advance, y: at.y + dir.y * plan.advance, z: at.z + dir.z * plan.advance });
@@ -272,10 +281,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
           forceN = maxForce;
           break;
         }
-        for (const m of plan.moves) {
-          const e = world.getEntity(m.id);
-          if (e) world.teleport(m.id, { x: e.position.x + m.delta.x, y: e.position.y + m.delta.y, z: e.position.z + m.delta.z }, false);
-        }
+        shoveBodies(world, plan.moves);
         forceN = Math.max(forceN, plan.requiredN);
         world.moveBlock(s.head, headCentre(frame, s.len + sign * plan.advance, headSize, stroke));
         s.len = lenOfHead();

@@ -29,6 +29,11 @@ export interface PushBody {
   massKg: number;
   /** Surface friction coefficient against what it slides on. */
   mu: number;
+  /**
+   * How deep (m) it may sit inside a solid across the direction of travel before that counts as "in the way". Absent = the
+   * usual hair (`SOLID_TOL`). A crate the rigid-body engine tilts sinks a few centimetres at an edge, which its box does not show.
+   */
+  crossTol?: number;
 }
 
 export interface PushInput {
@@ -74,6 +79,8 @@ const SOLID_TOL = 0.01;
 /** A body whose underside is this close to another's top stands on it. */
 const RIDE_GAP = 0.06;
 const BISECT = 12;
+/** `PushBody.crossTol` of a rigid crate: it may sink this deep (m) into a solid beside its path (a tilt at a belt edge) without being "stuck". */
+export const RIGID_CROSS_TOL = 0.05;
 
 function overlapAlong(a: Box, b: Box, axis: 'x' | 'y' | 'z'): number {
   return (a.size[axis] + b.size[axis]) / 2 - Math.abs(a.pos[axis] - b.pos[axis]);
@@ -175,8 +182,8 @@ function forceFor(input: PushInput, pushed: Map<EntityId, Vec3>, riderOf: Map<En
 }
 
 /** True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it). */
-function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3): boolean {
-  return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : SOLID_TOL));
+function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3, crossTol = SOLID_TOL): boolean {
+  return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : crossTol));
 }
 
 function clearOfSolids(input: PushInput, d: number): boolean {
@@ -189,7 +196,7 @@ function clearOfSolids(input: PushInput, d: number): boolean {
     if (inSolid(head, s, axes, input.dir)) return false;
     for (const [id, delta] of pushed) {
       const b = byId.get(id);
-      if (b && inSolid(shifted(b.box, delta), s, axes, input.dir)) return false;
+      if (b && inSolid(shifted(b.box, delta), s, axes, input.dir, b.crossTol)) return false;
     }
   }
   return true;

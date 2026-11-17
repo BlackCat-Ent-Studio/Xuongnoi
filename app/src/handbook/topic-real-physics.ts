@@ -51,7 +51,7 @@ export const REAL_PHYSICS_PAGE: HandbookTopic = {
         'Khối lượng và ma sát của thùng lấy từ ô "Khối lượng" và "Hệ số ma sát bề mặt" (mục Nâng cao của mảnh ghép tạo ra nó). Khi bật, ô "Độ trượt" không dùng nữa: thùng trượt theo ma sát thật, lực cản = μ × m × 9,81. Ô "Độ nảy" vẫn dùng.',
         'Ví dụ 4, đẩy cao thì đổ, đẩy thấp thì trượt: thùng 10 kg, cao 1,2 m, rộng 0,4 m, μ = 0,5. Trượt khi lực đẩy F ≥ μ × m × 9,81 = 49,05 N. Đổ khi F × độ cao đẩy ≥ m × 9,81 × (rộng ÷ 2) = 19,62 N·m. Đẩy ở 1,1 m: đổ khi F ≥ 17,8 N, nhỏ hơn 49,05 N nên thùng đổ trước khi kịp trượt. Đẩy ở 0,15 m: đổ cần F ≥ 130,8 N, lớn hơn nhiều nên thùng chỉ trượt. Bấm "Thử ngay" để xem hai thùng này.',
         'Thùng đang trượt mà bị chặn lại cũng có thể đổ: khi μ lớn hơn (rộng ÷ 2) ÷ (độ cao khối tâm), ở đây 0,2 ÷ 0,6 = 0,33 và μ = 0,5, ma sát dưới đáy làm nó chúi tới. Đẩy nhanh vào đỉnh thùng thì đổ dù lực không lớn; muốn đẩy mà không đổ thì đẩy thấp và chậm.',
-        'Robot đẩy thùng vẫn bị giới hạn lực như cũ: thùng cần F = μ × m × 9,81 mà tổng lực đẩy của các bánh (nhỏ hơn của lực động cơ và độ bám) không đủ thì robot đứng lại, thùng không nhúc nhích. Piston, cánh tay và bệ trượt vẫn đẩy thùng theo cách cũ của chúng (có giới hạn lực, nhưng đẩy tới đâu thùng ở tới đó, không có đà).',
+        'Robot đẩy thùng vẫn bị giới hạn lực như cũ: thùng cần F = μ × m × 9,81 mà tổng lực đẩy của các bánh (nhỏ hơn của lực động cơ và độ bám) không đủ thì robot đứng lại, thùng không nhúc nhích. Piston, khớp với thanh nối và bệ trượt cũng đẩy thùng bằng va chạm thật: đầu piston chạm cao thì thùng đổ, chạm thấp thì thùng trượt và giữ đà. Giới hạn lực vẫn như cũ: piston cần lực tối đa ≥ μ × m × 9,81 (thùng chồng lên nhau thì cộng khối lượng), khớp cần đủ mô-men (lực nhân khoảng cách tới trục); không đủ thì "Quá tải", đầu piston hay thanh nối đứng lại và thùng không nhúc nhích, kể cả khi đẩy cao lẽ ra chỉ cần lực nhỏ hơn để làm đổ. Thùng bị kẹp giữa đầu piston và tường thì piston dừng sát, không ép thùng xuyên tường.',
         'Băng chuyền kéo thùng bằng ma sát: thùng nhanh dần với a = μ × 9,81 cho tới khi bằng tốc độ băng. Thùng chạm tường cuối thì dừng và băng trượt dưới nó. Tay kẹp: thùng đang được kẹp hay đang khiêng thì rời khỏi mô phỏng, thả ra thì rơi tiếp từ chỗ đó.',
       ],
     },
@@ -68,7 +68,7 @@ export const REAL_PHYSICS_PAGE: HandbookTopic = {
       items: [
         'Dồn trọng lượng lên bánh trước khi phanh hay sau khi tăng tốc: tổng độ bám vẫn là μ × m × 9,81 nên các số ở trên không đổi.',
         'Mọi bánh coi như chịu trọng lượng bằng nhau; hàng chở coi như đặt giữa thân. Robot không bị lật.',
-        'Thùng chỉ chạm thân robot, xe và khối (hộp bao quanh), không chạm bánh riêng lẻ. Băng chuyền chỉ kéo thùng bằng ma sát: không có lực kéo riêng. Chưa có ma sát lăn: quả bóng lăn mãi trên sàn phẳng. Đạn bắn ra không thuộc mô phỏng này.',
+        'Thùng chỉ chạm thân robot, xe và khối (hộp bao quanh), không chạm bánh riêng lẻ. Băng chuyền chỉ kéo thùng bằng ma sát: không có lực kéo riêng. Chưa có ma sát lăn: quả bóng lăn mãi trên sàn phẳng. Piston và thanh nối đã qua kiểm tra lực thì chuyển động đúng tốc độ đã đặt dù va vào thùng (không chậm lại khi va): lực kiểm tra chỉ là μ × m × 9,81 lúc bắt đầu đẩy. Đạn bắn ra không thuộc mô phỏng này.',
       ],
     },
   ],
