@@ -3,6 +3,7 @@ import { TICK_DT, type EntitySpec, type PortValues, type Vec3, type ViewMode } f
 import { blockNode } from '../../src/nodes/block';
 import { counterNode } from '../../src/nodes/counter';
 import { itemNode } from '../../src/nodes/item';
+import { activeOutputs } from '../../src/engine/registry';
 import { SELECT_MAX_CHOICES, selectNumberNode } from '../../src/nodes/select-number';
 import { createWorld } from '../../src/world/world';
 import { makeWorld, runNode } from './fake-world';
@@ -195,12 +196,23 @@ describe('select-number node', () => {
     expect(picked(run([5], 3)[0]!)).toEqual([]);
   });
 
-  it('emits the same output ports for any choice count; the count is clamped to 2..6', () => {
+  it('emits exactly the ports the card shows: the old six up to 6 choices, more only above; the count is clamped to 2..12', () => {
     const keys = (n: number) => Object.keys(run([1], n)[0]!).sort();
+    const shown = (n: number) => activeOutputs(selectNumberNode, { choices: n }).map((p) => p.id).sort();
+    for (const n of [2, 3, 6, 7, 9, 12]) expect(keys(n)).toEqual(shown(n));
     expect(keys(2)).toEqual(keys(6));
     expect(keys(3)).toEqual(selectNumberNode.outputs.map((p) => p.id).sort());
+    expect(shown(12)).toHaveLength(13);
     expect(picked(run([3], 1)[0]!)).toEqual([]);
-    expect(picked(run([6], 99)[0]!)).toEqual([6]);
+    expect(picked(run([12], 99)[0]!)).toEqual([12]);
+    expect(picked(run([7], 6)[0]!)).toEqual([]);
+    expect(picked(run([7], 7)[0]!)).toEqual([7]);
+    expect(picked(run([11], 12)[0]!)).toEqual([11]);
+  });
+
+  it('lists the extra ports (7-12) as optional, so old saved wires still resolve', () => {
+    expect(selectNumberNode.outputs.map((p) => p.id)).toEqual(['is1', 'is2', 'is3', 'is4', 'is5', 'is6', 'changed']);
+    expect(selectNumberNode.optionalOutputs?.all.map((p) => p.id)).toEqual(['is7', 'is8', 'is9', 'is10', 'is11', 'is12']);
   });
 
   it('"Khi đổi" pulses when the choice changes, not on the first tick or while steady', () => {

@@ -26,6 +26,10 @@ import {
 } from './boards-input-logic';
 import type { HandbookEntry } from './types';
 
+const selectExtraChoices: Record<string, string> = Object.fromEntries(
+  Array.from({ length: 6 }, (_, k) => [`is${k + 7}`, `Bật khi số là ${k + 7}. Chỉ hiện khi "Số lựa chọn" từ ${k + 7} trở lên.`]),
+);
+
 /** Handbook pages for the input-logic node groups. */
 export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
   {
@@ -278,10 +282,11 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
       is3: 'Bật khi số là 3 (cần "Số lựa chọn" từ 3 trở lên).',
       is4: 'Bật khi số là 4 (cần "Số lựa chọn" từ 4 trở lên).',
       is5: 'Bật khi số là 5 (cần "Số lựa chọn" từ 5 trở lên).',
-      is6: 'Bật khi số là 6 (cần "Số lựa chọn" bằng 6).',
+      is6: 'Bật khi số là 6 (cần "Số lựa chọn" từ 6 trở lên).',
+      ...selectExtraChoices,
       changed: 'Bật một nhịp mỗi khi lựa chọn đổi sang cái khác.',
     },
-    params: { choices: 'Có bao nhiêu lựa chọn, từ 2 đến 6. Số nằm ngoài khoảng 1 tới số này thì không cổng nào bật.' },
+    params: { choices: 'Có bao nhiêu lựa chọn, từ 2 đến 12. Cổng "Bằng 7" tới "Bằng 12" chỉ hiện khi số lựa chọn đủ lớn. Số nằm ngoài khoảng 1 tới số này thì không cổng nào bật.' },
     example: 'Nhân vật "Máu" → Chọn theo số "Giá trị"; "Bằng 1" → Vật thể "Đặt màu": máu còn 1 thì hộp chuyển sang màu thứ nhất.',
     tips: [
       'Bắt đầu đếm từ 1, không phải 0. Số 0 hoặc số quá lớn thì không cổng nào bật.',

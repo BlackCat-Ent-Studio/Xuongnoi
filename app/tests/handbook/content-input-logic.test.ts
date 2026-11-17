@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createRuntime } from '../../src/engine/runtime';
-import { getNodeDef } from '../../src/engine/registry';
+import { getNodeDef, knownInputs, knownOutputs } from '../../src/engine/registry';
 import { TICK_DT } from '../../src/engine/types';
 import { HANDBOOK_INPUT_LOGIC } from '../../src/handbook/content-input-logic';
 import { parseBoard, serializeBoard } from '../../src/io';
@@ -28,7 +28,11 @@ describe('handbook input and logic pages', () => {
 
       it('is a registered node kind with ports and params matching its definition', () => {
         expect(def).toBeDefined();
-        expect(sorted(Object.keys(entry.ports))).toEqual(sorted([...def!.inputs, ...def!.outputs].map((p) => p.id)));
+        const documented = new Set(Object.keys(entry.ports));
+        const known = new Set([...knownInputs(def!), ...knownOutputs(def!)].map((p) => p.id));
+        // Every always-shown port is explained; a page may also explain switched-on ones, but never an unknown id.
+        expect(sorted([...def!.inputs, ...def!.outputs].map((p) => p.id).filter((id) => !documented.has(id)))).toEqual([]);
+        expect(sorted([...documented].filter((id) => !known.has(id)))).toEqual([]);
         expect(sorted(Object.keys(entry.params))).toEqual(sorted(def!.params.map((p) => p.id)));
       });
 
