@@ -192,6 +192,8 @@ export interface NodeGroup {
 export interface GraphSettings {
   /** "Va chạm thật": characters and loose items are solid bodies (see world/world-options.ts). Only ever stored as `true`. */
   solidBodies?: boolean;
+  /** "Vật lý thật": robots drive on wheel traction (grip, slip, yaw inertia, motor braking). Only ever stored as `true`. */
+  realPhysics?: boolean;
   /**
    * Set once a board follows "every action needs its own wire" (inputs such as "Bật" are off until wired).
    * A board without it is an older one: loading it wires a "Khi bắt đầu" card into those inputs. Only ever stored as `true`.
@@ -350,6 +352,10 @@ export interface RobotWheelSpec {
   rpm: number;
   /** Push force (N) this wheel can give at its current speed (its maximum scaled by |power|); absent = 0. */
   pushN?: number;
+  /** Most force (N) the motor gives when speeding up; real physics only. Absent = 6 N. */
+  driveN?: number;
+  /** Most force (N) the motor gives when slowing down; real physics only. Absent or 0 = only the grip limits braking. */
+  brakeN?: number;
 }
 
 /** Look of an item entity (built from boxes by the renderer). */
@@ -577,6 +583,8 @@ export interface EntityView {
     pushing?: boolean;
     /** Force (N) of that push: what the pushed chain needs, or what the motors give when they stall; absent when not pushing. */
     pushForce?: number;
+    /** Real physics only: per wheel, the slip speed (m/s, wheel rim minus ground; 0 while gripping). Absent when the switch is off. */
+    slip?: readonly number[];
   };
   /** Characters only; the vehicle this character is sitting in. */
   seatedIn?: EntityId;
@@ -846,6 +854,12 @@ export interface WorldApi {
   setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void;
   /** Newtons a robot chassis's motors can push with while travelling along `travel` (signed, along its heading): wheels turning that way, each at its maximum scaled by its power. 0 for anything that is not a robot chassis. */
   robotPushN(body: EntityId, travel: number): number;
+  /**
+   * What one motor's wheel really does with real physics on: its rim speed as revolutions per minute, how fast the rim runs
+   * ahead of (or behind) the ground while it slips, and whether it slips. Null when real physics is off, the wheel is not
+   * mounted or it has not been stepped yet.
+   */
+  robotWheelState(body: EntityId, wheelId: string): { rpm: number; slipSpeed: number; slipping: boolean } | null;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */

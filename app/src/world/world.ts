@@ -360,7 +360,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         ...(spec.disposable ? { disposable: true } : {}),
         ...bodyTuning(spec),
         ...materialTuning(spec),
-        ...(spec.kind === 'robot' ? { robot: createRobotBody(spec.robot, spec.heading) } : {}),
+        ...(spec.kind === 'robot' ? { robot: createRobotBody(spec.robot, spec.heading, options?.realPhysics === true) } : {}),
         ...(spec.kind === 'vehicle' ? { vehicle: createVehicleBody(spec.vehicle ?? { model: 'car', steerMode: 'direction', maxSpeed: 8, accel: 8 }) } : {}),
       };
       if (mode === '2d-side') e.pos.z = 0;
@@ -730,6 +730,11 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     robotPushN(body: EntityId, travel: number): number {
       const robot = byId.get(body)?.robot;
       return robot ? availablePushN(robot, finiteOr(travel, 0)) : 0;
+    },
+    robotWheelState(body: EntityId, wheelId: string): { rpm: number; slipSpeed: number; slipping: boolean } | null {
+      const wheel = byId.get(body)?.robot?.wheels.get(wheelId);
+      if (!wheel?.traction) return null;
+      return { rpm: (wheel.traction.rim * 60) / (2 * Math.PI * wheel.radius), slipSpeed: wheel.traction.slip, slipping: wheel.traction.slipping };
     },
     setBeltSpeed(id: EntityId, speed: number): void {
       const e = byId.get(id);

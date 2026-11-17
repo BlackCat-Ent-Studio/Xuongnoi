@@ -225,6 +225,7 @@ export function parseBoard(text: string): ParseResult {
   const rawSettings = isRecord(rawGraph.settings) ? rawGraph.settings : {};
   const settings: Graph['settings'] = {};
   if (rawSettings.solidBodies === true) settings.solidBodies = true;
+  if (rawSettings.realPhysics === true) settings.realPhysics = true;
   if (rawSettings.wireRule === true) settings.wireRule = true;
   if (Object.keys(settings).length > 0) graph = { ...graph, settings };
   // A board saved before the wire rule gets its "Khi bắt đầu" wires here, on every way in (file, library, autosave, sample).

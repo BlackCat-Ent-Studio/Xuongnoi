@@ -8,7 +8,8 @@ import { materialOf } from './material';
  * A robot chassis shoving loose items on the floor. It uses the same push model as the linear actuator (`planPush`):
  * the chassis is the "head", every item it meets is pushed ahead of it, the items those meet in turn too, and items
  * standing on a pushed item ride along. The resistance is  F = Σ μ · (m + load above) · g  of the directly pushed bodies.
- * The motors give  Σ (maximum push force × |power|)  of the wheels that turn the way the chassis travels; when the
+ * The motors give  Σ min(maximum push force × |power|, grip)  of the wheels that turn the way the chassis travels (the grip
+ * limit, μ · weight on the wheel, applies only with real physics on: a wheel cannot push harder than it grips); when the
  * resistance is higher the chassis stalls against the item (the wheels keep turning, there is no slip model).
  * Pushed items never enter a solid block: the chassis stops just short of that instead.
  * Not modelled: slowing down while pushing (a strong enough motor keeps the chassis speed) and items thinner than the
@@ -40,7 +41,7 @@ export interface ShoveState {
 export function availablePushN(robot: NonNullable<Entity['robot']>, travel: number): number {
   if (travel === 0) return 0;
   let total = 0;
-  for (const w of robot.wheels.values()) if (w.rpm * travel > 0) total += w.pushN;
+  for (const w of robot.wheels.values()) if (w.rpm * travel > 0) total += Math.min(w.pushN, w.traction?.gripN ?? Infinity);
   return total;
 }
 

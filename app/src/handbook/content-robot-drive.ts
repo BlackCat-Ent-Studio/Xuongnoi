@@ -127,11 +127,15 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
     ports: {
       body: 'Vào (vật): nối "Đối tượng" của Thân robot muốn gắn bánh lên. Không nối thì bánh quay trơ, không đẩy ai.',
       power: 'Vào (số): công suất từ -1 đến 1. 1 là quay hết tốc độ tới, -1 là hết tốc độ lùi, 0 là đứng yên. Không nối dây thì tính là 0 nên bánh không quay.',
-      rpm: 'Ra (số): vòng quay thật của bánh lúc này, tính bằng vòng mỗi phút. Dương là đẩy robot tới. Bánh tăng tốc từ từ nên số này đuổi theo công suất chứ không nhảy ngay.',
+      rpm: 'Ra (số): vòng quay thật của bánh lúc này, tính bằng vòng mỗi phút. Dương là đẩy robot tới. Bánh tăng tốc từ từ nên số này đuổi theo công suất chứ không nhảy ngay. Khi game bật "Vật lý thật", bánh lăn theo mặt đất và chỉ quay nhanh hơn mặt đất khi trượt.',
       turning: 'Ra: bật khi bánh đang quay.',
       turns:
         'Ra (số, chỉ hiện khi bật "Hiện bộ đếm vòng"): tổng số vòng bánh đã quay từ lúc bắt đầu, như bộ mã hóa vòng quay (encoder). Có dấu: quay tới thì tăng, quay lùi thì giảm. Số vòng × 2π × bán kính bánh là quãng đường bánh đã lăn (nếu robot không bị kẹt).',
       resetTurns: 'Vào (bật/tắt, chỉ hiện khi bật "Hiện bộ đếm vòng"): mỗi lần bật lên một nhịp thì đặt "Số vòng đã quay" về 0 rồi đếm lại.',
+      slipping:
+        'Ra (bật/tắt, chỉ hiện khi bật "Hiện ô Đang trượt"): bật khi bánh đang trượt, nghĩa là động cơ muốn kéo mạnh hơn độ bám của mặt đất cho phép nên bánh quay nhanh hơn mặt đất. Chỉ có khi game bật "Vật lý thật"; không thì luôn tắt.',
+      slipSpeed:
+        'Ra (số, m/s, chỉ hiện khi bật "Hiện ô Đang trượt"): tốc độ vành bánh nhanh hơn mặt đất bao nhiêu mét mỗi giây lúc bánh trượt; bánh bám tốt thì bằng 0. Chỉ có khi game bật "Vật lý thật".',
     },
     params: {
       side: 'Chỗ gắn bánh theo bề ngang thân, tính bằng mét tính từ đường giữa: số âm là bên trái, số dương là bên phải. Hai bánh càng xa nhau thì robot rẽ càng chậm mà chắc. Một bánh gắn lệch tâm sẽ làm robot đi vòng.',
@@ -143,6 +147,11 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       maxForce:
         'Lực kéo tối đa của động cơ này, đơn vị niu-tơn (N), khi công suất là 1; công suất nhỏ hơn thì lực nhỏ theo (công suất 0,5 là một nửa). Chỉ có tác dụng khi robot đẩy vật: lực của cả robot là tổng lực các động cơ đang quay cùng chiều robot chạy. Ví dụ hai động cơ 30 N cho 60 N, đủ đẩy một thùng 10 kg (cần 49,05 N); hai động cơ 20 N chỉ có 40 N nên robot đứng lại trước thùng. Không đẩy gì thì số này không đổi chuyển động của robot. Mặc định 30 N.',
       showTurns: 'Nâng cao. Bật để hiện thêm ô ra "Số vòng đã quay" và ô vào "Đặt lại vòng". Tắt thì thẻ Động cơ giữ nguyên như cũ.',
+      driveForce:
+        'Nâng cao, chỉ có tác dụng khi game bật "Vật lý thật". Lực tối đa (N) mà động cơ này kéo robot khi tăng tốc. Mặc định 6 N. Lực thật còn bị chặn bởi độ bám: μ × trọng lượng đè lên bánh. Xem trang "Vật lý thật".',
+      brakeForce:
+        'Nâng cao, chỉ có tác dụng khi game bật "Vật lý thật". Lực phanh tối đa (N) của động cơ này khi robot giảm tốc. 0 là chỉ phanh bằng ma sát (dừng cùng một quãng dù robot nặng hay nhẹ). Đặt số dương thì robot nặng cần quãng dừng dài hơn: a = tổng lực phanh ÷ khối lượng. Lực phanh cũng không vượt được độ bám.',
+      showSlip: 'Nâng cao. Bật để hiện thêm hai ô ra "Đang trượt" và "Tốc độ trượt". Tắt thì thẻ Động cơ giữ nguyên như cũ.',
     },
     example:
       'Cần điều khiển → hai Phép tính (lên + phải cho bánh trái, lên − phải cho bánh phải) → "Công suất" của hai Động cơ; "Đối tượng" của Thân robot → "Thân" của cả hai.',
