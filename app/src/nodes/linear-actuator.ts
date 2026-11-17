@@ -1,4 +1,4 @@
-import type { EntityId, EntityView, NodeDef, Vec3, ViewMode } from '../engine/types';
+import type { EntityId, EntityView, NodeDef, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
 import { actuatorFrame, approach, exceeds, planPush, targetLength, type PushBody, type PushOrient } from '../world/linear-actuator';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
@@ -13,6 +13,8 @@ interface PistonState {
   rod: EntityId;
   /** How far the rod is out of the barrel, in metres. */
   len: number;
+  /** False until the head has been set onto its mount once (that first jump is a placement, not a push). */
+  placed: boolean;
 }
 
 /** Length of the barrel (m): long enough to hold the whole rod when it is retracted. */
@@ -39,6 +41,80 @@ function headCentre(frame: Frame, len: number, head: number, stroke: number): Ve
 
 function boxOf(e: EntityView): { pos: Vec3; size: Vec3 } {
   return e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size };
+}
+
+/** Every loose body in the world that a head can shove (anything with a material that is not a block, carried or seated). */
+function pushBodiesOf(world: WorldApi): PushBody[] {
+  const bodies: PushBody[] = [];
+  for (const e of world.listEntities()) {
+    if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
+    const mat = world.materialOf(e.id);
+    if (mat) bodies.push({ id: e.id, box: boxOf(e), massKg: mat.massKg, mu: mat.mu });
+  }
+  return bodies;
+}
+
+interface FollowResult {
+  /** Part of the base's motion the head could not follow (a vector from the wanted place back to where the head is). */
+  short: Vec3;
+  /** Force (N) the chassis pushed with, the most it could give when it stalled or was blocked. */
+  forceN: number;
+  /** True when a load needed more than the chassis can push with. */
+  stalled: boolean;
+}
+
+/**
+ * The head follows a robot chassis it is bolted to. The chassis motion is a push like any other: loads in the way need
+ * the drive force of the wheels (the same rule as a chassis shoving items), and the head never enters a solid. What the
+ * head cannot follow is returned, so the caller can hold the chassis back (the rod is rigid).
+ */
+function followChassis(world: WorldApi, headId: EntityId, baseId: EntityId, want: Vec3, mode: ViewMode): FollowResult | null {
+  const head = world.getEntity(headId);
+  if (!head) return null;
+  const have = boxOf(head).pos;
+  const d = { x: want.x - have.x, y: want.y - have.y, z: want.z - have.z };
+  const dist = Math.hypot(d.x, d.y, d.z);
+  if (dist < 1e-9) return null;
+  const dir = { x: d.x / dist, y: d.y / dist, z: d.z / dist };
+  const heading = world.getEntity(baseId)?.robot?.heading ?? 0;
+  const travel = mode === '2d-side' ? d.x : d.x * Math.cos(heading) + d.z * Math.sin(heading);
+  const availableN = world.robotPushN(baseId, travel);
+  const subs = Math.max(1, Math.ceil(dist / MAX_SUB_STEP));
+  let moved = 0;
+  let forceN = 0;
+  let stalled = false;
+  for (let k = 0; k < subs; k++) {
+    const now = world.getEntity(headId);
+    if (!now) break;
+    const plan = planPush({
+      head: boxOf(now),
+      dir,
+      step: dist / subs,
+      bodies: pushBodiesOf(world),
+      solids: world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
+      flat: flatOf(mode),
+      lifting: dir.y > 0.5,
+    });
+    if (exceeds(plan.requiredN, availableN)) {
+      stalled = true;
+      forceN = availableN;
+      break;
+    }
+    for (const m of plan.moves) {
+      const e = world.getEntity(m.id);
+      if (e) world.teleport(m.id, { x: e.position.x + m.delta.x, y: e.position.y + m.delta.y, z: e.position.z + m.delta.z }, false);
+    }
+    forceN = Math.max(forceN, plan.requiredN);
+    const at = boxOf(now).pos;
+    world.moveBlock(headId, { x: at.x + dir.x * plan.advance, y: at.y + dir.y * plan.advance, z: at.z + dir.z * plan.advance });
+    moved += plan.advance;
+    if (plan.blocked) {
+      forceN = availableN;
+      break;
+    }
+  }
+  const left = Math.max(0, dist - moved);
+  return { short: { x: dir.x * left, y: dir.y * left, z: dir.z * left }, forceN, stalled };
 }
 
 export const linearActuatorNode: NodeDef<PistonState> = {
@@ -116,7 +192,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
     setArmHint(ctx.nodeId, head, { part: 'head' });
     setArmHint(ctx.nodeId, housing, { part: 'housing' });
     setArmHint(ctx.nodeId, rod, { part: 'rod' });
-    return { head, housing, rod, len: 0 };
+    return { head, housing, rod, len: 0, placed: false };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
@@ -132,7 +208,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
       return idle;
     }
     const orient = orientOf(strParam(params, 'orient', 'ground'));
-    const frame = actuatorFrame(origin, numParam(params, 'direction', 0), orient, ctx.mode);
+    let frame = actuatorFrame(origin, numParam(params, 'direction', 0), orient, ctx.mode);
     const dir = dirOf(frame);
     const headSize = Math.max(0.1, numParam(params, 'headSize', 0.6));
     const stroke = Math.max(0.1, numParam(params, 'stroke', 2));
@@ -149,14 +225,30 @@ export const linearActuatorNode: NodeDef<PistonState> = {
 
     // Follow whatever the piston is mounted on (and settle the head onto its place on the first tick).
     s.len = clamp(s.len, 0, stroke);
-    world.moveBlock(s.head, headCentre(frame, s.len, headSize, stroke));
+    let forceN = 0;
+    let overloaded = false;
+    const want = headCentre(frame, s.len, headSize, stroke);
+    const chassisId = baseId !== null && world.getEntity(baseId)?.robot !== undefined ? baseId : null;
+    const follow = s.placed && chassisId !== null ? followChassis(world, s.head, chassisId, want, ctx.mode) : null;
+    if (follow) {
+      // The chassis cannot carry the head any further than the loads and walls allow: it is held back with it.
+      forceN = follow.forceN;
+      overloaded = follow.stalled;
+      const left = Math.hypot(follow.short.x, follow.short.y, follow.short.z);
+      if (left > 1e-9) {
+        const base = world.getEntity(chassisId!)!;
+        world.teleport(chassisId!, { x: base.position.x - follow.short.x, y: base.position.y - follow.short.y, z: base.position.z - follow.short.z }, true);
+        frame = { ...frame, pos: { x: frame.pos.x - follow.short.x, y: frame.pos.y - follow.short.y, z: frame.pos.z - follow.short.z } };
+      }
+    } else if (chassisId === null || !s.placed) {
+      world.moveBlock(s.head, want);
+    }
+    s.placed = true;
     s.len = lenOfHead();
 
     const posIn = typeof i.position === 'number' && Number.isFinite(i.position) ? i.position : null;
     const goal = targetLength(stroke, asBool(i.extend), posIn);
     const wanted = approach(s.len, goal, stroke, speed, ctx.dt) - s.len;
-    let forceN = 0;
-    let overloaded = false;
 
     if (Math.abs(wanted) > 1e-9) {
       const sign = Math.sign(wanted);
@@ -165,12 +257,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
       for (let k = 0; k < subs; k++) {
         const head = world.getEntity(s.head);
         if (!head) break;
-        const bodies: PushBody[] = [];
-        for (const e of world.listEntities()) {
-          if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
-          const mat = world.materialOf(e.id);
-          if (mat) bodies.push({ id: e.id, box: boxOf(e), massKg: mat.massKg, mu: mat.mu });
-        }
+        const bodies = pushBodiesOf(world);
         const plan = planPush({
           head: boxOf(head),
           dir: moveDir,
@@ -206,7 +293,22 @@ export const linearActuatorNode: NodeDef<PistonState> = {
 
     const tip: Frame = { pos: localToWorld(frame, { x: barrel + s.len + headSize, y: 0, z: 0 }), yaw: frame.yaw, pitch: frame.pitch };
     reg.frames.set(s.head, tip);
-    reg.parts.set(ctx.nodeId, { tick: ctx.tick, baseId, tipId: s.head, masses: [] });
+    // A joint carrying this piston asks where the head would be for any angle it might turn to.
+    const direction = numParam(params, 'direction', 0);
+    const mount = vec3Param(params, 'mount', { x: 0, y: 0, z: 0 });
+    reg.parts.set(ctx.nodeId, {
+      tick: ctx.tick,
+      baseId,
+      tipId: s.head,
+      masses: [],
+      shape: (from, mode) => {
+        const at = actuatorFrame({ pos: localToWorld(from, mount), yaw: from.yaw, pitch: from.pitch }, direction, orient, mode);
+        return {
+          out: { pos: localToWorld(at, { x: barrelLen(stroke) + s.len + headSize, y: 0, z: 0 }), yaw: at.yaw, pitch: at.pitch },
+          solids: [{ pos: headCentre(at, s.len, headSize, stroke), size: { x: headSize, y: headSize, z: headSize } }],
+        };
+      },
+    });
     return {
       tip: s.head,
       positionNow: s.len,

@@ -21,6 +21,7 @@ const OLD_DEFAULT: Record<ArmPartKind, string> = {
   housing: '#0ea5e9',
   rod: '#0ea5e9',
   head: '#0ea5e9',
+  body: '#9ca3af',
 };
 const LOOK_DEFAULT: Record<ArmPartKind, string> = {
   joint: '#4a4f58',
@@ -30,6 +31,7 @@ const LOOK_DEFAULT: Record<ArmPartKind, string> = {
   housing: '#ff9f2e',
   rod: '#0ea5e9',
   head: '#0ea5e9',
+  body: '#9ca3af',
 };
 const PAD = '#ffd23f';
 const CHROME = '#c9ced6';
@@ -330,6 +332,8 @@ export class ArmPartFigure {
         break;
       case 'head':
         out.add(buildHead(size));
+        break;
+      case 'body':
         break;
     }
     return out;

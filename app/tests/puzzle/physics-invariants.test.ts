@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { rig } from '../helpers/arm-rig';
 import { PUZZLE_LEVELS } from '../../src/puzzle/levels';
 import { runLevel } from '../../src/puzzle/run-level';
 import { slotCentres } from '../../src/puzzle/store-slots';
@@ -11,6 +12,8 @@ import {
   checkContactClaims,
   gap,
   describeViolation,
+  penetration,
+  OVERLAP_TOLERANCE,
   type Violation,
 } from '../../src/world/physics-check';
 
@@ -363,5 +366,94 @@ describe('physics invariants: a loss comes for the stated reason', () => {
       expect(red.length, name).toBeGreaterThan(0);
     }
     expect(lost).toBeGreaterThan(0);
+  });
+});
+
+/**
+ * Arms and pistons are machines the learner builds, so the same rule holds for them: nothing they carry or push ends up
+ * inside a solid, and a solid arm piece or piston head is never inside a wall.
+ */
+describe('physics invariants: arms and pistons', () => {
+  const MACHINE = ['l', 'j', 'p'];
+  const penetrates = (a: BodySnapshot, b: BodySnapshot): number => penetration(a, b);
+
+  function watch(r: ReturnType<typeof rig>, ticks: number): string[] {
+    const seen = new Set<string>();
+    for (let i = 0; i < ticks; i++) {
+      r.tick();
+      const bodies = r.world.debugBodies?.() ?? [];
+      for (const v of checkBodies(bodies, { solidBodies: false })) seen.add(`${v.code} ${v.who.join('/')}`);
+      const walls = bodies.filter((b) => b.visible && b.kind === 'block' && b.solid && !MACHINE.includes(b.owner) && b.owner !== 'floor');
+      for (const m of bodies.filter((b) => b.visible && b.kind === 'block' && b.solid && MACHINE.includes(b.owner))) {
+        for (const w of walls) if (penetrates(m, w) > OVERLAP_TOLERANCE) seen.add(`machine-in-wall ${m.owner}/${w.owner}`);
+      }
+    }
+    return [...seen];
+  }
+
+  it('a solid arm swinging onto a wall block never enters it', () => {
+    const r = rig(
+      [
+        ['floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 40, y: 1, z: 6 } }],
+        ['pivot', 'block', { position: { x: -1, y: 3, z: 0 }, size: { x: 1.2, y: 1, z: 0.6 } }],
+        ['go', 'on-start'],
+        ['ang', 'const', { value: -90 }],
+        ['j', 'joint', { min: -90, max: 90, start: 0, maxTorque: 500, mount: { x: 1, y: 0, z: 0 }, solid: 'yes' }],
+        ['l', 'link', { length: 2, mass: 1, thickness: 0.2, solid: 'yes' }],
+        ['wall', 'block', { position: { x: 1.4, y: 1, z: 0 }, size: { x: 0.4, y: 2, z: 2 } }],
+      ],
+      [
+        ['pivot', 'self', 'j', 'base'],
+        ['go', 'started', 'j', 'power'],
+        ['ang', 'value', 'j', 'angle'],
+        ['j', 'tip', 'l', 'base'],
+      ],
+    );
+    expect(watch(r, 240)).toEqual([]);
+  });
+
+  it('a lowered barrier never ends inside a walking character', () => {
+    const r = rig(
+      [
+        ['floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 40, y: 1, z: 6 } }],
+        ['gantry', 'block', { position: { x: 3.8, y: 3, z: 0 }, size: { x: 1, y: 1, z: 0.6 } }],
+        ['go', 'on-start'],
+        ['ang', 'const', { value: -90 }],
+        ['j', 'joint', { min: -90, max: 90, start: 90, maxTorque: 500, mount: { x: -0.8, y: 0, z: 0 }, solid: 'yes' }],
+        ['l', 'link', { length: 3, mass: 1, thickness: 0.2, solid: 'yes' }],
+        ['mx', 'const', { value: 1 }],
+        ['who', 'character', { position: { x: 2.0, y: 1, z: 0 }, speed: 0.2 }],
+      ],
+      [
+        ['gantry', 'self', 'j', 'base'],
+        ['go', 'started', 'j', 'power'],
+        ['ang', 'value', 'j', 'angle'],
+        ['j', 'tip', 'l', 'base'],
+        ['mx', 'value', 'who', 'moveX'],
+      ],
+    );
+    expect(watch(r, 300)).toEqual([]);
+  });
+
+  it('a piston on a driving chassis never puts its head into a wall', () => {
+    const r = rig(
+      [
+        ['floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 60, y: 1, z: 6 } }],
+        ['body', 'robot-body', { position: { x: 0, y: 0.15, z: 0 }, height: 0.3, pushObjects: 'yes' }],
+        ['ml', 'motor', { side: -0.4, maxForce: 30 }],
+        ['mr', 'motor', { side: 0.4, maxForce: 30 }],
+        ['pw', 'const', { value: 1 }],
+        ['p', 'linear-actuator', { stroke: 1, maxForce: 100, headSize: 0.6, mount: { x: 0, y: 0.2, z: 0 } }],
+        ['wall', 'block', { position: { x: 4, y: 1, z: 0 }, size: { x: 0.4, y: 2, z: 4 } }],
+      ],
+      [
+        ['body', 'self', 'ml', 'body'],
+        ['body', 'self', 'mr', 'body'],
+        ['pw', 'value', 'ml', 'power'],
+        ['pw', 'value', 'mr', 'power'],
+        ['body', 'self', 'p', 'base'],
+      ],
+    );
+    expect(watch(r, 600)).toEqual([]);
   });
 });

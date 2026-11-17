@@ -1,5 +1,7 @@
-import type { EntityId, EvalCtx, Vec3, WorldApi } from '../engine/types';
+import type { EntityId, EvalCtx, Vec3, ViewMode, WorldApi } from '../engine/types';
+import { setArmHint } from '../engine/render-hints';
 import { localToWorld, type Frame } from '../world/arm-kinematics';
+import type { Box } from '../world/linear-actuator';
 
 /**
  * What the arm pieces of one running game know about each other. Wires carry only "an object" between pieces, so the
@@ -14,6 +16,9 @@ export interface ArmMass {
   point: Vec3;
 }
 
+/** Where a part stands and which solid cubes it has, given the frame of what it is mounted on (see `solidsBeyond`). */
+export type ArmShape = (base: Frame, mode: ViewMode) => { out: Frame | null; solids: Box[] };
+
 export interface ArmPart {
   /** Last tick this part wrote its record. */
   tick: number;
@@ -22,6 +27,8 @@ export interface ArmPart {
   /** Its own entity: the handle of its `tip` output (grippers have none). */
   tipId: EntityId | null;
   masses: ArmMass[];
+  /** Geometry of the part for any frame it might be mounted on; lets a joint ask what its turn would carry into. */
+  shape?: ArmShape;
 }
 
 export interface ArmRegistry {
@@ -61,6 +68,45 @@ export function massesBeyond(reg: ArmRegistry, tipId: EntityId, tick: number): A
     }
   }
   return out;
+}
+
+/**
+ * The solid cubes of every part mounted beyond `tipId`, placed as if that tip stood at `tip` (a joint asks this for the
+ * angle it would turn to). Parts further out keep the angles they have now.
+ */
+export function solidsBeyond(reg: ArmRegistry, tipId: EntityId, tip: Frame, tick: number, mode: ViewMode): Box[] {
+  const out: Box[] = [];
+  const seen = new Set<EntityId>([tipId]);
+  const queue: { id: EntityId; frame: Frame }[] = [{ id: tipId, frame: tip }];
+  while (queue.length > 0) {
+    const at = queue.shift()!;
+    for (const part of reg.parts.values()) {
+      if (part.baseId !== at.id || tick - part.tick > STALE_TICKS || !part.shape) continue;
+      const shape = part.shape(at.frame, mode);
+      out.push(...shape.solids);
+      if (part.tipId !== null && shape.out && !seen.has(part.tipId)) {
+        seen.add(part.tipId);
+        queue.push({ id: part.tipId, frame: shape.out });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Keeps one invisible solid block per cube: spawned on the first call, right where the cube is (a far jump would drag a
+ * solid across the world), then moved there every tick. `ids` is the piece's own list.
+ */
+export function placeSolidCubes(world: WorldApi, ownerNodeId: string, ids: EntityId[], cubes: readonly Box[]): void {
+  cubes.forEach((cube, k) => {
+    let id = ids[k];
+    if (id === undefined) {
+      id = world.spawn({ kind: 'block', ownerNodeId, position: cube.pos, size: cube.size, color: '#9ca3af', solid: true });
+      setArmHint(ownerNodeId, id, { part: 'body' });
+      ids.push(id);
+    }
+    world.moveBlock(id, cube.pos);
+  });
 }
 
 /** Frame of what a piece is mounted on, shifted by `mount` (local x along, y up, z sideways). Null when the object is unknown or hidden. */
