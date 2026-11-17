@@ -34,6 +34,8 @@ export const PANELS_TEXT_VI = {
   solidBodiesLabel: 'Va chạm thật',
   solidBodiesTip: 'Nhân vật và đồ vật đặc, không đi xuyên nhau; thả đồ rơi ngay trước tay. Áp dụng ở lần Chạy sau.',
   solidBodiesLocked: 'Bấm Dừng để đổi cài đặt này.',
+  realPhysicsLabel: 'Vật lý thật',
+  realPhysicsTip: 'Robot chạy bằng lực bám thật: bánh quá khỏe so với độ bám thì trượt, robot nặng thì tăng tốc, quay và dừng chậm hơn. Áp dụng ở lần Chạy sau.',
   emptyTitle: 'Chưa chọn mảnh ghép nào',
   emptyBody: 'Bấm vào một mảnh ghép trên bảng nối dây để xem và đổi thuộc tính của nó.',
   shortcuts: [

@@ -13,6 +13,8 @@ export interface WorldOptions {
   solidBodies?: boolean;
   /** Anything that falls off the world (far below the floor) goes back to where it started. Off when falling is part of the game. */
   respawnFallen?: boolean;
+  /** Robots drive on wheel traction: each wheel pushes with at most motor force and grip, wheels can slip, turning has inertia. */
+  realPhysics?: boolean;
   /** Collision box of every character, so it matches the figure that is drawn (position stays at the base box centre). */
   characterBox?: { size: Vec3; offset: Vec3 };
   /** Every character carries in front of it (a game whose figures have no hands up: the editor). Takes the place of frontCarryLooks. */

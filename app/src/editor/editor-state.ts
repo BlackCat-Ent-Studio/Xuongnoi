@@ -168,6 +168,10 @@ export interface EditorState {
   getSolidBodies(): boolean;
   /** Switches "Va chạm thật" for the next play. Ignored while playing; the field is dropped when off so old files round-trip unchanged. */
   setSolidBodies(on: boolean): void;
+  /** "Vật lý thật" of this game (robots drive on wheel traction). */
+  getRealPhysics(): boolean;
+  /** Switches "Vật lý thật" for the next play. Ignored while playing; the field is dropped when off so old files round-trip unchanged. */
+  setRealPhysics(on: boolean): void;
   setPlaying(playing: boolean): void;
   select(sel: Selection): void;
   /** Shift+click: add or remove one node/note from the selection. */
@@ -411,6 +415,14 @@ export function createEditorState(initial: Board): EditorState {
       const { settings: old, ...rest } = board.graph;
       const { solidBodies: _was, ...others } = old ?? {};
       const settings = on ? { ...others, solidBodies: true } : others;
+      commit({ ...board, graph: Object.keys(settings).length > 0 ? { ...rest, settings } : rest }, ['graph']);
+    },
+    getRealPhysics: () => board.graph.settings?.realPhysics === true,
+    setRealPhysics(on) {
+      if (playing || on === (board.graph.settings?.realPhysics === true)) return;
+      const { settings: old, ...rest } = board.graph;
+      const { realPhysics: _was, ...others } = old ?? {};
+      const settings = on ? { ...others, realPhysics: true } : others;
       commit({ ...board, graph: Object.keys(settings).length > 0 ? { ...rest, settings } : rest }, ['graph']);
     },
     setPlaying(p) {

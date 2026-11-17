@@ -351,6 +351,13 @@ export function mountEditor(root: HTMLElement): void {
             disabled: state.isPlaying(),
             onSelect: () => state.setSolidBodies(!state.getSolidBodies()),
           },
+          {
+            type: 'item',
+            label: PANELS_TEXT_VI.realPhysicsLabel,
+            checked: state.getRealPhysics(),
+            disabled: state.isPlaying(),
+            onSelect: () => state.setRealPhysics(!state.getRealPhysics()),
+          },
         ];
       },
     },

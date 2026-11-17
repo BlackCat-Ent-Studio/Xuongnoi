@@ -3,6 +3,7 @@ import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { SOLID_BODIES_TOPIC } from '../handbook/topic-solid-bodies';
+import { REAL_PHYSICS_TOPIC } from '../handbook/topic-real-physics';
 import { h } from './dom';
 import { renderGroupInspector, renderMultiSelect } from './groups/group-inspector';
 import { createLookPicker, type LookPicker } from './look-picker';
@@ -337,25 +338,34 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
   }
 
   /** The "Va chạm thật" switch of this game (also in the Tệp menu). Applies on the next Chạy. */
-  function solidBodiesToggle(): HTMLElement {
+  function worldSwitch(opts: { key: string; title: boolean; text: string; tip: string; topic: string; get: () => boolean; set: (on: boolean) => void }): HTMLElement {
     const playing = state.isPlaying();
     const row = h('div', 'pn-setting');
-    row.dataset.setting = 'solid-bodies';
+    row.dataset.setting = opts.key;
     const label = h('label', 'pn-setting-label');
     const box = h('input');
     box.type = 'checkbox';
-    box.checked = state.getSolidBodies();
+    box.checked = opts.get();
     box.disabled = playing;
-    box.addEventListener('change', () => state.setSolidBodies(box.checked));
-    label.append(box, h('span', '', P.solidBodiesLabel));
-    label.title = playing ? P.solidBodiesLocked : P.solidBodiesTip;
-    row.append(h('h3', '', P.gameSettingsTitle), label, createHandbookHelpButton(SOLID_BODIES_TOPIC, P.solidBodiesLabel), h('p', 'pn-setting-tip', P.solidBodiesTip));
+    box.addEventListener('change', () => opts.set(box.checked));
+    label.append(box, h('span', '', opts.text));
+    label.title = playing ? P.solidBodiesLocked : opts.tip;
+    row.append(...(opts.title ? [h('h3', '', P.gameSettingsTitle)] : []), label, createHandbookHelpButton(opts.topic, opts.text), h('p', 'pn-setting-tip', opts.tip));
     return row;
+  }
+
+  function solidBodiesToggle(): HTMLElement {
+    return worldSwitch({ key: 'solid-bodies', title: true, text: P.solidBodiesLabel, tip: P.solidBodiesTip, topic: SOLID_BODIES_TOPIC, get: () => state.getSolidBodies(), set: (on) => state.setSolidBodies(on) });
+  }
+
+  /** The "Vật lý thật" switch, right under "Va chạm thật". Applies on the next Chạy. */
+  function realPhysicsToggle(): HTMLElement {
+    return worldSwitch({ key: 'real-physics', title: false, text: P.realPhysicsLabel, tip: P.realPhysicsTip, topic: REAL_PHYSICS_TOPIC, get: () => state.getRealPhysics(), set: (on) => state.setRealPhysics(on) });
   }
 
   function renderEmpty(): void {
     const box = h('div', 'pn-empty-state');
-    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle());
+    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle(), realPhysicsToggle());
     const dl = h('dl', 'pn-keys');
     for (const s of P.shortcuts) {
       const dt = h('dt');

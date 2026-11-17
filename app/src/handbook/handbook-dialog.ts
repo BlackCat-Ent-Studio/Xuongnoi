@@ -12,9 +12,10 @@ import { buildRows, filterRows, levelOf, sectionsByCategory, sectionsByLevel, ty
 import { HANDBOOK_TEXT as T } from './handbook-text-vi';
 import { SOLID_BODIES_PAGE, type HandbookTopic } from './topic-solid-bodies';
 import { ENGINEERING_PHYSICS_PAGE } from './topic-engineering-physics';
+import { REAL_PHYSICS_PAGE } from './topic-real-physics';
 
 /** Topic pages shown above the node lists. */
-const TOPICS: readonly HandbookTopic[] = [SOLID_BODIES_PAGE, ENGINEERING_PHYSICS_PAGE];
+const TOPICS: readonly HandbookTopic[] = [SOLID_BODIES_PAGE, REAL_PHYSICS_PAGE, ENGINEERING_PHYSICS_PAGE];
 const isTopic = (id: string): boolean => TOPICS.some((t) => t.id === id);
 import './handbook-dialog.css';
 import './handbook-standalone.css';
