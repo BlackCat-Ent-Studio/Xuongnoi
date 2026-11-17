@@ -132,5 +132,8 @@
  "lesson:piston-push": "ae9ca2d5:900",
  "handbook:linear-actuator": "58564bc7:900",
  "sample:robot-avoid": "58d8376:900",
- "sample:robot-square": "d6963b32:900"
+ "sample:robot-square": "d6963b32:900",
+ "handbook:bool-to-number": "ff51ae4b:900",
+ "handbook:value-table": "e7cf3a41:900",
+ "handbook:angle-diff": "db006f25:900"
 }

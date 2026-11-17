@@ -549,6 +549,46 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'bool-to-number': {
+    vi: 'Đổi thành số',
+    en: 'Bool to Number',
+    was: 'Bật tắt thành số',
+    ports: {
+      in: {
+        'on': ['Bật/tắt', 'On/off'],
+      },
+      out: {
+        'value': ['Giá trị', 'Value'],
+      },
+    },
+  },
+  'value-table': {
+    vi: 'Bảng giá trị',
+    en: 'Lookup Table',
+    was: ['Bảng tra', 'Tra bảng'],
+    ports: {
+      in: {
+        'index': ['Số thứ tự', 'Index'],
+      },
+      out: {
+        'value': ['Giá trị', 'Value'],
+      },
+    },
+  },
+  'angle-diff': {
+    vi: 'Chênh lệch góc',
+    en: 'Angle Difference',
+    was: 'Hiệu góc',
+    ports: {
+      in: {
+        'a': ['Góc A', 'Angle A'],
+        'b': ['Góc B', 'Angle B'],
+      },
+      out: {
+        'diff': ['Chênh lệch', 'Difference'],
+      },
+    },
+  },
   'pid': {
     vi: 'Bộ điều khiển PID',
     en: 'PID Controller',

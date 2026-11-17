@@ -39,6 +39,9 @@ import { zoneSensorNode } from './zone-sensor';
 import { cargoNode } from './cargo';
 import { distanceNode } from './distance';
 import { forceSensorNode } from './force-sensor';
+import { boolToNumberNode } from './bool-to-number';
+import { valueTableNode } from './value-table';
+import { angleDiffNode } from './angle-diff';
 import { gripperNode } from './gripper';
 import { jointNode } from './joint';
 import { linkNode } from './link';
@@ -149,6 +152,9 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   lineSensorNode,
   pidNode,
   signalPlotNode,
+  boolToNumberNode,
+  valueTableNode,
+  angleDiffNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.
