@@ -20,10 +20,10 @@ export const REAL_PHYSICS_PAGE: HandbookTopic = {
     {
       heading: '1. Kéo và trượt (tăng tốc)',
       items: [
-        'Mỗi bánh kéo robot với lực F = nhỏ hơn của (lực động cơ, μ × trọng lượng đè lên bánh). Lực động cơ là ô "Lực kéo bánh" (mặc định 6 N). Trọng lượng chia đều cho các bánh: m × 9,81 ÷ số bánh. Tăng tốc a = tổng F ÷ m, m là khối lượng robot cộng hàng đang chở.',
-        'Ví dụ 1: robot 2 kg, hai động cơ 6 N, μ = 0,8. Bám tối đa mỗi bánh = 0,8 × 2 × 9,81 ÷ 2 = 7,85 N, lớn hơn 6 N nên động cơ là giới hạn: a = 12 ÷ 2 = 6 m/s². Chở thêm 1 kg: a = 12 ÷ 3 = 4 m/s². Đổi sàn trơn μ = 0,2: bám mỗi bánh chỉ 1,96 N, a = 0,2 × 9,81 = 1,96 m/s², bánh trượt.',
+        'Mỗi bánh kéo robot với lực F = nhỏ hơn của (lực động cơ, μ × trọng lượng đè lên bánh). Lực động cơ là ô "Lực kéo động cơ" (mặc định 30 N), nhân với công suất; chính số này cũng là lực khi robot đẩy thùng. Trọng lượng chia đều cho các bánh: m × 9,81 ÷ số bánh. Tăng tốc a = tổng F ÷ m, m là khối lượng robot cộng hàng đang chở.',
+        'Ví dụ 1: robot 2 kg, hai động cơ 30 N (mặc định), μ = 0,8. Bám tối đa mỗi bánh = 0,8 × 2 × 9,81 ÷ 2 = 7,85 N, nhỏ hơn 30 N nên độ bám là giới hạn: a = μ × 9,81 = 7,85 m/s² và bánh trượt thoáng qua lúc xuất phát (tới khi robot đuổi kịp tốc độ bánh, khoảng 0,25 s; chạy đều thì hết trượt). Robot 40 kg thì ngược lại: bám 0,8 × 40 × 9,81 ÷ 2 = 157 N mỗi bánh, lớn hơn 30 N nên động cơ là giới hạn: a = 60 ÷ 40 = 1,5 m/s², không trượt. Đặt động cơ 6 N cho robot 2 kg: a = 12 ÷ 2 = 6 m/s²; chở thêm 1 kg: a = 12 ÷ 3 = 4 m/s². Đổi sàn trơn μ = 0,2: bám mỗi bánh chỉ 1,96 N, a = 0,2 × 9,81 = 1,96 m/s², bánh trượt. Lưu ý "Độ tăng tốc" của động cơ (mặc định 400 vòng/phút mỗi giây, khoảng 6,3 m/s² ở mép bánh) cũng giới hạn: nếu nó chậm hơn độ bám thì bánh không trượt.',
         'Bánh trượt khi động cơ muốn kéo mạnh hơn độ bám cho phép: lúc đó vành bánh quay nhanh hơn mặt đất. Bật "Hiện ô Đang trượt" trên Động cơ để có ô ra "Đang trượt" và "Tốc độ trượt" (m/s, nhanh hơn mặt đất bao nhiêu). Bánh bám tốt thì lăn đúng theo mặt đất.',
-        'Robot đẩy thùng cũng không đẩy mạnh hơn độ bám của các bánh: lực đẩy tối đa = tổng min(Lực kéo tối đa, độ bám) của các bánh.',
+        'Robot đẩy thùng cũng không đẩy mạnh hơn độ bám của các bánh: lực đẩy tối đa = tổng min(Lực kéo động cơ × công suất, độ bám) của các bánh.',
       ],
     },
     {

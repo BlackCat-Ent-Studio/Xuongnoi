@@ -117,7 +117,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       kind: 'select',
       default: PUSH_DEFAULT,
       options: [
-        { value: 'yes', label: 'Có (đẩy vật đi theo; vật nặng quá thì robot đứng lại, cần "Lực kéo tối đa" của động cơ)' },
+        { value: 'yes', label: 'Có (đẩy vật đi theo; vật nặng quá thì robot đứng lại, cần "Lực kéo động cơ")' },
         { value: 'no', label: 'Không (robot đi xuyên qua vật như cũ)' },
       ],
       advanced: true,

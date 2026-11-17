@@ -248,8 +248,11 @@ describe('motor card with real physics', () => {
   });
 
   it('on firm ground the wheel rpm output follows the robot, not the command', () => {
+    // 6 N a motor on 2 kg is 6 m/s2, below the grip of mu 0.8 (7.85 m/s2): the motors limit, the wheels roll.
     const firm = nodes('no');
     (firm[0]![2] as Record<string, unknown>).friction = 0.8;
+    (firm[1]![2] as Record<string, unknown>).maxForce = 6;
+    (firm[2]![2] as Record<string, unknown>).maxForce = 6;
     const r = rig(firm, wires, '3d', false, true);
     r.tick(30);
     const speed = r.out('body', 'speed') as number;
@@ -257,6 +260,91 @@ describe('motor card with real physics', () => {
     expect(rpm / rpmFor(speed)).toBeGreaterThan(0.9);
     expect(rpm / rpmFor(speed)).toBeLessThanOrEqual(1);
     expect(rpm).toBeLessThan(500);
+  });
+});
+
+describe('one motor force drives and pushes', () => {
+  const board = (kg: number, motor: Record<string, number | string>) => [
+    ['body', 'robot-body', { position: { x: 0, y: 0.15, z: 0 }, height: 0.3, friction: 0.8, mass: kg, pushObjects: 'no' }],
+    ['ml', 'motor', { side: -0.35, showSlip: 'yes', ...motor }],
+    ['mr', 'motor', { side: 0.35, ...motor }],
+    ['p', 'const', { value: 1 }],
+    ['floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 200, y: 1, z: 200 } }],
+  ] as [string, string, Record<string, number | string | { x: number; y: number; z: number }>][];
+  const wires: [string, string, string, string][] = [
+    ['body', 'self', 'ml', 'body'],
+    ['body', 'self', 'mr', 'body'],
+    ['p', 'value', 'ml', 'power'],
+    ['p', 'value', 'mr', 'power'],
+  ];
+  /** Speed and the slip flag of the left wheel after every tick. */
+  function launch(kg: number, motor: Record<string, number | string>, ticks: number) {
+    const r = rig(board(kg, motor), wires, '3d', false, true);
+    const speeds: number[] = [];
+    const slips: boolean[] = [];
+    for (let i = 0; i < ticks; i++) {
+      r.tick(1);
+      speeds.push(r.out('body', 'speed') as number);
+      slips.push(r.out('ml', 'slipping') as boolean);
+    }
+    return { speeds, slips };
+  }
+
+  it('has a single force number: maxForce, no separate wheel force', async () => {
+    const { motorNode } = await import('../../src/nodes/motor');
+    const ids = motorNode.params.map((p) => p.id);
+    expect(ids).toContain('maxForce');
+    expect(ids).not.toContain('driveForce');
+  });
+
+  it('2 kg, mu 0.8, two 30 N motors, fast wheel ramp: grip-limited at mu g = 7.85 m/s2, slips while launching, grips at steady speed', () => {
+    const { speeds, slips } = launch(2, { accel: 10000 }, 40);
+    // 60 N asked, 2 * 0.8 * 2 * 9.81 / 2 = 15.7 N of grip: a = 7.848 m/s2 = 0.1308 m/s per tick.
+    expect(speeds[0]).toBeCloseTo(0, 9);
+    expect(speeds[1]).toBeCloseTo(0.8 * G * TICK_DT, 6);
+    expect(speeds[5]! - speeds[4]!).toBeCloseTo(0.8 * G * TICK_DT, 6);
+    expect(slips.slice(1, 15).every(Boolean)).toBe(true);
+    // Top speed 120 rpm * 0.15 m wheel = 1.885 m/s reached after ~0.24 s; from then on no slip, no flicker.
+    expect(speeds[39]).toBeCloseTo(rimOf(120), 6);
+    expect(slips.slice(16).some(Boolean)).toBe(false);
+  });
+
+  it('2 kg with the default wheel ramp (400 rpm/s = 6.3 m/s2) is held back by the ramp, not the grip: never slips', () => {
+    const { speeds, slips } = launch(2, {}, 40);
+    expect(speeds[5]! - speeds[4]!).toBeCloseTo((400 * 2 * Math.PI * 0.15) / 60 * TICK_DT, 6);
+    expect(slips.some(Boolean)).toBe(false);
+  });
+
+  it('40 kg, two 30 N motors: motor-limited at 60 / 40 = 1.5 m/s2, no slip, much slower than the 2 kg robot', () => {
+    const heavy = launch(40, { accel: 10000 }, 60);
+    const light = launch(2, { accel: 10000 }, 60);
+    expect(heavy.speeds[20]).toBeCloseTo(1.5 * 20 * TICK_DT, 6);
+    expect(heavy.slips.some(Boolean)).toBe(false);
+    expect(heavy.speeds[10]!).toBeLessThan(light.speeds[10]! / 4);
+  });
+
+  it('the same maxForce sets the acceleration: 40 kg with 20 N motors gives 40 / 40 = 1 m/s2', () => {
+    const { speeds } = launch(40, { accel: 10000, maxForce: 20 }, 30);
+    expect(speeds[20]).toBeCloseTo(1 * 20 * TICK_DT, 6);
+  });
+
+  it('half power gives half the motor force: 40 kg, power 0.5 asks 0.5 of 30 N a motor', () => {
+    const nodes = board(40, { accel: 10000 });
+    (nodes[3]![2] as Record<string, unknown>).value = 0.5;
+    const r = rig(nodes, wires, '3d', false, true);
+    r.tick(21);
+    expect(r.out('body', 'speed') as number).toBeCloseTo(0.75 * 20 * TICK_DT, 6);
+  });
+
+  it('power 0 still locks the wheels: a moving robot brakes on friction alone', () => {
+    const r = rig(board(2, { accel: 10000 }), wires, '3d', false, true);
+    r.tick(40);
+    expect(r.out('body', 'speed') as number).toBeCloseTo(rimOf(120), 6);
+    r.set('p', { value: 0 });
+    r.tick(30);
+    // 1.885 m/s at mu g = 7.85 m/s2 takes 0.24 s = 15 ticks.
+    expect(r.out('body', 'speed') as number).toBeCloseTo(0, 9);
+    expect(r.out('ml', 'rpm') as number).toBeCloseTo(0, 6);
   });
 });
 

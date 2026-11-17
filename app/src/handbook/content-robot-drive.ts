@@ -100,7 +100,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       showDistance: 'Nâng cao. Bật để hiện thêm ô ra "Quãng đường" và ô vào "Đặt lại quãng đường". Tắt thì thẻ Thân giữ nguyên như cũ.',
       showPayload: 'Nâng cao. Bật để hiện thêm hai ô ra "Khối lượng đang chở" và "Quá tải". Tắt thì thẻ Thân giữ nguyên như cũ.',
       pushObjects:
-        'Nâng cao. "Có" (mặc định): robot đi vào thùng, đồ vật nằm trên sàn thì đẩy chúng đi, giống xi lanh đẩy. Lực cần là F = μ × (khối lượng vật + hàng nằm trên vật) × 9,81, cộng dồn nếu đẩy nhiều vật nối nhau; ví dụ thùng 10 kg, μ 0,5 cần 49,05 N. Lực robot có là tổng "Lực kéo tối đa" của các Động cơ, mỗi cái nhân với công suất. Lực không đủ thì robot đứng lại sát vật (bánh vẫn quay). Vật bị đẩy không xuyên qua tường: gặp tường thì cả vật lẫn robot dừng. Đồ nằm trên mặt trên của thân thì đi theo robot chứ không bị đẩy. "Không": robot đi xuyên qua vật như cũ.',
+        'Nâng cao. "Có" (mặc định): robot đi vào thùng, đồ vật nằm trên sàn thì đẩy chúng đi, giống xi lanh đẩy. Lực cần là F = μ × (khối lượng vật + hàng nằm trên vật) × 9,81, cộng dồn nếu đẩy nhiều vật nối nhau; ví dụ thùng 10 kg, μ 0,5 cần 49,05 N. Lực robot có là tổng "Lực kéo động cơ" của các Động cơ, mỗi cái nhân với công suất. Lực không đủ thì robot đứng lại sát vật (bánh vẫn quay). Vật bị đẩy không xuyên qua tường: gặp tường thì cả vật lẫn robot dừng. Đồ nằm trên mặt trên của thân thì đi theo robot chứ không bị đẩy. "Không": robot đi xuyên qua vật như cũ.',
       showPush: 'Nâng cao. Bật để hiện thêm hai ô ra "Đang đẩy vật" và "Lực đang đẩy". Tắt thì thẻ Thân giữ nguyên như cũ.',
       friction:
         'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chạy.',
@@ -145,10 +145,8 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       accel: 'Độ tăng tốc của động cơ, vòng/phút mỗi giây. Nhỏ thì bánh ì khi bắt đầu quay và khi dừng; lớn thì đổi tốc độ gần như tức thì.',
       reverse: '"Đảo chiều" thì công suất dương làm bánh quay lùi. Dùng khi động cơ bên kia lắp ngược chiều.',
       maxForce:
-        'Lực kéo tối đa của động cơ này, đơn vị niu-tơn (N), khi công suất là 1; công suất nhỏ hơn thì lực nhỏ theo (công suất 0,5 là một nửa). Chỉ có tác dụng khi robot đẩy vật: lực của cả robot là tổng lực các động cơ đang quay cùng chiều robot chạy. Ví dụ hai động cơ 30 N cho 60 N, đủ đẩy một thùng 10 kg (cần 49,05 N); hai động cơ 20 N chỉ có 40 N nên robot đứng lại trước thùng. Không đẩy gì thì số này không đổi chuyển động của robot. Mặc định 30 N.',
+        'Lực kéo của động cơ này, đơn vị niu-tơn (N), khi công suất là 1; công suất nhỏ hơn thì lực nhỏ theo (công suất 0,5 là một nửa). Chỉ một con số này cho cả hai việc: tăng tốc robot và đẩy vật. Lực của cả robot là tổng lực các động cơ. Ví dụ hai động cơ 30 N cho 60 N, đủ đẩy một thùng 10 kg (cần 49,05 N); hai động cơ 20 N chỉ có 40 N nên robot đứng lại trước thùng. Khi game bật "Vật lý thật", số này còn quyết định robot tăng tốc nhanh cỡ nào: a = tổng lực ÷ khối lượng, nhưng lực thật bị chặn bởi độ bám μ × trọng lượng đè lên bánh, nên robot nhẹ chỉ tăng tốc cỡ μ × 9,81 m/s² dù động cơ khỏe (bánh trượt thoáng qua lúc xuất phát), còn robot nặng thì bị chính động cơ giới hạn. Khi game tắt "Vật lý thật", số này chỉ có tác dụng lúc đẩy vật. Mặc định 30 N.',
       showTurns: 'Nâng cao. Bật để hiện thêm ô ra "Số vòng đã quay" và ô vào "Đặt lại vòng". Tắt thì thẻ Động cơ giữ nguyên như cũ.',
-      driveForce:
-        'Nâng cao, chỉ có tác dụng khi game bật "Vật lý thật". Lực tối đa (N) mà động cơ này kéo robot khi tăng tốc. Mặc định 6 N. Lực thật còn bị chặn bởi độ bám: μ × trọng lượng đè lên bánh. Xem trang "Vật lý thật".',
       brakeForce:
         'Nâng cao, chỉ có tác dụng khi game bật "Vật lý thật". Lực phanh tối đa (N) của động cơ này khi robot giảm tốc. 0 là chỉ phanh bằng ma sát (dừng cùng một quãng dù robot nặng hay nhẹ). Đặt số dương thì robot nặng cần quãng dừng dài hơn: a = tổng lực phanh ÷ khối lượng. Lực phanh cũng không vượt được độ bám.',
       showSlip: 'Nâng cao. Bật để hiện thêm hai ô ra "Đang trượt" và "Tốc độ trượt". Tắt thì thẻ Động cơ giữ nguyên như cũ.',
@@ -159,7 +157,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       'Đừng quên dây "Công suất": không có nó thì bánh không quay và robot không chạy, đúng như động cơ không có điện.',
       'Chuyển động của robot do TẤT CẢ động cơ trên Thân cùng quyết định: tốc độ tới là trung bình các bánh, độ quay là chênh lệch giữa bánh bên trái và bên phải chia cho bề rộng giữa hai bánh.',
       'Một động cơ không nối công suất vẫn tính là một bánh đứng yên: nó hãm bên đó nên robot vòng về phía bánh ấy.',
-      'Nhìn ngang thì robot chỉ chạy theo trục ngang, không quay. Bộ đếm vòng đếm vòng quay của bánh, kể cả lúc robot bị tường chặn mà bánh vẫn quay trượt. Muốn biết robot thật sự đi được bao xa thì dùng "Quãng đường" của Thân robot. Đẩy vật chỉ tính ma sát: đủ "Lực kéo tối đa" thì robot đẩy hết tốc độ, thiếu thì đứng lại (bánh vẫn quay).',
+      'Nhìn ngang thì robot chỉ chạy theo trục ngang, không quay. Bộ đếm vòng đếm vòng quay của bánh, kể cả lúc robot bị tường chặn mà bánh vẫn quay trượt. Muốn biết robot thật sự đi được bao xa thì dùng "Quãng đường" của Thân robot. Đẩy vật chỉ tính ma sát: đủ "Lực kéo động cơ" thì robot đẩy hết tốc độ, thiếu thì đứng lại (bánh vẫn quay).',
     ],
     lessonId: 'two-motor-robot',
     tryBoard: tryMotor,
