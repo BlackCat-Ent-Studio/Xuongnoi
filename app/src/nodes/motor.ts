@@ -14,7 +14,12 @@ interface MotorState {
 
 const TURNS_PORT: PortDef = { id: 'turns', type: 'number', label: 'Số vòng đã quay' };
 const RESET_TURNS_PORT: PortDef = { id: 'resetTurns', type: 'bool', label: 'Đặt lại vòng' };
+const SLIP_PORTS: PortDef[] = [
+  { id: 'slipping', type: 'bool', label: 'Đang trượt' },
+  { id: 'slipSpeed', type: 'number', label: 'Tốc độ trượt' },
+];
 const showsTurns = (params: Params): boolean => strParam(params, 'showTurns', 'no') === 'yes';
+const showsSlip = (params: Params): boolean => strParam(params, 'showSlip', 'no') === 'yes';
 
 /** Wheel speed below this (rpm) no longer counts as turning. */
 const TURNING_RPM = 0.5;
@@ -40,7 +45,10 @@ export const motorNode: NodeDef<MotorState> = {
     { id: 'rpm', type: 'number', label: 'Vòng quay' },
     { id: 'turning', type: 'bool', label: 'Đang quay' },
   ],
-  optionalOutputs: { all: [TURNS_PORT], active: (params) => (showsTurns(params) ? [TURNS_PORT] : []) },
+  optionalOutputs: {
+    all: [TURNS_PORT, ...SLIP_PORTS],
+    active: (params) => [...(showsTurns(params) ? [TURNS_PORT] : []), ...(showsSlip(params) ? SLIP_PORTS : [])],
+  },
   params: [
     { id: 'side', label: 'Vị trí ngang trên thân (m, âm = bên trái, dương = bên phải)', kind: 'number', default: 0.4, min: -5, max: 5, step: 0.05 },
     { id: 'forward', label: 'Vị trí dọc trên thân (m, dương = phía trước)', kind: 'number', default: 0, min: -5, max: 5, step: 0.05 },
@@ -48,6 +56,8 @@ export const motorNode: NodeDef<MotorState> = {
     { id: 'maxRpm', label: 'Tốc độ tối đa (vòng/phút)', kind: 'number', default: 120, min: 1, max: 2000, step: 5 },
     { id: 'accel', label: 'Độ tăng tốc (vòng/phút mỗi giây)', kind: 'number', default: 400, min: 10, max: 10000, step: 10 },
     { id: 'maxForce', label: 'Lực kéo tối đa (N, khi robot đẩy vật; nhân với công suất)', kind: 'number', default: 30, min: 0, max: 1000000, step: 5 },
+    { id: 'driveForce', label: 'Lực kéo bánh (N, khi bật "Vật lý thật": tăng tốc tối đa mỗi động cơ)', kind: 'number', default: 6, min: 0, max: 1000000, step: 0.5, advanced: true },
+    { id: 'brakeForce', label: 'Lực phanh (N mỗi động cơ, khi bật "Vật lý thật"; 0 = chỉ phanh bằng ma sát)', kind: 'number', default: 0, min: 0, max: 1000000, step: 0.5, advanced: true },
     {
       id: 'reverse',
       label: 'Chiều quay',
@@ -69,6 +79,17 @@ export const motorNode: NodeDef<MotorState> = {
       ],
       advanced: true,
     },
+    {
+      id: 'showSlip',
+      label: 'Hiện ô "Đang trượt" và "Tốc độ trượt" (khi bật "Vật lý thật")',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (bánh quay nhanh hơn mặt đất thì trượt; ô số cho biết nhanh hơn bao nhiêu m/s)' },
+      ],
+      advanced: true,
+    },
   ],
   create() {
     return { rpm: 0, turns: 0, reset: { prev: false }, body: null };
@@ -80,9 +101,12 @@ export const motorNode: NodeDef<MotorState> = {
     // An unwired power input reads 0: the wheel holds still.
     const target = motorTargetRpm(asNum(i.power), numParam(params, 'maxRpm', 120), strParam(params, 'reverse', 'normal') === 'reversed');
     s.rpm = motorRpmStep(s.rpm, target, numParam(params, 'accel', 400), ctx.dt);
+    // With "Vật lý thật" on the wheel follows the ground unless it slips; its real speed (last tick) feeds the outputs and the encoder.
+    const real = body !== null ? ctx.world.robotWheelState(body, ctx.nodeId) : null;
+    const shownRpm = real ? real.rpm : s.rpm;
     // Encoder: the wheel's own revolutions, whether or not the robot is held back by a wall.
     if (risingEdge(s.reset, asBool(i.resetTurns))) s.turns = 0;
-    else s.turns += (s.rpm / 60) * ctx.dt;
+    else s.turns += (shownRpm / 60) * ctx.dt;
     if (body !== null) {
       const maxRpm = Math.max(1, numParam(params, 'maxRpm', 120));
       ctx.world.setRobotWheel(body, ctx.nodeId, {
@@ -91,8 +115,10 @@ export const motorNode: NodeDef<MotorState> = {
         forward: numParam(params, 'forward', 0),
         radius: Math.max(0.02, numParam(params, 'wheelRadius', 0.15)),
         rpm: s.rpm,
+        driveN: Math.max(0, numParam(params, 'driveForce', 6)),
+        brakeN: Math.max(0, numParam(params, 'brakeForce', 0)),
       });
     }
-    return { rpm: s.rpm, turning: Math.abs(s.rpm) > TURNING_RPM, turns: s.turns };
+    return { rpm: shownRpm, turning: Math.abs(shownRpm) > TURNING_RPM, turns: s.turns, slipping: real?.slipping === true, slipSpeed: real ? Math.abs(real.slipSpeed) : 0 };
   },
 };

@@ -149,6 +149,7 @@ export function toView(e: Entity): EntityView {
             ...(e.robot.payload > 0 ? { payload: e.robot.payload } : {}),
             ...(e.robot.overloaded ? { overloaded: true } : {}),
             ...(e.robot.pushing ? { pushing: true, pushForce: e.robot.pushForce } : {}),
+            ...(e.robot.traction ? { slip: [...e.robot.wheels.values()].map((w) => w.traction?.slip ?? 0) } : {}),
           },
         }
       : {}),

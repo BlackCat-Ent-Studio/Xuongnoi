@@ -1,4 +1,5 @@
 import type { RobotSpec, RobotWheelSpec } from '../engine/types';
+import { GRAVITY_N, MIN_FRICTION, tractionStep, type TractionWheel } from './robot-traction';
 
 /**
  * Robot drive train. Pure maths, no world access.
@@ -20,9 +21,7 @@ const MIN_LEVER = 0.05;
 /** Push one motor can give the chassis at full grip, newtons. Chassis acceleration = force of all motors / mass. */
 export const FORCE_PER_MOTOR = 6;
 /** Gravity used for grip, m/s^2. */
-const G = 9.81;
-/** Lowest friction accepted: with none the chassis could never speed up or stop. */
-const MIN_FRICTION = 0.02;
+const G = GRAVITY_N;
 /** Shortest width used for the turning lever of the chassis, metres. */
 const MIN_WIDTH = 0.1;
 
@@ -137,6 +136,12 @@ export interface MountedWheel extends DriveWheel {
   fresh: boolean;
   /** Push force (N) this wheel gives now: set by the motor node, its maximum scaled by |power|. */
   pushN: number;
+  /** Most force (N) the motor gives when speeding up (used only with real physics on). */
+  driveN: number;
+  /** Most force (N) the motor gives when slowing down; 0 = only grip limits it (used only with real physics on). */
+  brakeN: number;
+  /** Real physics only: what the wheel did in the last step. Absent until the first step. */
+  traction?: { force: number; gripN: number; slipping: boolean; slip: number; rim: number };
 }
 
 export interface RobotBody {
@@ -156,6 +161,10 @@ export interface RobotBody {
   /** Newtons of that push: what the pushed chain needs, or what the motors give when they stall. */
   pushForce: number;
   wheels: Map<string, MountedWheel>;
+  /** True when this chassis drives on wheel traction ("Vật lý thật"); false = the plain drive of every older board. */
+  traction: boolean;
+  /** Traction only: the average forward speed (m/s) the chassis moved at in the last step. */
+  travel: number;
 }
 
 function positive(n: number | undefined, fallback: number): number {
@@ -164,7 +173,7 @@ function positive(n: number | undefined, fallback: number): number {
 
 export const DEFAULT_ROBOT: RobotSpec = { length: 1, width: 0.7, mass: 2, friction: 0.8 };
 
-export function createRobotBody(spec: RobotSpec | undefined, heading = 0): RobotBody {
+export function createRobotBody(spec: RobotSpec | undefined, heading = 0, traction = false): RobotBody {
   return {
     spec: sanitizeRobotSpec(spec ?? DEFAULT_ROBOT),
     heading: Number.isFinite(heading) ? heading : 0,
@@ -175,6 +184,8 @@ export function createRobotBody(spec: RobotSpec | undefined, heading = 0): Robot
     pushing: false,
     pushForce: 0,
     wheels: new Map(),
+    traction,
+    travel: 0,
   };
 }
 
@@ -195,10 +206,15 @@ export function setWheel(body: RobotBody, id: string, wheel: RobotWheelSpec | nu
     body.wheels.delete(id);
     return;
   }
-  const { side, forward, radius, rpm, pushN } = wheel;
+  const { side, forward, radius, rpm, pushN, driveN, brakeN } = wheel;
   if (![side, forward, radius, rpm].every(Number.isFinite) || radius <= 0) return;
   const old = body.wheels.get(id);
-  body.wheels.set(id, { side, forward, radius, rpm, spin: old?.spin ?? 0, fresh: true, pushN: pushN !== undefined && Number.isFinite(pushN) && pushN > 0 ? pushN : 0 });
+  body.wheels.set(id, { side, forward, radius, rpm, spin: old?.spin ?? 0, fresh: true,
+    pushN: pushN !== undefined && Number.isFinite(pushN) && pushN > 0 ? pushN : 0,
+    driveN: driveN !== undefined && Number.isFinite(driveN) && driveN >= 0 ? driveN : FORCE_PER_MOTOR,
+    brakeN: brakeN !== undefined && Number.isFinite(brakeN) && brakeN > 0 ? brakeN : 0,
+    ...(old?.traction ? { traction: old.traction } : {}),
+  });
 }
 
 /** True when `payload` kg is more than the chassis may carry (a maximum of 0 means no limit). */
@@ -223,9 +239,11 @@ export function driveRobot(body: RobotBody, dt: number, sideView: boolean, paylo
   const ask = body.overloaded ? { speed: 0, turn: 0 } : solveDrive(wheels);
   if (sideView) ask.turn = 0;
   const loaded = body.payload > 0 ? { ...body.spec, mass: body.spec.mass + body.payload } : body.spec;
+  if (body.traction && wheels.length > 0) return driveOnTraction(body, wheels, loaded, dt, sideView);
   const next = followWheels({ speed: body.speed, turn: body.turnRate }, ask, loaded, wheels.length, dt);
   body.speed = next.speed;
   body.turnRate = next.turn;
+  body.travel = next.speed;
   for (const w of wheels) {
     w.spin += ((w.rpm * 2 * Math.PI) / 60) * dt;
     w.fresh = false;
@@ -237,7 +255,39 @@ export function driveRobot(body: RobotBody, dt: number, sideView: boolean, paylo
 
 /** After the move: the speed that is left once a wall took its share (the nose keeps pointing the same way). */
 export function settleRobot(body: RobotBody, vel: { x: number; z: number }, sideView: boolean): void {
-  body.speed = sideView ? vel.x : vel.x * Math.cos(body.heading) + vel.z * Math.sin(body.heading);
+  const along = sideView ? vel.x : vel.x * Math.cos(body.heading) + vel.z * Math.sin(body.heading);
+  if (!body.traction) {
+    body.speed = along;
+    return;
+  }
+  // Traction moves the chassis at the average speed of the tick; a wall that cut the move takes the same share of the new speed.
+  if (Math.abs(body.travel) < 1e-12) return;
+  const kept = Math.max(0, Math.min(1, along / body.travel));
+  if (kept < 1 - 1e-9) body.speed *= kept;
+}
+
+/**
+ * Drive of a chassis with real physics: every wheel gives a force (see robot-traction.ts), the chassis speed and turn rate
+ * follow from them. The chassis moves, and turns, at the average of its old and new rate over the tick, so stopping and
+ * starting distances match v^2 / (2a) instead of lagging a half tick behind.
+ */
+function driveOnTraction(body: RobotBody, wheels: MountedWheel[], loaded: RobotSpec, dt: number, sideView: boolean): { x: number; z: number } {
+  const wanted: TractionWheel[] = wheels.map((w) => ({ side: w.side, command: body.overloaded ? 0 : wheelSpeed(w), driveN: w.driveN, brakeN: w.brakeN }));
+  const was = { speed: body.speed, turn: sideView ? 0 : body.turnRate };
+  const res = tractionStep(was.speed, was.turn, wanted, { mass: loaded.mass, friction: loaded.friction, length: loaded.length, width: loaded.width }, dt);
+  const turn = sideView ? 0 : res.turn;
+  body.speed = res.speed;
+  body.turnRate = turn;
+  body.travel = (was.speed + res.speed) / 2;
+  wheels.forEach((w, i) => {
+    const t = res.wheels[i]!;
+    w.traction = { force: t.force, gripN: t.gripN, slipping: t.slipping, slip: t.slip, rim: t.rim };
+    w.spin += (t.rim / w.radius) * dt;
+    w.fresh = false;
+  });
+  if (sideView) return { x: body.travel, z: 0 };
+  body.heading = wrapAngle(body.heading + ((was.turn + turn) / 2) * dt);
+  return { x: Math.cos(body.heading) * body.travel, z: Math.sin(body.heading) * body.travel };
 }
 
 export function wrapAngle(a: number): number {

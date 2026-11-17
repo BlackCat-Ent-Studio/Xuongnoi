@@ -10,7 +10,7 @@ export type NodeSpec = [id: string, kind: string, params?: Record<string, ParamV
 export type WireSpec = [from: string, outPort: string, to: string, inPort: string];
 
 /** Builds a graph from short rows (defaults filled in) and plays it headless. */
-export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-side', solidBodies = false) {
+export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-side', solidBodies = false, realPhysics = false) {
   const graph: Graph = {
     nodes: nodes.map(([id, kind, params], n): GraphNode => {
       const def = getNodeDef(kind);
@@ -21,9 +21,9 @@ export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-s
       return { id, kind, params: { ...base, ...(params ?? {}) }, pos: { x: n * 10, y: 0 } };
     }),
     wires: wires.map(([f, fp, t, tp], n) => ({ id: `w${n}`, from: { node: f, port: fp }, to: { node: t, port: tp } })),
-    settings: { wireRule: true, ...(solidBodies ? { solidBodies: true } : {}) },
+    settings: { wireRule: true, ...(solidBodies ? { solidBodies: true } : {}), ...(realPhysics ? { realPhysics: true } : {}) },
   };
-  const world = createWorld(mode, solidBodies ? { solidBodies: true } : undefined);
+  const world = createWorld(mode, solidBodies || realPhysics ? { ...(solidBodies ? { solidBodies: true } : {}), ...(realPhysics ? { realPhysics: true } : {}) } : undefined);
   const rt = createRuntime(graph, world, mode);
   let keys = new Set<string>();
   return {
