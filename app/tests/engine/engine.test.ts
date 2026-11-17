@@ -173,6 +173,31 @@ describe('compileGraph', () => {
     expect(order).toEqual(['a', 'b']);
     expect([...backEdges]).toEqual(['w2']);
   });
+  it('cuts a loop at the wire into a feedback input, whichever card has the smaller id', () => {
+    registerNode({
+      kind: 'ack',
+      label: 'Báo xong',
+      category: 'logic',
+      description: '',
+      inputs: [{ id: 'in', type: 'number', label: 'vào' }, { id: 'done', type: 'number', label: 'xong', feedback: true }],
+      outputs: [{ id: 'out', type: 'number', label: 'ra' }],
+      params: [],
+      evaluate: () => ({ out: 0 }),
+    });
+    for (const [first, second] of [['a', 'b'], ['b', 'a']] as const) {
+      // `ack` reads the loop back through "done"; the cut is always that wire, not the one into the smaller id.
+      const graph = g(
+        [node(first, 'ack'), node(second, 'inc')],
+        [wire('w1', first, 'out', second, 'in'), wire('w2', second, 'out', first, 'done')],
+      );
+      const { order, backEdges } = compileGraph(graph);
+      expect(order, `${first}/${second}`).toEqual([first, second]);
+      expect([...backEdges], `${first}/${second}`).toEqual(['w2']);
+    }
+    // A feedback wire that is not on a loop stays an ordinary forward wire.
+    const open = g([node('x', 'inc'), node('y', 'ack')], [wire('w1', 'x', 'out', 'y', 'done')]);
+    expect(compileGraph(open).backEdges.size).toBe(0);
+  });
 });
 
 describe('runtime', () => {

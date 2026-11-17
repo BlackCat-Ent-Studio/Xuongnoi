@@ -25,6 +25,8 @@ const allDonePorts: PortDef[] = Array.from({ length: SEQUENCE_MAX_STEPS }, (_, k
   id: `done${k + 1}`,
   type: 'bool' as const,
   label: `Xong bước ${k + 1}`,
+  // Often wired back from something this card's own step drives (a joint that reached its angle): where that loop is cut, whatever the card ids.
+  feedback: true,
 }));
 
 function stepCount(raw: number): number {

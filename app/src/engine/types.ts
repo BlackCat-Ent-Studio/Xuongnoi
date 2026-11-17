@@ -46,6 +46,11 @@ export interface PortDef {
   required?: boolean;
   /** Input only: kept so saved boards still work, but one input does two actions. New boards use the dedicated inputs. */
   legacy?: boolean;
+  /**
+   * Input only: the card reads this port from the previous tick. When a wire into it closes a loop, that wire is where the
+   * loop is cut (instead of wherever the smallest card id falls), so the rest of the loop is evaluated in order within one tick.
+   */
+  feedback?: boolean;
 }
 
 export type ParamKind = 'number' | 'select' | 'key' | 'color' | 'vec3' | 'text';

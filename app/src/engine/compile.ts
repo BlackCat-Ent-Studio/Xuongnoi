@@ -1,3 +1,4 @@
+import { getNodeDef, knownInputs } from './registry';
 import type { Graph } from './types';
 
 export interface CompiledGraph {
@@ -9,9 +10,37 @@ export interface CompiledGraph {
 
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
 
+/** Wires into a `feedback` input that sit on a loop: the card reads them from the previous tick, whatever the card ids are. */
+function feedbackLoopWires(graph: Graph, ids: Set<string>): Set<string> {
+  const cut = new Set<string>();
+  const next = new Map<string, string[]>();
+  for (const w of graph.wires) {
+    if (!ids.has(w.from.node) || !ids.has(w.to.node)) continue;
+    next.set(w.from.node, [...(next.get(w.from.node) ?? []), w.to.node]);
+  }
+  const kinds = new Map(graph.nodes.map((n) => [n.id, n.kind]));
+  const reaches = (from: string, goal: string): boolean => {
+    const seen = new Set<string>([from]);
+    const stack = [from];
+    while (stack.length > 0) {
+      const at = stack.pop()!;
+      if (at === goal) return true;
+      for (const to of next.get(at) ?? []) if (!seen.has(to)) (seen.add(to), stack.push(to));
+    }
+    return false;
+  };
+  for (const w of graph.wires) {
+    if (!ids.has(w.from.node) || !ids.has(w.to.node)) continue;
+    const def = getNodeDef(kinds.get(w.to.node)!);
+    if (!def || !knownInputs(def).some((p) => p.id === w.to.port && p.feedback)) continue;
+    if (reaches(w.to.node, w.from.node)) cut.add(w.id);
+  }
+  return cut;
+}
+
 /**
- * Deterministic topological sort (Kahn, ties by node id). When only cycles remain,
- * the smallest remaining id is forced out and its unresolved incoming wires become back-edges.
+ * Deterministic topological sort (Kahn, ties by node id). Wires into a `feedback` input that close a loop are cut first.
+ * When only other cycles remain, the smallest remaining id is forced out and its unresolved incoming wires become back-edges.
  */
 export function compileGraph(graph: Graph): CompiledGraph {
   const ids = new Set(graph.nodes.map((n) => n.id));
@@ -21,14 +50,14 @@ export function compileGraph(graph: Graph): CompiledGraph {
     pending.set(id, new Set());
     outgoing.set(id, []);
   }
+  const backEdges = feedbackLoopWires(graph, ids);
   for (const w of graph.wires) {
     if (!ids.has(w.from.node) || !ids.has(w.to.node)) continue;
-    pending.get(w.to.node)!.add(w.id);
     outgoing.get(w.from.node)!.push({ id: w.id, to: w.to.node });
+    if (!backEdges.has(w.id)) pending.get(w.to.node)!.add(w.id);
   }
 
   const remaining = new Set(ids);
-  const backEdges = new Set<string>();
   const order: string[] = [];
 
   const emit = (id: string) => {

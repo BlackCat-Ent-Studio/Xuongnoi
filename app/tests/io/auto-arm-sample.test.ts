@@ -202,10 +202,8 @@ describe('sample Tay máy tự gắp và đặt', () => {
       ['grip-wait', 'done', 'grip-ok', 'a'],
       ['gripper', 'holding', 'grip-ok', 'b'],
       ['grip-ok', 'out', 'a-cycle', 'done3'],
-      ['swing', 'angleNow', 'at-place', 'a'],
-      ['c-place', 'value', 'at-place', 'b'],
-      ['at-place', 'out', 'a-cycle', 'done4'],
-      ['at-home', 'out', 'a-cycle', 'done5'],
+      ['swing', 'reached', 'a-cycle', 'done4'],
+      ['swing', 'reached', 'a-cycle', 'done5'],
       // the belts
       ['belt-run', 'out', 'feed', 'run'],
     ];
@@ -235,10 +233,6 @@ describe('sample Tay máy tự gắp và đặt', () => {
 
   it('wires that only report or tidy up are not essential: the machine places crates without them', { timeout: 300_000 }, () => {
     const optional: [string, string, string, string][] = [
-      // The "back home" test of step 5 only makes the arm wait for the swing before it looks for the next crate: step 2 waits
-      // for a crate between the fingers anyway, so the machine still works without the test (honest: not an essential wire).
-      ['swing', 'angleNow', 'at-home', 'a'],
-      ['c-home', 'value', 'at-home', 'b'],
       ['drop-zone', 'entered', 'placed', 'up'],
       ['gripper', 'slipped', 'slips', 'up'],
       ['gripper', 'crushedOut', 'crushes', 'up'],

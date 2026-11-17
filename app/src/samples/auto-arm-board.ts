@@ -5,7 +5,7 @@ import { makeBoard, type CardSpec, type Link } from './cell-board-kit';
  * Sample "Tay máy tự gắp và đặt": crates ride a belt that stops when one reaches the pick point; a 5-step cycle (wait,
  * lower, close, lift and swing, open and return) runs the arm. The step number picks a row of three "Bảng giá trị"
  * (one per joint) = the taught angles, and every step ends by itself through its own "Xong bước" port (a crate waiting,
- * a crate between the fingers, the gripper holding for a moment, the swing joint at the place or at home). The gripper takes only a crate lying between its
+ * a crate between the fingers, the gripper holding for a moment, the swing joint's own "Đã tới góc" at the place or at home). The gripper takes only a crate lying between its
  * fingers, so the arm really has to lower onto it. Built only from palette pieces; nothing is typed by a person while it runs.
  */
 
@@ -87,10 +87,6 @@ const specs: CardSpec[] = [
 
   // --- the cycle: Chuỗi bước with a "Xong bước" port per step ---
   { id: 'a-cycle', kind: 'sequence', col: 4, rows: 15, params: { stepCount: 5, loop: 'yes', showDone: 'yes' } },
-  { id: 'c-place', kind: 'const', col: 5, params: { value: AUTO_ARM.swing - 1 } },
-  { id: 'at-place', kind: 'compare', col: 5, params: { op: 'ge' } },
-  { id: 'c-home', kind: 'const', col: 5, params: { value: 1 } },
-  { id: 'at-home', kind: 'compare', col: 5, params: { op: 'le' } },
   { id: 'close-3-4', kind: 'or', col: 5 },
   { id: 'grip-wait', kind: 'timer', col: 5, params: { seconds: AUTO_ARM.gripWaitS, repeat: 'yes' } },
   { id: 'grip-ok', kind: 'and', col: 5 },
@@ -159,12 +155,8 @@ export const AUTO_ARM_WIRES: readonly Link[] = [
   ['grip-wait', 'done', 'grip-ok', 'a'],
   ['gripper', 'holding', 'grip-ok', 'b'],
   ['grip-ok', 'out', 'a-cycle', 'done3'],
-  ['swing', 'angleNow', 'at-place', 'a'],
-  ['c-place', 'value', 'at-place', 'b'],
-  ['at-place', 'out', 'a-cycle', 'done4'],
-  ['swing', 'angleNow', 'at-home', 'a'],
-  ['c-home', 'value', 'at-home', 'b'],
-  ['at-home', 'out', 'a-cycle', 'done5'],
+  ['swing', 'reached', 'a-cycle', 'done4'],
+  ['swing', 'reached', 'a-cycle', 'done5'],
   // Counters and readouts
   ['drop-zone', 'entered', 'placed', 'up'],
   ['gripper', 'slipped', 'slips', 'up'],
@@ -183,7 +175,7 @@ export function createAutoArmBoard(): Board {
   return makeBoard('Tay máy tự gắp và đặt', '3d', specs, AUTO_ARM_WIRES, [
     {
       color: 'yellow',
-      text: 'Tay máy chạy tự động theo 5 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng lên và quay sang chỗ đặt, 5 nhả rồi quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, góc xoay đã tới chỗ đặt (từ 179 độ) hoặc về chỗ cũ (dưới 1 độ).',
+      text: 'Tay máy chạy tự động theo 5 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng lên và quay sang chỗ đặt, 5 nhả rồi quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, khớp xoay báo "Đã tới góc" khi tới chỗ đặt (bước 4) hoặc khi về chỗ cũ (bước 5).',
     },
     {
       color: 'green',
