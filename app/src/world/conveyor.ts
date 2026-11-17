@@ -41,7 +41,7 @@ export function beltAxis(e: Entity): 'x' | 'z' {
   return swapped ? (e.belt.axis === 'x' ? 'z' : 'x') : e.belt.axis;
 }
 
-function beltVelocity(e: Entity): { x: number; z: number } {
+export function beltVelocity(e: Entity): { x: number; z: number } {
   const speed = e.belt?.speed ?? 0;
   return beltAxis(e) === 'x' ? { x: speed, z: 0 } : { x: 0, z: speed };
 }

@@ -14,6 +14,8 @@ import {
 } from '../engine/types';
 import { createRuntime } from '../engine/runtime';
 import { worldOptionsForGraph } from '../world/graph-world-options';
+import { needsPhysicsEngine, prepareWorldOptions, withLoadedEngine } from '../world/play-options';
+import type { WorldOptions } from '../world/world-options';
 import { createWorld } from '../world/world';
 import { registerAllNodes } from '../nodes';
 import { CameraRig } from './cameras';
@@ -76,6 +78,8 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   let runtime: Runtime | null = null;
   let playing = false;
   let rafId = 0;
+  /** Counts play requests: a play that waits for the physics engine to load starts only if no newer request came meanwhile. */
+  let playTicket = 0;
   let lastTime = 0;
   let readInputFn: (() => InputSnapshot) | null = null;
   let drag: { id: number; x: number; y: number; kind: 'orbit' | 'pan' } | null = null;
@@ -187,6 +191,7 @@ export function createGameView(options: GameViewOptions = {}): GameView {
   }
 
   function resetSession(): void {
+    playTicket++;
     cancelLoop();
     uiBuf.clear();
     blender.clear();
@@ -203,10 +208,18 @@ export function createGameView(options: GameViewOptions = {}): GameView {
     guideArrows?.clear();
   }
 
-  function build(graph: Graph, m: ViewMode): boolean {
+  /** World options this board asks for, before the physics engine (if it needs one) is added. */
+  function wantedOptions(graph: Graph, m: ViewMode): WorldOptions | undefined {
+    return options.stage?.worldOptions?.(m) ?? worldOptionsForGraph(graph);
+  }
+
+  function build(graph: Graph, m: ViewMode, resolved?: WorldOptions): boolean {
     try {
       ensureNodesRegistered();
-      const w = createWorld(m, options.stage?.worldOptions?.(m) ?? worldOptionsForGraph(graph));
+      // The old world's engine memory is freed before its replacement exists.
+      world?.dispose?.();
+      world = null;
+      const w = createWorld(m, resolved ?? wantedOptions(graph, m));
       const r = createRuntime(graph, w, m);
       world = w;
       runtime = r;
@@ -221,6 +234,25 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       showError();
       return false;
     }
+  }
+
+  /** Builds the world and starts the loop. `engineFailed`: the physics engine did not load, so the game runs on the plain rules and says so. */
+  function begin(graph: Graph, m: ViewMode, resolved: WorldOptions | undefined, engineFailed: boolean): void {
+    if (!build(graph, m, resolved)) {
+      draw(0, false);
+      return;
+    }
+    if (engineFailed) hud?.showError(TEXT_VI.physicsLoadFailed);
+    playing = true;
+    blender.capture(world ? world.entities() : []);
+    watchTime = 0;
+    watchFrames = 0;
+    rig.snap();
+    syncChrome();
+    hud?.clearItems();
+    guideArrows?.clear();
+    lastTime = performance.now();
+    rafId = requestAnimationFrame(frame);
   }
 
   /** Slow machines lose the shadows (the costliest part of the 3D look) instead of the frame rate. */
@@ -462,29 +494,31 @@ export function createGameView(options: GameViewOptions = {}): GameView {
       ensureRig(m);
       sceneView.setGrid(m, false);
       readInputFn = readInput;
-      if (!build(graph, m)) {
-        draw(0, false);
+      const wanted = wantedOptions(graph, m);
+      const ready = withLoadedEngine(wanted);
+      if (ready || !needsPhysicsEngine(wanted)) {
+        begin(graph, m, ready ?? wanted, false);
         return;
       }
-      playing = true;
-      blender.capture(world ? world.entities() : []);
-      watchTime = 0;
-      watchFrames = 0;
-      rig.snap();
-      syncChrome();
-      hud?.clearItems();
-      guideArrows?.clear();
-      lastTime = performance.now();
-      rafId = requestAnimationFrame(frame);
+      // "Vật lý thật" needs its engine, fetched the first time only: the game starts when it is here (or has failed).
+      const ticket = playTicket;
+      hud?.showError(TEXT_VI.physicsLoading);
+      void prepareWorldOptions(wanted).then((res) => {
+        if (ticket !== playTicket) return;
+        hud?.hideError();
+        begin(graph, m, res.options, res.failed);
+      });
     },
 
     stop(): void {
+      playTicket++;
       stepBreak = null;
       cancelLoop();
       clearPause();
       playing = false;
       runtime = null;
       hud?.hideEnd();
+      hud?.hideError();
     },
 
     setStageFit(fit): void {

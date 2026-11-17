@@ -61,7 +61,8 @@ function finiteOr(n: number, fallback: number): number {
 
 /** Bodies a moving block can carry or push. */
 export function movable(e: Entity): boolean {
-  if (!e.visible || e.kind === 'block' || e.bullet) return false;
+  // Rigid crates are moved by the crate engine (a moving block pushes and carries them through contact).
+  if (!e.visible || e.kind === 'block' || e.bullet || e.rigid) return false;
   return e.heldBy === null && e.seatedIn === null;
 }
 
@@ -82,8 +83,25 @@ function moveAxisOf(mode: ViewMode): Axis[] {
   return mode === '2d-side' ? ['x', 'y'] : mode === '2d-top' ? ['x', 'z'] : ['x', 'y', 'z'];
 }
 
+/** How deep (m) a pushed crate must sit inside a solid before the platform counts as crushing it. */
+const CRUSH_DEPTH = 0.02;
+
+/**
+ * True when pushing this rigid crate ahead of the platform would squeeze it into a solid. The crate itself is moved by the
+ * crate engine (it tips and slides); this only keeps a platform from crushing a crate against a wall.
+ */
+function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: readonly Entity[]): boolean {
+  if (overlap(crate, p, 'x') <= OVERLAP_MIN || overlap(crate, p, 'y') <= OVERLAP_MIN || overlap(crate, p, 'z') <= OVERLAP_MIN) return false;
+  const pb = colliderBox(p);
+  const reach = (pb.size[axis] + colliderBox(crate).size[axis]) / 2;
+  const pushed: Entity = { ...crate, pos: { ...crate.pos } };
+  pushed.pos[axis] = (d > 0 ? pb.pos[axis] + reach : pb.pos[axis] - reach) - colliderOffset(crate, axis);
+  // A crate resting on the floor sinks a fraction of a millimetre into it: only a real overlap is a squeeze.
+  return solids.some((s) => (['x', 'y', 'z'] as const).every((k) => overlap(pushed, s, k) > CRUSH_DEPTH));
+}
+
 /** One axis of a platform move. Returns false (and changes nothing) when it would squeeze a body into a solid. */
-function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], solids: readonly Entity[], mode: ViewMode): boolean {
+function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], solids: readonly Entity[], mode: ViewMode, crates: readonly Entity[]): boolean {
   const riders = bodies.filter((e) => standsOn(e, p, mode));
   const undo: { e: Entity; from: number }[] = [{ e: p, from: p.pos[axis] }];
   p.pos[axis] += d;
@@ -106,6 +124,11 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], s
       return false;
     }
   }
+  // A crate standing on the platform rides with it; any other crate in the way is pushed, so it must have room to go.
+  if (crates.some((c) => !standsOn(c, p, mode) && crushesCrate(p, c, axis, d, solids))) {
+    for (const back of undo) back.e.pos[axis] = back.from;
+    return false;
+  }
   return true;
 }
 
@@ -117,6 +140,7 @@ export function moveBlockTo(list: readonly Entity[], p: Entity, to: Vec3, mode: 
   }
   const solids = solidBlocksExcept(list, p);
   const bodies = list.filter(movable);
+  const crates = list.filter((e) => e.rigid === true && e.visible && e.heldBy === null && !e.bullet);
   let reached = true;
   for (const axis of moveAxisOf(mode)) {
     const d = finiteOr(to[axis], p.pos[axis]) - p.pos[axis];
@@ -124,7 +148,7 @@ export function moveBlockTo(list: readonly Entity[], p: Entity, to: Vec3, mode: 
     // Small steps, so a long jump cannot slide over someone without pushing them.
     const n = Math.ceil(Math.abs(d) / MAX_STEP);
     for (let i = 0; i < n; i++) {
-      if (!stepAxis(p, axis, d / n, bodies, solids, mode)) {
+      if (!stepAxis(p, axis, d / n, bodies, solids, mode, crates)) {
         reached = false;
         break;
       }

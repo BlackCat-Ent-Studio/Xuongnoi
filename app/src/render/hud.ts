@@ -55,7 +55,7 @@ export class Hud {
     this.overlay.style.cssText =
       'position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(255,255,255,0.7);pointer-events:auto;';
     this.errorBox.style.cssText =
-      'position:absolute;left:50%;top:12px;transform:translateX(-50%);display:none;padding:6px 12px;border-radius:6px;background:#ffe3e3;color:#a11;font-size:14px;max-width:90%;';
+      'position:absolute;left:50%;top:52px;transform:translateX(-50%);display:none;padding:6px 12px;border-radius:6px;background:#ffe3e3;color:#a11;font-size:14px;max-width:90%;';
     this.root.append(this.overlay, this.errorBox);
   }
 

@@ -17,7 +17,9 @@ import type {
   ViewMode,
   World,
 } from '../engine/types';
+import { DEFAULT_GRAVITY, cleanGravity } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
+import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
 import { moveBlockTo, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
@@ -63,8 +65,21 @@ function finiteOr(n: number, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/** The crate engine, or null when it cannot start (the world then keeps the plain item rules). */
+function startCrateEngine(rapier: NonNullable<WorldOptions['rapier']>, mode: ViewMode, gravity: number, solidBodies: boolean): CrateEngine | null {
+  try {
+    return createCrateEngine(rapier, { mode, gravity, solidBodies });
+  } catch (err) {
+    console.error(err);
+    return null;
+  }
+}
+
 export function createWorld(mode: ViewMode, options?: WorldOptions): World {
   const rules = bodyRules(options);
+  // "Vật lý thật": the maker's gravity (m/s²) pulls everything that falls; with the engine loaded, loose items are rigid crates.
+  const realGravity = options?.realPhysics === true ? (cleanGravity(options.gravity) ?? DEFAULT_GRAVITY) : null;
+  const crates = realGravity !== null && options?.rapier ? startCrateEngine(options.rapier, mode, realGravity, rules !== null) : null;
   const watcher = import.meta.env.DEV && import.meta.env.MODE !== 'test' && rules ? createPhysicsWatch() : null;
   const list: Entity[] = [];
   const byId = new Map<EntityId, Entity>();
@@ -338,6 +353,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         ...(spec.kind === 'character' && spec.role !== undefined ? { role: spec.role } : {}),
         ...(spec.kind === 'item' ? { shape: spec.shape ?? 'box' } : {}),
         solid: spec.kind === 'item' ? false : spec.solid,
+        ...(crates && spec.kind === 'item' ? { rigid: true } : {}),
         ...(spec.kind === 'block' && spec.zone ? { zone: true } : {}),
         ...(spec.kind === 'block' && spec.blockStyle && spec.blockStyle !== 'box' ? { blockStyle: spec.blockStyle } : {}),
         ...(spec.kind === 'block' && spec.label ? { label: spec.label } : {}),
@@ -790,7 +806,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       prepareTrains(list, byId, dt, mode);
       for (const e of list) if (e.belt) syncWalls(e);
       advanceBelts(list, dt);
-      stepPhysics(list, dt, mode, yaw, rules);
+      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates);
       if (rules?.respawnFallen) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),
@@ -825,6 +841,9 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     setCameraYaw(rad: number): void {
       yaw = Number.isFinite(rad) ? rad : 0;
+    },
+    dispose(): void {
+      crates?.dispose();
     },
     // Development and tests only: the snapshot the physics checks read. Production builds leave it out.
     ...(import.meta.env.DEV ? { debugBodies: (): readonly BodySnapshot[] => debugSnapshot() } : {}),

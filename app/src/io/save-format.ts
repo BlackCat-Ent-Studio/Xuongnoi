@@ -2,7 +2,9 @@ import { CONNECT_FAIL_TEXT } from '../engine/text-vi';
 import { getNodeDef } from '../engine/registry';
 import { canConnect } from '../engine/wiring';
 import {
+  DEFAULT_GRAVITY,
   VIEW_MODES,
+  cleanGravity,
   type Board,
   type Graph,
   type NodeGroup,
@@ -226,6 +228,9 @@ export function parseBoard(text: string): ParseResult {
   const settings: Graph['settings'] = {};
   if (rawSettings.solidBodies === true) settings.solidBodies = true;
   if (rawSettings.realPhysics === true) settings.realPhysics = true;
+  // Gravity only matters with the switch on; a missing or unusable number reads as 9.81, which is never written.
+  const gravity = cleanGravity(rawSettings.gravity);
+  if (gravity !== undefined && gravity !== DEFAULT_GRAVITY) settings.gravity = gravity;
   if (rawSettings.wireRule === true) settings.wireRule = true;
   if (Object.keys(settings).length > 0) graph = { ...graph, settings };
   // A board saved before the wire rule gets its "Khi bắt đầu" wires here, on every way in (file, library, autosave, sample).

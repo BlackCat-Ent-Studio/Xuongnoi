@@ -10,10 +10,26 @@ interface Pose {
   z: number;
   angle: number | undefined;
   tilt: number | undefined;
+  rotation: EntityView['rotation'];
+}
+
+type Turn = NonNullable<EntityView['rotation']>;
+
+const sameTurn = (a: Turn, b: Turn): boolean => a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
+
+/** Halfway turn between two unit quaternions (normalised linear blend, taking the short way round). */
+function blendTurn(a: Turn, b: Turn, t: number): Turn {
+  const sign = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w < 0 ? -1 : 1;
+  const x = a.x + (sign * b.x - a.x) * t;
+  const y = a.y + (sign * b.y - a.y) * t;
+  const z = a.z + (sign * b.z - a.z) * t;
+  const w = a.w + (sign * b.w - a.w) * t;
+  const len = Math.hypot(x, y, z, w) || 1;
+  return { x: x / len, y: y / len, z: z / len, w: w / len };
 }
 
 function poseOf(e: EntityView): Pose {
-  return { x: e.position.x, y: e.position.y, z: e.position.z, angle: e.angle, tilt: e.tilt };
+  return { x: e.position.x, y: e.position.y, z: e.position.z, angle: e.angle, tilt: e.tilt, rotation: e.rotation };
 }
 
 /**
@@ -51,13 +67,15 @@ export class TickBlender {
       const dx = to.x - from.x;
       const dy = to.y - from.y;
       const dz = to.z - from.z;
-      if (dx === 0 && dy === 0 && dz === 0 && from.angle === to.angle && from.tilt === to.tilt) return e;
+      const turned = from.rotation !== undefined && to.rotation !== undefined && !sameTurn(from.rotation, to.rotation);
+      if (dx === 0 && dy === 0 && dz === 0 && from.angle === to.angle && from.tilt === to.tilt && !turned) return e;
       if (Math.hypot(dx, dy, dz) > BLEND_MAX_STEP) return e;
       const out: EntityView = { ...e, position: { x: from.x + dx * a, y: from.y + dy * a, z: from.z + dz * a } };
       if (from.angle !== undefined && to.angle !== undefined) {
         out.angle = from.angle + shortestAngle(to.angle - from.angle) * a;
       }
       if (from.tilt !== undefined && to.tilt !== undefined) out.tilt = from.tilt + (to.tilt - from.tilt) * a;
+      if (from.rotation !== undefined && to.rotation !== undefined) out.rotation = blendTurn(from.rotation, to.rotation, a);
       return out;
     });
   }

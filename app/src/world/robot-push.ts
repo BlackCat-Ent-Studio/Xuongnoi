@@ -134,7 +134,8 @@ export function finishShove(r: Entity, state: ShoveState, byId: ReadonlyMap<stri
   if (plan.blocked) stop(plan.advance);
   for (const m of plan.moves) {
     const e = byId.get(m.id);
-    if (!e) continue;
+    // A rigid crate is pushed by the engine through contact; the plan above only decided how far the chassis may go.
+    if (!e || e.rigid) continue;
     e.pos.x += m.delta.x;
     e.pos.y += m.delta.y;
     e.pos.z += m.delta.z;
