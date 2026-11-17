@@ -104,10 +104,8 @@
    },
    {
     "id": "lech-goc",
-    "kind": "math",
-    "params": {
-     "op": "sub"
-    },
+    "kind": "angle-diff",
+    "params": {},
     "pos": {
      "x": 760,
      "y": 380
@@ -125,39 +123,6 @@
     }
    },
    {
-    "id": "c-360",
-    "kind": "const",
-    "params": {
-     "value": 360
-    },
-    "pos": {
-     "x": 40,
-     "y": 1060
-    }
-   },
-   {
-    "id": "c-am180",
-    "kind": "const",
-    "params": {
-     "value": -180
-    },
-    "pos": {
-     "x": 40,
-     "y": 1400
-    }
-   },
-   {
-    "id": "goc-vong",
-    "kind": "math",
-    "params": {
-     "op": "sub"
-    },
-    "pos": {
-     "x": 760,
-     "y": 720
-    }
-   },
-   {
     "id": "du-goc",
     "kind": "compare",
     "params": {
@@ -166,46 +131,6 @@
     "pos": {
      "x": 1120,
      "y": 380
-    }
-   },
-   {
-    "id": "qua-vong",
-    "kind": "compare",
-    "params": {
-     "op": "ge"
-    },
-    "pos": {
-     "x": 760,
-     "y": 1060
-    }
-   },
-   {
-    "id": "dang-vong",
-    "kind": "compare",
-    "params": {
-     "op": "lt"
-    },
-    "pos": {
-     "x": 760,
-     "y": 1400
-    }
-   },
-   {
-    "id": "vong-xong",
-    "kind": "and",
-    "params": {},
-    "pos": {
-     "x": 1120,
-     "y": 720
-    }
-   },
-   {
-    "id": "quay-ok",
-    "kind": "or",
-    "params": {},
-    "pos": {
-     "x": 1120,
-     "y": 1060
     }
    },
    {
@@ -387,28 +312,16 @@
     }
    },
    {
-    "id": "chu-thang",
+    "id": "chu-nay",
     "kind": "show-text",
     "params": {
-     "text": "Đang đi thẳng: đến khi quãng đường đủ 2 m",
+     "text": "Đang làm",
+     "lines": "Đang đi thẳng: đến khi quãng đường đủ 2 m\nĐang quay tại chỗ: đến khi hướng đổi 90 độ",
      "color": "#15803d",
      "corner": "bottom-left"
     },
     "pos": {
      "x": 40,
-     "y": 2080
-    }
-   },
-   {
-    "id": "chu-quay",
-    "kind": "show-text",
-    "params": {
-     "text": "Đang quay tại chỗ: đến khi hướng đổi 90 độ",
-     "color": "#9a3412",
-     "corner": "bottom-left"
-    },
-    "pos": {
-     "x": 400,
      "y": 2080
     }
    },
@@ -635,7 +548,7 @@
     "id": "w13",
     "from": {
      "node": "lech-goc",
-     "port": "out"
+     "port": "diff"
     },
     "to": {
      "node": "du-goc",
@@ -654,116 +567,6 @@
     }
    },
    {
-    "id": "w15",
-    "from": {
-     "node": "c-goc",
-     "port": "value"
-    },
-    "to": {
-     "node": "goc-vong",
-     "port": "a"
-    }
-   },
-   {
-    "id": "w16",
-    "from": {
-     "node": "c-360",
-     "port": "value"
-    },
-    "to": {
-     "node": "goc-vong",
-     "port": "b"
-    }
-   },
-   {
-    "id": "w17",
-    "from": {
-     "node": "lech-goc",
-     "port": "out"
-    },
-    "to": {
-     "node": "qua-vong",
-     "port": "a"
-    }
-   },
-   {
-    "id": "w18",
-    "from": {
-     "node": "goc-vong",
-     "port": "out"
-    },
-    "to": {
-     "node": "qua-vong",
-     "port": "b"
-    }
-   },
-   {
-    "id": "w19",
-    "from": {
-     "node": "lech-goc",
-     "port": "out"
-    },
-    "to": {
-     "node": "dang-vong",
-     "port": "a"
-    }
-   },
-   {
-    "id": "w20",
-    "from": {
-     "node": "c-am180",
-     "port": "value"
-    },
-    "to": {
-     "node": "dang-vong",
-     "port": "b"
-    }
-   },
-   {
-    "id": "w21",
-    "from": {
-     "node": "qua-vong",
-     "port": "out"
-    },
-    "to": {
-     "node": "vong-xong",
-     "port": "a"
-    }
-   },
-   {
-    "id": "w22",
-    "from": {
-     "node": "dang-vong",
-     "port": "out"
-    },
-    "to": {
-     "node": "vong-xong",
-     "port": "b"
-    }
-   },
-   {
-    "id": "w23",
-    "from": {
-     "node": "du-goc",
-     "port": "out"
-    },
-    "to": {
-     "node": "quay-ok",
-     "port": "a"
-    }
-   },
-   {
-    "id": "w24",
-    "from": {
-     "node": "vong-xong",
-     "port": "out"
-    },
-    "to": {
-     "node": "quay-ok",
-     "port": "b"
-    }
-   },
-   {
     "id": "w25",
     "from": {
      "node": "buoc",
@@ -772,17 +575,6 @@
     "to": {
      "node": "quay-xong",
      "port": "a"
-    }
-   },
-   {
-    "id": "w26",
-    "from": {
-     "node": "quay-ok",
-     "port": "out"
-    },
-    "to": {
-     "node": "quay-xong",
-     "port": "b"
     }
    },
    {
@@ -1017,24 +809,35 @@
     }
    },
    {
-    "id": "w48",
+    "id": "w50",
     "from": {
-     "node": "buoc",
-     "port": "step1"
+     "node": "du-goc",
+     "port": "out"
     },
     "to": {
-     "node": "chu-thang",
-     "port": "show"
+     "node": "quay-xong",
+     "port": "b"
     }
    },
    {
-    "id": "w49",
+    "id": "w51",
     "from": {
      "node": "buoc",
-     "port": "step2"
+     "port": "index"
     },
     "to": {
-     "node": "chu-quay",
+     "node": "chu-nay",
+     "port": "line"
+    }
+   },
+   {
+    "id": "w52",
+    "from": {
+     "node": "khi-bat-dau",
+     "port": "started"
+    },
+    "to": {
+     "node": "chu-nay",
      "port": "show"
     }
    }

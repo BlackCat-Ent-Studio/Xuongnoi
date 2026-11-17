@@ -12,6 +12,8 @@ export interface CardSpec {
   /** Column (0, 1, 2 ...): cards of one column are stacked downwards in the order given. */
   col: number;
   params?: Params;
+  /** Rows (inputs + outputs) the card shows when it differs from the usual of its kind (a setting added ports). */
+  rows?: number;
 }
 
 export type Link = [fromNode: string, fromPort: string, toNode: string, toPort: string];
@@ -52,6 +54,11 @@ const ROWS: Record<string, number> = {
   'force-sensor': 4,
   'linear-actuator': 9,
   'select-number': 8,
+  random: 3,
+  spawner: 9,
+  'value-table': 3,
+  'bool-to-number': 3,
+  'angle-diff': 3,
 };
 
 const COL_W = 330;
@@ -59,8 +66,8 @@ const GAP_Y = 24;
 const MARGIN = 30;
 const NOTE_W = 340;
 
-function cardHeight(kind: string): number {
-  return 48 + 26 * (ROWS[kind] ?? 8);
+function cardHeight(kind: string, rows?: number): number {
+  return 48 + 26 * (rows ?? ROWS[kind] ?? 8);
 }
 
 /** Builds a board: cards stacked per column, notes in a row under the lowest card. */
@@ -68,7 +75,7 @@ export function makeBoard(name: string, mode: ViewMode, specs: readonly CardSpec
   const bottoms = new Map<number, number>();
   const nodes: GraphNode[] = specs.map((s) => {
     const y = bottoms.get(s.col) ?? MARGIN;
-    bottoms.set(s.col, y + cardHeight(s.kind) + GAP_Y);
+    bottoms.set(s.col, y + cardHeight(s.kind, s.rows) + GAP_Y);
     return { id: s.id, kind: s.kind, params: structuredClone(s.params ?? {}), pos: { x: MARGIN + s.col * COL_W, y } };
   });
   const wires: Wire[] = links.map(([fn, fp, tn, tp], i) => ({ id: `w${i + 1}`, from: { node: fn, port: fp }, to: { node: tn, port: tp } }));

@@ -11,7 +11,7 @@ beforeAll(() => registerAllNodes());
 const sample = (): Board => structuredClone(listAllSamples().find((s) => s.id === 'robot-square')!.board);
 
 const ALLOWED = new Set([
-  'block', 'line-track', 'robot-body', 'motor', 'sequence', 'counter', 'compare', 'and', 'or', 'math', 'const', 'map-range',
+  'block', 'line-track', 'robot-body', 'motor', 'sequence', 'counter', 'compare', 'and', 'or', 'math', 'const', 'map-range', 'angle-diff',
   'show-number', 'show-text', 'signal-plot', 'camera', 'on-start',
 ]);
 /** Pieces that would make it a hand-driven or hidden-helper machine. */
@@ -130,6 +130,10 @@ describe('sample Robot đi hình vuông', () => {
     expect(hud.find((h) => h.label === 'Số cạnh đã đi')!.value).toBeGreaterThanOrEqual(1);
     expect(hud.some((h) => h.widget?.type === 'plot')).toBe(true);
     expect(hud.filter((h) => h.text && !h.hidden)).toHaveLength(1);
+    // One text card with two lines says what the robot is doing; the turn test is one angle-difference card.
+    expect(b.graph.nodes.filter((n) => n.kind === 'show-text')).toHaveLength(1);
+    expect(b.graph.nodes.filter((n) => n.kind === 'angle-diff')).toHaveLength(1);
+    expect(b.graph.nodes.filter((n) => n.kind === 'compare').map((n) => n.id).sort()).toEqual(['du-goc', 'so-dai']);
   });
 
   it('is anti-forced: without the distance wire it never turns, without the heading wire it never stops turning', { timeout: 300_000 }, () => {
@@ -153,7 +157,7 @@ describe('sample Robot đi hình vuông', () => {
   it('is anti-forced: every other essential wire stops the square', { timeout: 300_000 }, () => {
     const essential: [string, string, string, string][] = [
       ['buoc', 'step1', 'di-xong', 'a'], ['so-dai', 'out', 'di-xong', 'b'], ['di-xong', 'out', 'tiep', 'a'], ['tiep', 'out', 'buoc', 'next'],
-      ['buoc', 'step2', 'quay-xong', 'a'], ['quay-ok', 'out', 'quay-xong', 'b'], ['quay-xong', 'out', 'tiep', 'b'],
+      ['buoc', 'step2', 'quay-xong', 'a'], ['du-goc', 'out', 'quay-xong', 'b'], ['quay-xong', 'out', 'tiep', 'b'], ['lech-goc', 'diff', 'du-goc', 'a'], ['c-goc', 'value', 'du-goc', 'b'],
       ['buoc', 'step1', 'giu-huong', 'set'], ['giu-huong', 'value', 'lech-goc', 'b'], ['buoc', 'step2', 'than', 'resetDistance'],
       ['buoc', 'index', 'tien', 'value'], ['buoc', 'index', 'xoay', 'value'],
       ['cong-trai', 'out', 'dc-trai', 'power'], ['tru-phai', 'out', 'dc-phai', 'power'],
