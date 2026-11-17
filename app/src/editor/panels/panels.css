@@ -78,6 +78,7 @@
 .pn-props .pn-form { border: 0; padding: 0; margin: 0; min-width: 0; }
 
 .pn-props .pn-field { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 34px; margin: 0; }
+.pn-props .pn-field[hidden] { display: none; }
 .pn-props .pn-field.pn-col { flex-direction: column; align-items: stretch; gap: 6px; padding: 4px 0 6px; }
 .pn-props .pn-label { margin: 0; font-size: 12.5px; color: var(--text, #e7e9ec); min-width: 0; overflow-wrap: anywhere; }
 .pn-props .prop-input, .pn-props .pn-select { width: 100%; height: 30px; padding: 0 9px; background: var(--bg, #121418); border: 1px solid var(--line2, #3a404a); border-radius: 6px; color: var(--text, #e7e9ec); font: inherit; outline: 0; }

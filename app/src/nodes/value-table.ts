@@ -16,6 +16,8 @@ const rowParams: ParamDef[] = Array.from({ length: TABLE_MAX_ROWS }, (_, k) => (
   kind: 'number' as const,
   default: 0,
   step: 1,
+  // Only the rows in use are listed, so a 3-row table shows 3 boxes.
+  shownWhen: (params) => k < tableRowCount(numParam(params, 'rows', DEFAULT_ROWS)),
 }));
 
 export const valueTableNode: NodeDef<undefined> = {

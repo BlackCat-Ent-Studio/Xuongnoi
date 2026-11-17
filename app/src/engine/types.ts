@@ -71,6 +71,8 @@ export interface ParamDef {
    * New cards start from `default`. Only for settings whose better default would change how an old board plays.
    */
   legacyDefault?: ParamValue;
+  /** The properties panel hides this setting while this returns false (e.g. table rows beyond the chosen row count). The value is kept. */
+  shownWhen?: (params: Params) => boolean;
 }
 
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */

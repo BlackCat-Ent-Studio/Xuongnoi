@@ -239,10 +239,25 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     }
   }
 
+  /** Settings with a `shownWhen` rule appear and disappear as the other settings change, without rebuilding the panel (typing keeps its focus). */
+  function syncShownRows(): void {
+    const sel = state.getSelection();
+    if (sel?.kind !== 'node') return;
+    const node = state.getGraph().nodes.find((n) => n.id === sel.id);
+    const def = node ? getNodeDef(node.kind) : undefined;
+    if (!node || !def) return;
+    for (const p of def.params) {
+      if (!p.shownWhen) continue;
+      const row = el.querySelector<HTMLElement>(`[data-param="${p.id}"]`);
+      if (row) row.hidden = !p.shownWhen(node.params);
+    }
+  }
+
   function paramRow(def: ParamDef, node: GraphNode, playing: boolean): HTMLElement {
     const { control, inline, live } = editorFor(def, node);
     const row = h('div', `prop-row pn-field${inline ? '' : ' pn-col'}`);
     row.dataset.param = def.id;
+    if (def.shownWhen) row.hidden = !def.shownWhen(node.params);
     row.append(h('div', 'prop-label pn-label', def.label), control);
     if (playing && !live) {
       for (const c of row.querySelectorAll<HTMLInputElement | HTMLButtonElement | HTMLSelectElement>('input,button,select')) {
@@ -439,6 +454,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
 
   state.subscribe((kind) => {
     if (kind === 'params') {
+      syncShownRows();
       // Do not rebuild while the user is typing in this panel (would drop focus).
       if (el.contains(document.activeElement) && document.activeElement !== document.body) {
         lookPicker?.refreshColor();
