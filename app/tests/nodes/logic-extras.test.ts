@@ -65,6 +65,14 @@ describe('value-table', () => {
     const rows = valueTableNode.params.filter((p) => /^v\d+$/.test(p.id));
     expect(rows.map((p) => p.label)).toEqual(Array.from({ length: 12 }, (_, k) => 'Giá trị ' + (k + 1)));
   });
+  it('lists only the rows in use in the properties panel', () => {
+    const shown = (params: Record<string, number>) =>
+      valueTableNode.params.filter((p) => /^v\d+$/.test(p.id) && p.shownWhen?.(params) !== false).map((p) => p.id);
+    expect(shown({})).toEqual(['v1', 'v2', 'v3']);
+    expect(shown({ rows: 5 })).toEqual(['v1', 'v2', 'v3', 'v4', 'v5']);
+    expect(shown({ rows: 99 })).toHaveLength(12);
+    expect(shown({ rows: 0 })).toEqual(['v1', 'v2']);
+  });
 });
 
 describe('angle-diff', () => {
