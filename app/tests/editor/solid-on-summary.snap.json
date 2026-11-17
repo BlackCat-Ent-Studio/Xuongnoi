@@ -2632,5 +2632,62 @@
    "colliderMismatch": 0,
    "hash": "58564bc7"
   }
+ },
+ {
+  "id": "handbook:bool-to-number",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff51ae4b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "ff51ae4b"
+  }
+ },
+ {
+  "id": "handbook:value-table",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e7cf3a41"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e7cf3a41"
+  }
+ },
+ {
+  "id": "handbook:angle-diff",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "db006f25"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "db006f25"
+  }
  }
 ]
