@@ -476,6 +476,25 @@
   }
  },
  {
+  "id": "sample:agv-shuttle",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6b630e11"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6b630e11"
+  }
+ },
+ {
   "id": "lesson:walk-jump",
   "off": {
    "ended": "running",

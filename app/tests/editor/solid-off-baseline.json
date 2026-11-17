@@ -124,6 +124,7 @@
  "sample:auto-arm": "2c2acb78:900",
  "sample:auto-door": "db061049:900",
  "sample:weight-sorter": "9b4485c6:900",
+ "sample:agv-shuttle": "6b630e11:900",
  "lesson:robot-arm": "25d74ad5:900",
  "handbook:joint": "38c1a148:900",
  "handbook:link": "d61bda73:900",

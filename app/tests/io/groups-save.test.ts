@@ -34,10 +34,11 @@ describe('groups in save files', () => {
     expect('groups' in raw.graph).toBe(false);
   });
 
-  it('loads every sample unchanged: the old ones without groups, the 3D city with its groups', () => {
+  it('loads every sample unchanged: the old ones without groups, the 3D city and the AGV with their groups', () => {
     for (const s of listAllSamples()) {
       const loaded = ok(serializeBoard(s.board));
       if (s.id === 'city-delivery-3d') expect(loaded.graph.groups!.length).toBeGreaterThan(20);
+      else if (s.id === 'agv-shuttle') expect(loaded.graph.groups!.length).toBe(5);
       else expect(loaded.graph.groups).toBeUndefined();
       expect(loaded).toEqual(s.board);
     }

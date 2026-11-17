@@ -22,6 +22,7 @@ import { createRobotArmBoard } from '../samples/robot-arm-board';
 import { createAutoDoorBoard } from '../samples/auto-door-board';
 import { createAutoArmBoard } from '../samples/auto-arm-board';
 import { createWeightSorterBoard } from '../samples/weight-sorter-board';
+import { createAgvBoard } from '../samples/agv-board';
 import { parseBoard, serializeBoard } from './save-format';
 
 /**
@@ -34,6 +35,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'auto-door', label: 'Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn)', json: JSON.parse(serializeBoard(createAutoDoorBoard())) },
   { id: 'auto-arm', label: 'Tay máy tự gắp và đặt (chuỗi bước, góc dạy sẵn, lực kẹp, thùng dễ vỡ)', json: JSON.parse(serializeBoard(createAutoArmBoard())) },
   { id: 'weight-sorter', label: 'Băng chuyền phân loại theo cân nặng (cân, so sánh, xi lanh đẩy)', json: JSON.parse(serializeBoard(createWeightSorterBoard())) },
+  { id: 'agv-shuttle', label: 'Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)', json: JSON.parse(serializeBoard(createAgvBoard())) },
 ];
 
 /** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */
