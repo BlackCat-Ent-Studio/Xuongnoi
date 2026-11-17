@@ -1,4 +1,4 @@
-import { getNodeDef, knownOutputsOf } from '../engine/registry';
+import { activeInputs, activeOutputs, getNodeDef, knownOutputsOf } from '../engine/registry';
 import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
 import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
@@ -553,7 +553,20 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     notify,
   });
 
+  /** Which ports every card shows right now, so a setting that adds or removes ports can redraw the cards. */
+  function portSignature(): string {
+    return state
+      .getGraph()
+      .nodes.map((n) => {
+        const def = getNodeDef(n.kind);
+        return def ? `${n.id}:${activeInputs(def, n.params).map((q) => q.id).join('.')}/${activeOutputs(def, n.params).map((q) => q.id).join('.')}` : n.id;
+      })
+      .join(',');
+  }
+  let drawnPorts = '';
+
   function render(): void {
+    drawnPorts = portSignature();
     renderNodes();
     syncNotes(state, noteLayer, noteEls);
     noteLayer.hidden = inGroup();
@@ -713,6 +726,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       const fresh = state.getGraph().nodes.filter((n) => !seenNodes.has(n.id));
       for (const n of fresh) seenNodes.add(n.id);
       if (fresh.length === 1 && !state.isPlaying()) actions.placeNewNode(fresh[0] as GraphNode);
+    } else if (kind === 'params') {
+      if (portSignature() !== drawnPorts) render();
     } else if (kind === 'notes') {
       syncNotes(state, noteLayer, noteEls);
       applySelection();

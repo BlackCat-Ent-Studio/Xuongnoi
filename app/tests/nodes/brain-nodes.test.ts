@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { activeInputs, activeOutputs } from '../../src/engine/registry';
 import { createRuntime } from '../../src/engine/runtime';
 import {
   TICK_DT,
@@ -6,6 +7,7 @@ import {
   type Graph,
   type GraphNode,
   type Params,
+  type PortValues,
   type Runtime,
   type Vec3,
   type ViewMode,
@@ -79,10 +81,10 @@ const drive = (brain: string, jump = true): WireSpec[] => [
 // ---------- sequence ----------
 
 describe('sequence node', () => {
-  const run = (inputs: { next?: boolean; reset?: boolean }[], params: Params = {}) =>
+  const run = (inputs: PortValues[], params: Params = {}) =>
     runNode(sequenceNode, inputs.map((i) => ({ inputs: i })), params);
   const active = (o: Record<string, unknown>): number[] =>
-    [1, 2, 3, 4, 5, 6].filter((k) => o[`step${k}`] === true);
+    [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].filter((k) => o[`step${k}`] === true);
 
   it('starts on step 1 and moves on only at a rising edge of next', () => {
     const out = run([{}, { next: true }, { next: true }, {}, { next: true }], { stepCount: 3 });
@@ -96,7 +98,7 @@ describe('sequence node', () => {
   });
 
   it('stops after the last step unless looping', () => {
-    const pulse = [{}, { next: true }, {}, { next: true }, {}, { next: true }];
+    const pulse: PortValues[] = [{}, { next: true }, {}, { next: true }, {}, { next: true }];
     const once = run(pulse, { stepCount: 2, loop: 'no' });
     expect(once.map(active)).toEqual([[1], [2], [2], [], [], []]);
     expect(once[5]?.finished).toBe(true);
@@ -112,11 +114,111 @@ describe('sequence node', () => {
     expect(out[5]?.finished).toBe(false);
   });
 
-  it('clamps the step count to 2..6', () => {
-    const next = [{}, ...Array.from({ length: 12 }, (_, k) => ({ next: k % 2 === 0 }))];
-    expect(run(next, { stepCount: 99 }).some((o) => o.finished === true)).toBe(true);
+  it('clamps the step count to 2..12', () => {
+    const next = [{}, ...Array.from({ length: 30 }, (_, k) => ({ next: k % 2 === 0 }))];
+    const out99 = run(next, { stepCount: 99 });
+    expect(out99.some((o) => o.finished === true)).toBe(true);
+    expect(out99.flatMap(active).includes(12)).toBe(true);
+    expect(out99.flatMap(active).includes(13)).toBe(false);
     const out = run([{}, { next: true }, {}], { stepCount: 0 });
     expect(active(out[1]!)).toEqual([2]);
+  });
+
+  it('shows the old six "Bước" ports up to 6 steps and more only above, and emits just those', () => {
+    const shown = (n: number) => activeOutputs(sequenceNode, { stepCount: n }).map((p) => p.id);
+    expect(shown(2)).toEqual(sequenceNode.outputs.map((p) => p.id));
+    expect(shown(6)).toEqual(shown(2));
+    expect(shown(9).filter((id) => id.startsWith('step'))).toHaveLength(9);
+    expect(shown(12).filter((id) => id.startsWith('step'))).toHaveLength(12);
+    for (const n of [2, 6, 9, 12]) expect(Object.keys(run([{}], { stepCount: n })[0]!).sort()).toEqual([...shown(n)].sort());
+  });
+
+  it('walks through 12 steps with the next edge', () => {
+    const pulses = Array.from({ length: 23 }, (_, k) => ({ next: k % 2 === 1 }));
+    const out = run(pulses, { stepCount: 12 });
+    expect(out.flatMap(active).filter((k, i, a) => a.indexOf(k) === i)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+    expect(out[22]?.index).toBe(12);
+  });
+
+  describe('per-step "Xong bước" ports', () => {
+    const on = { stepCount: 4, showDone: 'yes' };
+
+    it('appear only when the setting is on, and only up to the step count', () => {
+      const ids = (p: Params) => activeInputs(sequenceNode, p).map((x) => x.id);
+      expect(ids({ stepCount: 4 })).toEqual(['next', 'reset']);
+      expect(ids(on)).toEqual(['next', 'reset', 'done1', 'done2', 'done3', 'done4']);
+      expect(ids({ stepCount: 12, showDone: 'yes' })).toHaveLength(14);
+    });
+
+    it('ignores the done inputs while the setting is off', () => {
+      const out = run([{ done1: true }, { done1: true }, { done2: true }], { stepCount: 3 });
+      expect(out.map(active)).toEqual([[1], [1], [1]]);
+    });
+
+    it('moves on while the current step\x27s done is on (a level), one step per tick, and ignores other steps\x27 done', () => {
+      const out = run([{ done1: true }, { done1: true }, { done2: true }, { done4: true }, {}, { done3: true }], on);
+      // tick 0 reads done1 (on) so step 2 shows right away; the held done1 is then not the current step's.
+      expect(out.map(active)).toEqual([[2], [2], [3], [3], [3], [4]]);
+    });
+
+    it('a condition already true on arrival advances at the next tick, not skipping any step', () => {
+      const allOn = { done1: true, done2: true, done3: true, done4: true };
+      const out = run(Array.from({ length: 6 }, () => allOn), { ...on, loop: 'no' });
+      expect(out.map(active)).toEqual([[2], [3], [4], [], [], []]);
+      expect(out[3]?.finished).toBe(true);
+      const looped = run(Array.from({ length: 6 }, () => allOn), { ...on, loop: 'yes' });
+      expect(looped.map(active)).toEqual([[2], [3], [4], [1], [2], [3]]);
+    });
+
+    it('mixes with the next edge and reset, never more than one step per tick', () => {
+      const out = run([{}, { next: true, done1: true }, { done2: true }, { reset: true, done1: true }, { done1: true }], on);
+      expect(out.map(active)).toEqual([[1], [2], [3], [1], [2]]);
+    });
+  });
+});
+
+describe('sequence with "Xong bước" ports in a feedback loop', () => {
+  /** Each step's own light goes through an Or card and comes back as that step's done: true the moment the step is entered. */
+  const timeline = (seq: string, buf: (k: number) => string, ticks = 14): number[] => {
+    const nodes: NodeSpec[] = [[seq, 'sequence', { stepCount: 3, loop: 'yes', showDone: 'yes' }]];
+    const wires: WireSpec[] = [];
+    for (let k = 1; k <= 3; k++) {
+      nodes.push([buf(k), 'or']);
+      wires.push([seq, `step${k}`, buf(k), 'a'], [buf(k), 'out', seq, `done${k}`]);
+    }
+    const s = sim('2d-top', nodes, wires);
+    const out: number[] = [];
+    for (let t = 0; t < ticks; t++) {
+      s.step();
+      out.push(s.out(seq, 'index') as number);
+    }
+    return out;
+  };
+  /** Steps in the order they were visited, with how many ticks each one lasted. */
+  const runs = (tl: number[]): [number, number][] =>
+    tl.reduce<[number, number][]>((acc, v) => {
+      const last = acc[acc.length - 1];
+      if (last && last[0] === v) last[1] += 1;
+      else acc.push([v, 1]);
+      return acc;
+    }, []);
+
+  it('never skips or sticks, whichever card is evaluated first', () => {
+    const cases = {
+      bufFirst: timeline('z-seq', (k) => `a-buf${k}`),
+      seqFirst: timeline('a-seq', (k) => `z-buf${k}`),
+      mixed: timeline('m-seq', (k) => (k === 2 ? 'a-buf2' : `z-buf${k}`)),
+    };
+    for (const [name, tl] of Object.entries(cases)) {
+      const r = runs(tl);
+      // Visited 1,2,3,1,2,3... in order, each for one or two ticks (the second tick is the one-tick feedback delay).
+      for (const [step, len] of r) expect(len, `${name} step ${step}`).toBeLessThanOrEqual(2);
+      expect(r.map(([step]) => step), name).toEqual(r.map((_, i) => ((i + (r[0]![0] - 1)) % 3) + 1));
+    }
+    // Same step order in every card order; they differ only by that one tick of delay.
+    const firstSteps = (tl: number[]) => runs(tl).map(([step]) => step).slice(0, 5);
+    expect(firstSteps(cases.bufFirst)).toEqual(firstSteps(cases.seqFirst));
+    expect(firstSteps(cases.mixed)).toEqual(firstSteps(cases.seqFirst));
   });
 });
 

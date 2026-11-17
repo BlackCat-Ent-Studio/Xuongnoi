@@ -23,7 +23,11 @@ import type { HandbookEntry } from './types';
 const ROUTE_POINT_TEXT = 'Một điểm trên tuyến (vị trí x, y, z). Chỉ các điểm từ 1 tới "Số điểm" được dùng. Các điểm 9 tới 32 nằm trong phần Nâng cao.';
 const routePoints: Record<string, string> = Object.fromEntries(Array.from({ length: 32 }, (_, k) => [`p${k + 1}`, ROUTE_POINT_TEXT]));
 const sequenceSteps: Record<string, string> = Object.fromEntries(
-  Array.from({ length: 6 }, (_, k) => [`step${k + 1}`, `Bật khi đang ở bước ${k + 1}. Mỗi lúc chỉ có đúng một "Bước" bật. Nếu "Số bước" nhỏ hơn ${k + 1} thì cổng này luôn tắt.`]),
+  Array.from({ length: 12 }, (_, k) => [`step${k + 1}`, `Bật khi đang ở bước ${k + 1}. Mỗi lúc chỉ có đúng một "Bước" bật. Nếu "Số bước" nhỏ hơn ${k + 1} thì cổng này luôn tắt.`]),
+);
+
+const sequenceDone: Record<string, string> = Object.fromEntries(
+  Array.from({ length: 12 }, (_, k) => [`done${k + 1}`, `Chỉ hiện khi bật "Hiện cổng Xong từng bước". Đang ở bước ${k + 1} mà cổng này đang bật thì sang bước kế ở nhịp sau (tối đa một bước mỗi nhịp). Cổng này tính theo mức bật, không cần bật lên từ tắt.`]),
 );
 
 const PATHFIND_TEXT = 'Bật thì bot tự tìm đường đi vòng qua tường và leo bục. Tắt thì bot đi thẳng tới đích (đơn giản hơn, nhưng đụng tường là kẹt).';
@@ -454,18 +458,20 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       next: 'Mỗi lần bật lên là xong bước hiện tại, chuyển sang bước kế. Thường nối "Khi đến nơi" của Di chuyển.',
       reset: 'Mỗi lần bật lên là làm lại từ bước 1.',
       ...sequenceSteps,
+      ...sequenceDone,
       index: 'Số của bước đang làm (1, 2, 3...). Khi đã xong hết thì là 0.',
       finished: 'Bật khi đã làm xong tất cả các bước (khi "Làm hết thì" = Dừng lại).',
     },
     params: {
-      stepCount: 'Có bao nhiêu bước (2 tới 6). Chỉ các cổng "Bước" từ 1 tới số này mới bật.',
+      stepCount: 'Có bao nhiêu bước (2 tới 12). Chỉ các cổng "Bước" từ 1 tới số này mới bật. Cổng "Bước" từ 7 trở đi chỉ hiện khi số bước đủ lớn.',
+      showDone: 'Bật thì mỗi bước có thêm cổng "Xong bước k" (k từ 1 tới số bước). Đang ở bước k mà "Xong bước k" đang bật là sang bước kế, giống bước chuyển của máy tự động (PLC). Có thể dùng cùng "Sang bước kế".',
       loop: '"Dừng lại" thì xong bước cuối là kết thúc. "Lặp lại" thì quay về bước 1 làm mãi.',
     },
     example: '"Bước 1" → "Bật" của Di chuyển kho; "Bước 2" → "Bật" của Di chuyển bệ; "Khi đến nơi" của cả hai (gộp bằng mảnh Hoặc) → "Sang bước kế".',
     tips: [
       'Cổng "Sang bước kế" chỉ nhận một dây. Nhiều nguồn báo xong thì gộp lại bằng mảnh Hoặc.',
-      'Chỉ chuyển bước khi tín hiệu bật lên từ tắt sang bật. Tín hiệu đã bật sẵn từ lúc bắt đầu không tính.',
-      'Tối đa 6 bước. Cần dài hơn thì nối hai Chuỗi bước tiếp nhau.',
+      '"Sang bước kế" chỉ chuyển bước khi tín hiệu bật lên từ tắt sang bật. Muốn bước nào xong khi điều kiện đã đúng sẵn lúc vào bước, bật "Hiện cổng Xong từng bước" và nối điều kiện vào "Xong bước k".',
+      'Tối đa 12 bước. Cần dài hơn thì nối hai Chuỗi bước tiếp nhau.',
       'Chuỗi bước chỉ bật các tín hiệu, tự nó không làm bot đi. Phải nối vào Di chuyển hoặc mảnh khác.',
     ],
     lessonId: 'chores',

@@ -1086,12 +1086,13 @@ export function nodeSearchAliases(kind: string): string[] {
   return n ? [n.en, ...(n.was ? [n.was].flat() : []), ...(n.wasEn ? [n.wasEn] : [])] : [];
 }
 
-/** Extra choice / step ports (4-6) that the review table does not list; they follow the same pattern as 1-3. */
+/** Extra choice / step / step-done ports (4-12; "done" from 1) that the review table does not list; they follow the same pattern as 1-3. */
 function extraNames(kind: string, id: string): [string, string] | null {
-  const m = /^(is|step)([4-6])$/.exec(id);
+  const m = /^(is|step|done)([1-9]|1[0-2])$/.exec(id);
   if (!m) return null;
   if (kind === 'select-number' && m[1] === 'is') return [`Bằng ${m[2]}`, `Case ${m[2]}`];
   if (kind === 'sequence' && m[1] === 'step') return [`Bước ${m[2]}`, `Step ${m[2]}`];
+  if (kind === 'sequence' && m[1] === 'done') return [`Xong bước ${m[2]}`, `Step ${m[2]} done`];
   return null;
 }
 
