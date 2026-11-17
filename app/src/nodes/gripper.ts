@@ -1,5 +1,5 @@
 import type { EntityId, EntityView, NodeDef, Vec3 } from '../engine/types';
-import { extentAlong, lateralOf, localToWorld, normalOf } from '../world/arm-kinematics';
+import { dirOf, extentAlong, lateralOf, localToWorld, normalOf } from '../world/arm-kinematics';
 import { gripHolds, weight } from '../world/mechanics';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
@@ -28,8 +28,46 @@ export function combinedMu(fingerMu: number, objectMu: number): number {
   return Math.min(Math.max(0, fingerMu), Math.max(0, objectMu));
 }
 
-/** The free item closest to the grasp point that is within `reach` and no wider than the opening (`width`) along `axis`. */
-function nearestGrippable(entities: readonly EntityView[], grasp: Vec3, axis: Vec3, reach: number, width: number): { id: EntityId; d: number; offset: Vec3 } | null {
+/** How the gripper decides what closing would grab (the "Cách kẹp" setting). */
+export type GripRule = 'between' | 'reach';
+
+/** Old boards have no setting and keep the reach rule; see the param's `legacyDefault`. */
+const gripRuleOf = (v: string): GripRule => (v === 'between' ? 'between' : 'reach');
+
+/** The directions the fingers work along: where the arm points, across which they close, and (3D only) the third one. */
+interface FingerAxes {
+  approach: Vec3;
+  close: Vec3;
+  /** Perpendicular to both; null in the flat views, which have no such direction. */
+  rise: Vec3 | null;
+}
+
+const dot = (a: Vec3, b: Vec3): number => a.x * b.x + a.y * b.y + a.z * b.z;
+
+/**
+ * True when the object lies between the open fingers: the grasp point is inside the object's extent along the arm and
+ * (in 3D) along the third direction, and the whole object fits between the fingers across the closing direction.
+ */
+export function betweenFingers(grasp: Vec3, size: Vec3, centre: Vec3, axes: FingerAxes, width: number): boolean {
+  const d = { x: centre.x - grasp.x, y: centre.y - grasp.y, z: centre.z - grasp.z };
+  const EPS = 1e-9;
+  if (Math.abs(dot(d, axes.approach)) > extentAlong(axes.approach, size) / 2 + EPS) return false;
+  if (axes.rise && Math.abs(dot(d, axes.rise)) > extentAlong(axes.rise, size) / 2 + EPS) return false;
+  return Math.abs(dot(d, axes.close)) + extentAlong(axes.close, size) / 2 <= width / 2 + EPS;
+}
+
+/**
+ * The free item closest to the grasp point that closing would grab: under "between" the one lying between the open
+ * fingers, under "reach" any one whose centre is within `reach` and that is no wider than the opening (`width`).
+ */
+function nearestGrippable(
+  entities: readonly EntityView[],
+  grasp: Vec3,
+  axes: FingerAxes,
+  rule: GripRule,
+  reach: number,
+  width: number,
+): { id: EntityId; d: number; offset: Vec3 } | null {
   let best: { id: EntityId; d: number; offset: Vec3 } | null = null;
   for (const e of entities) {
     if (e.kind !== 'item' || !e.visible || e.carried || e.inHand) continue;
@@ -37,7 +75,8 @@ function nearestGrippable(entities: readonly EntityView[], grasp: Vec3, axis: Ve
     const dy = e.position.y - grasp.y;
     const dz = e.position.z - grasp.z;
     const d = Math.hypot(dx, dy, dz);
-    if (d > reach || extentAlong(axis, e.size) > width + 1e-9) continue;
+    if (extentAlong(axes.close, e.size) > width + 1e-9) continue;
+    if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width)) continue;
     if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz } };
   }
   return best;
@@ -49,7 +88,7 @@ export const gripperNode: NodeDef<GripperState> = {
   labelEn: 'Gripper',
   category: 'action',
   description:
-    'Tay kẹp cuối cánh tay: kẹp món đồ vật gần nhất trong tầm với bằng hai ngón với lực bạn chọn. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng.',
+    'Tay kẹp cuối cánh tay: kẹp món đồ vật nằm giữa hai ngón (điểm kẹp nằm trong thân món đó và món đó lọt giữa hai ngón đang mở) bằng lực bạn chọn, nên phải đưa tay tới đúng tư thế. "Cách kẹp" có thể đổi sang kiểu cũ: món gần nhất trong tầm với. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng.',
   inputs: [
     { id: 'base', type: 'object', label: 'Gắn vào', required: true },
     { id: 'close', type: 'bool', label: 'Kẹp' },
@@ -69,7 +108,18 @@ export const gripperNode: NodeDef<GripperState> = {
     { id: 'maxForce', label: 'Lực kẹp tối đa (N mỗi ngón)', kind: 'number', default: 120, min: 0, max: 100000, step: 5 },
     { id: 'fingerMu', label: 'Ma sát của ngón μ', kind: 'number', default: 0.8, min: 0, max: 1.5, step: 0.05 },
     { id: 'width', label: 'Độ mở (m)', kind: 'number', default: 1, min: 0.05, max: 10, step: 0.05 },
-    { id: 'reach', label: 'Tầm với (m)', kind: 'number', default: 0.5, min: 0.05, max: 10, step: 0.05 },
+    {
+      id: 'grip',
+      label: 'Cách kẹp',
+      kind: 'select',
+      default: 'between',
+      legacyDefault: 'reach',
+      options: [
+        { value: 'between', label: 'Vật nằm giữa hai ngón' },
+        { value: 'reach', label: 'Vật trong tầm với' },
+      ],
+    },
+    { id: 'reach', label: 'Tầm với (m, chỉ khi kẹp kiểu "trong tầm với")', kind: 'number', default: 0.5, min: 0.05, max: 10, step: 0.05 },
     { id: 'mass', label: 'Khối lượng tay kẹp (kg)', kind: 'number', default: 0.5, min: 0, max: 100000, step: 0.1 },
     { id: 'fingers', label: 'Số ngón', kind: 'number', default: 2, min: 1, max: 4, step: 1 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#f59e0b', advanced: true },
@@ -109,6 +159,7 @@ export const gripperNode: NodeDef<GripperState> = {
     }
     const grasp = localToWorld(base, { x: GRASP_AT, y: 0, z: 0 });
     const axis = ctx.mode === '2d-side' ? normalOf(base) : lateralOf(base);
+    const axes: FingerAxes = { approach: dirOf(base), close: axis, rise: ctx.mode === '3d' ? normalOf(base) : null };
     const closeCmd = asBool(i.close);
     const maxForce = Math.max(0, numParam(params, 'maxForce', 120));
     const wired = typeof i.force === 'number' && Number.isFinite(i.force);
@@ -125,7 +176,8 @@ export const gripperNode: NodeDef<GripperState> = {
     }
 
     // The nearest free object inside reach whose width fits between the open fingers: what closing would grab right now.
-    const best = nearestGrippable(world.listEntities(), grasp, axis, Math.max(0, numParam(params, 'reach', 0.5)), width);
+    const rule = gripRuleOf(strParam(params, 'grip', 'reach'));
+    const best = nearestGrippable(world.listEntities(), grasp, axes, rule, Math.max(0, numParam(params, 'reach', 0.5)), width);
     if (closeCmd && s.held === null && !s.latched) {
       if (best) {
         s.held = best.id;

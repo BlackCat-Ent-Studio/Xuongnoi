@@ -64,6 +64,11 @@ export interface ParamDef {
   step?: number;
   /** Fine-tuning setting: shown folded under "Nâng cao" in the properties panel. */
   advanced?: boolean;
+  /**
+   * What a card saved before this setting existed keeps running with (a missing value reads as this, not as `default`).
+   * New cards start from `default`. Only for settings whose better default would change how an old board plays.
+   */
+  legacyDefault?: ParamValue;
 }
 
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */
@@ -830,6 +835,8 @@ export interface WorldApi {
   setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void;
   /** Changes the mass and ground grip of a robot chassis while it runs (unusable numbers keep the old value). */
   setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void;
+  /** Newtons a robot chassis's motors can push with while travelling along `travel` (signed, along its heading): wheels turning that way, each at its maximum scaled by its power. 0 for anything that is not a robot chassis. */
+  robotPushN(body: EntityId, travel: number): number;
   /** Fires a shot from the shooter along its facing (or at `spec.aimAt`). Returns the shot, or null when it cannot fire. */
   shoot(shooter: EntityId, spec: ShotSpec): EntityId | null;
   /** Characters this shooter's shots hit during the last physics step (a one-tick pulse). */

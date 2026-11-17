@@ -16,7 +16,8 @@ export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-s
       const def = getNodeDef(kind);
       if (!def) throw new Error(`unknown kind ${kind}`);
       const base: Record<string, ParamValue> = {};
-      for (const p of def.params) base[p.id] = p.default;
+      // A saved board that never mentioned a setting plays with its legacy value, like a card loaded from an old file.
+      for (const p of def.params) base[p.id] = p.legacyDefault ?? p.default;
       return { id, kind, params: { ...base, ...(params ?? {}) }, pos: { x: n * 10, y: 0 } };
     }),
     wires: wires.map(([f, fp, t, tp], n) => ({ id: `w${n}`, from: { node: f, port: fp }, to: { node: t, port: tp } })),

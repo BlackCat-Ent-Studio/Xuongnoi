@@ -78,7 +78,7 @@ function parseNode(raw: unknown, index: number, seen: Set<string>): GraphNode | 
   const params: Params = {};
   for (const p of def.params) {
     if (!Object.prototype.hasOwnProperty.call(given, p.id)) {
-      params[p.id] = cloneDefault(p.default);
+      params[p.id] = cloneDefault(p.legacyDefault ?? p.default);
       continue;
     }
     const clean = cleanParam(p, given[p.id]);

@@ -35,6 +35,7 @@ import { createTeleporter } from './teleport';
 import { lineOfSight } from './line-of-sight';
 import { probeAhead } from './probe-ahead';
 import { createRobotBody, sanitizeRobotSpec, setWheel } from './robot-drive';
+import { availablePushN } from './robot-push';
 import { createVehicleBody, seatPosition } from './vehicles';
 import { prepareTrains } from './vehicle-train';
 
@@ -725,6 +726,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!robot) return;
       const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction, maxPayload: tuning.maxPayload ?? robot.spec.maxPayload, pushObjects: tuning.pushObjects ?? robot.spec.pushObjects });
       robot.spec = next;
+    },
+    robotPushN(body: EntityId, travel: number): number {
+      const robot = byId.get(body)?.robot;
+      return robot ? availablePushN(robot, finiteOr(travel, 0)) : 0;
     },
     setBeltSpeed(id: EntityId, speed: number): void {
       const e = byId.get(id);

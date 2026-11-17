@@ -99,7 +99,7 @@ export const tryGripper = (): Board =>
       { alias: 'key', kind: 'key', x: 300, y: 520, params: { key: 'Space' } },
       { alias: 'shoulder', kind: 'joint', x: 600, y: 20, params: { start: 0, min: -60, max: 60, maxTorque: 200 } },
       { alias: 'arm', kind: 'link', x: 880, y: 20, params: { length: 1, mass: 1 } },
-      { alias: 'grip', kind: 'gripper', x: 1160, y: 20, params: { defaultForce: 20 } },
+      { alias: 'grip', kind: 'gripper', x: 1160, y: 20, params: { defaultForce: 20, grip: 'reach' } },
       { alias: 'force', kind: 'show-number', x: 1160, y: 300, params: { label: 'Lực kẹp mỗi ngón (N)', corner: 'top-left' } },
       { alias: 'slipLatch', kind: 'latch', x: 600, y: 520 },
       text('slip', 1160, 480, 'Vật tuột!'),
