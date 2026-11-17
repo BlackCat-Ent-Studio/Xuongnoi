@@ -21,9 +21,9 @@ function setup(over: Params = {}) {
 const plain = (w: World, id: string) => w.getEntity(id)!;
 
 describe('spawner material', () => {
-  it('neutral defaults add no field to the spawned entity (item and block)', () => {
+  it('a board saved before the mass setting adds no field to the spawned entity (item and block)', () => {
     for (const template of ['item', 'block']) {
-      const { w, fire } = setup({ template });
+      const { w, fire } = setup({ template, mass: 0 });
       const id = fire();
       const v = plain(w, id);
       expect(v).not.toHaveProperty('mass');
@@ -32,9 +32,17 @@ describe('spawner material', () => {
     }
   });
 
-  it('block keeps its 10 kg default while the mass param is left on 1', () => {
-    const { w, fire } = setup({ template: 'block' });
-    expect(w.materialOf(fire())!.massKg).toBe(10);
+  it('mass 0 means by kind: a block weighs 10 kg and an item 1 kg; old boards read 0', () => {
+    expect(spawnerNode.params.find((p) => p.id === 'mass')).toMatchObject({ default: 1, legacyDefault: 0 });
+    const block = setup({ template: 'block', mass: 0 });
+    expect(block.w.materialOf(block.fire())!.massKg).toBe(10);
+    const item = setup({ template: 'item', mass: 0 });
+    expect(item.w.materialOf(item.fire())!.massKg).toBe(1);
+  });
+
+  it('a block weighs what the mass box says, 1 kg included', () => {
+    const { w, fire } = setup({ template: 'block', mass: 1 });
+    expect(w.materialOf(fire())!.massKg).toBe(1);
   });
 
   it('applies mass, friction and crush limit params', () => {

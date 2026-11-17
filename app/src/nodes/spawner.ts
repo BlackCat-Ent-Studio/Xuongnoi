@@ -1,4 +1,4 @@
-import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type Params, type PortDef, type PortValue } from '../engine/types';
+import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type ParamDef, type Params, type PortDef, type PortValue } from '../engine/types';
 import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
 import { materialParams, materialSpec } from './body-params';
 import { ITEM_SHAPE_LABELS } from './item';
@@ -14,8 +14,12 @@ const MAX_ALIVE_LIMIT = 50;
 
 const MASS_PORT: PortDef = { id: 'mass', type: 'number', label: 'Khối lượng' };
 const CRUSH_PORT: PortDef = { id: 'crushLimit', type: 'number', label: 'Lực chịu nén' };
-/** The default "Khối lượng" of the params; a block left on it keeps the 10 kg every older block has. */
-const ITEM_DEFAULT_MASS = 1;
+/** "Khối lượng" 0 means "by kind": a block weighs 10 kg and an item 1 kg. Boards saved before the setting existed read 0. */
+const MASS_BY_KIND = 0;
+const spawnerMaterialParams = (): ParamDef[] =>
+  materialParams('item').map((p) =>
+    p.id === 'mass' ? { ...p, label: 'Khối lượng (kg, 0 = theo loại: Vật thể 10, Đồ vật 1)', legacyDefault: MASS_BY_KIND } : p,
+  );
 
 const takesWiredMaterial = (params: Params): boolean => strParam(params, 'wireMaterial', 'no') === 'yes';
 const wired = (v: PortValue | undefined): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
@@ -82,7 +86,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     },
     { id: 'maxAlive', label: 'Số lượng tối đa', kind: 'number', default: 3, min: 1, max: MAX_ALIVE_LIMIT, step: 1 },
     { id: 'lifetime', label: 'Sống bao lâu (giây, 0 = mãi)', kind: 'number', default: 5, min: 0, max: 600, step: 0.5 },
-    ...materialParams('item'),
+    ...spawnerMaterialParams(),
     {
       id: 'wireMaterial',
       label: 'Hiện ô "Khối lượng" và "Lực chịu nén" (nối dây để mỗi vật mới một khác)',
@@ -111,8 +115,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         const isBlock = strParam(params, 'template', 'item') === 'block';
         const shapeRaw = strParam(params, 'shape', 'ball');
         const material = materialSpec(params, isBlock ? 'block' : 'item');
-        // A block left on the default mass keeps the block default (10 kg), so older boards stay identical.
-        if (isBlock && material.mass === ITEM_DEFAULT_MASS) material.mass = undefined;
+        if (material.mass === MASS_BY_KIND) material.mass = undefined;
         if (takesWiredMaterial(params)) {
           material.mass = wired(i.mass) ?? material.mass;
           material.crushLimit = wired(i.crushLimit) ?? material.crushLimit;
