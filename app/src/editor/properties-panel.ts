@@ -1,5 +1,5 @@
 import { activeInputs, activeOutputs, getNodeDef, knownInputs, knownOutputs } from '../engine/registry';
-import type { GraphNode, ParamDef, ParamValue, Params, PortDef, Vec3 } from '../engine/types';
+import { DEFAULT_GRAVITY, MAX_GRAVITY, type GraphNode, type ParamDef, type ParamValue, type Params, type PortDef, type Vec3 } from '../engine/types';
 import { NODE_CATEGORY_LABELS } from '../nodes';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { SOLID_BODIES_TOPIC } from '../handbook/topic-solid-bodies';
@@ -363,9 +363,35 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     return worldSwitch({ key: 'real-physics', title: false, text: P.realPhysicsLabel, tip: P.realPhysicsTip, topic: REAL_PHYSICS_TOPIC, get: () => state.getRealPhysics(), set: (on) => state.setRealPhysics(on) });
   }
 
+  /** True while the gravity box itself changes the setting: the panel must not rebuild under the typing hand. */
+  let editingGravity = false;
+
+  /** Gravity of the "Vật lý thật" world, right under its switch. Only used while that switch is on. */
+  function gravityRow(): HTMLElement {
+    const def: ParamDef = { id: 'gravity', label: P.gravityLabel, kind: 'number', default: DEFAULT_GRAVITY, min: 0, max: MAX_GRAVITY, step: 0.1 };
+    const playing = state.isPlaying();
+    const row = h('div', 'pn-setting');
+    row.dataset.setting = 'gravity';
+    const stepper = numberStepper(def, state.getGravity(), (v) => {
+      editingGravity = true;
+      try {
+        state.setGravity(v);
+      } finally {
+        editingGravity = false;
+      }
+    });
+    stepper.input.disabled = playing;
+    for (const b of stepper.el.querySelectorAll('button')) b.disabled = playing;
+    const label = h('span', 'pn-setting-label', P.gravityLabel);
+    label.title = playing ? P.solidBodiesLocked : P.gravityTip;
+    label.append(createHandbookHelpButton(REAL_PHYSICS_TOPIC, P.gravityLabel));
+    row.append(label, stepper.el, h('p', 'pn-setting-tip', P.gravityTip));
+    return row;
+  }
+
   function renderEmpty(): void {
     const box = h('div', 'pn-empty-state');
-    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle(), realPhysicsToggle());
+    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle(), realPhysicsToggle(), gravityRow());
     const dl = h('dl', 'pn-keys');
     for (const s of P.shortcuts) {
       const dt = h('dt');
@@ -473,6 +499,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
       render();
       return;
     }
+    if (kind === 'graph' && editingGravity) return;
     if (kind === 'graph' || kind === 'selection' || kind === 'board' || kind === 'playing') render();
   });
   render();

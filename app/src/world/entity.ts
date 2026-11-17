@@ -88,6 +88,10 @@ export interface Entity {
   track?: LineTrackSpec;
   /** Solid-body worlds: where this character or item started; a fall off the tray brings it back here. */
   home?: Vec3;
+  /** Items in a "Vật lý thật" world with the engine loaded: the crate engine moves them (tip, stack, collide) instead of the plain item physics. */
+  rigid?: boolean;
+  /** Rigid items: turn as a unit quaternion, written by the crate engine; unset = not turned. */
+  rot?: { x: number; y: number; z: number; w: number };
 
   // ---- collision and body tuning; unset = plain visual box and normal physics ----
   collider?: ColliderSpec;
@@ -159,6 +163,7 @@ export function toView(e: Entity): EntityView {
     ...(e.belt ? { belt: { axis: beltAxis(e), speed: e.belt.speed, phase: e.belt.phase } } : {}),
     ...turnAngle(e),
     ...(e.collider ? { collider: colliderView(e) } : {}),
+    ...(e.rot ? { rotation: { ...e.rot } } : {}),
     ...(e.mass !== undefined ? { mass: e.mass } : {}),
     ...(e.mu !== undefined ? { mu: e.mu } : {}),
     ...(e.crushLimit !== undefined ? { crushLimit: e.crushLimit } : {}),

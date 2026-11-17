@@ -40,6 +40,8 @@ type Entry =
       bounds: THREE.Box3;
       shape: string;
       color: string;
+      /** True while the pose group stands at the item's centre and carries a physics turn (it must be put back when the turn ends). */
+      turned?: boolean;
     }
   | { type: 'arm'; figure: ArmPartFigure; part: ArmPartKind }
   | { type: 'vehicle'; figure: VehicleFigure; model: string }
@@ -53,6 +55,9 @@ type Entry =
 const LYING_POSE = new THREE.Quaternion()
   .setFromAxisAngle(new THREE.Vector3(0, 0, 1), Math.PI / 2)
   .multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2));
+
+const turnQuat = new THREE.Quaternion();
+const turnShift = new THREE.Vector3();
 
 function castShadows(root: THREE.Object3D): void {
   root.traverse((o) => {
@@ -255,11 +260,29 @@ export class SceneView {
       if (entry.type === 'item') {
         const { object } = entry.figure;
         object.scale.set(e.size.x, e.size.y, e.size.z);
-        if (entry.flat) {
+        if (e.rotation) {
+          // A crate the physics turned (tipped over, tumbling): the pose group sits at its centre and turns about it.
+          turnQuat.set(e.rotation.x, e.rotation.y, e.rotation.z, e.rotation.w);
+          turnShift.set(0, entry.flat ? -e.size.y / 2 - entry.bounds.min.z * e.size.z : 0, 0).applyQuaternion(turnQuat);
+          object.position.set(0, 0, 0);
+          entry.pose.position.set(e.position.x + turnShift.x, e.position.y + turnShift.y, e.position.z + turnShift.z);
+          entry.pose.quaternion.copy(turnQuat);
+          if (entry.flat) entry.pose.quaternion.multiply(LYING_POSE);
+          entry.turned = true;
+        } else if (entry.flat) {
+          if (entry.turned) {
+            entry.pose.quaternion.copy(LYING_POSE);
+            entry.turned = false;
+          }
           // Lying tool: the pose group turns it onto its side; lift so its lowest point rests on the entity's floor.
           object.position.set(0, 0, 0);
           entry.pose.position.set(e.position.x, e.position.y - e.size.y / 2 - entry.bounds.min.z * e.size.z, e.position.z);
         } else {
+          if (entry.turned) {
+            entry.pose.position.set(0, 0, 0);
+            entry.pose.quaternion.identity();
+            entry.turned = false;
+          }
           object.position.set(e.position.x, e.position.y, e.position.z);
         }
         if (entry.color !== e.color) {

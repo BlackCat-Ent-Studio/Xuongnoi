@@ -1,4 +1,5 @@
 import type { Vec3 } from '../engine/types';
+import type { RapierModule } from './rapier-loader';
 
 /**
  * Optional world behaviour switched on by a game that wants real bodies (the puzzle game's 3D levels).
@@ -15,6 +16,13 @@ export interface WorldOptions {
   respawnFallen?: boolean;
   /** Robots drive on wheel traction: each wheel pushes with at most motor force and grip, wheels can slip, turning has inertia. */
   realPhysics?: boolean;
+  /** With realPhysics: gravity in m/s² for everything that falls (and for the rigid crates). Absent = 9.81. */
+  gravity?: number;
+  /**
+   * With realPhysics: the loaded physics engine (see rapier-loader). Present = loose items are rigid bodies that tip, stack
+   * and collide; absent (not loaded, or failed to load) = items keep the plain rules.
+   */
+  rapier?: RapierModule;
   /** Collision box of every character, so it matches the figure that is drawn (position stays at the base box centre). */
   characterBox?: { size: Vec3; offset: Vec3 };
   /** Every character carries in front of it (a game whose figures have no hands up: the editor). Takes the place of frontCarryLooks. */

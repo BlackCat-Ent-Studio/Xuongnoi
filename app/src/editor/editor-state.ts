@@ -1,4 +1,5 @@
 import { clampNoteSize, createNote, NOTE_MAX_COUNT } from '../engine/notes';
+import { DEFAULT_GRAVITY, cleanGravity } from '../engine/types';
 import { getNodeDef } from '../engine/registry';
 import type {
   Board,
@@ -172,6 +173,10 @@ export interface EditorState {
   getRealPhysics(): boolean;
   /** Switches "Vật lý thật" for the next play. Ignored while playing; the field is dropped when off so old files round-trip unchanged. */
   setRealPhysics(on: boolean): void;
+  /** Gravity (m/s²) of this game while "Vật lý thật" is on; 9.81 unless the maker set another number. */
+  getGravity(): number;
+  /** Sets the gravity for the next play (0..100). Ignored while playing or for an unusable number; 9.81 drops the field so old files round-trip unchanged. */
+  setGravity(g: number): void;
   setPlaying(playing: boolean): void;
   select(sel: Selection): void;
   /** Shift+click: add or remove one node/note from the selection. */
@@ -424,6 +429,15 @@ export function createEditorState(initial: Board): EditorState {
       const { realPhysics: _was, ...others } = old ?? {};
       const settings = on ? { ...others, realPhysics: true } : others;
       commit({ ...board, graph: Object.keys(settings).length > 0 ? { ...rest, settings } : rest }, ['graph']);
+    },
+    getGravity: () => board.graph.settings?.gravity ?? DEFAULT_GRAVITY,
+    setGravity(g) {
+      const next = cleanGravity(g);
+      if (playing || next === undefined || next === (board.graph.settings?.gravity ?? DEFAULT_GRAVITY)) return;
+      const { settings: old, ...rest } = board.graph;
+      const { gravity: _was, ...others } = old ?? {};
+      const settings = next === DEFAULT_GRAVITY ? others : { ...others, gravity: next };
+      commit({ ...board, graph: Object.keys(settings).length > 0 ? { ...rest, settings } : rest }, ['graph'], 'gravity');
     },
     setPlaying(p) {
       if (p === playing) return;

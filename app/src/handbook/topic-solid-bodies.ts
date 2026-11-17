@@ -1,8 +1,12 @@
+import type { Board } from '../engine/types';
+
 /** Handbook topic (not a node page): the per-game "Va chạm thật" switch. Plain data so the page text is easy to test. */
 export const SOLID_BODIES_TOPIC = 'topic:solid-bodies';
 
 export interface HandbookTopic {
   id: string;
+  /** A ready-made board for the "Thử ngay" button; omitted = the page has no try button. */
+  tryBoard?: () => Board;
   title: string;
   /** Small label next to the title; omitted = the shared "Công tắc" label. */
   tag?: string;

@@ -283,6 +283,19 @@ export function createHandbookDialog(deps: HandbookDialogDeps): HandbookDialog {
       for (const item of block.items) ul.append(h('li', '', item));
       nodes.push(section(block.heading, ul));
     }
+    const tryBoard = topic.tryBoard;
+    if (tryBoard) {
+      const bar = h('div', 'hb-actions');
+      const tryBtn = h('button', 'btn primary', T.tryNow);
+      tryBtn.type = 'button';
+      tryBtn.dataset.hbAction = 'try';
+      tryBtn.addEventListener('click', () => {
+        deps.openBoard(tryBoard());
+        close();
+      });
+      bar.append(tryBtn);
+      nodes.push(bar);
+    }
     page.replaceChildren(...nodes);
     page.scrollTop = 0;
   }

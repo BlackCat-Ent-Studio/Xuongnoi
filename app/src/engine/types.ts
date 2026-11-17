@@ -188,12 +188,23 @@ export interface NodeGroup {
   y: number;
 }
 
+/** Gravity (m/s²) of a "Vật lý thật" game when the maker did not set one, and the largest value accepted. */
+export const DEFAULT_GRAVITY = 9.81;
+export const MAX_GRAVITY = 100;
+
+/** A usable gravity (0..MAX_GRAVITY); anything else is undefined. */
+export function cleanGravity(n: unknown): number | undefined {
+  return typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= MAX_GRAVITY ? n : undefined;
+}
+
 /** Per-game switches saved with the board. A missing field (or a missing `settings`) means the old behaviour. */
 export interface GraphSettings {
   /** "Va chạm thật": characters and loose items are solid bodies (see world/world-options.ts). Only ever stored as `true`. */
   solidBodies?: boolean;
   /** "Vật lý thật": robots drive on wheel traction (grip, slip, yaw inertia, motor braking). Only ever stored as `true`. */
   realPhysics?: boolean;
+  /** Gravity (m/s²) while "Vật lý thật" is on. Absent = 9.81. Only stored when it differs from that. */
+  gravity?: number;
   /**
    * Set once a board follows "every action needs its own wire" (inputs such as "Bật" are off until wired).
    * A board without it is an older one: loading it wires a "Khi bắt đầu" card into those inputs. Only ever stored as `true`.
@@ -601,6 +612,8 @@ export interface EntityView {
   tilt?: number;
   /** Collision box (center and full size), present only when it differs from `position` / `size`. */
   collider?: { position: Vec3; size: Vec3 };
+  /** Items only: turn of a crate that real physics ("Vật lý thật") simulates, as a unit quaternion. Absent for every other body. */
+  rotation?: { x: number; y: number; z: number; w: number };
   /** Present only when set to something other than the default of its kind; WorldApi.materialOf always gives the effective values. */
   mass?: number;
   mu?: number;
@@ -901,6 +914,8 @@ export interface World extends WorldApi {
   setCameraYaw(rad: number): void;
   /** The play-camera request that applies right now (most recently activated camera node), or null. */
   cameraCommand(): PlayCameraCommand | null;
+  /** Frees what the world holds outside the JS heap (the crate engine's memory). Call once when the world is thrown away; the world is unusable afterwards. */
+  dispose?(): void;
   /** Collision-level snapshot of every body for the physics checks (tests and the dev watcher); not used by the game. */
   debugBodies?(): readonly BodySnapshot[];
 }

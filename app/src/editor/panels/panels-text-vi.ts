@@ -35,7 +35,9 @@ export const PANELS_TEXT_VI = {
   solidBodiesTip: 'Nhân vật và đồ vật đặc, không đi xuyên nhau; thả đồ rơi ngay trước tay. Áp dụng ở lần Chạy sau.',
   solidBodiesLocked: 'Bấm Dừng để đổi cài đặt này.',
   realPhysicsLabel: 'Vật lý thật',
-  realPhysicsTip: 'Robot chạy bằng lực bám thật: bánh quá khỏe so với độ bám thì trượt, robot nặng thì tăng tốc, quay và dừng chậm hơn. Áp dụng ở lần Chạy sau.',
+  realPhysicsTip: 'Robot chạy bằng lực bám thật: bánh quá khỏe so với độ bám thì trượt, robot nặng thì tăng tốc, quay và dừng chậm hơn. Thùng và đồ vật đổ, chồng, va nhau như thật. Áp dụng ở lần Chạy sau.',
+  gravityLabel: 'Trọng lực (m/s²)',
+  gravityTip: 'Chỉ có tác dụng khi bật "Vật lý thật". Trái Đất 9,81; Mặt Trăng 1,62; 0 là không trọng lực. Áp dụng ở lần Chạy sau.',
   emptyTitle: 'Chưa chọn mảnh ghép nào',
   emptyBody: 'Bấm vào một mảnh ghép trên bảng nối dây để xem và đổi thuộc tính của nó.',
   shortcuts: [

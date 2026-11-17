@@ -3,6 +3,7 @@ import { cargoPositions } from './cargo';
 import { boxOverlap, colliderBox, colliderOffset } from './collider';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
+import type { CrateEngine } from './crate-engine';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
 import { massOn } from './material';
@@ -35,9 +36,9 @@ function overlapOn(a: Entity, b: Entity, axis: Axis): number {
   return boxOverlap(a, b, axis);
 }
 
-/** Gravity of one body: the world pull times its own scale (1 = normal, 0 = floats). */
-function gravityOf(e: Entity): number {
-  return GRAVITY * (e.gravityScale ?? 1);
+/** Gravity of one body: the world pull `g` (negative, units/s²) times its own scale (1 = normal, 0 = floats). */
+function gravityOf(e: Entity, g: number): number {
+  return g * (e.gravityScale ?? 1);
 }
 
 /** Puts `c` flush against `b` on one side along `axis` (collision boxes touch; offsets are respected). */
@@ -194,9 +195,9 @@ export const DEFAULT_ITEM_FRICTION = ITEM_FRICTION;
 /** A fall slower than this does not bounce, so a bouncing item eventually settles. */
 const BOUNCE_MIN_SPEED = 1.5;
 
-function stepFreeItem(item: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], extras?: Extras): void {
+function stepFreeItem(item: Entity, dt: number, mode: ViewMode, g: number, solids: readonly Entity[], extras?: Extras): void {
   if (mode === '2d-top') item.vel.y = 0;
-  else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + gravityOf(item) * dt);
+  else item.vel.y = Math.max(-TERMINAL_SPEED, item.vel.y + gravityOf(item, g) * dt);
   if (mode === '2d-side') {
     item.pos.z = 0;
     item.vel.z = 0;
@@ -276,6 +277,7 @@ function stepVehicle(
   dt: number,
   mode: ViewMode,
   yaw: number,
+  g: number,
   solids: readonly Entity[],
   colliders: readonly Entity[],
 ): void {
@@ -290,7 +292,7 @@ function stepVehicle(
   v.vel.z = flat.z;
   v.facing = vehicleFacing(body, mode);
   if (mode === '2d-top') v.vel.y = 0;
-  else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + gravityOf(v) * dt);
+  else v.vel.y = Math.max(-TERMINAL_SPEED, v.vel.y + gravityOf(v, g) * dt);
   if (mode === '2d-side') v.pos.z = 0;
   v.onGround = integrate(v, dt, mode, solids, rivals);
   settleVehicle(body, v.vel, wanted, dt, mode);
@@ -302,7 +304,7 @@ function stepVehicle(
  * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entity[], entities: readonly Entity[]): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, solids: readonly Entity[], entities: readonly Entity[]): void {
   const body = r.robot;
   if (!body) return;
   const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r));
@@ -310,7 +312,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, solids: readonly Entit
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
   if (mode === '2d-top') r.vel.y = 0;
-  else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r) * dt);
+  else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r, g) * dt);
   if (mode === '2d-side') r.pos.z = 0;
   const shove = beginShove(r, entities, solids, dt, mode);
   r.onGround = integrate(r, dt, mode, solids);
@@ -360,8 +362,20 @@ function supportsOf(item: Entity, robots: readonly Entity[]): Entity[] {
   return robots.filter((r) => restsOnChassis(item, r));
 }
 
-/** Advance all visible characters and loose items by dt against solid visible blocks; carried items follow. */
-export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewMode, yaw: number, rules: BodyRules | null = null): void {
+/**
+ * Advance all visible characters and loose items by dt against solid visible blocks; carried items follow.
+ * `g` is the pull in units/s² (negative; -30 unless the world has its own gravity). With a crate engine, rigid items are
+ * moved by it at the end of the tick instead of by the plain item rules.
+ */
+export function stepPhysics(
+  entities: readonly Entity[],
+  dt: number,
+  mode: ViewMode,
+  yaw: number,
+  rules: BodyRules | null = null,
+  g: number = GRAVITY,
+  crates: CrateEngine | null = null,
+): void {
   const byId = new Map(entities.map((e) => [e.id, e]));
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
@@ -389,10 +403,10 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
 
   const colliders = entities.filter((e) => e.kind === 'vehicle' && e.visible && e.vehicle?.spec.collide !== false);
   for (const c of entities) {
-    if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, solids, colliders);
+    if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, g, solids, colliders);
   }
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, solids, entities);
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {
@@ -411,7 +425,7 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
     if (mode === '2d-top') {
       c.vel.y = 0;
     } else {
-      c.vel.y = Math.max(-TERMINAL_SPEED, c.vel.y + gravityOf(c) * dt);
+      c.vel.y = Math.max(-TERMINAL_SPEED, c.vel.y + gravityOf(c, g) * dt);
     }
     if (mode === '2d-side') c.pos.z = 0;
 
@@ -436,11 +450,12 @@ export function stepPhysics(entities: readonly Entity[], dt: number, mode: ViewM
       item.vel.y = 0;
       item.vel.z = 0;
       item.onGround = false;
-    } else {
+    } else if (!item.rigid) {
       const held = chassis.length > 0 ? supportsOf(item, chassis) : [];
-      stepFreeItem(item, dt, mode, held.length > 0 ? [...solids, ...held] : solids, extrasFor(item));
+      stepFreeItem(item, dt, mode, g, held.length > 0 ? [...solids, ...held] : solids, extrasFor(item));
     }
   }
+  crates?.step(entities, dt);
 }
 
 /** True when the box overlaps a solid block (used to keep dropped items out of walls). */

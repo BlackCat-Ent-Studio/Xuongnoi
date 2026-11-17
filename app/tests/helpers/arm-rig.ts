@@ -2,6 +2,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { getNodeDef } from '../../src/engine/registry';
 import { registerAllNodes } from '../../src/nodes';
 import { TICK_DT, type Graph, type GraphNode, type InputSnapshot, type ParamValue, type ViewMode } from '../../src/engine/types';
+import type { RapierModule } from '../../src/world/rapier-loader';
 import { createWorld } from '../../src/world/world';
 
 registerAllNodes();
@@ -10,7 +11,7 @@ export type NodeSpec = [id: string, kind: string, params?: Record<string, ParamV
 export type WireSpec = [from: string, outPort: string, to: string, inPort: string];
 
 /** Builds a graph from short rows (defaults filled in) and plays it headless. */
-export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-side', solidBodies = false, realPhysics = false) {
+export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-side', solidBodies = false, realPhysics = false, rapier?: RapierModule) {
   const graph: Graph = {
     nodes: nodes.map(([id, kind, params], n): GraphNode => {
       const def = getNodeDef(kind);
@@ -23,7 +24,7 @@ export function rig(nodes: NodeSpec[], wires: WireSpec[], mode: ViewMode = '2d-s
     wires: wires.map(([f, fp, t, tp], n) => ({ id: `w${n}`, from: { node: f, port: fp }, to: { node: t, port: tp } })),
     settings: { wireRule: true, ...(solidBodies ? { solidBodies: true } : {}), ...(realPhysics ? { realPhysics: true } : {}) },
   };
-  const world = createWorld(mode, solidBodies || realPhysics ? { ...(solidBodies ? { solidBodies: true } : {}), ...(realPhysics ? { realPhysics: true } : {}) } : undefined);
+  const world = createWorld(mode, solidBodies || realPhysics ? { ...(solidBodies ? { solidBodies: true } : {}), ...(realPhysics ? { realPhysics: true, ...(rapier ? { rapier } : {}) } : {}) } : undefined);
   const rt = createRuntime(graph, world, mode);
   let keys = new Set<string>();
   return {
