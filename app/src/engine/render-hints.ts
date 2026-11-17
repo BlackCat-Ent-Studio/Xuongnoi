@@ -3,7 +3,8 @@
  * renderer cannot tell a joint from a wall by the entity alone; the nodes leave a note here and the scene reads it.
  * Hints never reach the world state: nothing in the simulation looks at them.
  */
-export type ArmPartKind = 'joint' | 'link' | 'palm' | 'finger' | 'housing' | 'rod' | 'head';
+/** 'body' is an invisible solid cube that makes a joint or link block things: it is not drawn. */
+export type ArmPartKind = 'joint' | 'link' | 'palm' | 'finger' | 'housing' | 'rod' | 'head' | 'body';
 
 export interface ArmHint {
   part: ArmPartKind;

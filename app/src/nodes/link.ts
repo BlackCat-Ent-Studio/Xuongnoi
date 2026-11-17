@@ -1,11 +1,14 @@
 import type { EntityId, NodeDef } from '../engine/types';
 import { advance, localToWorld } from '../world/arm-kinematics';
-import { armRegistry, baseFrame, placeBox } from './arm-parts';
+import { linkCubes } from '../world/arm-solid';
+import { armRegistry, baseFrame, placeBox, placeSolidCubes } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asObject, numParam, strParam } from './util';
 
 interface LinkState {
   id: EntityId;
+  /** Invisible solid cubes laid along the link, once "Chắn vật" is on and the link has been placed. */
+  bodies: EntityId[];
 }
 
 export const linkNode: NodeDef<LinkState> = {
@@ -21,9 +24,19 @@ export const linkNode: NodeDef<LinkState> = {
     { id: 'length', label: 'Chiều dài (m)', kind: 'number', default: 1, min: 0.1, max: 20, step: 0.1 },
     { id: 'mass', label: 'Khối lượng (kg)', kind: 'number', default: 1, min: 0, max: 100000, step: 0.5 },
     { id: 'thickness', label: 'Độ dày (m)', kind: 'number', default: 0.2, min: 0.05, max: 2, step: 0.05 },
+    {
+      id: 'solid',
+      label: 'Chắn vật (thanh là vật cản: người, robot, xe, đồ vật không đi xuyên qua)',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không (chỉ để vẽ, vật đi xuyên qua)' },
+        { value: 'yes', label: 'Có (thanh chắn đường; khớp phía trước đẩy hoặc bị chặn)' },
+      ],
+    },
     { id: 'color', label: 'Màu', kind: 'color', default: '#a3a3a3' },
   ],
-  createOnly: ['length', 'thickness', 'color'],
+  createOnly: ['length', 'thickness', 'color', 'solid'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -40,7 +53,7 @@ export const linkNode: NodeDef<LinkState> = {
       solid: false,
     });
     setArmHint(ctx.nodeId, id, { part: 'link' });
-    return { id };
+    return { id, bodies: [] };
   },
   evaluate(ctx, i, params, s) {
     const reg = armRegistry(ctx.world);
@@ -54,14 +67,18 @@ export const linkNode: NodeDef<LinkState> = {
     const length = Math.max(0.1, numParam(params, 'length', 1));
     const end = advance(start, length);
     const mid = localToWorld(start, { x: length / 2, y: 0, z: 0 });
+    const thickness = Math.max(0.05, numParam(params, 'thickness', 0.2));
+    const solid = strParam(params, 'solid', 'no') === 'yes';
     reg.frames.set(s.id, end);
     reg.parts.set(ctx.nodeId, {
       tick: ctx.tick,
       baseId,
       tipId: s.id,
       masses: [{ kg: Math.max(0, numParam(params, 'mass', 1)), point: mid }],
+      shape: (from) => ({ out: advance(from, length), solids: solid ? linkCubes(from, length, thickness) : [] }),
     });
     placeBox(ctx.world, ctx.mode, s.id, mid, start);
+    if (solid) placeSolidCubes(ctx.world, ctx.nodeId, s.bodies, linkCubes(start, length, thickness));
     return { tip: s.id };
   },
 };

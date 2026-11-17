@@ -178,7 +178,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
 
   /** Editor control and whether the row lays out label and control on one line. */
   function editorFor(def: ParamDef, node: GraphNode): { control: HTMLElement; inline: boolean; live: boolean } {
-    const raw: ParamValue = node.params[def.id] ?? def.default;
+    const raw: ParamValue = node.params[def.id] ?? def.legacyDefault ?? def.default;
     switch (def.kind) {
       case 'number': {
         const num = numberStepper(def, typeof raw === 'number' ? raw : 0, (v) => commitParam(node, def.id, v));

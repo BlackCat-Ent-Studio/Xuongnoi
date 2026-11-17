@@ -1,7 +1,9 @@
 import type { EntityId, NodeDef } from '../engine/types';
-import { DEG, rotateFrame, sagDirection, stepJoint, horizontalArm, type Frame } from '../world/arm-kinematics';
+import { DEG, localToWorld, rotateFrame, sagDirection, stepJoint, horizontalArm, type Frame } from '../world/arm-kinematics';
+import { hubCube, resolveTurn } from '../world/arm-solid';
+import type { Box, PushBody } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
-import { armRegistry, baseFrame, massesBeyond, placeBox } from './arm-parts';
+import { armRegistry, baseFrame, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
@@ -10,6 +12,8 @@ interface JointState {
   id: EntityId;
   /** Current joint angle in degrees, relative to what it is mounted on. */
   angle: number;
+  /** The invisible solid cube of the housing, once "Chắn vật" is on and the joint has been placed. */
+  bodies: EntityId[];
 }
 
 /** Size (m) of the hub box. */
@@ -50,11 +54,21 @@ export const jointNode: NodeDef<JointState> = {
     { id: 'max', label: 'Góc lớn nhất (độ)', kind: 'number', default: 90, min: -180, max: 180, step: 5 },
     { id: 'maxTorque', label: 'Mô-men tối đa (N·m)', kind: 'number', default: 50, min: 0, max: 100000, step: 1 },
     { id: 'maxSpeed', label: 'Tốc độ tối đa (độ/giây)', kind: 'number', default: 90, min: 1, max: 720, step: 5 },
+    {
+      id: 'solid',
+      label: 'Chắn vật (hộp khớp là vật cản; khớp quay đẩy hoặc bị chặn bởi vật)',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không (chỉ để vẽ, vật đi xuyên qua)' },
+        { value: 'yes', label: 'Có (nhân vật, robot, xe, đồ vật không đi xuyên qua)' },
+      ],
+    },
     { id: 'tolerance', label: 'Sai số cho phép (độ)', kind: 'number', default: 1, min: 0, max: 90, step: 0.5, advanced: true },
     { id: 'mount', label: 'Lệch so với vật gắn (dọc / lên / ngang, m)', kind: 'vec3', default: { x: 0, y: 0, z: 0 }, advanced: true },
     { id: 'color', label: 'Màu', kind: 'color', default: '#8b5cf6', advanced: true },
   ],
-  createOnly: ['color'],
+  createOnly: ['color', 'solid'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -71,7 +85,7 @@ export const jointNode: NodeDef<JointState> = {
       solid: false,
     });
     setArmHint(ctx.nodeId, id, { part: 'joint', axis: strParam(params, 'axis', 'pitch') === 'yaw' ? 'yaw' : 'pitch' });
-    return { id, angle: clamp(numParam(params, 'start', 0), lo, hi) };
+    return { id, angle: clamp(numParam(params, 'start', 0), lo, hi), bodies: [] };
   },
   evaluate(ctx, i, params, s) {
     const reg = armRegistry(ctx.world);
@@ -109,15 +123,57 @@ export const jointNode: NodeDef<JointState> = {
       sag: sagDirection(absolutePitchDeg),
       dt: ctx.dt,
     });
+    const angle0 = s.angle;
     s.angle = step.angle;
+
+    // Turning is a push. Solid cubes beyond the joint (links with "Chắn vật", a piston head) must not enter a solid, and
+    // what they shove needs torque on top of the one that holds the arm up; short of that the joint stays where it is.
+    const beyondAt = (deg: number): Box[] => solidsBeyond(reg, s.id, rotateFrame(base, axis, deg * DEG, ctx.mode), ctx.tick, ctx.mode);
+    let blocked = false;
+    const cubesNow = Math.abs(step.angle - angle0) > 1e-9 ? beyondAt(angle0) : [];
+    if (cubesNow.length > 0) {
+      const bodies: PushBody[] = [];
+      for (const e of ctx.world.listEntities()) {
+        if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
+        const mat = ctx.world.materialOf(e.id);
+        if (mat) bodies.push({ id: e.id, box: e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size }, massKg: mat.massKg, mu: mat.mu });
+      }
+      const lever = (b: Box): number => (axis === 'pitch' ? Math.hypot(horizontalArm(base, b.pos), b.pos.y - base.pos.y) : Math.hypot(b.pos.x - base.pos.x, b.pos.z - base.pos.z));
+      const resolved = resolveTurn(angle0, step.angle, beyondAt, {
+        levers: cubesNow.map(lever),
+        bodies,
+        solids: ctx.world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
+        flat: ctx.mode === '2d-top' ? 'y' : ctx.mode === '2d-side' ? 'z' : null,
+        availableNm: powered ? Math.max(0, maxTorque - required) : 0,
+      });
+      blocked = resolved.blocked;
+      s.angle = resolved.angle;
+      for (const [id, d] of resolved.moves) {
+        const e = ctx.world.getEntity(id);
+        if (e) ctx.world.teleport(id, { x: e.position.x + d.x, y: e.position.y + d.y, z: e.position.z + d.z }, false);
+      }
+    }
+    const overloaded = step.overloaded || blocked;
     // Drawing only: the renderer shows the servo's axis and a warning while it is overloaded.
-    setArmHint(ctx.nodeId, s.id, { part: 'joint', axis, overloaded: step.overloaded });
+    setArmHint(ctx.nodeId, s.id, { part: 'joint', axis, overloaded });
 
     const out: Frame = rotateFrame(base, axis, s.angle * DEG, ctx.mode);
     reg.frames.set(s.id, out);
-    reg.parts.set(ctx.nodeId, { tick: ctx.tick, baseId: asObject(i.base), tipId: s.id, masses: [] });
+    const solidHub = strParam(params, 'solid', 'no') === 'yes';
+    reg.parts.set(ctx.nodeId, {
+      tick: ctx.tick,
+      baseId: asObject(i.base),
+      tipId: s.id,
+      masses: [],
+      shape: (from, mode) => {
+        const mounted: Frame = { pos: localToWorld(from, vec3Param(params, 'mount', { x: 0, y: 0, z: 0 })), yaw: from.yaw, pitch: from.pitch };
+        const turned = rotateFrame(mounted, axis, s.angle * DEG, mode);
+        return { out: turned, solids: solidHub ? [hubCube(turned.pos, HUB)] : [] };
+      },
+    });
     placeBox(ctx.world, ctx.mode, s.id, out.pos, out);
-    const reached = !step.overloaded && Math.abs(s.angle - target) <= Math.max(0, numParam(params, 'tolerance', 1)) + 1e-9;
-    return { tip: s.id, angleNow: s.angle, load: required, overloaded: step.overloaded, reached };
+    if (solidHub) placeSolidCubes(ctx.world, ctx.nodeId, s.bodies, [hubCube(out.pos, HUB)]);
+    const reached = !overloaded && Math.abs(s.angle - target) <= Math.max(0, numParam(params, 'tolerance', 1)) + 1e-9;
+    return { tip: s.id, angleNow: s.angle, load: required, overloaded, reached };
   },
 };

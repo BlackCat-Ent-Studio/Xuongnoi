@@ -8,7 +8,7 @@ export const HANDBOOK_LINEAR_ACTUATOR: readonly HandbookEntry[] = [
     purpose: 'Xi lanh đẩy: một thanh đẩy ra vào theo đường thẳng. Đầu thanh là khối rắn đẩy mọi thứ nằm trước nó, nhưng chỉ khi đủ lực.',
     whenToUse: 'Đẩy thùng khỏi bệ hay băng chuyền, đẩy cửa, ép, nâng lên một đoạn ngắn, hoặc làm giá đỡ cho cảm biến và tay kẹp chạy tới lui trên một đường thẳng.',
     ports: {
-      base: 'Vật mà xi lanh gắn lên: hộp, thân robot, hoặc "Đầu khớp" / "Đầu thanh" của mảnh khác. Không bắt buộc: chưa nối thì xi lanh đứng cố định ở "Vị trí" trong thế giới.',
+      base: 'Vật mà xi lanh gắn lên: hộp, thân robot, hoặc "Đầu khớp" / "Đầu thanh" của mảnh khác. Không bắt buộc: chưa nối thì xi lanh đứng cố định ở "Vị trí" trong thế giới. Gắn trên thân robot thì lực đẩy là lực kéo của bánh xe; gắn trên khớp thì là mô-men của khớp.',
       extend: 'Bật thì thanh đẩy ra, tắt thì rút về. Chưa nối gì thì xi lanh nằm yên ở trạng thái rút về: mọi việc đều cần một sợi dây.',
       position: 'Vị trí muốn tới, từ 0 (rút hết) đến 1 (ra hết hành trình). Nối ô này thì nó thắng "Đẩy ra". Hợp để đẩy ra nửa chừng: 0,5 là một nửa hành trình.',
       tip: 'Mặt trước của đầu thanh, đi theo thanh khi nó ra vào. Nối vào "Gắn vào" của tay kẹp hay cảm biến để chúng chạy theo xi lanh.',
@@ -35,6 +35,8 @@ export const HANDBOOK_LINEAR_ACTUATOR: readonly HandbookEntry[] = [
       'Công thức: lực cần để đẩy F ≥ μ × m × 9,81 (μ là hệ số ma sát, m là khối lượng vật bị đẩy, kg). Ví dụ thùng 10 kg, μ 0,5: F = 0,5 × 10 × 9,81 = 49,05 N. Xi lanh 40 N đứng lại và báo "Quá tải", xi lanh 60 N đẩy được.',
       'Nhiều vật thì cộng lại: hai thùng 10 kg nằm sát nhau cần 98,1 N. Vật chồng lên vật bị đẩy cũng được tính: thùng dưới phải đẩy cả khối lượng thùng trên. Đẩy thẳng lên thì cộng thêm trọng lượng m × 9,81.',
       'Xi lanh không bao giờ đẩy xuyên tường: gặp tường hay sàn thì thanh dừng sát đó, vật bị đẩy cũng vậy. Rút về thì không kéo vật theo: vật nằm lại chỗ đã bị đẩy tới.',
+      'Gắn trên thân robot đang chạy thì chính robot đẩy đầu xi lanh đi: vật cản trên đường cần lực ma sát như trên, nhưng lấy từ lực kéo tối đa của các bánh (không dùng "Lực đẩy tối đa"). Thiếu lực hoặc gặp tường thì đầu xi lanh không xuyên qua, robot bị giữ lại và "Quá tải" bật.',
+      'Gắn trên khớp xoay thì khớp quay đầu xi lanh như một thanh cứng: đầu không xuyên tường, vật nằm trên đường chỉ bị đẩy khi mô-men của khớp đủ (M = F × khoảng cách tới trục). Lực phản lại khi chính xi lanh đẩy ra chưa tính vào mô-men.',
       'Chưa tính quán tính khi bắt đầu đẩy, chỉ tính ma sát. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
     ],
     lessonId: 'piston-push',

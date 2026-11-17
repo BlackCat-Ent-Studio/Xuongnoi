@@ -50,7 +50,7 @@ export function createRuntime(graph: Graph, world: WorldApi, mode: ViewMode): Ru
     const def = getNodeDef(gn.kind);
     if (!def) throw new Error(`Unknown node kind: ${gn.kind}`);
     const params: Params = {};
-    for (const p of def.params) params[p.id] = p.default;
+    for (const p of def.params) params[p.id] = p.legacyDefault ?? p.default;
     Object.assign(params, gn.params);
     nodes.set(gn.id, { def, params, state: undefined, wires: new Map() });
   }
