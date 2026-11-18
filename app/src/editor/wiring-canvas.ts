@@ -3,9 +3,11 @@ import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRo
 import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
+import { icon } from './icons';
 import type { EditorState } from './editor-state';
-import { CORNER_GAP, LEGACY_CARD_METRICS, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CardMetrics, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
+import { CORNER_GAP, FIT_FLOOR, LEGACY_CARD_METRICS, LOW_ZOOM, clampZoom, boxesOverlap, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CardMetrics, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
 import { createGraphToolbar } from './graph/graph-toolbar';
+import { GRAPH_TEXT } from './graph/graph-text-vi';
 import './graph/graph.css';
 import './graph/node-cards.css';
 import './graph/group.css';
@@ -34,6 +36,9 @@ import { createStepLightLayer, type StepLightSet } from './step/step-light-layer
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MIN_MAP_HEIGHT = 480;
 const ZOOM_STEP = 1.2;
+/** "Fit to screen" never shrinks the board below the zoom where the smallest card text is this big on screen. */
+const MIN_SCREEN_TEXT_PX = 11;
+const ARRANGE_HINT_KEY = 'xuongnoi.graph.arrangeHinted';
 /**
  * Wires are routed around the cards (right-angle paths) only while the open board or group shows at most this many
  * cards; a bigger one keeps the plain curves. Measured (headless Chrome, first draw of every wire): a 58-card group
@@ -78,6 +83,11 @@ export interface WiringCanvas {
   findFreeSpot(want: Point, kind?: string): Point;
   /** Re-lay out all nodes in layers, animated. */
   arrange(): void;
+  /**
+   * After a saved board is opened in "Học sinh": when its cards overlap, shows a dismissible offer to tidy it
+   * ("Sắp xếp gọn"), once per `key`. Nothing moves unless the user accepts.
+   */
+  offerArrangeHint(key: string): void;
   /**
    * Reserve the bottom-right corner (px of the canvas) for a floating window such as the game view.
    * Fit and new-node placement keep clear of a `right` x `bottom` box pinned to that corner.
@@ -135,7 +145,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   let pendingMove = new Set<string>();
   const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
   let stepLayer: ReturnType<typeof createStepLightLayer> | null = null;
-  const energy = createWireEnergy(wireLayer);
+  const energy = createWireEnergy(wireLayer, { rich: true });
   let energyRaf = 0;
   let energyLast = 0;
   let stubSpots: StubSpot[] = [];
@@ -253,7 +263,9 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function fitToContent(): void {
     const r = el.getBoundingClientRect();
-    view = fitView(unionBox(contentBoxes()), { w: r.width || 800, h: r.height || 600 }, cornerInsets());
+    // Fit stops where the smallest card text is still about 11 px on screen (it shrinks with the zoom), if the board allows.
+    const smallText = Number.parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--fs-s')) || 12;
+    view = fitView(unionBox(contentBoxes()), { w: r.width || 800, h: r.height || 600 }, cornerInsets(), Math.max(FIT_FLOOR, MIN_SCREEN_TEXT_PX / smallText));
     applyView();
   }
 
@@ -659,6 +671,54 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const { flash } = actions;
   const arrange = actions.arrange;
 
+  // ---------- offer to tidy a saved board whose cards overlap ----------
+
+  const arrangeHint = h('div', 'wc-arrange-hint wc-ui');
+  arrangeHint.hidden = true;
+  arrangeHint.setAttribute('role', 'note');
+  const arrangeText = h('span', '', GRAPH_TEXT.arrangeHint);
+  const arrangeYes = h('button', 'wc-arrange-yes', GRAPH_TEXT.arrangeYes);
+  arrangeYes.type = 'button';
+  const arrangeNo = h('button', 'wc-arrange-no');
+  arrangeNo.type = 'button';
+  arrangeNo.title = GRAPH_TEXT.arrangeNo;
+  arrangeNo.setAttribute('aria-label', GRAPH_TEXT.arrangeNo);
+  arrangeNo.append(icon('close'));
+  arrangeHint.append(arrangeText, arrangeYes, arrangeNo);
+  el.append(arrangeHint);
+  arrangeNo.addEventListener('click', () => (arrangeHint.hidden = true));
+  arrangeYes.addEventListener('click', () => {
+    arrangeHint.hidden = true;
+    arrange();
+  });
+  state.subscribe((kind) => {
+    if (kind === 'board') arrangeHint.hidden = true;
+  });
+
+  function hintedBoards(): string[] {
+    try {
+      const raw: unknown = JSON.parse(localStorage.getItem(ARRANGE_HINT_KEY) ?? '[]');
+      return Array.isArray(raw) ? raw.filter((k): k is string => typeof k === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+  function rememberHinted(key: string): void {
+    try {
+      localStorage.setItem(ARRANGE_HINT_KEY, JSON.stringify([...hintedBoards(), key].slice(-200)));
+    } catch {
+      /* storage full or blocked: the offer may come back once more */
+    }
+  }
+  function offerArrangeHint(key: string): void {
+    if (uiPrefs().mode() !== 'student' || state.isPlaying() || hintedBoards().includes(key)) return;
+    const boxes = [...nodeEls.values()].map((b) => ({ x: b.offsetLeft, y: b.offsetTop, w: b.offsetWidth, h: b.offsetHeight }));
+    const overlapping = boxes.some((a, i) => boxes.slice(i + 1).some((c) => boxesOverlap(a, c, -2)));
+    if (!overlapping) return;
+    rememberHinted(key);
+    arrangeHint.hidden = false;
+  }
+
   // ---------- pointer interaction ----------
 
   function setTip(text: string | null, cx = 0, cy = 0): void {
@@ -801,6 +861,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     findFreeSpot,
     placementAreas: () => ({ blocked: blockedWorld(), visible: visibleWorld() }),
     arrange,
+    offerArrangeHint,
     setOverlayInsets({ right, bottom }) {
       const ok = (n: number): number => (Number.isFinite(n) && n > 0 ? Math.round(n) : 0);
       overlayBR = { w: ok(right), h: ok(bottom) };

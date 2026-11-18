@@ -1,4 +1,5 @@
 import { h } from '../editor/dom';
+import { relayoutShipped } from '../editor/graph/shipped-layout';
 import { icon } from '../editor/icons';
 import type { EditorState } from '../editor/editor-state';
 import type { Board, GameResult } from '../engine/types';
@@ -163,7 +164,7 @@ export function createTutorial({ state, notify, onStart, revealPaletteItem, reve
     runner = createRunner(lesson);
     renderList();
     onStart?.();
-    state.loadBoard(lesson.createBoard());
+    state.loadBoard(relayoutShipped(lesson.createBoard()));
     window.clearInterval(pollTimer);
     pollTimer = window.setInterval(refreshHighlight, 300);
     advance();

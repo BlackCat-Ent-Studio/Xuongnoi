@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { LEGACY_CARD_METRICS, estimateNodeSize, spreadOverlaps } from '../../src/editor/graph/graph-geometry';
+import { FIT_FLOOR, LEGACY_CARD_METRICS, estimateNodeSize, fitView, spreadOverlaps } from '../../src/editor/graph/graph-geometry';
+import { formatPill } from '../../src/editor/graph/wire-energy';
 import type { Graph, GraphNode } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 
@@ -36,5 +37,27 @@ describe('card size estimate and the display modes', () => {
     const rows = (estimateNodeSize(n, { ...LEGACY_CARD_METRICS, row: 1, head: 0 }).h - 8) / 1;
     expect(estimateNodeSize(n, STUDENT).h).toBe(STUDENT.head + rows * STUDENT.row + 8);
     expect(estimateNodeSize(n, TEACHER).h).toBe(TEACHER.head + rows * TEACHER.row + 8);
+  });
+});
+
+describe('fit to screen floor', () => {
+  const content = { x: 0, y: 0, w: 4000, h: 3000 };
+  const viewport = { w: 1000, h: 600 };
+  it('without a floor it stops at the old minimum zoom', () => {
+    expect(fitView(content, viewport).zoom).toBe(FIT_FLOOR);
+  });
+  it('a higher floor keeps the card text readable when the board is bigger than the screen', () => {
+    expect(fitView(content, viewport, undefined, 11 / 13).zoom).toBeCloseTo(11 / 13);
+  });
+  it('a board that fits is not zoomed past 1 by the floor', () => {
+    expect(fitView({ x: 0, y: 0, w: 200, h: 100 }, viewport, undefined, 0.9).zoom).toBe(1);
+  });
+});
+
+describe('value pill text', () => {
+  it('two decimals, one from 100 up, sign kept', () => {
+    expect(formatPill(1)).toBe('1.00');
+    expect(formatPill(-0.456)).toBe('-0.46');
+    expect(formatPill(120)).toBe('120.0');
   });
 });

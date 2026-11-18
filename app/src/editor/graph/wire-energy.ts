@@ -127,6 +127,8 @@ interface Entry {
   type: PortType;
   path: SVGPathElement;
   glow: SVGPathElement | null;
+  /** Running dashes on a live wire (editor skin only). */
+  flow: SVGPathElement | null;
   mem: WireMemory;
   /** Output/input port rows (or group stubs) the live flag goes on. */
   outEl: Element | null;
@@ -158,7 +160,39 @@ export interface WireEnergy {
 
 const portOf = (dot: Element | undefined): Element | null => dot?.closest('.wc-port, .wc-stub') ?? null;
 
-export function createWireEnergy(layer: SVGElement): WireEnergy {
+export interface WireEnergyOptions {
+  /**
+   * The editor's richer current: white dashes run along a live wire and number ports show their value in a pill while
+   * playing. Off by default, so the puzzle board keeps drawing what it always drew.
+   */
+  rich?: boolean;
+}
+
+/** A number as it reads in a value pill: two decimals, one from 100 up. */
+export function formatPill(v: number): string {
+  return Math.abs(v) >= 100 ? v.toFixed(1) : v.toFixed(2);
+}
+
+export function createWireEnergy(layer: SVGElement, options: WireEnergyOptions = {}): WireEnergy {
+  const rich = options.rich === true;
+  const pills = new Map<Element, HTMLElement>();
+  /** Shows `text` in the value pill of a port row (made on first use); null removes it. */
+  const setPill = (row: Element | null, text: string | null): void => {
+    if (!row) return;
+    let pill = pills.get(row);
+    if (text === null) {
+      pill?.remove();
+      pills.delete(row);
+      return;
+    }
+    if (!pill) {
+      pill = document.createElement('span');
+      pill.className = 'wc-port-val';
+      row.append(pill);
+      pills.set(row, pill);
+    }
+    if (pill.textContent !== text) pill.textContent = text;
+  };
   let entries: Entry[] = [];
   let sparks: Spark[] = [];
   const pool: SVGCircleElement[] = [];
@@ -196,6 +230,18 @@ export function createWireEnergy(layer: SVGElement): WireEnergy {
       entry.glow = glow;
     }
     entry.glow?.classList.toggle('is-live', lit);
+    if (rich) {
+      if (lit && !entry.flow) {
+        const flow = document.createElementNS(SVG_NS, 'path');
+        flow.setAttribute('class', `wc-wire-flow type-${entry.type}`);
+        flow.setAttribute('d', entry.path.getAttribute('d') ?? '');
+        entry.path.after(flow);
+        entry.flow = flow;
+      } else if (!lit && entry.flow) {
+        entry.flow.remove();
+        entry.flow = null;
+      }
+    }
   }
 
   function syncFlags(next: Set<Element>, prev: Set<Element>, apply: (el: Element, on: boolean) => void): void {
@@ -217,9 +263,12 @@ export function createWireEnergy(layer: SVGElement): WireEnergy {
     for (const e of entries) {
       e.path.classList.remove('is-live', 'is-dim');
       e.glow?.classList.remove('is-live');
+      e.flow?.remove();
+      e.flow = null;
       e.mem = newWireMemory();
       e.lit = false;
     }
+    for (const row of [...pills.keys()]) setPill(row, null);
     syncFlags(new Set(), liveEls, setLive);
     syncFlags(new Set(), hotEls, setHot);
     liveEls = new Set();
@@ -234,6 +283,7 @@ export function createWireEnergy(layer: SVGElement): WireEnergy {
       pool.length = 0;
       liveEls = new Set();
       hotEls = new Set();
+      pills.clear();
     },
     addWire(wire, type, path, outDot, inDot, playing) {
       const outEl = portOf(outDot);
@@ -242,6 +292,7 @@ export function createWireEnergy(layer: SVGElement): WireEnergy {
         type,
         path,
         glow: null,
+        flow: null,
         mem: newWireMemory(),
         outEl,
         inEl: portOf(inDot),
@@ -278,6 +329,11 @@ export function createWireEnergy(layer: SVGElement): WireEnergy {
           if (e.nodeEl) nextHot.add(e.nodeEl);
         }
         if (step.spark && motion) spawn(e, step.spark);
+        if (rich && e.type === 'number' && typeof value === 'number') {
+          const text = formatPill(value);
+          setPill(e.outEl, text);
+          setPill(e.inEl, text);
+        }
       }
       syncFlags(nextLive, liveEls, setLive);
       syncFlags(nextHot, hotEls, setHot);

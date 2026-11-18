@@ -110,7 +110,7 @@ const SPREAD_GAP = 16;
  * Nodes are spread within their own scope: the main board, or the inside of one group.
  * Returns the same graph object when nothing overlapped.
  */
-export function spreadOverlaps(graph: Graph): Graph {
+export function spreadOverlaps(graph: Graph, metrics: CardMetrics = LEGACY_CARD_METRICS, gap: number = SPREAD_GAP): Graph {
   const groupOf = new Map<string, string>();
   for (const g of graph.groups ?? []) for (const id of g.nodeIds) groupOf.set(id, g.id);
   const moved = new Map<string, Point>();
@@ -124,9 +124,9 @@ export function spreadOverlaps(graph: Graph): Graph {
   for (const nodes of scopes.values()) {
     const placed: Box[] = [];
     for (const n of [...nodes].sort((a, b) => a.pos.y - b.pos.y || a.pos.x - b.pos.x)) {
-      const box: Box = { x: n.pos.x, y: n.pos.y, ...estimateNodeSize(n) };
+      const box: Box = { x: n.pos.x, y: n.pos.y, ...estimateNodeSize(n, metrics) };
       for (let hit = placed.find((p) => boxesOverlap(box, p)); hit; hit = placed.find((p) => boxesOverlap(box, p))) {
-        box.y = hit.y + hit.h + SPREAD_GAP;
+        box.y = hit.y + hit.h + gap;
       }
       if (box.y !== n.pos.y) moved.set(n.id, { x: n.pos.x, y: box.y });
       placed.push(box);
@@ -170,7 +170,7 @@ export const CORNER_GAP = 16;
  * Corner overlays are avoided: each one is dodged by giving up either a side column or a bottom strip,
  * and the combination that leaves the biggest zoom wins.
  */
-export function fitView(content: Box | null, viewport: Size, insets: CornerInsets = NO_INSETS): View {
+export function fitView(content: Box | null, viewport: Size, insets: CornerInsets = NO_INSETS, floor: number = FIT_FLOOR): View {
   if (!content) return { panX: FIT_PAD, panY: FIT_PAD, zoom: 1 };
   const has = (c: CornerInset): boolean => c.w > 0 && c.h > 0;
   let best: View | null = null;
@@ -185,7 +185,7 @@ export function fitView(content: Box | null, viewport: Size, insets: CornerInset
       const raw = Math.min((viewport.w - left - right) / content.w, (viewport.h - FIT_PAD - bottom) / content.h);
       if (raw > bestRaw + 1e-9) {
         bestRaw = raw;
-        const zoom = Math.min(1, Math.max(FIT_FLOOR, raw));
+        const zoom = Math.min(1, Math.max(floor, raw));
         best = { zoom, panX: left - content.x * zoom, panY: FIT_PAD - content.y * zoom };
       }
     }

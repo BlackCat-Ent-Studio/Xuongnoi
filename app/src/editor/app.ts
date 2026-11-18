@@ -47,6 +47,7 @@ import { createPropertiesPanel } from './properties-panel';
 import { PANELS_TEXT_VI } from './panels/panels-text-vi';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { TEXT_VI } from './text-vi';
+import { relayoutShipped } from './graph/shipped-layout';
 import './theme/ui-c-shell.css';
 import './theme/ui-c-board.css';
 import { uiPrefs } from './theme/ui-prefs';
@@ -338,7 +339,7 @@ export function mountEditor(root: HTMLElement): void {
             submenu: samples.map((s) => ({
               type: 'item' as const,
               label: s.label,
-              onSelect: () => loadBoard(structuredClone(s.board)),
+              onSelect: () => loadBoard(structuredClone(s.board), null, true),
             })),
             onSelect: () => undefined,
           },
@@ -548,7 +549,7 @@ export function mountEditor(root: HTMLElement): void {
   });
   topBar.addControl(tutorial.el);
   const handbook = createHandbookDialog({
-    openBoard: (b) => loadBoard(structuredClone(b)),
+    openBoard: (b) => loadBoard(structuredClone(b), null, true),
     startLesson: (id) => tutorial.startLesson(id),
   });
   document.addEventListener(HANDBOOK_OPEN_EVENT, (e) => {
@@ -563,7 +564,7 @@ export function mountEditor(root: HTMLElement): void {
     isPlaying: () => state.isPlaying(),
     tutorialActive: () => tutorial.isActive(),
     startLesson: () => tutorial.startFirst(),
-    openSample: (b) => loadBoard(b),
+    openSample: (b) => loadBoard(b, null, true),
     openLibrary: () => library.open(),
     startBlank: revealLeft,
   });
@@ -610,13 +611,16 @@ export function mountEditor(root: HTMLElement): void {
    * Replaces the game in the editor. The game being left already lives in the library, so it is flushed
    * first. `libraryId` names the entry the new board comes from; null means it is not in the library until edited.
    */
-  function loadBoard(board: Board, libraryId: string | null = null): void {
+  function loadBoard(board: Board, libraryId: string | null = null, shipped = false): void {
     flushAutosave();
     tutorial.exit();
     setCurrentGameId(libraryId);
     state.setPlaying(false);
-    state.loadBoard(board);
+    // Boards that ship with the app are spread once for the biggest card size; a saved board is never moved on its own,
+    // the board only offers to tidy it when its cards overlap.
+    state.loadBoard(shipped ? relayoutShipped(board) : board);
     topBar.notify(TEXT_VI.opened);
+    if (!shipped) requestAnimationFrame(() => canvas.offerArrangeHint(`${libraryId ?? ''}|${board.name}|${board.graph.nodes.length}`));
   }
 
   // ---------- preview / play ----------

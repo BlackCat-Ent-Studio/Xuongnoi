@@ -38,7 +38,7 @@
   border-radius: var(--card-radius);
   box-shadow: var(--shadow-card);
 }
-.app .wc .wc-node:hover { box-shadow: var(--shadow-hover); }
+.app .wc .wc-node:hover { box-shadow: var(--shadow-hover); border-color: var(--line2); }
 .app .wc .wc-node.selected {
   border-color: var(--card-line);
   outline: 3px solid var(--accent);
@@ -46,8 +46,8 @@
   box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent), var(--shadow-card);
 }
 /* Emits an active output during play: the card's own colour rims it. No transform, so wires stay attached to their pins. */
-.app .wc .wc-node.is-hot { border-color: var(--cc); box-shadow: 0 0 0 1px var(--cc), 0 0 26px -4px var(--cc), var(--shadow-card); }
-.app .wc .wc-node.is-hot.selected { border-color: var(--cc); box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent), 0 0 26px -4px var(--cc), var(--shadow-card); }
+.app .wc .wc-node.is-hot { border-color: var(--cc); }
+.app .wc .wc-node.is-hot.selected { border-color: var(--cc); }
 /* A piece with a missing wire: dashed outline plus the badge in the header (the text says it, not only the colour). */
 .app .wc .wc-node.wc-err { border-color: var(--danger); border-style: dashed; }
 .app .wc.step-on .wc-node.selected { outline-color: var(--accent); }
@@ -89,25 +89,28 @@
 .app .wc .wc-dot.type-object { border-radius: 3px; }
 .app .wc .wc-node .wc-port.missing .wc-dot { background: var(--card); border: 2px dashed var(--warn-line); box-shadow: none; }
 .app .wc .wc-node .wc-need { padding: 0 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-size: var(--fs-s); font-weight: 700; }
-.app .wc .wc-port[data-live="on"] .wc-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 32%, transparent), 0 0 12px var(--pc); }
-.app .wc .wc-port-val { padding: 3px 6px; border-radius: 10px; border: 1px solid var(--pe); background: color-mix(in srgb, var(--pc) 16%, var(--card)); color: var(--text); font: 700 var(--fs-s) / 1 var(--font-mono, ui-monospace, Consolas, monospace); }
+.app .wc .wc-port[data-live="on"] .wc-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 32%, transparent); }
+.app .wc .wc-ports.outs { align-items: stretch; }
+.app .wc .wc-port.in .wc-port-val { right: 10px; }
+.app .wc .wc-port.out .wc-port-val { left: 10px; }
+.app .wc .wc-port-val { position: absolute; top: 50%; transform: translateY(-50%); pointer-events: none; padding: 3px 6px; border-radius: 10px; border: 1px solid var(--pe); background: color-mix(in srgb, var(--pc) 16%, var(--card)); color: var(--text); font: 700 var(--fs-s) / 1 var(--font-mono, ui-monospace, Consolas, monospace); }
 .app .wc.wiring .wc-port.snap { background: color-mix(in srgb, var(--accent) 18%, transparent); outline: 2px solid var(--accent); outline-offset: -2px; }
 .app .wc.wiring .wc-port.bad { background: color-mix(in srgb, var(--danger) 16%, transparent); outline-color: var(--danger); }
 .app .wc.wiring .wc-port.no { opacity: 0.4; }
 .app .wc .wc-stub { height: calc(var(--row) + 6px); font-size: var(--fs-s); color: var(--text2); background: var(--panel); border-color: var(--line2); }
 
-/* ---------- wires ---------- */
+/* ---------- wires: casing under a type-coloured core, soft glow, white running dashes, a spark, a dotted hint ---------- */
 .app .wc .wc-wire { stroke-width: 2.8; }
-.app .wc .wc-wire.selected { stroke-width: 4.8; }
-.app .wc .wc-wire-case { fill: none; stroke: var(--pe); stroke-width: 5.4; stroke-linecap: round; pointer-events: none; display: none; transition: opacity 0.25s; }
-:root[data-theme='light'] .app .wc .wc-wire-case { display: inline; }
+.app .wc .wc-wire.selected { stroke-width: 4.8; filter: none; }
+.app .wc .wc-wire-case { fill: none; stroke: var(--pe); stroke-width: 4.6; stroke-linecap: round; pointer-events: none; transition: opacity 0.25s; }
 .app .wc .wc-wire-g:has(.wc-wire.is-dim) .wc-wire-case { opacity: 0.35; }
-.app .wc .wc-wire-g:has(.wc-wire.selected) .wc-wire-case { stroke-width: 7.4; }
-:root[data-theme='light'] .app .wc .wc-wire-glow { stroke-width: 9; }
-:root[data-theme='light'] .app .wc .wc-wire-glow.is-live { opacity: 0.32; }
-:root[data-theme='light'] .app .wc .wc-wire-flow { stroke: #ffffff; opacity: 0.85; }
-:root[data-theme='light'] .app .wc .wc-spark { fill: #ffffff; stroke: var(--pe); stroke-opacity: 1; stroke-width: 3; }
-.app .wc .wc-wire-temp { stroke: var(--pe, var(--text2)); stroke-width: 3; }
+.app .wc .wc-wire-g:has(.wc-wire.selected) .wc-wire-case { stroke-width: 7.2; }
+.app .wc .wc-wire-glow { stroke-width: 10; }
+.app .wc .wc-wire-glow.is-live { opacity: 0.2; }
+.app .wc .wc-wire-glow.type-object.is-live { opacity: 0.2; }
+.app .wc .wc-wire-flow { stroke: #ffffff; stroke-width: 2; opacity: 0.85; animation: wc-flow 0.9s steps(16) infinite; }
+.app .wc .wc-spark { fill: #ffffff; stroke: var(--pc); stroke-opacity: 1; stroke-width: 3; }
+.app .wc .wc-wire-temp { fill: none; stroke: var(--pe, var(--text2)); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 9; }
 .app .wc .wc-knot-ring { fill: var(--card-bg); stroke: var(--pe); }
 .app .wc .wc-knot-core { fill: var(--pc); stroke: var(--pe); stroke-width: 1; }
 .app .wc .wc-badge { padding: 0 8px; height: 22px; line-height: 19px; background: var(--card-bg); border: 1.5px solid var(--pe); border-radius: 11px; color: var(--text); font: 700 var(--fs-s) / 19px var(--font-mono, ui-monospace, Consolas, monospace); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
@@ -152,3 +155,13 @@
 @media (prefers-reduced-motion: reduce) {
   .app .wc .wc-wire-case { transition: none; }
 }
+
+/* ---------- legend and zoom cluster: room between the pieces; the offer to tidy a saved board ---------- */
+.app .wc-corner { left: 16px; bottom: 16px; gap: 12px; }
+.app .wc-corner-row { gap: 16px; }
+.app .wc-legend { gap: 14px; margin-top: 4px; padding: 6px 12px; border: 1px solid var(--line2); border-radius: 999px; background: var(--panel); box-shadow: var(--shadow-card); }
+.app .wc-arrange-hint { position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 8px; max-width: calc(100% - 24px); padding: 6px 6px 6px 14px; border: 1px solid var(--line2); border-radius: 12px; background: var(--panel); color: var(--text); font-size: var(--fs-s); box-shadow: var(--shadow-pop); }
+.app .wc-arrange-hint[hidden] { display: none; }
+.app .wc-arrange-yes { height: var(--ctl); padding: 0 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 700 var(--fs-s) var(--font); cursor: pointer; white-space: nowrap; }
+.app .wc-arrange-no { width: var(--ctl); height: var(--ctl); display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; }
+.app .wc-arrange-no:hover { background: var(--raise); color: var(--text); }
