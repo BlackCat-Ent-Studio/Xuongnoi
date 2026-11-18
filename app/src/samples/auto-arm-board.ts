@@ -2,8 +2,8 @@ import type { Board } from '../engine/types';
 import { makeBoard, type CardSpec, type Link } from './cell-board-kit';
 
 /**
- * Sample "Tay máy tự gắp và đặt": a spawner makes a crate on the feed belt every few seconds (for ever); the belt stops when one reaches the pick point; a 6-step cycle (wait,
- * lower, close, lift, swing, open and return) runs the arm. The step number picks a row of three "Bảng giá trị"
+ * Sample "Tay máy tự gắp và đặt": a spawner makes a crate on the feed belt every few seconds (for ever); the belt stops when one reaches the pick point; a 7-step cycle (wait,
+ * lower, close, lift, swing, open, return) runs the arm. The step number picks a row of three "Bảng giá trị"
  * (one per joint) = the taught angles, and every step ends by itself through its own "Xong bước" port (a crate waiting,
  * a crate between the fingers with the arm down at its taught angles, the gripper holding for a moment, the arm up, the swing joint's own "Đã tới góc" at the place or at home). The gripper takes only a crate lying between its
  * fingers, so the arm really has to lower onto it. Built only from palette pieces; nothing is typed by a person while it runs.
@@ -39,6 +39,8 @@ export const AUTO_ARM = {
   pickX: 2.05,
   /** The fingers stay closed this long (s) before the lift, so the grip is seen. */
   gripWaitS: 0.6,
+  /** The fingers stay at the place point this long (s) after they are told to open, so the hand is open before it swings back (opening takes about 0.2 s). */
+  openWaitS: 0.5,
 };
 
 const [H1, H2] = AUTO_ARM.hover;
@@ -99,18 +101,19 @@ const specs: CardSpec[] = [
   { id: 'belt-run', kind: 'not', col: 4 },
 
   // --- the cycle: Chuỗi bước with a "Xong bước" port per step ---
-  { id: 'a-cycle', kind: 'sequence', col: 4, rows: 15, params: { stepCount: 6, loop: 'yes', showDone: 'yes' } },
+  { id: 'a-cycle', kind: 'sequence', col: 4, rows: 17, params: { stepCount: 7, loop: 'yes', showDone: 'yes' } },
   { id: 'close-3-4', kind: 'or', col: 5 },
   { id: 'close-3-5', kind: 'or', col: 5 },
   { id: 'grip-wait', kind: 'timer', col: 5, params: { seconds: AUTO_ARM.gripWaitS, repeat: 'yes' } },
+  { id: 'open-wait', kind: 'timer', col: 5, params: { seconds: AUTO_ARM.openWaitS, repeat: 'yes' } },
   { id: 'grip-ok', kind: 'and', col: 5 },
   { id: 'arrived', kind: 'and', col: 5 },
   { id: 'hand-ready', kind: 'and', col: 5 },
 
   // --- taught angles: step number -> row of the table, one table per joint ---
-  { id: 'tbl-swing', kind: 'value-table', col: 6, params: table([0, 0, 0, 0, AUTO_ARM.swing, 0]) },
-  { id: 'tbl-shoulder', kind: 'value-table', col: 6, params: table([H1, D1, D1, H1, H1, H1]) },
-  { id: 'tbl-elbow', kind: 'value-table', col: 6, params: table([H2, D2, D2, H2, H2, H2]) },
+  { id: 'tbl-swing', kind: 'value-table', col: 6, params: table([0, 0, 0, 0, AUTO_ARM.swing, AUTO_ARM.swing, 0]) },
+  { id: 'tbl-shoulder', kind: 'value-table', col: 6, params: table([H1, D1, D1, H1, H1, H1, H1]) },
+  { id: 'tbl-elbow', kind: 'value-table', col: 6, params: table([H2, D2, D2, H2, H2, H2, H2]) },
 
   // --- readouts ---
   { id: 'placed', kind: 'counter', col: 7 },
@@ -128,7 +131,7 @@ const specs: CardSpec[] = [
     rows: 3,
     params: {
       text: 'Bước',
-      lines: '1. Chờ thùng tới\n2. Hạ tay xuống thùng\n3. Kẹp\n4. Nâng thùng lên khỏi băng\n5. Quay sang chỗ đặt\n6. Nhả rồi quay về',
+      lines: '1. Chờ thùng tới\n2. Hạ tay xuống thùng\n3. Kẹp\n4. Nâng thùng lên khỏi băng\n5. Quay sang chỗ đặt\n6. Nhả thùng, chờ tay mở\n7. Quay về',
       corner: 'top-right',
       color: '#0f766e',
     },
@@ -185,7 +188,9 @@ export const AUTO_ARM_WIRES: readonly Link[] = [
   ['grip-ok', 'out', 'a-cycle', 'done3'],
   ['arrived', 'out', 'a-cycle', 'done4'],
   ['swing', 'reached', 'a-cycle', 'done5'],
-  ['swing', 'reached', 'a-cycle', 'done6'],
+  ['a-cycle', 'step6', 'open-wait', 'run'],
+  ['open-wait', 'done', 'a-cycle', 'done6'],
+  ['swing', 'reached', 'a-cycle', 'done7'],
   // Counters and readouts
   ['drop-zone', 'entered', 'placed', 'up'],
   ['gripper', 'slipped', 'slips', 'up'],
@@ -205,7 +210,7 @@ export function createAutoArmBoard(): Board {
     {
       color: 'yellow',
       h: 430,
-      text: 'Tay máy chạy mãi, không cần bấm gì: cứ 8 giây "Tạo đối tượng" thả một thùng 2 kg lên băng chuyền, thùng nào cũng bị gắp, đặt sang băng ra rồi biến mất sau 40 giây nên tấm xanh không bao giờ đầy. Tay máy chạy tự động theo 5 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng thùng lên khỏi băng, 5 quay sang chỗ đặt, 6 nhả rồi quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, tay đã hạ tới góc dạy (vai và khuỷu báo "Đã tới góc") và thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, vai và khuỷu đã nâng tới góc (bước 4), khớp xoay báo "Đã tới góc" khi tới chỗ đặt (bước 5) hoặc khi về chỗ cũ (bước 6). Nâng lên hẳn rồi mới quay, vì thùng đang nằm thấp giữa hai thành băng chuyền sẽ quệt vào thành băng nếu vừa nâng vừa quay.',
+      text: 'Tay máy chạy mãi, không cần bấm gì: cứ 8 giây "Tạo đối tượng" thả một thùng 2 kg lên băng chuyền, thùng nào cũng bị gắp, đặt sang băng ra rồi biến mất sau 40 giây nên tấm xanh không bao giờ đầy. Tay máy chạy tự động theo 7 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng thùng lên khỏi băng, 5 quay sang chỗ đặt, 6 nhả thùng và chờ 0,5 giây cho hai ngón mở hẳn, 7 quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, tay đã hạ tới góc dạy (vai và khuỷu báo "Đã tới góc") và thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, vai và khuỷu đã nâng tới góc (bước 4), khớp xoay báo "Đã tới góc" khi tới chỗ đặt (bước 5) hoặc khi về chỗ cũ (bước 7), đồng hồ báo xong sau 0,5 giây ở bước 6. Hai ngón là vật rắn thật nên tay phải mở hẳn rồi mới quay về, nếu không ngón còn khép sẽ quệt thùng vừa đặt. Nâng lên hẳn rồi mới quay, vì thùng đang nằm thấp giữa hai thành băng chuyền sẽ quệt vào thành băng nếu vừa nâng vừa quay.',
     },
     {
       color: 'green',

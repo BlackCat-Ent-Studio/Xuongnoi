@@ -68,7 +68,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
   },
   {
     kind: 'gripper',
-    purpose: 'Tay kẹp ở cuối cánh tay. Kẹp một món đồ vật nằm giữa hai ngón với lực bạn chọn, và cho biết kẹp có giữ được hay không. Với "Vật lý thật" hai ngón khép tới khi chạm hai mặt thùng và thùng nằm gọn trước lòng bàn tay.',
+    purpose: 'Tay kẹp ở cuối cánh tay. Kẹp một món đồ vật nằm giữa hai ngón với lực bạn chọn, và cho biết kẹp có giữ được hay không. Với "Vật lý thật" hai ngón khép tới khi chạm hai mặt thùng và thùng nằm gọn trước lòng bàn tay; lòng bàn tay và hai ngón là vật rắn thật: thùng nằm trên đường đi bị đẩy, đổ hoặc chặn lại như khi thanh nối đẩy, và tay không lún vào thùng.',
     whenToUse: 'Gắp thùng lên băng chuyền, nhấc hàng nặng nhẹ khác nhau, kiểm tra lực kẹp vừa đủ: không tuột mà cũng không làm hỏng hàng dễ vỡ.',
     ports: {
       base: 'Đầu thanh nối hoặc đầu khớp mà tay kẹp gắn vào. Bắt buộc nối.',
@@ -99,6 +99,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       'Giữ được khi số ngón × μ × lực mỗi ngón ≥ khối lượng × 9,81. Ví dụ thùng 5 kg, μ 0,5, 2 ngón: cần 5 × 9,81 ÷ (2 × 0,5) = 49,05 N. 40 N thì tuột, 50 N thì giữ.',
       'Hỏng khi tổng lực ép (số ngón × lực mỗi ngón) vượt "Lực chịu nén tối đa" của món đồ. Thùng dễ vỡ chịu 60 N: kẹp 2 × 35 = 70 N là hỏng.',
       'Thùng đang nằm trên bàn thì bàn đỡ, chỉ khi nhấc lên mới cần ma sát. Món đang giữ làm nặng thêm mọi khớp phía sau. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
+      'Với "Vật lý thật" bàn tay là vật rắn thật. Ví dụ: tay mở hạ xuống một thùng 2 kg cao 1,75 m: tay dừng ngay trên nắp (cách 0 đến 5 mm), khớp báo "Quá tải" và "Mô-men đang chịu" = 0,5 × 2 × 9,81 = 9,81 N nhân khoảng cách từ trục tới lòng bàn tay (3 m) = khoảng 30 N·m. Hai ngón khép gặp một thùng chưa kẹp thì đẩy nó với lực không quá "Lực kẹp": thùng 2 kg, μ 0,5 cần 9,81 N, lực kẹp 8 N thì ngón đứng lại, 12 N thì đẩy được. Muốn gắp, phải hạ tay xuống ôm hai bên thùng (không đưa ngang vào thùng) và thùng không được nằm sát bàn tới mức ngón không chui xuống được. Tắt "Vật lý thật" thì bàn tay chỉ là hình vẽ như cũ.',
       'Kẹp phải đúng chỗ: tay chỉ kẹp món đồ mà điểm kẹp (giữa hai ngón) nằm trong thân nó và lọt giữa hai ngón đang mở. Thùng rắn ("Vật lý thật") còn phải nằm trước lòng bàn tay: nếu tay hạ quá sâu, lòng bàn tay lún vào thùng thì tay không kẹp. Đang giữ mà tay đè thùng vào vật rắn (bàn, thành băng) thì thùng tuột ra tại chỗ, đếm là "tuột". Tay dừng quá trước hay quá sau món đồ, hoặc lệch sang bên hơn nửa độ mở trừ nửa bề ngang của nó, thì "Có vật trong tầm" không bật. Muốn dò tư thế thì nối "Có vật trong tầm" ra một Hiện chữ.',
     ],
     lessonId: 'robot-arm',

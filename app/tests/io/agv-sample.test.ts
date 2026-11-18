@@ -298,7 +298,8 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       { wire: ['kep', 'inReach', 'dk-tay-gan', 'b'], fails: 'arm-stuck', note: 'the arm never sees a crate within reach' },
       { wire: ['kep', 'holding', 'dk-tay-giu', 'b'], fails: 'arm-stuck', note: 'the arm never learns that it holds the crate' },
       { wire: ['cho-kep', 'done', 'dk-tay-giu', 'a'], fails: 'arm-stuck', note: 'the arm never learns that the grip has held for a moment' },
-      { wire: ['co-tai', 'out', 'dk-b5', 'b'], fails: 'one-crate', note: 'after placing the first crate the arm waits forever for "loaded"' },
+      // The hand is solid: left lowered round the crate it keeps the loaded chassis in the loading zone (before, it passed through the hand).
+      { wire: ['co-tai', 'out', 'dk-b5', 'b'], fails: 'stuck-loaded-at-load', note: 'after placing the first crate the arm waits forever for "loaded", and its open hand stays down round the crate' },
       { wire: ['dk-kep', 'out', 'kep', 'close'], fails: 'arm-stuck', note: 'the gripper never closes' },
       { wire: ['dk-hop-4', 'out', 'buoc', 'next'], fails: 'arm-stuck', note: 'the step sequence never advances' },
       { wire: ['goc-vai-b', 'out', 'goc-vai-c', 'a'], fails: 'arm-stuck', note: 'the shoulder angle loses its taught values' },
