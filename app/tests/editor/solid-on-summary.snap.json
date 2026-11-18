@@ -438,22 +438,18 @@
   "off": {
    "ended": "running",
    "ticks": 900,
-   "breaks": [
-    "sensor-without-contact x3 from 3.6s"
-   ],
+   "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "d97d3862"
+   "hash": "a4d85f49"
   },
   "on": {
    "ended": "running",
    "ticks": 900,
-   "breaks": [
-    "sensor-without-contact x3 from 3.6s"
-   ],
+   "breaks": [],
    "error": null,
    "colliderMismatch": 0,
-   "hash": "d97d3862"
+   "hash": "a4d85f49"
   }
  },
  {
