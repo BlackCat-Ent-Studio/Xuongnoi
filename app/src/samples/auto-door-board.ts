@@ -48,7 +48,7 @@ const specs: CardSpec[] = [
     id: 'servo',
     kind: 'joint',
     col: 3,
-    params: { axis: 'pitch', start: 0, min: 0, max: 90, maxTorque: AUTO_DOOR.servoTorque, maxSpeed: 120, mount: { x: 0, y: 0.45, z: 0 }, tolerance: 2 },
+    params: { solid: 'no', axis: 'pitch', start: 0, min: 0, max: 90, maxTorque: AUTO_DOOR.servoTorque, maxSpeed: 120, mount: { x: 0, y: 0.45, z: 0 }, tolerance: 2 },
   },
   { id: 'bar', kind: 'link', col: 3, params: { length: AUTO_DOOR.barLengthM, mass: AUTO_DOOR.barMassKg, thickness: 0.2, color: '#ef4444', solid: 'yes' } },
 
