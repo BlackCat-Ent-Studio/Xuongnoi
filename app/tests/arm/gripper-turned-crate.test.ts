@@ -45,7 +45,7 @@ describe('a crate carried by the gripper keeps its turn relative to the hand', (
       ['l', 'link', { length: 0.8, mass: 0 }],
       ['table', 'block', { position: { x: 1.1, y: 0.4, z: 0 }, size: { x: 1, y: 0.8, z: 1.5 } }],
       ['g', 'gripper', { width: 1, grip: 'between', mass: 0 }],
-      ['c', 'item', { shape: 'crate', position: { x: 1.1, y: 1.0, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, mass: 1 }],
+      ['c', 'item', { shape: 'crate', position: { x: 1.17, y: 1.0, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, mass: 1 }], // the palm ends at x 0.95: the crate stands in front of it, not round it
       ['k', 'key', { key: 'Space' }],
     ];
     const wires: WireSpec[] = [

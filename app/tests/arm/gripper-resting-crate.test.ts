@@ -45,8 +45,9 @@ describe('gripper on a crate resting on a table (Vật lý thật)', () => {
     const r = run(25);
     const y0 = r.crate().position.y;
     const x0 = r.crate().position.x;
-    expect(y0).toBeGreaterThan(0.85);
-    expect(y0).toBeLessThan(0.95);
+    // The light crate is a 0.3 m cube on the 0.6 m table: its centre is 0.75 m up.
+    expect(y0).toBeGreaterThan(0.7);
+    expect(y0).toBeLessThan(0.8);
     r.setKeys(['Space']);
     for (let i = 0; i < 30; i++) {
       r.p.tick();
@@ -77,7 +78,7 @@ describe('gripper on a crate resting on a table (Vật lý thật)', () => {
       }
     }
     expect(slipped).toBe(true);
-    expect(weak.crate().position.y).toBeLessThan(0.95);
+    expect(weak.crate().position.y).toBeLessThan(0.8);
     weak.p.dispose();
 
     const strong = run(19.62 + 1);

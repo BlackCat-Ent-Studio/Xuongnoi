@@ -68,7 +68,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
   },
   {
     kind: 'gripper',
-    purpose: 'Tay kẹp ở cuối cánh tay. Kẹp một món đồ vật nằm giữa hai ngón với lực bạn chọn, và cho biết kẹp có giữ được hay không.',
+    purpose: 'Tay kẹp ở cuối cánh tay. Kẹp một món đồ vật nằm giữa hai ngón với lực bạn chọn, và cho biết kẹp có giữ được hay không. Với "Vật lý thật" hai ngón khép tới khi chạm hai mặt thùng và thùng nằm gọn trước lòng bàn tay.',
     whenToUse: 'Gắp thùng lên băng chuyền, nhấc hàng nặng nhẹ khác nhau, kiểm tra lực kẹp vừa đủ: không tuột mà cũng không làm hỏng hàng dễ vỡ.',
     ports: {
       base: 'Đầu thanh nối hoặc đầu khớp mà tay kẹp gắn vào. Bắt buộc nối.',
@@ -86,7 +86,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       defaultForce: 'Lực kẹp mỗi ngón khi chưa nối "Lực kẹp" (N). Mặc định 20.',
       maxForce: 'Lực kẹp mỗi ngón lớn nhất (N). Mặc định 120.',
       fingerMu: 'Hệ số ma sát của ngón μ. Ma sát dùng để kẹp là số NHỎ HƠN giữa μ của ngón và μ của món đồ (mặc định 0,8 và 0,5 nên ra 0,5).',
-      grip: 'Cách kẹp. "Vật nằm giữa hai ngón" (mặc định cho thẻ mới): điểm kẹp, giữa hai ngón, phải nằm trong thân món đồ (theo hướng tay duỗi ra và theo hướng ngang), và món đồ phải lọt trọn giữa hai ngón đang mở; vì vậy phải đưa tay tới đúng tư thế, góc khớp quyết định kẹp được hay không. "Vật trong tầm với": cách cũ, chỉ cần tâm món đồ cách điểm kẹp không quá "Tầm với" và vừa độ mở. Bảng đã lưu từ trước giữ cách cũ.',
+      grip: 'Cách kẹp. "Vật nằm giữa hai ngón" (mặc định cho thẻ mới): điểm kẹp, giữa hai ngón, phải nằm trong thân món đồ (theo hướng tay duỗi ra và theo hướng ngang), và món đồ phải lọt trọn giữa hai ngón đang mở; vì vậy phải đưa tay tới đúng tư thế, góc khớp quyết định kẹp được hay không. "Vật trong tầm với": cách cũ, chỉ cần tâm món đồ cách điểm kẹp không quá "Tầm với" và vừa độ mở. Bảng đã lưu từ trước giữ cách cũ. Khi bảng bật "Vật lý thật", thùng rắn chỉ được kẹp khi hai ngón thật sự ôm được nó: điểm kẹp nằm trong thân thùng, lòng bàn tay và thanh nối không lún vào thùng (tay phải dừng ngay trên nắp thùng, không hạ sâu hơn), thùng lọt giữa hai ngón đang mở, và (nhìn từ trên hay 3D, nơi ngón là hai tấm phẳng) mặt thùng lệch không quá 10 độ so với tấm ngón. Mỗi ngón khép tới khi chạm mặt thùng nên thùng không bị xê dịch và không bao giờ nằm lún vào ngón hay lòng bàn tay; ngón nào chạm sớm cũng không đẩy thùng.',
       width: 'Độ mở (mét): món đồ rộng hơn (tính theo chiều hai ngón khép lại) thì không kẹp được.',
       reach: 'Tầm với (mét), chỉ dùng khi "Cách kẹp" là "Vật trong tầm với": tâm món đồ phải cách điểm kẹp không quá số này.',
       mass: 'Khối lượng của chính tay kẹp (kg), tải thêm cho các khớp.',
@@ -99,7 +99,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       'Giữ được khi số ngón × μ × lực mỗi ngón ≥ khối lượng × 9,81. Ví dụ thùng 5 kg, μ 0,5, 2 ngón: cần 5 × 9,81 ÷ (2 × 0,5) = 49,05 N. 40 N thì tuột, 50 N thì giữ.',
       'Hỏng khi tổng lực ép (số ngón × lực mỗi ngón) vượt "Lực chịu nén tối đa" của món đồ. Thùng dễ vỡ chịu 60 N: kẹp 2 × 35 = 70 N là hỏng.',
       'Thùng đang nằm trên bàn thì bàn đỡ, chỉ khi nhấc lên mới cần ma sát. Món đang giữ làm nặng thêm mọi khớp phía sau. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
-      'Kẹp phải đúng chỗ: tay chỉ kẹp món đồ mà điểm kẹp (giữa hai ngón) nằm trong thân nó và lọt giữa hai ngón đang mở. Tay dừng quá trước hay quá sau món đồ, hoặc lệch sang bên hơn nửa độ mở trừ nửa bề ngang của nó, thì "Có vật trong tầm" không bật. Muốn dò tư thế thì nối "Có vật trong tầm" ra một Hiện chữ.',
+      'Kẹp phải đúng chỗ: tay chỉ kẹp món đồ mà điểm kẹp (giữa hai ngón) nằm trong thân nó và lọt giữa hai ngón đang mở. Thùng rắn ("Vật lý thật") còn phải nằm trước lòng bàn tay: nếu tay hạ quá sâu, lòng bàn tay lún vào thùng thì tay không kẹp. Đang giữ mà tay đè thùng vào vật rắn (bàn, thành băng) thì thùng tuột ra tại chỗ, đếm là "tuột". Tay dừng quá trước hay quá sau món đồ, hoặc lệch sang bên hơn nửa độ mở trừ nửa bề ngang của nó, thì "Có vật trong tầm" không bật. Muốn dò tư thế thì nối "Có vật trong tầm" ra một Hiện chữ.',
     ],
     lessonId: 'robot-arm',
     tryBoard: tryGripper,

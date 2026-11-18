@@ -92,9 +92,9 @@ export const tryGripper = (): Board =>
     [
       ...PILLAR,
       { alias: 'table', kind: 'block', x: 20, y: 520, params: { position: { x: -0.7, y: 0.3, z: 0 }, size: { x: 1.4, y: 0.6, z: 1 }, color: '#78716c' } },
-      { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -0.7, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 5 } },
+      { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -0.5, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 5 } },
       { alias: 'stick', kind: 'stick', x: 300, y: 20 },
-      { alias: 'scale', kind: 'map-range', x: 300, y: 200, params: { inMin: -1, inMax: 1, outMin: -20, outMax: 40, clamp: 'yes' } },
+      { alias: 'scale', kind: 'map-range', x: 300, y: 200, params: { inMin: -1, inMax: 1, outMin: -12, outMax: 40, clamp: 'yes' } },
       { alias: 'go', kind: 'on-start', x: 300, y: 380 },
       { alias: 'key', kind: 'key', x: 300, y: 520, params: { key: 'Space' } },
       { alias: 'shoulder', kind: 'joint', x: 600, y: 20, params: { start: 0, min: -60, max: 60, maxTorque: 200 } },

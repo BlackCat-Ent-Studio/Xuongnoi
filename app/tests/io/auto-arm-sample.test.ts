@@ -269,17 +269,24 @@ describe('sample Tay máy tự gắp và đặt', () => {
       // the gripper
       ['a-cycle', 'step3', 'close-3-4', 'a'],
       ['a-cycle', 'step4', 'close-3-4', 'b'],
-      ['close-3-4', 'out', 'gripper', 'close'],
+      ['a-cycle', 'step5', 'close-3-5', 'b'],
+      ['close-3-4', 'out', 'close-3-5', 'a'],
+      ['close-3-5', 'out', 'gripper', 'close'],
       ['grip-force', 'value', 'gripper', 'force'],
       // every "Xong bước" port
       ['pick', 'inside', 'a-cycle', 'done1'],
-      ['gripper', 'inReach', 'a-cycle', 'done2'],
+      ['shoulder', 'reached', 'arrived', 'a'],
+      ['elbow', 'reached', 'arrived', 'b'],
+      ['arrived', 'out', 'hand-ready', 'a'],
+      ['gripper', 'inReach', 'hand-ready', 'b'],
+      ['hand-ready', 'out', 'a-cycle', 'done2'],
       ['a-cycle', 'step3', 'grip-wait', 'run'],
       ['grip-wait', 'done', 'grip-ok', 'a'],
       ['gripper', 'holding', 'grip-ok', 'b'],
       ['grip-ok', 'out', 'a-cycle', 'done3'],
-      ['swing', 'reached', 'a-cycle', 'done4'],
+      ['arrived', 'out', 'a-cycle', 'done4'],
       ['swing', 'reached', 'a-cycle', 'done5'],
+      ['swing', 'reached', 'a-cycle', 'done6'],
       // the belts
       ['belt-run', 'out', 'feed', 'run'],
     ];
@@ -339,7 +346,8 @@ describe('sample Tay máy tự gắp và đặt', () => {
     ];
     for (const link of optional) {
       const r = run(without(sample(), link), SHORT_LIMIT_S);
-      expect(r.moved, link.join('.')).toBeGreaterThanOrEqual(3);
+      // Without the belt stop a crate drifts on while the arm lowers, and only the ones that happen to lie between the fingers are taken.
+      expect(r.moved, link.join('.')).toBeGreaterThanOrEqual(link[3] === 'in' && link[0] === 'pick' ? 2 : 3);
     }
   });
 });

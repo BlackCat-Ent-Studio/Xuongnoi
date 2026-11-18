@@ -28,7 +28,7 @@ const byId = (b: Board, id: string): GraphNode => b.graph.nodes.find((n) => n.id
 /** General pieces only: nothing driven by a key, a stick or a screen button. */
 const ALLOWED = new Set([
   'block', 'line-track', 'robot-body', 'line-sensor', 'math', 'map-range', 'const', 'pid', 'motor', 'zone', 'compare', 'and', 'or', 'not',
-  'sequence', 'joint', 'link', 'gripper', 'spawner', 'linear-actuator', 'counter', 'show-number', 'show-text', 'camera', 'on-start',
+  'sequence', 'joint', 'link', 'gripper', 'spawner', 'linear-actuator', 'counter', 'show-number', 'show-text', 'camera', 'on-start', 'timer',
 ]);
 
 interface Run {
@@ -297,6 +297,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       { wire: ['khuyu', 'reached', 'dk-tay-xong', 'b'], fails: 'arm-stuck', note: 'the arm waits forever for the elbow to arrive' },
       { wire: ['kep', 'inReach', 'dk-tay-gan', 'b'], fails: 'arm-stuck', note: 'the arm never sees a crate within reach' },
       { wire: ['kep', 'holding', 'dk-tay-giu', 'b'], fails: 'arm-stuck', note: 'the arm never learns that it holds the crate' },
+      { wire: ['cho-kep', 'done', 'dk-tay-giu', 'a'], fails: 'arm-stuck', note: 'the arm never learns that the grip has held for a moment' },
       { wire: ['co-tai', 'out', 'dk-b5', 'b'], fails: 'one-crate', note: 'after placing the first crate the arm waits forever for "loaded"' },
       { wire: ['dk-kep', 'out', 'kep', 'close'], fails: 'arm-stuck', note: 'the gripper never closes' },
       { wire: ['dk-hop-4', 'out', 'buoc', 'next'], fails: 'arm-stuck', note: 'the step sequence never advances' },

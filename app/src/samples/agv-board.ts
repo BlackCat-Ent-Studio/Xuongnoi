@@ -24,7 +24,7 @@ export const AGV_SETTINGS = {
   /** Taught joint angles (degrees): [shoulder, elbow] over the supply table, down at the crate, over the vehicle. */
   poses: {
     overTable: [120, 95],
-    atCrate: [146, 95],
+    atCrate: [142, 95],
     overVehicle: [27, -92],
   } as const,
   pistonForce: 100,
@@ -123,6 +123,7 @@ const ARM: Spec[] = [
   { id: 'dk-san-sang', kind: 'and' },
   { id: 'dk-tay-xong', kind: 'and' },
   { id: 'dk-tay-gan', kind: 'and' },
+  { id: 'cho-kep', kind: 'timer', params: { seconds: 0.6, repeat: 'yes' } },
   { id: 'dk-tay-giu', kind: 'and' },
   { id: 'dk-b1', kind: 'and' },
   { id: 'dk-b2', kind: 'and' },
@@ -136,7 +137,7 @@ const ARM: Spec[] = [
   { id: 'dk-hop-4', kind: 'or' },
   { id: 'dk-kep', kind: 'or' },
   { id: 'goc-vai-2', kind: 'map-range', params: { inMin: 1, inMax: 2, outMin: AGV_SETTINGS.poses.overTable[0], outMax: AGV_SETTINGS.poses.atCrate[0], clamp: 'yes' } },
-  { id: 'goc-vai-3', kind: 'map-range', params: { inMin: 2, inMax: 3, outMin: 0, outMax: AGV_SETTINGS.poses.overTable[0] - AGV_SETTINGS.poses.atCrate[0], clamp: 'yes' } },
+  { id: 'goc-vai-3', kind: 'map-range', params: { inMin: 3, inMax: 4, outMin: 0, outMax: AGV_SETTINGS.poses.overTable[0] - AGV_SETTINGS.poses.atCrate[0], clamp: 'yes' } },
   { id: 'goc-vai-4', kind: 'map-range', params: { inMin: 3, inMax: 4, outMin: 0, outMax: AGV_SETTINGS.poses.overVehicle[0] - AGV_SETTINGS.poses.overTable[0], clamp: 'yes' } },
   { id: 'goc-vai-6', kind: 'map-range', params: { inMin: 5, inMax: 6, outMin: 0, outMax: AGV_SETTINGS.poses.overTable[0] - AGV_SETTINGS.poses.overVehicle[0], clamp: 'yes' } },
   { id: 'goc-vai-a', kind: 'math', params: { op: 'add' } },
@@ -151,7 +152,7 @@ const ARM_COLUMNS: string[][] = [
   ['dk-san-sang', 'dk-tay-xong', 'dk-tay-gan', 'dk-tay-giu'],
   ['dk-b1', 'dk-b2', 'dk-b3', 'dk-b46'],
   ['dk-b4', 'dk-b5', 'dk-hop-1', 'dk-hop-2'],
-  ['dk-hop-3', 'dk-hop-4', 'dk-kep'],
+  ['dk-hop-3', 'dk-hop-4', 'dk-kep', 'cho-kep'],
   ['goc-vai-2', 'goc-vai-3', 'goc-vai-4', 'goc-vai-6', 'goc-khuyu-4', 'goc-khuyu-6'],
   ['goc-vai-a', 'goc-vai-b', 'goc-vai-c', 'goc-khuyu-a'],
   ['vai', 'khuyu'],
@@ -223,7 +224,7 @@ export const AGV_WIRES: readonly Link[] = [
   ['dk-tay-xong', 'out', 'dk-tay-gan', 'a'], ['kep', 'inReach', 'dk-tay-gan', 'b'],
   ['buoc', 'step1', 'dk-b1', 'a'], ['dk-san-sang', 'out', 'dk-b1', 'b'],
   ['buoc', 'step2', 'dk-b2', 'a'], ['dk-tay-gan', 'out', 'dk-b2', 'b'],
-  ['dk-tay-xong', 'out', 'dk-tay-giu', 'a'], ['kep', 'holding', 'dk-tay-giu', 'b'],
+  ['buoc', 'step3', 'cho-kep', 'run'], ['cho-kep', 'done', 'dk-tay-giu', 'a'], ['kep', 'holding', 'dk-tay-giu', 'b'],
   ['buoc', 'step3', 'dk-b3', 'a'], ['dk-tay-giu', 'out', 'dk-b3', 'b'],
   ['buoc', 'step4', 'dk-b46', 'a'], ['buoc', 'step6', 'dk-b46', 'b'],
   ['dk-b46', 'out', 'dk-b4', 'a'], ['dk-tay-xong', 'out', 'dk-b4', 'b'],
@@ -296,7 +297,7 @@ const NOTES: Note[] = [
     pos: { x: 1080, y: 580 },
     size: { w: 360, h: 250 },
     text:
-      'Nhóm "Tay máy nạp hàng": Chuỗi bước có 6 bước: 1 chờ xe vào trạm nạp, 2 hạ tay xuống (chờ "có vật trong tầm"), 3 kẹp (chờ "đang giữ"), 4 đưa thùng sang xe (chờ cả hai khớp "đã tới góc"), 5 nhả thùng (chờ xe báo đã chở), 6 về chỗ cũ. Các góc đã dạy (vai, khuỷu): 120/95, 146/95, 27/-92 độ.',
+      'Nhóm "Tay máy nạp hàng": Chuỗi bước có 6 bước: 1 chờ xe vào trạm nạp, 2 hạ tay xuống (chờ "có vật trong tầm"), 3 kẹp (chờ "đang giữ" và đã giữ chắc 0,6 giây), 4 đưa thùng sang xe (chờ cả hai khớp "đã tới góc"), 5 nhả thùng (chờ xe báo đã chở), 6 về chỗ cũ. Các góc đã dạy (vai, khuỷu): 120/95, 142/95, 27/-92 độ (ở 142/95 bàn tay tựa ngay trên nắp thùng, hai ngón ôm hai bên thân thùng). Tay đứng yên ở thùng cho tới khi kẹp xong, rồi bước 4 mới nâng và đưa sang xe.',
   },
   {
     id: 'n5',

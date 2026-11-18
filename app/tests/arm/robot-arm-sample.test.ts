@@ -133,8 +133,9 @@ describe('robot arm sample', () => {
     s.seconds(3);
     const placed = s.crate('crate-light');
     expect(s.out('gripper', 'holding')).toBe(false);
-    expect(placed.position.y).toBeGreaterThan(0.85);
-    expect(placed.position.y).toBeLessThan(0.95);
+    // Back on the table: the light crate is a 0.3 m cube, its centre 0.75 m up.
+    expect(placed.position.y).toBeGreaterThan(0.7);
+    expect(placed.position.y).toBeLessThan(0.8);
     expect(Math.abs(placed.position.x - startX)).toBeGreaterThan(0.1);
     expect(tiltDeg(placed.rotation)).toBeLessThan(10);
     expect(placed.damaged).toBeUndefined();
@@ -152,7 +153,7 @@ describe('robot arm sample', () => {
     expect(weak.out('gripper', 'holding')).toBe(true);
     const slip = liftWatching(weak, 2);
     expect(slip.slipped).toBe(true);
-    expect(weak.crate('crate-light').position.y).toBeLessThan(0.95);
+    expect(weak.crate('crate-light').position.y).toBeLessThan(0.8);
 
     const strong = session(createRobotArmBoard());
     strong.seconds(1);

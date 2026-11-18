@@ -26,9 +26,9 @@ function nodes(): Spec[] {
     { id: 'floor', kind: 'block', ...at(0, 0), params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
     { id: 'pillar', kind: 'block', ...at(0, 1), params: { position: { x: -1.8, y: 0.8, z: 0 }, size: { x: 0.6, y: 1.6, z: 1 }, color: '#a3a3a3' } },
     { id: 'table', kind: 'block', ...at(0, 2), params: { position: { x: 0.6, y: 0.3, z: 0 }, size: { x: 2.6, y: 0.6, z: 1 }, color: '#78716c' } },
-    { id: 'crate-light', kind: 'item', ...at(0, 3), params: { shape: 'box', position: { x: -0.24, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 2 } },
-    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.61, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#ef4444', mass: 6 } },
-    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.37, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', mass: 2, crushLimit: 60 } },
+    { id: 'crate-light', kind: 'item', ...at(0, 3), params: { shape: 'box', position: { x: -0.24, y: 0.75, z: 0 }, size: { x: 0.3, y: 0.3, z: 0.3 }, color: '#a16207', mass: 2 } },
+    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.78, y: 0.85, z: 0 }, size: { x: 0.5, y: 0.5, z: 0.5 }, color: '#ef4444', mass: 6 } },
+    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.52, y: 0.8, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, color: '#facc15', mass: 2, crushLimit: 60 } },
 
     // --- the arm ---
     { id: 'go', kind: 'on-start', ...at(1, 0) },
