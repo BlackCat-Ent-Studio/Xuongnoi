@@ -179,11 +179,12 @@ export function createAutoArmBoard(): Board {
     },
     {
       color: 'green',
-      text: 'Tay kẹp ở kiểu "Vật nằm giữa hai ngón": nó chỉ kẹp được thùng khi điểm kẹp nằm trong thùng, nên tay phải hạ xuống thật. Lực kẹp chọn 25 N mỗi ngón. Thùng nâu và thùng vàng đều nặng 2 kg, ma sát 0,5: giữ được khi 2 ngón × 0,5 × lực ≥ 2 × 9,81, tức lực ≥ 19,6 N. Thùng vàng dễ vỡ, chịu ép tối đa 60 N cả hai ngón, nên lực phải ≤ 30 N. Khoảng đúng là 19,6 đến 30 N; 25 N nằm giữa.',
+      h: 360,
+      text: 'Tay kẹp ở kiểu "Vật nằm giữa hai ngón": nó chỉ kẹp được thùng khi điểm kẹp nằm trong thùng, nên tay phải hạ xuống thật. Lực kẹp chọn 25 N mỗi ngón. Thùng nâu và thùng vàng đều nặng 2 kg, ma sát 0,5: giữ được khi 2 ngón × 0,5 × lực ≥ 2 × 9,81, tức lực ≥ 19,6 N. Thùng vàng dễ vỡ, chịu ép tối đa 60 N cả hai ngón, nên lực phải ≤ 30 N. Khoảng đúng là 19,6 đến 30 N; 25 N nằm giữa. Bảng này đã bật "Vật lý thật" (công tắc ở bảng Thuộc tính, khi chưa chọn mảnh nào): thùng là vật rắn thật, nằm yên trên băng, được tay nhấc, thả xuống băng ra rồi trôi tới tấm xanh và có thể lăn ngã ở đó.',
     },
     {
       color: 'pink',
       text: 'Thử đổi thông số: 1) Chọn Số cố định "lực kẹp", đổi 25 thành 15: thùng nâng lên là TUỘT, đếm "Bị tuột". 2) Đổi thành 40: thùng vàng bị ép hỏng, đếm "Bị hỏng". 3) Chọn "Bảng giá trị" của vai, đổi hàng 2 từ 21,2 thành 40: tay không hạ đủ sâu, thùng không nằm giữa hai ngón, tay đứng chờ mãi ở bước 2. 4) Chọn Khớp xoay "xoay", hạ "Tốc độ tối đa" xuống 30: tay quay chậm hẳn, đặt được ít thùng hơn.',
     },
-  ]);
+  ], { realPhysics: true });
 }

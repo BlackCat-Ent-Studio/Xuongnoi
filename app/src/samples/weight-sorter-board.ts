@@ -151,15 +151,18 @@ export function createWeightSorterBoard(): Board {
   return makeBoard('Băng chuyền phân loại theo cân nặng', '3d', specs, WEIGHT_SORTER_WIRES, [
     {
       color: 'yellow',
-      text: 'Băng chuyền tự phân loại và chạy mãi, không cần bấm gì. Bấm Chạy: cứ 4 giây "Tạo đối tượng" thả một thùng lên băng, khối lượng do "Số ngẫu nhiên" tung (1 đến 8 kg). Thùng chạy qua đoạn băng vàng là cái cân: "Cảm biến lực / Cân" đọc khối lượng, "So sánh" hỏi "từ 5 kg trở lên?". Hẹn giờ bắt đầu đếm từ lúc thùng vừa lên cân (cân chỉ đủ số kg khi thùng nằm trọn trên cân, còn đang gác nửa trên băng kia thì chỉ đọc phần của nó). Nếu thùng nặng thì Công tắc nhớ bật, hết giờ thì thùng đã tới trước Xi lanh và xi lanh đẩy thùng sang thùng bên (đỏ). Thùng nhẹ chạy tiếp tới thùng cuối (xanh).',
+      h: 400,
+      text: 'Băng chuyền tự phân loại và chạy mãi, không cần bấm gì. Bấm Chạy: cứ 4 giây "Tạo đối tượng" thả một thùng lên băng, khối lượng do "Số ngẫu nhiên" tung (1 đến 8 kg). Thùng chạy qua đoạn băng vàng là cái cân: "Cảm biến lực / Cân" đọc khối lượng, "So sánh" hỏi "từ 5 kg trở lên?". Hẹn giờ bắt đầu đếm từ lúc thùng vừa lên cân (cân chỉ đủ số kg khi thùng nằm trọn trên cân, còn đang gác nửa trên băng kia thì chỉ đọc phần của nó). Nếu thùng nặng thì Công tắc nhớ bật, hết giờ thì thùng đã tới trước Xi lanh và xi lanh đẩy thùng sang thùng bên (đỏ). Thùng nhẹ chạy tiếp tới thùng cuối (xanh). Bảng này đã bật "Vật lý thật" (công tắc ở bảng Thuộc tính, khi chưa chọn mảnh nào): thùng là vật rắn thật, bám băng chuyền bằng ma sát, va và lăn vào thùng chứa.',
     },
     {
       color: 'green',
-      text: 'Con số cần nhớ: đẩy một thùng cần lực F = μ × khối lượng × 9,81. Thùng 8 kg, μ = 0,5 cần khoảng 39 N; thùng 2 kg chỉ 10 N. Xi lanh đang đặt lực tối đa 80 N nên đủ sức. Đẩy xong thì xi lanh tự thu về rồi chờ thùng nặng kế tiếp. Mỗi thùng chỉ tồn tại 30 giây rồi biến mất, nên hai số "Trong thùng" là số thùng đang nằm trong mỗi thùng chứa lúc này.',
+      h: 380,
+      text: 'Con số cần nhớ: thùng cao 0,8 m, μ = 0,5, đầu xi lanh đẩy ở độ cao 0,75 m trên đáy thùng. Xi lanh chỉ cần lực nhỏ hơn trong hai lực: lực làm trượt μ × m × 9,81 và lực làm đổ m × 9,81 × 0,4 / 0,75. Thùng 8 kg: trượt 0,5 × 8 × 9,81 = 39 N, làm đổ 42 N, nên thùng trượt và ô "Lực đẩy" đọc 39 N; thùng 2 kg chỉ 10 N. Lực tối đa đặt 80 N, dư gần gấp đôi nên đẩy nhanh. Đẩy xong thì xi lanh tự thu về rồi chờ thùng nặng kế tiếp. Mỗi thùng chỉ tồn tại 30 giây rồi biến mất, nên hai số "Trong thùng" là số thùng đang nằm trong mỗi thùng chứa lúc này.',
     },
     {
       color: 'pink',
-      text: 'Thử đổi thông số: 1) Chọn Xi lanh đẩy, hạ "Lực đẩy tối đa" xuống 30 N: thùng nặng không đẩy nổi, hiện "Quá tải" và nó chạy lẫn vào thùng cuối. 2) Chọn "Số cố định" ngưỡng, đổi 5 thành 1: thùng nhẹ cũng bị đẩy sang bên. 3) Chọn "Số ngẫu nhiên", đổi "Lớn nhất" từ 8 thành 4: không còn thùng nặng nào. 4) Chọn Hẹn giờ 2,3 giây, đổi thành 1: xi lanh đẩy hụt vì thùng chưa tới. 5) Chọn "Số ngẫu nhiên", đổi "Hạt giống" từ 1 về 0: mỗi lần chạy ra một dãy khối lượng khác (hạt giống 1 thì lần nào cũng cùng một dãy).',
+      h: 420,
+      text: 'Thử đổi thông số: 1) Chọn Xi lanh đẩy, hạ "Lực đẩy tối đa" xuống 30 N: thùng nặng không đẩy nổi, hiện "Quá tải" và nó chạy lẫn vào thùng cuối. 2) Đặt "Lực đẩy tối đa" 41 N (chỉ dư 1,8 N): không quá tải nhưng thanh đẩy chậm đến mức thùng nặng cũng trôi sang thùng cuối. 3) Chọn "Tạo đối tượng", mở mục nâng cao, đổi "Hệ số ma sát" từ 0,5 lên 0,8: lực làm trượt thành 63 N, lớn hơn lực làm đổ 42 N, nên ô "Lực đẩy" đọc 42 N. 4) Chọn "Số cố định" ngưỡng, đổi 5 thành 1: thùng nhẹ cũng bị đẩy sang bên. 5) Chọn "Số ngẫu nhiên", đổi "Lớn nhất" từ 8 thành 4: không còn thùng nặng nào. 6) Chọn Hẹn giờ 2,3 giây, đổi thành 1: xi lanh đẩy hụt vì thùng chưa tới. 7) Chọn "Số ngẫu nhiên", đổi "Hạt giống" từ 1 về 0: mỗi lần chạy ra một dãy khối lượng khác (hạt giống 1 thì lần nào cũng cùng một dãy).',
     },
-  ]);
+  ], { realPhysics: true });
 }

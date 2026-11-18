@@ -3,9 +3,13 @@ import { listSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { AUTO_ARM, AUTO_ARM_WIRES } from '../../src/samples/auto-arm-board';
 import type { Board } from '../../src/engine/types';
-import { firstCardOverlap, play, without } from '../helpers/cell-run';
+import { firstCardOverlap, without } from '../helpers/cell-run';
+import { loadEngine, playReal as play } from '../helpers/cell-run-real';
 
-beforeAll(() => registerAllNodes());
+beforeAll(async () => {
+  registerAllNodes();
+  await loadEngine();
+});
 
 const sample = (): Board => structuredClone(listSamples().find((s) => s.id === 'auto-arm')!.board);
 
@@ -25,6 +29,8 @@ interface Result {
   strayed: number;
   /** Crates that ended on the far side of the arm (x < -0.7): moved by the arm, counter or not. */
   moved: number;
+  /** Crates that ended beyond the blue pad (past its edge or off its sides): thrown away instead of placed. */
+  lost: number;
 }
 
 /** `id` maps the sample's card ids to the ids of a renamed copy of the board. */
@@ -40,6 +46,8 @@ function run(board: Board, seconds = LIMIT_S, id: (name: string) => string = (n)
   // The place belt ends at x = -7; crates that fall off its end into the blue pad are not strays.
   const strayed = crates.filter((e) => e.position.y < 0.5 && e.position.x > -6.9 && e.position.x < 8).length;
   const moved = crates.filter((e) => e.position.x < -0.7).length;
+  // The blue pad spans x -10 to -7 and z -1.5 to 1.5.
+  const lost = crates.filter((e) => e.position.x < -10.1 || Math.abs(e.position.z) > 1.6 || e.position.y < 0.3).length;
   return {
     placed: p.out(id('placed'), 'value') as number,
     slipped: p.out(id('slips'), 'value') as number,
@@ -48,6 +56,7 @@ function run(board: Board, seconds = LIMIT_S, id: (name: string) => string = (n)
     overloaded,
     strayed,
     moved,
+    lost,
   };
 }
 
@@ -101,6 +110,22 @@ describe('sample Tay máy tự gắp và đặt', () => {
     expect(r.overloaded).toBe(false);
     expect(r.peakLoad).toBeLessThan(140);
     expect(r.strayed).toBe(0);
+    expect(r.lost).toBe(0);
+  });
+
+  it('runs on "Vật lý thật" for two minutes: all six real crates are carried and set down, none thrown away, no joint overloaded', { timeout: 180_000 }, () => {
+    const b = sample();
+    expect(b.graph.settings?.realPhysics).toBe(true);
+    expect(b.graph.settings?.gravity).toBeUndefined();
+    const r = run(b, 120);
+    expect(r.placed).toBe(AUTO_ARM.fragile.length);
+    expect(r.slipped).toBe(0);
+    expect(r.crushed).toBe(0);
+    expect(r.overloaded).toBe(false);
+    expect(r.lost).toBe(0);
+    // Real loads: well inside the joints' own limits (shoulder 140 N m).
+    expect(r.peakLoad).toBeGreaterThan(20);
+    expect(r.peakLoad).toBeLessThan(140);
   });
 
   it('the arm has to lower onto the crate: at the hover pose a waiting crate is not between the fingers, at the grab the shoulder is down', { timeout: 60_000 }, () => {
