@@ -1,7 +1,7 @@
 import type { EntityId, NodeDef } from '../engine/types';
 import { DEG, localToWorld, rotateFrame, sagDirection, stepJoint, horizontalArm, type Frame } from '../world/arm-kinematics';
 import { hubCube, resolveTurn } from '../world/arm-solid';
-import type { Box, PushBody } from '../world/linear-actuator';
+import { RIGID_CROSS_TOL, type Box, type PushBody } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
 import { armRegistry, baseFrame, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
@@ -136,7 +136,7 @@ export const jointNode: NodeDef<JointState> = {
       for (const e of ctx.world.listEntities()) {
         if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
         const mat = ctx.world.materialOf(e.id);
-        if (mat) bodies.push({ id: e.id, box: e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size }, massKg: mat.massKg, mu: mat.mu });
+        if (mat) bodies.push({ id: e.id, box: e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size }, massKg: mat.massKg, mu: mat.mu, ...(ctx.world.isRigidCrate(e.id) ? { crossTol: RIGID_CROSS_TOL } : {}) });
       }
       const lever = (b: Box): number => (axis === 'pitch' ? Math.hypot(horizontalArm(base, b.pos), b.pos.y - base.pos.y) : Math.hypot(b.pos.x - base.pos.x, b.pos.z - base.pos.z));
       const resolved = resolveTurn(angle0, step.angle, beyondAt, {
@@ -150,7 +150,8 @@ export const jointNode: NodeDef<JointState> = {
       s.angle = resolved.angle;
       for (const [id, d] of resolved.moves) {
         const e = ctx.world.getEntity(id);
-        if (e) ctx.world.teleport(id, { x: e.position.x + d.x, y: e.position.y + d.y, z: e.position.z + d.z }, false);
+        // A rigid crate (real physics on) is pushed by the engine when the cubes move; the sweep only checked torque and room.
+        if (e && !ctx.world.isRigidCrate(id)) ctx.world.teleport(id, { x: e.position.x + d.x, y: e.position.y + d.y, z: e.position.z + d.z }, false);
       }
     }
     const overloaded = step.overloaded || blocked;

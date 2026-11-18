@@ -94,6 +94,7 @@ export function makeWorld(): FakeWorld {
     setRobotWheel: () => undefined,
     setRobotTuning: () => undefined,
     robotPushN: () => 0,
+    isRigidCrate: () => false,
     robotWheelState: () => null,
     probeAhead: () => null,
     lineOfSight: () => true,

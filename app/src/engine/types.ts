@@ -873,6 +873,8 @@ export interface WorldApi {
   setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void;
   /** Newtons a robot chassis's motors can push with while travelling along `travel` (signed, along its heading): wheels turning that way, each at its maximum scaled by its power. 0 for anything that is not a robot chassis. */
   robotPushN(body: EntityId, travel: number): number;
+  /** True for a loose item that the rigid-body engine moves (real physics on and loaded). A pusher leaves such a crate to the engine: it checks force and room, but does not displace it. */
+  isRigidCrate(id: EntityId): boolean;
   /**
    * What one motor's wheel really does with real physics on: its rim speed as revolutions per minute, how fast the rim runs
    * ahead of (or behind) the ground while it slips, and whether it slips. Null when real physics is off, the wheel is not
