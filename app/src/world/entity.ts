@@ -92,6 +92,12 @@ export interface Entity {
   rigid?: boolean;
   /** Rigid items: turn as a unit quaternion, written by the crate engine; unset = not turned. */
   rot?: { x: number; y: number; z: number; w: number };
+  /**
+   * Rigid items a character, a hand or a vehicle carries: the turn the item had against its holder's heading when it was taken up.
+   * While carried, `rot` is this turn followed by the holder's heading, so the crate rides as it was taken and leaves the same way.
+   * Unset = carried upright.
+   */
+  heldTurn?: { x: number; y: number; z: number; w: number };
 
   // ---- collision and body tuning; unset = plain visual box and normal physics ----
   collider?: ColliderSpec;

@@ -1,7 +1,7 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
 import { boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox } from './collider';
-import { obbSeparation } from './oriented-box';
+import { mulQuat, obbSeparation, yawQuat } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
@@ -453,6 +453,8 @@ export function stepPhysics(
       item.vel.y = 0;
       item.vel.z = 0;
       item.onGround = false;
+      // A crate taken up turned rides with the same turn against its holder's heading, and is drawn and sensed that way.
+      if (item.heldTurn) item.rot = mulQuat(yawQuat(holder.facing), item.heldTurn);
     } else if (!item.rigid) {
       const held = chassis.length > 0 ? supportsOf(item, chassis) : [];
       stepFreeItem(item, dt, mode, g, held.length > 0 ? [...solids, ...held] : solids, extrasFor(item));

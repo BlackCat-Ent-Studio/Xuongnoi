@@ -76,6 +76,12 @@ const specs: CardSpec[] = [
   { id: 'limit', kind: 'const', col: 3, params: { value: WEIGHT_SORTER.thresholdKg } },
   { id: 'is-heavy', kind: 'compare', col: 3, params: { op: 'ge' } },
   { id: 'heavy-seen', kind: 'latch', col: 3 },
+  // The wait starts the moment a crate comes onto the scale (the same moment whatever the physics), not when the scale has read it
+  // fully: a crate that is only partly on the scale reads only its share. A crate that leaves without being heavy cancels it.
+  { id: 'here', kind: 'latch', col: 3 },
+  { id: 'busy', kind: 'or', col: 3 },
+  { id: 'idle', kind: 'not', col: 3 },
+  { id: 'forget', kind: 'or', col: 4 },
   { id: 'wait', kind: 'timer', col: 4, params: { seconds: WEIGHT_SORTER.pushDelayS } },
   { id: 'now-push', kind: 'and', col: 4 },
   {
@@ -113,13 +119,22 @@ export const WEIGHT_SORTER_WIRES: readonly Link[] = [
   ['weigh', 'mass', 'is-heavy', 'a'],
   ['limit', 'value', 'is-heavy', 'b'],
   ['is-heavy', 'out', 'heavy-seen', 'set'],
-  // Wait until the crate is in front of the piston, then push; when the rod is all the way out, forget and retract
-  ['heavy-seen', 'on', 'wait', 'run'],
+  // A crate on the scale starts the wait; when it is in front of the piston and was heavy, push
+  ['weigh', 'loaded', 'here', 'set'],
+  ['here', 'on', 'wait', 'run'],
   ['wait', 'done', 'now-push', 'a'],
   ['heavy-seen', 'on', 'now-push', 'b'],
   ['now-push', 'out', 'piston', 'extend'],
+  // When the rod is all the way out, forget and retract
   ['piston', 'extended', 'heavy-seen', 'reset'],
-  ['piston', 'extended', 'wait', 'reset'],
+  // A crate that left the scale without being heavy: forget it too, so the next one starts the wait afresh
+  ['weigh', 'loaded', 'busy', 'a'],
+  ['heavy-seen', 'on', 'busy', 'b'],
+  ['busy', 'out', 'idle', 'in'],
+  ['piston', 'extended', 'forget', 'a'],
+  ['idle', 'out', 'forget', 'b'],
+  ['forget', 'out', 'here', 'reset'],
+  ['forget', 'out', 'wait', 'reset'],
   // Readouts
   ['weigh', 'mass', 'show-mass', 'value'],
   ['side-bin', 'count', 'show-side', 'value'],
@@ -136,7 +151,7 @@ export function createWeightSorterBoard(): Board {
   return makeBoard('Băng chuyền phân loại theo cân nặng', '3d', specs, WEIGHT_SORTER_WIRES, [
     {
       color: 'yellow',
-      text: 'Băng chuyền tự phân loại và chạy mãi, không cần bấm gì. Bấm Chạy: cứ 4 giây "Tạo đối tượng" thả một thùng lên băng, khối lượng do "Số ngẫu nhiên" tung (1 đến 8 kg). Thùng chạy qua đoạn băng vàng là cái cân: "Cảm biến lực / Cân" đọc khối lượng, "So sánh" hỏi "từ 5 kg trở lên?". Nếu nặng thì Công tắc nhớ bật, Hẹn giờ chờ cho thùng tới trước Xi lanh rồi xi lanh đẩy thùng sang thùng bên (đỏ). Thùng nhẹ chạy tiếp tới thùng cuối (xanh).',
+      text: 'Băng chuyền tự phân loại và chạy mãi, không cần bấm gì. Bấm Chạy: cứ 4 giây "Tạo đối tượng" thả một thùng lên băng, khối lượng do "Số ngẫu nhiên" tung (1 đến 8 kg). Thùng chạy qua đoạn băng vàng là cái cân: "Cảm biến lực / Cân" đọc khối lượng, "So sánh" hỏi "từ 5 kg trở lên?". Hẹn giờ bắt đầu đếm từ lúc thùng vừa lên cân (cân chỉ đủ số kg khi thùng nằm trọn trên cân, còn đang gác nửa trên băng kia thì chỉ đọc phần của nó). Nếu thùng nặng thì Công tắc nhớ bật, hết giờ thì thùng đã tới trước Xi lanh và xi lanh đẩy thùng sang thùng bên (đỏ). Thùng nhẹ chạy tiếp tới thùng cuối (xanh).',
     },
     {
       color: 'green',

@@ -1,4 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
+import { layoutSize } from './collider';
 import type { Entity } from './entity';
 import { overlapsSolid } from './physics';
 
@@ -92,7 +93,9 @@ export function nearestLoadable(list: readonly Entity[], veh: Entity, reach: num
 /** A resting spot for an unloaded item beside the vehicle (behind first), clear of solid blocks and the vehicle. */
 export function unloadSpot(list: readonly Entity[], veh: Entity, item: Entity, mode: ViewMode, gap = DEFAULT_UNLOAD_GAP): Vec3 | null {
   const solids = list.filter((e) => e.visible && e.solid && e.kind === 'block');
-  const y = mode === '2d-top' ? veh.pos.y : veh.pos.y - veh.size.y / 2 + item.size.y / 2;
+  // A tilted crate is set down by the room its real outline takes, so it does not start inside the floor.
+  const size = layoutSize(item);
+  const y = mode === '2d-top' ? veh.pos.y : veh.pos.y - veh.size.y / 2 + size.y / 2;
   const f = veh.facing;
   const dirs = [
     { x: -f.x, z: -f.z },
@@ -100,7 +103,7 @@ export function unloadSpot(list: readonly Entity[], veh: Entity, item: Entity, m
     { x: f.z, z: -f.x },
     { x: f.x, z: f.z },
   ];
-  const base = Math.max(veh.size.x, veh.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + (Number.isFinite(gap) ? Math.max(0, gap) : DEFAULT_UNLOAD_GAP);
+  const base = Math.max(veh.size.x, veh.size.z) / 2 + Math.max(size.x, size.z) / 2 + (Number.isFinite(gap) ? Math.max(0, gap) : DEFAULT_UNLOAD_GAP);
   for (const extra of [0, 0.7]) {
     for (const d of dirs) {
       // Side view has no depth: the sideways spots would land on the vehicle itself.

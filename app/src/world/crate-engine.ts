@@ -163,8 +163,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   function remove(e: Entity, rec: Rec): void {
     world.removeRigidBody(rec.body);
     recs.delete(e);
-    // A crate that is picked up or hidden stands upright again when it comes back.
-    if (rec.role === 'crate') delete e.rot;
+    // A crate that is picked up or hidden stands upright again when it comes back, unless its holder carries it turned (`heldTurn`).
+    if (rec.role === 'crate' && !(e.heldBy !== null && e.heldTurn)) delete e.rot;
   }
 
   /** The collision box of a fixed / kinematic entity changed (a block turned, a robot resized): build a new collider. */

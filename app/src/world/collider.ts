@@ -84,6 +84,11 @@ export function boundsBox(e: Collidable): Box {
   return isTurnedBody(e) ? obbBounds(orientedBox(e)) : colliderBox(e);
 }
 
+/** Size of the entity's box for setting it down: a turned crate takes the room its real outline takes, else its plain size. */
+export function layoutSize(e: Collidable & { size: Vec3 }): Vec3 {
+  return isTurnedBody(e) ? boundsBox(e).size : e.size;
+}
+
 /** Distance from the entity position to its collision box center along one axis. */
 export function colliderOffset(e: Collidable, axis: Axis): number {
   if (!e.collider) return 0;

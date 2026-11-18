@@ -292,6 +292,28 @@ export function quatFromAxes(ax: Vec3, ay: Vec3, az: Vec3): Quat {
   return { w: (m10 - m01) / s, x: (m02 + m20) / s, y: (m12 + m21) / s, z: 0.25 * s };
 }
 
+/** The turn about the vertical that points the x axis along a heading `(x, z)` on the ground (no heading = no turn). */
+export function yawQuat(heading: { x: number; z: number }): Quat {
+  if (!(Math.hypot(heading.x, heading.z) > 1e-9)) return { x: 0, y: 0, z: 0, w: 1 };
+  const half = Math.atan2(-heading.z, heading.x) / 2;
+  return { x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) };
+}
+
+/** The point of the box nearest to `p` (`p` itself when it is inside). */
+export function closestOnObb(o: Obb, p: Vec3): Vec3 {
+  const d = sub(p, o.centre);
+  const half = [o.half.x, o.half.y, o.half.z];
+  const out = { ...o.centre };
+  for (let i = 0; i < 3; i++) {
+    const n = o.axes[i]!;
+    const s = Math.max(-half[i]!, Math.min(half[i]!, dot(d, n)));
+    out.x += n.x * s;
+    out.y += n.y * s;
+    out.z += n.z * s;
+  }
+  return out;
+}
+
 /** `a` applied after `b`: rotating by the result equals rotating by `b` first, then by `a`. */
 export function mulQuat(a: Quat, b: Quat): Quat {
   return {
