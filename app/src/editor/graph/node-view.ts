@@ -84,7 +84,10 @@ export function buildNodeView(node: GraphNode, missingPorts: ReadonlySet<string>
   const inputs = def ? activeInputs(def, node.params) : [];
   const outputs = def ? activeOutputs(def, node.params) : [];
   const missing = def ? inputs.filter((p) => missingPorts.has(p.id)).length : 0;
-  if (missing > 0) head.append(h('span', 'wc-miss-badge', missingBadge(missing)));
+  if (missing > 0) {
+    head.append(h('span', 'wc-miss-badge', missingBadge(missing)));
+    box.classList.add('wc-err'); // lets the editor skin draw the dashed "needs a wire" outline
+  }
   // Sits on the header's corner without taking room, so the card keeps its footprint.
   if (def) head.append(createCardHelpButton(node.kind, def.label));
   box.append(head);

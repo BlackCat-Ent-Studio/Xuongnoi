@@ -31,6 +31,8 @@ export const PANELS_TEXT_VI = {
   lookLabel: 'Kiểu dáng',
 
   gameSettingsTitle: 'Cài đặt mô phỏng',
+  switchOn: 'Bật',
+  switchOff: 'Tắt',
   solidBodiesLabel: 'Va chạm thật',
   solidBodiesTip: 'Nhân vật và đồ vật đặc, không đi xuyên nhau; thả đồ rơi ngay trước tay. Áp dụng ở lần Chạy sau.',
   solidBodiesLocked: 'Bấm Dừng để đổi cài đặt này.',

@@ -41,6 +41,8 @@ export const SHELL_TEXT = {
   viewLayout: 'Bố cục',
   viewLeftDock: 'Hiện dock trái',
   viewWireEnergy: 'Hiệu ứng dòng điện',
+  viewThemeHeading: 'Giao diện',
+  viewModeHeading: 'Chế độ hiển thị',
 
   // Trợ giúp
   helpLessons: 'Bài học',
@@ -55,6 +57,17 @@ export const SHELL_TEXT = {
   sub2dAria: 'Kiểu nhìn của 2D',
   sub2dFull: { '2d-side': 'Nhìn ngang', '2d-top': 'Nhìn từ trên' } as Record<Mode2d, string>,
   sub2dShort: { '2d-side': '↔', '2d-top': '↓' } as Record<Mode2d, string>,
+
+  // Display mode (density) and colour theme
+  uiModeAria: 'Chế độ hiển thị',
+  uiModeStudent: 'Học sinh',
+  uiModeTeacher: 'Giáo viên',
+  uiModeStudentTip: 'Chữ to, nút lớn, ẩn bớt phần nâng cao',
+  uiModeTeacherTip: 'Gọn hơn, hiện đầy đủ phần nâng cao',
+  themeLight: 'Sáng',
+  themeDark: 'Tối',
+  themeToLight: 'Đổi sang giao diện sáng',
+  themeToDark: 'Đổi sang giao diện tối',
 
   // Top bar
   gameNameLabel: 'Tên mô phỏng',

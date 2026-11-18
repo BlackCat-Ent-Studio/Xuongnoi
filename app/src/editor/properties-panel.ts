@@ -12,6 +12,7 @@ import { categoryTile, panelIcon } from './panels/panel-icons';
 import { PANELS_TEXT_VI as P } from './panels/panels-text-vi';
 import './panels/panels.css';
 import { PORT_TYPE_LABELS, TEXT_VI, keyLabel } from './text-vi';
+import { uiPrefs } from './theme/ui-prefs';
 
 export interface PropertiesPanelOptions {
   /**
@@ -21,9 +22,11 @@ export interface PropertiesPanelOptions {
   onLiveParamChange?: (nodeId: string, params: Params) => void;
 }
 
+/** Whether the "Nâng cao" fold is open; kept across re-renders and selections. Teachers see it open, pupils folded. */
+let advancedOpen = uiPrefs().mode() === 'teacher';
+/** Whether the "Cài đặt mô phỏng" group is open on the empty panel; same default rule. */
+let worldOpen = advancedOpen;
 /** Two-option selects that read as an on/off switch, mapped to their "on" value. */
-/** Whether the "Nâng cao" fold is open; kept across re-renders and selections. */
-let advancedOpen = false;
 const SWITCH_ON_VALUES: Readonly<Record<string, string>> = { 'yes,no': 'yes', 'no,yes': 'yes', 'on,off': 'on', 'off,on': 'on' };
 
 function switchOnValue(def: ParamDef): { on: string; off: string } | null {
@@ -169,12 +172,17 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     btn.setAttribute('aria-label', def.label);
     let on = raw === map.on;
     btn.setAttribute('aria-checked', String(on));
+    // The words next to the track say the state too, so it never depends on colour alone.
+    const word = h('span', 'pn-sw-l', on ? P.switchOn : P.switchOff);
     btn.addEventListener('click', () => {
       on = !on;
       btn.setAttribute('aria-checked', String(on));
+      word.textContent = on ? P.switchOn : P.switchOff;
       commitParam(node, def.id, on ? map.on : map.off);
     });
-    return btn;
+    const wrap = h('span', 'pn-sw-w');
+    wrap.append(btn, word);
+    return wrap;
   }
 
   /** Editor control and whether the row lays out label and control on one line. */
@@ -355,7 +363,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
   }
 
   function solidBodiesToggle(): HTMLElement {
-    return worldSwitch({ key: 'solid-bodies', title: true, text: P.solidBodiesLabel, tip: P.solidBodiesTip, topic: SOLID_BODIES_TOPIC, get: () => state.getSolidBodies(), set: (on) => state.setSolidBodies(on) });
+    return worldSwitch({ key: 'solid-bodies', title: false, text: P.solidBodiesLabel, tip: P.solidBodiesTip, topic: SOLID_BODIES_TOPIC, get: () => state.getSolidBodies(), set: (on) => state.setSolidBodies(on) });
   }
 
   /** The "Vật lý thật" switch, right under "Va chạm thật". Applies on the next Chạy. */
@@ -389,9 +397,26 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     return row;
   }
 
+  /** The three world settings under one fold: open for teachers, a single summary line for pupils. */
+  function worldGroup(): HTMLElement {
+    const group = document.createElement('details');
+    group.className = 'pn-world';
+    group.open = worldOpen;
+    group.addEventListener('toggle', () => (worldOpen = group.open));
+    const word = (on: boolean): string => (on ? P.switchOn : P.switchOff);
+    const sum = document.createElement('summary');
+    sum.className = 'pn-adv-h pn-world-h';
+    sum.append(
+      h('span', 'pn-world-t', P.gameSettingsTitle),
+      h('span', 'pn-world-sum', `${P.solidBodiesLabel}: ${word(state.getSolidBodies())} · ${P.realPhysicsLabel}: ${word(state.getRealPhysics())}`),
+    );
+    group.append(sum, solidBodiesToggle(), realPhysicsToggle(), gravityRow());
+    return group;
+  }
+
   function renderEmpty(): void {
     const box = h('div', 'pn-empty-state');
-    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), solidBodiesToggle(), realPhysicsToggle(), gravityRow());
+    box.append(h('h3', '', P.emptyTitle), h('p', '', P.emptyBody), worldGroup());
     const dl = h('dl', 'pn-keys');
     for (const s of P.shortcuts) {
       const dt = h('dt');
@@ -501,6 +526,12 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     }
     if (kind === 'graph' && editingGravity) return;
     if (kind === 'graph' || kind === 'selection' || kind === 'board' || kind === 'playing') render();
+  });
+  // Switching the display mode resets the folds to that mode's default.
+  uiPrefs().subscribe(() => {
+    advancedOpen = uiPrefs().mode() === 'teacher';
+    worldOpen = advancedOpen;
+    render();
   });
   render();
   return el;

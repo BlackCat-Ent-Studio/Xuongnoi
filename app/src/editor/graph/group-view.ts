@@ -1,6 +1,7 @@
 import type { GraphNode, NodeGroup } from '../../engine/types';
 import { h } from '../dom';
 import type { GroupPort } from '../groups/group-model';
+import { inkOn } from '../theme/contrast';
 import { estimateNodeSize, type Box, type Size } from './graph-geometry';
 import { GRAPH_TEXT, missingBadge } from './graph-text-vi';
 import type { PortDir } from './port-compat';
@@ -47,7 +48,10 @@ export function buildGroupView(group: NodeGroup, ports: readonly GroupPort[], mi
   box.dataset.kind = 'group';
   box.style.left = `${group.x}px`;
   box.style.top = `${group.y}px`;
-  if (group.color) box.style.setProperty('--gc', group.color);
+  if (group.color) {
+    box.style.setProperty('--gc', group.color);
+    box.style.setProperty('--ci', inkOn(group.color)); // header text that reads on the group's own colour
+  }
 
   const head = h('div', 'wc-node-head');
   const tile = h('span', 'wc-tile wc-group-tile');

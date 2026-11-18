@@ -1,0 +1,154 @@
+/* The editor's wiring board in the "Sân khấu mô phỏng" look: solid category headers, three port shapes, wires with a
+   casing in the light theme, and the two display modes (sizes come from --fs / --fs-s / --row / --hh / --ctl in style.css).
+   Every rule starts with ".app", which only the editor has: the puzzle page shares graph.css and node-cards.css but not
+   this file, so its cards keep today's look. */
+
+.app .wc {
+  --g-bg: var(--bg);
+  --g-dot: var(--grid);
+  --g-raise: var(--raise);
+  --g-line2: var(--line2);
+  --q: 28px;
+  --tile: 28px;
+  color: var(--text);
+  font-size: var(--fs);
+}
+:root[data-mode='teacher'] .app .wc { --q: 24px; --tile: 22px; }
+@media (pointer: coarse) { .app .wc, :root[data-mode='teacher'] .app .wc { --q: 28px; --tile: 28px; } }
+
+/* ---------- port types: colour, edge and shape ---------- */
+.app .wc .type-bool { --pc: var(--t-bool); --pe: var(--t-bool-edge); }
+.app .wc .type-number { --pc: var(--t-num); --pe: var(--t-num-edge); }
+.app .wc .type-object { --pc: var(--t-obj); --pe: var(--t-obj-edge); }
+.app .wc .cat-input { --ci: var(--ci-input); }
+.app .wc .cat-logic { --ci: var(--ci-logic); }
+.app .wc .cat-math { --ci: var(--ci-math); }
+.app .wc .cat-object { --ci: var(--ci-object); }
+.app .wc .cat-action { --ci: var(--ci-action); }
+.app .wc .cat-brain { --ci: var(--ci-brain); }
+.app .wc .cat-output { --ci: var(--ci-output); }
+
+/* ---------- card ---------- */
+.app .wc .wc-node {
+  --card: var(--card-bg);
+  min-width: 184px;
+  background: var(--card);
+  color: var(--text);
+  border: 1.5px solid var(--card-line);
+  border-radius: var(--card-radius);
+  box-shadow: var(--shadow-card);
+}
+.app .wc .wc-node:hover { box-shadow: var(--shadow-hover); }
+.app .wc .wc-node.selected {
+  border-color: var(--card-line);
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent), var(--shadow-card);
+}
+/* Emits an active output during play: the card's own colour rims it. No transform, so wires stay attached to their pins. */
+.app .wc .wc-node.is-hot { border-color: var(--cc); box-shadow: 0 0 0 1px var(--cc), 0 0 26px -4px var(--cc), var(--shadow-card); }
+.app .wc .wc-node.is-hot.selected { border-color: var(--cc); box-shadow: 0 0 0 8px color-mix(in srgb, var(--accent) 24%, transparent), 0 0 26px -4px var(--cc), var(--shadow-card); }
+/* A piece with a missing wire: dashed outline plus the badge in the header (the text says it, not only the colour). */
+.app .wc .wc-node.wc-err { border-color: var(--danger); border-style: dashed; }
+.app .wc.step-on .wc-node.selected { outline-color: var(--accent); }
+
+/* header: solid category colour, ink picked for contrast */
+.app .wc .wc-node-head {
+  min-height: var(--hh);
+  padding: 4px calc(var(--q) + 16px) 4px 10px;
+  gap: 10px;
+  background: var(--cc);
+  color: var(--ci, var(--accent-ink));
+  border-radius: calc(var(--card-radius) - 2px) calc(var(--card-radius) - 2px) 0 0;
+}
+.app .wc .wc-node .wc-tile { width: var(--tile); height: var(--tile); background: color-mix(in srgb, var(--ci, var(--accent-ink)) 20%, transparent); color: var(--ci, var(--accent-ink)); }
+.app .wc .wc-node .wc-tile svg { width: calc(var(--tile) * 0.62); height: calc(var(--tile) * 0.62); }
+.app .wc .wc-title { line-height: 1.15; }
+.app .wc .wc-name { font-size: var(--fs); font-weight: 700; }
+/* English term under the Vietnamese name: lighter weight, and it may widen the card so it is never cut off. */
+.app .wc .wc-sub,
+.app .wc .wc-node:not(.wc-group) .wc-sub { font-size: var(--fs-s); line-height: 1.2; font-weight: 500; color: var(--ci, var(--accent-ink)); contain: none; overflow: visible; text-overflow: clip; }
+.app .wc .wc-miss-badge { margin-left: 4px; padding: 1px 8px; border-radius: 6px; background: var(--warn-bg); color: var(--warn); border: 1px solid var(--warn-line); font-size: var(--fs-s); font-weight: 700; }
+.app .wc .wc-group .wc-tile { background: color-mix(in srgb, var(--ci, var(--accent-ink)) 20%, transparent); border: 0; color: var(--ci, var(--accent-ink)); }
+.app .wc .wc-group { --ci: var(--accent-ink); min-width: 220px; }
+.app .wc .wc-group .wc-name { font-size: var(--fs); }
+.app .wc .wc-group-hint { padding: 0 14px 9px; font-size: var(--fs-s); color: var(--text2); }
+
+/* "?" on the header corner: a quiet disc in the header's own ink; the hit area is the full control size */
+.app .wc .hb-help.hb-card-help { width: var(--q); height: var(--q); right: 10px; background: color-mix(in srgb, var(--ci, var(--accent-ink)) 16%, transparent); border: 1px solid color-mix(in srgb, var(--ci, var(--accent-ink)) 60%, transparent); color: var(--ci, var(--accent-ink)); font-size: var(--fs-s); font-weight: 700; }
+.app .wc .hb-help.hb-card-help::after { inset: calc((var(--q) - var(--ctl)) / 2); }
+.app .wc .hb-help.hb-card-help:hover { background: color-mix(in srgb, var(--ci, var(--accent-ink)) 30%, transparent); border: 1px solid var(--ci, var(--accent-ink)); color: var(--ci, var(--accent-ink)); }
+.app .wc .hb-help.hb-card-help:focus-visible { outline: 3px solid var(--ci, var(--accent-ink)); outline-offset: 2px; }
+
+/* ---------- ports ---------- */
+.app .wc .wc-ports-body { padding: 4px 0 6px; }
+.app .wc .wc-port { height: var(--row); gap: 8px; padding: 0 10px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.app .wc .wc-port:hover { background: var(--raise); }
+.app .wc .wc-node .wc-dot { width: 14px; height: 14px; border: 2px solid var(--pe); background: var(--pc); box-sizing: border-box; }
+.app .wc .wc-dot.type-number { transform: rotate(45deg) scale(0.84); }
+.app .wc .wc-dot.type-object { border-radius: 3px; }
+.app .wc .wc-node .wc-port.missing .wc-dot { background: var(--card); border: 2px dashed var(--warn-line); box-shadow: none; }
+.app .wc .wc-node .wc-need { padding: 0 6px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); font-size: var(--fs-s); font-weight: 700; }
+.app .wc .wc-port[data-live="on"] .wc-dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 32%, transparent), 0 0 12px var(--pc); }
+.app .wc .wc-port-val { padding: 3px 6px; border-radius: 10px; border: 1px solid var(--pe); background: color-mix(in srgb, var(--pc) 16%, var(--card)); color: var(--text); font: 700 var(--fs-s) / 1 var(--font-mono, ui-monospace, Consolas, monospace); }
+.app .wc.wiring .wc-port.snap { background: color-mix(in srgb, var(--accent) 18%, transparent); outline: 2px solid var(--accent); outline-offset: -2px; }
+.app .wc.wiring .wc-port.bad { background: color-mix(in srgb, var(--danger) 16%, transparent); outline-color: var(--danger); }
+.app .wc.wiring .wc-port.no { opacity: 0.4; }
+.app .wc .wc-stub { height: calc(var(--row) + 6px); font-size: var(--fs-s); color: var(--text2); background: var(--panel); border-color: var(--line2); }
+
+/* ---------- wires ---------- */
+.app .wc .wc-wire { stroke-width: 2.8; }
+.app .wc .wc-wire.selected { stroke-width: 4.8; }
+.app .wc .wc-wire-case { fill: none; stroke: var(--pe); stroke-width: 5.4; stroke-linecap: round; pointer-events: none; display: none; transition: opacity 0.25s; }
+:root[data-theme='light'] .app .wc .wc-wire-case { display: inline; }
+.app .wc .wc-wire-g:has(.wc-wire.is-dim) .wc-wire-case { opacity: 0.35; }
+.app .wc .wc-wire-g:has(.wc-wire.selected) .wc-wire-case { stroke-width: 7.4; }
+:root[data-theme='light'] .app .wc .wc-wire-glow { stroke-width: 9; }
+:root[data-theme='light'] .app .wc .wc-wire-glow.is-live { opacity: 0.32; }
+:root[data-theme='light'] .app .wc .wc-wire-flow { stroke: #ffffff; opacity: 0.85; }
+:root[data-theme='light'] .app .wc .wc-spark { fill: #ffffff; stroke: var(--pe); stroke-opacity: 1; stroke-width: 3; }
+.app .wc .wc-wire-temp { stroke: var(--pe, var(--text2)); stroke-width: 3; }
+.app .wc .wc-knot-ring { fill: var(--card-bg); stroke: var(--pe); }
+.app .wc .wc-knot-core { fill: var(--pc); stroke: var(--pe); stroke-width: 1; }
+.app .wc .wc-badge { padding: 0 8px; height: 22px; line-height: 19px; background: var(--card-bg); border: 1.5px solid var(--pe); border-radius: 11px; color: var(--text); font: 700 var(--fs-s) / 19px var(--font-mono, ui-monospace, Consolas, monospace); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
+
+/* ---------- overlays on the board ---------- */
+.app .wc-coach { font-size: var(--fs-s); color: var(--text); background: var(--panel); border-color: var(--line2); box-shadow: var(--shadow-card); }
+.app .wc-coach-x { width: var(--ctl); height: var(--ctl); color: var(--text2); }
+.app .wc-coach-x:hover { background: var(--raise); color: var(--text); }
+.app .wc-rail { background: var(--panel); border-color: var(--line2); border-radius: 10px; box-shadow: var(--shadow-card); }
+.app .wc-rail button { width: var(--ctl); height: var(--ctl); color: var(--text2); border-radius: 7px; }
+.app .wc-rail button:hover { background: var(--raise); color: var(--text); }
+.app .wc-rail .wc-pct { font-size: var(--fs-s); font-weight: 700; height: var(--ctl); width: 100%; min-width: 48px; }
+.app .wc-rail button:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.app .wc-mini { background: var(--panel); border-color: var(--line2); box-shadow: var(--shadow-card); }
+.app .wc-minimap { background: var(--bg); border: 1px solid var(--line); }
+/* pupils get the compact board: the overview map only comes back in the Giáo viên mode */
+:root[data-mode='student'] .app .wc-minimap { display: none; }
+.app .wc-legend { font-size: var(--fs-s); font-weight: 600; color: var(--text2); }
+.app .wc-shape { width: 12px; height: 12px; box-shadow: inset 0 0 0 2px var(--pe); }
+.app .wc-shape.type-number { transform: rotate(45deg) scale(0.8); }
+.app .wc-hint { color: var(--text2); font-size: var(--fs); }
+.app .wc-tip { background: var(--err-bg); border-color: var(--danger); color: var(--err-text); font-size: var(--fs-s); }
+.app .wc-marquee { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.app .wc-crumb { background: var(--panel); border-color: var(--line2); box-shadow: var(--shadow-card); font-size: var(--fs-s); }
+.app .wc-crumb button { height: var(--ctl); color: var(--text2); }
+.app .wc-crumb button:hover { background: var(--raise); color: var(--text); }
+.app .wc-crumb .wc-crumb-back { background: var(--accent-soft); color: var(--accent); font-weight: 700; }
+.app .wc-crumb-name { height: var(--ctl); color: var(--text); }
+.app .wc-crumb-name:focus { background: var(--panel2); }
+
+/* sticky notes keep their paper colours in both themes; only the controls grow with the mode */
+.app .wc .wc-note-tools { min-height: var(--ctl); font-size: var(--fs-s); }
+.app .wc .wc-note-text { font-size: var(--fs); }
+/* the colour dots stay small to look at; their hit area is the full control size */
+.app .wc .wc-note-dot { position: relative; }
+.app .wc .wc-note-dot::after { content: ''; position: absolute; inset: calc((14px - var(--ctl)) / 2); border-radius: 50%; }
+.app .wc .wc-note-del { min-width: var(--ctl); min-height: var(--ctl); font-size: var(--fs); }
+
+/* step run: the pulsing pin uses the accent, with a halo that reads on both boards */
+.app .wc .wc-node .wc-dot.step-pin { box-shadow: 0 0 0 3px var(--card-bg), 0 0 12px 4px var(--accent); }
+
+@media (prefers-reduced-motion: reduce) {
+  .app .wc .wc-wire-case { transition: none; }
+}

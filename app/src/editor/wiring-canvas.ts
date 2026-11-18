@@ -28,6 +28,7 @@ import './graph/wire-energy.css';
 import './graph/object-link.css';
 import { createWireEnergy, isEnergyEnabled, onEnergySettingChange } from './graph/wire-energy';
 import { TEXT_VI, formatWireValue } from './text-vi';
+import { uiPrefs } from './theme/ui-prefs';
 import { createStepLightLayer, type StepLightSet } from './step/step-light-layer';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -436,7 +437,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       hit.dataset.wire = wire.id;
       const path = svgEl('path', `wc-wire type-${type}`);
       path.setAttribute('d', pd);
-      g.append(path, hit);
+      // Outline under the wire: only the light theme shows it, so a yellow wire still reads on a pale board.
+      const casing = svgEl('path', `wc-wire-case type-${type}`);
+      casing.setAttribute('d', pd);
+      g.append(casing, path, hit);
       wireLayer.append(g);
       wirePaths.set(wire.id, path);
       wireDraws.set(wire.id, { ...d, g });
@@ -630,6 +634,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   }
 
   onEnergySettingChange(() => drawWires());
+  // The display mode changes the size of every card, so the wire ends are measured again; the theme only recolours (the minimap reads its colours when drawn).
+  uiPrefs().subscribe(() => drawWires());
 
   // ---------- placement, arrange, pulse ----------
 

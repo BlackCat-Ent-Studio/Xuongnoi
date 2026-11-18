@@ -47,6 +47,9 @@ import { createPropertiesPanel } from './properties-panel';
 import { PANELS_TEXT_VI } from './panels/panels-text-vi';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { TEXT_VI } from './text-vi';
+import './theme/ui-c-shell.css';
+import './theme/ui-c-board.css';
+import { uiPrefs } from './theme/ui-prefs';
 import { createTopBar } from './top-bar';
 import { createTutorial } from '../tutorial/controller';
 import { takeStash } from '../tutorial/storage';
@@ -74,6 +77,8 @@ function hasTextSelection(): boolean {
 }
 
 export function mountEditor(root: HTMLElement): void {
+  /** Colour theme + display mode; reading them also puts data-theme / data-mode on <html> before anything is drawn. */
+  const look = uiPrefs();
   const state = createEditorState(loadInitialBoard());
   const gameView: GameView = createGameView();
   const keyboard = createKeyboardInput();
@@ -416,6 +421,13 @@ export function mountEditor(root: HTMLElement): void {
           { type: 'separator' },
           { type: 'item', label: SHELL_TEXT.viewLeftDock, icon: 'tree', checked: !layout.leftCollapsed(), onSelect: () => layout.setLeftCollapsed(!layout.leftCollapsed()) },
           { type: 'item', label: SHELL_TEXT.viewWireEnergy, checked: isEnergyEnabled(), onSelect: () => setEnergyEnabled(!isEnergyEnabled()) },
+          { type: 'separator' },
+          { type: 'heading', label: SHELL_TEXT.viewThemeHeading },
+          { type: 'item', label: SHELL_TEXT.themeLight, icon: 'sun', checked: look.theme() === 'light', onSelect: () => look.setTheme('light') },
+          { type: 'item', label: SHELL_TEXT.themeDark, icon: 'moon', checked: look.theme() === 'dark', onSelect: () => look.setTheme('dark') },
+          { type: 'heading', label: SHELL_TEXT.viewModeHeading },
+          { type: 'item', label: SHELL_TEXT.uiModeStudent, checked: look.mode() === 'student', onSelect: () => look.setMode('student') },
+          { type: 'item', label: SHELL_TEXT.uiModeTeacher, checked: look.mode() === 'teacher', onSelect: () => look.setMode('teacher') },
         ];
       },
     },

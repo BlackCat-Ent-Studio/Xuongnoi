@@ -52,6 +52,8 @@ const SPRITE = `<svg width="0" height="0" style="position:absolute" aria-hidden=
   <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 17l-5.2 2.7 1-5.9L3.5 9.7l5.9-.8z"/></symbol>
   <symbol id="i-keyboard" viewBox="0 0 24 24"><rect x="2.5" y="6" width="19" height="12" rx="2"/><path d="M6.5 10h.01M10 10h.01M14 10h.01M17.5 10h.01M7 14h10"/></symbol>
   <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4h14v10l-5 6H5z"/><path d="M14 20v-5a1 1 0 0 1 1-1h4M8.5 8.5h7M8.5 12h4"/></symbol>
+  <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></symbol>
 </svg>`;
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -63,7 +65,7 @@ export type IconName =
   | 'fit' | 'arrange' | 'check' | 'help' | 'trash' | 'copy' | 'warn' | 'error' | 'info'
   | 'eye' | 'close' | 'user' | 'box' | 'coin' | 'enemy' | 'flag' | 'camera' | 'layers'
   | 'ground' | 'expand' | 'book' | 'term' | 'tree' | 'blocks' | 'sliders' | 'game'
-  | 'graph' | 'layout' | 'undo' | 'redo' | 'folder' | 'save' | 'download' | 'star' | 'keyboard' | 'note';
+  | 'graph' | 'layout' | 'undo' | 'redo' | 'folder' | 'save' | 'download' | 'star' | 'keyboard' | 'note' | 'sun' | 'moon';
 
 let mounted = false;
 

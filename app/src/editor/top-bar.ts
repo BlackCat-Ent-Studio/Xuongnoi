@@ -8,6 +8,7 @@ import { createMenuBar, type MenuDef } from './menu-bar';
 import { PRESET_LABELS, SHELL_TEXT } from './shell-text-vi';
 import { CONSOLE_TEXT } from './console/console-text-vi';
 import { MODE_LABELS, TEXT_VI } from './text-vi';
+import { UI_MODES, uiPrefs, type UiMode } from './theme/ui-prefs';
 import { DEFAULT_2D, MODES_2D, VIEW_KINDS, modeForKind, remember2d, viewKindOf, type Mode2d } from './view-switch';
 
 export interface TopBarDeps {
@@ -48,8 +49,12 @@ export interface TopBar {
   closeMenus(): void;
 }
 
+/** The mark sits on the navy bar in both themes, so it uses the bright port colours (circle = Đúng/Sai, square = Số). */
 const LOGO_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#23272e" stroke="#3a404a"/><circle cx="7" cy="8" r="2.2" fill="#3ecf8e"/><rect x="14.8" y="13.8" width="4.4" height="4.4" rx="1" fill="#e7e9ec"/><path d="M9 8c4 0 2.5 8 5.8 8" stroke="#3ecf8e" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="#0f1a2d" stroke="#7a8aa6"/><circle cx="7" cy="8" r="2.4" fill="#f7d046"/><rect x="14.6" y="13.6" width="4.8" height="4.8" rx="1" fill="#5aa9ff"/><path d="M9.2 8c4 0 2.4 8 5.6 8" stroke="#f1f4f9" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>';
+
+const UI_MODE_LABEL: Record<UiMode, string> = { student: SHELL_TEXT.uiModeStudent, teacher: SHELL_TEXT.uiModeTeacher };
+const UI_MODE_TIP: Record<UiMode, string> = { student: SHELL_TEXT.uiModeStudentTip, teacher: SHELL_TEXT.uiModeTeacherTip };
 
 export function createTopBar(deps: TopBarDeps): TopBar {
   const { state } = deps;
@@ -180,9 +185,10 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   const redoBtn = iconBtn('redo', SHELL_TEXT.redo, 'redo');
   redoBtn.addEventListener('click', () => state.redo());
   const helpBtn = iconBtn('help', SHELL_TEXT.helpButton);
+  helpBtn.classList.add('tb-help'); // folds away on tablet-width bars; the Trợ giúp menu still has it
   helpBtn.addEventListener('click', deps.onHelp);
 
-  const layoutSel = h('select', 'sel-ui');
+  const layoutSel = h('select', 'sel-ui tb-layout');
   layoutSel.setAttribute('aria-label', SHELL_TEXT.layoutLabel);
   layoutSel.title = SHELL_TEXT.layoutLabel;
   for (const p of LAYOUT_PRESETS) {
@@ -205,8 +211,50 @@ export function createTopBar(deps: TopBarDeps): TopBar {
   status.setAttribute('role', 'status');
   let statusTimer = 0;
 
+  // Display mode (Học sinh | Giáo viên) and light / dark theme; both are remembered per device.
+  const prefs = uiPrefs();
+  const modeSeg = h('div', 'seg ui-mode');
+  modeSeg.setAttribute('role', 'radiogroup');
+  modeSeg.setAttribute('aria-label', SHELL_TEXT.uiModeAria);
+  const modeOpts = UI_MODES.map((m) => {
+    const b = h('button', 'seg-opt', UI_MODE_LABEL[m]);
+    b.type = 'button';
+    b.dataset.uiMode = m;
+    b.title = UI_MODE_TIP[m];
+    b.setAttribute('role', 'radio');
+    b.addEventListener('click', () => prefs.setMode(m));
+    return b;
+  });
+  modeSeg.append(...modeOpts);
+  modeSeg.addEventListener('keydown', (e) => {
+    const dir = e.key === 'ArrowRight' || e.key === 'ArrowDown' ? 1 : e.key === 'ArrowLeft' || e.key === 'ArrowUp' ? -1 : 0;
+    if (dir === 0) return;
+    e.preventDefault();
+    const next = modeOpts[(UI_MODES.indexOf(prefs.mode()) + dir + modeOpts.length) % modeOpts.length]!;
+    next.focus();
+    next.click();
+  });
+  const themeBtn = h('button', 'icobtn ui-theme');
+  themeBtn.type = 'button';
+  themeBtn.dataset.act = 'theme';
+  themeBtn.addEventListener('click', () => prefs.toggleTheme());
+  function syncLook(): void {
+    UI_MODES.forEach((m, i) => {
+      const on = prefs.mode() === m;
+      modeOpts[i]!.setAttribute('aria-checked', String(on));
+      modeOpts[i]!.tabIndex = on ? 0 : -1;
+    });
+    const dark = prefs.theme() === 'dark';
+    const label = dark ? SHELL_TEXT.themeToLight : SHELL_TEXT.themeToDark;
+    themeBtn.title = label;
+    themeBtn.setAttribute('aria-label', label);
+    themeBtn.replaceChildren(icon(dark ? 'sun' : 'moon'));
+  }
+  prefs.subscribe(syncLook);
+  syncLook();
+
   const right = h('div', 'tb-right');
-  right.append(undoBtn, redoBtn, layoutSel, save, helpBtn);
+  right.append(undoBtn, redoBtn, layoutSel, save, helpBtn, modeSeg, themeBtn);
 
   el.append(left, play, right, status);
 

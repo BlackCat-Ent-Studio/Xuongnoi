@@ -1,0 +1,249 @@
+/* The editor shell in the "Sân khấu mô phỏng" look: palette, properties panel, docks, dialogs. It sits on top of the
+   component stylesheets and replaces their fixed sizes with the display-mode variables of style.css
+   (--fs / --fs-s text, --ctl control height, --tab-h tab bar, --row port row), so the same rules serve
+   "Học sinh", "Giáo viên" and a finger (pointer: coarse = 44 px). Floor: text 12 px, controls 28 / 24 / 44 px. */
+
+:root { --item-h: 48px; --hit-pad: 4px; }
+:root[data-mode='teacher'] { --item-h: 30px; }
+@media (pointer: coarse) { :root, :root[data-mode='teacher'] { --item-h: 52px; } }
+
+/* ---------- top bar: pupils do not need the layout picker (it stays in the Xem menu) ---------- */
+:root[data-mode='student'] .topbar .tb-layout { display: none; }
+/* Narrow windows give way in this order: layout picker, undo/redo (still in the Sửa menu), then the logo and spare padding.
+   The two switches (display mode, theme) stay on the bar down to a tablet width. */
+@media (max-width: 1500px) { :root .topbar .tb-layout { display: none; } }
+@media (max-width: 1300px) {
+  :root .topbar .tb-right .icobtn[data-act='undo'], :root .topbar .tb-right .icobtn[data-act='redo'] { display: none; }
+  :root .topbar .name-input { flex-basis: 120px; }
+}
+@media (max-width: 1100px) { :root .topbar .tb-help { display: none; } }
+@media (max-width: 1180px) {
+  :root .topbar { gap: 8px; padding: 0 6px; }
+  :root .topbar .brand { display: none; }
+  :root .topbar .menubar .mb-btn { padding: 0 8px; }
+  :root .topbar .save { display: none; }
+  :root .topbar .ui-mode .seg-opt { padding: 0 8px; }
+  :root .topbar .pbtn { padding: 0 8px; }
+  :root .topbar .pbtn.primary { padding: 0 12px; }
+  :root .topbar .name-input { flex-basis: 90px; min-width: 56px; padding: 0 6px; }
+}
+
+/* ---------- focus: a visible ring on everything that takes the keyboard ---------- */
+:root .pn-props .prop-input:focus-visible,
+:root .pn-props .pn-select:focus-visible,
+:root .pn-search-input:focus-visible,
+:root .hb-search:focus-visible,
+:root .lib-input:focus-visible,
+:root .wc-crumb-name:focus-visible,
+:root .pn-group-name:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+:root .pn-num:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+:root .pn-search:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+:root .name-input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ---------- category tiles: solid colour with the matching ink ---------- */
+:root .pn-cc-input { --ci: var(--ci-input); }
+:root .pn-cc-logic { --ci: var(--ci-logic); }
+:root .pn-cc-math { --ci: var(--ci-math); }
+:root .pn-cc-object { --ci: var(--ci-object); }
+:root .pn-cc-action { --ci: var(--ci-action); }
+:root .pn-cc-brain { --ci: var(--ci-brain); }
+:root .pn-cc-output { --ci: var(--ci-output); }
+:root .pn-tile { width: 26px; height: 26px; border-radius: 7px; background: var(--cc); color: var(--ci, var(--bg)); }
+:root .pn-tile .pn-ic { width: 16px; height: 16px; }
+:root .pn-tile-lg { width: 38px; height: 38px; border-radius: 10px; }
+:root .pn-tile-lg .pn-ic { width: 22px; height: 22px; }
+:root[data-mode='teacher'] .pn-tile { width: 22px; height: 22px; }
+:root[data-mode='teacher'] .pn-tile .pn-ic { width: 14px; height: 14px; }
+:root .pn-cat-head .pn-tile { width: 24px; height: 24px; }
+:root[data-mode='teacher'] .pn-cat-head .pn-tile { width: 20px; height: 20px; }
+:root .st-tile { background: var(--c, var(--c-object)); color: var(--bg); }
+
+/* ---------- "?" openers (palette rows, properties header, Sổ tay): visible disc, full-size hit area ---------- */
+:root .hb-help:not(.hb-card-help) { position: relative; width: 24px; height: 24px; font-size: var(--fs-s); border-color: var(--line2); color: var(--text); }
+:root .hb-help:not(.hb-card-help)::after { content: ''; position: absolute; inset: calc((24px - var(--ctl)) / 2); }
+:root .hb-help:not(.hb-card-help):hover { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+
+/* ---------- palette ---------- */
+:root .palette.pn-palette { background: var(--panel); color: var(--text); }
+:root .pn-palette .pn-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--line); }
+:root .pn-palette .pn-title { margin: 0 0 8px 0; font-size: calc(var(--fs) + 1px); font-weight: 700; }
+:root .pn-search { height: calc(var(--ctl) + 4px); gap: 8px; padding: 0 6px 0 10px; border: 1px solid var(--line2); border-radius: 8px; background: var(--panel2); color: var(--text3); font-size: var(--fs); }
+:root .pn-search-input { font-size: var(--fs); color: var(--text); }
+:root .pn-search-input::placeholder { color: var(--text3); }
+:root .pn-search-clear { width: var(--ctl); height: var(--ctl); }
+:root .pn-meta { font-size: var(--fs-s); color: var(--text3); }
+:root .pn-cat-head { height: calc(var(--ctl) + 4px); padding: 0 12px; font-size: calc(var(--fs) - 0.5px); font-weight: 700; background: var(--panel); }
+:root .pn-cat-head:hover { background: var(--raise); }
+:root .pn-cat-count { font-size: var(--fs-s); color: var(--text3); }
+:root .pn-items { padding: 4px 6px; }
+:root .palette .palette-item.pn-item { align-items: center; min-height: var(--item-h); gap: 10px; padding: 5px 8px 5px 10px; border-radius: 8px; }
+:root .palette .palette-item.pn-item:hover { background: var(--raise); }
+:root .pn-item .pn-tile { margin-top: 0; }
+:root .pn-item-text { gap: 1px; }
+:root .pn-item-text b { font-size: var(--fs); font-weight: 600; }
+:root .pn-item-text b .pn-en { margin-left: 6px; font-size: var(--fs-s); font-weight: 500; color: var(--text3); }
+:root .pn-item-text small { font-size: var(--fs-s); color: var(--text2); }
+:root[data-mode='teacher'] .pn-item-text small { display: none; }
+:root .palette .palette-item.pn-note { min-height: var(--ctl); margin: 8px 12px 0; width: calc(100% - 24px); padding: 0 10px; color: var(--text2); font-weight: 600; font-size: var(--fs); }
+:root .pn-empty { font-size: var(--fs); color: var(--text2); }
+:root .pn-empty b { color: var(--text); }
+:root .drag-ghost { background: var(--panel); border: 1px solid var(--accent); box-shadow: var(--shadow-pop); font-size: var(--fs); font-weight: 600; }
+
+/* ---------- properties panel ---------- */
+:root .props.pn-props { background: var(--panel); color: var(--text); }
+:root .pn-props .pn-title { padding: 12px 12px 0; font-size: calc(var(--fs) + 1px); font-weight: 700; }
+:root .pn-ihead { gap: 10px; padding: 10px 12px 6px; }
+:root .pn-props .pn-iname { font-size: calc(var(--fs) + 2px); font-weight: 700; color: var(--text); }
+:root .pn-icat { font-size: var(--fs-s); color: var(--text2); }
+:root .pn-desc { font-size: calc(var(--fs) - 1px); line-height: 1.45; color: var(--text2); }
+:root .pn-desc.pn-dim { font-size: var(--fs-s); }
+:root .pn-props .pn-live-note { background: var(--ok-bg); color: var(--ok-text); font-size: var(--fs-s); }
+:root .pn-sec { padding: 8px 12px 6px; }
+:root .pn-sec-h { min-height: 24px; font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
+:root .pn-sec-n { color: var(--text3); }
+:root .pn-adv-h { display: flex; align-items: center; gap: 6px; min-height: var(--ctl); font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
+:root .pn-adv-h:hover { color: var(--text); }
+:root .pn-props .pn-field { min-height: calc(var(--ctl) + 10px); }
+:root[data-mode='teacher'] .pn-props .pn-field { min-height: calc(var(--ctl) + 6px); }
+:root .pn-props .pn-label { font-size: calc(var(--fs) - 0.5px); font-weight: 600; color: var(--text); }
+:root .pn-props .prop-input, :root .pn-props .pn-select { height: var(--ctl); font-size: var(--fs); background: var(--panel2); border-color: var(--line2); border-radius: 7px; }
+:root .pn-props .pn-select option { background: var(--panel); color: var(--text); }
+:root .pn-props textarea.prop-input { height: auto; }
+:root .pn-num { height: calc(var(--ctl) + 2px); border-radius: 7px; background: var(--panel2); border-color: var(--line2); }
+:root .pn-num-btn { width: calc(var(--ctl) - 2px); height: calc(var(--ctl) - 2px); color: var(--text2); }
+:root .pn-num-btn .pn-ic { width: 14px; height: 14px; }
+:root .pn-props .pn-num .pn-num-input { width: 56px; height: calc(var(--ctl) - 2px); font-size: var(--fs); font-weight: 700; }
+:root .pn-props .prop-key { min-height: var(--ctl); font-size: calc(var(--fs) - 1px); border-color: var(--line2); border-radius: 7px; }
+:root .pn-props .pn-color { width: 56px; height: var(--ctl); border-radius: 7px; border-color: var(--line2); }
+:root .pn-props .look-name { font-size: var(--fs-s); }
+:root .pn-props .look-tile.selected { border-color: var(--accent); background: var(--accent-soft); }
+:root .pn-props .pn-axis { font-size: var(--fs-s); }
+
+/* switch: the track says the state by position and by the word beside it, not by colour alone */
+:root .pn-sw-w { display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: var(--ctl); }
+:root .pn-sw-l { min-width: 2.2em; font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
+:root .pn-switch { width: 44px; height: 26px; border-radius: 13px; border: 1.5px solid var(--line2); background: var(--panel2); }
+:root .pn-switch::before { content: ''; position: absolute; inset: calc((26px - var(--ctl)) / 2) -4px; }
+:root .pn-switch::after { left: 3px; top: 3px; width: 17px; height: 17px; background: var(--line2); }
+:root .pn-switch[aria-checked='true'] { background: var(--run); border-color: var(--run); }
+:root .pn-switch[aria-checked='true']::after { transform: translateX(18px); background: var(--run-ink); }
+
+:root .pn-port > b { font-size: calc(var(--fs) - 1px); font-weight: 600; }
+:root .pn-port > b em { font-size: var(--fs-s); color: var(--text3); }
+:root .pn-shape { width: 12px; height: 12px; margin-top: 3px; box-shadow: inset 0 0 0 2px var(--pe, transparent); }
+:root .pn-shape.t-bool { --pe: var(--t-bool-edge); }
+:root .pn-shape.t-number { --pe: var(--t-num-edge); }
+:root .pn-shape.t-object { --pe: var(--t-obj-edge); }
+:root .pn-port { grid-template-columns: 16px minmax(0, 1fr); }
+:root .pn-conn { font-size: var(--fs-s); color: var(--text2); }
+:root .pn-jump { min-height: max(24px, calc(var(--ctl) - 8px)); padding: 0 8px; font-size: var(--fs-s); background: var(--raise); }
+:root .pn-actions { gap: 8px; padding: 12px 12px 8px; }
+:root .pn-props .pn-btn { min-height: var(--ctl); padding: 0 12px; border-color: var(--line2); border-radius: 7px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+:root .pn-props .pn-btn.danger { color: var(--danger); }
+:root .pn-props .pn-btn.danger:hover:not(:disabled) { background: color-mix(in srgb, var(--danger) 12%, transparent); border-color: var(--danger); }
+:root .pn-lock-note { font-size: var(--fs-s); color: var(--warn); }
+:root .pn-empty-state { font-size: var(--fs); color: var(--text2); }
+:root .pn-empty-state h3 { font-size: calc(var(--fs) + 1px); font-weight: 700; color: var(--text); }
+:root .pn-keys kbd { font: 600 12px / 1 var(--font); border-color: var(--line2); background: var(--raise); }
+:root .pn-keys { font-size: var(--fs-s); }
+
+/* world settings: one folded line for pupils, open (with the explanations) for teachers */
+:root .pn-world { margin-top: 12px; border-top: 1px solid var(--line2); }
+:root .pn-world-h { padding: 4px 0; color: var(--text); font-size: calc(var(--fs) - 0.5px); cursor: pointer; }
+:root .pn-world-t { flex: none; }
+:root .pn-world-sum { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: right; font-weight: 500; color: var(--text2); }
+:root .pn-world[open] .pn-world-sum { display: none; }
+:root .pn-setting { margin: 0; padding: 8px 0 0; border-top: 0; }
+:root .pn-setting-label { min-height: var(--ctl); font-size: var(--fs); font-weight: 600; }
+:root .pn-setting-label input { width: 20px; height: 20px; accent-color: var(--accent); }
+:root .pn-setting-tip { font-size: var(--fs-s); color: var(--text2); }
+:root .pn-group-name { height: var(--ctl); font-size: var(--fs); background: var(--panel2); border-color: var(--line2); border-radius: 7px; }
+:root .pn-grow, :root .pn-gport, :root .pn-member { font-size: var(--fs-s); }
+:root .pn-member { min-height: var(--ctl); }
+
+/* ---------- docks: scene tree, lessons, console ---------- */
+:root .scene-tree { font-size: var(--fs-s); }
+:root .st-row { min-height: var(--ctl); }
+:root .st-group-label, :root .st-count, :root .st-hint { font-size: var(--fs-s); color: var(--text2); }
+:root .st-empty { font-size: var(--fs); }
+:root .ld-item { min-height: var(--ctl); font-size: var(--fs-s); font-weight: 600; }
+:root .ld-title { font-size: calc(var(--fs) + 1px); font-weight: 700; }
+:root .ld-where { font-size: var(--fs-s); color: var(--text2); }
+:root .ld-text, :root .ld-idle p { font-size: var(--fs); }
+:root .ld-explain { font-size: calc(var(--fs) - 1px); color: var(--text); }
+:root .ld-idle h3 { font-size: calc(var(--fs) + 1px); }
+:root .lp-opt small { font-size: var(--fs-s); }
+:root .cs { font-size: var(--fs-s); }
+:root .cs-head { min-height: calc(var(--ctl) - 2px); }
+:root .cs button.cs-btn { min-height: max(24px, calc(var(--ctl) - 6px)); padding: 0 10px; font-size: var(--fs-s); font-weight: 600; border-color: var(--line2); border-radius: 6px; }
+:root .cs button.cs-btn.on { background: var(--accent-soft); }
+:root .cs-line { font-size: var(--fs-s); }
+:root .cs-badge { font-size: 12px; background: var(--warn-line); color: var(--warn-ink); }
+:root .cs-empty { color: var(--text2); }
+:root .cs-issue::before { background: var(--warn-line); }
+:root .cs-line.warn { color: var(--warn); }
+
+/* ---------- floating simulation window: chrome only ---------- */
+:root .pip { border-radius: 12px; border-color: var(--line2); box-shadow: var(--shadow-pop); }
+:root .pip-title { height: var(--tab-h); background: var(--panel); border-bottom: 1px solid var(--line); }
+:root .pip-name { font-size: calc(var(--fs) - 0.5px); font-weight: 700; }
+:root .pip-chip { font-size: 12px; background: var(--raise); color: var(--text2); }
+:root .pip.playing .pip-chip { background: var(--ok-bg); color: var(--run-text); }
+:root .pip.paused .pip-chip { background: var(--warn-bg); color: var(--warn); }
+:root .pip-actions .icobtn { width: var(--ctl); height: var(--ctl); }
+:root .pip-hint { font-size: var(--fs-s); }
+:root .pip-dropzone { background: color-mix(in srgb, var(--bg) 70%, transparent); }
+:root .pip-ghost { background: var(--panel); box-shadow: var(--shadow-pop); }
+
+/* ---------- dialogs ---------- */
+:root .modal-title { font-size: calc(var(--fs) + 4px); font-weight: 700; }
+:root .modal-note { font-size: var(--fs-s); }
+:root .mode-choice { font-size: var(--fs); background: var(--panel2); min-height: var(--ctl); }
+:root .mode-choice span { font-size: var(--fs-s); }
+:root .lib-modal { background: var(--panel); }
+:root .lib-row { background: var(--panel2); }
+:root .lib-badge { font-size: 12px; box-shadow: inset 0 0 0 1px var(--accent); }
+:root .lib-when { font-size: var(--fs-s); color: var(--text2); }
+:root .lib-input { height: var(--ctl); font-size: var(--fs); background: var(--panel2); border-color: var(--line2); }
+:root .lib-confirm-text, :root .lib-error { font-size: var(--fs-s); }
+:root .btn.danger-solid { color: #ffffff; }
+:root .tut-menu-title { font-size: calc(var(--fs) + 1px); }
+:root .tut-menu-hint, :root .tut-menu-count, :root .tut-lesson-summary, :root .tut-lesson-num { font-size: var(--fs-s); }
+:root .tut-lesson-title { font-size: var(--fs); }
+:root .tut-lesson-item { min-height: max(52px, var(--ctl)); }
+
+/* handbook (Sổ tay mảnh ghép) */
+:root .modal.hb-modal { background: var(--panel); font-size: var(--fs); }
+:root .hb-head .modal-title { font-size: calc(var(--fs) + 4px); }
+:root .hb-side { background: var(--panel2); }
+:root .hb-search { height: var(--ctl); font-size: var(--fs); background: var(--panel); border-color: var(--line2); border-radius: 7px; }
+:root .hb-mode { font-size: var(--fs-s); }
+:root .hb-mode-btn { height: max(24px, calc(var(--ctl) - 4px)); font-size: var(--fs-s); font-weight: 600; border-color: var(--line2); color: var(--text2); }
+:root .hb-mode-btn.on { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+:root .hb-sec-h { background: var(--panel2); font-size: var(--fs-s); }
+:root .hb-row { min-height: var(--ctl); font-size: var(--fs); }
+:root .hb-row:hover { background: var(--raise); }
+:root .hb-row.selected { background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+:root .hb-tag, :root .hb-level { font-size: 12px; }
+:root .hb-level { background: var(--accent-soft); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+:root .hb-empty, :root .hb-muted { font-size: var(--fs); }
+:root .hb-page { font-size: var(--fs); }
+:root .hb-node-name .hb-node-en { font-size: var(--fs-s); color: var(--text2); }
+:root .hb-block h3 { font-size: var(--fs-s); }
+:root .hb-note { font-size: var(--fs); }
+:root .hb-example { background: var(--panel2); border-left-color: var(--accent); }
+:root .hb-table { font-size: var(--fs); }
+:root .hb-table th { font-size: var(--fs-s); }
+:root .hb-req, :root .hb-port-en { font-size: 12px; }
+:root .hb-adv summary { font-size: var(--fs-s); min-height: var(--ctl); display: flex; align-items: center; }
+:root .hb-shape { width: 12px; height: 12px; box-shadow: inset 0 0 0 2px var(--pe); }
+:root .hb-type.type-bool { --pe: var(--t-bool-edge); }
+:root .hb-type.type-number { --pe: var(--t-num-edge); }
+:root .hb-type.type-object { --pe: var(--t-obj-edge); }
+:root .hb-type.type-object .hb-shape { border-radius: 3px; }
+:root .hb-actions .btn { height: var(--ctl); }
+
+/* ---------- reduced motion keeps the calm look ---------- */
+@media (prefers-reduced-motion: reduce) {
+  :root .pn-switch, :root .pn-switch::after { transition: none; }
+}
