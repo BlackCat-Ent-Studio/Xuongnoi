@@ -126,11 +126,19 @@ function clearance(pusher: Box, body: Box, dir: Vec3, axes: readonly ('x' | 'y' 
   return Number.isFinite(best) ? Math.max(0, best) : 0;
 }
 
+/** True when `under` lies below `above` and its top is where `above` rests (within `RIDE_GAP`): it only supports it. */
+function holdsUp(under: Box, above: Box): boolean {
+  return under.pos.y < above.pos.y && under.pos.y + under.size.y / 2 <= above.pos.y - above.size.y / 2 + RIDE_GAP;
+}
+
 /** Who moves when the head advances `d`: bodies the head meets, bodies those meet in turn, and what stands on them. */
 function contactSet(input: PushInput, d: number): ContactSet {
   const axes = axesOf(input.flat);
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const pushers: Box[] = [shifted(input.head, move)];
+  /** Parallel to `pushers`: true for a rigid crate that is being pushed (the head itself is false). */
+  const rigidPusher: boolean[] = [false];
+  const sideways = input.flat !== 'y' && Math.abs(input.dir.y) <= 0.5;
   const pushed = new Map<EntityId, Vec3>();
   const pushedBy = new Map<EntityId, Box>();
   const boxes = new Map<EntityId, Box>();
@@ -140,7 +148,12 @@ function contactSet(input: PushInput, d: number): ContactSet {
       if (pushed.has(b.id)) continue;
       // A rigid crate counts as touched a few millimetres before the faces meet: the engine already pushes it from that close.
       const skin = b.skin ?? 0;
-      const hit = pushers.find((p) => axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH)));
+      const hit = pushers.find(
+        (p, k) =>
+          axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH)) &&
+          // Pushed sideways, a rigid crate does not push what only holds it up: the engine rests it a hair inside that body.
+          !(sideways && rigidPusher[k] && holdsUp(b.box, p)),
+      );
       if (!hit) continue;
       const t = clearance(hit, b.box, input.dir, axes);
       const delta = { x: input.dir.x * t, y: input.dir.y * t, z: input.dir.z * t };
@@ -149,6 +162,7 @@ function contactSet(input: PushInput, d: number): ContactSet {
       const moved = shifted(b.box, delta);
       boxes.set(b.id, moved);
       pushers.push(moved);
+      rigidPusher.push(b.crossTol !== undefined);
       again = true;
     }
   }

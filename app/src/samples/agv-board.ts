@@ -19,6 +19,8 @@ export const AGV_SETTINGS = {
   /** Top speed share of the motors: the speed gain at full signal. */
   speedGain: 0.7,
   kp: 3,
+  /** Pull of each drive motor (N) at full power. */
+  motorForce: 6,
   /** Taught joint angles (degrees): [shoulder, elbow] over the supply table, down at the crate, over the vehicle. */
   poses: {
     overTable: [120, 95],
@@ -85,8 +87,8 @@ const LINE: Spec[] = [
   { id: 'toc-do', kind: 'math', params: { op: 'mul' } },
   { id: 'cong-trai', kind: 'math', params: { op: 'add' } },
   { id: 'tru-phai', kind: 'math', params: { op: 'sub' } },
-  { id: 'dc-trai', kind: 'motor', params: { side: -0.45, maxRpm: 90 } },
-  { id: 'dc-phai', kind: 'motor', params: { side: 0.45, maxRpm: 90 } },
+  { id: 'dc-trai', kind: 'motor', params: { side: -0.45, maxRpm: 90, maxForce: AGV_SETTINGS.motorForce } },
+  { id: 'dc-phai', kind: 'motor', params: { side: 0.45, maxRpm: 90, maxForce: AGV_SETTINGS.motorForce } },
 ];
 const LINE_COLUMNS: string[][] = [['mat-trai', 'mat-giua', 'mat-phai'], ['lech', 'toc-do', 'cong-trai', 'tru-phai'], ['pid'], ['dc-trai', 'dc-phai']];
 
@@ -310,7 +312,15 @@ const NOTES: Note[] = [
     pos: { x: 1820, y: 580 },
     size: { w: 380, h: 250 },
     text:
-      'Thử đổi thông số:\n1) Thân robot, mục Nâng cao, "Tải tối đa" = 0,5 kg: thùng 1 kg nặng hơn tải tối đa, hiện "QUÁ TẢI" và xe đứng yên ở trạm nạp.\n2) Xi lanh đẩy, "Lực đẩy tối đa" = 3 N: nhỏ hơn 4,9 N nên xi lanh không đẩy nổi, hiện "Quá tải" và xe chờ mãi ở trạm dỡ.\n3) Thân robot "Khối lượng" = 20 kg: xe nặng nên tăng tốc chậm hơn (2 động cơ chỉ đẩy 12 N).\n4) Bộ PID "Kp" = 0: xe không lái nữa và đi lệch khỏi line.',
+      'Thử đổi thông số:\n1) Thân robot, mục Nâng cao, "Tải tối đa" = 0,5 kg: thùng 1 kg nặng hơn tải tối đa, hiện "QUÁ TẢI" và xe đứng yên ở trạm nạp.\n2) Xi lanh đẩy, "Lực đẩy tối đa" = 3 N: nhỏ hơn 4,9 N nên xi lanh không đẩy nổi, hiện "Quá tải" và xe chờ mãi ở trạm dỡ.\n3) Thân robot "Khối lượng" = 20 kg: xe nặng nên tăng tốc chậm hơn (a = F / m, hai động cơ kéo 2 × 4,2 = 8,4 N).\n4) Bộ PID "Kp" = 0: xe không lái nữa và đi lệch khỏi line.',
+  },
+  {
+    id: 'n7',
+    color: 'blue',
+    pos: { x: 2240, y: 580 },
+    size: { w: 380, h: 250 },
+    text:
+      'Vật lý thật (đã bật): thùng là vật rắn thật nằm trên lưng xe, xi lanh đẩy nó trượt ra khỏi xe. Mỗi động cơ kéo 6 N × công suất 0,7 = 4,2 N, hai động cơ 8,4 N. Xe trống nặng 5 kg tăng tốc a = 8,4 / 5 = 1,68 m/s², xe chở thùng 1 kg (6 kg) chỉ a = 8,4 / 6 = 1,4 m/s²: đạt 0,9 m/s sau 0,54 giây khi trống và 0,64 giây khi có hàng. Sàn giữ được μ·m·g = 0,8 × 5 × 9,81 = 39 N, lớn hơn lực kéo nên bánh không trượt.',
   },
 ];
 
@@ -339,7 +349,7 @@ export function createAgvBoard(): Board {
   return {
     name: 'Xe tự hành chở hàng (AGV)',
     mode: '3d',
-    graph: { nodes, wires, groups: groups(), settings: { wireRule: true } },
+    graph: { nodes, wires, groups: groups(), settings: { wireRule: true, realPhysics: true } },
     notes: structuredClone(NOTES),
   };
 }

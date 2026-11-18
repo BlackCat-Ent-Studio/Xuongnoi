@@ -7,11 +7,20 @@ import { TICK_DT, type Board, type GraphNode } from '../../src/engine/types';
 import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { trackSpecOf } from '../../src/nodes/line-track';
-import { AGV_WIRES } from '../../src/samples/agv-board';
+import { AGV_SETTINGS, AGV_WIRES } from '../../src/samples/agv-board';
+import { worldOptionsForGraph } from '../../src/world/graph-world-options';
 import { distanceToTrack } from '../../src/world/line-track';
+import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
 import { createWorld } from '../../src/world/world';
 
-beforeAll(() => registerAllNodes());
+let rapier: RapierModule;
+beforeAll(async () => {
+  registerAllNodes();
+  rapier = await loadRapier();
+});
+
+/** The world the board asks for through its settings ("Vật lý thật" on), with the crate engine loaded. */
+const makeWorld = (b: Board) => createWorld('3d', { ...(worldOptionsForGraph(b.graph) ?? {}), rapier });
 
 const sample = (): Board => structuredClone(listAllSamples().find((s) => s.id === 'agv-shuttle')!.board);
 const byId = (b: Board, id: string): GraphNode => b.graph.nodes.find((n) => n.id === id)!;
@@ -36,7 +45,7 @@ interface Run {
 
 /** Plays the board for `seconds`, calling `each(world, rt, t)` every tick when given. */
 function run(board: Board, seconds: number, each?: (world: ReturnType<typeof createWorld>, rt: ReturnType<typeof createRuntime>, t: number) => void): Run {
-  const world = createWorld('3d');
+  const world = makeWorld(board);
   const rt = createRuntime(board.graph, world, '3d');
   const track = trackSpecOf(byId(board, 'duong').params, '3d');
   let maxOff = 0;
@@ -51,7 +60,7 @@ function run(board: Board, seconds: number, each?: (world: ReturnType<typeof cre
     each?.(world, rt, i * TICK_DT);
   }
   const agv = world.entities().find((e) => e.kind === 'robot')!;
-  return {
+  const out: Run = {
     delivered: Number(rt.getOutput('dem-thung', 'value')),
     laps: Number(rt.getOutput('dem-vong', 'value')),
     maxOff,
@@ -60,6 +69,8 @@ function run(board: Board, seconds: number, each?: (world: ReturnType<typeof cre
     pistonOverloaded: rt.getOutput('xi-lanh', 'overloaded') === true,
     step: Number(rt.getOutput('buoc', 'index')),
   };
+  world.dispose?.();
+  return out;
 }
 
 const RUN_SECONDS = 80;
@@ -130,7 +141,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
 
   it('shows readouts and a camera that frames the whole machine', () => {
     const b = sample();
-    const world = createWorld('3d');
+    const world = makeWorld(b);
     const rt = createRuntime(b.graph, world, '3d');
     for (let i = 0; i < 600; i++) {
       rt.tick({ keysDown: new Set() });
@@ -182,7 +193,14 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
     expect(run(two, RUN_SECONDS).delivered).toBeGreaterThanOrEqual(2);
   });
 
-  it('a heavier chassis speeds up more slowly (the two motors push with a fixed force)', () => {
+  it('ships with "Vật lý thật" on; each drive motor pulls 6 N x 0.7 power = 4.2 N', () => {
+    const b = sample();
+    expect(b.graph.settings?.realPhysics).toBe(true);
+    for (const m of ['dc-trai', 'dc-phai']) expect(byId(b, m).params.maxForce).toBe(AGV_SETTINGS.motorForce);
+    expect(AGV_SETTINGS.motorForce * AGV_SETTINGS.speedGain * 2).toBeCloseTo(8.4, 9);
+  });
+
+  it('a heavier chassis speeds up more slowly: a = F / m with F = 8.4 N', () => {
     const speedAfter = (mass: number): number => {
       const b = sample();
       byId(b, 'than').params.mass = mass;
@@ -192,7 +210,46 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       });
       return v;
     };
-    expect(speedAfter(5)).toBeGreaterThan(speedAfter(20) + 0.2);
+    // 20 kg: 8.4 / 20 = 0.42 m/s2, about 0.34 m/s after 0.8 s; 5 kg already runs at its line speed (0.99 m/s).
+    expect(speedAfter(20)).toBeLessThan(0.45);
+    expect(speedAfter(5)).toBeGreaterThan(speedAfter(20) + 0.4);
+  });
+
+  it('repeats load / carry / unload for 3 minutes, and the loaded chassis starts off slower than the empty one (1.4 against 1.68 m/s2)', { timeout: 300_000 }, () => {
+    const b = sample();
+    const departures: { payload: number; seconds: number }[] = [];
+    let still = true;
+    let t0 = -1;
+    let payload0 = 0;
+    const r = run(b, 180, (world, _rt, t) => {
+      const agv = world.entities().find((e) => e.kind === 'robot')!;
+      const v = Math.abs(agv.robot?.speed ?? 0);
+      if (v < 0.02) {
+        still = true;
+        t0 = -1;
+      } else if (still) {
+        still = false;
+        t0 = t;
+        payload0 = agv.robot?.payload ?? 0;
+      }
+      if (!still && t0 >= 0 && v >= 0.9) {
+        departures.push({ payload: payload0, seconds: t - t0 });
+        t0 = -1;
+      }
+    });
+    expect(r.delivered).toBeGreaterThanOrEqual(6);
+    expect(r.laps).toBeGreaterThanOrEqual(5);
+    expect(r.maxOff).toBeLessThan(0.25);
+    expect(r.minCrateY).toBeGreaterThan(0.4);
+    const mean = (xs: number[]): number => xs.reduce((a, c) => a + c, 0) / xs.length;
+    const loaded = departures.filter((d) => d.payload > 0.5).map((d) => d.seconds);
+    const empty = departures.filter((d) => d.payload < 0.5).map((d) => d.seconds);
+    expect(loaded.length).toBeGreaterThanOrEqual(5);
+    expect(empty.length).toBeGreaterThanOrEqual(5);
+    // Hand numbers: 0.9 m/s at 1.4 m/s2 = 0.64 s loaded, at 1.68 m/s2 = 0.54 s empty (a tick or two of slack).
+    expect(mean(loaded)).toBeGreaterThan(mean(empty) + 0.06);
+    expect(mean(loaded)).toBeCloseTo(0.64, 1);
+    expect(mean(empty)).toBeCloseTo(0.54, 1);
   });
 
   it('Kp = 0 does not steer: the chassis cannot take the first corner, loses the line and never reaches a station', { timeout: 120_000 }, () => {
@@ -229,7 +286,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       | 'no-crate' // nothing is ever put on the table
       | 'stuck-at-unload' // waits loaded at the unloading station: the crate is never pushed off
       | 'lost-line'; // never gets round the first corner
-    const essential: { wire: [string, string, string, string]; fails: Failure; note: string }[] = [
+    const essential: { wire: [string, string, string, string]; fails: Failure; note: string; crateMayFall?: boolean }[] = [
       // Stations (stop logic)
       { wire: ['vung-nap', 'count', 'dung-nap', 'a'], fails: 'floor-drop', note: 'the loading zone cannot stop the chassis' },
       { wire: ['vung-do', 'count', 'dung-do', 'a'], fails: 'rides-on', note: 'the unloading zone cannot stop the chassis' },
@@ -244,7 +301,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       { wire: ['dk-kep', 'out', 'kep', 'close'], fails: 'arm-stuck', note: 'the gripper never closes' },
       { wire: ['dk-hop-4', 'out', 'buoc', 'next'], fails: 'arm-stuck', note: 'the step sequence never advances' },
       { wire: ['goc-vai-b', 'out', 'goc-vai-c', 'a'], fails: 'arm-stuck', note: 'the shoulder angle loses its taught values' },
-      { wire: ['goc-khuyu-a', 'out', 'khuyu', 'angle'], fails: 'arm-stuck', note: 'the elbow keeps its start angle' },
+      { wire: ['goc-khuyu-a', 'out', 'khuyu', 'angle'], fails: 'arm-stuck', note: 'the elbow keeps its start angle (the straight arm sweeps the crate off the table)', crateMayFall: true },
       { wire: ['buoc', 'step1', 'tao-thung', 'spawn'], fails: 'no-crate', note: 'no crate is ever put on the table' },
       // Unloading
       { wire: ['dk-do-hang', 'out', 'xi-lanh', 'extend'], fails: 'stuck-at-unload', note: 'the piston never pushes' },
@@ -258,7 +315,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       { wire: ['than', 'self', 'dc-trai', 'body'], fails: 'lost-line', note: 'the left motor is not mounted on the chassis' },
       { wire: ['than', 'self', 'mat-giua', 'who'], fails: 'lost-line', note: 'the middle eye is not mounted on the chassis' },
     ];
-    for (const { wire, fails, note } of essential) {
+    for (const { wire, fails, note, crateMayFall } of essential) {
       const r = run(withoutWire(sample(), ...wire), RUN_SECONDS);
       const name = `${wire.join(' ')} (${note}) -> delivered ${r.delivered}, laps ${r.laps}, x ${r.agv.x.toFixed(2)}, payload ${r.agv.payload}, lowest crate ${r.minCrateY.toFixed(2)}`;
       expect(r.maxOff, name).toBeLessThan(0.25);
@@ -268,7 +325,7 @@ describe('sample Xe tự hành chở hàng (AGV)', () => {
       }
       expect(r.delivered, name).toBe(0);
       if (fails === 'floor-drop') expect(r.minCrateY, name).toBeLessThan(0.3);
-      else expect(r.minCrateY, name).toBeGreaterThan(0.4);
+      else if (!crateMayFall) expect(r.minCrateY, name).toBeGreaterThan(0.4);
       if (fails === 'rides-on') {
         expect(r.agv.payload, name).toBeCloseTo(1, 5);
         expect(r.laps, name).toBeGreaterThanOrEqual(2);

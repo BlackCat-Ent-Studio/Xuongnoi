@@ -12,6 +12,7 @@ const expected = baseline as Record<string, string>;
 const boards = allBoards();
 /** Boards that ship with "Vật lý thật" on on purpose; their hash is recorded with that physics. One id per line. */
 const SHIPS_REAL_PHYSICS = new Set([
+  'sample:agv-shuttle',
   'sample:robot-avoid',
   'sample:robot-line-follow',
   'sample:robot-square',

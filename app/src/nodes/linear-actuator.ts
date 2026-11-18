@@ -48,12 +48,13 @@ function boxOf(e: EntityView): { pos: Vec3; size: Vec3 } {
 
 /**
  * Every loose body in the world that a head can shove (anything with a material that is not a block, carried or seated).
+ * `except` is the body the pusher is mounted on: a pusher never pushes what it stands on.
  * A rigid crate (real physics on) comes with its real, possibly turned, outline: it can tip, and its box is the bounds of that outline.
  */
-export function pushBodiesOf(world: WorldApi): PushBody[] {
+export function pushBodiesOf(world: WorldApi, except: EntityId | null = null): PushBody[] {
   const bodies: PushBody[] = [];
   for (const e of world.listEntities()) {
-    if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
+    if (e.id === except || e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
     const mat = world.materialOf(e.id);
     if (!mat) continue;
     const base = { id: e.id, massKg: mat.massKg, mu: mat.mu };
@@ -115,7 +116,7 @@ function followChassis(world: WorldApi, headId: EntityId, baseId: EntityId, want
       head: boxOf(now),
       dir,
       step: dist / subs,
-      bodies: pushBodiesOf(world),
+      bodies: pushBodiesOf(world, baseId),
       solids: world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
       flat: flatOf(mode),
       lifting: dir.y > 0.5,
@@ -285,7 +286,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
           head: boxOf(head0),
           dir: moveDir,
           step: Math.abs(wanted),
-          bodies: pushBodiesOf(world),
+          bodies: pushBodiesOf(world, baseId),
           solids: world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
           flat: flatOf(ctx.mode),
           lifting: moveDir.y > 0.5,
@@ -300,7 +301,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
       for (let k = 0; k < subs; k++) {
         const head = world.getEntity(s.head);
         if (!head) break;
-        const bodies = pushBodiesOf(world);
+        const bodies = pushBodiesOf(world, baseId);
         const plan = planPush({
           head: boxOf(head),
           dir: moveDir,
