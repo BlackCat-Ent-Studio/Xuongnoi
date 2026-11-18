@@ -110,7 +110,8 @@ export function createAutoDoorBoard(): Board {
   return makeBoard('Cửa tự động', '3d', specs, AUTO_DOOR_WIRES, [
     {
       color: 'yellow',
-      text: 'Cửa tự động chạy một mình, không cần bấm phím. Bấm Chạy rồi xem: một người máy đi tuần qua lại. Khi người vào vùng xanh (Vùng kích hoạt), "Công tắc nhớ" bật, Khớp xoay (servo) nhấc thanh chắn đỏ lên 90 độ. Người đi khỏi vùng 2 giây (Hẹn giờ) thì công tắc tắt và thanh hạ xuống.',
+      h: 360,
+      text: 'Cửa tự động chạy một mình, không cần bấm phím. Bấm Chạy rồi xem: một người máy đi tuần qua lại. Khi người vào vùng xanh (Vùng kích hoạt), "Công tắc nhớ" bật, Khớp xoay (servo) nhấc thanh chắn đỏ lên 90 độ. Người đi khỏi vùng 2 giây (Hẹn giờ) thì công tắc tắt và thanh hạ xuống. Bảng này đã bật "Vật lý thật" (công tắc ở bảng Thuộc tính, khi chưa chọn mảnh nào): thanh nặng thật, nên ô "Mô-men khớp" đọc 4 × 9,81 × 1,8 = 70,6 N·m lúc khớp giữ thanh nằm ngang (khớp có 120 N·m).',
     },
     {
       color: 'green',
@@ -120,5 +121,5 @@ export function createAutoDoorBoard(): Board {
       color: 'pink',
       text: 'Thử đổi thông số: 1) Chọn Hẹn giờ, đổi "Số giây" từ 2 thành 8: cửa mở lâu hơn sau khi người đi khỏi. 2) Chọn Khớp xoay, hạ "Mô-men tối đa" từ 120 xuống 50: thanh nặng 4 kg dài 3,6 m cần ~70 N·m nên không nhấc nổi, hiện "quá tải", người bị chặn mãi. 3) Chọn Vùng kích hoạt, thu nhỏ "Kích thước vùng": cửa mở trễ, người đâm vào thanh rồi mới được qua. 4) Chọn Thanh nối, đổi "Chắn vật" thành Không: thanh chỉ còn là hình vẽ, người đi xuyên qua.',
     },
-  ]);
+  ], { realPhysics: true });
 }

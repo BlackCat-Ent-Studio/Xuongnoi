@@ -1,4 +1,4 @@
-import type { Board, GraphNode, Note, NoteColor, Params, ViewMode, Wire } from '../engine/types';
+import type { Board, Graph, GraphNode, Note, NoteColor, Params, ViewMode, Wire } from '../engine/types';
 
 /**
  * Shared helpers for the machine samples built only from palette pieces: a card spec with a column, wires as
@@ -71,7 +71,15 @@ function cardHeight(kind: string, rows?: number): number {
 }
 
 /** Builds a board: cards stacked per column, notes in a row under the lowest card. */
-export function makeBoard(name: string, mode: ViewMode, specs: readonly CardSpec[], links: readonly Link[], notes: readonly NoteSpec[]): Board {
+export function makeBoard(
+  name: string,
+  mode: ViewMode,
+  specs: readonly CardSpec[],
+  links: readonly Link[],
+  notes: readonly NoteSpec[],
+  /** World switches saved with the board (e.g. `{ realPhysics: true }`); the wire rule is always on. */
+  extraSettings: Partial<Graph['settings']> = {},
+): Board {
   const bottoms = new Map<number, number>();
   const nodes: GraphNode[] = specs.map((s) => {
     const y = bottoms.get(s.col) ?? MARGIN;
@@ -87,5 +95,5 @@ export function makeBoard(name: string, mode: ViewMode, specs: readonly CardSpec
     size: { w: NOTE_W, h: n.h ?? 300 },
     text: n.text,
   }));
-  return { name, mode, graph: { nodes, wires, settings: { wireRule: true } }, notes: noteList };
+  return { name, mode, graph: { nodes, wires, settings: { ...extraSettings, wireRule: true } }, notes: noteList };
 }

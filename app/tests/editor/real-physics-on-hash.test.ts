@@ -16,7 +16,8 @@ import { allBoards, runBoard } from './solid-helpers';
 const expected = baseline as Record<string, string>;
 const hasLooseItems = (b: Board): boolean => b.graph.nodes.some((n) => n.kind === 'item' || n.kind === 'spawner');
 const boards = [
-  ...allBoards().filter((b) => hasLooseItems(b.board)),
+  // Boards with loose items, plus every board that ships with the switch on (robots have no crates but drive by traction).
+  ...allBoards().filter((b) => hasLooseItems(b.board) || b.board.graph.settings?.realPhysics === true),
   { id: 'topic:real-physics', group: 'handbook' as const, board: tryCrateTipping() },
 ];
 

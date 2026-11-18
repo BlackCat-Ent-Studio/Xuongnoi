@@ -6,7 +6,7 @@
  "sample:dodge-shoot": "9bdce109:244",
  "sample:city-delivery": "8219d465:900",
  "sample:city-delivery-3d": "5da144d2:900",
- "sample:robot-arm": "3802e7d4:900",
+ "sample:robot-arm": "ce0e5bea:900",
  "sample:auto-arm": "4a79df4f:900",
  "sample:weight-sorter": "b117a029:900",
  "sample:agv-shuttle": "a2c4833d:900",
@@ -36,5 +36,9 @@
  "handbook:spawner": "c59c5bfc:900",
  "handbook:gripper": "809af53:900",
  "handbook:linear-actuator": "f5a7dba5:900",
- "topic:real-physics": "b91a9735:900"
+ "topic:real-physics": "b91a9735:900",
+ "sample:robot-line-follow": "9e629b9a:900",
+ "sample:robot-avoid": "d6a7f032:900",
+ "sample:robot-square": "5a7a0:900",
+ "sample:auto-door": "9365a0f4:900"
 }
