@@ -2,7 +2,7 @@ import type { Board } from '../engine/types';
 import { makeBoard, type CardSpec, type Link } from './cell-board-kit';
 
 /**
- * Sample "Tay máy tự gắp và đặt": crates ride a belt that stops when one reaches the pick point; a 5-step cycle (wait,
+ * Sample "Tay máy tự gắp và đặt": a spawner makes a crate on the feed belt every few seconds (for ever); the belt stops when one reaches the pick point; a 5-step cycle (wait,
  * lower, close, lift and swing, open and return) runs the arm. The step number picks a row of three "Bảng giá trị"
  * (one per joint) = the taught angles, and every step ends by itself through its own "Xong bước" port (a crate waiting,
  * a crate between the fingers, the gripper holding for a moment, the swing joint's own "Đã tới góc" at the place or at home). The gripper takes only a crate lying between its
@@ -21,10 +21,15 @@ export const AUTO_ARM = {
   down: [21.2, -95.8] as const,
   /** Swing (deg) of the base joint to the place point. */
   swing: 180,
-  /** Which crates of the queue are fragile (front of the queue first). */
-  fragile: [false, false, true, false, true, false] as readonly boolean[],
-  firstCrateX: 4.5,
-  crateSpacingM: 3,
+  /** A new crate is made on the feed belt every this many seconds, for as long as the machine runs. */
+  spawnEveryS: 8,
+  /** Each crate vanishes this long after it was made (the pad never fills); long enough to ride in, be placed and ride out. */
+  crateLifeS: 40,
+  /** The dice throw 1 to 3: a 3 makes a fragile crate (about one in three). */
+  fragileThrow: 3,
+  /** Where the crates are made (x on the feed belt) and the belt's far end. */
+  crateX: 12,
+  feedEndX: 13,
   beltSpeed: 1,
   /** Where a crate stops on the belt (x of its centre): the gripper lowers onto this spot. */
   pickX: 2.05,
@@ -38,22 +43,6 @@ const [D1, D2] = AUTO_ARM.down;
 const beltY = 0.3;
 const beltTop = 0.6;
 
-function crates(): CardSpec[] {
-  return AUTO_ARM.fragile.map((fragile, i) => ({
-    id: `crate-${i + 1}`,
-    kind: 'item',
-    col: 0,
-    params: {
-      shape: 'box',
-      position: { x: AUTO_ARM.firstCrateX + i * AUTO_ARM.crateSpacingM, y: beltTop + 0.35, z: 0 },
-      size: { x: 0.6, y: 0.6, z: 0.6 },
-      color: fragile ? '#facc15' : '#a16207',
-      mass: AUTO_ARM.crateKg,
-      ...(fragile ? { crushLimit: AUTO_ARM.fragileLimitN } : {}),
-    },
-  }));
-}
-
 /** One "Bảng giá trị": row k = the angle of this joint in step k of the cycle. */
 const table = (v: readonly number[]) => ({ rows: v.length, ...Object.fromEntries(v.map((x, k) => [`v${k + 1}`, x])) });
 
@@ -61,11 +50,31 @@ const specs: CardSpec[] = [
   // --- the world ---
   { id: 'floor', kind: 'block', col: 0, params: { position: { x: 5, y: -0.5, z: 0 }, size: { x: 50, y: 1, z: 14 }, color: '#65a30d' } },
   { id: 'pillar', kind: 'block', col: 0, params: { position: { x: 0, y: 0.8, z: 0 }, size: { x: 0.6, y: 1.6, z: 0.6 }, color: '#a3a3a3' } },
-  { id: 'feed', kind: 'block', col: 0, params: { position: { x: 11.5, y: beltY, z: 0 }, size: { x: 21, y: 0.6, z: 1.2 }, style: 'conveyor', beltSpeed: AUTO_ARM.beltSpeed, beltDir: '-x', color: '#475569' } },
+  { id: 'feed', kind: 'block', col: 0, params: { position: { x: (1 + AUTO_ARM.feedEndX) / 2, y: beltY, z: 0 }, size: { x: AUTO_ARM.feedEndX - 1, y: 0.6, z: 1.2 }, style: 'conveyor', beltSpeed: AUTO_ARM.beltSpeed, beltDir: '-x', color: '#475569' } },
   { id: 'out-belt', kind: 'block', col: 0, params: { position: { x: -4, y: beltY, z: 0 }, size: { x: 6, y: 0.6, z: 1.2 }, style: 'conveyor', beltSpeed: AUTO_ARM.beltSpeed, beltDir: '-x', color: '#475569' } },
   { id: 'pad-out', kind: 'block', col: 0, params: { position: { x: -8.5, y: 0.05, z: 0 }, size: { x: 3, y: 0.1, z: 3 }, color: '#3b82f6' } },
   { id: 'go', kind: 'on-start', col: 1 },
-  ...crates(),
+
+  // --- crates are made on the feed belt, one every few seconds; the dice decide which ones are fragile ---
+  { id: 'make-timer', kind: 'timer', col: 1, params: { seconds: AUTO_ARM.spawnEveryS, repeat: 'yes' } },
+  { id: 'dice', kind: 'random', col: 1, params: { min: 1, max: AUTO_ARM.fragileThrow, whole: 'yes', mode: 'tick', seed: 1 } },
+  { id: 'crate-mass', kind: 'const', col: 1, params: { value: AUTO_ARM.crateKg } },
+  { id: 'tbl-fragile', kind: 'value-table', col: 1, params: table([0, 0, AUTO_ARM.fragileLimitN]) },
+  {
+    id: 'maker',
+    kind: 'spawner',
+    col: 1,
+    params: {
+      template: 'item',
+      shape: 'box',
+      position: { x: AUTO_ARM.crateX, y: beltTop + 0.35, z: 0 },
+      size: { x: 0.6, y: 0.6, z: 0.6 },
+      color: '#a16207',
+      maxAlive: 8,
+      lifetime: AUTO_ARM.crateLifeS,
+      wireMaterial: 'yes',
+    },
+  },
 
   // --- the arm: pillar -> swing -> shoulder -> upper -> elbow -> fore -> gripper ---
   { id: 'swing', kind: 'joint', col: 2, params: { axis: 'yaw', start: 0, min: -180, max: 180, maxTorque: 50, maxSpeed: 90, mount: { x: 0, y: 0.8, z: 0 }, color: '#8b5cf6' } },
@@ -129,6 +138,12 @@ export const AUTO_ARM_WIRES: readonly Link[] = [
   ['upper', 'tip', 'elbow', 'base'],
   ['elbow', 'tip', 'fore', 'base'],
   ['fore', 'tip', 'gripper', 'base'],
+  // A new crate every few seconds; the dice throw (1 to 3) picks a row of the table: 0 N (sturdy) or the crush limit (fragile)
+  ['go', 'started', 'make-timer', 'run'],
+  ['make-timer', 'done', 'maker', 'spawn'],
+  ['crate-mass', 'value', 'maker', 'mass'],
+  ['dice', 'value', 'tbl-fragile', 'index'],
+  ['tbl-fragile', 'value', 'maker', 'crushLimit'],
   // Power and belts: the feed belt stops while a crate waits at the pick point
   ['go', 'started', 'swing', 'power'],
   ['go', 'started', 'shoulder', 'power'],
@@ -175,16 +190,17 @@ export function createAutoArmBoard(): Board {
   return makeBoard('Tay máy tự gắp và đặt', '3d', specs, AUTO_ARM_WIRES, [
     {
       color: 'yellow',
-      text: 'Tay máy chạy tự động theo 5 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng lên và quay sang chỗ đặt, 5 nhả rồi quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, khớp xoay báo "Đã tới góc" khi tới chỗ đặt (bước 4) hoặc khi về chỗ cũ (bước 5).',
+      h: 430,
+      text: 'Tay máy chạy mãi, không cần bấm gì: cứ 8 giây "Tạo đối tượng" thả một thùng 2 kg lên băng chuyền, thùng nào cũng bị gắp, đặt sang băng ra rồi biến mất sau 40 giây nên tấm xanh không bao giờ đầy. Tay máy chạy tự động theo 5 bước (Chuỗi bước): 1 chờ thùng tới điểm gắp (băng chuyền tự dừng), 2 hạ tay xuống quanh thùng, 3 kẹp, 4 nâng lên và quay sang chỗ đặt, 5 nhả rồi quay về. Số bước chọn một hàng của ba "Bảng giá trị" (góc dạy sẵn của vai, khuỷu, xoay). Mỗi bước tự báo "Xong bước" qua cổng riêng: thùng đã tới, thùng nằm giữa hai ngón, tay kẹp đã giữ chắc 0,6 giây, khớp xoay báo "Đã tới góc" khi tới chỗ đặt (bước 4) hoặc khi về chỗ cũ (bước 5).',
     },
     {
       color: 'green',
-      h: 360,
-      text: 'Tay kẹp ở kiểu "Vật nằm giữa hai ngón": nó chỉ kẹp được thùng khi điểm kẹp nằm trong thùng, nên tay phải hạ xuống thật. Lực kẹp chọn 25 N mỗi ngón. Thùng nâu và thùng vàng đều nặng 2 kg, ma sát 0,5: giữ được khi 2 ngón × 0,5 × lực ≥ 2 × 9,81, tức lực ≥ 19,6 N. Thùng vàng dễ vỡ, chịu ép tối đa 60 N cả hai ngón, nên lực phải ≤ 30 N. Khoảng đúng là 19,6 đến 30 N; 25 N nằm giữa. Bảng này đã bật "Vật lý thật" (công tắc ở bảng Thuộc tính, khi chưa chọn mảnh nào): thùng là vật rắn thật, nằm yên trên băng, được tay nhấc, thả xuống băng ra rồi trôi tới tấm xanh và có thể lăn ngã ở đó.',
+      h: 440,
+      text: 'Tay kẹp ở kiểu "Vật nằm giữa hai ngón": nó chỉ kẹp được thùng khi điểm kẹp nằm trong thùng, nên tay phải hạ xuống thật. Lực kẹp chọn 25 N mỗi ngón. Mọi thùng đều nặng 2 kg (Số cố định "khối lượng"), ma sát 0,5: giữ được khi 2 ngón × 0,5 × lực ≥ 2 × 9,81, tức lực ≥ 19,6 N. Xúc xắc ném 1 đến 3 chọn một hàng của "Bảng giá trị" lực chịu nén: ném 3 (khoảng một thùng trong ba) ra 60 N, thùng dễ vỡ, chịu ép tối đa 60 N cả hai ngón, nên lực phải ≤ 30 N; các thùng khác là 0 (không bao giờ hỏng). Khoảng đúng là 19,6 đến 30 N; 25 N nằm giữa. Bảng này đã bật "Vật lý thật" (công tắc ở bảng Thuộc tính, khi chưa chọn mảnh nào): thùng là vật rắn thật, nằm yên trên băng, được tay nhấc, thả xuống băng ra rồi trôi tới tấm xanh và có thể lăn ngã ở đó.',
     },
     {
       color: 'pink',
-      text: 'Thử đổi thông số: 1) Chọn Số cố định "lực kẹp", đổi 25 thành 15: thùng nâng lên là TUỘT, đếm "Bị tuột". 2) Đổi thành 40: thùng vàng bị ép hỏng, đếm "Bị hỏng". 3) Chọn "Bảng giá trị" của vai, đổi hàng 2 từ 21,2 thành 40: tay không hạ đủ sâu, thùng không nằm giữa hai ngón, tay đứng chờ mãi ở bước 2. 4) Chọn Khớp xoay "xoay", hạ "Tốc độ tối đa" xuống 30: tay quay chậm hẳn, đặt được ít thùng hơn.',
+      text: 'Thử đổi thông số: 1) Chọn Số cố định "lực kẹp", đổi 25 thành 15: thùng nâng lên là TUỘT, đếm "Bị tuột". 2) Đổi thành 40: thùng dễ vỡ bị ép hỏng, đếm "Bị hỏng". 3) Chọn "Bảng giá trị" của vai, đổi hàng 2 từ 21,2 thành 40: tay không hạ đủ sâu, thùng không nằm giữa hai ngón, tay đứng chờ mãi ở bước 2. 4) Chọn Khớp xoay "xoay", hạ "Tốc độ tối đa" xuống 30: tay quay chậm hẳn, đặt được ít thùng hơn.',
     },
   ], { realPhysics: true });
 }

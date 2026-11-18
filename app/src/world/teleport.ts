@@ -6,6 +6,8 @@ import { seatPosition } from './vehicles';
 /** Vertical search step and reach when the wanted spot is inside a block. */
 const LIFT_STEP = 0.5;
 const MAX_LIFT = 6;
+/** How far a resting rigid crate may sink into what it rests on (m) before it counts as inside it. */
+const REST_SKIN = 0.01;
 /** Sideways search rings. */
 const RING_STEP = 0.5;
 const MAX_RING = 4;
@@ -48,9 +50,12 @@ export function findFreeSpot(list: readonly Entity[], e: Entity, to: Vec3, mode:
   const solids = list.filter(
     (o) => o !== e && o.visible && o.solid && (o.kind === 'block' || (o.kind === 'vehicle' && e.kind === 'character')),
   );
+  // A rigid crate ("Vật lý thật") that rests on or leans against something touches it within the engine's contact margin:
+  // a resting contact is not an overlap, so it is tested with a thin skin taken off every face.
+  const size = e.rigid === true ? { x: e.size.x - 2 * REST_SKIN, y: e.size.y - 2 * REST_SKIN, z: e.size.z - 2 * REST_SKIN } : e.size;
   for (const c of candidates(to, mode)) {
     const spot: Vec3 = { x: c.x, y: mode === '2d-top' ? e.pos.y : c.y, z: mode === '2d-side' ? 0 : c.z };
-    if (!overlapsSolid({ ...e, pos: spot }, solids)) return spot;
+    if (!overlapsSolid({ ...e, pos: spot, size }, solids)) return spot;
   }
   return null;
 }

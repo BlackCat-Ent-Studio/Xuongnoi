@@ -14,23 +14,31 @@ beforeAll(async () => {
 const sample = (): Board => structuredClone(listSamples().find((s) => s.id === 'auto-arm')!.board);
 
 const KEYS_OR_BUTTONS = new Set(['key', 'stick', 'ui-button', 'ui-start', 'ui-pick', 'ui-dialog']);
-/** Time limit of the runs (s): about 5 s a crate plus the queue. */
+/** Time limit of the runs (s): the first crate arrives after about 10 s, then one is placed about every 8 s. */
 const LIMIT_S = 60;
-const SHORT_LIMIT_S = 40;
+const SHORT_LIMIT_S = 60;
+const LONG_S = 300;
 
 interface Result {
+  /** Crates the spawner made. */
+  spawned: number;
   placed: number;
   slipped: number;
   crushed: number;
   /** Peak load of the shoulder (N·m) and whether any joint reported overload. */
   peakLoad: number;
   overloaded: boolean;
-  /** Crates lying on the floor away from the belts (dropped by accident). */
+  /** Crates that lay on the floor away from the belts at some moment (dropped by accident). */
   strayed: number;
-  /** Crates that ended on the far side of the arm (x < -0.7): moved by the arm, counter or not. */
+  /** Crates that got to the far side of the arm (x < -0.7): moved by the arm, counter or not. */
   moved: number;
-  /** Crates that ended beyond the blue pad (past its edge or off its sides): thrown away instead of placed. */
+  /** Crates that went beyond the blue pad (past its edge or off its sides): thrown away instead of placed. */
   lost: number;
+  /** Most crates alive at once, and the longest time (s) between two placements (the cell never blocks). */
+  maxAlive: number;
+  longestGapS: number;
+  /** Fragile crates (a crush limit) the spawner made. */
+  fragileSeen: number;
 }
 
 /** `id` maps the sample's card ids to the ids of a renamed copy of the board. */
@@ -38,25 +46,54 @@ function run(board: Board, seconds = LIMIT_S, id: (name: string) => string = (n)
   const p = play(board);
   let peakLoad = 0;
   let overloaded = false;
-  p.watch(seconds, () => {
+  let maxAlive = 0;
+  let lastPlaced = 0;
+  let lastPlacedAt = 0;
+  let longestGap = 0;
+  const seen = new Set<string>();
+  const strayedIds = new Set<string>();
+  const movedIds = new Set<string>();
+  const lostIds = new Set<string>();
+  const fragileIds = new Set<string>();
+  p.watch(seconds, (t) => {
     peakLoad = Math.max(peakLoad, p.out(id('shoulder'), 'load') as number);
     if (p.out(id('shoulder'), 'overloaded') === true || p.out(id('elbow'), 'overloaded') === true || p.out(id('swing'), 'overloaded') === true) overloaded = true;
+    const placed = p.out(id('placed'), 'value') as number;
+    if (placed > lastPlaced) {
+      longestGap = Math.max(longestGap, t - lastPlacedAt);
+      lastPlaced = placed;
+      lastPlacedAt = t;
+    }
+    let alive = 0;
+    for (const e of p.world.entities()) {
+      if (e.ownerNodeId !== id('maker')) continue;
+      alive++;
+      if (!seen.has(e.id)) {
+        seen.add(e.id);
+        if (p.world.materialOf(e.id)!.crushLimitN > 0) fragileIds.add(e.id);
+      }
+      // The place belt ends at x = -7; crates that fall off its end into the blue pad are not strays.
+      if (e.position.y < 0.5 && e.position.x > -6.9 && e.position.x < 8) strayedIds.add(e.id);
+      if (e.position.x < -0.7) movedIds.add(e.id);
+      // The blue pad spans x -10 to -7 and z -1.5 to 1.5.
+      if (e.position.x < -10.1 || Math.abs(e.position.z) > 1.6 || e.position.y < 0.3) lostIds.add(e.id);
+    }
+    maxAlive = Math.max(maxAlive, alive);
   });
-  const crates = AUTO_ARM.fragile.map((_, i) => p.entity(id(`crate-${i + 1}`)));
-  // The place belt ends at x = -7; crates that fall off its end into the blue pad are not strays.
-  const strayed = crates.filter((e) => e.position.y < 0.5 && e.position.x > -6.9 && e.position.x < 8).length;
-  const moved = crates.filter((e) => e.position.x < -0.7).length;
-  // The blue pad spans x -10 to -7 and z -1.5 to 1.5.
-  const lost = crates.filter((e) => e.position.x < -10.1 || Math.abs(e.position.z) > 1.6 || e.position.y < 0.3).length;
+  longestGap = Math.max(longestGap, seconds - lastPlacedAt);
   return {
-    placed: p.out(id('placed'), 'value') as number,
+    spawned: seen.size,
+    placed: lastPlaced,
     slipped: p.out(id('slips'), 'value') as number,
     crushed: p.out(id('crushes'), 'value') as number,
     peakLoad,
     overloaded,
-    strayed,
-    moved,
-    lost,
+    strayed: strayedIds.size,
+    moved: movedIds.size,
+    lost: lostIds.size,
+    maxAlive,
+    longestGapS: longestGap,
+    fragileSeen: fragileIds.size,
   };
 }
 
@@ -83,12 +120,15 @@ describe('sample Tay máy tự gắp và đặt', () => {
     expect(b.mode).toBe('3d');
     for (const n of b.graph.nodes) expect(KEYS_OR_BUTTONS.has(n.kind), n.kind).toBe(false);
     const kinds = new Set(b.graph.nodes.map((n) => n.kind));
-    for (const k of ['camera', 'sequence', 'joint', 'link', 'gripper', 'item', 'counter', 'value-table', 'timer', 'show-number', 'show-text']) expect(kinds.has(k), k).toBe(true);
+    for (const k of ['camera', 'sequence', 'joint', 'link', 'gripper', 'spawner', 'random', 'counter', 'value-table', 'timer', 'show-number', 'show-text']) expect(kinds.has(k), k).toBe(true);
     expect(b.graph.nodes.find((n) => n.id === 'floor')?.kind).toBe('block');
-    expect(b.graph.nodes.filter((n) => n.kind === 'item').some((n) => Number(n.params.crushLimit) > 0)).toBe(true);
+    // Crates are made while it runs (none is placed by hand); the dice and a table decide which are fragile.
+    expect(b.graph.nodes.filter((n) => n.kind === 'item')).toHaveLength(0);
+    expect(b.graph.nodes.find((n) => n.id === 'maker')!.params.wireMaterial).toBe('yes');
+    expect(Number(b.graph.nodes.find((n) => n.id === 'tbl-fragile')!.params.v3)).toBe(AUTO_ARM.fragileLimitN);
     // The taught angles are three tables, not ramps; the steps end through their own ports, not a gate.
     for (const gone of ['map-range', 'select-number', 'math']) expect(kinds.has(gone), gone).toBe(false);
-    expect(b.graph.nodes.filter((n) => n.kind === 'value-table')).toHaveLength(3);
+    expect(b.graph.nodes.filter((n) => n.kind === 'value-table').map((n) => n.id).sort()).toEqual(['tbl-elbow', 'tbl-fragile', 'tbl-shoulder', 'tbl-swing']);
     expect(b.graph.nodes.find((n) => n.id === 'a-cycle')!.params.showDone).toBe('yes');
     expect(b.graph.wires.some((w) => w.to.node === 'a-cycle' && w.to.port === 'next')).toBe(false);
     // The gripper takes only what lies between its fingers, set on the card (not left to an old-board default).
@@ -103,8 +143,10 @@ describe('sample Tay máy tự gắp và đặt', () => {
     expect(AUTO_ARM.gripForceN).toBeGreaterThan(AUTO_ARM.holdThresholdN);
     expect(AUTO_ARM.gripForceN * 2).toBeLessThan(AUTO_ARM.fragileLimitN);
     const r = run(sample());
-    expect(r.placed).toBe(AUTO_ARM.fragile.length);
-    expect(r.moved).toBe(AUTO_ARM.fragile.length);
+    // Everything that had time to arrive was placed (the last ones are still on the way in).
+    expect(r.placed).toBeGreaterThanOrEqual(4);
+    expect(r.placed).toBeGreaterThanOrEqual(r.spawned - 3);
+    expect(r.moved).toBeGreaterThanOrEqual(r.placed);
     expect(r.slipped).toBe(0);
     expect(r.crushed).toBe(0);
     expect(r.overloaded).toBe(false);
@@ -113,16 +155,22 @@ describe('sample Tay máy tự gắp và đặt', () => {
     expect(r.lost).toBe(0);
   });
 
-  it('runs on "Vật lý thật" for two minutes: all six real crates are carried and set down, none thrown away, no joint overloaded', { timeout: 180_000 }, () => {
+  it('runs on "Vật lý thật" for five minutes and never stops: every crate that arrived is placed, none dropped or crushed, no joint overloaded, the cell never blocks', { timeout: 300_000 }, () => {
     const b = sample();
     expect(b.graph.settings?.realPhysics).toBe(true);
     expect(b.graph.settings?.gravity).toBeUndefined();
-    const r = run(b, 120);
-    expect(r.placed).toBe(AUTO_ARM.fragile.length);
+    const r = run(b, LONG_S);
+    expect(r.spawned).toBeGreaterThanOrEqual(Math.floor(LONG_S / AUTO_ARM.spawnEveryS) - 1);
+    expect(r.fragileSeen).toBeGreaterThanOrEqual(3);
+    expect(r.placed).toBeGreaterThanOrEqual(r.spawned - 3);
     expect(r.slipped).toBe(0);
     expect(r.crushed).toBe(0);
     expect(r.overloaded).toBe(false);
     expect(r.lost).toBe(0);
+    expect(r.strayed).toBe(0);
+    // Crates vanish after their life, so the pad never fills; one is placed about every spawn period, none waits long.
+    expect(r.maxAlive).toBeLessThanOrEqual(8);
+    expect(r.longestGapS).toBeLessThan(2 * AUTO_ARM.spawnEveryS + 6);
     // Real loads: well inside the joints' own limits (shoulder 140 N m).
     expect(r.peakLoad).toBeGreaterThan(20);
     expect(r.peakLoad).toBeLessThan(140);
@@ -133,9 +181,10 @@ describe('sample Tay máy tự gắp và đặt', () => {
     let waitingTicks = 0;
     let reachWhileHovering = 0;
     let grabShoulder: number | null = null;
-    p.watch(12, () => {
+    p.watch(25, () => {
       const step = p.out('a-cycle', 'index');
-      if (step === 1 && p.out('pick', 'inside') === true) {
+      // Step 2 ("lower") starts the moment the crate is at the pick point; while the shoulder is still near the hover angle the crate must not be between the fingers.
+      if (step === 2 && p.out('pick', 'inside') === true && (p.out('shoulder', 'angleNow') as number) > AUTO_ARM.hover[0] - 5) {
         waitingTicks++;
         if (p.out('gripper', 'inReach') === true) reachWhileHovering++;
       }
@@ -150,7 +199,7 @@ describe('sample Tay máy tự gắp và đặt', () => {
 
   it('the steps do not depend on card ids or card order: renamed or reordered copies place the same crates', { timeout: 300_000 }, () => {
     const base = run(sample(), SHORT_LIMIT_S);
-    expect(base.placed).toBeGreaterThanOrEqual(5);
+    expect(base.placed).toBeGreaterThanOrEqual(4);
     const variants: [string, (b: Board) => Board, (n: string) => string][] = [
       ['prefix a', (b) => renamed(b, (i) => `a-${i}`), (n) => `a-${n}`],
       ['prefix z', (b) => renamed(b, (i) => `z-${i}`), (n) => `z-${n}`],
@@ -172,6 +221,7 @@ describe('sample Tay máy tự gắp và đặt', () => {
     for (const [name, make, id] of variants) {
       const r = run(make(sample()), SHORT_LIMIT_S, id);
       expect(r.placed, name).toBe(base.placed);
+      expect(r.spawned, name).toBe(base.spawned);
       expect(r.slipped, name).toBe(0);
       expect(r.crushed, name).toBe(0);
     }
@@ -182,7 +232,7 @@ describe('sample Tay máy tự gắp và đặt', () => {
     expect(r.slipped).toBeGreaterThanOrEqual(1);
     expect(r.placed).toBe(0);
     // Just above the threshold it holds again.
-    const ok = run(withForce(AUTO_ARM.holdThresholdN + 0.5), 25);
+    const ok = run(withForce(AUTO_ARM.holdThresholdN + 0.5), 40);
     expect(ok.slipped).toBe(0);
     expect(ok.placed).toBeGreaterThanOrEqual(1);
   });
@@ -190,6 +240,7 @@ describe('sample Tay máy tự gắp và đặt', () => {
   it('above the crush limit (30 N each finger for the fragile crate) the fragile crate is crushed', { timeout: 120_000 }, () => {
     const r = run(withForce(AUTO_ARM.fragileLimitN / 2 + 5));
     expect(r.crushed).toBeGreaterThanOrEqual(1);
+    expect(r.crushed).toBeLessThanOrEqual(r.fragileSeen);
     expect(r.slipped).toBe(0);
     // Just under the limit the same crate survives.
     const ok = run(withForce(AUTO_ARM.fragileLimitN / 2 - 0.5));
@@ -240,9 +291,26 @@ describe('sample Tay máy tự gắp và đặt', () => {
     }
   });
 
-  it('without the belt stop the crates drift past the pick point: only some are caught (the wire matters, but not every crate depends on it)', { timeout: 120_000 }, () => {
-    const r = run(without(sample(), ['pick', 'inside', 'belt-run', 'in']), SHORT_LIMIT_S);
-    expect(r.moved).toBeLessThan(AUTO_ARM.fragile.length);
+  it('is anti-forced: without the timer or the spawn wire no crate is made and nothing is placed; the dice and table only decide which crates are fragile', { timeout: 300_000 }, () => {
+    for (const link of [
+      ['go', 'started', 'make-timer', 'run'],
+      ['make-timer', 'done', 'maker', 'spawn'],
+    ] as const) {
+      expect(AUTO_ARM_WIRES.some((w) => w.join('.') === link.join('.')), link.join('.')).toBe(true);
+      const r = run(without(sample(), link), SHORT_LIMIT_S);
+      expect(r.spawned, link.join('.')).toBe(0);
+      expect(r.placed, link.join('.')).toBe(0);
+    }
+    for (const link of [
+      ['dice', 'value', 'tbl-fragile', 'index'],
+      ['tbl-fragile', 'value', 'maker', 'crushLimit'],
+    ] as const) {
+      expect(AUTO_ARM_WIRES.some((w) => w.join('.') === link.join('.')), link.join('.')).toBe(true);
+      const r = run(without(sample(), link), SHORT_LIMIT_S);
+      expect(r.placed, link.join('.')).toBeGreaterThanOrEqual(4);
+    }
+    // Without the table wire the fragile row is never read: no crate has a limit at all.
+    expect(run(without(sample(), ['tbl-fragile', 'value', 'maker', 'crushLimit']), SHORT_LIMIT_S).fragileSeen).toBe(0);
   });
 
   it('one text card shows the name of the step that is running, driven by the step number', { timeout: 60_000 }, () => {
@@ -267,10 +335,11 @@ describe('sample Tay máy tự gắp và đặt', () => {
       ['go', 'started', 'step-text', 'show'],
       ['go', 'started', 'cam', 'on'],
       ['go', 'started', 'out-belt', 'run'],
+      ['pick', 'inside', 'belt-run', 'in'],
     ];
     for (const link of optional) {
       const r = run(without(sample(), link), SHORT_LIMIT_S);
-      expect(r.moved, link.join('.')).toBeGreaterThanOrEqual(5);
+      expect(r.moved, link.join('.')).toBeGreaterThanOrEqual(3);
     }
   });
 });

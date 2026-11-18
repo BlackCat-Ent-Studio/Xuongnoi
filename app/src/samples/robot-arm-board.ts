@@ -122,7 +122,7 @@ const NOTES: Note[] = [
     pos: { x: 20, y: 1500 },
     size: { w: 320, h: 340 },
     text:
-      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bảng này đã bật "Vật lý thật": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng tuột ngay khi hai ngón khép lại.',
+      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bảng này đã bật "Vật lý thật": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng nằm trên bàn vẫn được giữ, nhưng nhấc lên là tuột.',
   },
   {
     id: 'note2',
