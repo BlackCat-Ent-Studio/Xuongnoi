@@ -1,4 +1,5 @@
 import type { EntityId, EntityView, NodeDef } from '../engine/types';
+import { flattenObb, isTurnedView, obbInside, obbOf, obbOfView, obbSeparation, type Obb } from '../world/oriented-box';
 import { asObject, clamp, numParam, strParam, vec3Param } from './util';
 
 interface ZoneState {
@@ -39,6 +40,27 @@ function axisHit(rule: string, d: number, ee: number, zz: number): boolean {
   if (rule === 'center') return ad <= zz / 2;
   if (rule === 'inside') return ad + ee / 2 <= zz / 2;
   return ad < (ee + zz) / 2;
+}
+
+/**
+ * A turned crate against the zone box by the crate's real outline ("touch" = the two solids overlap, "inside" = the whole crate is
+ * in). The zone box is turned by the zone's yaw, so the crate is looked at in the zone's own frame. Flat views leave out the axis
+ * they do not show.
+ */
+function turnedHit(e: EntityView, rule: string, c: { x: number; y: number; z: number }, cos: number, sin: number, size: { x: number; y: number; z: number }, useY: boolean, useZ: boolean): boolean {
+  const world = obbOfView(e, false);
+  const toZone = (v: { x: number; y: number; z: number }): { x: number; y: number; z: number } => ({ x: v.x * cos + v.z * sin, y: v.y, z: -v.x * sin + v.z * cos });
+  const rel = toZone({ x: world.centre.x - c.x, y: world.centre.y - c.y, z: world.centre.z - c.z });
+  let crate: Obb = { centre: rel, half: world.half, axes: [toZone(world.axes[0]), toZone(world.axes[1]), toZone(world.axes[2])] };
+  let zone: Obb = obbOf({ x: 0, y: 0, z: 0 }, { x: Math.abs(size.x), y: Math.abs(size.y), z: Math.abs(size.z) });
+  if (!useY) {
+    crate = flattenObb(crate, 'y');
+    zone = flattenObb(zone, 'y');
+  } else if (!useZ) {
+    crate = flattenObb(crate, 'z');
+    zone = flattenObb(zone, 'z');
+  }
+  return rule === 'inside' ? obbInside(crate, zone) : obbSeparation(crate, zone) < 0;
 }
 
 const DEFAULT_CENTER = { x: 0, y: 1, z: 0 };
@@ -145,6 +167,13 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     for (const e of ctx.world.listEntities()) {
       if (!e.visible || e.seatedIn !== undefined || e.inHand || e.carried || !matchesFilter(e, filter)) continue;
       if (goods !== '' && ctx.world.tagOf(e.id) !== goods) continue;
+      // A crate that tipped over is judged by its real outline (the centre rule does not look at the outline at all).
+      if (rule !== 'center' && isTurnedView(e)) {
+        if (!turnedHit(e, rule, c, cos, sin, z, useY, useZ)) continue;
+        count++;
+        if (first === null) first = e.id;
+        continue;
+      }
       // Entity centre in the zone's own frame, and its box extent along the zone's axes.
       const dx = e.position.x - c.x;
       const dz = e.position.z - c.z;

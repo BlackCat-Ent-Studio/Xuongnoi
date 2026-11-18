@@ -29,7 +29,7 @@ import type { WorldOptions } from './world-options';
 import { createPhysicsWatch } from '../dev/physics-watch';
 import { bodyTuning } from './body-tuning';
 import { massHeld, massOn, materialOf, materialTuning, squeeze } from './material';
-import { colliderBox, normalizeCollider } from './collider';
+import { boundsBox, colliderBox, isTurnedBody, normalizeCollider } from './collider';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
@@ -221,19 +221,21 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     for (const e of list) {
       if (e === c || !e.visible || e.seatedIn !== null) continue;
       if (e.id === c.holding || e.id === c.handHolding) continue;
-      const dx = e.pos.x - c.pos.x;
-      const dz = e.pos.z - c.pos.z;
-      const dy = e.pos.y - c.pos.y;
+      // A turned crate is reached by the bounds of its real outline, not by the upright box it started as.
+      const eb = isTurnedBody(e) ? boundsBox(e) : { pos: e.pos, size: e.size };
+      const dx = eb.pos.x - c.pos.x;
+      const dz = eb.pos.z - c.pos.z;
+      const dy = eb.pos.y - c.pos.y;
       const fwd = dx * fx + dz * fz;
       const lat = dx * fz - dz * fx;
-      const fwdHalf = (Math.abs(fx) * e.size.x + Math.abs(fz) * e.size.z) / 2;
-      const latHalf = (Math.abs(fz) * e.size.x + Math.abs(fx) * e.size.z) / 2;
+      const fwdHalf = (Math.abs(fx) * eb.size.x + Math.abs(fz) * eb.size.z) / 2;
+      const latHalf = (Math.abs(fz) * eb.size.x + Math.abs(fx) * eb.size.z) / 2;
       if (fwd + fwdHalf <= 0.05 || fwd - fwdHalf > r) continue;
       if (Math.abs(lat) > latHalf + halfWidth) continue;
-      if (Math.abs(dy) > (e.size.y + c.size.y) / 2 - USE_MIN_VERTICAL_OVERLAP) continue;
+      if (Math.abs(dy) > (eb.size.y + c.size.y) / 2 - USE_MIN_VERTICAL_OVERLAP) continue;
       // Closest point of the target's box (on the ground plane) to the swinger: wide boxes get no head start.
-      const px = Math.min(Math.max(c.pos.x, e.pos.x - e.size.x / 2), e.pos.x + e.size.x / 2) - c.pos.x;
-      const pz = Math.min(Math.max(c.pos.z, e.pos.z - e.size.z / 2), e.pos.z + e.size.z / 2) - c.pos.z;
+      const px = Math.min(Math.max(c.pos.x, eb.pos.x - eb.size.x / 2), eb.pos.x + eb.size.x / 2) - c.pos.x;
+      const pz = Math.min(Math.max(c.pos.z, eb.pos.z - eb.size.z / 2), eb.pos.z + eb.size.z / 2) - c.pos.z;
       const dist = Math.hypot(px, pz);
       if (dist > r || px * fx + pz * fz < -1e-9) continue; // out of reach, or only touching behind
       if (dist < bestDist - 1e-9 || (Math.abs(dist - bestDist) <= 1e-9 && fwd < bestFwd)) {
@@ -720,6 +722,14 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     teleport(id: EntityId, to: Vec3, keepVelocity: boolean): Vec3 | null {
       return teleporter.teleport(id, to, keepVelocity);
+    },
+    setItemRotation(id, rotation) {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'item' || !e.visible || e.rigid !== true || e.heldBy !== null || e.bullet) return false;
+      const n = Math.hypot(rotation.x, rotation.y, rotation.z, rotation.w);
+      if (!(n > 0) || !Number.isFinite(n)) return false;
+      e.rot = { x: rotation.x / n, y: rotation.y / n, z: rotation.z / n, w: rotation.w / n };
+      return true;
     },
     setPortal(id: EntityId, link: PortalLink): void {
       teleporter.setPortal(id, link);

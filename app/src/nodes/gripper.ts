@@ -1,6 +1,7 @@
 import type { EntityId, EntityView, NodeDef, Vec3 } from '../engine/types';
-import { dirOf, extentAlong, lateralOf, localToWorld, normalOf } from '../world/arm-kinematics';
+import { dirOf, extentAlong, lateralOf, localToWorld, normalOf, type Frame } from '../world/arm-kinematics';
 import { gripHolds, weight } from '../world/mechanics';
+import { conjQuat, extentOn, isTurned, mulQuat, obbOf, quatFromAxes, rotateBy, sensedTurn, type Quat } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam } from './util';
@@ -11,6 +12,11 @@ interface GripperState {
   /** The object between the fingers, and where it sits relative to the grasp point (kept so it does not jump when grabbed). */
   held: EntityId | null;
   offset: Vec3;
+  /**
+   * A crate that can turn (real physics): where it sits in the hand and how it is turned, both in the arm's own frame, so it turns
+   * and swings with the hand and keeps that turn when let go. Null for anything that cannot turn.
+   */
+  grip: { offset: Vec3; turn: Quat } | null;
   /** After a slip the gripper must be opened before it tries again, so a dropped object is not grabbed back in mid-air. */
   latched: boolean;
 }
@@ -43,17 +49,28 @@ interface FingerAxes {
 }
 
 const dot = (a: Vec3, b: Vec3): number => a.x * b.x + a.y * b.y + a.z * b.z;
+const ORIGIN: Vec3 = { x: 0, y: 0, z: 0 };
+
+/** Length of the object's shadow on `axis`: a crate that tipped over is measured by its real outline, not by the upright box. */
+function extentOf(axis: Vec3, size: Vec3, rotation: Quat | undefined): number {
+  return isTurned(rotation) ? extentOn(obbOf(ORIGIN, size, rotation), axis) : extentAlong(axis, size);
+}
+
+/** The turn of the arm's frame: its x axis along the arm, y up from the arm, z sideways. */
+function frameTurn(f: Frame): Quat {
+  return quatFromAxes(dirOf(f), normalOf(f), lateralOf(f));
+}
 
 /**
  * True when the object lies between the open fingers: the grasp point is inside the object's extent along the arm and
  * (in 3D) along the third direction, and the whole object fits between the fingers across the closing direction.
  */
-export function betweenFingers(grasp: Vec3, size: Vec3, centre: Vec3, axes: FingerAxes, width: number): boolean {
+export function betweenFingers(grasp: Vec3, size: Vec3, centre: Vec3, axes: FingerAxes, width: number, rotation?: Quat): boolean {
   const d = { x: centre.x - grasp.x, y: centre.y - grasp.y, z: centre.z - grasp.z };
   const EPS = 1e-9;
-  if (Math.abs(dot(d, axes.approach)) > extentAlong(axes.approach, size) / 2 + EPS) return false;
-  if (axes.rise && Math.abs(dot(d, axes.rise)) > extentAlong(axes.rise, size) / 2 + EPS) return false;
-  return Math.abs(dot(d, axes.close)) + extentAlong(axes.close, size) / 2 <= width / 2 + EPS;
+  if (Math.abs(dot(d, axes.approach)) > extentOf(axes.approach, size, rotation) / 2 + EPS) return false;
+  if (axes.rise && Math.abs(dot(d, axes.rise)) > extentOf(axes.rise, size, rotation) / 2 + EPS) return false;
+  return Math.abs(dot(d, axes.close)) + extentOf(axes.close, size, rotation) / 2 <= width / 2 + EPS;
 }
 
 /**
@@ -67,17 +84,18 @@ function nearestGrippable(
   rule: GripRule,
   reach: number,
   width: number,
-): { id: EntityId; d: number; offset: Vec3 } | null {
-  let best: { id: EntityId; d: number; offset: Vec3 } | null = null;
+): { id: EntityId; d: number; offset: Vec3; rotation: Quat | undefined } | null {
+  let best: { id: EntityId; d: number; offset: Vec3; rotation: Quat | undefined } | null = null;
   for (const e of entities) {
     if (e.kind !== 'item' || !e.visible || e.carried || e.inHand) continue;
     const dx = e.position.x - grasp.x;
     const dy = e.position.y - grasp.y;
     const dz = e.position.z - grasp.z;
     const d = Math.hypot(dx, dy, dz);
-    if (extentAlong(axes.close, e.size) > width + 1e-9) continue;
-    if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width)) continue;
-    if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz } };
+    const turn = sensedTurn(e.rotation, e.shape);
+    if (extentOf(axes.close, e.size, turn) > width + 1e-9) continue;
+    if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width, turn)) continue;
+    if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz }, rotation: e.rotation };
   }
   return best;
 }
@@ -144,7 +162,7 @@ export const gripperNode: NodeDef<GripperState> = {
     setArmHint(ctx.nodeId, palm, { part: 'palm' });
     setArmHint(ctx.nodeId, f1, { part: 'finger', side: 1 });
     setArmHint(ctx.nodeId, f2, { part: 'finger', side: -1 });
-    return { palm, fingers: [f1, f2], held: null, offset: { x: 0, y: 0, z: 0 }, latched: false };
+    return { palm, fingers: [f1, f2], held: null, offset: { x: 0, y: 0, z: 0 }, grip: null, latched: false };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
@@ -155,6 +173,7 @@ export const gripperNode: NodeDef<GripperState> = {
     if (!base) {
       reg.parts.delete(ctx.nodeId);
       s.held = null;
+      s.grip = null;
       return idle;
     }
     const grasp = localToWorld(base, { x: GRASP_AT, y: 0, z: 0 });
@@ -172,6 +191,7 @@ export const gripperNode: NodeDef<GripperState> = {
 
     if (!closeCmd) {
       s.held = null;
+      s.grip = null;
       s.latched = false;
     }
 
@@ -182,6 +202,13 @@ export const gripperNode: NodeDef<GripperState> = {
       if (best) {
         s.held = best.id;
         s.offset = best.offset;
+        // A crate that can turn is carried by the hand: remember its place and turn in the hand's own frame.
+        if (best.rotation) {
+          const hand = frameTurn(base);
+          s.grip = { offset: rotateBy(conjQuat(hand), best.offset), turn: mulQuat(conjQuat(hand), best.rotation) };
+        } else {
+          s.grip = null;
+        }
       }
     }
 
@@ -192,12 +219,14 @@ export const gripperNode: NodeDef<GripperState> = {
       const mat = world.materialOf(s.held);
       if (!view || !mat || !view.visible || view.carried || view.inHand) {
         s.held = null;
+        s.grip = null;
       } else {
         // A resting object is held up by what it rests on; only a lifted one hangs on the fingers.
         const supported = world.isOnGround(s.held);
         const grip = gripHolds({ gripForceN: force, mu: combinedMu(numParam(params, 'fingerMu', 0.8), mat.mu), fingers, weightN: weight(mat.massKg) });
         if (!supported && !grip.holds) {
           s.held = null;
+          s.grip = null;
           s.latched = true;
           slipped = true;
         } else {
@@ -205,8 +234,15 @@ export const gripperNode: NodeDef<GripperState> = {
           const nowDamaged = world.applySqueeze(s.held, fingers * force, axis);
           crushedOut = nowDamaged && !wasDamaged;
           carriedKg = supported ? 0 : mat.massKg;
-          gap = extentAlong(axis, view.size) / 2;
-          world.teleport(s.held, { x: grasp.x + s.offset.x, y: grasp.y + s.offset.y, z: grasp.z + s.offset.z }, false);
+          gap = extentOf(axis, view.size, sensedTurn(view.rotation, view.shape)) / 2;
+          let at = s.offset;
+          if (s.grip) {
+            // The crate turns and swings with the hand (when the arm turns, so does the crate).
+            const hand = frameTurn(base);
+            at = rotateBy(hand, s.grip.offset);
+            world.setItemRotation(s.held, mulQuat(hand, s.grip.turn));
+          }
+          world.teleport(s.held, { x: grasp.x + at.x, y: grasp.y + at.y, z: grasp.z + at.z }, false);
         }
       }
     }

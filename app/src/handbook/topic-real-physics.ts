@@ -52,7 +52,9 @@ export const REAL_PHYSICS_PAGE: HandbookTopic = {
         'Ví dụ 4, đẩy cao thì đổ, đẩy thấp thì trượt: thùng 10 kg, cao 1,2 m, rộng 0,4 m, μ = 0,5. Trượt khi lực đẩy F ≥ μ × m × 9,81 = 49,05 N. Đổ khi F × độ cao đẩy ≥ m × 9,81 × (rộng ÷ 2) = 19,62 N·m. Đẩy ở 1,1 m: đổ khi F ≥ 17,8 N, nhỏ hơn 49,05 N nên thùng đổ trước khi kịp trượt. Đẩy ở 0,15 m: đổ cần F ≥ 130,8 N, lớn hơn nhiều nên thùng chỉ trượt. Bấm "Thử ngay" để xem hai thùng này.',
         'Thùng đang trượt mà bị chặn lại cũng có thể đổ: khi μ lớn hơn (rộng ÷ 2) ÷ (độ cao khối tâm), ở đây 0,2 ÷ 0,6 = 0,33 và μ = 0,5, ma sát dưới đáy làm nó chúi tới. Đẩy nhanh vào đỉnh thùng thì đổ dù lực không lớn; muốn đẩy mà không đổ thì đẩy thấp và chậm.',
         'Robot đẩy thùng vẫn bị giới hạn lực như cũ: thùng cần F = μ × m × 9,81 mà tổng lực đẩy của các bánh (nhỏ hơn của lực động cơ và độ bám) không đủ thì robot đứng lại, thùng không nhúc nhích. Piston, cánh tay và bệ trượt vẫn đẩy thùng theo cách cũ của chúng (có giới hạn lực, nhưng đẩy tới đâu thùng ở tới đó, không có đà).',
-        'Băng chuyền kéo thùng bằng ma sát: thùng nhanh dần với a = μ × 9,81 cho tới khi bằng tốc độ băng. Thùng chạm tường cuối thì dừng và băng trượt dưới nó. Tay kẹp: thùng đang được kẹp hay đang khiêng thì rời khỏi mô phỏng, thả ra thì rơi tiếp từ chỗ đó.',
+        'Băng chuyền kéo thùng bằng ma sát: thùng nhanh dần với a = μ × 9,81 cho tới khi bằng tốc độ băng. Thùng chạm tường cuối thì dừng và băng trượt dưới nó. Tay kẹp: thùng đang được kẹp rời khỏi mô phỏng nhưng giữ nguyên góc so với bàn tay (cánh tay nâng 30 độ thì thùng nghiêng theo 30 độ), thả ra thì rơi tiếp từ chỗ và góc đó. Thùng đang được nhân vật khiêng hay nằm trên xe thì đứng thẳng lại khi thả.',
+        'Thùng đã đổ hay đang lăn được các thẻ đọc theo hình dạng thật của nó, không theo cái hộp thẳng đứng lúc đầu: thẻ Va chạm (kể cả "Nới / thu vùng chạm" khi dùng làm cảm biến đo gần), thẻ Vùng kích hoạt với cách tính "Chạm mép" và "Nằm trọn bên trong", Cảm biến lực kiểu cân, và cú bấm chuột vào thùng lúc chạy. Cách tính "Tâm vật vào trong" và thẻ Đo khoảng cách vẫn đo từ tâm thùng (tâm của thùng đổ nằm đúng chỗ thật).',
+        'Cân: một thùng đè lên bàn cân khi mặt bàn đỡ nó, nghĩa là điểm thấp nhất của thùng cách mặt bàn không quá 5 cm và phần đáy đang tựa xuống chồng lên mặt bàn một diện tích (nhìn từ trên). Thùng nằm ngang trên bàn cân đọc đủ khối lượng; thùng nằm lấn nửa ra ngoài mép vẫn đọc đủ, như thùng đứng thẳng; thùng đã trượt hẳn ra ngoài hay rơi xuống sàn thì đọc 0. Ví dụ 6: thùng 5 kg, dài 2 m, rộng 0,4 m nằm ngang giữa bàn cân rộng 1 m: bàn cân đọc 5 kg; trượt thùng sang cho đáy không còn chồng lên mặt bàn nữa thì đọc 0.',
       ],
     },
     {
@@ -68,7 +70,7 @@ export const REAL_PHYSICS_PAGE: HandbookTopic = {
       items: [
         'Dồn trọng lượng lên bánh trước khi phanh hay sau khi tăng tốc: tổng độ bám vẫn là μ × m × 9,81 nên các số ở trên không đổi.',
         'Mọi bánh coi như chịu trọng lượng bằng nhau; hàng chở coi như đặt giữa thân. Robot không bị lật.',
-        'Thùng chỉ chạm thân robot, xe và khối (hộp bao quanh), không chạm bánh riêng lẻ. Băng chuyền chỉ kéo thùng bằng ma sát: không có lực kéo riêng. Chưa có ma sát lăn: quả bóng lăn mãi trên sàn phẳng. Đạn bắn ra không thuộc mô phỏng này.',
+        'Thùng chỉ chạm thân robot, xe và khối (hộp bao quanh), không chạm bánh riêng lẻ. Thẻ Dò phía trước và Tầm nhìn vẫn không coi đồ vật là vật cản (như khi tắt); muốn đo tới mặt thùng thì dùng thẻ Va chạm với "Nới / thu vùng chạm". Quả bóng vẫn được các thẻ đọc như hộp bao quanh nó. Băng chuyền chỉ kéo thùng bằng ma sát: không có lực kéo riêng. Chưa có ma sát lăn: quả bóng lăn mãi trên sàn phẳng. Đạn bắn ra không thuộc mô phỏng này.',
       ],
     },
   ],

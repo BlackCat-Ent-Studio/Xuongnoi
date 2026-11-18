@@ -1,6 +1,6 @@
 import type { Collider, ColliderDesc, RigidBody, RigidBodyDesc, World } from '@dimforge/rapier3d-deterministic-compat';
 import type { Vec3, ViewMode } from '../engine/types';
-import { boxOverlap, colliderBox } from './collider';
+import { boundsBox, boxOverlap, colliderBox } from './collider';
 import { beltVelocity } from './conveyor';
 import type { Entity } from './entity';
 import { materialOf } from './material';
@@ -207,6 +207,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     if (rec.parked) {
       rec.body.setEnabled(true);
       rec.body.setTranslation(e.pos, true);
+      // Game code may have turned it while it held it (a gripper keeps the turn relative to the hand): it comes back turned that way.
+      rec.body.setRotation(e.rot ?? IDENTITY, true);
       rec.body.setLinvel({ x: e.vel.x, y: e.vel.y, z: mode === '2d-side' ? 0 : e.vel.z }, true);
       rec.body.setAngvel({ x: 0, y: 0, z: 0 }, true);
       rec.parked = false;
@@ -240,12 +242,12 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
 
   /** True when something solid lies right under the crate's bottom face (for a crate the engine is not moving). */
   function restsOnSomething(e: Entity, entities: readonly Entity[]): boolean {
-    const me = colliderBox(e);
+    const me = boundsBox(e);
     const bottom = me.pos.y - me.size.y / 2;
     for (const o of entities) {
       if (o === e || !o.visible || o.heldBy !== null || o.bullet) continue;
       if (!(o.kind === 'block' ? o.solid : o.kind === 'item' ? o.rigid === true : o.kind === 'robot' || o.kind === 'vehicle' ? o.solid : false)) continue;
-      const b = colliderBox(o);
+      const b = boundsBox(o);
       if (Math.abs(bottom - (b.pos.y + b.size.y / 2)) > REST_GAP) continue;
       if (boxOverlap(e, o, 'x') > 1e-6 && boxOverlap(e, o, 'z') > 1e-6) return true;
     }

@@ -1,4 +1,5 @@
 import type { EntityView, NodeDef } from '../engine/types';
+import { flattenObb, growObb, isTurnedView, obbInside, obbOfView, obbSeparation, pointInObb, type Obb } from '../world/oriented-box';
 import { asObject, numParam, strParam } from './util';
 
 interface TouchState {
@@ -10,8 +11,20 @@ interface TouchState {
 
 type TouchMode = 'edge' | 'center' | 'inside';
 
+/** The same test for a turned crate: on the real outline of the boxes (flat views leave out the axis they do not show). */
+function turnedBoxTest(viewA: EntityView, viewB: EntityView, mode: TouchMode, grow: number, useY: boolean, useZ: boolean): boolean {
+  const flat = (o: Obb): Obb => (!useY ? flattenObb(o, 'y') : !useZ ? flattenObb(o, 'z') : o);
+  const a = flat(obbOfView(viewA));
+  const b = flat(obbOfView(viewB));
+  if (mode === 'edge') return obbSeparation(growObb(a, grow), b) < 0;
+  // A's centre is a point, so the grow value widens B's tolerance instead.
+  if (mode === 'center') return pointInObb(b, a.centre, grow);
+  return obbInside(growObb(a, grow), b);
+}
+
 /** Geometric test on the axes the current view uses; grow > 0 widens A's box, < 0 shrinks it. */
 function boxTest(viewA: EntityView, viewB: EntityView, mode: TouchMode, grow: number, useY: boolean, useZ: boolean): boolean {
+  if (isTurnedView(viewA) || isTurnedView(viewB)) return turnedBoxTest(viewA, viewB, mode, grow, useY, useZ);
   // Objects with a custom collision box are tested by that box, not by what is drawn.
   const a = { position: viewA.collider?.position ?? viewA.position, size: viewA.collider?.size ?? viewA.size };
   const b = { position: viewB.collider?.position ?? viewB.position, size: viewB.collider?.size ?? viewB.size };

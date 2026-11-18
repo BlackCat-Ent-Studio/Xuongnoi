@@ -1,5 +1,6 @@
 import type { EntityKind, EntitySpec, Vec3 } from '../engine/types';
-import { boxOverlap, colliderBox } from './collider';
+import { boxOverlap, colliderBox, isTurnedBody, orientedBox } from './collider';
+import { footprintsOverlap, obbCorners } from './oriented-box';
 import type { Entity } from './entity';
 
 /**
@@ -70,8 +71,26 @@ function squeezeAxisOf(d: Vec3 | undefined): 'x' | 'z' | null {
 /** How far (m of game units) a bottom face may be from a top face and still count as resting on it. */
 const REST_GAP = 0.05;
 
+/**
+ * A turned crate (lying on its side, tipped against something) counts as standing on `base` when the base's top surface holds it up:
+ * its lowest corners (all within REST_GAP of its lowest point) are within REST_GAP of the highest point of the base, and the patch
+ * those corners make overlaps the base's top patch by a positive area, seen from above. Where the centre sits does not matter:
+ * as before, any overlap loads the base with the crate's whole mass; a crate that slid off, or hangs above, loads nothing.
+ */
+function restsTurned(top: Entity, base: Entity): boolean {
+  const lowT = obbCorners(orientedBox(top));
+  const highB = obbCorners(orientedBox(base));
+  const bottom = Math.min(...lowT.map((c) => c.y));
+  const ceiling = Math.max(...highB.map((c) => c.y));
+  if (Math.abs(bottom - ceiling) > REST_GAP) return false;
+  const feet = lowT.filter((c) => c.y <= bottom + REST_GAP);
+  const patch = highB.filter((c) => c.y >= ceiling - REST_GAP);
+  return footprintsOverlap(feet, patch);
+}
+
 /** True when `top` stands on `base`: its bottom meets base's top and the footprints overlap. */
 function rests(top: Entity, base: Entity): boolean {
+  if (isTurnedBody(top) || isTurnedBody(base)) return restsTurned(top, base);
   const t = colliderBox(top);
   const b = colliderBox(base);
   if (Math.abs(t.pos.y - t.size.y / 2 - (b.pos.y + b.size.y / 2)) > REST_GAP) return false;

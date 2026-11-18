@@ -106,6 +106,7 @@ export function makeWorld(): FakeWorld {
     runSeed: () => 12345,
     setCamera: () => undefined,
     teleport: () => null,
+    setItemRotation: () => false,
     setPortal: () => undefined,
     portalUser: () => null,
     setBeltSpeed: () => undefined,

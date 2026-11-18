@@ -1,6 +1,7 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
-import { boxOverlap, colliderBox, colliderOffset } from './collider';
+import { boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox } from './collider';
+import { obbSeparation } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
@@ -58,6 +59,8 @@ export function touching(a: Entity, b: Entity): boolean {
   // A spinning block touches through its rotated outline, not its bounding box.
   if (isSpinner(a)) return spinnerTouches(a, b);
   if (isSpinner(b)) return spinnerTouches(b, a);
+  // A turned crate touches through its real outline, not through the upright box around it.
+  if (isTurnedBody(a) || isTurnedBody(b)) return obbSeparation(orientedBox(a), orientedBox(b)) <= CONTACT_EPS;
   const ba = colliderBox(a);
   const bb = colliderBox(b);
   return (

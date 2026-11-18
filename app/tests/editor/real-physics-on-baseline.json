@@ -7,9 +7,9 @@
  "sample:city-delivery": "9ce9a5e3:900",
  "sample:city-delivery-3d": "5da144d2:900",
  "sample:robot-arm": "3802e7d4:900",
- "sample:auto-arm": "a7c98609:900",
+ "sample:auto-arm": "4a79df4f:900",
  "sample:weight-sorter": "b117a029:900",
- "sample:agv-shuttle": "3bea87b6:900",
+ "sample:agv-shuttle": "6ed8609c:900",
  "lesson:weight-force": "93e9a37b:900",
  "lesson:robot-arm": "afa2d285:900",
  "lesson:arm-steps": "4466f24b:900",
@@ -36,5 +36,5 @@
  "handbook:spawner": "c59c5bfc:900",
  "handbook:gripper": "809af53:900",
  "handbook:linear-actuator": "b0cf41d9:900",
- "topic:real-physics": "825cf914:900"
+ "topic:real-physics": "b91a9735:900"
 }

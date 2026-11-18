@@ -1,5 +1,5 @@
 import type { ViewMode } from '../engine/types';
-import { boxOverlap, colliderBox } from './collider';
+import { boundsBox, boxOverlap, colliderBox } from './collider';
 import type { Entity } from './entity';
 import { exceeds, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
 import { materialOf } from './material';
@@ -24,7 +24,8 @@ export const SUPPORT_SINK = 0.02;
 
 /** True when `item` lies on (or is landing on) the top of `chassis`. */
 export function restsOnChassis(item: Entity, chassis: Entity): boolean {
-  const bottom = colliderBox(item).pos.y - colliderBox(item).size.y / 2;
+  const lying = boundsBox(item);
+  const bottom = lying.pos.y - lying.size.y / 2;
   const rb = colliderBox(chassis);
   return bottom >= rb.pos.y + rb.size.y / 2 - SUPPORT_SINK && boxOverlap(item, chassis, 'x') > SKIN && boxOverlap(item, chassis, 'z') > SKIN;
 }
@@ -51,7 +52,7 @@ function pushBodies(r: Entity, entities: readonly Entity[], mode: ViewMode): Pus
     if (e.kind !== 'item' || !e.visible || e.bullet || e.heldBy !== null || e.inHand) continue;
     if (mode !== '2d-top' && restsOnChassis(e, r)) continue;
     const m = materialOf(e);
-    out.push({ id: e.id, box: colliderBox(e), massKg: m.massKg, mu: m.mu });
+    out.push({ id: e.id, box: boundsBox(e), massKg: m.massKg, mu: m.mu });
   }
   return out;
 }

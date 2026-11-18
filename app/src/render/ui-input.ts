@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { EntityId, EntityView, UiInput } from '../engine/types';
+import { isTurnedView, obbOfView, rayObb } from '../world/oriented-box';
 
 /**
  * Collects clicks while the browser runs between ticks. `take()` hands them to the runtime once; the held
@@ -73,6 +74,12 @@ export function pickEntities(
   const hits: { id: EntityId; dist: number }[] = [];
   for (const e of entities) {
     if (EXCLUDED_FROM_PICK(e)) continue;
+    // A crate that tipped over is hit where it really is, not through the upright box it started as.
+    if (isTurnedView(e)) {
+      const along = rayObb(obbOfView(e, false), raycaster.ray.origin, raycaster.ray.direction);
+      if (along !== null) hits.push({ id: e.id, dist: along });
+      continue;
+    }
     box.setFromCenterAndSize(
       new THREE.Vector3(e.position.x, e.position.y, e.position.z),
       new THREE.Vector3(e.size.x, e.size.y, e.size.z),

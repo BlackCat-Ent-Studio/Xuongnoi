@@ -836,6 +836,12 @@ export interface WorldApi {
    * center, or null when nothing moved (unknown / hidden / dead / a block / an item in someone's hand / no free spot).
    */
   teleport(id: EntityId, to: Vec3, keepVelocity: boolean): Vec3 | null;
+  /**
+   * Turns a loose crate to `rotation` (unit quaternion) while game code carries it (a gripper keeps the turn the crate had relative to
+   * the hand). The crate keeps that turn when it is let go. False, and nothing changes, unless real physics is on and the id is a
+   * visible crate that is not held by a character.
+   */
+  setItemRotation(id: EntityId, rotation: { x: number; y: number; z: number; w: number }): boolean;
   /** Declares (each tick, idempotent) a portal entity and who it leads to; see PortalLink. */
   setPortal(id: EntityId, link: PortalLink): void;
   /** The entity that stepped into this portal on the last physics step, else null (one tick). */

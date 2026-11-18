@@ -1,5 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
-import { boxOverlap, colliderBox, colliderOffset, type Collidable } from './collider';
+import { boundsBox, boxOverlap, colliderBox, colliderOffset, type Collidable } from './collider';
 import type { Entity } from './entity';
 
 /**
@@ -72,7 +72,7 @@ function solidBlocksExcept(list: readonly Entity[], p: Entity): Entity[] {
 
 export function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
   if (mode === '2d-top') return false;
-  const eb = colliderBox(e);
+  const eb = boundsBox(e);
   const pb = colliderBox(p);
   if (Math.abs(eb.pos.y - eb.size.y / 2 - (pb.pos.y + pb.size.y / 2)) > RIDE_GAP) return false;
   if (overlap(e, p, 'x') <= OVERLAP_MIN) return false;
@@ -93,7 +93,7 @@ const CRUSH_DEPTH = 0.02;
 function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: readonly Entity[]): boolean {
   if (overlap(crate, p, 'x') <= OVERLAP_MIN || overlap(crate, p, 'y') <= OVERLAP_MIN || overlap(crate, p, 'z') <= OVERLAP_MIN) return false;
   const pb = colliderBox(p);
-  const reach = (pb.size[axis] + colliderBox(crate).size[axis]) / 2;
+  const reach = (pb.size[axis] + boundsBox(crate).size[axis]) / 2;
   const pushed: Entity = { ...crate, pos: { ...crate.pos } };
   pushed.pos[axis] = (d > 0 ? pb.pos[axis] + reach : pb.pos[axis] - reach) - colliderOffset(crate, axis);
   // A crate resting on the floor sinks a fraction of a millimetre into it: only a real overlap is a squeeze.

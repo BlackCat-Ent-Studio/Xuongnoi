@@ -1,5 +1,6 @@
 import type { Vec3 } from '../engine/types';
-import { boxOverlap, colliderBox } from './collider';
+import { boundsBox, boxOverlap, colliderBox, isTurnedBody, orientedBox } from './collider';
+import { obbSeparation } from './oriented-box';
 import type { Entity } from './entity';
 import type { WorldOptions } from './world-options';
 
@@ -37,6 +38,7 @@ export function isSolidBody(e: Entity): boolean {
 }
 
 export function overlapsBox(a: Entity, b: Entity): boolean {
+  if (isTurnedBody(a) || isTurnedBody(b)) return obbSeparation(orientedBox(a), orientedBox(b)) < -1e-6;
   return boxOverlap(a, b, 'x') > 1e-6 && boxOverlap(a, b, 'y') > 1e-6 && boxOverlap(a, b, 'z') > 1e-6;
 }
 
@@ -70,16 +72,23 @@ export function solidCarryPosition(holder: Entity, item: Entity, rules: BodyRule
 const LIFT_LOOKAHEAD = 1;
 const LIFT_SIDE = 0.1;
 
+/** Lowest and highest point of an item (a turned crate by its real outline). */
+function heightSpan(e: Entity): { bottom: number; top: number } {
+  if (!isTurnedBody(e)) return { bottom: e.pos.y - e.size.y / 2, top: e.pos.y + e.size.y / 2 };
+  const b = boundsBox(e);
+  return { bottom: b.pos.y - b.size.y / 2, top: b.pos.y + b.size.y / 2 };
+}
+
 /** True when another loose item rests on top of this one (so it cannot be picked up from underneath). */
 export function isCovered(item: Entity, entities: readonly Entity[]): boolean {
-  const top = item.pos.y + item.size.y / 2;
+  const top = heightSpan(item).top;
   return entities.some(
     (o) =>
       o !== item &&
       o.kind === 'item' &&
       isSolidBody(o) &&
-      o.pos.y - o.size.y / 2 >= top - 0.05 &&
-      o.pos.y - o.size.y / 2 <= top + 0.3 &&
+      heightSpan(o).bottom >= top - 0.05 &&
+      heightSpan(o).bottom <= top + 0.3 &&
       boxOverlap(o, item, 'x') > 1e-6 &&
       boxOverlap(o, item, 'z') > 1e-6,
   );
