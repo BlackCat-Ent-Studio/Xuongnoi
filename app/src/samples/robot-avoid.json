@@ -16,7 +16,9 @@
      "heading": -20,
      "length": 0.9,
      "width": 0.7,
-     "color": "#3b82f6"
+     "color": "#3b82f6",
+     "mass": 2,
+     "friction": 0.8
     },
     "pos": {
      "x": 40,
@@ -70,7 +72,8 @@
     "id": "dc-trai",
     "kind": "motor",
     "params": {
-     "side": -0.4
+     "side": -0.4,
+     "maxForce": 30
     },
     "pos": {
      "x": 2200,
@@ -81,7 +84,8 @@
     "id": "dc-phai",
     "kind": "motor",
     "params": {
-     "side": 0.4
+     "side": 0.4,
+     "maxForce": 30
     },
     "pos": {
      "x": 2200,
@@ -1313,7 +1317,8 @@
    }
   ],
   "settings": {
-   "wireRule": true
+   "wireRule": true,
+   "realPhysics": true
   }
  },
  "notes": [
@@ -1367,6 +1372,19 @@
    "size": {
     "w": 360,
     "h": 190
+   }
+  },
+  {
+   "id": "n5",
+   "text": "Vật lý thật (đã bật): robot nặng 2 kg, sàn giữ được tối đa μ·m·g = 0,8 × 2 × 9,81 = 15,7 N nên robot phanh được với gia tốc a = 15,7 / 2 = 7,85 m/s²: từ 1,7 m/s dừng trong v² / 2a = 0,18 m. Thử đổi Khối lượng robot từ 2 lên 20 kg: robot nặng quay chậm hơn nhiều (quán tính xoay), né muộn và chỉ cách tường hoặc hộp khoảng 5 cm.",
+   "color": "yellow",
+   "pos": {
+    "x": 1520,
+    "y": 3100
+   },
+   "size": {
+    "w": 380,
+    "h": 210
    }
   }
  ]

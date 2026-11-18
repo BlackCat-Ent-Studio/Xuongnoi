@@ -34,7 +34,9 @@
      },
      "length": 0.9,
      "width": 0.7,
-     "color": "#3b82f6"
+     "color": "#3b82f6",
+     "mass": 2,
+     "friction": 0.8
     },
     "pos": {
      "x": 40,
@@ -155,7 +157,10 @@
     "id": "dc-trai",
     "kind": "motor",
     "params": {
-     "side": -0.4
+     "side": -0.4,
+     "maxForce": 30,
+     "accel": 2000,
+     "showSlip": "yes"
     },
     "pos": {
      "x": 1480,
@@ -166,7 +171,9 @@
     "id": "dc-phai",
     "kind": "motor",
     "params": {
-     "side": 0.4
+     "side": 0.4,
+     "maxForce": 30,
+     "accel": 2000
     },
     "pos": {
      "x": 1480,
@@ -241,6 +248,18 @@
     },
     "pos": {
      "x": 1120,
+     "y": 940
+    }
+   },
+   {
+    "id": "hien-truot",
+    "kind": "show-number",
+    "params": {
+     "label": "Bánh trái trượt (m/s)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 400,
      "y": 940
     }
    }
@@ -520,10 +539,22 @@
      "node": "may-quay",
      "port": "on"
     }
+   },
+   {
+    "id": "w26",
+    "from": {
+     "node": "dc-trai",
+     "port": "slipSpeed"
+    },
+    "to": {
+     "node": "hien-truot",
+     "port": "value"
+    }
    }
   ],
   "settings": {
-   "wireRule": true
+   "wireRule": true,
+   "realPhysics": true
   }
  },
  "notes": [
@@ -577,6 +608,19 @@
    "size": {
     "w": 360,
     "h": 170
+   }
+  },
+  {
+   "id": "n5",
+   "text": "Vật lý thật (đã bật): robot nặng 2 kg, mỗi động cơ kéo tối đa 30 N, nhưng sàn chỉ giữ được μ·m·g = 0,8 × 2 × 9,81 = 15,7 N. Nên gia tốc không bao giờ quá a = 15,7 / 2 = 7,85 m/s². Khi lệnh đòi nhiều hơn (lúc xuất phát, lúc bẻ lái gấp) bánh quay nhanh hơn mặt đất: bánh trượt và ô \"Bánh trái trượt\" khác 0. Thử đổi Khối lượng robot từ 2 lên 20 kg: robot nặng hơn, chạy chậm hơn nhưng vẫn bám line.",
+   "color": "yellow",
+   "pos": {
+    "x": 1520,
+    "y": 1040
+   },
+   "size": {
+    "w": 380,
+    "h": 230
    }
   }
  ]

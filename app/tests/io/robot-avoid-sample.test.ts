@@ -4,6 +4,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board } from '../../src/engine/types';
 import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
+import { worldOptionsForGraph } from '../../src/world/graph-world-options';
 import { createWorld } from '../../src/world/world';
 
 beforeAll(() => registerAllNodes());
@@ -30,7 +31,7 @@ interface Run {
 
 /** Plays the board and measures how close the robot came to the walls and boxes (floor excluded). */
 function run(board: Board, seconds: number): Run {
-  const world = createWorld(board.mode);
+  const world = createWorld(board.mode, worldOptionsForGraph(board.graph));
   const rt = createRuntime(board.graph, world, board.mode);
   const res: Run = { minGap: Infinity, distance: 0, spanX: 0, spanZ: 0, reversed: false };
   let last: { x: number; z: number } | null = null;
@@ -91,14 +92,24 @@ describe('sample Robot tránh vật cản', () => {
     }
   });
 
-  it('drives 60 s around the room without touching a wall or a box, covering the room; readouts and camera on the robot', { timeout: 300_000 }, () => {
+  it('ships with "Vật lý thật" on, the robot weighs 2 kg and the motors say 30 N', () => {
     const b = sample();
-    const r = run(b, 60);
-    expect(r.minGap).toBeGreaterThan(0.15);
-    expect(r.distance).toBeGreaterThan(60);
+    expect(b.graph.settings?.realPhysics).toBe(true);
+    expect(worldOptionsForGraph(b.graph)?.realPhysics).toBe(true);
+    const body = b.graph.nodes.find((n) => n.kind === 'robot-body')!;
+    expect(body.params.mass).toBe(2);
+    expect(body.params.friction).toBe(0.8);
+    for (const m of b.graph.nodes.filter((n) => n.kind === 'motor')) expect(m.params.maxForce).toBe(30);
+  });
+
+  it('drives 3 minutes around the room without touching a wall or a box, covering the room; readouts and camera on the robot', { timeout: 300_000 }, () => {
+    const b = sample();
+    const r = run(b, 180);
+    expect(r.minGap).toBeGreaterThan(0.3);
+    expect(r.distance).toBeGreaterThan(200);
     expect(r.spanX).toBeGreaterThan(5);
     expect(r.spanZ).toBeGreaterThan(4);
-    const world = createWorld(b.mode);
+    const world = createWorld(b.mode, worldOptionsForGraph(b.graph));
     const rt = createRuntime(b.graph, world, b.mode);
     for (let i = 0; i < 300; i++) {
       rt.tick({ keysDown: new Set() });
@@ -132,6 +143,14 @@ describe('sample Robot tránh vật cản', () => {
       expect(r.minGap, `${x},${z},${h}`).toBeGreaterThan(0.1);
       expect(r.distance, `${x},${z},${h}`).toBeGreaterThan(50);
     }
+  });
+
+  it('a 20 kg robot turns slowly and comes within 15 cm of a wall or box, but still does not touch', { timeout: 120_000 }, () => {
+    const b = sample();
+    b.graph.nodes.find((n) => n.kind === 'robot-body')!.params.mass = 20;
+    const r = run(b, 180);
+    expect(r.minGap).toBeGreaterThan(0);
+    expect(r.minGap).toBeLessThan(0.15);
   });
 
   it('is anti-forced: without the front eye it hits a wall, without a motor wire it stops or circles', { timeout: 300_000 }, () => {

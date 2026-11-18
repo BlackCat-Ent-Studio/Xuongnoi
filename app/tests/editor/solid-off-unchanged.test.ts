@@ -10,14 +10,24 @@ import { allBoards, runBoard } from './solid-helpers';
  */
 const expected = baseline as Record<string, string>;
 const boards = allBoards();
+/** Boards that ship with "Vật lý thật" on on purpose; their hash is recorded with that physics. One id per line. */
+const SHIPS_REAL_PHYSICS = new Set([
+  'sample:robot-avoid',
+  'sample:robot-line-follow',
+  'sample:robot-square',
+]);
 
 describe('Va chạm thật off keeps the old behaviour', () => {
   it('covers every sample, lesson and handbook board that was recorded', () => {
     expect(boards.map((b) => b.id).sort()).toEqual(Object.keys(expected).sort());
   });
 
-  it('none of the shipped boards turns the switch on', () => {
-    for (const b of boards) expect(worldOptionsForGraph(b.board.graph), b.id).toBeUndefined();
+  it('no shipped board turns "Va chạm thật" on, and only the listed ones turn "Vật lý thật" on', () => {
+    for (const b of boards) {
+      const options = worldOptionsForGraph(b.board.graph);
+      if (SHIPS_REAL_PHYSICS.has(b.id)) expect(options, b.id).toEqual({ realPhysics: true });
+      else expect(options, b.id).toBeUndefined();
+    }
   });
 
   for (const b of boards) {

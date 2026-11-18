@@ -4,6 +4,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board } from '../../src/engine/types';
 import { listAllSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
+import { worldOptionsForGraph } from '../../src/world/graph-world-options';
 import { createWorld } from '../../src/world/world';
 
 beforeAll(() => registerAllNodes());
@@ -43,7 +44,7 @@ interface Run {
 const wrap = (deg: number): number => ((((deg + 180) % 360) + 360) % 360) - 180;
 
 function run(board: Board, seconds: number): Run {
-  const world = createWorld(board.mode);
+  const world = createWorld(board.mode, worldOptionsForGraph(board.graph));
   const rt = createRuntime(board.graph, world, board.mode);
   const res: Run = { corners: [], sides: 0, step: 0, spun: 0, distance: 0 };
   let prevStep = 0;
@@ -67,6 +68,15 @@ function run(board: Board, seconds: number): Run {
   }
   return res;
 }
+
+/** Corners whose 4th side closes the square: back at the start (within 0.3 m), facing the start way (within 10 degrees). */
+const closed = (c: Corner): boolean => c.sides % 4 === 0 && Math.hypot(c.x - START.x, c.z - START.z) < 0.3 && Math.abs(c.heading) < 10;
+/** A real square: it closes, and every side of the walk is about 2 m (one working wheel can loop back to the start on a small circle, which is not a square). */
+const realSquares = (r: Run): Corner[] =>
+  r.corners.filter((c, k) => {
+    if (!closed(c) || c.sides !== 4) return false;
+    return r.corners.slice(0, k + 1).every((q, j) => j === 0 || Math.hypot(q.x - r.corners[j - 1]!.x, q.z - r.corners[j - 1]!.z) > 1.7);
+  });
 
 const cut = (b: Board, from: string, fp: string, to: string, tp: string): void => {
   const before = b.graph.wires.length;
@@ -115,9 +125,46 @@ describe('sample Robot đi hình vuông', () => {
     }
   });
 
+  it('ships with "Vật lý thật" on, the robot weighs 2 kg and the motors say 30 N', () => {
+    const b = sample();
+    expect(b.graph.settings?.realPhysics).toBe(true);
+    expect(worldOptionsForGraph(b.graph)?.realPhysics).toBe(true);
+    const body = b.graph.nodes.find((n) => n.kind === 'robot-body')!;
+    expect(body.params.mass).toBe(2);
+    expect(body.params.friction).toBe(0.8);
+    for (const m of b.graph.nodes.filter((n) => n.kind === 'motor')) expect(m.params.maxForce).toBe(30);
+  });
+
+  it('closes the square for 8 laps in a row: every 4th corner within 0.3 m of the start and within 10 degrees of the start heading', { timeout: 120_000 }, () => {
+    const r = run(sample(), 180);
+    const laps = r.corners.filter((c) => c.sides % 4 === 0);
+    expect(laps.length).toBeGreaterThanOrEqual(8);
+    for (const c of laps) {
+      expect(Math.hypot(c.x - START.x, c.z - START.z), `after ${c.sides} sides`).toBeLessThan(0.3);
+      expect(Math.abs(c.heading), `after ${c.sides} sides`).toBeLessThan(10);
+    }
+  });
+
+  it('on a slippery floor (grip 0.2) the wheels slip, the readout shows it and the square no longer closes', { timeout: 120_000 }, () => {
+    const b = sample();
+    b.graph.nodes.find((n) => n.kind === 'robot-body')!.params.friction = 0.2;
+    const world = createWorld(b.mode, worldOptionsForGraph(b.graph));
+    const rt = createRuntime(b.graph, world, b.mode);
+    let readout = 0;
+    for (let i = 0; i < 1800; i++) {
+      rt.tick({ keysDown: new Set() });
+      world.step(TICK_DT);
+      readout = Math.max(readout, (world.hudItems() as readonly { label?: string; value?: number }[]).find((x) => x.label === 'Bánh trái trượt (m/s)')?.value ?? 0);
+    }
+    expect(readout).toBeGreaterThan(0.01);
+    const r = run(b, 60);
+    const fourth = r.corners.find((c) => c.sides === 4)!;
+    expect(Math.hypot(fourth.x - START.x, fourth.z - START.z)).toBeGreaterThan(0.3);
+  });
+
   it('shows the side count, the distance, the heading and a plot of the heading; the camera follows the robot', { timeout: 60_000 }, () => {
     const b = sample();
-    const world = createWorld(b.mode);
+    const world = createWorld(b.mode, worldOptionsForGraph(b.graph));
     const rt = createRuntime(b.graph, world, b.mode);
     for (let i = 0; i < 600; i++) {
       rt.tick({ keysDown: new Set() });
@@ -167,8 +214,7 @@ describe('sample Robot đi hình vuông', () => {
       const b = sample();
       cut(b, fn, fp, tn, tp);
       const r = run(b, 40);
-      const squares = r.corners.filter((c) => c.sides === 4 && Math.hypot(c.x - START.x, c.z - START.z) < 0.3 && Math.abs(c.heading) < 10);
-      expect(squares, `${fn}.${fp}->${tn}.${tp}`).toHaveLength(0);
+      expect(realSquares(r), `${fn}.${fp}->${tn}.${tp}`).toHaveLength(0);
     }
   });
 });

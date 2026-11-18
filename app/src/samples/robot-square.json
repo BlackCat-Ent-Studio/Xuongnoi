@@ -17,7 +17,9 @@
      "length": 0.9,
      "width": 0.7,
      "color": "#3b82f6",
-     "showDistance": "yes"
+     "showDistance": "yes",
+     "mass": 2,
+     "friction": 0.8
     },
     "pos": {
      "x": 40,
@@ -29,7 +31,9 @@
     "kind": "motor",
     "params": {
      "side": -0.4,
-     "showTurns": "yes"
+     "showTurns": "yes",
+     "maxForce": 30,
+     "showSlip": "yes"
     },
     "pos": {
      "x": 1840,
@@ -40,7 +44,8 @@
     "id": "dc-phai",
     "kind": "motor",
     "params": {
-     "side": 0.4
+     "side": 0.4,
+     "maxForce": 30
     },
     "pos": {
      "x": 1840,
@@ -408,6 +413,18 @@
     "pos": {
      "x": 400,
      "y": 2420
+    }
+   },
+   {
+    "id": "hien-truot",
+    "kind": "show-number",
+    "params": {
+     "label": "Bánh trái trượt (m/s)",
+     "corner": "top-left"
+    },
+    "pos": {
+     "x": 40,
+     "y": 1060
     }
    }
   ],
@@ -840,10 +857,22 @@
      "node": "chu-nay",
      "port": "show"
     }
+   },
+   {
+    "id": "w53",
+    "from": {
+     "node": "dc-trai",
+     "port": "slipSpeed"
+    },
+    "to": {
+     "node": "hien-truot",
+     "port": "value"
+    }
    }
   ],
   "settings": {
-   "wireRule": true
+   "wireRule": true,
+   "realPhysics": true
   }
  },
  "notes": [
@@ -875,7 +904,7 @@
   },
   {
    "id": "n3",
-   "text": "Chuỗi bước có 2 bước: bước 1 đi thẳng, bước 2 quay tại chỗ. Đi đủ 2 m thì sang bước 2. Hướng đã đổi đủ 90 độ so với đầu cạnh thì sang bước 1 lại. Hướng chạy vòng từ -180 đến 180 nên cần thêm vài ô So sánh để xử lý chỗ vòng. Quãng đường được đặt lại về 0 mỗi lần bắt đầu quay.",
+   "text": "Chuỗi bước có 2 bước: bước 1 đi thẳng, bước 2 quay tại chỗ. Đi đủ 2 m thì sang bước 2. Ô \"Chênh lệch góc\" cho biết hướng đã đổi bao nhiêu độ so với đầu cạnh (tự lo chỗ vòng từ -180 sang 180); đủ 89 độ thì sang bước 1 lại. Quãng đường được đặt lại về 0 mỗi lần bắt đầu quay.",
    "color": "blue",
    "pos": {
     "x": 760,
@@ -897,6 +926,19 @@
    "size": {
     "w": 360,
     "h": 210
+   }
+  },
+  {
+   "id": "n5",
+   "text": "Vật lý thật (đã bật): robot nặng 2 kg, sàn giữ được μ·m·g = 0,8 × 2 × 9,81 = 15,7 N nên bánh bám tốt và hình vuông khép lại sau nhiều vòng (sai lệch dưới 0,3 m). Thử đổi Độ bám của Thân robot từ 0,8 xuống 0,2: bánh trượt khi tăng tốc và quay (ô \"Bánh trái trượt\" khác 0), hình vuông không còn khép lại, lệch hơn nửa mét.",
+   "color": "yellow",
+   "pos": {
+    "x": 1480,
+    "y": 3100
+   },
+   "size": {
+    "w": 380,
+    "h": 190
    }
   }
  ]
