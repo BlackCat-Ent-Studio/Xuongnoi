@@ -34,8 +34,10 @@ function run(force: number) {
     }
   };
   p.seconds(1);
-  tap('KeyS', 2);
+  // The hand is solid: elbow first (the open hand stays high), then the shoulder lowers it round the crate.
   tap('KeyA', 2);
+  p.seconds(2);
+  tap('KeyS', 2);
   p.seconds(3);
   return { p, crate, tap, setKeys: (k: string[]) => (keys = new Set(k)) };
 }

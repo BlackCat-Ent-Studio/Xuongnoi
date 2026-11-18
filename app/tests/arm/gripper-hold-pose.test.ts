@@ -3,7 +3,7 @@ import { tryGripper } from '../../src/handbook/boards-robot-arm';
 import { createAutoArmBoard } from '../../src/samples/auto-arm-board';
 import { loadRapier } from '../../src/world/rapier-loader';
 import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
-import { holdMetrics } from '../helpers/grip-metrics';
+import { crateInHand, holdMetrics } from '../helpers/grip-metrics';
 import { loadEngine, playReal } from '../helpers/cell-run-real';
 
 /**
@@ -12,11 +12,14 @@ import { loadEngine, playReal } from '../helpers/cell-run-real';
  *
  * Hand: a link pointing straight down from a joint 3 m up; the palm is 0.15 m deep, the fingers 0.3 m long, the grasp point
  * 0.3 m ahead of the wrist (wrist at y = 2). The palm's front face is 0.15 m above the grasp point. Tolerances: overlap
- * 1 mm, centring 1 cm.
+ * 1 mm, centring 1 cm. With real physics the fingers close at 1 m/s (at most 0.7 m to travel here), so a clamp is measured 45 ticks (0.75 s)
+ * after the key goes down.
  */
 const OVERLAP_MM = 0.001;
 const CENTRE_CM = 0.01;
 const GRASP_Y = 1.7;
+/** Ticks the fingers need to close from the open hand onto a crate (<= 0.7 m at 1 m/s), with a margin. */
+const CLOSE_TICKS = 45;
 
 beforeAll(async () => {
   await loadRapier();
@@ -94,7 +97,7 @@ describe('gripper clamps a crate between the pads (Vật lý thật)', () => {
     const r = await hand({ y: GRASP_Y - 0.2 });
     expect(r.out('g', 'inReach')).toBe(true);
     r.hold('Space');
-    r.tick(20);
+    r.tick(CLOSE_TICKS);
     expect(r.out('g', 'holding')).toBe(true);
     expectClamped(r);
   });
@@ -102,7 +105,7 @@ describe('gripper clamps a crate between the pads (Vật lý thật)', () => {
   it('a crate 0.15 m off the middle across the fingers is clamped where it lies: each finger closes until it touches, the crate is not moved', async () => {
     const r = await hand({ y: GRASP_Y - 0.2, z: 0.15 });
     r.hold('Space');
-    r.tick(20);
+    r.tick(CLOSE_TICKS);
     expect(r.out('g', 'holding')).toBe(true);
     expectClamped(r);
     expect(Math.abs(Math.abs(metrics(r).across) - 0.15)).toBeLessThan(CENTRE_CM);
@@ -125,13 +128,12 @@ describe('gripper clamps a crate between the pads (Vật lý thật)', () => {
     expect(r.out('g', 'holding')).toBe(false);
   });
 
-  it('a crate outside the finger gap is not attached: 0.3 m off the middle does not fit the 1 m opening (needs <= 0.2)', async () => {
+  it('a crate that does not fit between the pads is not attached: 0.3 m off the middle would sink 0.1 m into a finger, so the finger pushes it out of the way first (needs <= 0.2 to fit)', async () => {
     const r = await hand({ y: GRASP_Y - 0.2, z: 0.3 });
-    expect(r.out('g', 'inReach')).toBe(false);
-    r.hold('Space');
-    r.tick(20);
-    expect(r.out('g', 'holding')).toBe(false);
-    expect(Math.abs(r.entity('c')!.position.z - 0.3)).toBeLessThan(CENTRE_CM);
+    // The hand is solid: the crate cannot stay inside the finger. It was pushed toward the middle until it fits (at most 0.2 m off),
+    // or it no longer overlaps the finger at all; either way nothing is sunk into the hand (the engine's contact margin leaves up to 2 mm).
+    expect(crateInHand(r.world, 'l', 'g', r.entity('c')!)).toBeLessThan(0.002);
+    expect(r.entity('c')!.position.z).toBeLessThan(0.3);
   });
 
   it('a crate wider than the opening cannot be gripped', async () => {
@@ -147,7 +149,7 @@ describe('gripper clamps a crate between the pads (Vật lý thật)', () => {
     await turnAboutVertical(small, 6);
     expect(small.out('g', 'inReach')).toBe(true);
     small.hold('Space');
-    small.tick(20);
+    small.tick(CLOSE_TICKS);
     expect(small.out('g', 'holding')).toBe(true);
     expectClamped(small);
 
@@ -181,6 +183,7 @@ describe('auto-arm: every pick is a real clamp', () => {
     let worstAcross = 0;
     let worstFace = 0;
     let picks = 0;
+    let heldFor = 0;
     let wasHeld: string | null = null;
     const made = new Set<string>();
     p.watch(300, () => {
@@ -188,6 +191,7 @@ describe('auto-arm: every pick is a real clamp', () => {
       const held = p.out('gripper', 'held') as string | null;
       if (held !== null && held !== wasHeld) picks++;
       wasHeld = held;
+      heldFor = held === null ? 0 : heldFor + 1;
       if (held === null) return;
       const c = p.world.entities().find((e) => e.id === held);
       const m = c ? holdMetrics(p.world, 'fore', 'gripper', c) : null;
@@ -195,7 +199,8 @@ describe('auto-arm: every pick is a real clamp', () => {
       heldTicks++;
       worstOverlap = Math.max(worstOverlap, m.overlap.palm, m.overlap.finger1, m.overlap.finger2, m.overlap.link);
       worstAcross = Math.max(worstAcross, Math.abs(m.across));
-      worstFace = Math.max(worstFace, Math.abs(m.faceGap[0]), Math.abs(m.faceGap[1]));
+      // Closing from the open hand onto a 0.6 m crate takes 0.2 m at 1 m/s: after 0.35 s both pads are on the faces.
+      if (heldFor > 21) worstFace = Math.max(worstFace, Math.abs(m.faceGap[0]), Math.abs(m.faceGap[1]));
     });
     // One crate every 8 s: 37 made in 300 s; all that had time to arrive are picked (the last ones are still on the way in).
     expect(made.size).toBeGreaterThanOrEqual(36);

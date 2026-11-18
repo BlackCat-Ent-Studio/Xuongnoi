@@ -83,6 +83,8 @@ export interface PushPlan {
   /** Bodies the full step would move (pushed and riding), and their total mass (kg): the load the force has to accelerate. */
   loadIds: EntityId[];
   loadKg: number;
+  /** Force (N) each directly pushed body needs (a row or stack counts under the body the head touches); `requiredN` is their sum. */
+  needs: ReadonlyMap<EntityId, number>;
   /** With `probeContact`: distance (m) the head can travel before it first touches a body; null when it touches none within the full step. */
   contactAt: number | null;
 }
@@ -211,7 +213,7 @@ function contactHeight(pusher: Box, body: Box): number {
  *   tipping   (m + load above) · g · a / h    (`tipForceN`, at the height where it is really touched).
  * Lifting (the rod points up) adds the weight on top of the friction and never tips anything.
  */
-function forceFor(input: PushInput, set: ContactSet): number {
+function forceFor(input: PushInput, set: ContactSet): { total: number; needs: Map<EntityId, number> } {
   const { pushed, riderOf, pushedBy } = set;
   const byId = new Map(input.bodies.map((b) => [b.id, b]));
   // The whole load carried by each directly pushed body: itself plus every rider above it (stacks count).
@@ -226,6 +228,7 @@ function forceFor(input: PushInput, set: ContactSet): number {
     load.set(root, (load.get(root) ?? 0) + (byId.get(id)?.massKg ?? 0));
   }
   let total = 0;
+  const needs = new Map<EntityId, number>();
   for (const [root, kg] of load) {
     const body = byId.get(root);
     if (!body) continue;
@@ -234,8 +237,9 @@ function forceFor(input: PushInput, set: ContactSet): number {
     if (body.real && by && Math.abs(input.dir.y) <= 0.5 && input.flat !== 'y') need = Math.min(need, tipForceN(body.real, input.dir, contactHeight(by, body.box), kg));
     total += need;
     if (input.lifting) total += weight(kg);
+    needs.set(root, input.lifting ? need + weight(kg) : need);
   }
-  return total;
+  return { total, needs };
 }
 
 /** True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it). */
@@ -263,7 +267,7 @@ function clearOfSolids(input: PushInput, d: number): boolean {
 export function planPush(input: PushInput): PushPlan {
   const step = Math.max(0, Number.isFinite(input.step) ? input.step : 0);
   const full = contactSet(input, step);
-  const requiredN = forceFor(input, full);
+  const { total: requiredN, needs } = forceFor(input, full);
   const loadIds = [...full.pushed.keys()];
   const byId = new Map(input.bodies.map((b) => [b.id, b]));
   const loadKg = loadIds.reduce((sum, id) => sum + (byId.get(id)?.massKg ?? 0), 0);
@@ -299,7 +303,7 @@ export function planPush(input: PushInput): PushPlan {
   const moves: PushMove[] = [...set.pushed]
     .map(([id, delta]): PushMove => ({ id, delta, role: set.riderOf.has(id) ? 'rider' : 'pushed' }))
     .sort((a, b) => ahead(b.id) - ahead(a.id));
-  return { advance, blocked, requiredN, moves, loadIds, loadKg, contactAt };
+  return { advance, blocked, requiredN, moves, loadIds, loadKg, needs, contactAt };
 }
 
 /** The same body after it was moved by `delta`: its box and its real outline go together. */

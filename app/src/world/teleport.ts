@@ -48,7 +48,8 @@ function* candidates(to: Vec3, mode: ViewMode): Generator<Vec3> {
 export function findFreeSpot(list: readonly Entity[], e: Entity, to: Vec3, mode: ViewMode): Vec3 | null {
   if (![to.x, to.y, to.z].every(Number.isFinite)) return null;
   const solids = list.filter(
-    (o) => o !== e && o.visible && o.solid && (o.kind === 'block' || (o.kind === 'vehicle' && e.kind === 'character')),
+    // A crate a gripper holds is part of that hand: the hand's own cubes never keep it from its place.
+    (o) => o !== e && o.visible && o.solid && (o.kind === 'block' || (o.kind === 'vehicle' && e.kind === 'character')) && !(e.grippedBy !== undefined && o.ownerNodeId === e.grippedBy),
   );
   // A rigid crate ("Vật lý thật") that rests on or leans against something touches it within the engine's contact margin:
   // a resting contact is not an overlap, so it is tested with a thin skin taken off every face.

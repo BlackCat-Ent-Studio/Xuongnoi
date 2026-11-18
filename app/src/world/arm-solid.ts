@@ -74,6 +74,8 @@ export function sweepCubes(input: SweepInput): SweepResult {
   let requiredNm = 0;
   let rigidNm = 0;
   let fraction = 1;
+  /** Rigid crates already charged to an earlier cube of this sweep: a hand of many cubes pushes a crate once, not once per cube. */
+  const charged = new Set<string>();
   for (const i of order) {
     const from = input.before[i]!;
     const to = input.after[i]!;
@@ -82,7 +84,14 @@ export function sweepCubes(input: SweepInput): SweepResult {
     if (len < TINY) continue;
     const dir = { x: d.x / len, y: d.y / len, z: d.z / len };
     const plan = planPush({ head: from, dir, step: len, bodies, solids: input.solids, flat: input.flat, lifting: dir.y > 0.5 });
-    const nm = torque(plan.requiredN, input.levers[i] ?? 0);
+    // What an earlier (farther out) cube already pays for a rigid crate is not charged again; other bodies are charged per cube as ever.
+    let fresh = plan.requiredN;
+    for (const [id, need] of plan.needs) {
+      if (bodies.find((b) => b.id === id)?.crossTol === undefined) continue;
+      if (charged.has(id)) fresh -= need;
+      else charged.add(id);
+    }
+    const nm = torque(Math.max(0, fresh), input.levers[i] ?? 0);
     requiredNm += nm;
     if (plan.loadIds.some((id) => bodies.find((b) => b.id === id)?.crossTol !== undefined)) rigidNm += nm;
     fraction = Math.min(fraction, plan.advance / len);

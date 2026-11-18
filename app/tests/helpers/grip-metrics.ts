@@ -1,7 +1,7 @@
 import type { EntityView, Vec3, World } from '../../src/engine/types';
 import { armRegistry } from '../../src/nodes/arm-parts';
 import { dirOf, lateralOf, normalOf } from '../../src/world/arm-kinematics';
-import { extentOn, obbOf, obbSeparation, quatFromAxes } from '../../src/world/oriented-box';
+import { extentOn, obbOf, obbSeparation, quatFromAxes, type Obb } from '../../src/world/oriented-box';
 
 /**
  * Where a held crate sits in a gripper's hand, measured independently of the gripper code: from the arm's frame (the end of
@@ -31,9 +31,8 @@ export function holdMetrics(world: World, linkOwner: string, gripperOwner: strin
   const la = lateralOf(hand);
   const grasp = { x: hand.pos.x + ap.x * 0.3, y: hand.pos.y + ap.y * 0.3, z: hand.pos.z + ap.z * 0.3 };
   const q = quatFromAxes(ap, no, la);
-  const parts = world.entities().filter((e) => e.ownerNodeId === gripperOwner);
-  const palm = parts.find((e) => Math.abs(e.size.x - 0.15) < 1e-9);
-  const fingers = parts.filter((e) => Math.abs(e.size.x - 0.3) < 1e-9);
+  // The drawn palm and two fingers are the first three entities the gripper made (the solid cover cubes of a hand come after them).
+  const [palm, ...fingers] = world.entities().filter((e) => e.ownerNodeId === gripperOwner).slice(0, 3);
   if (!palm || fingers.length !== 2) return null;
   const c = obbOf(crate.position, crate.size, crate.rotation);
   const d = sub(crate.position, grasp);
@@ -51,4 +50,52 @@ export function holdMetrics(world: World, linkOwner: string, gripperOwner: strin
     },
     faceGap: [face(fingers[0]!), face(fingers[1]!)],
   };
+}
+
+/** The drawn boxes of a gripper (palm, finger 1, finger 2) with the turn of its hand, for measuring against any crate. */
+export function handBoxesOf(world: World, linkOwner: string, gripperOwner: string): { palm: Obb; fingers: [Obb, Obb]; link: Obb } | null {
+  const link = world.entities().find((e) => e.ownerNodeId === linkOwner);
+  const hand = link ? armRegistry(world).frames.get(link.id) : undefined;
+  if (!link || !hand) return null;
+  const q = quatFromAxes(dirOf(hand), normalOf(hand), lateralOf(hand));
+  const [palm, f1, f2] = world.entities().filter((e) => e.ownerNodeId === gripperOwner).slice(0, 3);
+  if (!palm || !f1 || !f2) return null;
+  return {
+    palm: obbOf(palm.position, palm.size, q),
+    fingers: [obbOf(f1.position, f1.size, q), obbOf(f2.position, f2.size, q)],
+    link: obbOf(link.position, link.size, q),
+  };
+}
+
+/** How far a crate sinks into the hand's palm, either finger or the link (m, positive = overlap, negative = gap): the largest of the four. */
+export function crateInHand(world: World, linkOwner: string, gripperOwner: string, crate: EntityView): number {
+  const h = handBoxesOf(world, linkOwner, gripperOwner);
+  if (!h) return -Infinity;
+  const c = obbOf(crate.position, crate.size, crate.rotation);
+  return Math.max(...[h.palm, h.fingers[0], h.fingers[1], h.link].map((o) => -obbSeparation(o, c)));
+}
+
+/** The drawn box of any link (its turn is the one of the frame at its end: a link does not turn). */
+function linkObbOf(world: World, owner: string): Obb | null {
+  const link = world.entities().find((e) => e.ownerNodeId === owner);
+  const frame = link ? armRegistry(world).frames.get(link.id) : undefined;
+  if (!link || !frame) return null;
+  return obbOf(link.position, link.size, quatFromAxes(dirOf(frame), normalOf(frame), lateralOf(frame)));
+}
+
+/**
+ * How far a crate sinks into any part of an arm (m, positive = overlap): its links, the hand's palm and both fingers. `links` are the
+ * node ids of the links; the last of them is the one the gripper hangs on. Negative = the gap to the nearest part.
+ */
+export function crateInArm(world: World, links: readonly string[], gripperOwner: string, crate: EntityView): number {
+  const c = obbOf(crate.position, crate.size, crate.rotation);
+  const parts: Obb[] = [];
+  for (const l of links) {
+    const o = linkObbOf(world, l);
+    if (o) parts.push(o);
+  }
+  const hand = links.length > 0 ? handBoxesOf(world, links[links.length - 1]!, gripperOwner) : null;
+  if (hand) parts.push(hand.palm, hand.fingers[0], hand.fingers[1]);
+  if (parts.length === 0) return -Infinity;
+  return Math.max(...parts.map((o) => -obbSeparation(o, c)));
 }

@@ -194,8 +194,9 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   }
 
   function syncCrate(e: Entity, rec: Rec): void {
-    if (!same3(e.pos, rec.lastPos)) {
-      // Game code put it somewhere (a gripper, a piston, a portal): out of the simulation while it is being moved.
+    if (e.grippedBy !== undefined || !same3(e.pos, rec.lastPos)) {
+      // Game code put it somewhere (a gripper, a piston, a portal): out of the simulation while it is being moved. A crate the
+      // gripper holds stays out for as long as it holds it, even on a tick the hand has not moved it.
       if (!rec.parked) {
         rec.body.setEnabled(false);
         rec.parked = true;
@@ -246,6 +247,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     const bottom = me.pos.y - me.size.y / 2;
     for (const o of entities) {
       if (o === e || !o.visible || o.heldBy !== null || o.bullet) continue;
+      // The fingers and palm that hold the crate do not carry it.
+      if (e.grippedBy !== undefined && o.ownerNodeId === e.grippedBy) continue;
       if (!(o.kind === 'block' ? o.solid : o.kind === 'item' ? o.rigid === true : o.kind === 'robot' || o.kind === 'vehicle' ? o.solid : false)) continue;
       const b = boundsBox(o);
       if (Math.abs(bottom - (b.pos.y + b.size.y / 2)) > REST_GAP) continue;

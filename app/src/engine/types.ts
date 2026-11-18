@@ -875,6 +875,15 @@ export interface WorldApi {
   robotPushN(body: EntityId, travel: number): number;
   /** True for a loose item that the rigid-body engine moves (real physics on and loaded). A pusher leaves such a crate to the engine: it checks force and room, but does not displace it. */
   isRigidCrate(id: EntityId): boolean;
+  /** True when real physics is on and the rigid-body engine is loaded (loose items are rigid crates, a hand is solid). */
+  realPhysicsOn(): boolean;
+  /**
+   * Declares (each tick, idempotent) that the gripper whose node id is `holder` holds this crate, or with null that it let go.
+   * A held crate is part of the hand: the engine leaves it to the gripper, and the hand's own solid cubes neither support it nor keep it from its place.
+   */
+  setItemGrip(id: EntityId, holder: string | null): void;
+  /** Gives a block a new size (a hand's cover cubes follow its pose). Ignored for anything else and for sizes that are not positive numbers. */
+  resizeBlock(id: EntityId, size: Vec3): void;
   /**
    * What one motor's wheel really does with real physics on: its rim speed as revolutions per minute, how fast the rim runs
    * ahead of (or behind) the ground while it slips, and whether it slips. Null when real physics is off, the wheel is not

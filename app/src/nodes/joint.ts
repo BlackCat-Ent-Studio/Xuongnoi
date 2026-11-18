@@ -4,7 +4,7 @@ import { hubCube, resolveTurn } from '../world/arm-solid';
 import type { Box } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
 import { pushBodiesOf } from './linear-actuator';
-import { armRegistry, baseFrame, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
+import { armRegistry, baseFrame, heldBeyond, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
@@ -135,7 +135,8 @@ export const jointNode: NodeDef<JointState> = {
     let pushNm = 0;
     const cubesNow = Math.abs(step.angle - angle0) > 1e-9 ? beyondAt(angle0) : [];
     if (cubesNow.length > 0) {
-      const bodies = pushBodiesOf(ctx.world);
+      // A crate a gripper beyond this joint holds is part of the hand, not something the hand pushes.
+      const bodies = pushBodiesOf(ctx.world, null, heldBeyond(reg, s.id, ctx.tick));
       const lever = (b: Box): number => (axis === 'pitch' ? Math.hypot(horizontalArm(base, b.pos), b.pos.y - base.pos.y) : Math.hypot(b.pos.x - base.pos.x, b.pos.z - base.pos.z));
       const resolved = resolveTurn(angle0, step.angle, beyondAt, {
         levers: cubesNow.map(lever),
