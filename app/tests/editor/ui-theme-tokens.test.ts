@@ -108,3 +108,16 @@ describe('display mode sizes', () => {
     expect(coarse).toContain(":root[data-mode='teacher']");
   });
 });
+
+describe('light theme "Xám dịu": no pure-white large surfaces', () => {
+  const t = THEMES.light;
+  it.each(['bg', 'panel', 'panel2', 'raise', 'card-bg', 'card-head', 'card-adv'])('--%s is a soft grey, not #ffffff', (name) => {
+    expect(hexOf(t, name).toLowerCase()).not.toBe('#ffffff');
+  });
+  it('uses the agreed soft surfaces', () => {
+    expect([t.bg, t.panel, t.panel2, t.raise, t.line, t['card-bg']]).toEqual(['#dfe3e8', '#eceff3', '#e3e7ec', '#d8dde4', '#cbd2da', '#f1f3f6']);
+  });
+  it('the yellow Đúng/Sai wire reads on the soft board through its casing (>= 3:1)', () => {
+    expect(contrastRatio(hexOf(t, 't-bool-edge'), hexOf(t, 'bg'))).toBeGreaterThanOrEqual(3);
+  });
+});

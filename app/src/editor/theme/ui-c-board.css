@@ -165,3 +165,6 @@
 .app .wc-arrange-yes { height: var(--ctl); padding: 0 14px; border: 0; border-radius: 8px; background: var(--accent); color: var(--accent-ink); font: 700 var(--fs-s) var(--font); cursor: pointer; white-space: nowrap; }
 .app .wc-arrange-no { width: var(--ctl); height: var(--ctl); display: grid; place-items: center; border: 0; border-radius: 8px; background: none; color: var(--text2); cursor: pointer; }
 .app .wc-arrange-no:hover { background: var(--raise); color: var(--text); }
+/* the legend pill is as wide as its words, whatever box it sits in */
+.app .wc-mini { width: max-content; min-width: 188px; }
+.app .wc-legend { width: max-content; max-width: none; flex: none; box-sizing: border-box; }

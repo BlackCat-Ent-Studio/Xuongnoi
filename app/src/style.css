@@ -79,8 +79,8 @@
   color-scheme: dark;
 }
 :root[data-theme='light'] {
-  --bg: #f3f1ea;
-  --grid: #cfc9bb;
+  --bg: #dfe3e8;
+  --grid: #b9c1cc;
   --chrome: #16233a;
   --chrome-text: #f1f4f9;
   --chrome-text2: #b9c4d6;
@@ -90,14 +90,14 @@
   --chrome-raise: #2a3b5a;
   --chrome-run: #5fd4a0;
   --chrome-danger: #ff9d94;
-  --panel: #ffffff;
-  --panel2: #f6f4ef;
-  --raise: #ece9e1;
-  --line: #dedad0;
+  --panel: #eceff3;
+  --panel2: #e3e7ec;
+  --raise: #d8dde4;
+  --line: #cbd2da;
   --line2: #8a8577;
   --text: #1b2330;
   --text2: #4a5361;
-  --text3: #5f6876;
+  --text3: #515b69;
   --accent: #0b6f6b;
   --accent-ink: #ffffff;
   --accent-soft: #c5e4e1;
@@ -115,10 +115,10 @@
   --ok-text: #0f5a2c;
   --err-bg: #fde4e1;
   --err-text: #8e1c13;
-  --card-bg: #ffffff;
-  --card-line: #8a8577;
-  --card-head: #f6f4ef;
-  --card-adv: #f8f7f3;
+  --card-bg: #f1f3f6;
+  --card-line: #767164;
+  --card-head: #e3e7ec;
+  --card-adv: #e8ebef;
   --card-radius: 12px;
   --shadow-card: 0 1px 2px rgba(21, 32, 43, 0.1), 0 4px 10px -4px rgba(21, 32, 43, 0.18);
   --shadow-hover: 0 2px 4px rgba(21, 32, 43, 0.14), 0 10px 20px -6px rgba(21, 32, 43, 0.28);
