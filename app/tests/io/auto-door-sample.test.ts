@@ -3,9 +3,13 @@ import { listSamples } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { AUTO_DOOR, AUTO_DOOR_WIRES } from '../../src/samples/auto-door-board';
 import type { Board } from '../../src/engine/types';
-import { firstCardOverlap, play, without } from '../helpers/cell-run';
+import { firstCardOverlap, without } from '../helpers/cell-run';
+import { loadEngine, playReal as play } from '../helpers/cell-run-real';
 
-beforeAll(() => registerAllNodes());
+beforeAll(async () => {
+  registerAllNodes();
+  await loadEngine();
+});
 
 const sample = (): Board => structuredClone(listSamples().find((s) => s.id === 'auto-door')!.board);
 
@@ -94,6 +98,58 @@ describe('sample Cửa tự động', () => {
     // Every pass of the walker opened the door again, and the walker did pass the bar each time.
     expect(p.out('passes', 'value') as number).toBeGreaterThanOrEqual(3);
     expect(crossings).toBeGreaterThanOrEqual(5);
+  });
+
+  it('runs on "Vật lý thật" for two minutes: the bar rises and falls for every arrival and never traps or launches the walker', { timeout: 120_000 }, () => {
+    const b = sample();
+    expect(b.graph.settings?.realPhysics).toBe(true);
+    expect(b.graph.settings?.gravity).toBeUndefined();
+    const p = play(b);
+    const walker = p.entity('walker');
+    let prev = p.world.getEntity(walker.id)!.position;
+    let maxStep = 0;
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let rises = 0;
+    let falls = 0;
+    let up = false;
+    let peakLoad = 0;
+    let overloaded = false;
+    p.watch(120, (t) => {
+      const pos = p.world.getEntity(walker.id)!.position;
+      // The walker is made 0.5 m above its standing height and settles in the first second.
+      if (t < 1.5) {
+        prev = pos;
+        return;
+      }
+      maxStep = Math.max(maxStep, Math.hypot(pos.x - prev.x, pos.y - prev.y, pos.z - prev.z));
+      minY = Math.min(minY, pos.y);
+      maxY = Math.max(maxY, pos.y);
+      prev = pos;
+      const angle = p.out('servo', 'angleNow') as number;
+      if (!up && angle > 80) {
+        up = true;
+        rises++;
+      }
+      if (up && angle < 1) {
+        up = false;
+        falls++;
+      }
+      peakLoad = Math.max(peakLoad, p.out('servo', 'load') as number);
+      if (p.out('servo', 'overloaded') === true) overloaded = true;
+    });
+    // 120 s = about 5 patrol legs each way: the bar goes up and down for each one, and every rise has its fall.
+    expect(rises).toBeGreaterThanOrEqual(5);
+    expect(falls).toBeGreaterThanOrEqual(rises - 1);
+    expect(p.out('passes', 'value') as number).toBeGreaterThanOrEqual(rises);
+    // Walks at 3 m/s = 0.05 m a tick: no tick moves it much further, and it stays on the ground (never thrown up by the swinging bar).
+    expect(maxStep).toBeLessThan(0.08);
+    expect(minY).toBeGreaterThan(0.45);
+    expect(maxY).toBeLessThan(0.65);
+    expect(overloaded).toBe(false);
+    // Holding the 4 kg, 3.6 m bar level takes m g L / 2 = 70.6 N m: the servo's 120 N m has room.
+    expect(peakLoad).toBeCloseTo(AUTO_DOOR.barMassKg * 9.81 * (AUTO_DOOR.barLengthM / 2), 1);
+    expect(peakLoad).toBeLessThan(AUTO_DOOR.servoTorque);
   });
 
   it('never holds the walker up at the bar (it is never standing still next to it)', () => {

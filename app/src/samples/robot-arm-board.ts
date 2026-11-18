@@ -26,9 +26,9 @@ function nodes(): Spec[] {
     { id: 'floor', kind: 'block', ...at(0, 0), params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
     { id: 'pillar', kind: 'block', ...at(0, 1), params: { position: { x: -1.8, y: 0.8, z: 0 }, size: { x: 0.6, y: 1.6, z: 1 }, color: '#a3a3a3' } },
     { id: 'table', kind: 'block', ...at(0, 2), params: { position: { x: 0.6, y: 0.3, z: 0 }, size: { x: 2.6, y: 0.6, z: 1 }, color: '#78716c' } },
-    { id: 'crate-light', kind: 'item', ...at(0, 3), params: { shape: 'box', position: { x: -0.1, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 2 } },
-    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.7, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#ef4444', mass: 6 } },
-    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.5, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', mass: 2, crushLimit: 60 } },
+    { id: 'crate-light', kind: 'item', ...at(0, 3), params: { shape: 'box', position: { x: -0.24, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 2 } },
+    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.61, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#ef4444', mass: 6 } },
+    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.37, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#facc15', mass: 2, crushLimit: 60 } },
 
     // --- the arm ---
     { id: 'go', kind: 'on-start', ...at(1, 0) },
@@ -120,9 +120,9 @@ const NOTES: Note[] = [
     id: 'note1',
     color: 'yellow',
     pos: { x: 20, y: 1500 },
-    size: { w: 320, h: 260 },
+    size: { w: 320, h: 340 },
     text:
-      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách.',
+      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bảng này đã bật "Vật lý thật": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng tuột ngay khi hai ngón khép lại.',
   },
   {
     id: 'note2',
@@ -157,7 +157,7 @@ export function createRobotArmBoard(): Board {
   return {
     name: 'Tay máy gắp thùng',
     mode: '2d-side',
-    graph: { nodes: graphNodes, wires, settings: { wireRule: true } },
+    graph: { nodes: graphNodes, wires, settings: { wireRule: true, realPhysics: true } },
     notes: structuredClone(NOTES),
   };
 }
