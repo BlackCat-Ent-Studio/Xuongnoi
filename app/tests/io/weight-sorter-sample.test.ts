@@ -158,9 +158,9 @@ describe('sample Băng chuyền phân loại theo cân nặng', () => {
       ['make-timer', 'done', 'maker', 'spawn'],
       ['scale', 'self', 'weigh', 'who'],
       ['weigh', 'mass', 'is-heavy', 'a'],
-      ['limit', 'value', 'is-heavy', 'b'],
       ['is-heavy', 'out', 'heavy-seen', 'set'],
-      ['heavy-seen', 'on', 'wait', 'run'],
+      ['weigh', 'loaded', 'here', 'set'],
+      ['here', 'on', 'wait', 'run'],
       ['wait', 'done', 'now-push', 'a'],
       ['heavy-seen', 'on', 'now-push', 'b'],
       ['now-push', 'out', 'piston', 'extend'],
@@ -173,6 +173,15 @@ describe('sample Băng chuyền phân loại theo cân nặng', () => {
       const r = sort(without(sample(), link), 40);
       expect(r.sideTotal, link.join('.')).toBe(0);
     }
+  });
+
+  it('without the limit wire the compare is always on: the first crate of any weight is pushed and the sorting by weight is gone', { timeout: 180_000 }, () => {
+    const link = ['limit', 'value', 'is-heavy', 'b'] as const;
+    expect(WEIGHT_SORTER_WIRES.some((w) => w.join('.') === link.join('.'))).toBe(true);
+    const r = sort(without(sample(), link), 60);
+    const done = arrived(r);
+    // A light crate goes to the side, and a heavy one is left to ride on to the end bin: not sorted by weight.
+    expect(done.some((c) => c.bin === 'side' && !isHeavy(c)) || done.some((c) => c.bin === 'end' && isHeavy(c))).toBe(true);
   });
 
   it('wires that only report (the scale reading, the force readout, the camera) are not essential: the machine sorts without them', { timeout: 180_000 }, () => {

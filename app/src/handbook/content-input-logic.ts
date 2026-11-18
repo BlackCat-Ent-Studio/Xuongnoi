@@ -363,7 +363,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Nếu chưa nối đủ hai vật thì khoảng cách là 0 nhưng "Trong tầm" vẫn TẮT, đừng nhầm.',
       'Vật bị ẩn cũng làm "Trong tầm" tắt.',
-      'Khoảng cách đo giữa hai tâm vật, nên vật to sẽ chạm nhau trước khi khoảng cách xuống 0.',
+      'Khoảng cách đo giữa hai tâm vật, nên vật to sẽ chạm nhau trước khi khoảng cách xuống 0. Riêng thùng rời khi bật "Vật lý thật" thì đo tới điểm gần nhất trên mặt thùng, đúng hình thùng đang nghiêng hay nằm: thùng dài 1,2 m nằm ngang có tâm cách 3 ô thì đầu gần cách 3 - 0,6 = 2,4 ô (thùng đứng thẳng rộng 0,4 m: 3 - 0,2 = 2,8); hai thùng thì đo khe hở giữa hai mặt gần nhau nhất.',
       'Game nhìn ngang hay nhìn từ trên chỉ đo trên mặt phẳng đang thấy.',
     ],
     lessonId: 'chance-zones',
@@ -410,6 +410,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     tips: [
       'Khối lượng đặt ở mục Nâng cao của Đồ vật, Vật thể, Nhân vật và Xe (mặc định: đồ vật 1 kg, nhân vật 60 kg).',
       'Một thùng phải nằm trên mặt trên của bàn cân mới được tính; thùng đang bay trên không hoặc đứng cạnh bàn thì không.',
+      'Khi bật "Vật lý thật", thùng gác lên nhiều chỗ chỉ đè lên bàn cân đúng phần của nó (quy tắc đòn bẩy, xem trang "Vật lý thật"): thùng 10 kg nằm nửa trên bàn cân, nửa trên khối sàn cùng độ cao thì cân đọc 5 kg, khối sàn 5 kg; tổng các chỗ đỡ luôn bằng khối lượng thùng. Thùng đang trượt lên cân thì số đọc tăng dần, đủ khối lượng khi nằm trọn trên cân. Tắt "Vật lý thật" thì thùng chạm bàn là tính đủ khối lượng như trước.',
       'Số kg và N khác nhau: 1 kg đè khoảng 9,8 N. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
     ],
     lessonId: 'weight-force',
@@ -568,6 +569,7 @@ export const HANDBOOK_INPUT_LOGIC: readonly HandbookEntry[] = [
     example: '"Đối tượng" của bot → "Đối tượng"; "Đồ gần nhất" → "Điểm đến" của Di chuyển; "Đã tìm thấy" → "Bật" của Di chuyển; "Đã đến" → "Nhấc lên" của Khiêng đồ.',
     tips: [
       'Chỉ tính đồ nằm rời trên sàn: đồ đang được khiêng hoặc đang cầm thì bị bỏ qua.',
+      'Khi bật "Vật lý thật", thùng rời được xếp theo điểm gần nhất trên mặt thùng (nhìn từ trên xuống), không theo tâm: thùng dài nằm ngang có đầu gần hơn sẽ thắng thùng khác có tâm gần hơn, và "Khoảng cách" ra đúng đoạn tới mặt thùng đó.',
       'Hai món cách đều thì chọn món có tên đứng trước, nên bot không đổi ý giữa chừng.',
       'Nối các ô đánh dấu vào "Bỏ qua đồ trên ô" thì thùng đã cất vào kho không bị đi lấy lại.',
     ],

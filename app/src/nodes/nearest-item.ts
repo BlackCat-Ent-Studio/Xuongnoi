@@ -1,4 +1,5 @@
 import type { EntityView, NodeDef } from '../engine/types';
+import { floorGap } from '../world/view-gap';
 import { SLOT_PORTS, isTaken } from './next-free-slot';
 import { asBool, asObject, strParam } from './util';
 
@@ -10,7 +11,7 @@ export const nearestItemNode: NodeDef<null> = {
   label: 'Tìm đồ gần nhất',
   category: 'logic',
   description:
-    'Nhìn khắp sàn và chỉ ra món đồ nằm rời, không ai khiêng, gần "Đối tượng" nhất. Món đó ra ở "Đồ gần nhất" để nối vào "Điểm đến" của mảnh Di chuyển; "Đã tìm thấy" bật khi tìm thấy, "Khoảng cách" là đường tới món đó. Muốn bỏ qua đồ đã cất vào ô đánh dấu thì nối các ô đó vào "Bỏ qua đồ trên ô". "Chỉ tìm loại hàng" lọc theo loại hàng. Bật "Tạm nghỉ" thì nó không tìm gì (Có tắt).',
+    'Nhìn khắp sàn và chỉ ra món đồ nằm rời, không ai khiêng, gần "Đối tượng" nhất. Món đó ra ở "Đồ gần nhất" để nối vào "Điểm đến" của mảnh Di chuyển; "Đã tìm thấy" bật khi tìm thấy, "Khoảng cách" là đường tới món đó. Thùng rời khi bật "Vật lý thật" được tính tới điểm gần nhất trên mặt thùng (nhìn từ trên xuống), nên thùng dài nằm ngang có đầu gần hơn sẽ thắng thùng có tâm gần hơn. Muốn bỏ qua đồ đã cất vào ô đánh dấu thì nối các ô đó vào "Bỏ qua đồ trên ô". "Chỉ tìm loại hàng" lọc theo loại hàng. Bật "Tạm nghỉ" thì nó không tìm gì (Có tắt).',
   inputs: [{ id: 'who', type: 'object', label: 'Đối tượng', required: true }, { id: 'pause', type: 'bool', label: 'Tạm nghỉ' }, ...IGNORE_PORTS],
   outputs: [
     { id: 'item', type: 'object', label: 'Đồ gần nhất' },
@@ -42,7 +43,8 @@ export const nearestItemNode: NodeDef<null> = {
       if (!it.visible || it.carried || it.inHand || world.isHeld(it.id)) continue;
       if (goods !== '' && world.tagOf(it.id) !== goods) continue;
       if (markers.some((m) => isTaken(world, m, [it]))) continue;
-      const gap = Math.hypot(it.position.x - who.position.x, flat ? 0 : it.position.z - who.position.z);
+      // A crate under real physics is as far as the nearest point of its outline, not as its middle.
+      const gap = floorGap(who, it, flat);
       if (gap < bestGap - 1e-6 || (Math.abs(gap - bestGap) <= 1e-6 && best !== null && it.id < best.id)) {
         best = it;
         bestGap = gap;

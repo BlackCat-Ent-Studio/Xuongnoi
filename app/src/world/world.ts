@@ -29,7 +29,8 @@ import type { WorldOptions } from './world-options';
 import { createPhysicsWatch } from '../dev/physics-watch';
 import { bodyTuning } from './body-tuning';
 import { massHeld, massOn, materialOf, materialTuning, squeeze } from './material';
-import { boundsBox, colliderBox, isTurnedBody, normalizeCollider } from './collider';
+import { boundsBox, colliderBox, isTurnedBody, layoutSize, normalizeCollider } from './collider';
+import { conjQuat, mulQuat, yawQuat } from './oriented-box';
 import { MAX_BULLETS, aimDirection, clampShot, countBullets, muzzlePosition, stepBullets } from './projectiles';
 import { exitSpot, nearestEnterable } from './vehicle-seats';
 import { cargoOn, nearestLoadable, normalizeCells, unloadSpot } from './cargo';
@@ -47,6 +48,8 @@ function pairKey(a: EntityId, b: EntityId): string {
 
 /** Vertical share of a throw's speed. */
 const THROW_LIFT = 0.5;
+/** A crate's turn smaller than this (sine of half the angle: about 0.6 degrees) counts as standing straight when it is taken up. */
+const MIN_CARRIED_TURN = 0.005;
 /** How much facing toward an item counts against distance when several are in reach. */
 const FACING_BIAS = 0.3;
 /** Seconds a swing lasts; a new swing cannot start before it ends. */
@@ -175,7 +178,18 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     item.heldBy = null;
     item.inHand = false;
     delete item.cargoSeq;
+    // The crate goes on with the turn it was riding in (`rot`); only the link to the holder's heading ends.
+    delete item.heldTurn;
     return holder;
+  }
+
+  /**
+   * A rigid crate taken up while turned (tipped, leaning, turned about) keeps that turn against the holder's heading until it is let
+   * go. The rounding wobble of a crate that stands still (a few millionths) is not a turn: that crate rides upright.
+   */
+  function keepTurn(item: Entity, holder: Entity): void {
+    if (item.rigid === true && item.rot && isTurnedBody(item) && Math.hypot(item.rot.x, item.rot.y, item.rot.z) > MIN_CARRIED_TURN) item.heldTurn = mulQuat(conjQuat(yawQuat(holder.facing)), item.rot);
+    else delete item.heldTurn;
   }
 
   /** Gets a seated character out beside its vehicle (no-op when it is not seated). Returns the vehicle left. */
@@ -271,8 +285,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const spot = solidDropSpot(c, item, distance, [...solids, ...list.filter((e) => e !== item && isSolidBody(e))]);
       return spot ?? carryAt(c, item, mode, rules);
     }
-    const y = mode === '2d-top' ? c.pos.y : c.pos.y - c.size.y / 2 + item.size.y / 2;
-    const autoGap = Math.max(c.size.x, c.size.z) / 2 + Math.max(item.size.x, item.size.z) / 2 + 0.05;
+    // A tilted crate is set down by the room its real outline takes, so it does not start inside the floor.
+    const size = layoutSize(item);
+    const y = mode === '2d-top' ? c.pos.y : c.pos.y - c.size.y / 2 + size.y / 2;
+    const autoGap = Math.max(c.size.x, c.size.z) / 2 + Math.max(size.x, size.z) / 2 + 0.05;
     const gap = distance !== undefined && Number.isFinite(distance) && distance > 0 ? distance : autoGap;
     const spots: Vec3[] = [
       { x: c.pos.x + c.facing.x * gap, y, z: c.pos.z + c.facing.z * gap },
@@ -470,6 +486,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       c.holding = item.id;
       if (rules) turnToward(c, item);
       else Object.assign(item.pos, carryAt(c, item, mode, rules));
+      keepTurn(item, c);
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },
@@ -550,6 +567,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       tool.inHand = true;
       c.handHolding = tool.id;
       Object.assign(tool.pos, handPosition(c, tool, mode));
+      keepTurn(tool, c);
       tool.vel = { x: 0, y: 0, z: 0 };
       return tool.id;
     },
@@ -688,6 +706,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!item) return null;
       item.heldBy = veh.id;
       item.cargoSeq = (onBoard.length > 0 ? onBoard[onBoard.length - 1]!.cargoSeq! : 0) + 1;
+      keepTurn(item, veh);
       item.vel = { x: 0, y: 0, z: 0 };
       return item.id;
     },

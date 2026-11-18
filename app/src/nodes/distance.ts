@@ -1,4 +1,5 @@
 import type { NodeDef } from '../engine/types';
+import { viewDistance } from '../world/view-gap';
 import { asObject, numParam } from './util';
 
 export const distanceNode: NodeDef<undefined> = {
@@ -6,7 +7,7 @@ export const distanceNode: NodeDef<undefined> = {
   label: 'Đo khoảng cách',
   category: 'logic',
   description:
-    'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). "Trong tầm" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Trong tầm" tắt.',
+    'Đo khoảng cách giữa tâm hai vật (đơn vị = 1 ô). Riêng thùng rời khi bật "Vật lý thật": đo tới điểm gần nhất trên mặt thùng, đúng hình thùng đang nghiêng hay nằm, không đo tới tâm. "Trong tầm" bật khi khoảng cách nhỏ hơn hoặc bằng ngưỡng. Chưa nối đủ hai vật thì ra 0 và "Trong tầm" tắt.',
   inputs: [
     { id: 'a', type: 'object', label: 'Đối tượng A', required: true },
     { id: 'b', type: 'object', label: 'Đối tượng B', required: true },
@@ -22,11 +23,8 @@ export const distanceNode: NodeDef<undefined> = {
     const ea = a !== null ? ctx.world.getEntity(a) : undefined;
     const eb = b !== null ? ctx.world.getEntity(b) : undefined;
     if (!ea || !eb || !ea.visible || !eb.visible) return { distance: 0, within: false };
-    // Flat views measure on their own plane only.
-    const dx = ea.position.x - eb.position.x;
-    const dy = ctx.mode === '2d-top' ? 0 : ea.position.y - eb.position.y;
-    const dz = ctx.mode === '2d-side' ? 0 : ea.position.z - eb.position.z;
-    const distance = Math.hypot(dx, dy, dz);
+    // Flat views measure on their own plane only. A loose crate under real physics is measured to its nearest surface point.
+    const distance = viewDistance(ea, eb, ctx.mode);
     return { distance, within: distance <= numParam(params, 'threshold', 3) };
   },
 };

@@ -16,7 +16,7 @@ export const forceSensorNode: NodeDef<ForceSensorState> = {
   label: 'Cảm biến lực / Cân',
   category: 'logic',
   description:
-    'Cân và đo lực. Nối một vật vào "Đối tượng". Kiểu "Cân vật đặt lên": cộng khối lượng mọi thứ đang nằm hoặc đứng trên mặt trên của vật đó (kể cả thùng chồng lên thùng) - dùng một Vật thể phẳng làm bàn cân. Kiểu "Lực đang giữ": đo món mà nhân vật đang khiêng hoặc cầm. "Khối lượng" tính bằng kg; "Lực" là trọng lượng bằng niutơn (N) = khối lượng × 9,81, tức là lực mà tải đè xuống; "Có tải" bật khi có gì trên cân. "Làm mượt" (giây) làm số đo đỡ nhảy khi tải vừa đặt xuống; để 0 thì đo tức thì.',
+    'Cân và đo lực. Nối một vật vào "Đối tượng". Kiểu "Cân vật đặt lên": cộng khối lượng mọi thứ đang nằm hoặc đứng trên mặt trên của vật đó (kể cả thùng chồng lên thùng) - dùng một Vật thể phẳng làm bàn cân. Khi bật "Vật lý thật", thùng gác lên nhiều chỗ chỉ đè lên cân đúng phần của nó (quy tắc đòn bẩy quanh khối tâm của thùng). Kiểu "Lực đang giữ": đo món mà nhân vật đang khiêng hoặc cầm. "Khối lượng" tính bằng kg; "Lực" là trọng lượng bằng niutơn (N) = khối lượng × 9,81, tức là lực mà tải đè xuống; "Có tải" bật khi có gì trên cân. "Làm mượt" (giây) làm số đo đỡ nhảy khi tải vừa đặt xuống; để 0 thì đo tức thì.',
   inputs: [{ id: 'who', type: 'object', label: 'Đối tượng', required: true }],
   outputs: [
     { id: 'force', type: 'number', label: 'Lực (N)' },
