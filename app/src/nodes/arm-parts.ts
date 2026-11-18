@@ -27,6 +27,8 @@ export interface ArmPart {
   /** Its own entity: the handle of its `tip` output (grippers have none). */
   tipId: EntityId | null;
   masses: ArmMass[];
+  /** The crate this part holds in its fingers (grippers): the arm's own pushes leave it alone, it is part of the hand. */
+  holds?: EntityId | null;
   /** Geometry of the part for any frame it might be mounted on; lets a joint ask what its turn would carry into. */
   shape?: ArmShape;
 }
@@ -48,6 +50,32 @@ export function armRegistry(world: WorldApi): ArmRegistry {
   return r;
 }
 
+/**
+ * True when a link or joint is a solid body: "Có", or "Tự động" (the default of a new card) while "Vật lý thật" is on. "Không" is a drawn-only
+ * piece whatever the switch says: an open setting means what it says.
+ */
+export function isSolidPiece(world: WorldApi, params: Record<string, unknown>): boolean {
+  const v = params.solid;
+  return v === 'yes' || (v === 'auto' && world.realPhysicsOn());
+}
+
+/**
+ * The block the arm this piece belongs to is bolted to: follow the bases down from `baseId` through joints and links to the first thing that is
+ * not an arm piece. Null when that is not a plain block (a robot chassis, a vehicle).
+ */
+export function mountBox(world: WorldApi, reg: ArmRegistry, baseId: EntityId | null): Box | null {
+  let at = baseId;
+  for (let n = 0; at !== null && reg.frames.has(at) && n < 64; n++) {
+    const owner = [...reg.parts.values()].find((p) => p.tipId === at);
+    at = owner ? owner.baseId : null;
+  }
+  if (at === null || reg.frames.has(at)) return null;
+  const e = world.getEntity(at);
+  if (!e || e.kind !== 'block') return null;
+  const b = e.collider ?? { position: e.position, size: e.size };
+  return { pos: { ...b.position }, size: { ...b.size } };
+}
+
 /** A record older than this many ticks belongs to a piece that stopped running. */
 const STALE_TICKS = 3;
 
@@ -61,6 +89,25 @@ export function massesBeyond(reg: ArmRegistry, tipId: EntityId, tick: number): A
     for (const part of reg.parts.values()) {
       if (part.baseId !== at || tick - part.tick > STALE_TICKS) continue;
       out.push(...part.masses);
+      if (part.tipId !== null && !seen.has(part.tipId)) {
+        seen.add(part.tipId);
+        queue.push(part.tipId);
+      }
+    }
+  }
+  return out;
+}
+
+/** The crates held by every gripper mounted beyond `tipId`: they move with the hand and are not pushed by it. */
+export function heldBeyond(reg: ArmRegistry, tipId: EntityId, tick: number): Set<EntityId> {
+  const out = new Set<EntityId>();
+  const seen = new Set<EntityId>([tipId]);
+  const queue: EntityId[] = [tipId];
+  while (queue.length > 0) {
+    const at = queue.shift()!;
+    for (const part of reg.parts.values()) {
+      if (part.baseId !== at || tick - part.tick > STALE_TICKS) continue;
+      if (part.holds) out.add(part.holds);
       if (part.tipId !== null && !seen.has(part.tipId)) {
         seen.add(part.tipId);
         queue.push(part.tipId);
@@ -97,7 +144,7 @@ export function solidsBeyond(reg: ArmRegistry, tipId: EntityId, tip: Frame, tick
  * Keeps one invisible solid block per cube: spawned on the first call, right where the cube is (a far jump would drag a
  * solid across the world), then moved there every tick. `ids` is the piece's own list.
  */
-export function placeSolidCubes(world: WorldApi, ownerNodeId: string, ids: EntityId[], cubes: readonly Box[]): void {
+export function placeSolidCubes(world: WorldApi, ownerNodeId: string, ids: EntityId[], cubes: readonly Box[], resize = false): void {
   cubes.forEach((cube, k) => {
     let id = ids[k];
     if (id === undefined) {
@@ -105,6 +152,8 @@ export function placeSolidCubes(world: WorldApi, ownerNodeId: string, ids: Entit
       setArmHint(ownerNodeId, id, { part: 'body' });
       ids.push(id);
     }
+    // A cube that covers a turning box changes size with the turn; a link's cubes never do.
+    if (resize) world.resizeBlock(id, cube.size);
     world.moveBlock(id, cube.pos);
   });
 }

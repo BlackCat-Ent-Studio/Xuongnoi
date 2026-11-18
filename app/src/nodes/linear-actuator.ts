@@ -48,13 +48,13 @@ function boxOf(e: EntityView): { pos: Vec3; size: Vec3 } {
 
 /**
  * Every loose body in the world that a head can shove (anything with a material that is not a block, carried or seated).
- * `except` is the body the pusher is mounted on: a pusher never pushes what it stands on.
+ * `except` is the body the pusher is mounted on: a pusher never pushes what it stands on; `alsoExcept` are crates it holds.
  * A rigid crate (real physics on) comes with its real, possibly turned, outline: it can tip, and its box is the bounds of that outline.
  */
-export function pushBodiesOf(world: WorldApi, except: EntityId | null = null): PushBody[] {
+export function pushBodiesOf(world: WorldApi, except: EntityId | null = null, alsoExcept: ReadonlySet<EntityId> | null = null): PushBody[] {
   const bodies: PushBody[] = [];
   for (const e of world.listEntities()) {
-    if (e.id === except || e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
+    if (e.id === except || alsoExcept?.has(e.id) || e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
     const mat = world.materialOf(e.id);
     if (!mat) continue;
     const base = { id: e.id, massKg: mat.massKg, mu: mat.mu };

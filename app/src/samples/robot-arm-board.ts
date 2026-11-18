@@ -27,8 +27,8 @@ function nodes(): Spec[] {
     { id: 'pillar', kind: 'block', ...at(0, 1), params: { position: { x: -1.8, y: 0.8, z: 0 }, size: { x: 0.6, y: 1.6, z: 1 }, color: '#a3a3a3' } },
     { id: 'table', kind: 'block', ...at(0, 2), params: { position: { x: 0.6, y: 0.3, z: 0 }, size: { x: 2.6, y: 0.6, z: 1 }, color: '#78716c' } },
     { id: 'crate-light', kind: 'item', ...at(0, 3), params: { shape: 'box', position: { x: -0.24, y: 0.75, z: 0 }, size: { x: 0.3, y: 0.3, z: 0.3 }, color: '#a16207', mass: 2 } },
-    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.78, y: 0.85, z: 0 }, size: { x: 0.5, y: 0.5, z: 0.5 }, color: '#ef4444', mass: 6 } },
-    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.52, y: 0.8, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, color: '#facc15', mass: 2, crushLimit: 60 } },
+    { id: 'crate-heavy', kind: 'item', ...at(0, 4), params: { shape: 'box', position: { x: 0.46, y: 0.85, z: 0 }, size: { x: 0.44, y: 0.5, z: 0.44 }, color: '#ef4444', mass: 6 } },
+    { id: 'crate-fragile', kind: 'item', ...at(0, 5), params: { shape: 'box', position: { x: 1.12, y: 0.775, z: 0 }, size: { x: 0.35, y: 0.35, z: 0.35 }, color: '#facc15', mass: 2, crushLimit: 60 } },
 
     // --- the arm ---
     { id: 'go', kind: 'on-start', ...at(1, 0) },
@@ -41,7 +41,12 @@ function nodes(): Spec[] {
     { id: 'upper', kind: 'link', ...at(3, 1), params: { length: 1.8, mass: 1.2, thickness: 0.22 } },
     { id: 'elbow', kind: 'joint', ...at(4, 1), params: { axis: 'pitch', start: -90, min: -150, max: 30, maxTorque: ARM_SETTINGS.elbowTorque, maxSpeed: 60 } },
     { id: 'fore', kind: 'link', ...at(5, 1), params: { length: 1.4, mass: 0.9, thickness: 0.18 } },
-    { id: 'gripper', kind: 'gripper', ...at(6, 1), params: { defaultForce: 10, maxForce: ARM_SETTINGS.maxGrip, fingerMu: 0.8, width: 1, reach: 0.5, mass: 0.5 } },
+    { id: 'wrist', kind: 'joint', ...at(6, 0), params: { axis: 'pitch', start: -50, min: -180, max: 180, maxTorque: 60, maxSpeed: 180 } },
+    { id: 'gripper', kind: 'gripper', ...at(6, 1), params: { defaultForce: 10, maxForce: ARM_SETTINGS.maxGrip, fingerMu: 0.8, width: 0.5, reach: 0.5, mass: 0.5 } },
+    // The wrist keeps the hand pointing straight down: its angle is -90 minus the shoulder and the elbow angles (two sums).
+    { id: 'down', kind: 'const', ...at(4, 0), params: { value: -90 } },
+    { id: 'keep-1', kind: 'math', ...at(5, 0), params: { op: 'sub' } },
+    { id: 'keep-2', kind: 'math', ...at(5, 6), params: { op: 'sub' } },
 
     // --- shoulder control: W raises, S lowers (10 degrees a press) ---
     { id: 'key-w', kind: 'key', ...at(1, 2), params: { key: 'KeyW' } },
@@ -82,10 +87,18 @@ export const ROBOT_ARM_WIRES: readonly Link[] = [
   ['shoulder', 'tip', 'upper', 'base'],
   ['upper', 'tip', 'elbow', 'base'],
   ['elbow', 'tip', 'fore', 'base'],
-  ['fore', 'tip', 'gripper', 'base'],
-  // Power for both servos
+  ['fore', 'tip', 'wrist', 'base'],
+  ['wrist', 'tip', 'gripper', 'base'],
+  // Power for the servos
   ['go', 'started', 'shoulder', 'power'],
   ['go', 'started', 'elbow', 'power'],
+  ['go', 'started', 'wrist', 'power'],
+  // The wrist turns the hand back so that it points straight down whatever the shoulder and the elbow do
+  ['down', 'value', 'keep-1', 'a'],
+  ['shoulder', 'angleNow', 'keep-1', 'b'],
+  ['keep-1', 'out', 'keep-2', 'a'],
+  ['elbow', 'angleNow', 'keep-2', 'b'],
+  ['keep-2', 'out', 'wrist', 'angle'],
   // Shoulder: keys -> counter -> scale -> angle
   ['key-w', 'pressed', 'count-shoulder', 'up'],
   ['key-s', 'pressed', 'count-shoulder', 'down'],
@@ -122,7 +135,7 @@ const NOTES: Note[] = [
     pos: { x: 20, y: 1500 },
     size: { w: 320, h: 340 },
     text:
-      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bảng này đã bật "Vật lý thật": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng nằm trên bàn vẫn được giữ, nhưng nhấc lên là tuột.',
+      'Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bàn tay là vật rắn thật và cổ tay (một khớp nữa, nối bằng hai phép trừ) luôn giữ nó hướng thẳng xuống, nên phải hạ tay xuống ôm hai bên thùng: gập khuỷu trước (A / D) cho tay còn cao, rồi hạ vai (S), đừng để ngón quệt vào thùng bên cạnh. Bảng này đã bật "Vật lý thật": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng nằm trên bàn vẫn được giữ, nhưng nhấc lên là tuột.',
   },
   {
     id: 'note2',

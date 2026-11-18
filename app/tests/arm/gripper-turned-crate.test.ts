@@ -34,18 +34,25 @@ describe('between the fingers uses the turned shape', () => {
 });
 
 describe('a crate carried by the gripper keeps its turn relative to the hand', () => {
+  /**
+   * Side view. The hand hangs straight down from a joint 3 m up (link 1 m, wrist 2 m up, grasp point 1.7 m up). The crate (0.4 m cube) is
+   * between the fingers from the start (the key goes down on the second tick), its top 0.05 m above the grasp point and 0.1 m under the palm,
+   * so the gripper holds it in the air. (Swung off a shelf by a hand that hangs from a joint this far away, the crate's lower corner would
+   * dip into the shelf as it turns: the hand really has to lift first.)
+   */
   async function arm() {
     const rapier = await loadRapier();
     const nodes: NodeSpec[] = [
       ['floor', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 4 } }],
-      ['ped', 'block', { position: { x: -0.5, y: 0.5, z: 0 }, size: { x: 1, y: 1, z: 1 } }],
+      ['ped', 'block', { position: { x: 0, y: 0.5, z: 0 }, size: { x: 0.4, y: 1, z: 1 } }],
       ['go', 'on-start'],
-      ['ang', 'const', { value: 0 }],
-      ['j', 'joint', { start: 0, min: -90, max: 90, maxTorque: 100, mount: { x: 0.5, y: 0.5, z: 0 } }],
-      ['l', 'link', { length: 0.8, mass: 0 }],
-      ['table', 'block', { position: { x: 1.1, y: 0.4, z: 0 }, size: { x: 1, y: 0.8, z: 1.5 } }],
+      ['ang', 'const', { value: -90 }],
+      ['j', 'joint', { start: -90, min: -90, max: 90, maxTorque: 100, mount: { x: 0, y: 2.5, z: 0 } }],
+      ['l', 'link', { length: 1, mass: 0 }],
       ['g', 'gripper', { width: 1, grip: 'between', mass: 0 }],
-      ['c', 'item', { shape: 'crate', position: { x: 1.17, y: 1.0, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, mass: 1 }], // the palm ends at x 0.95: the crate stands in front of it, not round it
+      // A shelf under the crate holds it while the pads close (a free crate in the air falls); it is taken away once the hand holds the crate.
+      ['shelf', 'block', { position: { x: 0, y: 1.1, z: 0 }, size: { x: 2, y: 0.5, z: 1 } }],
+      ['c', 'item', { shape: 'crate', position: { x: 0, y: 1.55, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, mass: 1 }],
       ['k', 'key', { key: 'Space' }],
     ];
     const wires: WireSpec[] = [
@@ -61,15 +68,17 @@ describe('a crate carried by the gripper keeps its turn relative to the hand', (
 
   it('lifting the arm 30 degrees turns the held crate 30 degrees; letting go keeps that turn for the first moments of its fall', async () => {
     const r = await arm();
-    r.tick(60);
-    expect(r.out('g', 'inReach')).toBe(true);
+    // One tick first: the engine gives the crate its turn on its first step, and only a crate that has one is clamped as a rigid crate.
+    r.tick(1);
     r.hold('Space');
-    r.tick(10);
+    // The pads close at 1 m/s and the crate is held from the moment they touch its faces (under 0.7 s here).
+    r.tick(45);
     expect(r.out('g', 'holding')).toBe(true);
+    r.world.hide(r.entity('shelf')!.id);
     expect(tipDegrees(r.entity('c')!)).toBeLessThan(1);
-    r.set('ang', { value: 30 });
+    r.set('ang', { value: -60 });
     r.tick(90);
-    expect(Number(r.out('j', 'angleNow'))).toBeCloseTo(30, 0);
+    expect(Number(r.out('j', 'angleNow'))).toBeCloseTo(-60, 0);
     expect(r.out('g', 'holding')).toBe(true);
     expect(tipDegrees(r.entity('c')!)).toBeCloseTo(30, 0);
     r.hold();

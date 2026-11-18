@@ -5,6 +5,7 @@ import type {
   EntityId,
   EntitySpec,
   EntityView,
+  ExactBody,
   GameResult,
   HudItem,
   PlayCameraCommand,
@@ -775,6 +776,23 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     isRigidCrate(id: EntityId): boolean {
       const e = byId.get(id);
       return e !== undefined && e.kind === 'item' && e.rigid === true;
+    },
+    realPhysicsOn(): boolean {
+      return crates !== null;
+    },
+    setItemGrip(id: EntityId, holder: string | null): void {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'item') return;
+      if (holder === null) delete e.grippedBy;
+      else e.grippedBy = holder;
+    },
+    setExactBodies(owner: string, bodies: readonly ExactBody[] | null): void {
+      crates?.setExact(owner, bodies);
+    },
+    resizeBlock(id: EntityId, size: Vec3): void {
+      const e = byId.get(id);
+      if (!e || e.kind !== 'block' || ![size.x, size.y, size.z].every((n) => Number.isFinite(n) && n > 0)) return;
+      e.size = { ...size };
     },
     robotPushN(body: EntityId, travel: number): number {
       const robot = byId.get(body)?.robot;

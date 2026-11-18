@@ -98,6 +98,8 @@ export interface Entity {
    * Unset = carried upright.
    */
   heldTurn?: { x: number; y: number; z: number; w: number };
+  /** Rigid items: node id of the gripper whose fingers hold it; the crate engine leaves it to that hand and the hand's own solid cubes ignore it. */
+  grippedBy?: string;
 
   // ---- collision and body tuning; unset = plain visual box and normal physics ----
   collider?: ColliderSpec;

@@ -841,6 +841,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
         'crushedOut': ['Khi làm hỏng vật', 'On crush'],
         'inReach': ['Có vật trong tầm', 'Object in reach'],
         'candidate': ['Vật trong tầm', 'Reachable object'],
+        'fingerStalled': ['Ngón bị chặn', 'Finger blocked'],
+        'fingerForce': ['Lực ngón đang ép', 'Finger press force'],
       },
     },
   },

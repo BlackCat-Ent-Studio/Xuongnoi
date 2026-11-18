@@ -1,0 +1,429 @@
+{
+  "format_version": 1,
+  "name": "Tay nghiêng 45 độ chạm thùng",
+  "mode": "3d",
+  "graph": {
+    "nodes": [
+      {
+        "id": "floor",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 30,
+            "y": 1,
+            "z": 30
+          },
+          "color": "#65a30d",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "ped",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 0.4,
+            "y": 1,
+            "z": 0.4
+          },
+          "color": "#a3a3a3",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 10,
+          "y": 0
+        }
+      },
+      {
+        "id": "table",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 1.8,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 3,
+            "y": 1,
+            "z": 4
+          },
+          "color": "#78716c",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 20,
+          "y": 0
+        }
+      },
+      {
+        "id": "go",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 30,
+          "y": 0
+        }
+      },
+      {
+        "id": "sw",
+        "kind": "const",
+        "params": {
+          "value": 80
+        },
+        "pos": {
+          "x": 40,
+          "y": 0
+        }
+      },
+      {
+        "id": "ya",
+        "kind": "const",
+        "params": {
+          "value": 45
+        },
+        "pos": {
+          "x": 50,
+          "y": 0
+        }
+      },
+      {
+        "id": "j1",
+        "kind": "joint",
+        "params": {
+          "axis": "yaw",
+          "start": 0,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 1000,
+          "maxSpeed": 15,
+          "solid": "yes",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0.7,
+            "z": 0
+          },
+          "color": "#8b5cf6"
+        },
+        "pos": {
+          "x": 60,
+          "y": 0
+        }
+      },
+      {
+        "id": "l1",
+        "kind": "link",
+        "params": {
+          "length": 1.2,
+          "mass": 0,
+          "thickness": 0.2,
+          "solid": "yes",
+          "color": "#a3a3a3"
+        },
+        "pos": {
+          "x": 70,
+          "y": 0
+        }
+      },
+      {
+        "id": "j2",
+        "kind": "joint",
+        "params": {
+          "axis": "yaw",
+          "start": 45,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 1000,
+          "maxSpeed": 90,
+          "solid": "yes",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "color": "#8b5cf6"
+        },
+        "pos": {
+          "x": 80,
+          "y": 0
+        }
+      },
+      {
+        "id": "l2",
+        "kind": "link",
+        "params": {
+          "length": 0.1,
+          "mass": 0,
+          "thickness": 0.2,
+          "solid": "yes",
+          "color": "#a3a3a3"
+        },
+        "pos": {
+          "x": 90,
+          "y": 0
+        }
+      },
+      {
+        "id": "g",
+        "kind": "gripper",
+        "params": {
+          "defaultForce": 20,
+          "maxForce": 120,
+          "fingerMu": 0.8,
+          "width": 0.2,
+          "grip": "reach",
+          "reach": 0.5,
+          "mass": 0,
+          "fingers": 2,
+          "color": "#f59e0b",
+          "fingerSpeed": 1,
+          "showFingerOuts": "yes"
+        },
+        "pos": {
+          "x": 100,
+          "y": 0
+        }
+      },
+      {
+        "id": "c",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 0.9753893930860315,
+            "y": 1.2,
+            "z": -1.0042985272593319
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#a16207",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 110,
+          "y": 0
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w0",
+        "from": {
+          "node": "ped",
+          "port": "self"
+        },
+        "to": {
+          "node": "j1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w1",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "j1",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "j2",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "sw",
+          "port": "value"
+        },
+        "to": {
+          "node": "j1",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "ya",
+          "port": "value"
+        },
+        "to": {
+          "node": "j2",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "j1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "l1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "l1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "j2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "j2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "l2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "l2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "g",
+          "port": "base"
+        }
+      }
+    ],
+    "settings": {
+      "wireRule": true,
+      "realPhysics": true
+    }
+  }
+}

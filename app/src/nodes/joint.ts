@@ -4,7 +4,7 @@ import { hubCube, resolveTurn } from '../world/arm-solid';
 import type { Box } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
 import { pushBodiesOf } from './linear-actuator';
-import { armRegistry, baseFrame, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
+import { armRegistry, baseFrame, heldBeyond, isSolidPiece, massesBeyond, mountBox, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
@@ -15,6 +15,8 @@ interface JointState {
   angle: number;
   /** The invisible solid cube of the housing, once "Chắn vật" is on and the joint has been placed. */
   bodies: EntityId[];
+  /** Speed (m/s) at which the link pushed a rigid crate last tick (0 when it pushed none): the crate may gain only a little more per tick. */
+  loadSpeed: number;
 }
 
 /** Size (m) of the hub box. */
@@ -59,8 +61,12 @@ export const jointNode: NodeDef<JointState> = {
       id: 'solid',
       label: 'Chắn vật (hộp khớp là vật cản; khớp quay đẩy hoặc bị chặn bởi vật)',
       kind: 'select',
-      default: 'no',
+      // A new card follows the world switch: solid with "Vật lý thật" (a real arm is), drawn-only without it, so a board that plays with the
+      // switch off is built and behaves as it always did. Boards saved before the setting existed keep passing through things.
+      default: 'auto',
+      legacyDefault: 'no',
       options: [
+        { value: 'auto', label: 'Tự động (có khi bật "Vật lý thật", không khi tắt)' },
         { value: 'no', label: 'Không (chỉ để vẽ, vật đi xuyên qua)' },
         { value: 'yes', label: 'Có (nhân vật, robot, xe, đồ vật không đi xuyên qua)' },
       ],
@@ -86,7 +92,7 @@ export const jointNode: NodeDef<JointState> = {
       solid: false,
     });
     setArmHint(ctx.nodeId, id, { part: 'joint', axis: strParam(params, 'axis', 'pitch') === 'yaw' ? 'yaw' : 'pitch' });
-    return { id, angle: clamp(numParam(params, 'start', 0), lo, hi), bodies: [] };
+    return { id, angle: clamp(numParam(params, 'start', 0), lo, hi), bodies: [], loadSpeed: 0 };
   },
   evaluate(ctx, i, params, s) {
     const reg = armRegistry(ctx.world);
@@ -134,16 +140,20 @@ export const jointNode: NodeDef<JointState> = {
     /** Torque (N·m) spent pushing rigid crates, on top of the one that holds the arm up. */
     let pushNm = 0;
     const cubesNow = Math.abs(step.angle - angle0) > 1e-9 ? beyondAt(angle0) : [];
+    if (cubesNow.length === 0) s.loadSpeed = 0;
     if (cubesNow.length > 0) {
-      const bodies = pushBodiesOf(ctx.world);
+      // A crate a gripper beyond this joint holds is part of the hand, not something the hand pushes.
+      const bodies = pushBodiesOf(ctx.world, null, heldBeyond(reg, s.id, ctx.tick));
       const lever = (b: Box): number => (axis === 'pitch' ? Math.hypot(horizontalArm(base, b.pos), b.pos.y - base.pos.y) : Math.hypot(b.pos.x - base.pos.x, b.pos.z - base.pos.z));
       const resolved = resolveTurn(angle0, step.angle, beyondAt, {
         levers: cubesNow.map(lever),
         bodies,
         solids: ctx.world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
         flat: ctx.mode === '2d-top' ? 'y' : ctx.mode === '2d-side' ? 'z' : null,
+        mount: mountBox(ctx.world, reg, asObject(i.base)),
         availableNm: powered ? Math.max(0, maxTorque - required) : 0,
-      });
+      }, { dt: ctx.dt, loadSpeed: s.loadSpeed });
+      s.loadSpeed = resolved.loadSpeed;
       blocked = resolved.blocked;
       pushNm = resolved.rigidNm;
       s.angle = resolved.angle;
@@ -159,7 +169,7 @@ export const jointNode: NodeDef<JointState> = {
 
     const out: Frame = rotateFrame(base, axis, s.angle * DEG, ctx.mode);
     reg.frames.set(s.id, out);
-    const solidHub = strParam(params, 'solid', 'no') === 'yes';
+    const solidHub = isSolidPiece(ctx.world, params);
     reg.parts.set(ctx.nodeId, {
       tick: ctx.tick,
       baseId: asObject(i.base),

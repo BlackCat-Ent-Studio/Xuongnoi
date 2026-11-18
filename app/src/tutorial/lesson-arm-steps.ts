@@ -19,7 +19,7 @@ const T = {
   boardName: 'Tay máy tự làm theo bước',
   intro: {
     title: 'Tay máy tự làm',
-    text: 'Cánh tay đã lắp sẵn: khớp, thanh nối, tay kẹp, và một thùng nặng 2,5 kg trên bàn. Lần này không có phím nào: ta cho nó tự làm ba bước: hạ xuống, kẹp, nhấc lên.',
+    text: 'Cánh tay đã lắp sẵn: khớp, thanh nối, tay kẹp (treo xuống từ một khớp cổ tay cố định), và một thùng nặng 2,5 kg trên bàn. Lần này không có phím nào: ta cho nó tự làm ba bước: hạ xuống, kẹp, nhấc lên.',
     explain: 'Máy tự động là máy tự biết việc nào xong rồi mới làm việc kế tiếp. Ta cần một mảnh nhớ "đang ở bước nào" và một bảng ghi góc của từng bước.',
   },
   seq: {
@@ -99,13 +99,16 @@ const T = {
 
 const NODES: BuildArgs[1] = [
   { alias: 'floor', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
-  { alias: 'pillar', kind: 'block', x: 20, y: 200, params: { position: { x: -2, y: 0.5, z: 0 }, size: { x: 0.6, y: 1, z: 1 }, color: '#a3a3a3' } },
-  { alias: 'cap', kind: 'block', x: 20, y: 360, params: { position: { x: -2, y: 1.25, z: 0 }, size: { x: 0.5, y: 0.5, z: 0.5 }, color: '#f59e0b' } },
+  { alias: 'pillar', kind: 'block', x: 20, y: 200, params: { position: { x: -2, y: 0.65, z: 0 }, size: { x: 0.6, y: 1.3, z: 1 }, color: '#a3a3a3' } },
+  { alias: 'cap', kind: 'block', x: 20, y: 360, params: { position: { x: -2, y: 1.6, z: 0 }, size: { x: 0.5, y: 0.5, z: 0.5 }, color: '#f59e0b' } },
   { alias: 'table', kind: 'block', x: 20, y: 520, params: { position: { x: -0.7, y: 0.3, z: 0 }, size: { x: 1.4, y: 0.6, z: 1 }, color: '#78716c' } },
-  { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -0.7, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 2.5 } },
+  { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -0.9, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 2.5 } },
   { alias: 'go', kind: 'on-start', x: 300, y: 20 },
-  { alias: 'joint', kind: 'joint', x: 300, y: 160, params: { start: 30, min: -30, max: 60, maxTorque: 60 } },
-  { alias: 'link', kind: 'link', x: 300, y: 420, params: {} },
+  { alias: 'joint', kind: 'joint', x: 300, y: 160, params: { solid: 'no', start: 30, min: -30, max: 60, maxTorque: 60 } },
+  { alias: 'link', kind: 'link', x: 300, y: 420, params: { solid: 'no' } },
+  // The hand hangs down from a fixed wrist (-78 deg from the link): with the arm lowered 12 deg it points straight down, so it comes down
+  // round the crate (a hand held out sideways could never get a pad under a crate that lies on a table).
+  { alias: 'wrist', kind: 'joint', x: 300, y: 490, params: { solid: 'no', start: -78, min: -90, max: 0, maxTorque: 100 } },
   { alias: 'gripper', kind: 'gripper', x: 300, y: 560, params: { defaultForce: 30 } },
   { alias: 'either', kind: 'or', x: 580, y: 560 },
   { alias: 'left', kind: 'show-number', x: 860, y: 20, params: { label: 'Còn phải quay (độ)', corner: 'top-left' } },
@@ -114,8 +117,10 @@ const NODES: BuildArgs[1] = [
 const WIRES: BuildArgs[2] = [
   ['cap', 'self', 'joint', 'base'],
   ['joint', 'tip', 'link', 'base'],
-  ['link', 'tip', 'gripper', 'base'],
+  ['link', 'tip', 'wrist', 'base'],
+  ['wrist', 'tip', 'gripper', 'base'],
   ['go', 'started', 'joint', 'power'],
+  ['go', 'started', 'wrist', 'power'],
   ['either', 'out', 'gripper', 'close'],
 ];
 

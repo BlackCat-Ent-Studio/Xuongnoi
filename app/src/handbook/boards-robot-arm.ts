@@ -85,21 +85,29 @@ export const tryLink = (): Board =>
     [...SHOULDER_WIRES, ['shoulder', 'tip', 'arm', 'base'], ['shoulder', 'load', 'load', 'value']],
   );
 
+/**
+ * The gripper board: the arm is a pillar, a servo and a link, and the hand hangs down from a servo that is not wired and keeps its start
+ * angle (-78 deg from the link): with the link tilted down 12 deg (arrow down) the hand points straight down. The hand is solid with
+ * "Vật lý thật", so it must come down round the crate, not sideways into it.
+ */
 export const tryGripper = (): Board =>
   build(
     'Tay kẹp',
-    'Bấm Chạy. Mũi tên xuống hạ tay tới thùng 5 kg, giữ phím Cách để kẹp, rồi mũi tên lên để nhấc. Lực 20 N mỗi ngón không đủ (cần 5 × 9,81 ÷ (2 × 0,5) = 49 N): thùng tuột. Chọn tay kẹp, đặt "Lực kẹp mặc định" 50 rồi chạy lại thì giữ được.',
+    'Bấm Chạy. Mũi tên xuống hạ tay tới thùng 5 kg, giữ phím Cách để kẹp, rồi mũi tên lên để nhấc. Bàn tay (lòng bàn tay và hai ngón) là vật rắn thật khi bật "Vật lý thật": nó hạ xuống ôm hai bên thùng, không xuyên qua thùng. Lực 20 N mỗi ngón không đủ (cần 5 × 9,81 ÷ (2 × 0,5) = 49 N): thùng tuột. Chọn tay kẹp, đặt "Lực kẹp mặc định" 50 rồi chạy lại thì giữ được.',
     [
-      ...PILLAR,
+      { alias: 'floor', kind: 'block', x: 20, y: 20, params: { position: { x: 0, y: -0.5, z: 0 }, size: { x: 30, y: 1, z: 1 }, color: '#65a30d' } },
+      { alias: 'pillar', kind: 'block', x: 20, y: 200, params: { position: { x: -2, y: 0.65, z: 0 }, size: { x: 0.6, y: 1.3, z: 1 }, color: '#a3a3a3' } },
+      { alias: 'cap', kind: 'block', x: 20, y: 360, params: { position: { x: -2, y: 1.6, z: 0 }, size: { x: 0.5, y: 0.5, z: 0.5 }, color: '#78716c' } },
       { alias: 'table', kind: 'block', x: 20, y: 520, params: { position: { x: -0.7, y: 0.3, z: 0 }, size: { x: 1.4, y: 0.6, z: 1 }, color: '#78716c' } },
-      { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -0.5, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 5 } },
+      { alias: 'crate', kind: 'item', x: 20, y: 680, params: { shape: 'crate', position: { x: -1.02, y: 0.9, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 }, color: '#a16207', mass: 5 } },
       { alias: 'stick', kind: 'stick', x: 300, y: 20 },
       { alias: 'scale', kind: 'map-range', x: 300, y: 200, params: { inMin: -1, inMax: 1, outMin: -12, outMax: 40, clamp: 'yes' } },
       { alias: 'go', kind: 'on-start', x: 300, y: 380 },
       { alias: 'key', kind: 'key', x: 300, y: 520, params: { key: 'Space' } },
       { alias: 'shoulder', kind: 'joint', x: 600, y: 20, params: { start: 0, min: -60, max: 60, maxTorque: 200 } },
       { alias: 'arm', kind: 'link', x: 880, y: 20, params: { length: 1, mass: 1 } },
-      { alias: 'grip', kind: 'gripper', x: 1160, y: 20, params: { defaultForce: 20, grip: 'reach' } },
+      { alias: 'wrist', kind: 'joint', x: 1160, y: 20, params: { start: -78, min: -90, max: 0, maxTorque: 100 } },
+      { alias: 'grip', kind: 'gripper', x: 1440, y: 20, params: { defaultForce: 20, grip: 'reach' } },
       { alias: 'force', kind: 'show-number', x: 1160, y: 300, params: { label: 'Lực kẹp mỗi ngón (N)', corner: 'top-left' } },
       { alias: 'slipLatch', kind: 'latch', x: 600, y: 520 },
       text('slip', 1160, 480, 'Vật tuột!'),
@@ -107,7 +115,9 @@ export const tryGripper = (): Board =>
     [
       ...SHOULDER_WIRES,
       ['shoulder', 'tip', 'arm', 'base'],
-      ['arm', 'tip', 'grip', 'base'],
+      ['arm', 'tip', 'wrist', 'base'],
+      ['go', 'started', 'wrist', 'power'],
+      ['wrist', 'tip', 'grip', 'base'],
       ['key', 'held', 'grip', 'close'],
       ['grip', 'gripForce', 'force', 'value'],
       ['grip', 'slipped', 'slipLatch', 'set'],

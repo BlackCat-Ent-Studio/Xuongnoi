@@ -286,7 +286,10 @@ describe('sample Tay máy tự gắp và đặt', () => {
       ['grip-ok', 'out', 'a-cycle', 'done3'],
       ['arrived', 'out', 'a-cycle', 'done4'],
       ['swing', 'reached', 'a-cycle', 'done5'],
-      ['swing', 'reached', 'a-cycle', 'done6'],
+      // step 6 waits for the fingers to open (a timer), step 7 swings the hand back
+      ['a-cycle', 'step6', 'open-wait', 'run'],
+      ['open-wait', 'done', 'a-cycle', 'done6'],
+      ['swing', 'reached', 'a-cycle', 'done7'],
       // the belts
       ['belt-run', 'out', 'feed', 'run'],
     ];

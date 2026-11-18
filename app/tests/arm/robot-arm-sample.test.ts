@@ -47,10 +47,15 @@ function session(board: Board) {
 
 type Session = ReturnType<typeof session>;
 
-/** Starting counts are shoulder 8 (50 deg) and elbow 4 (-90 deg); these tap the keys to reach other counts. */
+/**
+ * Starting counts are shoulder 8 (50 deg) and elbow 4 (-90 deg); these tap the keys to reach other counts. The hand is solid, so
+ * it comes to a crate from above: the elbow first (the hand stays high), then the shoulder lowers it. Lowering the shoulder first
+ * would carry the open hand through the crate next to the one it is going to.
+ */
 function moveArm(s: Session, shoulder: number, elbow: number): void {
-  s.tap(shoulder < 8 ? 'KeyS' : 'KeyW', Math.abs(shoulder - 8));
   s.tap(elbow < 4 ? 'KeyA' : 'KeyD', Math.abs(elbow - 4));
+  s.seconds(2);
+  s.tap(shoulder < 8 ? 'KeyS' : 'KeyW', Math.abs(shoulder - 8));
   s.seconds(3);
 }
 
@@ -225,7 +230,7 @@ function pick(board: Board, which: 'light' | 'fragile'): { y: number; holding: b
 const picked = (r: ReturnType<typeof pick>): boolean => r.holding && r.y > 1.3 && !r.damaged;
 
 /** The wires the picks need; the readout wires after them only draw numbers and messages. The key-down wire only tunes the force down and no pick needs it (see its own test). */
-const ESSENTIAL = ROBOT_ARM_WIRES.slice(0, 20).filter((w) => w[0] !== 'key-down');
+const ESSENTIAL = ROBOT_ARM_WIRES.slice(0, 27).filter((w) => w[0] !== 'key-down');
 
 describe('robot arm sample is built only from wires', () => {
   it('the full board picks the crate up (control run for the cases below)', () => {

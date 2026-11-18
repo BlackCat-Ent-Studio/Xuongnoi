@@ -1,5 +1,5 @@
 import type { Collider, ColliderDesc, RigidBody, RigidBodyDesc, World } from '@dimforge/rapier3d-deterministic-compat';
-import type { Vec3, ViewMode } from '../engine/types';
+import type { ExactBody, Vec3, ViewMode } from '../engine/types';
 import { boundsBox, boxOverlap, colliderBox } from './collider';
 import { beltVelocity } from './conveyor';
 import type { Entity } from './entity';
@@ -55,9 +55,36 @@ interface Rec {
   plane: number;
 }
 
+/** A turned kinematic box an arm piece or hand shows to the engine (see `WorldApi.setExactBodies`). */
+interface ExactRec {
+  body: RigidBody;
+  collider: Collider;
+  size: Vec3;
+  /** Where the box stood at the start of this tick, and where / how turned the game wants it at the end. */
+  from: Vec3;
+  fromRot: Quat;
+  to: Vec3;
+  toRot: Quat;
+}
+
+type Quat = { x: number; y: number; z: number; w: number };
+
+/** Normalised linear mix of two turns (the hand turns a degree or two per tick, so this is as good as a slerp). */
+function mixTurn(a: Quat, b: Quat, t: number): Quat {
+  const sign = a.x * b.x + a.y * b.y + a.z * b.z + a.w * b.w < 0 ? -1 : 1;
+  const x = a.x + (sign * b.x - a.x) * t;
+  const y = a.y + (sign * b.y - a.y) * t;
+  const z = a.z + (sign * b.z - a.z) * t;
+  const w = a.w + (sign * b.w - a.w) * t;
+  const n = Math.hypot(x, y, z, w) || 1;
+  return { x: x / n, y: y / n, z: z / n, w: w / n };
+}
+
 export interface CrateEngine {
   /** One tick: shows the world to the engine, steps it, and writes the crates' place, speed and turn back. */
   step(entities: readonly Entity[], dt: number): void;
+  /** Declares the exact boxes of an arm piece or hand for this tick (see `WorldApi.setExactBodies`); null drops them. */
+  setExact(owner: string, bodies: readonly ExactBody[] | null): void;
   /** Frees the engine's memory. The engine cannot be used afterwards. */
   dispose(): void;
 }
@@ -81,6 +108,12 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   world.numSolverIterations = SOLVER_ITERATIONS;
   const recs = new Map<Entity, Rec>();
   const MAX = rapier.CoefficientCombineRule.Max;
+  /** Exact boxes declared by arm pieces: the tick they were declared in and the boxes. The owner's upright cover cubes then stay out of the engine. */
+  const declared = new Map<string, { tick: number; bodies: readonly ExactBody[] }>();
+  const exactRecs = new Map<string, ExactRec[]>();
+  /** Engine ticks run so far: a declaration is fresh during the step of the tick it was made in. */
+  let ticks = 0;
+  let freshOwners = new Set<string>();
 
   /** What this entity is to the engine this tick, or null when it takes no part. */
   function roleOf(e: Entity): Role | null {
@@ -90,7 +123,7 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       return 'crate';
     }
     if (e.kind === 'block') {
-      if (!e.solid) return null;
+      if (!e.solid || freshOwners.has(e.ownerNodeId)) return null;
       if (e.belt && e.belt.speed !== 0 && mode !== '2d-top') return 'belt';
       return e.mover ? 'kin' : 'fixed';
     }
@@ -194,8 +227,9 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   }
 
   function syncCrate(e: Entity, rec: Rec): void {
-    if (!same3(e.pos, rec.lastPos)) {
-      // Game code put it somewhere (a gripper, a piston, a portal): out of the simulation while it is being moved.
+    if (e.grippedBy !== undefined || !same3(e.pos, rec.lastPos)) {
+      // Game code put it somewhere (a gripper, a piston, a portal): out of the simulation while it is being moved. A crate the
+      // gripper holds stays out for as long as it holds it, even on a tick the hand has not moved it.
       if (!rec.parked) {
         rec.body.setEnabled(false);
         rec.parked = true;
@@ -246,6 +280,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     const bottom = me.pos.y - me.size.y / 2;
     for (const o of entities) {
       if (o === e || !o.visible || o.heldBy !== null || o.bullet) continue;
+      // The fingers and palm that hold the crate do not carry it.
+      if (e.grippedBy !== undefined && o.ownerNodeId === e.grippedBy) continue;
       if (!(o.kind === 'block' ? o.solid : o.kind === 'item' ? o.rigid === true : o.kind === 'robot' || o.kind === 'vehicle' ? o.solid : false)) continue;
       const b = boundsBox(o);
       if (Math.abs(bottom - (b.pos.y + b.size.y / 2)) > REST_GAP) continue;
@@ -300,9 +336,62 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     rec.lastVel = { ...e.vel };
   }
 
+  function exactCollider(size: Vec3): ColliderDesc {
+    return rapier.ColliderDesc.cuboid(Math.max(size.x / 2, 1e-4), Math.max(size.y / 2, 1e-4), Math.max(size.z / 2, 1e-4))
+      .setFriction(0)
+      .setRestitution(0)
+      .setFrictionCombineRule(MAX)
+      .setRestitutionCombineRule(MAX);
+  }
+
+  /** Brings the engine's turned boxes in line with what the arm pieces declared this tick (new, moved, resized, gone). */
+  function syncExact(): void {
+    for (const owner of [...exactRecs.keys()]) {
+      if (freshOwners.has(owner)) continue;
+      for (const r of exactRecs.get(owner)!) world.removeRigidBody(r.body);
+      exactRecs.delete(owner);
+    }
+    for (const owner of freshOwners) {
+      const list = declared.get(owner)!.bodies;
+      let recs = exactRecs.get(owner);
+      if (!recs) exactRecs.set(owner, (recs = []));
+      while (recs.length > list.length) world.removeRigidBody(recs.pop()!.body);
+      list.forEach((b, i) => {
+        const ok = finite3(b.centre) && finite3(b.size) && [b.rot.x, b.rot.y, b.rot.z, b.rot.w].every(Number.isFinite);
+        if (!ok) return;
+        const rot = b.rot;
+        let rec = recs![i];
+        if (!rec) {
+          const body = world.createRigidBody(rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(b.centre.x, b.centre.y, b.centre.z).setRotation(rot));
+          const collider = world.createCollider(exactCollider(b.size), body);
+          rec = { body, collider, size: { ...b.size }, from: { ...b.centre }, fromRot: rot, to: { ...b.centre }, toRot: rot };
+          recs![i] = rec;
+          return;
+        }
+        if (!same3(b.size, rec.size)) {
+          world.removeCollider(rec.collider, true);
+          rec.collider = world.createCollider(exactCollider(b.size), rec.body);
+          rec.size = { ...b.size };
+        }
+        rec.from = rec.to;
+        rec.fromRot = rec.toRot;
+        rec.to = { ...b.centre };
+        rec.toRot = rot;
+      });
+    }
+  }
+
   return {
+    setExact(owner, bodies) {
+      if (bodies === null) declared.delete(owner);
+      else declared.set(owner, { tick: ticks, bodies });
+    },
     step(entities, dt) {
       world.timestep = dt / SUBSTEPS;
+      freshOwners = new Set([...declared].filter(([, d]) => d.tick === ticks).map(([k]) => k));
+      for (const [k, d] of declared) if (d.tick < ticks) declared.delete(k);
+      syncExact();
+      if ((globalThis as any).__dbg) console.log("fresh", [...freshOwners].join(","), [...exactRecs].map(([k, v]) => k + ":" + v.length + "@" + v[0]!.to.x.toFixed(2) + "," + v[0]!.to.y.toFixed(2) + "," + v[0]!.to.z.toFixed(2)).join(" "));
       const live = new Set<Entity>();
       const belts: Entity[] = [];
       for (const e of entities) {
@@ -341,12 +430,21 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
             rec.body.setTranslation(e.pos, false);
           }
         }
+        for (const owner of freshOwners) {
+          for (const r of exactRecs.get(owner) ?? []) {
+            r.body.setNextKinematicTranslation({ x: r.from.x + (r.to.x - r.from.x) * t, y: r.from.y + (r.to.y - r.from.y) * t, z: r.from.z + (r.to.z - r.from.z) * t });
+            r.body.setNextKinematicRotation(mixTurn(r.fromRot, r.toRot, t));
+          }
+        }
         world.step();
         if (mode !== '3d') for (const rec of recs.values()) if (rec.role === 'crate' && !rec.parked) flatten(rec);
       }
       for (const [e, rec] of recs) if (rec.role === 'crate') writeBack(e, rec, entities);
+      ticks++;
     },
     dispose() {
+      exactRecs.clear();
+      declared.clear();
       recs.clear();
       world.free();
     },
