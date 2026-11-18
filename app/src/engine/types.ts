@@ -625,6 +625,14 @@ export interface EntityView {
   visible: boolean;
 }
 
+/** A turned box that only the crate engine sees (see `WorldApi.setExactBodies`): centre, full size along its own axes, and its turn. */
+export interface ExactBody {
+  centre: Vec3;
+  size: Vec3;
+  /** Unit quaternion: where the box's own x, y and z axes point. */
+  rot: { x: number; y: number; z: number; w: number };
+}
+
 /** An axis-aligned solid block as the pathfinder sees it. */
 export interface SolidBox {
   /** Center. */
@@ -884,6 +892,12 @@ export interface WorldApi {
   setItemGrip(id: EntityId, holder: string | null): void;
   /** Gives a block a new size (a hand's cover cubes follow its pose). Ignored for anything else and for sizes that are not positive numbers. */
   resizeBlock(id: EntityId, size: Vec3): void;
+  /**
+   * Real physics: declares (each tick, idempotent) the exact, turned boxes of an arm piece or hand (node id `owner`). The crate engine
+   * then meets loose crates with these boxes instead of with the upright cover cubes that piece spawned (which stay for everything else).
+   * A piece that does not refresh its boxes for a tick drops them; null drops them at once. Ignored when real physics is off.
+   */
+  setExactBodies(owner: string, bodies: readonly ExactBody[] | null): void;
   /**
    * What one motor's wheel really does with real physics on: its rim speed as revolutions per minute, how fast the rim runs
    * ahead of (or behind) the ground while it slips, and whether it slips. Null when real physics is off, the wheel is not

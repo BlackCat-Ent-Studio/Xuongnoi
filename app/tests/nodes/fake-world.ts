@@ -98,6 +98,7 @@ export function makeWorld(): FakeWorld {
     realPhysicsOn: () => false,
     setItemGrip: () => undefined,
     resizeBlock: () => undefined,
+    setExactBodies: () => undefined,
     robotWheelState: () => null,
     probeAhead: () => null,
     lineOfSight: () => true,

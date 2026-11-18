@@ -1,6 +1,8 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { dirOf, lateralOf, localToWorld, normalOf, type Frame } from './arm-kinematics';
-import { obbBounds, obbOf, quatFromAxes, rotateBy, type Quat } from './oriented-box';
+import { outlineSlices } from './arm-solid';
+import type { Box } from './linear-actuator';
+import { obbBounds, obbOf, quatFromAxes, rotateBy, type Obb, type Quat } from './oriented-box';
 
 /**
  * The solid body of a gripper (pure maths, no world access): a palm and two fingers, each a box that turns with the hand.
@@ -95,4 +97,22 @@ export function coverCubes(b: HandPart): { pos: Vec3; size: Vec3 }[] {
 /** Every cover cube of the hand, palm first, then finger 1 and finger 2 (a fixed number and order for a given opening). */
 export function handCubes(base: Frame, mode: ViewMode, width: number, pads: readonly [number, number]): { pos: Vec3; size: Vec3 }[] {
   return handBoxes(base, mode, width, pads).flatMap(coverCubes);
+}
+
+/** The exact box of one part of the hand. */
+export function partOutline(b: HandPart): Obb {
+  return obbOf(b.centre, b.size, b.turn);
+}
+
+/**
+ * What a sweep tests for one part (real physics on): the upright cover cubes, which meet everything but rigid crates, and the exact
+ * slices of the part, which meet rigid crates by their real shape. A hand tilted 45 degrees is then touched exactly where it is drawn.
+ */
+export function partSweep(b: HandPart): Box[] {
+  return [...coverCubes(b).map((c): Box => ({ ...c, fat: true })), ...outlineSlices(partOutline(b), b.along, b.slices)];
+}
+
+/** Every sweep piece of the hand: palm, then finger 1 and finger 2 (a fixed number and order for a given opening). */
+export function handSweep(base: Frame, mode: ViewMode, width: number, pads: readonly [number, number]): Box[] {
+  return handBoxes(base, mode, width, pads).flatMap(partSweep);
 }

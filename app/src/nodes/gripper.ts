@@ -1,8 +1,8 @@
-import type { EntityId, EntityView, EvalCtx, NodeDef, Vec3 } from '../engine/types';
+import type { EntityId, EntityView, EvalCtx, NodeDef, PortDef, Vec3 } from '../engine/types';
 import { dirOf, extentAlong, lateralOf, localToWorld, normalOf, type Frame } from '../world/arm-kinematics';
 import { resolveTurn } from '../world/arm-solid';
 import { fitInHand, type GripFit, type HandBox } from '../world/grip-fit';
-import { coverCubes, FINGER_LEN, FINGER_T, GRASP_AT, handBoxes, handCubes, PALM, palmSizeOf } from '../world/hand-solid';
+import { FINGER_LEN, FINGER_T, GRASP_AT, handBoxes, handCubes, handSweep, PALM, palmSizeOf, partSweep } from '../world/hand-solid';
 import { gripHolds, weight } from '../world/mechanics';
 import { conjQuat, extentOn, isTurned, mulQuat, obbOf, obbSeparation, quatFromAxes, rotateBy, sensedTurn, type Quat } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox, placeSolidCubes } from './arm-parts';
@@ -33,10 +33,31 @@ interface GripperState {
   cubes: EntityId[];
   /** The crate the engine was told this hand holds (so it can be told when the hand lets go). */
   gripped: EntityId | null;
+  /**
+   * Real physics on: the crate the pads are closing on. It counts as held only when both pads touch its faces; until then it is a
+   * free body that a closing finger may push. Null when closing found nothing to clamp.
+   */
+  pending: EntityId | null;
+  /** Last tick's finger report: a finger that wants to move and cannot, and the force (N) the fingers press with. */
+  stalled: boolean;
+  pressN: number;
 }
 
-/** Speed (m/s) at which a finger closes or opens with real physics on (without it the fingers jump to their place). */
+/** Speed (m/s) at which a finger closes or opens with real physics on (the param's default; without real physics the fingers jump to their place). */
 const FINGER_SPEED = 1;
+/**
+ * A pad closing on a crate stops this far (m) short of its face, and counts as touching from there: a pad that lands exactly on a face
+ * gives the crate a push (the engine's contact is soft, a 2 kg crate was shoved 8 mm at 1 m/s), one that stops a hair short does not.
+ * The clamp then takes up the last fraction of a millimetre.
+ */
+const STAND_OFF = 4e-4;
+/** How close (m) to its stopping place a pad must be for the crate to count as held. */
+const ARRIVED = 1e-4;
+/** The two read-outs behind "Hiện báo ngón bị chặn". */
+const FINGER_PORTS: PortDef[] = [
+  { id: 'fingerStalled', type: 'bool', label: 'Ngón bị chặn', labelEn: 'Finger blocked' },
+  { id: 'fingerForce', type: 'number', label: 'Lực ngón đang ép', labelEn: 'Finger press force' },
+];
 /** Gap (m) between fingers closed on nothing. */
 const SHUT_GAP = 0.02;
 /** Overlap (m) of a pad or the palm with a solid block that makes a grip impossible. */
@@ -94,6 +115,8 @@ interface Grippable {
   offset: Vec3;
   /** Where a rigid crate clamps in the hand; null for what cannot turn (old rules). */
   fit: GripFit | null;
+  /** Width (m) of the crate as it stands now across the closing axis: where the pads' faces meet it. */
+  closeExtent: number;
 }
 
 /**
@@ -109,6 +132,8 @@ function nearestGrippable(
   reach: number,
   width: number,
   fitOf: (e: EntityView, offset: Vec3) => GripFit | null,
+  /** The crate the pads are already closing on: kept while it can still be clamped, even when another one is nearer. */
+  prefer: EntityId | null = null,
 ): Grippable | null {
   let best: Grippable | null = null;
   for (const e of entities) {
@@ -128,7 +153,9 @@ function nearestGrippable(
       if (extentOf(axes.close, e.size, undefined) > width + 1e-9) continue;
       if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width, undefined)) continue;
     }
-    if (!best || d < best.d) best = { id: e.id, d, offset, fit };
+    const cand = { id: e.id, d, offset, fit, closeExtent: extentOf(axes.close, e.size, sensedTurn(e.rotation, e.shape)) };
+    if (e.id === prefer) return cand;
+    if (!best || d < best.d) best = cand;
   }
   return best;
 }
@@ -142,41 +169,58 @@ function setGrip(s: GripperState, world: EvalCtx['world'], nodeId: string, held:
 }
 
 /**
- * Real physics: the cover cubes ride along with the hand, then each finger travels toward its place along the closing axis.
+ * Real physics: the cover cubes ride along with the hand, then each finger travels toward its place along the closing axis, at the "Tốc độ khép ngón" speed.
  * A finger is a pusher like a piston head: a crate it meets is pushed (tipped or slid, see `planPush`) with at most the grip
  * force, and the finger stops where that is not enough or where a solid (a wall, the other finger) is in the way.
  * The crate the hand holds is part of the hand and is not pushed. The sweep is the one the joints use, with a lever of 1 m so
  * that its "torque" reads as the force in newtons.
  */
-function moveFingers(ctx: EvalCtx, s: GripperState, base: Frame, width: number, want: readonly [number, number], forceN: number, held: EntityId | null): void {
+function moveFingers(
+  ctx: EvalCtx,
+  s: GripperState,
+  base: Frame,
+  width: number,
+  want: readonly [number, number],
+  forceN: number,
+  held: EntityId | null,
+  speed: number,
+): { stalled: boolean; pressN: number } {
   const world = ctx.world;
   const place = (): void => placeSolidCubes(world, ctx.nodeId, s.cubes, handCubes(base, ctx.mode, width, s.pads!), true);
   if (!s.pads) {
     s.pads = [want[0], want[1]];
     for (const id of s.cubes) world.show(id);
     place();
-    return;
+    return { stalled: false, pressN: 0 };
   }
   place();
-  const limit = FINGER_SPEED * ctx.dt;
+  const limit = speed * ctx.dt;
   const flat = ctx.mode === '2d-top' ? 'y' : ctx.mode === '2d-side' ? 'z' : null;
   const pads = s.pads;
   let moved = false;
+  let stalled = false;
+  let pressN = 0;
   for (const n of [0, 1] as const) {
     const delta = want[n] - pads[n];
     if (Math.abs(delta) < 1e-9) continue;
     const step = Math.sign(delta) * Math.min(Math.abs(delta), limit);
-    const cubesAt = (k: number) => coverCubes(handBoxes(base, ctx.mode, width, n === 0 ? [pads[0] + k, pads[1]] : [pads[0], pads[1] + k])[1 + n]!);
+    const cubesAt = (k: number) => partSweep(handBoxes(base, ctx.mode, width, n === 0 ? [pads[0] + k, pads[1]] : [pads[0], pads[1] + k])[1 + n]!);
     const parts = handBoxes(base, ctx.mode, width, pads);
     // The other finger is a solid a pushed crate cannot be squeezed into. The palm is not: it sits behind the fingers, never in their way.
-    const others = coverCubes(parts[2 - n]!);
+    const others = partSweep(parts[2 - n]!).filter((b) => !b.exact);
     const resolved = resolveTurn(0, step, cubesAt, {
       levers: cubesAt(0).map(() => 1),
-      bodies: pushBodiesOf(world, null, held === null ? null : new Set([held])),
+      // A finger touches a crate when the faces meet (no contact margin): a pad that stops at a face is not pushing it.
+      bodies: pushBodiesOf(world, null, held === null ? null : new Set([held])).map(({ skin: _skin, ...b }) => b),
       solids: [...world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })), ...others],
       flat,
       availableNm: forceN,
     });
+    // Newtons: the sweep's lever is 1 m. A finger that cannot go on presses with all it has; one that pushes a crate along, with what that takes.
+    if (resolved.blocked) {
+      stalled = true;
+      pressN = Math.max(pressN, forceN);
+    } else if (resolved.rigidNm > 0) pressN = Math.max(pressN, resolved.rigidNm);
     for (const [id, d] of resolved.moves) {
       const e = world.getEntity(id);
       if (e && !world.isRigidCrate(id)) world.teleport(id, { x: e.position.x + d.x, y: e.position.y + d.y, z: e.position.z + d.z }, false);
@@ -187,6 +231,7 @@ function moveFingers(ctx: EvalCtx, s: GripperState, base: Frame, width: number, 
     }
   }
   if (moved) place();
+  return { stalled, pressN };
 }
 
 export const gripperNode: NodeDef<GripperState> = {
@@ -195,7 +240,7 @@ export const gripperNode: NodeDef<GripperState> = {
   labelEn: 'Gripper',
   category: 'action',
   description:
-    'Tay kẹp cuối cánh tay: kẹp món đồ vật nằm giữa hai ngón (điểm kẹp nằm trong thân món đó và món đó lọt giữa hai ngón đang mở) bằng lực bạn chọn, nên phải đưa tay tới đúng tư thế. "Cách kẹp" có thể đổi sang kiểu cũ: món gần nhất trong tầm với. Với "Vật lý thật" thùng rắn chỉ được kẹp khi hai ngón ôm được nó (lòng bàn tay không lún vào thùng, mặt thùng hướng vào hai ngón) và mỗi ngón khép tới khi chạm mặt thùng. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng. Với "Vật lý thật" lòng bàn tay và hai ngón là vật rắn: thùng nằm trên đường đi bị đẩy, đổ hoặc chặn lại, hai ngón khép với tốc độ 1 m/s và đẩy thùng chưa kẹp bằng lực không quá "Lực kẹp".',
+    'Tay kẹp cuối cánh tay: kẹp món đồ vật nằm giữa hai ngón (điểm kẹp nằm trong thân món đó và món đó lọt giữa hai ngón đang mở) bằng lực bạn chọn, nên phải đưa tay tới đúng tư thế. "Cách kẹp" có thể đổi sang kiểu cũ: món gần nhất trong tầm với. Với "Vật lý thật" thùng rắn chỉ được kẹp khi hai ngón ôm được nó (lòng bàn tay không lún vào thùng, mặt thùng hướng vào hai ngón) và mỗi ngón khép tới khi chạm mặt thùng. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng. Với "Vật lý thật" lòng bàn tay và hai ngón là vật rắn: thùng nằm trên đường đi bị đẩy, đổ hoặc chặn lại, hai ngón khép với "Tốc độ khép ngón" (mặc định 1 m/s) và đẩy thùng chưa kẹp bằng lực không quá "Lực kẹp"; thùng chỉ được tính là đang kẹp khi cả hai ngón đã chạm hai mặt thùng.',
   inputs: [
     { id: 'base', type: 'object', label: 'Gắn vào', required: true },
     { id: 'close', type: 'bool', label: 'Kẹp' },
@@ -210,6 +255,7 @@ export const gripperNode: NodeDef<GripperState> = {
     { id: 'inReach', type: 'bool', label: 'Có vật trong tầm' },
     { id: 'candidate', type: 'object', label: 'Vật trong tầm' },
   ],
+  optionalOutputs: { all: FINGER_PORTS, active: (params) => (strParam(params, 'showFingerOuts', 'no') === 'yes' ? FINGER_PORTS : []) },
   params: [
     { id: 'defaultForce', label: 'Lực kẹp mặc định (N mỗi ngón)', kind: 'number', default: 20, min: 0, max: 100000, step: 1 },
     { id: 'maxForce', label: 'Lực kẹp tối đa (N mỗi ngón)', kind: 'number', default: 120, min: 0, max: 100000, step: 5 },
@@ -230,6 +276,18 @@ export const gripperNode: NodeDef<GripperState> = {
     { id: 'mass', label: 'Khối lượng tay kẹp (kg)', kind: 'number', default: 0.5, min: 0, max: 100000, step: 0.1 },
     { id: 'fingers', label: 'Số ngón', kind: 'number', default: 2, min: 1, max: 4, step: 1 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#f59e0b', advanced: true },
+    { id: 'fingerSpeed', label: 'Tốc độ khép ngón (m/s)', kind: 'number', default: FINGER_SPEED, min: 0.05, max: 5, step: 0.05, advanced: true },
+    {
+      id: 'showFingerOuts',
+      label: 'Hiện báo ngón bị chặn',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (hiện thêm ô ra "Ngón bị chặn" và "Lực ngón đang ép")' },
+      ],
+      advanced: true,
+    },
   ],
   createOnly: ['width', 'color'],
   liveApply: {
@@ -249,7 +307,7 @@ export const gripperNode: NodeDef<GripperState> = {
     setArmHint(ctx.nodeId, palm, { part: 'palm' });
     setArmHint(ctx.nodeId, f1, { part: 'finger', side: 1 });
     setArmHint(ctx.nodeId, f2, { part: 'finger', side: -1 });
-    return { palm, fingers: [f1, f2], held: null, offset: { x: 0, y: 0, z: 0 }, grip: null, latched: false, pads: null, cubes: [], gripped: null };
+    return { palm, fingers: [f1, f2], held: null, offset: { x: 0, y: 0, z: 0 }, grip: null, latched: false, pads: null, cubes: [], gripped: null, pending: null, stalled: false, pressN: 0 };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
@@ -261,9 +319,11 @@ export const gripperNode: NodeDef<GripperState> = {
       reg.parts.delete(ctx.nodeId);
       s.held = null;
       s.grip = null;
+      s.pending = null;
       // A hand that is not mounted on anything is not a body: it lets go of its crate and its cubes leave the world until it is mounted again.
       setGrip(s, world, ctx.nodeId, null);
       for (const id of s.cubes) world.hide(id);
+      world.setExactBodies(ctx.nodeId, null);
       s.pads = null;
       return idle;
     }
@@ -286,6 +346,7 @@ export const gripperNode: NodeDef<GripperState> = {
       s.held = null;
       s.grip = null;
       s.latched = false;
+      s.pending = null;
     }
 
     // The nearest free object inside reach whose width fits between the open fingers: what closing would grab right now.
@@ -303,7 +364,8 @@ export const gripperNode: NodeDef<GripperState> = {
     const opening = solid && s.pads ? Math.min(width, 2 * Math.min(s.pads[0], -s.pads[1]) - FINGER_T) : width;
     const solids = solid ? world.solidBoxes() : [];
     const fitOf = (e: EntityView, offset: Vec3): GripFit | null => {
-      const fit = fitInHand({ hand: handTurn, offset, size: e.size, rotation: sensedTurn(e.rotation, e.shape), width: opening, close, clear });
+      // The crate the pads are already closing on was accepted when the fingers stood open: it stays so while they close on it.
+      const fit = fitInHand({ hand: handTurn, offset, size: e.size, rotation: sensedTurn(e.rotation, e.shape), width: e.id === s.pending ? width : opening, close, clear });
       if (!fit || solids.length === 0) return fit;
       const at = [fit.shift + fit.across / 2 + FINGER_T / 2, fit.shift - fit.across / 2 - FINGER_T / 2] as const;
       const parts = handBoxes(base, ctx.mode, width, at).map((b) => obbOf(b.centre, b.size, b.turn));
@@ -313,18 +375,37 @@ export const gripperNode: NodeDef<GripperState> = {
       });
       return sunk ? null : fit;
     };
-    const best = nearestGrippable(world.listEntities(), grasp, axes, rule, Math.max(0, numParam(params, 'reach', 0.5)), opening, fitOf);
+    const best = nearestGrippable(world.listEntities(), grasp, axes, rule, Math.max(0, numParam(params, 'reach', 0.5)), opening, fitOf, s.pending);
+    const speed = clamp(numParam(params, 'fingerSpeed', FINGER_SPEED), 0.05, 5);
+    // Where the pads must be to touch the crate they are closing on: its faces as it stands now, middle on its centre.
+    const wantOn = (c: Grippable): [number, number] => {
+      const half = c.closeExtent / 2 + FINGER_T / 2;
+      return [c.fit!.shift + half + STAND_OFF, c.fit!.shift - half - STAND_OFF];
+    };
     if (closeCmd && s.held === null && !s.latched) {
-      if (best) {
+      let take = false;
+      if (best && solid && best.fit) {
+        // Real physics: a rigid crate is held from the moment both pads touch its faces; until then it is a free body the fingers may push.
+        s.pending = best.id;
+        const at = wantOn(best);
+        take = s.pads !== null && Math.abs(s.pads[0] - at[0]) < ARRIVED && Math.abs(s.pads[1] - at[1]) < ARRIVED;
+      } else {
+        s.pending = null;
+        take = best !== null;
+      }
+      if (best && take) {
+        s.pending = null;
         s.held = best.id;
         s.offset = best.offset;
         // A crate that can turn is clamped by the pads and carried by the hand: its place and turn in the hand's own frame.
         s.grip = best.fit ? { offset: best.fit.offset, turn: best.fit.turn, across: best.fit.across, shift: best.fit.shift } : null;
       }
     }
+    const closingOn = s.pending !== null && best !== null && best.id === s.pending ? best : null;
 
     let carriedKg = 0;
-    let gap = closeCmd ? SHUT_GAP : width / 2;
+    // A hand whose grip failed lets go (real physics): pads that kept closing on the crate it dropped would wedge or squeeze it.
+    let gap = closeCmd && !(solid && s.latched) ? SHUT_GAP : width / 2;
     if (s.held !== null) {
       const view = world.getEntity(s.held);
       const mat = world.materialOf(s.held);
@@ -340,6 +421,7 @@ export const gripperNode: NodeDef<GripperState> = {
           s.grip = null;
           s.latched = true;
           slipped = true;
+          if (solid) gap = width / 2;
         } else {
           const wasDamaged = mat.damaged;
           const nowDamaged = world.applySqueeze(s.held, fingers * force, axis);
@@ -374,13 +456,22 @@ export const gripperNode: NodeDef<GripperState> = {
     const half = gap + FINGER_T / 2;
     // Each finger closes until it touches: on a clamped crate the pads' middle is the crate's centre, not necessarily the grasp point.
     const mid = s.held !== null && s.grip ? s.grip.shift : 0;
-    const wantPads: [number, number] = [mid + half, mid - half];
+    let wantPads: [number, number] = [mid + half, mid - half];
+    // Closing on a crate that is not held yet: the pads go to its faces and push it on the way if it is not where they will meet.
+    if (s.held === null && closingOn?.fit) wantPads = wantOn(closingOn);
     // Real physics: the hand is solid, so the fingers travel to their place and meet what is in the way; otherwise they jump there.
+    let report = { stalled: false, pressN: 0 };
     if (solid) {
-      moveFingers(ctx, s, base, width, wantPads, force, s.held);
+      report = moveFingers(ctx, s, base, width, wantPads, force, s.held, speed);
       setGrip(s, world, ctx.nodeId, s.held);
     }
+    // A clamped crate squeezes with the grip force from each pad.
+    if (s.held !== null && s.grip && solid) report.pressN = Math.max(report.pressN, force);
+    s.stalled = report.stalled;
+    s.pressN = report.pressN;
     const pads = solid && s.pads ? s.pads : wantPads;
+    // The crate engine meets the hand by its real boxes (palm and both fingers, turned with the hand), not by the upright cover cubes.
+    if (solid) world.setExactBodies(ctx.nodeId, handBoxes(base, ctx.mode, width, pads).map((b) => ({ centre: b.centre, size: b.size, rot: b.turn })));
     s.fingers.forEach((id, n) => {
       const k = pads[n]!;
       const at = { x: grasp.x + axis.x * k, y: grasp.y + axis.y * k, z: grasp.z + axis.z * k };
@@ -397,7 +488,7 @@ export const gripperNode: NodeDef<GripperState> = {
       ],
       holds: s.held,
       // A joint turning the arm asks where the palm and fingers would be: they are solid cubes it must push through (or stop at).
-      ...(solid ? { shape: (from: Frame, mode: EvalCtx['mode']) => ({ out: null, solids: handCubes(from, mode, width, s.pads ?? wantPads) }) } : {}),
+      ...(solid ? { shape: (from: Frame, mode: EvalCtx['mode']) => ({ out: null, solids: handSweep(from, mode, width, s.pads ?? wantPads) }) } : {}),
     });
     return {
       holding: s.held !== null,
@@ -408,6 +499,7 @@ export const gripperNode: NodeDef<GripperState> = {
       // While holding, the held object is the one in reach; otherwise whatever closing would grab now.
       inReach: s.held !== null || best !== null,
       candidate: s.held ?? best?.id ?? null,
+      ...(strParam(params, 'showFingerOuts', 'no') === 'yes' ? { fingerStalled: s.stalled, fingerForce: s.pressN } : {}),
     };
   },
 };

@@ -50,6 +50,8 @@ describe('a crate carried by the gripper keeps its turn relative to the hand', (
       ['j', 'joint', { start: -90, min: -90, max: 90, maxTorque: 100, mount: { x: 0, y: 2.5, z: 0 } }],
       ['l', 'link', { length: 1, mass: 0 }],
       ['g', 'gripper', { width: 1, grip: 'between', mass: 0 }],
+      // A shelf under the crate holds it while the pads close (a free crate in the air falls); it is taken away once the hand holds the crate.
+      ['shelf', 'block', { position: { x: 0, y: 1.1, z: 0 }, size: { x: 2, y: 0.5, z: 1 } }],
       ['c', 'item', { shape: 'crate', position: { x: 0, y: 1.55, z: 0 }, size: { x: 0.4, y: 0.4, z: 0.4 }, mass: 1 }],
       ['k', 'key', { key: 'Space' }],
     ];
@@ -69,8 +71,10 @@ describe('a crate carried by the gripper keeps its turn relative to the hand', (
     // One tick first: the engine gives the crate its turn on its first step, and only a crate that has one is clamped as a rigid crate.
     r.tick(1);
     r.hold('Space');
-    r.tick(10);
+    // The pads close at 1 m/s and the crate is held from the moment they touch its faces (under 0.7 s here).
+    r.tick(45);
     expect(r.out('g', 'holding')).toBe(true);
+    r.world.hide(r.entity('shelf')!.id);
     expect(tipDegrees(r.entity('c')!)).toBeLessThan(1);
     r.set('ang', { value: -60 });
     r.tick(90);

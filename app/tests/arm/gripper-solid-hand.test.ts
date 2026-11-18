@@ -65,11 +65,15 @@ describe('a closing finger pushes a crate the hand does not grip, with at most t
     expect(r.out('g', 'inReach')).toBe(false);
     r.hold('Space');
     let tilt = 0;
+    // Where the crate stands on the tick the two pads first have it between them (their inner faces 0.4 m apart).
+    let atMeet: number | null = null;
     for (let i = 0; i < 90; i++) {
       r.tick();
       tilt = Math.max(tilt, tipDegrees(r.entity('c')!));
+      const [, f1, f2] = r.world.entities().filter((e) => e.ownerNodeId === 'g');
+      if (atMeet === null && f1!.position.z - f2!.position.z - 0.12 <= 0.4 + MM) atMeet = r.entity('c')!.position.z;
     }
-    return { r, tilt };
+    return { r, tilt, atMeet };
   }
 
   it('9.81 N is the limit: 8 N stalls both fingers (crate stays), 12 N slides it between the pads', () => {
@@ -79,7 +83,8 @@ describe('a closing finger pushes a crate the hand does not grip, with at most t
 
     const strong = push(12);
     // Pushed from z = 0.25 until it meets the other finger: both pads close at 1 m/s, so they meet it half way, at z = 0 (+- 3 cm).
-    expect(Math.abs(strong.r.entity('c')!.position.z)).toBeLessThan(0.03);
+    // (Closing on past that squeezes it between the two fingertips, which only dip 3 cm into its top: not asserted.)
+    expect(Math.abs(strong.atMeet!)).toBeLessThan(0.03);
     expect(strong.tilt).toBeLessThan(5);
     expect(strong.r.out('g', 'holding')).toBe(false);
   });

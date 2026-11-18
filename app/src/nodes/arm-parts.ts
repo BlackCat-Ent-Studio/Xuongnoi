@@ -50,6 +50,32 @@ export function armRegistry(world: WorldApi): ArmRegistry {
   return r;
 }
 
+/**
+ * True when a link or joint is a solid body: "Có", or "Tự động" (the default of a new card) while "Vật lý thật" is on. "Không" is a drawn-only
+ * piece whatever the switch says: an open setting means what it says.
+ */
+export function isSolidPiece(world: WorldApi, params: Record<string, unknown>): boolean {
+  const v = params.solid;
+  return v === 'yes' || (v === 'auto' && world.realPhysicsOn());
+}
+
+/**
+ * The block the arm this piece belongs to is bolted to: follow the bases down from `baseId` through joints and links to the first thing that is
+ * not an arm piece. Null when that is not a plain block (a robot chassis, a vehicle).
+ */
+export function mountBox(world: WorldApi, reg: ArmRegistry, baseId: EntityId | null): Box | null {
+  let at = baseId;
+  for (let n = 0; at !== null && reg.frames.has(at) && n < 64; n++) {
+    const owner = [...reg.parts.values()].find((p) => p.tipId === at);
+    at = owner ? owner.baseId : null;
+  }
+  if (at === null || reg.frames.has(at)) return null;
+  const e = world.getEntity(at);
+  if (!e || e.kind !== 'block') return null;
+  const b = e.collider ?? { position: e.position, size: e.size };
+  return { pos: { ...b.position }, size: { ...b.size } };
+}
+
 /** A record older than this many ticks belongs to a piece that stopped running. */
 const STALE_TICKS = 3;
 
