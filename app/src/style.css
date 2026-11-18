@@ -227,9 +227,10 @@ button:disabled { cursor: not-allowed; }
 .status.info { background: var(--ok-bg); color: var(--ok-text); border: 1px solid var(--run-text); }
 .status.error { background: var(--err-bg); color: var(--err-text); border: 1px solid var(--danger); }
 @media (min-width: 1430px) { .topbar { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); } }
-@media (max-width: 1520px) { .save-label { display: none; } }
-@media (max-width: 1560px) { .pstate { display: none; } .brand-name { display: none; } }
-@media (max-width: 1500px) { .pbtn:not(.primary) > span { display: none; } .pbtn:not(.primary) { padding: 0 8px; } .name-input { flex-basis: 140px; } }
+/* Bigger text and buttons need the wide bar sooner: the extra words only show on very wide windows. */
+@media (max-width: 1900px) { .save-label { display: none; } }
+@media (max-width: 1800px) { .pstate { display: none; } .brand-name { display: none; } }
+@media (max-width: 1600px) { .pbtn:not(.primary) > span { display: none; } .pbtn:not(.primary) { padding: 0 8px; } .name-input { flex-basis: 140px; } }
 @media (max-width: 1100px) { .sel-ui { max-width: 104px; } .name-input { flex-basis: 90px; min-width: 64px; } }
 
 /* menus (menu bar popups and the lessons dropdown) */

@@ -403,13 +403,11 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     group.className = 'pn-world';
     group.open = worldOpen;
     group.addEventListener('toggle', () => (worldOpen = group.open));
-    const word = (on: boolean): string => (on ? P.switchOn : P.switchOff);
+    // One short line says what is on, so the folded group still tells the story.
+    const on = [state.getSolidBodies() ? P.solidBodiesLabel : '', state.getRealPhysics() ? P.realPhysicsLabel : ''].filter((t) => t !== '');
     const sum = document.createElement('summary');
     sum.className = 'pn-adv-h pn-world-h';
-    sum.append(
-      h('span', 'pn-world-t', P.gameSettingsTitle),
-      h('span', 'pn-world-sum', `${P.solidBodiesLabel}: ${word(state.getSolidBodies())} · ${P.realPhysicsLabel}: ${word(state.getRealPhysics())}`),
-    );
+    sum.append(h('span', 'pn-world-t', P.gameSettingsTitle), h('span', 'pn-world-sum', on.length > 0 ? `${P.switchOn}: ${on.join(', ')}` : P.worldAllOff));
     group.append(sum, solidBodiesToggle(), realPhysicsToggle(), gravityRow());
     return group;
   }

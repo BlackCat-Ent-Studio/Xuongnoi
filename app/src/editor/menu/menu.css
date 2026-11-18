@@ -36,7 +36,9 @@
 .seg-opt[aria-checked='true'] { background: var(--chrome-text); color: var(--chrome); font-weight: 700; }
 .seg-opt:disabled { cursor: not-allowed; color: var(--text2); opacity: 0.55; }
 .seg-opt[aria-checked='true']:disabled { opacity: 0.7; }
+@media (max-width: 1400px) {
+  .sub2d { flex: none; width: 48px; padding: 0 2px; text-align: center; }
+}
 @media (max-width: 1180px) {
   .seg-opt { padding: 0 7px; }
-  .sub2d { flex: none; width: 42px; padding: 0 2px; }
 }

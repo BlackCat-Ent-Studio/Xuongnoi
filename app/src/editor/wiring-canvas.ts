@@ -4,7 +4,7 @@ import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
 import type { EditorState } from './editor-state';
-import { CORNER_GAP, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
+import { CORNER_GAP, LEGACY_CARD_METRICS, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CardMetrics, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
 import { createGraphToolbar } from './graph/graph-toolbar';
 import './graph/graph.css';
 import './graph/node-cards.css';
@@ -639,8 +639,18 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   // ---------- placement, arrange, pulse ----------
 
+  /** Card sizes of the current display mode, read from the same CSS variables the cards use. */
+  function liveCardMetrics(): CardMetrics {
+    const style = getComputedStyle(document.documentElement);
+    const px = (name: string, fallback: number): number => {
+      const v = Number.parseFloat(style.getPropertyValue(name));
+      return Number.isFinite(v) && v > 0 ? v : fallback;
+    };
+    return { head: px('--hh', LEGACY_CARD_METRICS.head), row: px('--row', LEGACY_CARD_METRICS.row), fontScale: px('--fs', 13) / 13 };
+  }
+
   function findFreeSpot(want: Point, kind?: string): Point {
-    const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }) : { w: 168, h: 90 };
+    const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }, liveCardMetrics()) : { w: 168, h: 90 };
     const scene = sceneGraph(state.getGraph(), state.getScope());
     return findFreeNodeSpot(want, size, [...occupiedBoxes(scene, notesInView(), sizeOf), ...blockedWorld()], visibleWorld());
   }

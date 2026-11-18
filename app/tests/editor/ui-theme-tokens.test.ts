@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { contrastRatio, inkOn, MIN_TEXT_CONTRAST } from '../../src/editor/theme/contrast';
+import { GROUP_COLORS } from '../../src/editor/groups/group-model';
 
 /** Reads the design tokens straight from the shipped stylesheet, so the test checks what the page really uses. */
 const CSS = readFileSync(new URL('../../src/style.css', import.meta.url), 'utf8');
@@ -69,6 +70,15 @@ describe.each(['light', 'dark'] as const)('%s theme tokens', (name) => {
   it('keeps the three port colours apart', () => {
     const colours = ['t-bool', 't-num', 't-obj'].map((n) => hexOf(t, n));
     expect(new Set(colours).size).toBe(3);
+  });
+});
+
+describe('group card header ink', () => {
+  it.each(GROUP_COLORS)('the ink picked for the group colour %s reads on it (>= 4.5:1)', (colour) => {
+    expect(contrastRatio(inkOn(colour), colour)).toBeGreaterThanOrEqual(MIN_TEXT_CONTRAST);
+  });
+  it('an unreadable colour value falls back to the dark ink instead of throwing', () => {
+    expect(inkOn('red')).toBe('#10151b');
   });
 });
 

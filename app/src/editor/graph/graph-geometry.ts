@@ -77,8 +77,21 @@ const LEGACY_LONGEST_LABEL: Readonly<Record<string, number>> = {
   'vision-sensor': 17,
 };
 
-/** Rough on-canvas size of a node before it has been measured in the DOM. */
-export function estimateNodeSize(node: GraphNode): Size {
+/** What sets the size of a card: header band, one row per port, and text size relative to the 13 px of the first cards. */
+export interface CardMetrics {
+  head: number;
+  row: number;
+  fontScale: number;
+}
+/** The card sizes boards and samples were laid out with; the default, so saved layouts keep their spacing. */
+export const LEGACY_CARD_METRICS: CardMetrics = { head: 40, row: 26, fontScale: 1 };
+
+/**
+ * Rough on-canvas size of a node before it has been measured in the DOM.
+ * Without `metrics` this is the legacy estimate that saved boards and the samples were spread with; a caller that places
+ * a new card passes the metrics of the current display mode so the card is not put on top of its neighbours.
+ */
+export function estimateNodeSize(node: GraphNode, metrics: CardMetrics = LEGACY_CARD_METRICS): Size {
   const def = getNodeDef(node.kind);
   if (!def) return { w: 168, h: 70 };
   // Card metrics (node-cards.css): ~40px header band, then one 26px row per input and per output.
@@ -86,7 +99,7 @@ export function estimateNodeSize(node: GraphNode): Size {
   const outputs = activeOutputs(def, node.params);
   const longest = LEGACY_LONGEST_LABEL[def.kind] ?? Math.max(def.label.length, ...inputs.map((p) => p.label.length), ...outputs.map((p) => p.label.length));
   const rows = inputs.length + outputs.length;
-  return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
+  return { w: Math.max(168, (60 + longest * 7.4) * metrics.fontScale), h: metrics.head + rows * metrics.row + 8 };
 }
 
 /** Gap left between a node pushed down and the node it overlapped. */

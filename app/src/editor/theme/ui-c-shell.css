@@ -9,23 +9,28 @@
 
 /* ---------- top bar: pupils do not need the layout picker (it stays in the Xem menu) ---------- */
 :root[data-mode='student'] .topbar .tb-layout { display: none; }
-/* Narrow windows give way in this order: layout picker, undo/redo (still in the Sửa menu), then the logo and spare padding.
-   The two switches (display mode, theme) stay on the bar down to a tablet width. */
+/* Narrow windows give way in this order: layout picker, save note and shortcut help (both still reachable from the
+   menus), undo/redo (still in the Sửa menu), then the logo and spare padding. The two switches (display mode, theme)
+   stay on the bar down to a tablet width. */
 @media (max-width: 1500px) { :root .topbar .tb-layout { display: none; } }
+@media (max-width: 1400px) { :root .topbar .tb-help, :root .topbar .save { display: none; } }
 @media (max-width: 1300px) {
   :root .topbar .tb-right .icobtn[data-act='undo'], :root .topbar .tb-right .icobtn[data-act='redo'] { display: none; }
   :root .topbar .name-input { flex-basis: 120px; }
 }
-@media (max-width: 1100px) { :root .topbar .tb-help { display: none; } }
 @media (max-width: 1180px) {
   :root .topbar { gap: 8px; padding: 0 6px; }
   :root .topbar .brand { display: none; }
   :root .topbar .menubar .mb-btn { padding: 0 8px; }
-  :root .topbar .save { display: none; }
   :root .topbar .ui-mode .seg-opt { padding: 0 8px; }
   :root .topbar .pbtn { padding: 0 8px; }
   :root .topbar .pbtn.primary { padding: 0 12px; }
   :root .topbar .name-input { flex-basis: 90px; min-width: 56px; padding: 0 6px; }
+}
+@media (max-width: 1100px) {
+  :root .topbar .name-input { flex-basis: 56px; min-width: 48px; }
+  :root .topbar .ui-mode .seg-opt { padding: 0 6px; }
+  :root .topbar .tb-right > .tut-wrap > .btn { padding: 0 8px; }
 }
 
 /* ---------- focus: a visible ring on everything that takes the keyboard ---------- */
@@ -123,7 +128,7 @@
 :root .pn-sw-w { display: inline-flex; align-items: center; gap: 8px; flex: none; min-height: var(--ctl); }
 :root .pn-sw-l { min-width: 2.2em; font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
 :root .pn-switch { width: 44px; height: 26px; border-radius: 13px; border: 1.5px solid var(--line2); background: var(--panel2); }
-:root .pn-switch::before { content: ''; position: absolute; inset: calc((26px - var(--ctl)) / 2) -4px; }
+:root .pn-switch::before { content: ''; position: absolute; inset: calc((26px - var(--ctl)) / 2 - 2px) -4px; }
 :root .pn-switch::after { left: 3px; top: 3px; width: 17px; height: 17px; background: var(--line2); }
 :root .pn-switch[aria-checked='true'] { background: var(--run); border-color: var(--run); }
 :root .pn-switch[aria-checked='true']::after { transform: translateX(18px); background: var(--run-ink); }
@@ -242,6 +247,18 @@
 :root .hb-type.type-object { --pe: var(--t-obj-edge); }
 :root .hb-type.type-object .hb-shape { border-radius: 3px; }
 :root .hb-actions .btn { height: var(--ctl); }
+
+/* ---------- a finger: nothing the pointer must hit is under 44 px in either direction ---------- */
+@media (pointer: coarse) {
+  :root .topbar .pbtn, :root .topbar .menubar .mb-btn, :root .topbar .icobtn, :root .tab { min-width: var(--ctl); }
+  :root .seg-opt { height: var(--ctl); min-width: var(--ctl); }
+  :root .cs button.cs-btn, :root .pn-jump, :root .hb-mode-btn { min-height: var(--ctl); min-width: var(--ctl); }
+  :root .pn-num-btn { width: var(--ctl); height: var(--ctl); }
+  :root .pn-switch::before { inset: calc((26px - var(--ctl)) / 2 - 2px) -6px; }
+  /* the folded left dock is a 40 px rail: its tabs reach into the gap beside it */
+  :root .work.left-collapsed .dock-left .tab { min-height: var(--ctl); }
+  :root .work.left-collapsed .dock-left .tab::before { content: ''; position: absolute; inset: 0 -6px; }
+}
 
 /* ---------- reduced motion keeps the calm look ---------- */
 @media (prefers-reduced-motion: reduce) {

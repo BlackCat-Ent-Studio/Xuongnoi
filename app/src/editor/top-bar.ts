@@ -120,7 +120,8 @@ export function createTopBar(deps: TopBarDeps): TopBar {
     sub2d.append(o);
     return o;
   });
-  const narrow = window.matchMedia('(max-width: 1180px)');
+  // Bigger buttons leave less room, so the 2D view picker is shortened to its arrow sooner than it used to be.
+  const narrow = window.matchMedia('(max-width: 1400px)');
   const labelSub2d = (): void => {
     MODES_2D.forEach((m, i) => {
       sub2dOpts[i]!.textContent = (narrow.matches ? SHELL_TEXT.sub2dShort : SHELL_TEXT.sub2dFull)[m];
