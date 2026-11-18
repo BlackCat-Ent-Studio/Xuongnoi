@@ -1,5 +1,6 @@
 import type { EntityId, EntityView, NodeDef, Vec3 } from '../engine/types';
 import { dirOf, extentAlong, lateralOf, localToWorld, normalOf, type Frame } from '../world/arm-kinematics';
+import { fitInHand, type GripFit, type HandBox } from '../world/grip-fit';
 import { gripHolds, weight } from '../world/mechanics';
 import { conjQuat, extentOn, isTurned, mulQuat, obbOf, quatFromAxes, rotateBy, sensedTurn, type Quat } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
@@ -14,9 +15,10 @@ interface GripperState {
   offset: Vec3;
   /**
    * A crate that can turn (real physics): where it sits in the hand and how it is turned, both in the arm's own frame, so it turns
-   * and swings with the hand and keeps that turn when let go. Null for anything that cannot turn.
+   * and swings with the hand and keeps that turn when let go. It is clamped between the pads (see `fitInHand`): `across` is its
+   * width between them. Null for anything that cannot turn.
    */
-  grip: { offset: Vec3; turn: Quat } | null;
+  grip: { offset: Vec3; turn: Quat; across: number; shift: number } | null;
   /** After a slip the gripper must be opened before it tries again, so a dropped object is not grabbed back in mid-air. */
   latched: boolean;
 }
@@ -28,6 +30,8 @@ const FINGER_T = 0.12;
 const GRASP_AT = PALM + FINGER_LEN / 2;
 /** Gap (m) between fingers closed on nothing. */
 const SHUT_GAP = 0.02;
+/** How far (m) a solid may keep a clamped crate from where the hand wants it before the pads let go. */
+const BLOCKED = 0.02;
 
 /** Gripper finger friction against an object's own surface: the weaker of the two limits the grip. */
 export function combinedMu(fingerMu: number, objectMu: number): number {
@@ -73,9 +77,18 @@ export function betweenFingers(grasp: Vec3, size: Vec3, centre: Vec3, axes: Fing
   return Math.abs(dot(d, axes.close)) + extentOf(axes.close, size, rotation) / 2 <= width / 2 + EPS;
 }
 
+interface Grippable {
+  id: EntityId;
+  d: number;
+  offset: Vec3;
+  /** Where a rigid crate clamps in the hand; null for what cannot turn (old rules). */
+  fit: GripFit | null;
+}
+
 /**
- * The free item closest to the grasp point that closing would grab: under "between" the one lying between the open
- * fingers, under "reach" any one whose centre is within `reach` and that is no wider than the opening (`width`).
+ * The free item closest to the grasp point that closing would grab. A crate that can turn (real physics) is taken only when the
+ * pads can really clamp it (`fit`, the same rule under either setting); anything else under "between" is the one lying between
+ * the open fingers, under "reach" any one whose centre is within `reach` and that is no wider than the opening (`width`).
  */
 function nearestGrippable(
   entities: readonly EntityView[],
@@ -84,18 +97,27 @@ function nearestGrippable(
   rule: GripRule,
   reach: number,
   width: number,
-): { id: EntityId; d: number; offset: Vec3; rotation: Quat | undefined } | null {
-  let best: { id: EntityId; d: number; offset: Vec3; rotation: Quat | undefined } | null = null;
+  fitOf: (e: EntityView, offset: Vec3) => GripFit | null,
+): Grippable | null {
+  let best: Grippable | null = null;
   for (const e of entities) {
     if (e.kind !== 'item' || !e.visible || e.carried || e.inHand) continue;
     const dx = e.position.x - grasp.x;
     const dy = e.position.y - grasp.y;
     const dz = e.position.z - grasp.z;
     const d = Math.hypot(dx, dy, dz);
-    const turn = sensedTurn(e.rotation, e.shape);
-    if (extentOf(axes.close, e.size, turn) > width + 1e-9) continue;
-    if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width, turn)) continue;
-    if (!best || d < best.d) best = { id: e.id, d, offset: { x: dx, y: dy, z: dz }, rotation: e.rotation };
+    const offset = { x: dx, y: dy, z: dz };
+    let fit: GripFit | null = null;
+    if (e.rotation !== undefined) {
+      // The grasp point has to be inside the crate, so nothing farther than its half diagonal can be clamped.
+      if (d > Math.hypot(e.size.x, e.size.y, e.size.z) / 2 + 1e-9) continue;
+      fit = fitOf(e, offset);
+      if (!fit) continue;
+    } else {
+      if (extentOf(axes.close, e.size, undefined) > width + 1e-9) continue;
+      if (rule === 'reach' ? d > reach : !betweenFingers(grasp, e.size, e.position, axes, width, undefined)) continue;
+    }
+    if (!best || d < best.d) best = { id: e.id, d, offset, fit };
   }
   return best;
 }
@@ -106,7 +128,7 @@ export const gripperNode: NodeDef<GripperState> = {
   labelEn: 'Gripper',
   category: 'action',
   description:
-    'Tay kẹp cuối cánh tay: kẹp món đồ vật nằm giữa hai ngón (điểm kẹp nằm trong thân món đó và món đó lọt giữa hai ngón đang mở) bằng lực bạn chọn, nên phải đưa tay tới đúng tư thế. "Cách kẹp" có thể đổi sang kiểu cũ: món gần nhất trong tầm với. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng.',
+    'Tay kẹp cuối cánh tay: kẹp món đồ vật nằm giữa hai ngón (điểm kẹp nằm trong thân món đó và món đó lọt giữa hai ngón đang mở) bằng lực bạn chọn, nên phải đưa tay tới đúng tư thế. "Cách kẹp" có thể đổi sang kiểu cũ: món gần nhất trong tầm với. Với "Vật lý thật" thùng rắn chỉ được kẹp khi hai ngón ôm được nó (lòng bàn tay không lún vào thùng, mặt thùng hướng vào hai ngón) và mỗi ngón khép tới khi chạm mặt thùng. Giữ được khi số ngón × μ × lực ≥ khối lượng × 9,81, kẹp quá mạnh thì món đồ bị hỏng.',
   inputs: [
     { id: 'base', type: 'object', label: 'Gắn vào', required: true },
     { id: 'close', type: 'bool', label: 'Kẹp' },
@@ -197,18 +219,24 @@ export const gripperNode: NodeDef<GripperState> = {
 
     // The nearest free object inside reach whose width fits between the open fingers: what closing would grab right now.
     const rule = gripRuleOf(strParam(params, 'grip', 'reach'));
-    const best = nearestGrippable(world.listEntities(), grasp, axes, rule, Math.max(0, numParam(params, 'reach', 0.5)), width);
+    const handTurn = frameTurn(base);
+    const close = ctx.mode === '2d-side' ? 'y' : 'z';
+    const span = width + 2 * FINGER_T;
+    // What a clamped crate must stay clear of, in the hand's frame: the palm, and the link the hand hangs on.
+    const clear: HandBox[] = [{ centre: { x: PALM / 2 - GRASP_AT, y: 0, z: 0 }, size: ctx.mode === '2d-side' ? { x: PALM, y: span, z: 0.25 } : { x: PALM, y: 0.25, z: span } }];
+    const baseView = baseId !== null && reg.frames.has(baseId) ? world.getEntity(baseId) : undefined;
+    if (baseView) {
+      clear.push({ centre: rotateBy(conjQuat(handTurn), { x: baseView.position.x - grasp.x, y: baseView.position.y - grasp.y, z: baseView.position.z - grasp.z }), size: baseView.size });
+    }
+    const fitOf = (e: EntityView, offset: Vec3): GripFit | null =>
+      fitInHand({ hand: handTurn, offset, size: e.size, rotation: sensedTurn(e.rotation, e.shape), width, close, clear });
+    const best = nearestGrippable(world.listEntities(), grasp, axes, rule, Math.max(0, numParam(params, 'reach', 0.5)), width, fitOf);
     if (closeCmd && s.held === null && !s.latched) {
       if (best) {
         s.held = best.id;
         s.offset = best.offset;
-        // A crate that can turn is carried by the hand: remember its place and turn in the hand's own frame.
-        if (best.rotation) {
-          const hand = frameTurn(base);
-          s.grip = { offset: rotateBy(conjQuat(hand), best.offset), turn: mulQuat(conjQuat(hand), best.rotation) };
-        } else {
-          s.grip = null;
-        }
+        // A crate that can turn is clamped by the pads and carried by the hand: its place and turn in the hand's own frame.
+        s.grip = best.fit ? { offset: best.fit.offset, turn: best.fit.turn, across: best.fit.across, shift: best.fit.shift } : null;
       }
     }
 
@@ -234,15 +262,25 @@ export const gripperNode: NodeDef<GripperState> = {
           const nowDamaged = world.applySqueeze(s.held, fingers * force, axis);
           crushedOut = nowDamaged && !wasDamaged;
           carriedKg = supported ? 0 : mat.massKg;
-          gap = extentOf(axis, view.size, sensedTurn(view.rotation, view.shape)) / 2;
+          gap = s.grip ? s.grip.across / 2 : extentOf(axis, view.size, sensedTurn(view.rotation, view.shape)) / 2;
           let at = s.offset;
           if (s.grip) {
             // The crate turns and swings with the hand (when the arm turns, so does the crate).
-            const hand = frameTurn(base);
-            at = rotateBy(hand, s.grip.offset);
-            world.setItemRotation(s.held, mulQuat(hand, s.grip.turn));
+            at = rotateBy(handTurn, s.grip.offset);
+            world.setItemRotation(s.held, mulQuat(handTurn, s.grip.turn));
           }
-          world.teleport(s.held, { x: grasp.x + at.x, y: grasp.y + at.y, z: grasp.z + at.z }, false);
+          const want = { x: grasp.x + at.x, y: grasp.y + at.y, z: grasp.z + at.z };
+          const placed = world.teleport(s.held, want, false);
+          // A clamped crate the hand drives into a solid cannot follow: the pads slide off it (it is let go where it is) instead of
+          // being carried sunk into the solid or thrown clear of it.
+          if (s.grip && (!placed || Math.hypot(placed.x - want.x, placed.y - want.y, placed.z - want.z) > BLOCKED)) {
+            s.held = null;
+            s.grip = null;
+            s.latched = true;
+            slipped = true;
+            carriedKg = 0;
+            gap = width / 2;
+          }
         }
       }
     }
@@ -250,9 +288,12 @@ export const gripperNode: NodeDef<GripperState> = {
     // Pieces: palm at the base, two fingers either side of the grasp point.
     placeBox(world, ctx.mode, s.palm, localToWorld(base, { x: PALM / 2, y: 0, z: 0 }), base);
     const half = gap + FINGER_T / 2;
+    // Each finger closes until it touches: on a clamped crate the pads' middle is the crate's centre, not necessarily the grasp point.
+    const mid = s.held !== null && s.grip ? s.grip.shift : 0;
     s.fingers.forEach((id, n) => {
       const sign = n === 0 ? 1 : -1;
-      const at = { x: grasp.x + axis.x * half * sign, y: grasp.y + axis.y * half * sign, z: grasp.z + axis.z * half * sign };
+      const k = mid + half * sign;
+      const at = { x: grasp.x + axis.x * k, y: grasp.y + axis.y * k, z: grasp.z + axis.z * k };
       placeBox(world, ctx.mode, id, at, base);
     });
 
