@@ -15,7 +15,7 @@ export const HANDBOOK_LINEAR_ACTUATOR: readonly HandbookEntry[] = [
       positionNow: 'Thanh đang ra khỏi ống bao nhiêu mét (0 tới Hành trình).',
       extended: 'Bật khi thanh đã ra hết hành trình.',
       retracted: 'Bật khi thanh đã rút hết về.',
-      force: 'Lực thanh đang đẩy (N): tổng ma sát của mọi vật đang bị đẩy. Khi quá tải hoặc tì vào tường thì bằng "Lực đẩy tối đa". Không đẩy gì thì bằng 0.',
+      force: 'Lực thanh đang đẩy (N): tổng lực cần của mọi vật đang bị đẩy (ma sát; thùng rắn thật mà bị đẩy cao thì là lực làm đổ nếu nhỏ hơn). Khi quá tải hoặc tì vào tường thì bằng "Lực đẩy tối đa". Không đẩy gì thì bằng 0.',
       overloaded: 'Bật khi lực cần để đẩy lớn hơn "Lực đẩy tối đa": thanh đứng yên tại chỗ.',
     },
     params: {
@@ -37,7 +37,8 @@ export const HANDBOOK_LINEAR_ACTUATOR: readonly HandbookEntry[] = [
       'Xi lanh không bao giờ đẩy xuyên tường: gặp tường hay sàn thì thanh dừng sát đó, vật bị đẩy cũng vậy. Rút về thì không kéo vật theo: vật nằm lại chỗ đã bị đẩy tới.',
       'Gắn trên thân robot đang chạy thì chính robot đẩy đầu xi lanh đi: vật cản trên đường cần lực ma sát như trên, nhưng lấy từ lực kéo tối đa của các bánh (không dùng "Lực đẩy tối đa"). Thiếu lực hoặc gặp tường thì đầu xi lanh không xuyên qua, robot bị giữ lại và "Quá tải" bật.',
       'Gắn trên khớp xoay thì khớp quay đầu xi lanh như một thanh cứng: đầu không xuyên tường, vật nằm trên đường chỉ bị đẩy khi mô-men của khớp đủ (M = F × khoảng cách tới trục). Lực phản lại khi chính xi lanh đẩy ra chưa tính vào mô-men.',
-      'Chưa tính quán tính khi bắt đầu đẩy, chỉ tính ma sát. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
+      'Khi bật "Vật lý thật", thùng là vật rắn thật nên đẩy cao thì đổ trước khi trượt: F_đổ = m × 9,81 × b ÷ h (b là nửa bề rộng đáy, h là độ cao chỗ đầu thanh chạm thùng), F_trượt = μ × m × 9,81, và xi lanh chỉ cần lực nhỏ hơn. Ví dụ thùng 10 kg, rộng 0,4 m (b = 0,2), μ 0,5, đẩy ở h = 1,1 m: F_đổ = 10 × 9,81 × 0,2 ÷ 1,1 = 17,8 N, F_trượt = 49,05 N, nên 30 N làm thùng đổ còn 15 N đứng lại và "Quá tải". Đẩy ở h = 0,15 m thì F_đổ = 130,8 N: thùng chỉ trượt, cần 49,05 N. Xem trang "Vật lý thật" ở đầu Sổ tay.',
+      'Khi tắt "Vật lý thật" chưa tính quán tính khi bắt đầu đẩy, chỉ tính ma sát. Khi bật, thùng chỉ được tăng tốc bằng lực còn thừa: a = (lực tối đa − lực cần) ÷ m, nên thanh chạy nhanh cũng không bắn thùng đi nhanh hơn thế. Xem trang "Vật lý kỹ thuật" ở đầu Sổ tay.',
     ],
     lessonId: 'piston-push',
     tryBoard: tryLinearActuator,

@@ -1,6 +1,7 @@
 import type { EntityId, EntityView, NodeDef, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
-import { actuatorFrame, approach, exceeds, planPush, RIGID_CROSS_TOL, targetLength, type PushBody, type PushMove, type PushOrient } from '../world/linear-actuator';
+import { actuatorFrame, approach, exceeds, loadLimitedAdvance, planPush, RIGID_CONTACT_SKIN, RIGID_CROSS_TOL, targetLength, type PushBody, type PushMove, type PushOrient } from '../world/linear-actuator';
+import { isTurnedView, obbBounds, obbOfView } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
@@ -15,6 +16,8 @@ interface PistonState {
   len: number;
   /** False until the head has been set onto its mount once (that first jump is a placement, not a push). */
   placed: boolean;
+  /** Speed (m/s) at which the head pushed a rigid crate last tick; 0 when it was not pushing one. */
+  loadSpeed: number;
 }
 
 /** Length of the barrel (m): long enough to hold the whole rod when it is retracted. */
@@ -43,13 +46,23 @@ function boxOf(e: EntityView): { pos: Vec3; size: Vec3 } {
   return e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size };
 }
 
-/** Every loose body in the world that a head can shove (anything with a material that is not a block, carried or seated). */
-function pushBodiesOf(world: WorldApi): PushBody[] {
+/**
+ * Every loose body in the world that a head can shove (anything with a material that is not a block, carried or seated).
+ * A rigid crate (real physics on) comes with its real, possibly turned, outline: it can tip, and its box is the bounds of that outline.
+ */
+export function pushBodiesOf(world: WorldApi): PushBody[] {
   const bodies: PushBody[] = [];
   for (const e of world.listEntities()) {
     if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
     const mat = world.materialOf(e.id);
-    if (mat) bodies.push({ id: e.id, box: boxOf(e), massKg: mat.massKg, mu: mat.mu, ...(world.isRigidCrate(e.id) ? { crossTol: RIGID_CROSS_TOL } : {}) });
+    if (!mat) continue;
+    const base = { id: e.id, massKg: mat.massKg, mu: mat.mu };
+    if (!world.isRigidCrate(e.id)) {
+      bodies.push({ ...base, box: boxOf(e) });
+      continue;
+    }
+    const real = obbOfView(e);
+    bodies.push({ ...base, box: isTurnedView(e) ? obbBounds(real) : boxOf(e), crossTol: RIGID_CROSS_TOL, skin: RIGID_CONTACT_SKIN, ...(e.shape === 'ball' ? {} : { real }) });
   }
   return bodies;
 }
@@ -201,7 +214,7 @@ export const linearActuatorNode: NodeDef<PistonState> = {
     setArmHint(ctx.nodeId, head, { part: 'head' });
     setArmHint(ctx.nodeId, housing, { part: 'housing' });
     setArmHint(ctx.nodeId, rod, { part: 'rod' });
-    return { head, housing, rod, len: 0, placed: false };
+    return { head, housing, rod, len: 0, placed: false, loadSpeed: 0 };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
@@ -257,11 +270,32 @@ export const linearActuatorNode: NodeDef<PistonState> = {
 
     const posIn = typeof i.position === 'number' && Number.isFinite(i.position) ? i.position : null;
     const goal = targetLength(stroke, asBool(i.extend), posIn);
-    const wanted = approach(s.len, goal, stroke, speed, ctx.dt) - s.len;
+    let wanted = approach(s.len, goal, stroke, speed, ctx.dt) - s.len;
+    const lenBefore = s.len;
+    let rigidContactAt: number | null = null;
 
     if (Math.abs(wanted) > 1e-9) {
       const sign = Math.sign(wanted);
       const moveDir = { x: dir.x * sign, y: dir.y * sign, z: dir.z * sign };
+      // A rigid crate in the way is accelerated by the force the rod has left after moving it, so a fast rod cannot hit it
+      // harder than that force allows: the head stops at the crate's face and then follows the crate as it speeds up.
+      const head0 = world.getEntity(s.head);
+      if (head0) {
+        const probe = planPush({
+          head: boxOf(head0),
+          dir: moveDir,
+          step: Math.abs(wanted),
+          bodies: pushBodiesOf(world),
+          solids: world.solidBoxes().map((b) => ({ pos: b.position, size: b.size })),
+          flat: flatOf(ctx.mode),
+          lifting: moveDir.y > 0.5,
+          probeContact: true,
+        });
+        if (probe.loadIds.some((id) => world.isRigidCrate(id)) && !exceeds(probe.requiredN, maxForce)) {
+          rigidContactAt = probe.contactAt;
+          wanted = sign * loadLimitedAdvance({ step: Math.abs(wanted), dt: ctx.dt, contactAt: probe.contactAt, loadKg: probe.loadKg, requiredN: probe.requiredN, maxN: maxForce, loadSpeed: s.loadSpeed });
+        }
+      }
       const subs = Math.max(1, Math.ceil(Math.abs(wanted) / MAX_SUB_STEP));
       for (let k = 0; k < subs; k++) {
         const head = world.getEntity(s.head);
@@ -292,6 +326,9 @@ export const linearActuatorNode: NodeDef<PistonState> = {
         }
       }
     }
+    // Speed the head (and so the crate it is pushing) really had this tick; 0 when it only ran up to the crate or touched nothing.
+    const travelled = Math.abs(s.len - lenBefore);
+    s.loadSpeed = rigidContactAt !== null && travelled > rigidContactAt + 1e-6 ? travelled / ctx.dt : 0;
 
     const barrel = barrelLen(stroke);
     placeBox(world, ctx.mode, s.housing, localToWorld(frame, { x: barrel / 2, y: 0, z: 0 }), frame);

@@ -1,6 +1,6 @@
 import type { Vec3 } from '../engine/types';
 import { localToWorld, type Frame } from './arm-kinematics';
-import { planPush, type Box, type PushBody } from './linear-actuator';
+import { planPush, shiftPushBody, type Box, type PushBody } from './linear-actuator';
 import { torque } from './mechanics';
 
 /**
@@ -58,6 +58,8 @@ export interface SweepResult {
   fraction: number;
   /** Torque (N·m) the full step needs to push what it meets. */
   requiredNm: number;
+  /** The part of `requiredNm` that goes into rigid crates (real physics on): the only part shown in the joint's load read-out. */
+  rigidNm: number;
   /** True when that is more than `availableNm`: the joint cannot push, so it stays. */
   stalled: boolean;
   /** Where the bodies it pushes go, as a displacement from now, by id. */
@@ -70,6 +72,7 @@ export function sweepCubes(input: SweepInput): SweepResult {
   let bodies = input.bodies.map((b) => ({ ...b }));
   const moves = new Map<string, Vec3>();
   let requiredNm = 0;
+  let rigidNm = 0;
   let fraction = 1;
   for (const i of order) {
     const from = input.before[i]!;
@@ -79,20 +82,22 @@ export function sweepCubes(input: SweepInput): SweepResult {
     if (len < TINY) continue;
     const dir = { x: d.x / len, y: d.y / len, z: d.z / len };
     const plan = planPush({ head: from, dir, step: len, bodies, solids: input.solids, flat: input.flat, lifting: dir.y > 0.5 });
-    requiredNm += torque(plan.requiredN, input.levers[i] ?? 0);
+    const nm = torque(plan.requiredN, input.levers[i] ?? 0);
+    requiredNm += nm;
+    if (plan.loadIds.some((id) => bodies.find((b) => b.id === id)?.crossTol !== undefined)) rigidNm += nm;
     fraction = Math.min(fraction, plan.advance / len);
     if (plan.moves.length === 0) continue;
     const delta = new Map(plan.moves.map((m) => [m.id, m.delta]));
     bodies = bodies.map((b) => {
       const m = delta.get(b.id);
-      return m ? { ...b, box: { pos: { x: b.box.pos.x + m.x, y: b.box.pos.y + m.y, z: b.box.pos.z + m.z }, size: b.box.size } } : b;
+      return m ? shiftPushBody(b, m) : b;
     });
     for (const m of plan.moves) {
       const was = moves.get(m.id) ?? { x: 0, y: 0, z: 0 };
       moves.set(m.id, { x: was.x + m.delta.x, y: was.y + m.delta.y, z: was.z + m.delta.z });
     }
   }
-  return { fraction, requiredNm, stalled: requiredNm > Math.max(0, input.availableNm) + 1e-9, moves };
+  return { fraction, requiredNm, rigidNm, stalled: requiredNm > Math.max(0, input.availableNm) + 1e-9, moves };
 }
 
 export interface ResolvedStep {
@@ -101,6 +106,8 @@ export interface ResolvedStep {
   /** True when it is short of the angle asked for because of a solid or a load it cannot push. */
   blocked: boolean;
   moves: Map<string, Vec3>;
+  /** Torque (N·m) the push of rigid crates took (stalled: the torque it would have taken); 0 when no rigid crate is touched. */
+  rigidNm: number;
 }
 
 /**
@@ -113,16 +120,18 @@ export function resolveTurn(
   cubesAt: (angle: number) => readonly Box[],
   rest: Omit<SweepInput, 'before' | 'after'>,
 ): ResolvedStep {
-  if (Math.abs(to - from) < TINY) return { angle: from, blocked: false, moves: new Map() };
+  if (Math.abs(to - from) < TINY) return { angle: from, blocked: false, moves: new Map(), rigidNm: 0 };
   const before = cubesAt(from);
   let f = 1;
+  let rigidNm = 0;
   for (let k = 0; k < RETRIES; k++) {
     const angle = from + (to - from) * f;
     const r = sweepCubes({ ...rest, before, after: cubesAt(angle) });
-    if (r.stalled) return { angle: from, blocked: true, moves: new Map() };
-    if (r.fraction >= FULL) return { angle, blocked: f < FULL, moves: r.moves };
+    rigidNm = r.rigidNm;
+    if (r.stalled) return { angle: from, blocked: true, moves: new Map(), rigidNm };
+    if (r.fraction >= FULL) return { angle, blocked: f < FULL, moves: r.moves, rigidNm };
     f *= r.fraction;
     if (f < 1e-6) break;
   }
-  return { angle: from, blocked: true, moves: new Map() };
+  return { angle: from, blocked: true, moves: new Map(), rigidNm };
 }

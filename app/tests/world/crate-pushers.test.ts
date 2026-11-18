@@ -75,9 +75,9 @@ describe('a piston pushes a crate through the engine', () => {
     expect(peakForce).toBeCloseTo(49.05, 1);
   });
 
-  it('a piston weaker than mu * m * g (40 N against 49.05 N) stalls: overloaded, the crate does not move or tip', () => {
+  it('a low piston weaker than mu * m * g (40 N against 49.05 N, tipping would need 130.8 N) stalls: overloaded, the crate does not move or tip', () => {
     peakForce = 0;
-    const r = piston({ y: 1.1, head: 0.3, maxForce: 40 });
+    const r = piston({ y: 0.15, head: 0.3, maxForce: 40 });
     const peak = peakTilt(r, 60 * 6);
     expect(r.entity('c0')!.position.x).toBeCloseTo(3, 2);
     expect(peak).toBeLessThan(1);
@@ -147,8 +147,8 @@ describe('an arm link sweeping across the floor pushes a crate through the engin
     expect(r.entity('c')!.position.z).toBeLessThan(-0.6);
   });
 
-  it('a servo with too little torque (40 N m against about 74 N m) stays: the crate is not touched', () => {
-    const r = sweep(40, 10, 1.0);
+  it('a low link and a servo with too little torque (40 N m against about 74 N m) stays: the crate is not touched', () => {
+    const r = sweep(40, 10, 0.15);
     expect(peak(r, 60 * 4)).toBeLessThan(0.5);
     expect(r.entity('c')!.position.z).toBeCloseTo(-0.5, 2);
     expect(r.out('j', 'overloaded')).toBe(true);

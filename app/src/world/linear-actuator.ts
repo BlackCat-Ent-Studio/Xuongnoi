@@ -1,6 +1,8 @@
 import type { EntityId, Vec3, ViewMode } from '../engine/types';
 import { DEG, type Frame } from './arm-kinematics';
-import { frictionForce, weight } from './mechanics';
+import { tipForceN } from './crate-tipping';
+import { accelFromForce, frictionForce, weight } from './mechanics';
+import type { Obb } from './oriented-box';
 
 /**
  * Pure maths of the linear actuator (piston): where the rod points, what its head pushes along one step and how much force
@@ -34,6 +36,13 @@ export interface PushBody {
    * usual hair (`SOLID_TOL`). A crate the rigid-body engine tilts sinks a few centimetres at an edge, which its box does not show.
    */
   crossTol?: number;
+  /**
+   * Rigid crate (real physics on): its real, possibly turned, outline. Present = the crate may tip, so pushing it needs only
+   * the smaller of the sliding force and the tipping force (`tipForceN`). Absent = it can only slide.
+   */
+  real?: Obb;
+  /** How close (m) along the direction of travel a pusher counts as touching this body. Absent = only when the boxes overlap. */
+  skin?: number;
 }
 
 export interface PushInput {
@@ -50,6 +59,8 @@ export interface PushInput {
   flat?: 'y' | 'z' | null;
   /** True when the rod points straight up: pushed bodies are lifted, not slid. */
   lifting?: boolean;
+  /** Also find how far the head can travel before it first touches a body (`PushPlan.contactAt`). */
+  probeContact?: boolean;
 }
 
 export interface PushMove {
@@ -69,6 +80,11 @@ export interface PushPlan {
   requiredN: number;
   /** Displacements at `advance`; bodies listed front first (largest distance along `dir` first). */
   moves: PushMove[];
+  /** Bodies the full step would move (pushed and riding), and their total mass (kg): the load the force has to accelerate. */
+  loadIds: EntityId[];
+  loadKg: number;
+  /** With `probeContact`: distance (m) the head can travel before it first touches a body; null when it touches none within the full step. */
+  contactAt: number | null;
 }
 
 const AXES = ['x', 'y', 'z'] as const;
@@ -79,8 +95,11 @@ const SOLID_TOL = 0.01;
 /** A body whose underside is this close to another's top stands on it. */
 const RIDE_GAP = 0.06;
 const BISECT = 12;
+const CONTACT_BISECT = 14;
 /** `PushBody.crossTol` of a rigid crate: it may sink this deep (m) into a solid beside its path (a tilt at a belt edge) without being "stuck". */
 export const RIGID_CROSS_TOL = 0.05;
+/** `PushBody.skin` of a rigid crate (m): the engine's contact margin is about 2 mm, so a pusher 5 mm away is checked as touching. */
+export const RIGID_CONTACT_SKIN = 0.005;
 
 function overlapAlong(a: Box, b: Box, axis: 'x' | 'y' | 'z'): number {
   return (a.size[axis] + b.size[axis]) / 2 - Math.abs(a.pos[axis] - b.pos[axis]);
@@ -88,10 +107,6 @@ function overlapAlong(a: Box, b: Box, axis: 'x' | 'y' | 'z'): number {
 
 function axesOf(flat: PushInput['flat']): readonly ('x' | 'y' | 'z')[] {
   return AXES.filter((a) => a !== flat);
-}
-
-function overlaps(a: Box, b: Box, axes: readonly ('x' | 'y' | 'z')[], tol: number): boolean {
-  return axes.every((ax) => overlapAlong(a, b, ax) > tol);
 }
 
 function shifted(b: Box, d: Vec3): Box {
@@ -112,21 +127,25 @@ function clearance(pusher: Box, body: Box, dir: Vec3, axes: readonly ('x' | 'y' 
 }
 
 /** Who moves when the head advances `d`: bodies the head meets, bodies those meet in turn, and what stands on them. */
-function contactSet(input: PushInput, d: number): { pushed: Map<EntityId, Vec3>; riderOf: Map<EntityId, EntityId> } {
+function contactSet(input: PushInput, d: number): ContactSet {
   const axes = axesOf(input.flat);
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const pushers: Box[] = [shifted(input.head, move)];
   const pushed = new Map<EntityId, Vec3>();
+  const pushedBy = new Map<EntityId, Box>();
   const boxes = new Map<EntityId, Box>();
   for (let again = true; again; ) {
     again = false;
     for (const b of input.bodies) {
       if (pushed.has(b.id)) continue;
-      const hit = pushers.find((p) => overlaps(p, b.box, axes, TOUCH));
+      // A rigid crate counts as touched a few millimetres before the faces meet: the engine already pushes it from that close.
+      const skin = b.skin ?? 0;
+      const hit = pushers.find((p) => axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH)));
       if (!hit) continue;
       const t = clearance(hit, b.box, input.dir, axes);
       const delta = { x: input.dir.x * t, y: input.dir.y * t, z: input.dir.z * t };
       pushed.set(b.id, delta);
+      pushedBy.set(b.id, hit);
       const moved = shifted(b.box, delta);
       boxes.set(b.id, moved);
       pushers.push(moved);
@@ -154,11 +173,32 @@ function contactSet(input: PushInput, d: number): { pushed: Map<EntityId, Vec3>;
       }
     }
   }
-  return { pushed: new Map([...pushed, ...[...riderOf.keys()].map((id) => [id, carriers.get(id)!] as const)]), riderOf };
+  return { pushed: new Map([...pushed, ...[...riderOf.keys()].map((id) => [id, carriers.get(id)!] as const)]), riderOf, pushedBy };
 }
 
-/** Force (N) to push the given set: friction of every pushed body under its own load, plus the weight when lifting. */
-function forceFor(input: PushInput, pushed: Map<EntityId, Vec3>, riderOf: Map<EntityId, EntityId>): number {
+interface ContactSet {
+  pushed: Map<EntityId, Vec3>;
+  riderOf: Map<EntityId, EntityId>;
+  /** For each directly pushed body, the box (head or another pushed body, where it ends up) that pushes it. */
+  pushedBy: Map<EntityId, Box>;
+}
+
+/** Height (world y) at which `pusher` pushes `body`: the pusher's own mid-height, kept inside the stretch where the two really touch. */
+function contactHeight(pusher: Box, body: Box): number {
+  const lo = Math.max(pusher.pos.y - pusher.size.y / 2, body.pos.y - body.size.y / 2);
+  const hi = Math.min(pusher.pos.y + pusher.size.y / 2, body.pos.y + body.size.y / 2);
+  return hi < lo ? (lo + hi) / 2 : Math.min(hi, Math.max(lo, pusher.pos.y));
+}
+
+/**
+ * Force (N) to push the given set. Every directly pushed body needs its own share, and the shares add up (a row of crates
+ * is pushed by the sum): the smaller of
+ *   sliding   μ · (m + load above) · g        and, for a rigid crate pushed sideways,
+ *   tipping   (m + load above) · g · a / h    (`tipForceN`, at the height where it is really touched).
+ * Lifting (the rod points up) adds the weight on top of the friction and never tips anything.
+ */
+function forceFor(input: PushInput, set: ContactSet): number {
+  const { pushed, riderOf, pushedBy } = set;
   const byId = new Map(input.bodies.map((b) => [b.id, b]));
   // The whole load carried by each directly pushed body: itself plus every rider above it (stacks count).
   const rootOf = (id: EntityId): EntityId => {
@@ -175,7 +215,10 @@ function forceFor(input: PushInput, pushed: Map<EntityId, Vec3>, riderOf: Map<En
   for (const [root, kg] of load) {
     const body = byId.get(root);
     if (!body) continue;
-    total += frictionForce(body.mu, weight(kg));
+    let need = frictionForce(body.mu, weight(kg));
+    const by = pushedBy.get(root);
+    if (body.real && by && Math.abs(input.dir.y) <= 0.5 && input.flat !== 'y') need = Math.min(need, tipForceN(body.real, input.dir, contactHeight(by, body.box), kg));
+    total += need;
     if (input.lifting) total += weight(kg);
   }
   return total;
@@ -206,7 +249,21 @@ function clearOfSolids(input: PushInput, d: number): boolean {
 export function planPush(input: PushInput): PushPlan {
   const step = Math.max(0, Number.isFinite(input.step) ? input.step : 0);
   const full = contactSet(input, step);
-  const requiredN = forceFor(input, full.pushed, full.riderOf);
+  const requiredN = forceFor(input, full);
+  const loadIds = [...full.pushed.keys()];
+  const byId = new Map(input.bodies.map((b) => [b.id, b]));
+  const loadKg = loadIds.reduce((sum, id) => sum + (byId.get(id)?.massKg ?? 0), 0);
+  let contactAt: number | null = null;
+  if (input.probeContact && step > 0 && loadIds.length > 0) {
+    let lo = 0;
+    let hi = step;
+    for (let i = 0; i < CONTACT_BISECT; i++) {
+      const mid = (lo + hi) / 2;
+      if (contactSet(input, mid).pushed.size > 0) hi = mid;
+      else lo = mid;
+    }
+    contactAt = lo;
+  }
   let advance = step;
   let blocked = false;
   if (step > 0 && !clearOfSolids(input, step)) {
@@ -228,7 +285,43 @@ export function planPush(input: PushInput): PushPlan {
   const moves: PushMove[] = [...set.pushed]
     .map(([id, delta]): PushMove => ({ id, delta, role: set.riderOf.has(id) ? 'rider' : 'pushed' }))
     .sort((a, b) => ahead(b.id) - ahead(a.id));
-  return { advance, blocked, requiredN, moves };
+  return { advance, blocked, requiredN, moves, loadIds, loadKg, contactAt };
+}
+
+/** The same body after it was moved by `delta`: its box and its real outline go together. */
+export function shiftPushBody(b: PushBody, delta: Vec3): PushBody {
+  const move = (p: Vec3): Vec3 => ({ x: p.x + delta.x, y: p.y + delta.y, z: p.z + delta.z });
+  return { ...b, box: { pos: move(b.box.pos), size: b.box.size }, ...(b.real ? { real: { ...b.real, centre: move(b.real.centre) } } : {}) };
+}
+
+export interface LoadLimitInput {
+  /** The head's step (m) this tick, as the rod speed asks for it. */
+  step: number;
+  dt: number;
+  /** `PushPlan.contactAt` of that step. */
+  contactAt: number | null;
+  /** What the step has to accelerate (`PushPlan.loadKg`) and the force the push needs just to move it (`PushPlan.requiredN`). */
+  loadKg: number;
+  requiredN: number;
+  /** The force limit of the pusher. */
+  maxN: number;
+  /** Speed (m/s) the load already has along the push. */
+  loadSpeed: number;
+}
+
+/**
+ * How far the head may go this tick so that it never gives its load more speed than its force can: the push that is left
+ * after moving the load (maxN - requiredN) accelerates it at a = F / m, so in one tick the load gains at most a * dt.
+ * Before the head touches anything it runs free, but it stops at the face instead of hitting it at full speed; once it
+ * touches, it moves no faster than the load can follow. The extra energy a head driven faster would give the crate does
+ * not exist: the crate's kinetic energy never exceeds (maxN - requiredN) times the distance pushed.
+ */
+export function loadLimitedAdvance(i: LoadLimitInput): number {
+  if (i.contactAt === null || !(i.loadKg > 0) || !(i.dt > 0)) return i.step;
+  const a = accelFromForce(Math.max(0, i.maxN - i.requiredN), i.loadKg);
+  const follow = (Math.max(0, i.loadSpeed) + a * i.dt) * i.dt;
+  if (i.step <= follow) return i.step;
+  return Math.min(i.step, Math.max(i.contactAt, follow));
 }
 
 /** True when `requiredN` is more than `maxN` can supply (a hair of tolerance for floating point). */

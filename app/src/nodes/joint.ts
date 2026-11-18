@@ -1,8 +1,9 @@
 import type { EntityId, NodeDef } from '../engine/types';
 import { DEG, localToWorld, rotateFrame, sagDirection, stepJoint, horizontalArm, type Frame } from '../world/arm-kinematics';
 import { hubCube, resolveTurn } from '../world/arm-solid';
-import { RIGID_CROSS_TOL, type Box, type PushBody } from '../world/linear-actuator';
+import type { Box } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
+import { pushBodiesOf } from './linear-actuator';
 import { armRegistry, baseFrame, massesBeyond, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
@@ -130,14 +131,11 @@ export const jointNode: NodeDef<JointState> = {
     // what they shove needs torque on top of the one that holds the arm up; short of that the joint stays where it is.
     const beyondAt = (deg: number): Box[] => solidsBeyond(reg, s.id, rotateFrame(base, axis, deg * DEG, ctx.mode), ctx.tick, ctx.mode);
     let blocked = false;
+    /** Torque (N·m) spent pushing rigid crates, on top of the one that holds the arm up. */
+    let pushNm = 0;
     const cubesNow = Math.abs(step.angle - angle0) > 1e-9 ? beyondAt(angle0) : [];
     if (cubesNow.length > 0) {
-      const bodies: PushBody[] = [];
-      for (const e of ctx.world.listEntities()) {
-        if (e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
-        const mat = ctx.world.materialOf(e.id);
-        if (mat) bodies.push({ id: e.id, box: e.collider ? { pos: e.collider.position, size: e.collider.size } : { pos: e.position, size: e.size }, massKg: mat.massKg, mu: mat.mu, ...(ctx.world.isRigidCrate(e.id) ? { crossTol: RIGID_CROSS_TOL } : {}) });
-      }
+      const bodies = pushBodiesOf(ctx.world);
       const lever = (b: Box): number => (axis === 'pitch' ? Math.hypot(horizontalArm(base, b.pos), b.pos.y - base.pos.y) : Math.hypot(b.pos.x - base.pos.x, b.pos.z - base.pos.z));
       const resolved = resolveTurn(angle0, step.angle, beyondAt, {
         levers: cubesNow.map(lever),
@@ -147,6 +145,7 @@ export const jointNode: NodeDef<JointState> = {
         availableNm: powered ? Math.max(0, maxTorque - required) : 0,
       });
       blocked = resolved.blocked;
+      pushNm = resolved.rigidNm;
       s.angle = resolved.angle;
       for (const [id, d] of resolved.moves) {
         const e = ctx.world.getEntity(id);
@@ -175,6 +174,6 @@ export const jointNode: NodeDef<JointState> = {
     placeBox(ctx.world, ctx.mode, s.id, out.pos, out);
     if (solidHub) placeSolidCubes(ctx.world, ctx.nodeId, s.bodies, [hubCube(out.pos, HUB)]);
     const reached = !overloaded && Math.abs(s.angle - target) <= Math.max(0, numParam(params, 'tolerance', 1)) + 1e-9;
-    return { tip: s.id, angleNow: s.angle, load: required, overloaded, reached };
+    return { tip: s.id, angleNow: s.angle, load: required + pushNm, overloaded, reached };
   },
 };
