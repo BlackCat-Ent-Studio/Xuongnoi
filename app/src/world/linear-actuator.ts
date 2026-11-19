@@ -195,7 +195,7 @@ function holdsUp(under: Box, above: Box): boolean {
 }
 
 /** Who moves when the head advances `d`: bodies the head meets, bodies those meet in turn, and what stands on them. */
-function contactSet(input: PushInput, d: number): ContactSet {
+function contactSet(input: PushInput, d: number, early: boolean): ContactSet {
   const axes = axesOf(input.flat);
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const pushers: Box[] = [shifted(input.head, move)];
@@ -204,6 +204,15 @@ function contactSet(input: PushInput, d: number): ContactSet {
   /** Parallel to `pushers`: true for a rigid crate that is being pushed (the head itself is false). */
   const rigidPusher: boolean[] = [false];
   const sideways = input.flat !== 'y' && Math.abs(input.dir.y) <= 0.5;
+  // An exact head cannot touch a body whose centre is further from its own than both can reach (see `HeadReach`; 3D only):
+  // with `early`, such a body is not put through the separating-axis test.
+  const headRound = early && realHead && !input.flat ? ROOT3 * (realHead.half.x + realHead.half.y + realHead.half.z) : null;
+  const beyondHead = (b: PushBody, skin: number): boolean => {
+    if (headRound === null || !realHead) return false;
+    const c = b.real ? b.real.centre : b.box.pos;
+    const round = b.real ? Math.hypot(b.real.half.x, b.real.half.y, b.real.half.z) : Math.hypot(b.box.size.x, b.box.size.y, b.box.size.z) / 2;
+    return Math.hypot(c.x - realHead.centre.x, c.y - realHead.centre.y, c.z - realHead.centre.z) > round + headRound + ROOT3 * Math.abs(skin);
+  };
   const pushed = new Map<EntityId, Vec3>();
   const pushedBy = new Map<EntityId, Box>();
   const boxes = new Map<EntityId, Box>();
@@ -215,7 +224,7 @@ function contactSet(input: PushInput, d: number): ContactSet {
       const skin = b.skin ?? 0;
       const hit = pushers.find(
         (p, k) =>
-          (k === 0 && exactHead ? -obbSeparation(exactHead, seen(outlineOf(b), input.flat)) > TOUCH - skin : axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH))) &&
+          (k === 0 && exactHead ? !beyondHead(b, skin) && -obbSeparation(exactHead, seen(outlineOf(b), input.flat)) > TOUCH - skin : axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH))) &&
           // Pushed sideways, a rigid crate does not push what only holds it up: the engine rests it a hair inside that body.
           !(sideways && rigidPusher[k] && holdsUp(b.box, p)),
       );
@@ -310,9 +319,9 @@ function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3, 
   return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : crossTol));
 }
 
-function clearOfSolids(input: PushInput, d: number): boolean {
+function clearOfSolids(input: PushInput, d: number, early: boolean): boolean {
   const axes = axesOf(input.flat);
-  const { pushed } = contactSet(input, d);
+  const { pushed } = contactSet(input, d, early);
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const head = shifted(input.head, move);
   const exactHead = input.head.exact !== undefined;
@@ -411,12 +420,17 @@ function quietPush(input: PushInput, step: number): PushInput | null {
 /** One step of the head: what moves, how far the head may go, and how much force the full step needs. */
 export function planPush(whole: PushInput): PushPlan {
   const step = Math.max(0, Number.isFinite(whole.step) ? whole.step : 0);
-  return planWhole(quietPush(whole, step) ?? whole, step);
+  return planWith(quietPush(whole, step) ?? whole, step, true);
 }
 
-/** `planPush` with every body and every solid looked at, whatever the head can reach (the tests hold the shortcut against it). */
-export function planWhole(input: PushInput, step = Math.max(0, Number.isFinite(input.step) ? input.step : 0)): PushPlan {
-  const full = contactSet(input, step);
+/** `planPush` with every body and every solid looked at in full, whatever the head can reach (the tests hold the shortcuts against it). */
+export function planWhole(input: PushInput): PushPlan {
+  return planWith(input, Math.max(0, Number.isFinite(input.step) ? input.step : 0), false);
+}
+
+/** `early` = a body an exact head cannot reach is passed over before the full touch test (see `contactSet`). */
+function planWith(input: PushInput, step: number, early: boolean): PushPlan {
+  const full = contactSet(input, step, early);
   const { total: requiredN, needs } = forceFor(input, full);
   const loadIds = [...full.pushed.keys()];
   const byId = new Map(input.bodies.map((b) => [b.id, b]));
@@ -427,25 +441,25 @@ export function planWhole(input: PushInput, step = Math.max(0, Number.isFinite(i
     let hi = step;
     for (let i = 0; i < CONTACT_BISECT; i++) {
       const mid = (lo + hi) / 2;
-      if (contactSet(input, mid).pushed.size > 0) hi = mid;
+      if (contactSet(input, mid, early).pushed.size > 0) hi = mid;
       else lo = mid;
     }
     contactAt = lo;
   }
   let advance = step;
   let blocked = false;
-  if (step > 0 && !clearOfSolids(input, step)) {
+  if (step > 0 && !clearOfSolids(input, step, early)) {
     blocked = true;
     let lo = 0;
     let hi = step;
     for (let i = 0; i < BISECT; i++) {
       const mid = (lo + hi) / 2;
-      if (clearOfSolids(input, mid)) lo = mid;
+      if (clearOfSolids(input, mid, early)) lo = mid;
       else hi = mid;
     }
     advance = lo;
   }
-  const set = advance === step ? full : contactSet(input, advance);
+  const set = advance === step ? full : contactSet(input, advance, early);
   const ahead = (id: EntityId): number => {
     const b = input.bodies.find((x) => x.id === id)!;
     return b.box.pos.x * input.dir.x + b.box.pos.y * input.dir.y + b.box.pos.z * input.dir.z;
