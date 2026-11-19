@@ -1,5 +1,5 @@
 import type { EntityKind, EntitySpec, Vec3 } from '../engine/types';
-import { boxOverlap, chassisOutline, chassisReach, colliderBox, hasChassisOutline, isTurnedBody, orientedBox, outlinePair, type Box } from './collider';
+import { boxOverlap, chassisOutline, chassisReach, colliderBox, isTurnedBody, orientedBox, outlinePair, type Box } from './collider';
 import { footprintsOverlap, obbCorners, type Obb } from './oriented-box';
 import type { Pt } from './footprint-2d';
 import { leverShares, shapeOf, supportPoint, type Shape } from './weighing';
@@ -127,6 +127,8 @@ interface Fact {
   turned: boolean;
   box: Box;
   reach: number;
+  /** A chassis with a real outline: that outline (what other bodies rest on); null for every other body. */
+  outline: Obb | null;
   /**
    * A box on the ground plane such that two bodies can only rest on one another when their boxes meet, or `everywhere` is set
    * for one of them. It follows from the tests `holds` rules pairs out with:
@@ -137,14 +139,13 @@ interface Fact {
    *  - an upright body at least MIN_SIDE wide rests on a turned one only when its rectangle comes within a billionth of the
    *    other's highest corners along x and along z (its own corners make x and z two of the axes `footprintsOverlap` tries),
    *    and those corners lie within the turned body's reach of its position;
-   *  - a chassis with a real outline (not a loose crate) takes the same box as a loose crate, three reaches plus TURNED_SLACK
-   *    round its position (its reach holds both its outline and its collision box). As a
-   *    support of a loose crate it is a turned support (first case: the crate is at most its own reach plus three of the
-   *    chassis's plus TURNED_SLACK away). With a block it is an upright body whose rectangle lies within one reach. With any
-   *    other body the two rest only when `footprintsOverlap` finds no gap between two sets of corners, each within its body's
-   *    reach of its position; the axes it tries include, for a set with two different corners, the line through them and
-   *    the line across it, and along both the sets come within a billionth of each other, so the positions are at most
-   *    √2 times the two reaches apart.
+   *  - a chassis with a real outline (not a loose crate) takes √2 reaches plus RIM_SLACK round its position; its reach holds
+   *    both its outline and its collision box. A loose crate rests on it only within its own reach plus RIM_SLACK of the
+   *    outline's rectangle (`tooFarToHold`), so within the two reaches plus RIM_SLACK of its position. With a block it is an
+   *    upright body whose rectangle lies within one reach. With any other body the two rest only when `footprintsOverlap`
+   *    finds no gap between two sets of corners, each within its body's reach of its position; the axes it tries include,
+   *    for a set with two different corners, the line through them and the line across it, and along both the sets come
+   *    within a billionth of each other, so the positions are at most √2 times the two reaches apart.
    * Every other body (turned without being a loose crate or such a chassis, upright and thinner than MIN_SIDE, or with a
    * number that is not finite) is `everywhere`: no test rules it out, so it is always asked.
    */
@@ -159,14 +160,15 @@ function readFact(f: Fact): void {
   const e = f.e;
   const b = colliderBox(e);
   f.free = isFreeCrate(e);
-  const chassis = hasChassisOutline(e);
+  f.outline = chassisOutline(e);
+  const chassis = f.outline !== null;
   f.turned = chassis || isTurnedBody(e);
   f.box = b;
   f.reach = Math.max(chassisReach(e), Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2);
   const halfX = Math.abs(b.size.x) / 2;
   const halfZ = Math.abs(b.size.z) / 2;
   if (f.free || chassis) {
-    const round = 3 * f.reach + TURNED_SLACK;
+    const round = f.free ? 3 * f.reach + TURNED_SLACK : Math.SQRT2 * f.reach + RIM_SLACK;
     f.minX = e.pos.x - round;
     f.maxX = e.pos.x + round;
     f.minZ = e.pos.z - round;
@@ -183,7 +185,7 @@ function readFact(f: Fact): void {
 }
 
 function factOf(e: Entity): Fact {
-  const f: Fact = { e, free: false, turned: false, box: e, reach: 0, minX: 0, maxX: 0, minZ: 0, maxZ: 0, everywhere: true };
+  const f: Fact = { e, free: false, turned: false, box: e, reach: 0, outline: null, minX: 0, maxX: 0, minZ: 0, maxZ: 0, everywhere: true };
   readFact(f);
   return f;
 }
@@ -234,9 +236,23 @@ export function weighSceneOf(list: readonly Entity[]): WeighScene {
  * along x or along z, shares nothing with it. A turned support's top lies within its own reach of its position; the outline
  * maths may take a point for inside up to (1e-9 / side length) beyond a side and up to two diameters beyond a corner, hence
  * three reaches and TURNED_SLACK. With a number that is not finite anywhere in the pair, the outline maths decides alone.
+ *
+ * A chassis with a real outline is the first kind of support turned about the vertical: its top is the outline's rectangle,
+ * and what the outline maths forgives depends on the length of a side, not on which way it points. So the same test holds
+ * along the chassis's own length and width.
  */
 function tooFarToHold(crate: Fact, base: Fact): boolean {
   const c = crate.e.pos;
+  const o = base.outline;
+  if (o) {
+    if (!(o.half.x * 2 >= MIN_SIDE) || !(o.half.z * 2 >= MIN_SIDE)) return false;
+    const dx = c.x - o.centre.x;
+    const dz = c.z - o.centre.z;
+    const along = Math.abs(dx * o.axes[0].x + dz * o.axes[0].z);
+    const across = Math.abs(dx * o.axes[2].x + dz * o.axes[2].z);
+    if (!(along + across + crate.reach + o.half.x + o.half.z + Math.abs(c.y) + Math.abs(o.centre.y) + o.half.y < Infinity)) return false;
+    return along > crate.reach + o.half.x + RIM_SLACK || across > crate.reach + o.half.z + RIM_SLACK;
+  }
   if (base.turned) {
     const p = base.e.pos;
     const far = Math.hypot(c.x - p.x, c.z - p.z);
@@ -294,7 +310,7 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
   const shapeFor = (e: Entity): Shape => {
     let s = shapes.get(e);
     if (!s) {
-      s = shapeOf(chassisOutline(e) ?? orientedBox(e));
+      s = shapeOf(scene.byEntity.get(e)?.outline ?? chassisOutline(e) ?? orientedBox(e));
       shapes.set(e, s);
     }
     return s;
