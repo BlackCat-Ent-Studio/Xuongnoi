@@ -22,7 +22,7 @@ import { DEFAULT_GRAVITY, cleanGravity } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
-import { moveBlockIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
+import { crateMovedIn, moveBlockIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDropSpot } from './solid-bodies';
@@ -71,9 +71,10 @@ function finiteOr(n: number, fallback: number): number {
 
 /**
  * World calls that leave every entity view as it was: questions, and commands that only set state no view shows (the HUD, the play
- * camera, what a machine piece is bolted to, the engine's exact boxes, which hand grips a crate). `moveBlock` and `setRobotWheel`
- * are here because they say themselves which views they changed. Every call NOT listed drops all cached views, so a call added
- * later is safe without being listed; list one only after checking, field by field, that `viewOf` cannot see what it changes.
+ * camera, what a machine piece is bolted to, the engine's exact boxes, which hand grips a crate). The last two rows are here
+ * because those calls say themselves what they changed (one entity, a few, or everything): machines make them for every piece
+ * on every tick. Every call NOT listed drops all cached views, so a call added later is safe without being listed; list one only
+ * after checking, field by field, that `viewOf` (and `MoveScene`) cannot see what it changes beyond what it reports.
  */
 const KEEPS_VIEWS: ReadonlySet<string> = new Set<keyof World>([
   'getEntity', 'isOnGround', 'isTouching', 'tagOf', 'materialOf', 'massOn', 'massHeld', 'tooHeavyToGrab', 'heldItem', 'isHeld', 'wasInteracted',
@@ -81,7 +82,8 @@ const KEEPS_VIEWS: ReadonlySet<string> = new Set<keyof World>([
   'cargoOf', 'cameraCommand', 'portalUser', 'isRigidCrate', 'realPhysicsOn', 'robotPushN', 'robotWheelState', 'shotHits', 'entities', 'listEntities',
   'runSeed', 'hudItems', 'debugBodies',
   'setHud', 'setCamera', 'setMount', 'setExactBodies', 'setItemGrip',
-  'moveBlock', 'setRobotWheel',
+  'moveBlock', 'setRobotWheel', 'setRobotTuning', 'resizeBlock', 'setBlockAngle', 'setBlockTilt',
+  'applySqueeze', 'setItemRotation', 'teleport',
 ]);
 
 /** The crate engine, or null when it cannot start (the world then keeps the plain item rules). */
@@ -115,6 +117,16 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
   /** What moving solid blocks look at (see `MoveScene`), kept for as long as the views are: the calls that leave it right are the same. */
   let scene: MoveScene | null = null;
   const markStale = (e: Entity): void => void stale.add(e);
+  /** Anything may have changed: no view and no scene is kept. */
+  const dropViews = (): void => {
+    views = null;
+    scene = null;
+  };
+  /** A rigid crate (or any other item) was put somewhere else or turned by a call; nothing else changed. */
+  const itemMoved = (e: Entity): void => {
+    stale.add(e);
+    if (scene) crateMovedIn(scene, e);
+  };
   const hud = new Map<string, HudItem>();
   let contacts = new Set<string>();
   let ended: { result: GameResult; message: string } | null = null;
@@ -575,7 +587,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     applySqueeze(id: EntityId, forceN: number, direction?: Vec3): boolean {
       const e = byId.get(id);
-      return !!e && e.visible && squeeze(e, forceN, direction);
+      if (!e || !e.visible) return false;
+      // Breaking shows in this body's own view only.
+      stale.add(e);
+      return squeeze(e, forceN, direction);
     },
     massOn(id: EntityId): number {
       const e = byId.get(id);
@@ -813,7 +828,12 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       return best ? best.cmd : null;
     },
     teleport(id: EntityId, to: Vec3, keepVelocity: boolean): Vec3 | null {
-      return teleporter.teleport(id, to, keepVelocity);
+      const e = byId.get(id);
+      // An item goes alone (a hand carrying a crate does this every tick); a character or a vehicle takes others along.
+      if (e?.kind !== 'item') dropViews();
+      const at = teleporter.teleport(id, to, keepVelocity);
+      if (e?.kind === 'item') itemMoved(e);
+      return at;
     },
     setItemRotation(id, rotation) {
       const e = byId.get(id);
@@ -821,6 +841,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const n = Math.hypot(rotation.x, rotation.y, rotation.z, rotation.w);
       if (!(n > 0) || !Number.isFinite(n)) return false;
       e.rot = { x: rotation.x / n, y: rotation.y / n, z: rotation.z / n, w: rotation.w / n };
+      itemMoved(e);
       return true;
     },
     setPortal(id: EntityId, link: PortalLink): void {
@@ -846,10 +867,12 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       stale.add(e);
     },
     setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void {
-      const robot = byId.get(body)?.robot;
-      if (!robot) return;
+      const e = byId.get(body);
+      const robot = e?.robot;
+      if (!e || !robot) return;
       const next = sanitizeRobotSpec({ ...robot.spec, mass: tuning.mass, friction: tuning.friction, maxPayload: tuning.maxPayload ?? robot.spec.maxPayload, pushObjects: tuning.pushObjects ?? robot.spec.pushObjects });
       robot.spec = next;
+      stale.add(e);
     },
     isRigidCrate(id: EntityId): boolean {
       const e = byId.get(id);
@@ -886,6 +909,8 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const e = byId.get(id);
       if (!e || e.kind !== 'block' || ![size.x, size.y, size.z].every((n) => Number.isFinite(n) && n > 0)) return;
       e.size = { ...size };
+      // A block's size shows in its own view only (nothing carries a block), and the scene keeps blocks, not their sizes.
+      stale.add(e);
     },
     robotPushN(body: EntityId, travel: number): number {
       const robot = byId.get(body)?.robot;
@@ -905,8 +930,13 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!e || e.kind !== 'block' || !e.visible) return false;
       const angle = finiteOr(rad, 0);
       markMover(e);
-      if (e.solid) return turnSolidTo(list, e, angle / (Math.PI / 2), mode);
+      if (e.solid) {
+        // A solid block that turns moves whoever is in its way.
+        dropViews();
+        return turnSolidTo(list, e, angle / (Math.PI / 2), mode);
+      }
       spinBlockTo(e, angle, mode);
+      stale.add(e);
       return true;
     },
     setBlockTilt(id: EntityId, rad: number): void {
@@ -914,6 +944,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!e || e.kind !== 'block' || !e.visible || e.solid) return;
       markMover(e);
       tiltBlockTo(e, finiteOr(rad, 0), mode);
+      stale.add(e);
     },
     shoot(shooter: EntityId, spec: ShotSpec): EntityId | null {
       const s = byId.get(shooter);
@@ -1014,8 +1045,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     const call = Object.getOwnPropertyDescriptor(api, key)?.value as unknown;
     if (typeof call !== 'function' || KEEPS_VIEWS.has(key)) continue;
     (api as unknown as Record<string, unknown>)[key] = (...args: unknown[]): unknown => {
-      views = null;
-      scene = null;
+      dropViews();
       return (call as (...a: unknown[]) => unknown)(...args);
     };
   }

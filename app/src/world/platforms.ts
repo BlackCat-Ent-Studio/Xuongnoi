@@ -81,7 +81,13 @@ export interface MoveScene {
   solids: readonly Entity[];
   bodies: readonly Entity[];
   crates: readonly Entity[];
-  crateBoxes: readonly Box[];
+  crateBoxes: Box[];
+}
+
+/** A rigid crate was put somewhere else or turned, and nothing else changed: the scene takes its new box. */
+export function crateMovedIn(scene: MoveScene, crate: Entity): void {
+  const k = scene.crates.indexOf(crate);
+  if (k >= 0) scene.crateBoxes[k] = boundsBox(crate);
 }
 
 export function moveSceneOf(list: readonly Entity[]): MoveScene {
