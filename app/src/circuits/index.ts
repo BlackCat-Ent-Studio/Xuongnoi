@@ -22,3 +22,4 @@ export {
 export { CircuitError, expandBoard, expandCircuitAlone, type CircuitErrorCode, type CircuitIdMap, type ExpandedOrigin, type Expansion } from './expand';
 export { isBlockingIssue, validateCircuits, type CircuitIssue } from './validate';
 export { runnableGraph } from './runnable';
+export { BENCH_PREFIX, benchKey, benchPlan, type BenchDrive, type BenchInput, type BenchOutput, type BenchPlan } from './bench';

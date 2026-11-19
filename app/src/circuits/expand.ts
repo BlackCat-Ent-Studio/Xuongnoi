@@ -54,7 +54,10 @@ export interface CircuitIdMap {
   readonly origins: ReadonlyMap<string, ExpandedOrigin>;
   /** The flat node id of inner node `inner` of the copy at `path`; undefined when no such node runs (unknown, or a bench node). */
   expandedId(path: readonly string[], inner: string): string | undefined;
-  /** The real port (flat node id + port) a pin of the copy at `path` leads to; undefined for an unknown pin or one that leads nowhere. */
+  /**
+   * The real port (flat node id + port) a pin of the copy at `path` leads to; undefined for an unknown pin or one that leads
+   * nowhere. After `expandCircuitAlone` the empty path stands for the circuit on the bench itself.
+   */
   pinPort(path: readonly string[], pinId: string): PortRef | undefined;
 }
 
@@ -231,7 +234,7 @@ function expandLevel(
     const bench = new Set(circuit.benchIds);
     expandLevel(work, circuit.graph, childPath, compose(frame, place), inner, bench, [...stack, circuit.id]);
     for (const pin of circuit.pins) {
-      const port = landing(work, circuit.graph, childPath, pin.inner, pin.dir, bench);
+      const port = isPinWired(pin) ? landing(work, circuit.graph, childPath, pin.inner, pin.dir, bench) : null;
       if (port) work.pins.set(`${joinPath(childPath)}|${pin.id}`, port);
     }
   }
@@ -343,5 +346,10 @@ export function expandCircuitAlone(board: Pick<Board, 'graph' | 'circuits'>, cir
   const circuit = work.circuits.get(circuitId);
   if (!circuit) throw new CircuitError('unknown-circuit', { circuit: circuitId });
   expandLevel(work, circuit.graph, [], IDENTITY, NO_OVERRIDES, EMPTY_SET, [circuit.id]);
+  // The circuit's own pins, so whoever runs the bench can feed and read them (`pinPort([], pinId)`).
+  for (const pin of circuit.pins) {
+    const port = isPinWired(pin) ? landing(work, circuit.graph, [], pin.inner, pin.dir, EMPTY_SET) : null;
+    if (port) work.pins.set(`|${pin.id}`, port);
+  }
   return finish(work, board.graph.settings);
 }
