@@ -209,6 +209,11 @@ export function onTrack(track: LineTrackSpec, p: PlanePoint): boolean {
   return false;
 }
 
+/** The fixed pattern of samples of a sensing spot (a sunflower spiral), worked out once: the radius share and the direction of each. */
+const SPOT_RADIUS = Array.from({ length: SPOT_SAMPLES }, (_, i) => Math.sqrt((i + 0.5) / SPOT_SAMPLES));
+const SPOT_COS = Array.from({ length: SPOT_SAMPLES }, (_, i) => Math.cos(i * GOLDEN_ANGLE));
+const SPOT_SIN = Array.from({ length: SPOT_SAMPLES }, (_, i) => Math.sin(i * GOLDEN_ANGLE));
+
 /**
  * The share (0..1) of a round sensing spot that lies on the painted line, like the grey level an infrared sensor reads:
  * 0 off the line, 1 with the whole spot inside the band, in between while the spot crosses an edge.
@@ -226,10 +231,10 @@ export function trackCoverage(tracks: readonly LineTrackSpec[], centre: PlanePoi
   if (live.length === 0) return 0;
   let hits = 0;
   for (let i = 0; i < SPOT_SAMPLES; i++) {
-    const k = Math.sqrt((i + 0.5) / SPOT_SAMPLES);
+    const k = SPOT_RADIUS[i]!;
     const p: PlanePoint = flat
       ? { u: centre.u + r * (2 * ((i + 0.5) / SPOT_SAMPLES) - 1), v: centre.v }
-      : { u: centre.u + r * k * Math.cos(i * GOLDEN_ANGLE), v: centre.v + r * k * Math.sin(i * GOLDEN_ANGLE) };
+      : { u: centre.u + r * k * SPOT_COS[i]!, v: centre.v + r * k * SPOT_SIN[i]! };
     if (live.some((t) => (flat ? distanceAlongFloor(t, p.u) <= t.width / 2 : onTrack(t, p)))) hits++;
   }
   return hits / SPOT_SAMPLES;
