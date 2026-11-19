@@ -171,6 +171,8 @@ const api = {
     return run({ ...req, boardJson: serializeBoard(createFactoryShowcase(options)), markers: options.classic ? [] : markers });
   },
   spots: SPOTS,
+  /** The showcase as a saved board, to open in the real editor. */
+  showcaseJson: (options: ShowcaseOptions = {}): string => serializeBoard(createFactoryShowcase(options)),
   redraw: (): void => redraw?.(),
   png: (): string => renderer.domElement.toDataURL('image/png'),
   /** Draw calls and triangles of the last frame (shadow pass included). */
