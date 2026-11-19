@@ -328,9 +328,94 @@ function clearOfSolids(input: PushInput, d: number): boolean {
   return true;
 }
 
+const ROOT3 = Math.sqrt(3);
+
+/**
+ * A box round everything one or more heads pass through on their steps, for telling early that a head can touch no body.
+ * Each body gets a box that holds all a head could touch of it; a body whose box is clear of the reach along one axis the
+ * view shows cannot be touched by any of the heads:
+ *  - a plain head touches a body when their boxes overlap, or come within the body's `skin`, on every shown axis; the head's
+ *    box travels in a straight line;
+ *  - an exact head (3D only) touches when the largest gap along the separating axes is less than `skin`, the body's own three
+ *    axes among them. The head lies within R = the sum of its half sizes of its centre along any axis, so the centres are then
+ *    less than |half sizes of the body| + √3·(R + skin) apart: the head adds √3·R round its centre's path, the body the rest.
+ * A head that touches no body pushes nothing, and nothing rides; a solid then stops it only by overlapping the head's own box,
+ * so a solid clear of the reach stops none. Anything that is not a finite number makes the reach unsure, and it is not used.
+ */
+export interface HeadReach {
+  shown: readonly ('x' | 'y' | 'z')[];
+  flat: 'y' | 'z' | null;
+  lo: Vec3;
+  hi: Vec3;
+}
+
+export function emptyReach(flat: 'y' | 'z' | null | undefined): HeadReach {
+  return { shown: axesOf(flat), flat: flat ?? null, lo: { x: Infinity, y: Infinity, z: Infinity }, hi: { x: -Infinity, y: -Infinity, z: -Infinity } };
+}
+
+/** Adds the way of `head` moved by `move`. False when the reach cannot be trusted for this head. */
+export function growReach(reach: HeadReach, head: Box, move: Vec3): boolean {
+  const exact = head.exact;
+  // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here.
+  if (exact && reach.flat !== null) return false;
+  const round = exact ? ROOT3 * (exact.half.x + exact.half.y + exact.half.z) : 0;
+  let sum = 0;
+  for (const k of reach.shown) {
+    const start = exact ? exact.centre[k] : head.pos[k];
+    const end = start + move[k];
+    // The step is walked as start + direction * distance: rounding may end it a few last bits beside `end`.
+    const ext = (exact ? round : Math.abs(head.size[k]) / 2) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
+    reach.lo[k] = Math.min(reach.lo[k], start - ext, end - ext);
+    reach.hi[k] = Math.max(reach.hi[k], start + ext, end + ext);
+    sum += Math.abs(start) + Math.abs(end) + ext;
+  }
+  return sum < Infinity;
+}
+
+/** True only when no head of the reach can touch the body. */
+export function clearOfReach(reach: HeadReach, b: PushBody): boolean {
+  const skin = Math.abs(b.skin ?? 0);
+  const centre = b.real ? b.real.centre : b.box.pos;
+  const round = (b.real ? Math.hypot(b.real.half.x, b.real.half.y, b.real.half.z) : Math.hypot(b.box.size.x, b.box.size.y, b.box.size.z) / 2) + ROOT3 * skin;
+  let clear = false;
+  for (const k of reach.shown) {
+    const side = Math.abs(b.box.size[k]) / 2 + skin;
+    const min = Math.min(b.box.pos[k] - side, centre[k] - round);
+    const max = Math.max(b.box.pos[k] + side, centre[k] + round);
+    if (!(Math.abs(min) + Math.abs(max) < Infinity)) return false;
+    if (min > reach.hi[k] || max < reach.lo[k]) clear = true;
+  }
+  return clear;
+}
+
+/** The solids that reach into the reach, in their order (one that is not made of finite numbers is kept). */
+export function solidsInReach(reach: HeadReach, solids: readonly Box[]): Box[] {
+  return solids.filter((s) => {
+    for (const k of reach.shown) {
+      const half = Math.abs(s.size[k]) / 2;
+      if (s.pos[k] - half > reach.hi[k] || s.pos[k] + half < reach.lo[k]) return false;
+    }
+    return true;
+  });
+}
+
+/** The same push with no bodies and only the solids in reach, when the head can touch no body on its step; null otherwise. */
+function quietPush(input: PushInput, step: number): PushInput | null {
+  if (input.bodies.length === 0) return null;
+  const reach = emptyReach(input.flat);
+  if (!growReach(reach, input.head, { x: input.dir.x * step, y: input.dir.y * step, z: input.dir.z * step })) return null;
+  for (const b of input.bodies) if (!clearOfReach(reach, b)) return null;
+  return { ...input, bodies: [], solids: solidsInReach(reach, input.solids) };
+}
+
 /** One step of the head: what moves, how far the head may go, and how much force the full step needs. */
-export function planPush(input: PushInput): PushPlan {
-  const step = Math.max(0, Number.isFinite(input.step) ? input.step : 0);
+export function planPush(whole: PushInput): PushPlan {
+  const step = Math.max(0, Number.isFinite(whole.step) ? whole.step : 0);
+  return planWhole(quietPush(whole, step) ?? whole, step);
+}
+
+/** `planPush` with every body and every solid looked at, whatever the head can reach (the tests hold the shortcut against it). */
+export function planWhole(input: PushInput, step = Math.max(0, Number.isFinite(input.step) ? input.step : 0)): PushPlan {
   const full = contactSet(input, step);
   const { total: requiredN, needs } = forceFor(input, full);
   const loadIds = [...full.pushed.keys()];

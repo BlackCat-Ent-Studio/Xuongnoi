@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sweepCubes, sweepWhole, type SweepInput } from '../../src/world/arm-solid';
-import type { Box, PushBody } from '../../src/world/linear-actuator';
+import { planPush, planWhole, type Box, type PushBody } from '../../src/world/linear-actuator';
 import { obbBounds, obbOf } from '../../src/world/oriented-box';
 
 /**
@@ -97,5 +97,41 @@ describe('sweepCubes gives what the whole sweep gives', () => {
       if (round % 4 === 3) input.before[0]!.size.x = odd;
       expect(sweepCubes(input)).toEqual(sweepWhole(input));
     }
+  });
+});
+
+describe('planPush gives what the whole plan gives', () => {
+  it('for single heads (pistons, chassis, fingers) with bodies and solids near and far, in every view', () => {
+    const next = rng(161803);
+    let pushing = 0;
+    let stopped = 0;
+    let free = 0;
+    for (let round = 0; round < 4000; round++) {
+      const flat = ([null, null, 'y', 'z'] as const)[Math.floor(round / 4) % 4]!;
+      const s = sweep(next, [1.5, 4, 12, 80][round % 4]!, flat);
+      const from = s.before[0]!;
+      const to = s.after[0]!;
+      const d = { x: to.pos.x - from.pos.x, y: flat === 'y' ? 0 : to.pos.y - from.pos.y, z: flat === 'z' ? 0 : to.pos.z - from.pos.z };
+      const len = Math.hypot(d.x, d.y, d.z) || 1;
+      const input = {
+        head: from,
+        ...(to.exact && next() < 0.7 ? { headEnd: to.exact } : {}),
+        dir: { x: d.x / len, y: d.y / len, z: d.z / len },
+        step: [len, len * 5, 0, 1.5][Math.floor(next() * 4)]!,
+        bodies: s.bodies,
+        solids: s.solids,
+        flat,
+        lifting: d.y / len > 0.5,
+        ...(next() < 0.5 ? { probeContact: true } : {}),
+      };
+      const want = planWhole(input);
+      expect(planPush(input)).toEqual(want);
+      if (want.moves.length > 0) pushing++;
+      else if (want.blocked) stopped++;
+      else free++;
+    }
+    expect(pushing).toBeGreaterThan(300);
+    expect(stopped).toBeGreaterThan(300);
+    expect(free).toBeGreaterThan(300);
   });
 });

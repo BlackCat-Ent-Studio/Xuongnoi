@@ -1,6 +1,6 @@
 import type { Vec3 } from '../engine/types';
 import { dirOf, lateralOf, localToWorld, normalOf, type Frame } from './arm-kinematics';
-import { loadLimitedAdvance, planPush, shiftPushBody, type Box, type PushBody } from './linear-actuator';
+import { clearOfReach, emptyReach, growReach, loadLimitedAdvance, planPush, planWhole, shiftPushBody, solidsInReach, type Box, type PushBody } from './linear-actuator';
 import { torque } from './mechanics';
 import { obbOf, obbBounds, quatFromAxes, type Obb } from './oriented-box';
 
@@ -171,81 +171,35 @@ function boxesOverlap(a: Box, b: Box, flat: 'y' | 'z' | null): boolean {
   return (['x', 'y', 'z'] as const).every((k) => k === flat || (a.size[k] + b.size[k]) / 2 - Math.abs(a.pos[k] - b.pos[k]) > 1e-6);
 }
 
-const ROOT3 = Math.sqrt(3);
-const SHOWN = ['x', 'y', 'z'] as const;
-
 /**
- * The same sweep with less to look at, when no cube can touch any body on its way: then nothing is pushed and nothing rides,
- * so the bodies do not matter at all, and of the solids only those the cubes can reach. Null when a body may be touched (the
- * whole sweep is then needed: a pushed body can push others anywhere) or when the shortcut is not sure.
- *
- * A region is put round everything the cubes pass through, and round each body a box that holds all a cube could touch of it:
- *  - a plain cube touches a body when their boxes overlap, or come within the body's `skin`, on every axis the view shows; the
- *    cube's box travels in a straight line from `before` to `after`;
- *  - an exact piece (3D only) touches when the largest gap along the separating axes is less than `skin`, the body's own three
- *    axes among them. The piece lies within R = the sum of its half sizes of its centre along any axis, so the centres are then
- *    less than |half sizes of the body| + √3·(R + skin) apart: the piece adds √3·R round its centre's path, the body the rest.
- * A body whose box is clear of the region along one shown axis cannot be touched. A solid stops a cube that pushes nothing only
- * by overlapping the cube's own box, so a solid clear of the region stops none. Anything that is not a finite number makes the
- * shortcut unsure.
+ * The same sweep with less to look at, when no cube can touch any body on its way (see `HeadReach`): then nothing is pushed
+ * and nothing rides, so the bodies do not matter at all, and of the solids only those the cubes can reach. Null when a body
+ * may be touched (the whole sweep is then needed: a pushed body can push others anywhere) or when the shortcut is not sure.
  */
 function quietSweep(input: SweepInput): SweepInput | null {
   if (input.bodies.length === 0 && input.solids.length === 0) return null;
   if (input.after.length < input.before.length) return null;
-  const shown = SHOWN.filter((k) => k !== input.flat);
-  const lo = { x: Infinity, y: Infinity, z: Infinity };
-  const hi = { x: -Infinity, y: -Infinity, z: -Infinity };
-  let sum = 0;
+  const reach = emptyReach(input.flat);
   for (let i = 0; i < input.before.length; i++) {
     const from = input.before[i]!;
     const to = input.after[i]!;
-    // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here.
-    if (from.exact && input.flat !== null) return null;
-    const round = from.exact ? ROOT3 * (from.exact.half.x + from.exact.half.y + from.exact.half.z) : 0;
-    for (const k of shown) {
-      const start = from.exact ? from.exact.centre[k] : from.pos[k];
-      const end = start + (to.pos[k] - from.pos[k]);
-      // The step is walked as start + direction * distance: rounding may end it a few last bits beside `end`.
-      const ext = (from.exact ? round : Math.abs(from.size[k]) / 2) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
-      lo[k] = Math.min(lo[k], start - ext, end - ext);
-      hi[k] = Math.max(hi[k], start + ext, end + ext);
-      sum += Math.abs(start) + Math.abs(end) + ext;
-    }
+    if (!growReach(reach, from, { x: to.pos.x - from.pos.x, y: to.pos.y - from.pos.y, z: to.pos.z - from.pos.z })) return null;
   }
-  if (!(sum < Infinity)) return null;
-  for (const b of input.bodies) {
-    const skin = Math.abs(b.skin ?? 0);
-    const centre = b.real ? b.real.centre : b.box.pos;
-    const half = b.real ? b.real.half : null;
-    const round = (half ? Math.hypot(half.x, half.y, half.z) : Math.hypot(b.box.size.x, b.box.size.y, b.box.size.z) / 2) + ROOT3 * skin;
-    let clear = false;
-    for (const k of shown) {
-      const reach = Math.abs(b.box.size[k]) / 2 + skin;
-      const min = Math.min(b.box.pos[k] - reach, centre[k] - round);
-      const max = Math.max(b.box.pos[k] + reach, centre[k] + round);
-      // Not finite: never clear.
-      if (min > hi[k] || max < lo[k]) clear = true;
-      if (!(Math.abs(min) + Math.abs(max) < Infinity)) return null;
-    }
-    if (!clear) return null;
-  }
-  const solids = input.solids.filter((s) => {
-    for (const k of shown) {
-      const half = Math.abs(s.size[k]) / 2;
-      if (s.pos[k] - half > hi[k] || s.pos[k] + half < lo[k]) return false;
-    }
-    return true;
-  });
-  return { ...input, bodies: [], solids };
+  for (const b of input.bodies) if (!clearOfReach(reach, b)) return null;
+  return { ...input, bodies: [], solids: solidsInReach(reach, input.solids) };
 }
 
 /** One straight step of every cube: who is pushed, how much torque it takes, how much of it a solid allows. */
 export function sweepCubes(input: SweepInput): SweepResult {
-  return sweepWhole(quietSweep(input) ?? input);
+  return sweepWith(quietSweep(input) ?? input, planPush);
 }
 
-/** `sweepCubes` with every body and every solid looked at, whatever the cubes can reach (the tests hold the shortcut against it). */
+/** `sweepCubes` with every body and every solid looked at, whatever the cubes can reach (the tests hold the shortcuts against it). */
 export function sweepWhole(input: SweepInput): SweepResult {
+  return sweepWith(input, planWhole);
+}
+
+function sweepWith(input: SweepInput, planOne: typeof planPush): SweepResult {
   const order = input.before.map((_, i) => i).sort((a, b) => (input.levers[b] ?? 0) - (input.levers[a] ?? 0));
   let bodies = input.bodies.map((b) => ({ ...b }));
   const moves = new Map<string, Vec3>();
@@ -269,7 +223,7 @@ export function sweepWhole(input: SweepInput): SweepResult {
     const solids = input.mount && boxesOverlap(from, input.mount, input.flat) ? input.solids.filter((s) => !sameBox(s, input.mount!)) : input.solids;
     const seen = from.exact ? bodies.filter(isRigid) : from.fat ? bodies.filter((b) => !isRigid(b)) : bodies;
     if (from.exact && seen.length === 0) continue;
-    const plan = planPush({ head: from, ...(to.exact ? { headEnd: to.exact } : {}), dir, step: len, bodies: seen, solids, flat: input.flat, lifting: dir.y > 0.5, ...(input.probeContact ? { probeContact: true } : {}) });
+    const plan = planOne({ head: from, ...(to.exact ? { headEnd: to.exact } : {}), dir, step: len, bodies: seen, solids, flat: input.flat, lifting: dir.y > 0.5, ...(input.probeContact ? { probeContact: true } : {}) });
     // What an earlier (farther out) cube already pays for a rigid crate is not charged again; other bodies are charged per cube as ever.
     let fresh = plan.requiredN;
     for (const [id, need] of plan.needs) {
