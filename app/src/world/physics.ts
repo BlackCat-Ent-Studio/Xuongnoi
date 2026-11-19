@@ -307,7 +307,7 @@ function stepVehicle(
  * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, solids: readonly Entity[], entities: readonly Entity[]): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, solids: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null): void {
   const body = r.robot;
   if (!body) return;
   const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r));
@@ -317,10 +317,52 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, solids: rea
   if (mode === '2d-top') r.vel.y = 0;
   else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r, g) * dt);
   if (mode === '2d-side') r.pos.z = 0;
-  const shove = beginShove(r, entities, solids, dt, mode);
-  r.onGround = integrate(r, dt, mode, solids);
-  if (shove) finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode);
-  settleRobot(body, r.vel, mode === '2d-side');
+  const others = meets && r.solid ? meets.chassis.filter((o) => o !== r) : [];
+  if (!meets || others.length === 0) {
+    const shove = beginShove(r, entities, solids, dt, mode);
+    r.onGround = integrate(r, dt, mode, solids);
+    if (shove) finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode);
+    settleRobot(body, r.vel, mode === '2d-side');
+    return;
+  }
+  // Another chassis that already shoved this one along this tick has given it that much of its own move: it does not travel it twice.
+  const given = meets.shoved.get(r);
+  const cut = { x: 0, z: 0 };
+  const far = given ? Math.hypot(given.x, given.z) : 0;
+  if (given && far > 1e-12) {
+    const own = ((r.vel.x * given.x + r.vel.z * given.z) / far) * dt;
+    const take = Math.min(Math.max(own, 0), far) / (far * dt);
+    cut.x = given.x * take;
+    cut.z = given.z * take;
+    r.vel.x -= cut.x;
+    r.vel.z -= cut.z;
+  }
+  const from = { x: r.pos.x, z: r.pos.z };
+  const shove = beginShove(r, entities, solids, dt, mode, others);
+  // The chassis it shoves move once it has moved; every other one stops it like a wall.
+  const rivals: Rivals = { list: shove && shove.shoved.size > 0 ? others.filter((o) => !shove.shoved.has(o.id)) : others, hit: new Set() };
+  r.onGround = integrate(r, dt, mode, solids, rivals);
+  if (shove) {
+    for (const [o, d] of finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode, dt)) {
+      if (meets.stepped.has(o)) continue;
+      const was = meets.shoved.get(o);
+      meets.shoved.set(o, was ? { x: was.x + d.x, z: was.z + d.z } : d);
+    }
+  }
+  meets.stepped.add(r);
+  // Stopped by a chassis that itself moves, it keeps the speed it really travelled at (a wall takes all of it, as ever).
+  const done = rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel;
+  settleRobot(body, { x: done.x + cut.x, z: done.z + cut.z }, mode === '2d-side');
+}
+
+/**
+ * Real physics: the solid robot chassis of this tick, which stop and shove each other. `shoved` is how far a chassis that has
+ * not made its own move yet (`stepped`) was already pushed along by others.
+ */
+interface ChassisMeets {
+  chassis: readonly Entity[];
+  shoved: Map<Entity, { x: number; z: number }>;
+  stepped: Set<Entity>;
 }
 
 /** Seconds a contact must stay broken before the same pair can crash again. */
@@ -408,8 +450,11 @@ export function stepPhysics(
   for (const c of entities) {
     if (c.kind === 'vehicle' && c.visible) stepVehicle(c, dt, mode, yaw, g, solids, colliders);
   }
+  // Real physics: solid chassis on wheel traction are solid for each other too (without it they pass through, as on every older board).
+  const tractionChassis = entities.filter((e) => e.kind === 'robot' && e.visible && e.solid && e.robot?.traction === true);
+  const meets: ChassisMeets | null = tractionChassis.length > 1 ? { chassis: tractionChassis, shoved: new Map(), stepped: new Set() } : null;
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities);
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, c.robot?.traction === true ? meets : null);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {

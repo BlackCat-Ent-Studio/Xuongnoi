@@ -53,6 +53,11 @@ export interface PushBody {
   real?: Obb;
   /** How close (m) along the direction of travel a pusher counts as touching this body. Absent = only when the boxes overlap. */
   skin?: number;
+  /**
+   * Force (N) it takes to move this body, whatever stands on it included, when that is not its sliding friction μ · m · g: a robot
+   * chassis is held by its wheels (brakes and grip). Absent = it slides on its own surface.
+   */
+  holdN?: number;
 }
 
 export interface PushInput {
@@ -290,7 +295,7 @@ function forceFor(input: PushInput, set: ContactSet): { total: number; needs: Ma
   for (const [root, kg] of load) {
     const body = byId.get(root);
     if (!body) continue;
-    let need = frictionForce(body.mu, weight(kg));
+    let need = body.holdN ?? frictionForce(body.mu, weight(kg));
     const by = pushedBy.get(root);
     if (body.real && by && Math.abs(input.dir.y) <= 0.5 && input.flat !== 'y') need = Math.min(need, tipForceN(body.real, input.dir, contactHeight(by, body.box), kg));
     total += need;
