@@ -1,5 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
-import { TICK_DT, type ParamValue } from '../../src/engine/types';
+import * as THREE from 'three';
+import { TICK_DT, type EntityView, type ParamValue } from '../../src/engine/types';
+import { ArmPartFigure } from '../../src/render/arm-part-models';
 import { linkCubes, linkOutline } from '../../src/world/arm-solid';
 import type { Frame } from '../../src/world/arm-kinematics';
 import { obbCorners, obbSeparation, obbOf, type Obb } from '../../src/world/oriented-box';
@@ -238,10 +240,35 @@ describe('a 0.6 x 0.6 m tray on a chassis joint, "Vật lý thật" on', () => {
 });
 
 describe('with "Vật lý thật" off', () => {
-  it('a loose item rests on a level plate (its cover is solid), and a link without a width is unchanged', () => {
-    const r = build({ crateKg: 1, real: false });
-    r.tick(Math.round(3 / TICK_DT));
-    expect(r.entity('crate')!.position.y).toBeCloseTo(TRAY_TOP + CRATE / 2, 2);
-    expect(Math.abs(r.entity('crate')!.position.x - (PIVOT_X + TRAY.length / 2))).toBeLessThan(0.01);
+  it('a loose item out at the side of a level plate rests on it and touches it; beside a bar of the same length it falls to the chassis top', () => {
+    // The item spans 5 cm to 45 cm from the centre line: over the 60 cm plate (out to 30 cm), clear of the 5 cm bar.
+    const plate = build({ crateKg: 1, real: false, lateral: 0.25 });
+    plate.tick(Math.round(3 / TICK_DT));
+    expect(plate.entity('crate')!.position.y).toBeCloseTo(TRAY_TOP + CRATE / 2, 2);
+    expect(Math.abs(plate.entity('crate')!.position.x - (PIVOT_X + TRAY.length / 2))).toBeLessThan(0.01);
+    expect(plate.world.isTouching(plate.entity('tray')!.id, plate.entity('crate')!.id)).toBe(true);
+    const bar = build({ crateKg: 1, real: false, lateral: 0.25, tray: { width: 0 } });
+    bar.tick(Math.round(3 / TICK_DT));
+    expect(bar.entity('crate')!.position.y).toBeCloseTo(CHASSIS.height + CRATE / 2, 2);
+    expect(bar.world.isTouching(bar.entity('tray')!.id, bar.entity('crate')!.id)).toBe(false);
+  });
+});
+
+describe('the drawn link', () => {
+  const extent = (size: { x: number; y: number; z: number }): THREE.Vector3 => {
+    const fig = new ArmPartFigure('link');
+    const view: EntityView = { id: 'e', kind: 'block', ownerNodeId: 'n', position: { x: 0, y: 0, z: 0 }, size, color: '#a3a3a3', visible: true };
+    fig.update(view, '3d', { part: 'link' }, 0);
+    return new THREE.Box3().setFromObject(fig.object).getSize(new THREE.Vector3());
+  };
+
+  it('is the same look stretched sideways: a plate is drawn as wide as a bar is, in proportion, and no longer or thicker', () => {
+    const bar = extent({ x: 0.6, y: 0.05, z: 0.05 });
+    const plate = extent({ x: 0.6, y: 0.05, z: 0.6 });
+    expect(plate.x).toBeCloseTo(bar.x, 6);
+    expect(plate.y).toBeCloseTo(bar.y, 6);
+    // The slab is drawn at 80 % of the block's depth, plus the 8 cm the stripe stands out.
+    expect(bar.z).toBeCloseTo(0.05 * 0.8 + 0.08, 2);
+    expect(plate.z).toBeCloseTo(0.6 * 0.8 + 0.08, 2);
   });
 });
