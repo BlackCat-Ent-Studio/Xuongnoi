@@ -162,11 +162,51 @@ function distanceAlongFloor(track: LineTrackSpec, u: number): number {
   return best;
 }
 
+/**
+ * Per piece of a track's centre line, the upright box around it grown by half the band width (and a hair more): a point outside
+ * the box is further from that piece than half the width. Four numbers per piece: min u, max u, min v, max v.
+ */
+const pieceBoxes = new WeakMap<LineTrackSpec, Float64Array>();
+
+function pieceBoxesOf(track: LineTrackSpec): Float64Array {
+  let boxes = pieceBoxes.get(track);
+  if (!boxes) {
+    const path = track.path;
+    const n = path.length;
+    const pieces = track.closed ? n : n - 1;
+    boxes = new Float64Array(pieces * 4);
+    for (let i = 0; i < pieces; i++) {
+      const a = path[i]!;
+      const b = path[(i + 1) % n]!;
+      // The nearest point of the piece is worked out as a + t * (b - a): rounding can put it a few last bits outside the piece.
+      const grow = track.width / 2 + 1e-9 * (1 + Math.abs(a.u) + Math.abs(a.v) + Math.abs(b.u) + Math.abs(b.v));
+      boxes[i * 4] = Math.min(a.u, b.u) - grow;
+      boxes[i * 4 + 1] = Math.max(a.u, b.u) + grow;
+      boxes[i * 4 + 2] = Math.min(a.v, b.v) - grow;
+      boxes[i * 4 + 3] = Math.max(a.v, b.v) + grow;
+    }
+    pieceBoxes.set(track, boxes);
+  }
+  return boxes;
+}
+
 /** True when the point lies on the band of a track (within half the width of the centre line). */
 export function onTrack(track: LineTrackSpec, p: PlanePoint): boolean {
   const b = boundsOf(track);
   if (p.u < b.minU || p.u > b.maxU || p.v < b.minV || p.v > b.maxV) return false;
-  return distanceToTrack(track, p) <= track.width / 2;
+  const half = track.width / 2;
+  const path = track.path;
+  const n = path.length;
+  // The plain rule, for the tracks the shortcut below is not made for.
+  if (n < 2 || !(half >= 0 && half < Infinity)) return distanceToTrack(track, p) <= half;
+  // On the band = within half the width of the nearest piece = within half the width of some piece. A piece whose box the
+  // point is outside of is too far (a NaN is outside of nothing and is measured); the first piece near enough settles it.
+  const boxes = pieceBoxesOf(track);
+  for (let i = 0, k = 0; k < boxes.length; i++, k += 4) {
+    if (p.u < boxes[k]! || p.u > boxes[k + 1]! || p.v < boxes[k + 2]! || p.v > boxes[k + 3]!) continue;
+    if (segmentDistance(p, path[i]!, path[(i + 1) % n]!) <= half) return true;
+  }
+  return false;
 }
 
 /**

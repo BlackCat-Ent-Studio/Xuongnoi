@@ -131,3 +131,45 @@ describe('rounded corners', () => {
     expect(tiny.every((p) => Number.isFinite(p.u) && Number.isFinite(p.v))).toBe(true);
   });
 });
+
+describe('onTrack agrees with the plain rule (within half the width of the centre line)', () => {
+  it('for points all over, near the band edges and at the path points of smooth, sharp, closed and open tracks', () => {
+    let a = 12345;
+    const next = (): number => {
+      a = (Math.imul(a, 1664525) + 1013904223) >>> 0;
+      return a / 4294967296;
+    };
+    let on = 0;
+    let off = 0;
+    for (let round = 0; round < 200; round++) {
+      const n = 1 + Math.floor(next() * 7);
+      const raw = Array.from({ length: n }, () => ({ u: (next() - 0.5) * 20, v: (next() - 0.5) * 20 }));
+      const closed = next() < 0.5;
+      const width = [0.3, 0.05, 2, 0][round % 4]!;
+      const track = { path: next() < 0.5 ? smoothPath(raw, closed, 1) : raw, closed, width };
+      const half = width / 2;
+      for (let k = 0; k < 400; k++) {
+        const base = k % 3 === 0 ? { u: (next() - 0.5) * 24, v: (next() - 0.5) * 24 } : track.path[Math.floor(next() * track.path.length)]!;
+        // Around a path point: just inside, on and just outside the band.
+        const out = half + [0, 1e-12, -1e-12, 1e-6, -1e-6, 0.01, -0.01][k % 7]!;
+        const turn = next() * Math.PI * 2;
+        const p = k % 3 === 0 ? base : { u: base.u + Math.cos(turn) * out, v: base.v + Math.sin(turn) * out };
+        const want = distanceToTrack(track, p) <= half;
+        expect(onTrack(track, p)).toBe(want);
+        if (want) on++;
+        else off++;
+      }
+    }
+    expect(on).toBeGreaterThan(5000);
+    expect(off).toBeGreaterThan(5000);
+  });
+
+  it('for tracks and points that are not numbers', () => {
+    const odd = { path: [{ u: 0, v: 0 }, { u: NaN, v: 1 }, { u: 4, v: 0 }], closed: false, width: 0.3 };
+    for (const p of [{ u: 3.9, v: 0.1 }, { u: 0, v: 0 }, { u: NaN, v: 0 }, { u: 2, v: 0.5 }]) expect(onTrack(odd, p)).toBe(distanceToTrack(odd, p) <= 0.15);
+    for (const width of [NaN, Infinity, -1]) {
+      const t = { path: [{ u: 0, v: 0 }, { u: 4, v: 0 }], closed: false, width };
+      for (const p of [{ u: 2, v: 0 }, { u: 2, v: 9 }]) expect(onTrack(t, p)).toBe(distanceToTrack(t, p) <= width / 2);
+    }
+  });
+});
