@@ -1,7 +1,7 @@
 import type { ViewMode } from '../engine/types';
 import { boundsBox, colliderBox, spanOverlap } from './collider';
 import type { Entity } from './entity';
-import { exceeds, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
+import { emptyReach, exceeds, growReach, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
 import { materialOf } from './material';
 import { wheelSpeed } from './robot-drive';
 import { GRAVITY_N, MIN_FRICTION } from './robot-traction';
@@ -142,6 +142,28 @@ function planFor(head: Box, dir: { x: number; z: number }, step: number, items: 
 }
 
 /**
+ * False only when the step of the chassis can meet no loose item and no other chassis: its box, on its way, stays clear of the
+ * box round each of them along some axis the view shows. (An item's bounds, however it is turned, lie within its collision
+ * box's offset plus half its diagonal of its position, along every axis.) Then nothing is shoved, whatever else is worked out.
+ */
+export function somethingOnTheWay(r: Entity, entities: readonly Entity[], others: readonly Entity[], move: { x: number; z: number }, mode: ViewMode): boolean {
+  const reach = emptyReach(flatOf(mode));
+  if (!growReach(reach, colliderBox(r), { x: move.x, y: 0, z: move.z })) return true;
+  const clear = (e: Entity): boolean => {
+    const b = colliderBox(e);
+    const round = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+    for (const k of reach.shown) if (e.pos[k] - round > reach.hi[k] || e.pos[k] + round < reach.lo[k]) return true;
+    return false;
+  };
+  for (const o of others) if (!clear(o)) return true;
+  for (const e of entities) {
+    if (e.kind !== 'item' || !e.visible || e.bullet || e.heldBy !== null || e.inHand) continue;
+    if (!clear(e)) return true;
+  }
+  return false;
+}
+
+/**
  * Before the chassis moves this tick: finds what its step would push. Returns null when nothing is in the way (the move
  * is then exactly the usual one). A stall zeroes the ground velocity; a push cut short by a solid scales it down.
  * `others` are the other solid chassis it may meet (real physics on; none otherwise).
@@ -153,6 +175,8 @@ export function beginShove(r: Entity, entities: readonly Entity[], solids: reado
   const dz = mode === '2d-side' ? 0 : r.vel.z * dt;
   const len = Math.hypot(dx, dz);
   if (len < 1e-9) return null;
+  // The plan below would find nothing to move and give the same answer; this saves making it for every chassis on an open floor.
+  if (!somethingOnTheWay(r, entities, others, { x: dx, z: dz }, mode)) return null;
   const loose = pushBodies(r, entities, mode, others);
   if (loose.length === 0 && others.length === 0) return null;
   const dir = { x: dx / len, z: dz / len };
