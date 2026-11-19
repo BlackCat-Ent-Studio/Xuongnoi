@@ -69,7 +69,7 @@ const T = {
   color: {
     title: 'Đọc màu sàn',
     text: 'Kéo mảnh ghép "Đọc màu" (nhóm Logic) vào bảng.',
-    explain: 'Nó đọc màu hộp dưới chân và cho ra số 1 (đỏ), 2 (vàng) hoặc 3 (xanh lá). Màu khác thì ra 0.',
+    explain: 'Nó đọc màu hộp dưới chân và cho ra số theo bảng màu: 1 (đỏ), 2 (vàng), 3 (xanh lá), rồi 4, 5, 6 (xanh dương, tím, cam). Màu khác thì ra 0.',
   },
   colorWho: {
     title: 'Đọc màu dưới chân ai?',

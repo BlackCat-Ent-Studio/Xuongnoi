@@ -18,7 +18,10 @@ import {
   spawnerWeightBoard,
   teleportBoard,
 } from './boards-action-brain';
+import { spawnerClassBoard } from './boards-memory-dispatch';
 import type { HandbookEntry } from './types';
+
+const SPAWNER_CLASSES = [1, 2, 3, 4, 5, 6];
 
 /** One shared sentence for every "Điểm n" of Chạy theo tuyến (p1..p32). */
 const ROUTE_POINT_TEXT = 'Một điểm trên tuyến (vị trí x, y, z). Chỉ các điểm từ 1 tới "Số điểm" được dùng. Các điểm 9 tới 32 nằm trong phần Nâng cao.';
@@ -287,6 +290,8 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       count: 'Số vật đang còn tồn tại.',
       spawned: 'Bật một nhịp khi vừa sinh thành công.',
       touched: 'Bật khi nhân vật ở "Chạm thử với" đang chạm bất kỳ vật nào do mảnh ghép này sinh ra.',
+      lastClass: 'Ra (số), chỉ hiện khi bật "Sinh ngẫu nhiên theo loại": loại (1, 2, 3...) của vật vừa sinh gần nhất. Chưa sinh cái nào thì là 0.',
+      lastMass: 'Ra (số), chỉ hiện khi bật "Sinh ngẫu nhiên theo loại": khối lượng (kg) của vật vừa sinh gần nhất.',
     },
     params: {
       template: 'Sinh "Vật thể" hay "Đồ vật" (đồ vật rơi xuống đất).',
@@ -302,6 +307,12 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       mu: 'Nâng cao: hệ số ma sát bề mặt của vật mới (0 = trơn, 1,5 = rất nhám).',
       crushLimit: 'Nâng cao: lực ép lớn nhất (N) mà vật mới chịu được. Bị kẹp mạnh hơn thì hỏng. 0 nghĩa là không bao giờ hỏng.',
       wireMaterial: 'Nâng cao: bật thì hiện thêm hai ô nhập "Khối lượng" và "Lực chịu nén" để nối dây, giá trị trên dây lúc tạo thay cho ô nhập tương ứng. Nối "Số ngẫu nhiên" vào "Khối lượng" để có thùng nặng nhẹ lẫn lộn.',
+      randomClass:
+        'Nâng cao: bật thì mỗi vật mới bốc thăm một trong các loại bên dưới (loại nào cũng dễ ra như nhau) và mang màu, khối lượng của loại đó thay cho ô "Màu" và "Khối lượng". Thẻ hiện thêm cổng "Loại vừa sinh" và "Khối lượng vừa sinh". Tắt thì mảnh ghép chạy như cũ.',
+      classCount: 'Số loại được dùng, từ 2 đến 6. Chỉ các loại từ 1 tới số này được bốc thăm.',
+      ...Object.fromEntries(SPAWNER_CLASSES.map((k) => [`class${k}Color`, `Màu của vật thuộc loại ${k}. Mặc định trùng "Màu ${k}" của mảnh Đọc màu.`])),
+      ...Object.fromEntries(SPAWNER_CLASSES.map((k) => [`class${k}Mass`, `Khối lượng (kg) của vật thuộc loại ${k}. Để 0 thì theo loại vật: Vật thể 10 kg, Đồ vật 1 kg.`])),
+      classSeed: 'Hạt giống của việc bốc thăm loại. Để 0 thì mỗi lần chạy ra thứ tự khác nhau; đặt số khác 0 thì lần nào cũng ra y hệt.',
     },
     example: 'Phím E "Khi nhấn phím" → "Tạo"; "Đối tượng" → "Tại đối tượng"; "Số đang có" → Hiện số.',
     tips: [
@@ -312,7 +323,10 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
     ],
     lessonId: 'platforms-shooting',
     tryBoard: spawnerBoard,
-    extraTries: [{ label: 'Thử: thùng nặng nhẹ ngẫu nhiên', board: spawnerWeightBoard }],
+    extraTries: [
+      { label: 'Thử: thùng nặng nhẹ ngẫu nhiên', board: spawnerWeightBoard },
+      { label: 'Thử: sinh ngẫu nhiên theo loại', board: spawnerClassBoard },
+    ],
   },
   {
     kind: 'patrol',

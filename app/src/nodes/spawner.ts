@@ -1,13 +1,21 @@
 import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type ParamDef, type Params, type PortDef, type PortValue } from '../engine/types';
 import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
+import { MAX_MASS_KG } from '../world/material';
 import { materialParams, materialSpec } from './body-params';
+import { PALETTE_COLORS } from './color-palette';
 import { ITEM_SHAPE_LABELS } from './item';
+import { createRng, hashText } from './random';
 import { asBool, asObject, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
 interface SpawnerState {
   pool: SpawnPool;
   spawn: EdgeState;
   last: EntityId | null;
+  /** Picks the class of each new object while "Sinh ngẫu nhiên theo loại" is on. */
+  next: () => number;
+  /** Class (1-based) and mass (kg) of the latest object made with a random class; 0 before the first one. */
+  lastClass: number;
+  lastMass: number;
 }
 
 const MAX_ALIVE_LIMIT = 50;
@@ -20,6 +28,31 @@ const spawnerMaterialParams = (): ParamDef[] =>
   materialParams('item').map((p) =>
     p.id === 'mass' ? { ...p, label: 'Khối lượng (kg, 0 = theo loại: Vật thể 10, Đồ vật 1)', legacyDefault: MASS_BY_KIND } : p,
   );
+
+export const SPAWNER_MAX_CLASSES = 6;
+const MIN_CLASSES = 2;
+const DEFAULT_CLASSES = 3;
+/** Class k starts with the colour "Đọc màu" knows as Màu k. */
+const CLASS_COLORS = PALETTE_COLORS;
+const CLASS_PORT: PortDef = { id: 'lastClass', type: 'number', label: 'Loại vừa sinh', labelEn: 'Latest class' };
+const CLASS_MASS_PORT: PortDef = { id: 'lastMass', type: 'number', label: 'Khối lượng vừa sinh', labelEn: 'Latest mass' };
+
+const randomClasses = (params: Params): boolean => strParam(params, 'randomClass', 'no') === 'yes';
+/** Class count as the node uses it: rounded and kept within 2..6. */
+export function spawnerClassCount(params: Params): number {
+  return Math.min(SPAWNER_MAX_CLASSES, Math.max(MIN_CLASSES, Math.round(numParam(params, 'classCount', DEFAULT_CLASSES))));
+}
+const classColor = (params: Params, k: number): string => strParam(params, `class${k}Color`, CLASS_COLORS[k - 1] ?? '#ef4444');
+const classMass = (params: Params, k: number): number => numParam(params, `class${k}Mass`, k);
+
+// Only the classes in use are listed, and none of them while the toggle is off.
+const classParams: ParamDef[] = Array.from({ length: SPAWNER_MAX_CLASSES }, (_, n) => n + 1).flatMap((k): ParamDef[] => {
+  const shownWhen = (params: Params): boolean => randomClasses(params) && k <= spawnerClassCount(params);
+  return [
+    { id: `class${k}Color`, label: `Màu loại ${k}`, kind: 'color', default: CLASS_COLORS[k - 1] ?? '#ef4444', advanced: true, shownWhen },
+    { id: `class${k}Mass`, label: `Khối lượng loại ${k} (kg)`, kind: 'number', default: k, min: 0, max: MAX_MASS_KG, step: 0.1, advanced: true, shownWhen },
+  ];
+});
 
 const takesWiredMaterial = (params: Params): boolean => strParam(params, 'wireMaterial', 'no') === 'yes';
 const wired = (v: PortValue | undefined): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
@@ -43,6 +76,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     { id: 'spawned', type: 'bool', label: 'Khi tạo' },
     { id: 'touched', type: 'bool', label: 'Đang chạm thử' },
   ],
+  // Only while "Sinh ngẫu nhiên theo loại" is on, so a spawner card keeps its size on every old board.
+  optionalOutputs: { all: [CLASS_PORT, CLASS_MASS_PORT], active: (params) => (randomClasses(params) ? [CLASS_PORT, CLASS_MASS_PORT] : []) },
   params: [
     {
       id: 'template',
@@ -98,8 +133,28 @@ export const spawnerNode: NodeDef<SpawnerState> = {
       ],
       advanced: true,
     },
+    {
+      id: 'randomClass',
+      label: 'Sinh ngẫu nhiên theo loại',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (mỗi vật mới bốc thăm một loại, mỗi loại một màu và một khối lượng)' },
+      ],
+      advanced: true,
+    },
+    { id: 'classCount', label: `Số loại (${MIN_CLASSES}-${SPAWNER_MAX_CLASSES})`, kind: 'number', default: DEFAULT_CLASSES, min: MIN_CLASSES, max: SPAWNER_MAX_CLASSES, step: 1, advanced: true, shownWhen: randomClasses },
+    ...classParams,
+    { id: 'classSeed', label: 'Hạt giống (0 = mỗi lần chạy khác nhau)', kind: 'number', default: 0, step: 1, advanced: true, shownWhen: randomClasses },
   ],
-  create: () => ({ pool: createSpawnPool(), spawn: { prev: false }, last: null }),
+  createOnly: ['classSeed'],
+  create(ctx, params) {
+    // Same rule as "Số ngẫu nhiên": seed 0 follows the run, any other number repeats the same draws on every run.
+    const seed = Math.trunc(numParam(params, 'classSeed', 0));
+    const base = seed !== 0 ? seed : ctx.world.runSeed();
+    return { pool: createSpawnPool(), spawn: { prev: false }, last: null, next: createRng((base ^ hashText(ctx.nodeId)) >>> 0), lastClass: 0, lastMass: 0 };
+  },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
     let alive = tickSpawnPool(s.pool, ctx.dt, world);
@@ -115,6 +170,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         const isBlock = strParam(params, 'template', 'item') === 'block';
         const shapeRaw = strParam(params, 'shape', 'ball');
         const material = materialSpec(params, isBlock ? 'block' : 'item');
+        const cls = randomClasses(params) ? 1 + Math.floor(s.next() * spawnerClassCount(params)) : 0;
+        if (cls > 0) material.mass = classMass(params, cls);
         if (material.mass === MASS_BY_KIND) material.mass = undefined;
         if (takesWiredMaterial(params)) {
           material.mass = wired(i.mass) ?? material.mass;
@@ -125,7 +182,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
           ownerNodeId: ctx.nodeId,
           position: { x: base.x + off.x, y: base.y + off.y, z: base.z + off.z },
           size: vec3Param(params, 'size', { x: 0.7, y: 0.7, z: 0.7 }),
-          color: strParam(params, 'color', '#ef4444'),
+          color: cls > 0 ? classColor(params, cls) : strParam(params, 'color', '#ef4444'),
           solid: isBlock && strParam(params, 'solid', 'solid') !== 'pickup',
           ...(isBlock
             ? {}
@@ -138,6 +195,10 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         });
         addToSpawnPool(s.pool, id, numParam(params, 'lifetime', 5));
         s.last = id;
+        if (cls > 0) {
+          s.lastClass = cls;
+          s.lastMass = world.materialOf(id)?.massKg ?? 0;
+        }
         spawned = true;
         alive++;
       }
@@ -145,6 +206,6 @@ export const spawnerNode: NodeDef<SpawnerState> = {
 
     const toucher = asObject(i.toucher);
     const touched = toucher !== null && s.pool.alive.some((m) => world.isTouching(toucher, m.id));
-    return { lastSpawned: s.last !== null && world.getEntity(s.last)?.visible ? s.last : null, count: alive, spawned, touched };
+    return { lastSpawned: s.last !== null && world.getEntity(s.last)?.visible ? s.last : null, count: alive, spawned, touched, lastClass: s.lastClass, lastMass: s.lastMass };
   },
 };

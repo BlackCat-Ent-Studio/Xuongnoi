@@ -114,7 +114,9 @@ function buildLink(size: { x: number; y: number; z: number }, color: string): TH
   const t = size.y;
   const w0 = t * 1.25;
   const w1 = t * 0.85;
-  const d = size.z * 0.8;
+  // A square bar is drawn a little slimmer than its box; a plate (wider than thick) is drawn at its real width,
+  // so what rests on a tray is seen resting on it.
+  const d = Math.abs(size.z - size.y) > 1e-9 ? size.z : size.z * 0.8;
   const slab = geo(`link|${q(L)}|${q(t)}|${q(d)}`, () => {
     const s = new THREE.Shape();
     s.moveTo(-w0 / 2, 0);

@@ -262,13 +262,13 @@ describe('the drawn link', () => {
     return new THREE.Box3().setFromObject(fig.object).getSize(new THREE.Vector3());
   };
 
-  it('is the same look stretched sideways: a plate is drawn as wide as a bar is, in proportion, and no longer or thicker', () => {
+  it('a plate is drawn at its real width, a bar a little slimmer, and neither is longer or thicker', () => {
     const bar = extent({ x: 0.6, y: 0.05, z: 0.05 });
     const plate = extent({ x: 0.6, y: 0.05, z: 0.6 });
     expect(plate.x).toBeCloseTo(bar.x, 6);
     expect(plate.y).toBeCloseTo(bar.y, 6);
-    // The slab is drawn at 80 % of the block's depth, plus the 8 cm the stripe stands out.
+    // A bar is drawn at 80 % of its depth and a plate at its real width, plus the 8 cm the stripe stands out.
     expect(bar.z).toBeCloseTo(0.05 * 0.8 + 0.08, 2);
-    expect(plate.z).toBeCloseTo(0.6 * 0.8 + 0.08, 2);
+    expect(plate.z).toBeCloseTo(0.6 + 0.08, 2);
   });
 });

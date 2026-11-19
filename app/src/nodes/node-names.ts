@@ -195,6 +195,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'who': ['Đối tượng', 'Object'],
+        'thing': ['Vật cần đọc', 'Object to read'],
       },
       out: {
         'index': ['Chỉ số màu', 'Color index'],
@@ -586,6 +587,37 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
       out: {
         'diff': ['Chênh lệch', 'Difference'],
+      },
+    },
+  },
+  'sample-hold': {
+    vi: 'Nhớ số',
+    en: 'Sample and Hold',
+    was: 'Lưu số',
+    ports: {
+      in: {
+        'value': ['Giá trị', 'Value'],
+        'store': ['Lưu', 'Store'],
+        'clear': ['Xoá', 'Clear'],
+      },
+      out: {
+        'held': ['Số nhớ', 'Held value'],
+        'stored': ['Vừa lưu', 'On store'],
+      },
+    },
+  },
+  'dispatcher': {
+    vi: 'Bộ điều phối',
+    en: 'Dispatcher',
+    was: 'Chia việc',
+    ports: {
+      in: {
+        'job': ['Có việc', 'Job waiting'],
+      },
+      out: {
+        'chosen': ['Máy được chọn', 'Chosen machine'],
+        'waiting': ['Đang chờ', 'Waiting'],
+        'given': ['Đã giao', 'Jobs given'],
       },
     },
   },
