@@ -1,5 +1,5 @@
 import type { EntityKind, EntitySpec, Vec3 } from '../engine/types';
-import { boxOverlap, chassisOutline, colliderBox, hasChassisOutline, isTurnedBody, orientedBox, outlinePair, type Box } from './collider';
+import { boxOverlap, chassisOutline, chassisReach, colliderBox, hasChassisOutline, isTurnedBody, orientedBox, outlinePair, type Box } from './collider';
 import { footprintsOverlap, obbCorners, type Obb } from './oriented-box';
 import type { Pt } from './footprint-2d';
 import { leverShares, shapeOf, supportPoint, type Shape } from './weighing';
@@ -138,7 +138,7 @@ interface Fact {
    *    other's highest corners along x and along z (its own corners make x and z two of the axes `footprintsOverlap` tries),
    *    and those corners lie within the turned body's reach of its position;
    *  - a chassis with a real outline (not a loose crate) takes the same box as a loose crate, three reaches plus TURNED_SLACK
-   *    round its position. Its outline is no longer and no wider than its collision box, so it lies within its reach. As a
+   *    round its position (its reach holds both its outline and its collision box). As a
    *    support of a loose crate it is a turned support (first case: the crate is at most its own reach plus three of the
    *    chassis's plus TURNED_SLACK away). With a block it is an upright body whose rectangle lies within one reach. With any
    *    other body the two rest only when `footprintsOverlap` finds no gap between two sets of corners, each within its body's
@@ -162,7 +162,7 @@ function readFact(f: Fact): void {
   const chassis = hasChassisOutline(e);
   f.turned = chassis || isTurnedBody(e);
   f.box = b;
-  f.reach = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+  f.reach = Math.max(chassisReach(e), Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2);
   const halfX = Math.abs(b.size.x) / 2;
   const halfZ = Math.abs(b.size.z) / 2;
   if (f.free || chassis) {

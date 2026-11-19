@@ -104,6 +104,13 @@ export function chassisOutline(e: Collidable): Obb | null {
   return obbOf(e.pos, { x: spec.length, y: e.size.y, z: spec.width }, e.facing ? yawQuat(e.facing) : undefined);
 }
 
+/** How far (m) the real outline of such a chassis reaches from its position at most, whatever its heading; 0 for every other body. */
+export function chassisReach(e: Collidable): number {
+  if (!hasChassisOutline(e)) return 0;
+  const spec = e.robot!.spec;
+  return Math.hypot(spec.length, e.size.y, spec.width) / 2;
+}
+
 /**
  * The outlines two bodies meet by when one of them is a chassis with a real outline and neither is a block; null when their
  * upright boxes decide, as between any other two bodies.

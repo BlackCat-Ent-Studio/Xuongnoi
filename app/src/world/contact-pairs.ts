@@ -1,4 +1,4 @@
-import { colliderBox, hasChassisOutline, isTurnedBody } from './collider';
+import { chassisReach, colliderBox, isTurnedBody } from './collider';
 import type { Entity } from './entity';
 import { CONTACT_EPS, touching } from './physics';
 import { isSpinner } from './platforms';
@@ -25,7 +25,7 @@ import { isSpinner } from './platforms';
  *    at most √3·(R_A + R_B + CONTACT_EPS) apart, and a cube of half side √3·(R + CONTACT_EPS) about each centre is enough.
  *    (That cube also holds the upright bounds the case before needs.)
  *  - a chassis with a real outline (see `chassisOutline`): against a block it is a plain body; against any other body it is
- *    a turned box no longer and no wider than its collision box, so the cube of a turned crate of that size holds it too.
+ *    a turned box about its position, so the cube of a turned crate with that box's half diagonal holds it.
  * Sizes are taken without their sign, which can only make a box larger. All of the above is about ordinary numbers: with a place
  * or a size that is not a number, endless, or so large that products of it overflow, `touching` can answer anything, so such an
  * entity is asked against every other one, whatever their boxes say.
@@ -100,8 +100,13 @@ function boundOf(e: Entity, at: number): Bound {
     const r = (Math.abs(e.size.x) + Math.abs(e.size.y) + Math.abs(e.size.z)) / 2;
     hold(e.pos.x, e.pos.y, e.pos.z, r, r, r);
   }
-  if (isTurnedBody(e) || hasChassisOutline(e)) {
+  if (isTurnedBody(e)) {
     const r = reach + ROOT3 * (Math.hypot(hx, hy, hz) + CONTACT_EPS);
+    hold(e.pos.x, e.pos.y, e.pos.z, r, r, r);
+  }
+  const outline = chassisReach(e);
+  if (outline > 0) {
+    const r = ROOT3 * (outline + CONTACT_EPS);
     hold(e.pos.x, e.pos.y, e.pos.z, r, r, r);
   }
   // NaN fails every comparison, so it is not `sure` either.

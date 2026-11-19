@@ -1,5 +1,5 @@
 import type { ViewMode } from '../engine/types';
-import { boundsBox, chassisOutline, colliderBox, overOutline, spanOverlap } from './collider';
+import { boundsBox, chassisOutline, chassisReach, colliderBox, overOutline, spanOverlap } from './collider';
 import { obbBounds, type Obb } from './oriented-box';
 import type { Entity } from './entity';
 import { emptyReach, exceeds, growReach, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
@@ -173,14 +173,15 @@ function planFor(head: Box, dir: { x: number; z: number }, step: number, items: 
 /**
  * False only when the step of the chassis can meet no loose item and no other chassis: its box, on its way, stays clear of the
  * box round each of them along some axis the view shows. (An item's bounds, however it is turned, lie within its collision
- * box's offset plus half its diagonal of its position, along every axis.) Then nothing is shoved, whatever else is worked out.
+ * box's offset plus half its diagonal of its position, along every axis; a chassis's real outline within half its own diagonal.)
+ * Then nothing is shoved, whatever else is worked out.
  */
 export function somethingOnTheWay(r: Entity, entities: readonly Entity[], others: readonly Entity[], move: { x: number; z: number }, mode: ViewMode): boolean {
   const reach = emptyReach(flatOf(mode));
   if (!growReach(reach, headOf(r), { x: move.x, y: 0, z: move.z })) return true;
   const clear = (e: Entity): boolean => {
     const b = colliderBox(e);
-    const round = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+    const round = Math.max(chassisReach(e), Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2);
     for (const k of reach.shown) if (e.pos[k] - round > reach.hi[k] || e.pos[k] + round < reach.lo[k]) return true;
     return false;
   };
