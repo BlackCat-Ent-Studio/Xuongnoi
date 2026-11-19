@@ -134,7 +134,8 @@ function tooFarToHold(crate: Entity, base: Entity): boolean {
   const reach = reachOf(crate);
   if (isTurnedBody(base)) {
     const far = Math.hypot(crate.pos.x - base.pos.x, crate.pos.z - base.pos.z);
-    return far < Infinity && far > reach + 3 * reachOf(base) + TURNED_SLACK;
+    const limit = reach + 3 * reachOf(base) + TURNED_SLACK;
+    return far + limit + Math.abs(crate.pos.y) + Math.abs(base.pos.y) < Infinity && far > limit;
   }
   const b = colliderBox(base);
   const halfX = Math.abs(b.size.x) / 2;
@@ -142,7 +143,9 @@ function tooFarToHold(crate: Entity, base: Entity): boolean {
   if (!(halfX * 2 >= MIN_SIDE) || !(halfZ * 2 >= MIN_SIDE)) return false;
   const dx = Math.abs(crate.pos.x - b.pos.x);
   const dz = Math.abs(crate.pos.z - b.pos.z);
-  return (dx < Infinity && dx > reach + halfX + RIM_SLACK) || (dz < Infinity && dz > reach + halfZ + RIM_SLACK);
+  // One number that is not finite anywhere in the pair, and the outline maths decides alone.
+  if (!(dx + dz + reach + halfX + halfZ + Math.abs(crate.pos.y) + Math.abs(b.pos.y) + Math.abs(b.size.y) < Infinity)) return false;
+  return dx > reach + halfX + RIM_SLACK || dz > reach + halfZ + RIM_SLACK;
 }
 
 /**
@@ -182,9 +185,23 @@ function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySe
   const hands = new Set<string>();
   for (const p of parts) hands.add(p.ownerNodeId);
   const gripped = (e: Entity): boolean => e.grippedBy !== undefined && hands.has(e.grippedBy);
+  /**
+   * True only when the upright body `top` cannot stand on the turned `base` because its bottom is not at the height of the base's
+   * highest point: the first thing `restsTurned` asks, answered here without working out the corners of `top`. An upright box's
+   * lowest corner is its collision box's middle less half its height, to the last bit (the corner sum adds zeros to it); the
+   * millionth of slack leaves anything near the limit to `restsTurned` itself.
+   */
+  const wrongHeightFor = (top: Entity, base: Entity): boolean => {
+    if (isTurnedBody(top) || !isTurnedBody(base)) return false;
+    const b = colliderBox(top);
+    // With a size that is not finite the corner sum is not a number, and `restsTurned` must say what that means.
+    if (!(Math.hypot(b.size.x, b.size.y, b.size.z) < Infinity)) return false;
+    return Math.abs(b.pos.y - Math.abs(b.size.y) / 2 - shapeFor(base).highest) > REST_GAP + 1e-6;
+  };
   /** Where `base` pushes up on `top`: for a free crate the patch middle, else any overlap that old rule says is standing on it. */
   const holds = (top: Entity, base: Entity): Pt | null => {
     if (isFreeCrate(top)) return tooFarToHold(top, base) ? null : supportPoint(shapeFor(top), shapeFor(base));
+    if (wrongHeightFor(top, base)) return null;
     return rests(top, base) ? { x: top.pos.x, z: top.pos.z } : null;
   };
 
