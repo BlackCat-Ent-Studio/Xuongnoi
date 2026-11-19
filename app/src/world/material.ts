@@ -106,6 +106,45 @@ const isFreeCrate = (e: Entity): boolean => e.rigid === true && e.kind === 'item
 
 const NO_PARTS: ReadonlySet<Entity> = new Set();
 
+/** A support at least this wide and deep (m) has a plain rectangle as its top, with sides the outline maths handles exactly. */
+const MIN_SIDE = 1e-3;
+/** Further than this (m) beyond the rim of an upright support's top, a crate is not on it. The outline maths forgives a millionth of that. */
+const RIM_SLACK = 1e-3;
+/** Slack (m) for a turned support, whose top outline can be any small shape: its sides are longer than 1e-9 m, which forgives up to 1 m. */
+const TURNED_SLACK = 1;
+
+/** Everything of the entity's real shape, however it is turned, lies within this distance of its position. */
+function reachOf(e: Entity): number {
+  const b = colliderBox(e);
+  return Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+}
+
+/**
+ * True only when the loose crate `crate` is so far to the side of `base` that it cannot rest on it; then `supportPoint` need not be
+ * asked (it would work out both outlines to say no). Never true for a pair that could rest: a wrong "far" would change a weight.
+ *
+ * A crate rests on a support where its underside, seen from above, shares a patch with the support's top. The underside lies
+ * within `reachOf(crate)` of the crate's position. An upright support (not turned, at least MIN_SIDE wide and deep) has its
+ * collision box's rectangle as top, so a crate whose position is further than its reach plus RIM_SLACK outside that rectangle,
+ * along x or along z, shares nothing with it. A turned support's top lies within its own reach of its position; the outline
+ * maths may take a point for inside up to (1e-9 / side length) beyond a side and up to two diameters beyond a corner, hence
+ * three reaches and TURNED_SLACK. Numbers that are not finite never count as far.
+ */
+function tooFarToHold(crate: Entity, base: Entity): boolean {
+  const reach = reachOf(crate);
+  if (isTurnedBody(base)) {
+    const far = Math.hypot(crate.pos.x - base.pos.x, crate.pos.z - base.pos.z);
+    return far < Infinity && far > reach + 3 * reachOf(base) + TURNED_SLACK;
+  }
+  const b = colliderBox(base);
+  const halfX = Math.abs(b.size.x) / 2;
+  const halfZ = Math.abs(b.size.z) / 2;
+  if (!(halfX * 2 >= MIN_SIDE) || !(halfZ * 2 >= MIN_SIDE)) return false;
+  const dx = Math.abs(crate.pos.x - b.pos.x);
+  const dz = Math.abs(crate.pos.z - b.pos.z);
+  return (dx < Infinity && dx > reach + halfX + RIM_SLACK) || (dz < Infinity && dz > reach + halfZ + RIM_SLACK);
+}
+
 /**
  * Total mass (kg) standing on `target`, counting everything stacked on those bodies in turn. Hidden bodies and tools in hand do not count.
  * With real physics on, a loose crate loads each thing it rests on only with its share (see `massOnShared`); without it, every body that
@@ -145,7 +184,7 @@ function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySe
   const gripped = (e: Entity): boolean => e.grippedBy !== undefined && hands.has(e.grippedBy);
   /** Where `base` pushes up on `top`: for a free crate the patch middle, else any overlap that old rule says is standing on it. */
   const holds = (top: Entity, base: Entity): Pt | null => {
-    if (isFreeCrate(top)) return supportPoint(shapeFor(top), shapeFor(base));
+    if (isFreeCrate(top)) return tooFarToHold(top, base) ? null : supportPoint(shapeFor(top), shapeFor(base));
     return rests(top, base) ? { x: top.pos.x, z: top.pos.z } : null;
   };
 
