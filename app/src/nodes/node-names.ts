@@ -1152,6 +1152,70 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'robot-goto': {
+    vi: 'Đi tới điểm',
+    en: 'Go To Point',
+    ports: {
+      in: {
+        'robot': ['Robot', 'Robot'],
+        'target': ['Đích', 'Target'],
+        'go': ['Chạy', 'Run'],
+        'x': ['Đích X', 'Target X'],
+        'z': ['Đích Z', 'Target Z'],
+        'face': ['Hướng khi tới', 'Final heading'],
+      },
+      out: {
+        'left': ['Trái', 'Left power'],
+        'right': ['Phải', 'Right power'],
+        'arrived': ['Đã tới', 'Arrived'],
+        'arrivedPulse': ['Khi tới nơi', 'On arrive'],
+        'distance': ['Còn cách', 'Distance left'],
+        'headingError': ['Lệch hướng', 'Heading error'],
+      },
+    },
+  },
+  'floor-marker': {
+    vi: 'Mốc sàn',
+    en: 'Floor Marker',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+        'x': ['X', 'X'],
+        'z': ['Z', 'Z'],
+        'number': ['Số mốc', 'Marker number'],
+      },
+    },
+  },
+  'floor-marker-sensor': {
+    vi: 'Đọc mốc sàn',
+    en: 'Marker Reader',
+    ports: {
+      in: {
+        'who': ['Đối tượng', 'Origin'],
+      },
+      out: {
+        'number': ['Số mốc', 'Marker number'],
+        'on': ['Đang trên mốc', 'On marker'],
+        'entered': ['Khi vào mốc', 'On enter'],
+        'marker': ['Mốc', 'Marker'],
+      },
+    },
+  },
+  'floor-marker-find': {
+    vi: 'Tìm mốc sàn',
+    en: 'Find Marker',
+    ports: {
+      in: {
+        'number': ['Số mốc', 'Marker number'],
+      },
+      out: {
+        'marker': ['Mốc', 'Marker'],
+        'x': ['X', 'X'],
+        'z': ['Z', 'Z'],
+        'found': ['Có mốc', 'Found'],
+      },
+    },
+  },
 };
 
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */

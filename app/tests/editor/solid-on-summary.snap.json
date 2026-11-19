@@ -727,6 +727,25 @@
   }
  },
  {
+  "id": "lesson:robot-to-marker",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e6e7abad"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "e6e7abad"
+  }
+ },
+ {
   "id": "lesson:share-jobs",
   "off": {
    "ended": "running",
@@ -2760,6 +2779,82 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "fe93cc64"
+  }
+ },
+ {
+  "id": "handbook:robot-goto",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5e7ed583"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5e7ed583"
+  }
+ },
+ {
+  "id": "handbook:floor-marker",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9f044ab1"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "9f044ab1"
+  }
+ },
+ {
+  "id": "handbook:floor-marker-sensor",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "3b8a6a36"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "3b8a6a36"
+  }
+ },
+ {
+  "id": "handbook:floor-marker-find",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "16137d45"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "16137d45"
   }
  }
 ]
