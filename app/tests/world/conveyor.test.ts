@@ -177,6 +177,40 @@ describe('belt style', () => {
     expect(side.world.entities().filter((e) => e.ownerNodeId === 'belt')).toHaveLength(1);
   });
 
+  it('the open-frame belt look is a belt by the same rule: same speed, same walls, same ride for the same crate, tick for tick', () => {
+    const run = (style: string, over: Params = {}) => {
+      const g = sim('3d', [floor3, ['belt', 'block', { position: v(0, 0.5), size: v(6, 1, 2), color: '#888', style, ...over }]]);
+      const c = crate(g.world, -2, 1.3, 0.4);
+      const h = walker(g.world, 1, 1.55, 0);
+      g.world.setCharacterIntent(h, { moveX: 0, moveY: 1, jump: false, speed: 3, jumpPower: 0 });
+      const track: number[] = [];
+      for (let k = 0; k < 150; k++) {
+        g.step();
+        const p = pos(g.world, c);
+        const w = pos(g.world, h);
+        track.push(p.x, p.y, p.z, w.x, w.y, w.z);
+      }
+      const parts = g.world.entities().filter((e) => e.ownerNodeId === 'belt').map((e) => ({ position: e.position, size: e.size, belt: e.belt }));
+      // The walker's z after 45 ticks, while the belt still carries it: the wall on that side holds it.
+      return { track, parts, crateX: pos(g.world, c).x, walkerZ: track[44 * 6 + 5]! };
+    };
+    for (const over of [{}, { beltWalls: 'no' }, { beltSpeed: -3, beltDir: 'z' }, { size: v(2, 1, 6) }] as Params[]) {
+      const old = run('conveyor', over);
+      const framed = run('belt-frame', over);
+      expect(framed.track).toEqual(old.track);
+      expect(framed.parts).toEqual(old.parts);
+    }
+    // It really is a running belt with walls, not two belts that both stand still.
+    const framed = run('belt-frame');
+    expect(framed.crateX).toBeGreaterThan(-2 + 2);
+    expect(framed.parts).toHaveLength(3);
+    expect(framed.parts[0]!.belt).toMatchObject({ axis: 'x', speed: 2 });
+    expect(framed.walkerZ).toBeGreaterThan(-1);
+    const open = run('belt-frame', { beltWalls: 'no' });
+    expect(open.parts).toHaveLength(1);
+    expect(open.walkerZ).toBeLessThan(-1.2);
+  });
+
   it('a decorative rail changes nothing but the picture', () => {
     const g = sim('3d', [floor3, ['rail', 'block', { position: v(0, 0.5), size: v(6, 1, 2), color: '#888', style: 'rail' }]]);
     const c = crate(g.world, 0, 1.3);
