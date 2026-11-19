@@ -15,7 +15,11 @@ export type BlockStyle =
   | 'fence'
   | 'sign'
   | 'conveyor'
-  | 'rail';
+  | 'rail'
+  | 'belt-frame'
+  | 'scan-gate'
+  | 'chute'
+  | 'arm-base';
 
 export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   box: 'Hộp',
@@ -34,6 +38,10 @@ export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   sign: 'Biển tên',
   conveyor: 'Băng chuyền',
   rail: 'Đường ray',
+  'belt-frame': 'Băng chuyền khung xanh (chân hở)',
+  'scan-gate': 'Cổng quét (khung vàng, đèn theo màu)',
+  chute: 'Cửa thả + túi vải (số ghi ở "Chữ trên biển")',
+  'arm-base': 'Đế tay máy',
 };
 
 export const BLOCK_STYLES = Object.keys(BLOCK_STYLE_LABELS) as readonly BlockStyle[];

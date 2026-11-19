@@ -253,7 +253,8 @@ function warnSprite(): THREE.SpriteMaterial {
   return warnSpriteMat;
 }
 
-function buildWarning(radius: number, axis: 'pitch' | 'yaw'): THREE.Group {
+/** The overload cue of a joint (pulsing red ring, glow and a "!" sign); shared by every look of the joint. */
+export function buildWarning(radius: number, axis: 'pitch' | 'yaw'): THREE.Group {
   const g = new THREE.Group();
   const ring = new THREE.Mesh(geo(`warnring|${q(radius)}`, () => new THREE.TorusGeometry(radius * 1.3, radius * 0.1, 6, 20)), ringMat);
   const glow = new THREE.Mesh(geo(`warnglow|${q(radius)}`, () => new THREE.SphereGeometry(radius * 1.15, 10, 6)), glowMat);
@@ -268,7 +269,7 @@ function buildWarning(radius: number, axis: 'pitch' | 'yaw'): THREE.Group {
 }
 
 /** Red ring and glow pulse about three times a second; one call per frame is enough for all joints. */
-function pulseWarnings(nowMs: number): void {
+export function pulseWarnings(nowMs: number): void {
   const p = 0.55 + 0.45 * Math.sin(nowMs * 0.008);
   ringMat.opacity = p;
   glowMat.opacity = 0.2 * p;

@@ -3,13 +3,15 @@ import { TRAFFIC_COLORS, type BlockStyle } from '../engine/block-styles';
 import type { EntityView, Vec3 } from '../engine/types';
 import { BLOCK_PACK } from './pack-model-table';
 import { PackSlot, applyPlacement, fitPlacement, onPackLoaded, packTemplate, pickVariant, type PackPool } from './pack-models';
+import { buildFactoryBlockLook, isFactoryBlockStyle } from './factory-blocks';
 
 /**
  * Looks for blocks ("Kiểu dáng"). Every look is built inside the unit cube (-0.5..0.5) and the scene
  * scales it to the block size, so collision (the block's own box) always matches the footprint.
  *
  * Styles with a pool in BLOCK_PACK are drawn with MEGA PACK WORLD models instead (see buildPackLook); the rest
- * (box, sign, conveyor, rail) are code-drawn.
+ * (box, sign, conveyor, rail) are code-drawn. The factory styles (open-frame belt, scan gate, chute, arm base) are
+ * code-drawn in real units by factory-blocks.
  *
  * Speed: a code-drawn look is baked into at most two merged geometries (one tinted by the block colour through a cached
  * material, one with fixed vertex colours), shared by every block of that look. 200 houses = 400 draw calls
@@ -438,6 +440,7 @@ function buildPackLook(style: BlockStyle, pool: PackPool, color: string, size: V
 export function buildBlockLook(style: BlockStyle, color: string, size: Vec3, label = '', seed = ''): BlockLookFigure {
   const pool = BLOCK_PACK[style];
   if (pool) return buildPackLook(style, pool, color, size, seed);
+  if (isFactoryBlockStyle(style)) return buildFactoryBlockLook(style, color, size, label, seed);
   const object = new THREE.Group();
   const baked = bake(style, size);
   let tintedMesh: THREE.Mesh | null = null;

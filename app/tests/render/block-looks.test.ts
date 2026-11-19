@@ -103,7 +103,7 @@ describe('pack looks', () => {
 
   it('code-drawn styles are exactly those without a pool', () => {
     for (const style of BLOCK_STYLES) {
-      expect(['box', 'sign', 'conveyor', 'rail'].includes(style), style).toBe(BLOCK_PACK[style] === undefined);
+      expect(['box', 'sign', 'conveyor', 'rail', 'belt-frame', 'scan-gate', 'chute', 'arm-base'].includes(style), style).toBe(BLOCK_PACK[style] === undefined);
     }
   });
 

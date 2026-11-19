@@ -15,6 +15,10 @@ import { ColliderFrames } from './collider-frames';
 import { damagedView, tintDamaged } from './damaged-look';
 import { ObjectHighlight } from './object-highlight';
 import { ArmPartFigure } from './arm-part-models';
+import { AGV_LOOK } from '../engine/factory-looks';
+import { AgvFigure } from './factory-agv';
+import { FactoryArmFigure, hasFactoryArmFigure } from './factory-arm';
+import { buildParcel, isParcelLook } from './factory-parcels';
 import { LoadTagLayer } from './load-tag';
 import { armHintOf, type ArmPartKind } from '../engine/render-hints';
 import { VisionFanLayer, type FanSpec } from './vision-fan';
@@ -39,13 +43,15 @@ type Entry =
       /** Bounds of the figure at unit scale, unrotated. */
       bounds: THREE.Box3;
       shape: string;
+      /** The parcel look it was built for ('' = drawn by its shape). */
+      look: string;
       color: string;
       /** True while the pose group stands at the item's centre and carries a physics turn (it must be put back when the turn ends). */
       turned?: boolean;
     }
-  | { type: 'arm'; figure: ArmPartFigure; part: ArmPartKind }
+  | { type: 'arm'; figure: ArmPartFigure | FactoryArmFigure; part: ArmPartKind; look: string }
   | { type: 'vehicle'; figure: VehicleFigure; model: string }
-  | { type: 'robot'; figure: RobotFigure }
+  | { type: 'robot'; figure: RobotFigure | AgvFigure; look: string }
   | { type: 'portal'; figure: PortalFigure }
   | { type: 'track'; figure: LineTrackFigure }
   | { type: 'dot'; figure: LineDotFigure }
@@ -70,18 +76,25 @@ function styleOf(e: EntityView): string {
   return e.zone ? 'box' : blockStyleOf(e.blockStyle);
 }
 
+/** The look an arm block is drawn in: a factory look this part has a figure for, or '' for the classic figure. */
+function armLookOf(part: ArmPartKind, e: EntityView): string {
+  return hasFactoryArmFigure(part, e.look) ? e.look : '';
+}
+const robotLookOf = (e: EntityView): string => (e.look === AGV_LOOK ? AGV_LOOK : '');
+const parcelLookOf = (e: EntityView): string => (isParcelLook(e.look) ? e.look : '');
+
 /** Whether an existing entry can keep representing the entity (same kind and, for characters/items, same look/shape). */
 function matches(entry: Entry, e: EntityView): boolean {
   if (entry.type === 'stage') return false; // decided by the role, see sync
   if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
   if (entry.type === 'track') return e.kind === 'block' && e.look === LINE_TRACK_LOOK;
   if (entry.type === 'dot') return e.kind === 'block' && e.look === LINE_DOT_LOOK;
-  if (entry.type === 'arm') return e.kind === 'block' && armHintOf(e.ownerNodeId, e.id)?.part === entry.part;
+  if (entry.type === 'arm') return e.kind === 'block' && armHintOf(e.ownerNodeId, e.id)?.part === entry.part && armLookOf(entry.part, e) === entry.look;
   if (entry.type === 'block') return e.kind === 'block' && !armHintOf(e.ownerNodeId, e.id) && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && styleOf(e) === 'box';
   if (entry.type === 'look') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === entry.style;
-  if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box');
+  if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box') && entry.look === parcelLookOf(e);
   if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
-  if (entry.type === 'robot') return e.kind === 'robot';
+  if (entry.type === 'robot') return e.kind === 'robot' && entry.look === robotLookOf(e);
   return e.kind === 'character' && entry.look === resolveLook(e.look);
 }
 
@@ -386,10 +399,16 @@ export class SceneView {
       return { type: 'vehicle', figure, model: figure.model };
     }
     if (e.kind === 'robot') {
+      const look = robotLookOf(e);
+      if (look === AGV_LOOK) {
+        const figure = new AgvFigure();
+        this.group.add(figure.object);
+        return { type: 'robot', figure, look };
+      }
       const figure = new RobotFigure(e.color);
       castShadows(figure.object);
       this.group.add(figure.object);
-      return { type: 'robot', figure };
+      return { type: 'robot', figure, look };
     }
     if (e.kind === 'character') {
       const figure = new Humanoid(e.color, this.mode, e.look);
@@ -400,7 +419,8 @@ export class SceneView {
     }
     if (e.kind === 'item') {
       const shape = e.shape ?? 'box';
-      const figure = buildItem(shape, e.color, `${e.ownerNodeId}|${e.id}`);
+      const look = parcelLookOf(e);
+      const figure = look ? buildParcel(look, e.color, `${e.ownerNodeId}|${e.id}`) : buildItem(shape, e.color, `${e.ownerNodeId}|${e.id}`);
       figure.object.traverse((o) => {
         o.userData.ownerNodeId = e.ownerNodeId;
         if (o instanceof THREE.Mesh) o.castShadow = true;
@@ -408,10 +428,10 @@ export class SceneView {
       const pose = new THREE.Group();
       pose.add(figure.object);
       const bounds = new THREE.Box3().setFromObject(figure.object); // before the pose turns it
-      const flat = liesFlat(shape);
+      const flat = !look && liesFlat(shape);
       if (flat) pose.quaternion.copy(LYING_POSE);
       this.group.add(pose);
-      return { type: 'item', figure, pose, flat, bounds, shape, color: e.color };
+      return { type: 'item', figure, pose, flat, bounds, shape, look, color: e.color };
     }
     if (e.kind === 'block' && e.look === PORTAL_LOOK) {
       const figure = new PortalFigure(e.color, this.mode);
@@ -430,9 +450,10 @@ export class SceneView {
     }
     const armHint = e.kind === 'block' && !e.zone ? armHintOf(e.ownerNodeId, e.id) : undefined;
     if (armHint) {
-      const figure = new ArmPartFigure(armHint.part);
+      const look = armLookOf(armHint.part, e);
+      const figure = look ? new FactoryArmFigure(armHint.part, look) : new ArmPartFigure(armHint.part);
       this.group.add(figure.object);
-      return { type: 'arm', figure, part: armHint.part };
+      return { type: 'arm', figure, part: armHint.part, look };
     }
     const style = styleOf(e);
     if (style !== 'box') {
