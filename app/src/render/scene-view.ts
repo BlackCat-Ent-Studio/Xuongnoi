@@ -10,6 +10,8 @@ import { PORTAL_LOOK, PortalFigure } from './portal-model';
 import { RobotFigure } from './robot-models';
 import { LINE_DOT_LOOK, LINE_TRACK_LOOK } from '../world/line-track';
 import { LineDotFigure, LineTrackFigure } from './line-track-figure';
+import { FLOOR_MARKER_LOOK } from '../nodes/floor-marker';
+import { FloorMarkerFigure } from './floor-marker-figure';
 import { VehicleFigure } from './vehicle-models';
 import { ColliderFrames } from './collider-frames';
 import { damagedView, tintDamaged } from './damaged-look';
@@ -55,6 +57,7 @@ type Entry =
   | { type: 'portal'; figure: PortalFigure }
   | { type: 'track'; figure: LineTrackFigure }
   | { type: 'dot'; figure: LineDotFigure }
+  | { type: 'marker'; figure: FloorMarkerFigure }
   | { type: 'stage'; figure: StageFigure; role: string };
 
 /** Length along x, head along z, resting on its side: yaw a quarter turn, then lay the long axis down. */
@@ -89,8 +92,9 @@ function matches(entry: Entry, e: EntityView): boolean {
   if (entry.type === 'portal') return e.kind === 'block' && e.look === PORTAL_LOOK;
   if (entry.type === 'track') return e.kind === 'block' && e.look === LINE_TRACK_LOOK;
   if (entry.type === 'dot') return e.kind === 'block' && e.look === LINE_DOT_LOOK;
+  if (entry.type === 'marker') return e.kind === 'block' && e.look === FLOOR_MARKER_LOOK;
   if (entry.type === 'arm') return e.kind === 'block' && armHintOf(e.ownerNodeId, e.id)?.part === entry.part && armLookOf(entry.part, e) === entry.look;
-  if (entry.type === 'block') return e.kind === 'block' && !armHintOf(e.ownerNodeId, e.id) && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && styleOf(e) === 'box';
+  if (entry.type === 'block') return e.kind === 'block' && !armHintOf(e.ownerNodeId, e.id) && e.look !== PORTAL_LOOK && e.look !== LINE_TRACK_LOOK && e.look !== LINE_DOT_LOOK && e.look !== FLOOR_MARKER_LOOK && styleOf(e) === 'box';
   if (entry.type === 'look') return e.kind === 'block' && e.look !== PORTAL_LOOK && styleOf(e) === entry.style;
   if (entry.type === 'item') return e.kind === 'item' && entry.shape === (e.shape ?? 'box') && entry.look === parcelLookOf(e);
   if (entry.type === 'vehicle') return e.kind === 'vehicle' && entry.model === e.vehicle?.model;
@@ -247,7 +251,7 @@ export class SceneView {
         entry.figure.update(e, dt);
         continue;
       }
-      if (entry.type === 'track' || entry.type === 'dot') {
+      if (entry.type === 'track' || entry.type === 'dot' || entry.type === 'marker') {
         entry.figure.update(e);
         continue;
       }
@@ -448,6 +452,11 @@ export class SceneView {
       this.group.add(figure.object);
       return { type: 'dot', figure };
     }
+    if (e.kind === 'block' && e.look === FLOOR_MARKER_LOOK) {
+      const figure = new FloorMarkerFigure(e, this.mode);
+      this.group.add(figure.object);
+      return { type: 'marker', figure };
+    }
     const armHint = e.kind === 'block' && !e.zone ? armHintOf(e.ownerNodeId, e.id) : undefined;
     if (armHint) {
       const look = armLookOf(armHint.part, e);
@@ -477,7 +486,7 @@ export class SceneView {
     if (entry.type === 'stage') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
-    } else if (entry.type === 'portal' || entry.type === 'track' || entry.type === 'dot') {
+    } else if (entry.type === 'portal' || entry.type === 'track' || entry.type === 'dot' || entry.type === 'marker') {
       this.group.remove(entry.figure.object);
       entry.figure.dispose();
     } else if (entry.type === 'vehicle' || entry.type === 'robot' || entry.type === 'arm') {

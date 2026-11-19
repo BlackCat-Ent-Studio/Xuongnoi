@@ -156,7 +156,7 @@ describe('which settings are marked as places', () => {
         'block.position', 'character.position', 'item.position', 'vehicle.position', 'robot-body.position', 'portal.position',
         'rotating-platform.position', 'moving-platform.position', 'moving-platform.to', 'patrol.pointA', 'patrol.pointB',
         'line-track.center', 'zone.center', 'spawner.position', 'camera.point', 'linear-actuator.position', 'teleport.position',
-        'go-to.targetPos', ...numbered('route-follow', 32), ...numbered('line-track', 16),
+        'go-to.targetPos', 'robot-goto.targetPos', 'floor-marker.position', ...numbered('route-follow', 32), ...numbered('line-track', 16),
       ].sort(),
     );
     expect(headings.sort()).toEqual(['linear-actuator.direction', 'robot-body.heading']);
