@@ -36,7 +36,7 @@ import './circuits.css';
 const PIN_MARGIN = 90;
 /** Height the path bar and the note under it take at the top of the board (px at 100% zoom, with some air). */
 const HEADROOM = 104;
-const PIN_WIDTH = { student: 236, teacher: 208 } as const;
+const PIN_WIDTH = { student: 236, teacher: 224 } as const;
 /** Where the pin columns stand when the circuit has no cards yet. */
 const EMPTY_INSIDE: Box = { x: 0, y: 0, w: 420, h: 220 };
 

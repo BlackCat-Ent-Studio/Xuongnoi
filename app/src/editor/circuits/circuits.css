@@ -38,6 +38,8 @@
 .app .wc .wc-inst-ports .wc-port { padding: 0 9px; }
 .app .wc .wc-inst-ports .wc-ports.outs { align-items: stretch; }
 .app .wc .wc-port.wc-port-fixed { cursor: default; }
+/* pins sit two to a row here, so there is no room for the value pill beside the name: the value shows on the wire */
+.app .wc .wc-inst-ports .wc-port-val { display: none; }
 .app .wc .wc-inst-none { padding: 8px 12px 10px; font-size: var(--fs-s); color: var(--text2); }
 .app .wc .wc-inst .wc-miss-badge { margin-left: 0; }
 .wc.lowzoom .wc-inst-status, .wc.lowzoom .wc-inst-open span { visibility: hidden; }
