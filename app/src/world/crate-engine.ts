@@ -391,7 +391,6 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       freshOwners = new Set([...declared].filter(([, d]) => d.tick === ticks).map(([k]) => k));
       for (const [k, d] of declared) if (d.tick < ticks) declared.delete(k);
       syncExact();
-      if ((globalThis as any).__dbg) console.log("fresh", [...freshOwners].join(","), [...exactRecs].map(([k, v]) => k + ":" + v.length + "@" + v[0]!.to.x.toFixed(2) + "," + v[0]!.to.y.toFixed(2) + "," + v[0]!.to.z.toFixed(2)).join(" "));
       const live = new Set<Entity>();
       const belts: Entity[] = [];
       for (const e of entities) {
