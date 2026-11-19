@@ -1,9 +1,14 @@
+import type { Circuit } from '../../engine/types';
+import { downloadCircuit, importCircuitFile, importClash, pickCircuitFile, type CircuitFile } from '../../io';
+import { listStarterCircuits } from '../../io/starter-circuits';
 import { h } from '../dom';
 import type { EditorState } from '../editor-state';
+import { GROUP_COLORS } from '../groups/group-model';
 import { circuitFromSelection, newEmptyCircuit, type Notify } from './circuit-actions';
-import { CIRCUIT_NAME_MAX, circuitsOf, countInstances, deleteCircuit, duplicateCircuit, findCircuit, renameCircuit } from './circuit-model';
+import { CIRCUIT_NAME_MAX, circuitsOf, countInstances, deleteCircuit, duplicateCircuit, findCircuit, renameCircuit, setCircuitColor } from './circuit-model';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
-import { circuitIcon, circuitTile, iconButton } from './circuit-views';
+import { circuitIcon, circuitTile, iconButton, type CircuitGlyph } from './circuit-views';
+import './circuit-library.css';
 
 const DRAG_THRESHOLD = 5;
 
@@ -30,16 +35,42 @@ const fold = (text: string): string =>
     .replace(/Đ/g, 'D')
     .toLowerCase();
 
+/** The colour swatches of a circuit: the default first, then the palette the groups use. */
+export function circuitSwatches(current: string | undefined, disabled: boolean, pick: (color: string | null) => void): HTMLElement {
+  const box = h('span', 'pn-swatches ck-swatches');
+  box.setAttribute('role', 'group');
+  box.setAttribute('aria-label', T.colour);
+  for (const c of [null, ...GROUP_COLORS]) {
+    const on = (current ?? null) === c;
+    const sw = h('button', `pn-swatch${on ? ' on' : ''}${c === null ? ' none' : ''}`);
+    sw.type = 'button';
+    sw.disabled = disabled;
+    sw.title = c === null ? T.colourDefault : c;
+    sw.setAttribute('aria-label', c === null ? T.colourDefault : T.colourOf(c));
+    sw.setAttribute('aria-pressed', String(on));
+    sw.dataset.colour = c ?? '';
+    if (c) sw.style.background = c;
+    sw.addEventListener('click', () => pick(c));
+    box.append(sw);
+  }
+  return box;
+}
+
 /**
  * The palette group "Bảng mạch": the board's circuits. Drag one to the board (or press it) to place a copy; the small
- * buttons open, rename, duplicate and delete it. Deleting a circuit that still has copies asks first, in the row itself.
+ * buttons open, rename, colour, duplicate, save to a file and delete it. Under the list: new circuits, a circuit from a file
+ * (a name that is taken is asked about right here) and the ready-made starter circuits.
  */
 export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteDeps): CircuitPalette {
   const el = h('section', 'pn-cat ck-pal');
   let open = true;
+  let startersOpen = true;
   let query = '';
   let renaming: string | null = null;
   let asking: string | null = null;
+  let colouring: string | null = null;
+  /** A picked file whose circuit has the name of one the board already has: waiting for the choice. */
+  let incoming: { file: CircuitFile; clash: string } | null = null;
 
   function attachDrag(row: HTMLElement, circuitId: string, title: string): void {
     row.addEventListener('pointerdown', (e) => {
@@ -91,9 +122,49 @@ export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteD
     else notify(T.locked, 'error');
   }
 
-  function item(circuitId: string): HTMLElement {
+  /** The list of circuits belongs to the whole board: a circuit that is open view-only is left first, so the edit is not refused by its lock. */
+  function editLibrary(change: Parameters<EditorState['edit']>[0]): boolean {
+    if (state.isPlaying()) return false;
+    if (state.isReadOnly()) state.exitCircuit(0);
+    return state.edit(change);
+  }
+
+  /** Adds the circuits of a file (or of a starter) to the board; `replace` puts the root in the place of an existing circuit. */
+  function bringIn(file: CircuitFile, replace: string | undefined, said: (name: string, contained: number, dropped: number) => string): void {
+    const res = importCircuitFile(state.getBoard(), file, replace === undefined ? {} : { replace });
+    if (!res.ok) {
+      notify(T.importFail[res.reason], 'error');
+      return;
+    }
+    if (editLibrary(() => res.board)) notify(said(res.name, res.contained, res.dropped));
+    else notify(T.locked, 'error');
+  }
+
+  function importFromFile(): void {
+    pickCircuitFile().then(
+      (file) => {
+        if (!file) return;
+        const clash = importClash(state.getBoard(), file);
+        if (!clash) return bringIn(file, undefined, T.imported);
+        incoming = { file, clash: clash.id };
+        open = true;
+        render();
+      },
+      (e: unknown) => notify(e instanceof Error ? e.message : T.importFail.broken, 'error'),
+    );
+  }
+
+  function textButton(label: string, className: string, tip: string, onClick: () => void): HTMLButtonElement {
+    const b = h('button', `ck-pal-btn${className}`, label);
+    b.type = 'button';
+    if (tip) b.title = tip;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function item(circuit: Circuit): HTMLElement {
     const board = state.getBoard();
-    const circuit = findCircuit(board, circuitId)!;
+    const circuitId = circuit.id;
     const copies = countInstances(board, circuitId);
     const playing = state.isPlaying();
     const row = h('div', 'ck-pal-item');
@@ -138,32 +209,45 @@ export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteD
 
     const tools = h('div', 'ck-pal-tools');
     if (asking === circuitId) {
-      const yes = h('button', 'ck-pal-btn danger', T.deleteYes);
-      yes.type = 'button';
-      yes.addEventListener('click', () => {
-        asking = null;
-        remove(circuitId, true);
-      });
-      const no = h('button', 'ck-pal-btn', T.deleteNo);
-      no.type = 'button';
-      no.addEventListener('click', () => {
+      const no = textButton(T.deleteNo, '', '', () => {
         asking = null;
         render();
       });
       tools.classList.add('ask');
       tools.setAttribute('role', 'alert');
-      tools.append(h('span', 'ck-pal-ask', T.deleteAsk(copies)), yes, no);
+      tools.append(
+        h('span', 'ck-pal-ask', T.deleteAsk(copies)),
+        textButton(T.deleteYes, ' danger', '', () => {
+          asking = null;
+          remove(circuitId, true);
+        }),
+        no,
+      );
       queueMicrotask(() => no.focus());
+    } else if (colouring === circuitId) {
+      tools.classList.add('colour');
+      tools.append(
+        circuitSwatches(circuit.color, playing, (c) => void state.edit((b) => setCircuitColor(b, circuitId, c))),
+        textButton(T.colourDone, '', '', () => {
+          colouring = null;
+          render();
+        }),
+      );
     } else {
-      const openBtn = iconButton('enter', T.actOpen, 'ck-pal-tool', () => {
+      const tool = (glyph: CircuitGlyph, label: string, onClick: () => void, extra = ''): HTMLButtonElement => iconButton(glyph, label, `ck-pal-tool${extra}`, onClick);
+      const openBtn = tool('enter', T.actOpen, () => {
         state.exitCircuit(0);
         state.enterCircuit({ circuit: circuitId });
       });
-      const renameBtn = iconButton('pencil', T.actRename, 'ck-pal-tool', () => {
+      const renameBtn = tool('pencil', T.actRename, () => {
         renaming = circuitId;
         render();
       });
-      const dupBtn = iconButton('copy', T.actDuplicate, 'ck-pal-tool', () => {
+      const colourBtn = tool('drop', T.actColour, () => {
+        colouring = circuitId;
+        render();
+      });
+      const dupBtn = tool('copy', T.actDuplicate, () => {
         let made = '';
         const ok = state.edit((b) => {
           const res = duplicateCircuit(b, circuitId);
@@ -172,21 +256,33 @@ export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteD
         });
         notify(ok ? T.duplicated(made) : T.locked, ok ? 'info' : 'error');
       });
-      const delBtn = iconButton('trash', T.actDelete, 'ck-pal-tool danger', () => {
-        if (copies > 0) {
-          asking = circuitId;
-          render();
-        } else remove(circuitId, false);
+      const exportBtn = tool('download', T.actExport, () => {
+        try {
+          if (downloadCircuit(state.getBoard(), circuitId)) notify(T.exported(circuit.name));
+        } catch (e) {
+          notify(e instanceof Error ? e.message : T.importFail.broken, 'error');
+        }
       });
-      for (const b of [renameBtn, dupBtn, delBtn]) b.disabled = playing;
-      tools.append(openBtn, renameBtn, dupBtn, delBtn);
+      const delBtn = tool(
+        'trash',
+        T.actDelete,
+        () => {
+          if (copies > 0) {
+            asking = circuitId;
+            render();
+          } else remove(circuitId, false);
+        },
+        ' danger',
+      );
+      for (const b of [renameBtn, colourBtn, dupBtn, delBtn]) b.disabled = playing;
+      tools.append(openBtn, renameBtn, colourBtn, dupBtn, exportBtn, delBtn);
     }
     row.append(tools);
     attachDrag(row, circuitId, circuit.name);
     return row;
   }
 
-  function footButton(glyph: 'plus' | 'circuit', label: string, tip: string, onClick: () => void): HTMLButtonElement {
+  function footButton(glyph: CircuitGlyph, label: string, tip: string, onClick: () => void): HTMLButtonElement {
     const b = h('button', 'ck-pal-new');
     b.type = 'button';
     b.title = tip;
@@ -196,10 +292,67 @@ export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteD
     return b;
   }
 
+  /** "Đã có bảng mạch tên X": keep both, put the file's circuit in the old one's place, or drop the file. */
+  function incomingAsk(pending: { file: CircuitFile; clash: string }): HTMLElement | null {
+    const clash = findCircuit(state.getBoard(), pending.clash);
+    if (!clash) return null;
+    const copies = countInstances(state.getBoard(), clash.id);
+    const box = h('div', 'ck-pal-tools ask ck-pal-incoming');
+    box.setAttribute('role', 'alert');
+    const cancel = textButton(T.importCancel, '', '', () => {
+      incoming = null;
+      render();
+    });
+    const settle = (replace: string | undefined): void => {
+      incoming = null;
+      bringIn(pending.file, replace, replace === undefined ? T.imported : T.importReplaced);
+      render();
+    };
+    const keep = textButton(T.importKeep, '', T.importKeepTip, () => settle(undefined));
+    keep.dataset.act = 'keep';
+    const swap = textButton(T.importReplace, ' danger', T.importReplaceTip(copies), () => settle(clash.id));
+    swap.dataset.act = 'replace';
+    box.append(h('span', 'ck-pal-ask', T.importAsk(clash.name, copies)), keep, swap, cancel);
+    queueMicrotask(() => keep.focus());
+    return box;
+  }
+
+  function starters(): HTMLElement {
+    const box = h('div', 'ck-pal-starters');
+    const head = h('button', 'ck-pal-starthead');
+    head.type = 'button';
+    head.setAttribute('aria-expanded', String(startersOpen));
+    const chev = circuitIcon('chev');
+    chev.classList.add('pn-chev', 'pn-ic');
+    head.append(chev, circuitIcon('star'), h('span', '', T.starters));
+    head.addEventListener('click', () => {
+      startersOpen = !startersOpen;
+      render();
+      el.querySelector<HTMLElement>('.ck-pal-starthead')?.focus();
+    });
+    box.append(head);
+    if (!startersOpen) return box;
+    box.append(h('p', 'ck-pal-empty', T.startersHint));
+    for (const s of listStarterCircuits()) {
+      const circuit = s.file.circuits.find((c) => c.id === s.file.root);
+      if (!circuit) continue;
+      const row = h('div', 'ck-pal-starter');
+      row.dataset.starter = s.id;
+      const text = h('span', 'pn-item-text');
+      text.append(h('b', '', circuit.name), h('small', '', s.about));
+      const add = textButton(T.starterAdd, '', T.starterAddTip(circuit.name), () => bringIn(s.file, undefined, T.starterAdded));
+      add.disabled = state.isPlaying();
+      row.append(circuitTile(circuit, 'ck-pal-ic'), text, add);
+      box.append(row);
+    }
+    return box;
+  }
+
   function render(): void {
     const all = circuitsOf(state.getBoard());
     if (renaming !== null && !all.some((c) => c.id === renaming)) renaming = null;
     if (asking !== null && !all.some((c) => c.id === asking)) asking = null;
+    if (colouring !== null && !all.some((c) => c.id === colouring)) colouring = null;
     const wanted = fold(query.trim());
     const shown = wanted === '' ? all : all.filter((c) => fold(c.name).includes(wanted));
     el.hidden = wanted !== '' && shown.length === 0;
@@ -221,19 +374,27 @@ export function createCircuitPalette({ state, notify, onPlace }: CircuitPaletteD
 
     const wrap = h('div', 'pn-items ck-pal-items');
     if (all.length === 0) wrap.append(h('p', 'ck-pal-empty', T.paletteEmpty));
-    for (const c of shown) wrap.append(item(c.id));
+    for (const c of shown) wrap.append(item(c));
     if (wanted === '') {
       const foot = h('div', 'ck-pal-foot');
+      const importBtn = footButton('upload', T.importBtn, T.importTip, importFromFile);
+      importBtn.dataset.act = 'import';
       foot.append(
         footButton('plus', T.newEmpty, T.newEmptyTip, () => void newEmptyCircuit(state, notify)),
         footButton('circuit', T.fromSelection, T.fromSelectionTip, () => void circuitFromSelection(state, notify)),
+        importBtn,
       );
       wrap.append(foot);
+      const ask = incoming ? incomingAsk(incoming) : null;
+      if (ask) wrap.append(ask);
+      else incoming = null;
+      wrap.append(starters());
     }
     el.append(wrap);
   }
 
   state.subscribe((kind) => {
+    if (kind === 'board') incoming = null;
     if (kind === 'graph' || kind === 'board' || kind === 'playing') render();
   });
   render();

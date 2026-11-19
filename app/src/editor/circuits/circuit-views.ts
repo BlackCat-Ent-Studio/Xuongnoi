@@ -35,6 +35,7 @@ const GLYPHS = {
   download: '<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/>',
   upload: '<path d="M12 16V5M7.5 9L12 4.5 16.5 9M5 20h14"/>',
   star: '<path d="M12 4l2.4 5 5.4.7-4 3.8 1 5.4-4.8-2.7-4.8 2.7 1-5.4-4-3.8 5.4-.7z"/>',
+  drop: '<path d="M12 3.5c3 3.6 6 6.6 6 10a6 6 0 0 1-12 0c0-3.4 3-6.4 6-10z"/>',
 } as const;
 
 export type CircuitGlyph = keyof typeof GLYPHS;

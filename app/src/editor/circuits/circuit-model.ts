@@ -30,6 +30,7 @@ import {
 } from '../../engine/types';
 import { removeNode } from '../../engine/wiring';
 import { pruneGraphKnots } from '../graph/board-knots';
+import { findGroup, isGroupColor, ungroup } from '../groups/group-model';
 import { nextNodeId } from '../node-ids';
 
 /**
@@ -491,6 +492,16 @@ export function renameCircuit(board: Board, id: string, name: string): Board {
   return patchCircuit(board, id, (c) => (!clean || clean === c.name ? c : { ...c, name: clean }));
 }
 
+/** Gives the circuit its own colour (the dot on its icon, on every copy and in the list); null goes back to the default. */
+export function setCircuitColor(board: Board, id: string, color: string | null): Board {
+  if (color !== null && !isGroupColor(color)) return board;
+  return patchCircuit(board, id, (c) => {
+    if ((c.color ?? null) === color) return c;
+    const { color: _old, ...rest } = c;
+    return color === null ? rest : { ...rest, color };
+  });
+}
+
 /** A second circuit with the same inside; its copies are placed separately. */
 export function duplicateCircuit(board: Board, id: string): { board: Board; circuitId: string } | null {
   const source = findCircuit(board, id);
@@ -723,6 +734,21 @@ function buildFromSelection(board: Board, path: CircuitPath, ids: ReadonlySet<st
   next = pruneCircuits({ ...next, graph: pruneGraphKnots(next.graph) });
   if (nestingFail(board, next) !== null) return { ok: false, reason: 'too-deep' };
   return { ok: true, board: next, circuitId, instanceId, orderChanged: false };
+}
+
+/**
+ * "Chuyển nhóm thành bảng mạch": a group of the main board (a drawing-only block) becomes a circuit with one copy where the
+ * block stood. The circuit takes the name and the colour of the group; wires that left the group become pins.
+ */
+export function createCircuitFromGroup(board: Board, groupId: string): FromSelectionResult {
+  const group = findGroup(board.graph, groupId);
+  if (!group) return { ok: false, reason: 'empty' };
+  const loose: Board = { ...board, graph: ungroup(board.graph, groupId) };
+  const res = createCircuitFromSelection(loose, [], new Set(group.nodeIds), group.name);
+  if (!res.ok) return res;
+  const coloured = group.color && isGroupColor(group.color) ? setCircuitColor(res.board, res.circuitId, group.color) : res.board;
+  const nodes = coloured.graph.nodes.map((n) => (n.id === res.instanceId ? { ...n, pos: { x: Math.round(group.x), y: Math.round(group.y) } } : n));
+  return { ...res, board: { ...coloured, graph: { ...coloured.graph, nodes } } };
 }
 
 /** Gives one copy on the open graph its own name; an empty name removes it, so the copy shows its circuit's name again. */

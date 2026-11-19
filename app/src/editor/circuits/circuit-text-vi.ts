@@ -1,3 +1,4 @@
+import type { CircuitImportFail } from '../../io/circuit-file';
 import type { BenchCardFail, FromSelectionFail, PlaceFail } from './circuit-model';
 
 /** Vietnamese strings for "Bảng mạch": the block on the board, the inside of a circuit, the palette group and the inspector. */
@@ -120,6 +121,38 @@ export const CIRCUIT_VI = {
   pinWireBody: (pin: string, card: string) => `Chân "${pin}" nối với ${card}.`,
   pinWireDelete: 'Gỡ dây của chân',
   multiCreate: 'Tạo bảng mạch',
+
+  // colour, files, starters, groups
+  colour: 'Màu',
+  colourDefault: 'Màu mặc định',
+  colourOf: (hex: string) => `Màu ${hex}`,
+  colourHint: 'Chấm màu hiện trên biểu tượng của mọi bản sao và trong danh sách.',
+  actColour: 'Đổi màu',
+  colourDone: 'Xong',
+  actExport: 'Xuất ra tệp',
+  exported: (name: string) => `Đã xuất bảng mạch "${name}" ra tệp (kèm các bảng mạch nằm bên trong nó)`,
+  importBtn: 'Nhập từ tệp',
+  importTip: 'Thêm một bảng mạch từ tệp .bangmach.json đã xuất trước đó',
+  imported: (name: string, contained: number) => (contained > 0 ? `Đã nhập bảng mạch "${name}" và ${contained} bảng mạch nằm bên trong nó` : `Đã nhập bảng mạch "${name}"`),
+  importAsk: (name: string, copies: number) => `Bảng này đã có bảng mạch tên "${name}"${copies > 0 ? ` (đang có ${copies} bản sao)` : ''}. Bạn muốn làm gì với bảng mạch trong tệp?`,
+  importKeep: 'Giữ cả hai',
+  importKeepTip: 'Thêm bảng mạch trong tệp với một con số sau tên; bảng mạch cũ giữ nguyên',
+  importReplace: 'Thay bảng mạch cũ',
+  importReplaceTip: (copies: number) => (copies > 0 ? `Cả ${copies} bản sao sẽ dùng bảng mạch trong tệp. Dây nối vào chân không còn sẽ bị gỡ.` : 'Bảng mạch cũ được thay bằng bảng mạch trong tệp'),
+  importCancel: 'Thôi',
+  importReplaced: (name: string, _contained: number, dropped: number) => (dropped > 0 ? `Đã thay bảng mạch "${name}" bằng bảng mạch trong tệp và gỡ ${dropped} dây ở chân không còn. Không ưng thì Hoàn tác.` : `Đã thay bảng mạch "${name}" bằng bảng mạch trong tệp. Không ưng thì Hoàn tác.`),
+  importFail: {
+    'too-deep': 'Không nhập được: bảng mạch lồng nhau sẽ quá 4 tầng.',
+    broken: 'Không nhập được: bảng mạch trong tệp không khớp với bảng này.',
+  } satisfies Record<CircuitImportFail, string>,
+  starters: 'Mạch mẫu',
+  startersHint: 'Bảng mạch làm sẵn từ các mảnh ghép thường. Thêm vào rồi mở ra xem cách lắp.',
+  starterAdd: 'Thêm',
+  starterAddTip: (name: string) => `Thêm "${name}" vào danh sách bảng mạch của bảng này`,
+  starterAdded: (name: string) => `Đã thêm bảng mạch mẫu "${name}". Kéo nó vào bảng để đặt một bản sao.`,
+  groupToCircuit: 'Chuyển nhóm thành bảng mạch',
+  groupToCircuitTip: 'Nhóm chỉ để gọn mắt. Bảng mạch thì đặt lại được nhiều lần, có chân và chạy thử riêng được. Dây nối ra ngoài nhóm thành chân.',
+  madeFromGroup: (name: string, pins: number) => `Đã chuyển nhóm thành bảng mạch "${name}" với ${pins} chân`,
 
   // bench ("Chạy thử máy này")
   benchOpen: 'Chạy thử máy này',

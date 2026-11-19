@@ -449,7 +449,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     const graph = state.getGraph();
     const playing = state.isPlaying();
 
-    if (sel?.kind === 'group' && renderGroupInspector(el, state, sel.id)) return;
+    if (sel?.kind === 'group' && renderGroupInspector(el, state, sel.id, notify)) return;
     // A copy of a circuit, a stacked block, a pin's wire, or the entered circuit itself.
     if (renderCircuitInspector(el, state, { paramRow, notify })) return;
     if (!sel) {

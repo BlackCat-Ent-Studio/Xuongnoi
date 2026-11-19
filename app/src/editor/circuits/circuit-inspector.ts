@@ -21,10 +21,12 @@ import {
   openCircuit,
   renameCircuit,
   setBenchCard,
+  setCircuitColor,
   setExposed,
   setInstanceName,
   stacksOf,
 } from './circuit-model';
+import { circuitSwatches } from './circuit-palette';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
 import { buildInstanceView, circuitIcon, circuitTile, instanceTitle } from './circuit-views';
 import { pinIdOfCard } from './circuit-wiring';
@@ -187,6 +189,9 @@ function renderCircuit(el: HTMLElement, state: EditorState, circuit: Circuit): v
   el.append(head(circuit, T.circuitTitle(circuit.name), T.usedAt(countInstances(board, circuit.id))));
   const form = h('div', 'pn-sec');
   form.append(textField(T.nameLabel, circuit.name, '', CIRCUIT_NAME_MAX, locked, (text) => void state.edit((b) => renameCircuit(b, circuit.id, text), ['graph'], `cname:${circuit.id}`)));
+  const colourRow = h('div', 'prop-row pn-field ck-colour');
+  colourRow.append(h('div', 'prop-label pn-label', T.colour), circuitSwatches(circuit.color, locked, (c) => void state.edit((b) => setCircuitColor(b, circuit.id, c))));
+  form.append(colourRow, h('p', 'pn-desc pn-dim ck-flat', T.colourHint));
   el.append(form);
 
   const look = section(T.outsideLook);

@@ -1,4 +1,6 @@
 import { getNodeDef } from '../../engine/registry';
+import { circuitFromGroup, type Notify } from '../circuits/circuit-actions';
+import { CIRCUIT_VI } from '../circuits/circuit-text-vi';
 import { h } from '../dom';
 import type { EditorState } from '../editor-state';
 import { categoryTile } from '../panels/panel-icons';
@@ -18,7 +20,7 @@ function button(label: string, title: string, disabled: boolean, onClick: () => 
 }
 
 /** Inspector for a selected group: name, colour, members (click to open the group and select one), ports. False for an unknown id. */
-export function renderGroupInspector(el: HTMLElement, state: EditorState, groupId: string): boolean {
+export function renderGroupInspector(el: HTMLElement, state: EditorState, groupId: string, notify: Notify = () => undefined): boolean {
   const graph = state.getGraph();
   const group = findGroup(graph, groupId);
   if (!group) return false;
@@ -99,6 +101,10 @@ export function renderGroupInspector(el: HTMLElement, state: EditorState, groupI
     button(GROUP_VI.ungroup, GROUP_VI.ungroupTip, playing, () => state.ungroupSelection()),
     button(T.duplicate, '', playing, () => state.duplicate()),
   );
+  // A group is drawing only; as a circuit it can be placed many times, has pins and can be tried alone.
+  const toCircuit = button(CIRCUIT_VI.groupToCircuit, CIRCUIT_VI.groupToCircuitTip, playing, () => void circuitFromGroup(state, group.id, notify));
+  toCircuit.dataset.act = 'group-to-circuit';
+  actions.append(toCircuit);
   const danger = h('div', 'pn-danger');
   danger.append(button(T.delete, '', playing, () => state.deleteSelection(), ' danger'));
   el.append(actions, danger);
