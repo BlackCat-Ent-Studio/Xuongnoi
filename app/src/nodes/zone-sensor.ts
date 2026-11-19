@@ -81,7 +81,15 @@ export const zoneSensorNode: NodeDef<ZoneState> = {
     { id: 'first', type: 'object', label: 'Đối tượng đầu tiên' },
   ],
   params: [
-    { id: 'center', label: 'Tâm vùng', kind: 'vec3', default: DEFAULT_CENTER },
+    {
+      id: 'center',
+      label: 'Tâm vùng',
+      kind: 'vec3',
+      default: DEFAULT_CENTER,
+      place: 'point',
+      // Following something, the centre is an offset: along the world axes, or in the followed body's own frame when the zone turns with it.
+      placeAs: (p, wired) => (!wired.has('follow') ? 'world' : p.rotate === 'yes' ? 'local' : 'offset'),
+    },
     { id: 'size', label: 'Kích thước vùng', kind: 'vec3', default: DEFAULT_SIZE },
     {
       id: 'filter',

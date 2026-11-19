@@ -61,8 +61,8 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
     ],
   },
   params: [
-    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
-    { id: 'heading', label: 'Hướng mũi lúc đầu (độ, 0 = sang phải, 90 = xuống dưới)', kind: 'number', default: 0, min: -360, max: 360, step: 5 },
+    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 }, place: 'point' },
+    { id: 'heading', label: 'Hướng mũi lúc đầu (độ, 0 = sang phải, 90 = xuống dưới)', kind: 'number', default: 0, min: -360, max: 360, step: 5, place: 'heading' },
     { id: 'length', label: 'Chiều dài (m)', kind: 'number', default: 1, min: 0.2, max: 6, step: 0.05 },
     { id: 'width', label: 'Chiều rộng (m)', kind: 'number', default: 0.7, min: 0.2, max: 6, step: 0.05 },
     { id: 'height', label: 'Chiều cao (m)', kind: 'number', default: 0.3, min: 0.1, max: 3, step: 0.05 },

@@ -29,7 +29,7 @@ export const rotatingPlatformNode: NodeDef<RotatingState> = {
     { id: 'turned', type: 'bool', label: 'Khi xoay xong' },
   ],
   params: [
-    { id: 'position', label: 'Vị trí (tâm)', kind: 'vec3', default: { x: 0, y: 2, z: 0 } },
+    { id: 'position', label: 'Vị trí (tâm)', kind: 'vec3', default: { x: 0, y: 2, z: 0 }, place: 'point' },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 3, y: 0.5, z: 1 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#8b5cf6' },
     {

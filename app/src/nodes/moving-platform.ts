@@ -33,8 +33,8 @@ export const movingPlatformNode: NodeDef<PlatformState> = {
     { id: 'arrived', type: 'bool', label: 'Khi tới cuối đường' },
   ],
   params: [
-    { id: 'position', label: 'Điểm A (xuất phát)', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
-    { id: 'to', label: 'Điểm B', kind: 'vec3', default: { x: 4, y: 0, z: 0 } },
+    { id: 'position', label: 'Điểm A (xuất phát)', kind: 'vec3', default: { x: 0, y: 0, z: 0 }, place: 'point' },
+    { id: 'to', label: 'Điểm B', kind: 'vec3', default: { x: 4, y: 0, z: 0 }, place: 'point' },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 3, y: 0.5, z: 1 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#f59e0b' },
     { id: 'speed', label: 'Tốc độ (ô/giây)', kind: 'number', default: 2, min: 0.1, max: 20, step: 0.1 },

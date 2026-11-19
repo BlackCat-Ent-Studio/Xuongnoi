@@ -47,7 +47,7 @@ export const goToNode: NodeDef<GoToState> = {
     { id: 'arrivedAt2', type: 'bool', label: 'Đã đến điểm đến 2' },
   ],
   params: [
-    { id: 'targetPos', label: 'Vị trí đến (khi không nối Điểm đến)', kind: 'vec3', default: DEFAULT_TARGET },
+    { id: 'targetPos', label: 'Vị trí đến (khi không nối Điểm đến)', kind: 'vec3', default: DEFAULT_TARGET, place: 'point' },
     {
       id: 'stopDistance',
       label: 'Dừng cách đích',

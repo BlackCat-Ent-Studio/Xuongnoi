@@ -20,7 +20,7 @@ export const teleportNode: NodeDef<TeleportState> = {
   ],
   outputs: [{ id: 'done', type: 'bool', label: 'Khi dịch chuyển' }],
   params: [
-    { id: 'position', label: 'Vị trí đến (khi không nối Điểm đến)', kind: 'vec3', default: DEFAULT_DEST },
+    { id: 'position', label: 'Vị trí đến (khi không nối Điểm đến)', kind: 'vec3', default: DEFAULT_DEST, place: 'point' },
     {
       id: 'keepVelocity',
       label: 'Giữ đà đang chạy / rơi',

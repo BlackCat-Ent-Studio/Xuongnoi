@@ -26,6 +26,7 @@ const POINT_PARAMS: ParamDef[] = DEFAULT_POINTS.map((p, i) => ({
   label: `Điểm ${i + 1} (chỉ dùng x và z; dạng "Tự vẽ")`,
   kind: 'vec3',
   default: p,
+  place: 'point',
   ...(i >= CLASSIC_POINTS ? { advanced: true } : {}),
 }));
 
@@ -94,7 +95,7 @@ export const lineTrackNode: NodeDef<{ id: EntityId }> = {
         { value: 'custom', label: 'Tự vẽ bằng các điểm' },
       ],
     },
-    { id: 'center', label: 'Tâm (x, z; y = độ cao mặt sàn, m)', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
+    { id: 'center', label: 'Tâm (x, z; y = độ cao mặt sàn, m)', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 }, place: 'point' },
     { id: 'length', label: 'Dài (m, các dạng có sẵn)', kind: 'number', default: 12, min: 1, max: MAX_SPAN, step: 0.5 },
     { id: 'breadth', label: 'Rộng (m, các dạng có sẵn)', kind: 'number', default: 6, min: 0, max: MAX_SPAN, step: 0.5 },
     { id: 'width', label: 'Bề rộng vạch (m)', kind: 'number', default: 0.2, min: MIN_WIDTH, max: MAX_WIDTH, step: 0.02 },

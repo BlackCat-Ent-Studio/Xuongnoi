@@ -161,8 +161,8 @@ export const linearActuatorNode: NodeDef<PistonState> = {
     { id: 'overloaded', type: 'bool', label: 'Quá tải' },
   ],
   params: [
-    { id: 'position', label: 'Vị trí (khi chưa gắn vào vật nào)', kind: 'vec3', default: { x: 0, y: 0.3, z: 0 } },
-    { id: 'direction', label: 'Hướng đẩy (độ, trên mặt phẳng nằm)', kind: 'number', default: 0, min: -360, max: 360, step: 15 },
+    { id: 'position', label: 'Vị trí (khi chưa gắn vào vật nào)', kind: 'vec3', default: { x: 0, y: 0.3, z: 0 }, place: 'point' },
+    { id: 'direction', label: 'Hướng đẩy (độ, trên mặt phẳng nằm)', kind: 'number', default: 0, min: -360, max: 360, step: 15, place: 'heading', placeAs: (_p, wired) => (wired.has('base') ? 'local' : 'world') },
     {
       id: 'orient',
       label: 'Hướng thẳng đứng',

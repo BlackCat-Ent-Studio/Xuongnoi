@@ -54,7 +54,7 @@ export const itemNode: NodeDef<ItemState> = {
   ],
   optionalOutputs: { all: [DAMAGED_PORT, WEIGHT_PORT], active: materialPortsActive },
   params: [
-    { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },
+    { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 1, z: 0 }, place: 'point' },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 0.6, y: 0.6, z: 0.6 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#facc15' },
     {

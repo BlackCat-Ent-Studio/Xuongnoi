@@ -78,7 +78,26 @@ export interface ParamDef {
   legacyDefault?: ParamValue;
   /** The properties panel hides this setting while this returns false (e.g. table rows beyond the chosen row count). The value is kept. */
   shownWhen?: (params: Params) => boolean;
+  /**
+   * The value is a place in the world: 'point' = a world position (vec3), 'heading' = a direction on the ground in degrees
+   * (0 = +x, 90 = +z). A copy of a circuit board that is placed somewhere else moves and turns these values (see src/circuits).
+   * Absent = sizes, offsets and everything else, which a placed copy keeps as they are. Nothing else reads this.
+   */
+  place?: 'point' | 'heading';
+  /**
+   * For a `place` setting whose meaning depends on the card's other settings or on which inputs have a wire (`wired`):
+   * 'world' = a world point / direction (moved and turned), 'offset' = measured along the world axes from something that
+   * is itself placed (turned only, never moved), 'local' = measured in another body's own frame (left alone). Absent = 'world'.
+   */
+  placeAs?: (params: Params, wired: ReadonlySet<string>) => PlaceMeaning;
+  /**
+   * For kind 'text': cards that share this text are linked to each other (a pair code). Inside a copy of a circuit board
+   * the text is private to that copy, so two copies never link to each other by accident.
+   */
+  instanceScoped?: boolean;
 }
+
+export type PlaceMeaning = 'world' | 'offset' | 'local';
 
 /** Keyboard state for one tick. Keys are KeyboardEvent.code values, e.g. 'KeyW', 'ArrowLeft', 'Space'. */
 export interface InputSnapshot {
@@ -247,6 +266,46 @@ export interface Board {
   graph: Graph;
   /** Optional sticky notes (absent in older files). */
   notes?: Note[];
+  /** Optional library of circuit boards ("bảng mạch") used by `circuit` nodes of this board (absent whenever there are none). */
+  circuits?: Circuit[];
+}
+
+// ---------- circuit boards (a board type used as one block on another board; resolved in src/circuits before the engine runs) ----------
+
+/** Kind of a graph node that stands for one copy of a circuit. It has no NodeDef: `expandBoard` replaces it by the circuit's own nodes. */
+export const CIRCUIT_KIND = 'circuit';
+
+/** A named port of a circuit: outside it is a port of the copy, inside it is one port of one node. */
+export interface CircuitPin {
+  id: string;
+  label: string;
+  dir: 'in' | 'out';
+  type: PortType;
+  /** The inner port the pin stands for: an input for 'in', an output for 'out'. May be a pin of a nested copy. */
+  inner: PortRef;
+}
+
+/** A setting of an inner node that every copy may set for itself. */
+export interface CircuitExposed {
+  id: string;
+  label: string;
+  /** May name a setting of a nested copy (see `instanceValueKey` in src/circuits). */
+  inner: { node: string; param: string };
+}
+
+/** A board type. Every `circuit` node naming its id is a copy of it; editing the circuit changes all copies. */
+export interface Circuit {
+  id: string;
+  name: string;
+  /** `#rrggbb` accent, absent for the default. */
+  color?: string;
+  /** Inner nodes, wires and wire bend points. Groups and settings are not used here. */
+  graph: Graph;
+  /** Ordered: the order the ports are listed on a copy. */
+  pins: CircuitPin[];
+  exposed: CircuitExposed[];
+  /** Inner nodes that exist only to try the circuit on its own (a floor, a switch): left out of every copy. */
+  benchIds: string[];
 }
 
 // ---------- engine API (implemented in src/engine) ----------

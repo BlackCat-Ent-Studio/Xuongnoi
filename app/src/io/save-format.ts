@@ -1,6 +1,7 @@
 import { CONNECT_FAIL_TEXT } from '../engine/text-vi';
 import { getNodeDef } from '../engine/registry';
-import { canConnect } from '../engine/wiring';
+import { canConnectIn, circuitLookup, isInstance, type CircuitLookup } from '../circuits/instance';
+import { validateCircuits } from '../circuits/validate';
 import {
   DEFAULT_GRAVITY,
   VIEW_MODES,
@@ -20,6 +21,7 @@ import { GROUP_NAME_MAX, cleanGroupName, isGroupColor, withGroups } from '../edi
 import { sanitizeKnots } from '../editor/graph/board-knots';
 import { migrateWireRule } from '../editor/graph/wire-rule-migration';
 import { registerAllNodes } from '../nodes';
+import { circuitIssueText, circuitsForFile, readCircuitHeaders, readInstanceParams } from './circuits-format';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
 import { IO_TEXT } from './text-vi';
 
@@ -42,6 +44,7 @@ export function serializeBoard(board: Board): string {
       mode: board.mode,
       graph: board.graph,
       ...(board.notes && board.notes.length > 0 ? { notes: board.notes } : {}),
+      ...(board.circuits && board.circuits.length > 0 ? { circuits: circuitsForFile(board.circuits) } : {}),
     },
     null,
     2,
@@ -66,12 +69,22 @@ function cloneDefault(v: ParamValue): ParamValue {
   return typeof v === 'object' ? { ...v } : v;
 }
 
-function parseNode(raw: unknown, index: number, seen: Set<string>): GraphNode | string {
+function parseNode(raw: unknown, index: number, seen: Set<string>, circuits: CircuitLookup): GraphNode | string {
   if (!isRecord(raw) || typeof raw.id !== 'string' || typeof raw.kind !== 'string') {
     return IO_TEXT.badNode(index);
   }
   const { id, kind } = raw;
   if (seen.has(id)) return IO_TEXT.dupNode(id);
+  if (isInstance({ kind })) {
+    // A copy of a circuit has no node definition: its params are its circuit, its placement and its own values.
+    const given = raw.params === undefined ? {} : raw.params;
+    if (!isRecord(given)) return IO_TEXT.badParam(id, 'params');
+    const params = readInstanceParams(id, given, circuits);
+    if (typeof params === 'string') return params;
+    const at = raw.pos;
+    if (!isRecord(at) || !isFiniteNum(at.x) || !isFiniteNum(at.y)) return IO_TEXT.badNode(index);
+    return { id, kind, params, pos: { x: at.x, y: at.y } };
+  }
   const def = getNodeDef(kind);
   if (!def) return IO_TEXT.unknownKind(id, kind);
 
@@ -162,6 +175,47 @@ function parseGroups(raw: unknown, nodes: readonly GraphNode[]): NodeGroup[] {
   return groups;
 }
 
+/**
+ * Reads the nodes and wires of one graph (the main board's or a circuit's). Returns the graph and its wire ids, or a
+ * Vietnamese error. `circuits` are the circuits of the file, whose pins are the ports of their copies.
+ */
+function parseNodesAndWires(rawNodes: unknown[], rawWires: unknown[], circuits: CircuitLookup): { graph: Graph; wireIds: Set<string> } | string {
+  const nodes: GraphNode[] = [];
+  const seenNodes = new Set<string>();
+  for (const [i, raw] of rawNodes.entries()) {
+    const node = parseNode(raw, i, seenNodes, circuits);
+    if (typeof node === 'string') return node;
+    seenNodes.add(node.id);
+    nodes.push(node);
+  }
+
+  // Add wires one by one so canConnect enforces ports, types and one wire per input.
+  let graph: Graph = { nodes, wires: [] };
+  const wireIds = new Set<string>();
+  for (const [i, raw] of rawWires.entries()) {
+    if (
+      !isRecord(raw) ||
+      typeof raw.id !== 'string' ||
+      !isRecord(raw.from) ||
+      !isRecord(raw.to) ||
+      typeof raw.from.node !== 'string' ||
+      typeof raw.from.port !== 'string' ||
+      typeof raw.to.node !== 'string' ||
+      typeof raw.to.port !== 'string'
+    ) {
+      return IO_TEXT.badWire(i);
+    }
+    if (wireIds.has(raw.id)) return IO_TEXT.dupWire(raw.id);
+    const from = { node: raw.from.node, port: raw.from.port };
+    const to = { node: raw.to.node, port: raw.to.port };
+    const res = canConnectIn(graph, from, to, circuits);
+    if (!res.ok) return IO_TEXT.wireRejected(raw.id, CONNECT_FAIL_TEXT[res.reason]);
+    wireIds.add(raw.id);
+    graph = { nodes, wires: [...graph.wires, { id: raw.id, from, to }] };
+  }
+  return { graph, wireIds };
+}
+
 /** Validates untrusted text into a Board. Never throws; errors are Vietnamese. */
 export function parseBoard(text: string): ParseResult {
   registerAllNodes();
@@ -188,39 +242,15 @@ export function parseBoard(text: string): ParseResult {
     return { ok: false, error: IO_TEXT.badGraph };
   }
 
-  const nodes: GraphNode[] = [];
-  const seenNodes = new Set<string>();
-  for (const [i, raw] of rawGraph.nodes.entries()) {
-    const node = parseNode(raw, i, seenNodes);
-    if (typeof node === 'string') return { ok: false, error: node };
-    seenNodes.add(node.id);
-    nodes.push(node);
-  }
+  const headers = readCircuitHeaders(data.circuits);
+  if (typeof headers === 'string') return { ok: false, error: headers };
+  const circuits = circuitLookup(headers.map((h) => h.circuit));
 
-  // Add wires one by one so canConnect enforces ports, types and one wire per input.
-  let graph: Graph = { nodes, wires: [] };
-  const seenWires = new Set<string>();
-  for (const [i, raw] of rawGraph.wires.entries()) {
-    if (
-      !isRecord(raw) ||
-      typeof raw.id !== 'string' ||
-      !isRecord(raw.from) ||
-      !isRecord(raw.to) ||
-      typeof raw.from.node !== 'string' ||
-      typeof raw.from.port !== 'string' ||
-      typeof raw.to.node !== 'string' ||
-      typeof raw.to.port !== 'string'
-    ) {
-      return { ok: false, error: IO_TEXT.badWire(i) };
-    }
-    if (seenWires.has(raw.id)) return { ok: false, error: IO_TEXT.dupWire(raw.id) };
-    const from = { node: raw.from.node, port: raw.from.port };
-    const to = { node: raw.to.node, port: raw.to.port };
-    const res = canConnect(graph, from, to);
-    if (!res.ok) return { ok: false, error: IO_TEXT.wireRejected(raw.id, CONNECT_FAIL_TEXT[res.reason]) };
-    seenWires.add(raw.id);
-    graph = { nodes, wires: [...graph.wires, { id: raw.id, from, to }] };
-  }
+  const main = parseNodesAndWires(rawGraph.nodes, rawGraph.wires, circuits);
+  if (typeof main === 'string') return { ok: false, error: main };
+  const nodes = main.graph.nodes;
+  const seenWires = main.wireIds;
+  let graph: Graph = main.graph;
 
   graph = withGroups(graph, parseGroups(rawGraph.groups, nodes));
   // Only an explicit `true` switches a setting on; anything else reads as the old behaviour.
@@ -242,7 +272,19 @@ export function parseBoard(text: string): ParseResult {
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };
 
+  // The graphs inside the circuits: read like the main board's, then every pin, exposed setting and copy is checked.
+  for (const { circuit, rawGraph: inner } of headers) {
+    const read = parseNodesAndWires(inner.nodes as unknown[], inner.wires as unknown[], circuits);
+    if (typeof read === 'string') return { ok: false, error: IO_TEXT.inCircuit(circuit.name, read) };
+    const innerKnots = sanitizeKnots(inner.knots, read.wireIds);
+    circuit.graph = innerKnots ? { ...read.graph, knots: innerKnots } : read.graph;
+  }
   const board: Board = { name: data.name, mode: mode as ViewMode, graph };
   if (notes.length > 0) board.notes = notes;
+  if (headers.length > 0) {
+    board.circuits = headers.map((h) => h.circuit);
+    const issue = validateCircuits(board)[0];
+    if (issue) return { ok: false, error: circuitIssueText(issue, circuits) };
+  }
   return { ok: true, board };
 }

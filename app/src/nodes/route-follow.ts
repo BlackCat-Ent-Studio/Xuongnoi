@@ -72,6 +72,7 @@ const POINT_PARAMS: ParamDef[] = DEFAULT_POINTS.map((p, i) => ({
   label: `Điểm ${i + 1}`,
   kind: 'vec3',
   default: p,
+  place: 'point',
   ...(i >= CLASSIC_POINTS ? { advanced: true } : {}),
 }));
 

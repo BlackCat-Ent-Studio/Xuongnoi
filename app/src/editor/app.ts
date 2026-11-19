@@ -1,4 +1,5 @@
 import type { GameView } from '../app-contracts';
+import { runnableGraph } from '../circuits/runnable';
 import { type Board, type ViewMode } from '../engine/types';
 import {
   clearAutosave,
@@ -628,7 +629,7 @@ export function mountEditor(root: HTMLElement): void {
   let previewTimer = 0;
   function showPreview(): void {
     try {
-      gameView.showPreview(state.getGraph(), state.getMode());
+      gameView.showPreview(runnableGraph(state.getBoard()), state.getMode());
     } catch {
       topBar.notify(TEXT_VI.playFailed, 'error');
     }
@@ -648,7 +649,7 @@ export function mountEditor(root: HTMLElement): void {
     for (const n of state.getGraph().nodes) liveBase.set(n.id, structuredClone(n.params));
     keyboard.attach();
     try {
-      gameView.play(state.getGraph(), state.getMode(), () => keyboard.snapshot());
+      gameView.play(runnableGraph(state.getBoard()), state.getMode(), () => keyboard.snapshot());
     } catch {
       keyboard.detach();
       topBar.notify(TEXT_VI.playFailed, 'error');

@@ -46,6 +46,9 @@ export const cameraNode: NodeDef<CameraState> = {
       label: 'Điểm nhìn / Lệch so với vật',
       kind: 'vec3',
       default: { x: 0, y: 0, z: 0 },
+      place: 'point',
+      // Following, the point is an offset from the followed body along the world axes.
+      placeAs: (p) => (p.mode === 'fixed' ? 'world' : 'offset'),
     },
     { id: 'zoom', label: 'Phóng to mặc định', kind: 'number', default: 1, min: CAMERA_MIN_ZOOM, max: CAMERA_MAX_ZOOM, step: 0.1 },
     { id: 'smoothness', label: 'Độ mượt (0 = tức thì)', kind: 'number', default: 5, min: 0, max: 20, step: 0.5 },

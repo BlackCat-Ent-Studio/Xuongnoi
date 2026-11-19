@@ -1,3 +1,4 @@
+import { runnableGraph } from '../../src/circuits/runnable';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type InputSnapshot } from '../../src/engine/types';
 import { HANDBOOK } from '../../src/handbook';
@@ -83,7 +84,7 @@ export function runBoard(board: Board, worldOptions: WorldOptions | undefined, o
   let world: World | null = null;
   try {
     world = createWorld(board.mode, worldOptions);
-    const rt = createRuntime(board.graph, world, board.mode);
+    const rt = createRuntime(runnableGraph(board), world, board.mode);
     const total = Math.round(opts.seconds / TICK_DT);
     for (let i = 0; i < total && !world.ended; i++) {
       rt.tick(inputAt(i));

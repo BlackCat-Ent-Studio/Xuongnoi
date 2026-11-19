@@ -20,7 +20,7 @@ export const characterNode: NodeDef<{ id: EntityId }> = {
     { id: 'z', type: 'number', label: 'Vị trí Z' },
   ],
   params: [
-    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 1, z: 0 } },
+    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 1, z: 0 }, place: 'point' },
     { id: 'speed', label: 'Tốc độ chạy', kind: 'number', default: 5, min: 0, step: 0.5 },
     { id: 'jumpPower', label: 'Sức nhảy', kind: 'number', default: 10, min: 0, step: 0.5 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#3b82f6' },

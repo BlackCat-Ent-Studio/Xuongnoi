@@ -42,8 +42,8 @@ export const patrolNode: NodeDef<PatrolState> = {
     { id: 'route', type: 'object', label: 'Tuyến đi tuần' },
   ],
   params: [
-    { id: 'pointA', label: 'Điểm A', kind: 'vec3', default: DEFAULT_A },
-    { id: 'pointB', label: 'Điểm B', kind: 'vec3', default: DEFAULT_B },
+    { id: 'pointA', label: 'Điểm A', kind: 'vec3', default: DEFAULT_A, place: 'point' },
+    { id: 'pointB', label: 'Điểm B', kind: 'vec3', default: DEFAULT_B, place: 'point' },
     { id: 'wait', label: 'Chờ ở mỗi đầu (giây)', kind: 'number', default: 1, min: 0, max: 30, step: 0.5 },
     {
       id: 'turnAtEdge',

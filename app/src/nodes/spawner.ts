@@ -54,7 +54,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
         { value: 'item', label: 'Đồ vật (rơi xuống đất)' },
       ],
     },
-    { id: 'position', label: 'Vị trí / lệch so với "Tại đối tượng"', kind: 'vec3', default: { x: 0, y: 5, z: 0 } },
+    { id: 'position', label: 'Vị trí / lệch so với "Tại đối tượng"', kind: 'vec3', default: { x: 0, y: 5, z: 0 }, place: 'point', placeAs: (_p, wired) => (wired.has('at') ? 'offset' : 'world') },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 0.7, y: 0.7, z: 0.7 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#ef4444' },
     {

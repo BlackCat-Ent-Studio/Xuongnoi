@@ -66,7 +66,7 @@ export const blockNode: NodeDef<BlockState> = {
     active: (params) => [...(strParam(params, 'showHiddenOut', 'no') === 'yes' ? HIDDEN_PORTS : []), ...materialPortsActive(params)],
   },
   params: [
-    { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 } },
+    { id: 'position', label: 'Vị trí', kind: 'vec3', default: { x: 0, y: 0, z: 0 }, place: 'point' },
     { id: 'size', label: 'Kích thước', kind: 'vec3', default: { x: 1, y: 1, z: 1 } },
     { id: 'color', label: 'Màu', kind: 'color', default: '#a3a3a3' },
     {

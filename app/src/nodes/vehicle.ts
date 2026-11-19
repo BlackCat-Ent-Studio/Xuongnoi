@@ -53,7 +53,7 @@ export const vehicleNode: NodeDef<VehicleState> = {
     { id: 'crashedWith', type: 'object', label: 'Đối tượng va phải' },
   ],
   params: [
-    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 } },
+    { id: 'position', label: 'Vị trí xuất hiện', kind: 'vec3', default: { x: 0, y: 0.5, z: 0 }, place: 'point' },
     {
       id: 'model',
       label: 'Loại xe',
