@@ -64,6 +64,28 @@ describe('floor marker figure', () => {
     fig.dispose();
   });
 
+  it('is a dark floor tile under a ring in the marker colour: the tile is the full marker, takes shadows and keeps its own colour', () => {
+    const fig = new FloorMarkerFigure(tile(), '3d');
+    const meshes: THREE.Mesh[] = [];
+    fig.object.traverse((o) => {
+      if (o instanceof THREE.Mesh) meshes.push(o);
+    });
+    const [plate, ring] = meshes as [THREE.Mesh, THREE.Mesh];
+    fig.object.updateMatrixWorld(true);
+    const size = new THREE.Box3().setFromObject(plate).getSize(new THREE.Vector3());
+    expect(size.x).toBeCloseTo(1.4, 6);
+    expect(size.z).toBeCloseTo(1.4, 6);
+    expect(plate.receiveShadow).toBe(true);
+    // darker than any marker colour, so the light dashes and the ring read on a light floor too
+    const dark = (plate.material as THREE.MeshLambertMaterial).color.getHexString();
+    expect(dark).toBe('2c3038');
+    fig.update(tile({ color: '#22c55e' }));
+    expect((plate.material as THREE.MeshLambertMaterial).color.getHexString()).toBe(dark);
+    // the ring lies over the tile, never under it
+    expect(new THREE.Box3().setFromObject(ring).min.y).toBeGreaterThan(new THREE.Box3().setFromObject(plate).max.y);
+    fig.dispose();
+  });
+
   it('the scene draws a marker as this figure (not as a zone box), moves it with the entity and removes it', () => {
     const view = new SceneView();
     view.setMode('3d');

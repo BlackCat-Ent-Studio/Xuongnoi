@@ -9,7 +9,6 @@ import { ArmPartFigure } from '../../src/render/arm-part-models';
 import { buildBlockLook } from '../../src/render/block-looks';
 import { AGV_STRIP, AgvFigure } from '../../src/render/factory-agv';
 import { FactoryArmFigure, TRAY_RIM, TRAY_STAND, hasFactoryArmFigure } from '../../src/render/factory-arm';
-import { buildFloorMarker } from '../../src/render/factory-blocks';
 import { drawCost } from '../../src/render/factory-kit';
 import { buildParcel, fillPlacement, isParcelLook, parcelModelOf } from '../../src/render/factory-parcels';
 import { setPackTemplateForTests } from '../../src/render/pack-models';
@@ -560,20 +559,6 @@ describe('the drawn factory blocks', () => {
     expect(after).not.toBe(before);
     const b = boxOf(fig.object);
     expect(b.max.y - b.min.y).toBeCloseTo(0.6, 3);
-  });
-});
-
-describe('the floor marker', () => {
-  it('is one flat mesh on the floor, one cell wide, turned by the heading', () => {
-    const m = buildFloorMarker({ cell: 1, heading: Math.PI / 2, ownerNodeId: 'marker' });
-    expect(drawCost(m)).toEqual({ meshes: 1, triangles: expect.any(Number) });
-    const b = boxOf(m);
-    expect(b.max.y - b.min.y).toBeLessThan(MM);
-    expect(b.min.y).toBeGreaterThan(0);
-    expect(b.max.x - b.min.x).toBeLessThanOrEqual(1 + MM);
-    const mesh = m.children[0] as THREE.Mesh;
-    expect(mesh.userData.ownerNodeId).toBe('marker');
-    expect(mesh.rotation.y).toBeCloseTo(-Math.PI / 2, 9);
   });
 });
 

@@ -13,7 +13,6 @@ import { listAllSamples } from '../../src/io';
 import { parseBoard } from '../../src/io/save-format';
 import { registerAllNodes } from '../../src/nodes';
 import { CameraRig } from '../../src/render/cameras';
-import { buildFloorMarker } from '../../src/render/factory-blocks';
 import { serializeBoard } from '../../src/io/save-format';
 import { SPOTS, createFactoryShowcase, type ShowcaseOptions } from './factory-showcase-board';
 import { onPackLoaded } from '../../src/render/pack-models';
@@ -61,8 +60,6 @@ export interface RunRequest {
   /** Parameters to set on nodes at a given tick, e.g. to tilt a tray: [tick, nodeId, params]. */
   edits?: [number, string, Params][];
   grid?: boolean;
-  /** Floor markers laid straight into the scene (there is no piece that places them yet): [x, z, heading in degrees]. */
-  markers?: [number, number, number][];
 }
 
 const EDITOR_BACKDROP = 0xe6e8ec;
@@ -125,11 +122,6 @@ async function run(req: RunRequest): Promise<{ entities: number; ticks: number; 
     rt.tick(input);
     w.step(TICK_DT);
   }
-  for (const [x, z, deg] of req.markers ?? []) {
-    const marker = buildFloorMarker({ heading: (deg * Math.PI) / 180 });
-    marker.position.set(x, 0, z);
-    view.scene.add(marker);
-  }
   let free: THREE.PerspectiveCamera | null = null;
   if (req.camera) {
     free = new THREE.PerspectiveCamera(req.camera.fov ?? 35, width / height, 0.1, 400);
@@ -164,12 +156,8 @@ async function run(req: RunRequest): Promise<{ entities: number; ticks: number; 
 const api = {
   samples: (): { id: string; mode: ViewMode }[] => listAllSamples().map((s) => ({ id: s.id, mode: s.board.mode })),
   run,
-  /** The factory showcase board (see factory-showcase-board.ts), with a small grid of floor markers beside it. */
-  showcase: (options: ShowcaseOptions, req: Omit<RunRequest, 'sample' | 'boardJson'>) => {
-    const markers: [number, number, number][] = [];
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) markers.push([SPOTS.markers.x + i, SPOTS.markers.z - 1.5 + j, i === 1 ? 90 : 0]);
-    return run({ ...req, boardJson: serializeBoard(createFactoryShowcase(options)), markers: options.classic ? [] : markers });
-  },
+  /** The factory showcase board (see factory-showcase-board.ts). */
+  showcase: (options: ShowcaseOptions, req: Omit<RunRequest, 'sample' | 'boardJson'>) => run({ ...req, boardJson: serializeBoard(createFactoryShowcase(options)) }),
   spots: SPOTS,
   /** The showcase as a saved board, to open in the real editor. */
   showcaseJson: (options: ShowcaseOptions = {}): string => serializeBoard(createFactoryShowcase(options)),

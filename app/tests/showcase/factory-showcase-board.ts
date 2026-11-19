@@ -124,6 +124,9 @@ export function createFactoryShowcase(o: ShowcaseOptions = {}): Board {
 
   wires.push(['go', 'started', 'belt', 'run']);
 
+  // ---- a small grid of floor markers
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 4; j++) nodes.push([`mark-${i}-${j}`, 'floor-marker', { number: 1 + i * 4 + j, position: { x: SPOTS.markers.x + i, y: 0, z: SPOTS.markers.z - 1.5 + j }, size: 1 }]);
+
   const graph: Graph = {
     nodes: nodes.map(([id, kind, params], n): GraphNode => {
       const def = getNodeDef(kind);
