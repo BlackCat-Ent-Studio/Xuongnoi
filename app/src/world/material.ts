@@ -123,6 +123,24 @@ interface Fact {
   turned: boolean;
   box: Box;
   reach: number;
+  /**
+   * A box on the ground plane such that two bodies can only rest on one another when their boxes meet, or `everywhere` is set
+   * for one of them. It follows from the tests `holds` rules pairs out with:
+   *  - a loose crate on an upright support at least MIN_SIDE wide and deep: the crate's position is within its reach plus
+   *    RIM_SLACK of the support's rectangle; on a turned loose crate: within its reach plus three of the other's plus TURNED_SLACK.
+   *    So a loose crate takes three reaches plus TURNED_SLACK round its position, an upright body its rectangle plus RIM_SLACK;
+   *  - two upright bodies rest only when their rectangles overlap;
+   *  - an upright body at least MIN_SIDE wide rests on a turned one only when its rectangle comes within a billionth of the
+   *    other's highest corners along x and along z (its own corners make x and z two of the axes `footprintsOverlap` tries),
+   *    and those corners lie within the turned body's reach of its position.
+   * Every other body (turned without being a loose crate, upright and thinner than MIN_SIDE, or with a number that is not
+   * finite) is `everywhere`: no test rules it out, so it is always asked.
+   */
+  minX: number;
+  maxX: number;
+  minZ: number;
+  maxZ: number;
+  everywhere: boolean;
 }
 
 function readFact(f: Fact): void {
@@ -132,10 +150,27 @@ function readFact(f: Fact): void {
   f.turned = isTurnedBody(e);
   f.box = b;
   f.reach = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+  const halfX = Math.abs(b.size.x) / 2;
+  const halfZ = Math.abs(b.size.z) / 2;
+  if (f.free) {
+    const round = 3 * f.reach + TURNED_SLACK;
+    f.minX = e.pos.x - round;
+    f.maxX = e.pos.x + round;
+    f.minZ = e.pos.z - round;
+    f.maxZ = e.pos.z + round;
+  } else {
+    f.minX = b.pos.x - halfX - RIM_SLACK;
+    f.maxX = b.pos.x + halfX + RIM_SLACK;
+    f.minZ = b.pos.z - halfZ - RIM_SLACK;
+    f.maxZ = b.pos.z + halfZ + RIM_SLACK;
+  }
+  // A turned body is only ruled out as a loose crate; an upright one only when it is wide and deep enough.
+  const plain = f.turned ? f.free : halfX * 2 >= MIN_SIDE && halfZ * 2 >= MIN_SIDE;
+  f.everywhere = !plain || !(Math.abs(f.minX) + Math.abs(f.maxX) + Math.abs(f.minZ) + Math.abs(f.maxZ) + Math.abs(e.pos.y) + Math.abs(b.pos.y) + Math.abs(b.size.y) + f.reach < Infinity);
 }
 
 function factOf(e: Entity): Fact {
-  const f: Fact = { e, free: false, turned: false, box: e, reach: 0 };
+  const f: Fact = { e, free: false, turned: false, box: e, reach: 0, minX: 0, maxX: 0, minZ: 0, maxZ: 0, everywhere: true };
   readFact(f);
   return f;
 }
@@ -238,7 +273,8 @@ export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlyS
  *
  * Every body is held against every support of the pile, so a pair is first ruled out by a few numbers where that is certain
  * (`tooFarToHold`, and the height tests in `holds`, each the very test the full rule would start with); only the pairs left are
- * asked in full. The bodies are gone through in the order of the entity list, which the shares depend on.
+ * asked in full. The bodies are gone through in the order of the entity list, which the shares depend on. And only the bodies
+ * round the pile are gone through at all: those whose ground box (see `Fact`) meets the box round the whole pile so far.
  */
 function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Entity>): number {
   const { facts, shapes } = scene;
@@ -276,27 +312,61 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
     return rests(top.e, base.e) ? { x: top.e.pos.x, z: top.e.pos.z } : null;
   };
 
+  // The box round the pile (the target, its pieces and all that loads them so far) and the bodies whose own box meets it, in
+  // the order of the list. Whatever can rest on a body of the pile, or bear one, is among them.
+  let minX = Infinity;
+  let maxX = -Infinity;
+  let minZ = Infinity;
+  let maxZ = -Infinity;
+  let everywhere = false;
+  let near: readonly Fact[] = [];
+  let grown = false;
+  const join = (f: Fact): void => {
+    if (f.everywhere) {
+      grown ||= !everywhere;
+      everywhere = true;
+      return;
+    }
+    if (f.minX >= minX && f.maxX <= maxX && f.minZ >= minZ && f.maxZ <= maxZ) return;
+    minX = Math.min(minX, f.minX);
+    maxX = Math.max(maxX, f.maxX);
+    minZ = Math.min(minZ, f.minZ);
+    maxZ = Math.max(maxZ, f.maxZ);
+    grown = true;
+  };
+  const lookRound = (): void => {
+    if (!grown) return;
+    grown = false;
+    near = everywhere ? facts : facts.filter((f) => f.everywhere || !(f.minX > maxX || f.maxX < minX || f.minZ > maxZ || f.maxZ < minZ));
+  };
+
   // Everything that loads the target, directly or through other bodies.
   const above: Fact[] = [];
   const seen = new Set<Entity>([target, ...parts]);
   const queue: Fact[] = [factFor(target), ...[...parts].map(factFor)];
+  queue.forEach(join);
   if (hands.size > 0) {
     for (const f of facts) {
       if (parts.has(f.e) || !gripped(f.e)) continue;
       seen.add(f.e);
       above.push(f);
       queue.push(f);
+      join(f);
     }
   }
   while (queue.length > 0) {
     const base = queue.pop()!;
-    for (const f of facts) {
+    // `base` joined the pile before it was queued, so the bodies round the pile hold all that can rest on it.
+    lookRound();
+    for (const f of near) {
       if (seen.has(f.e) || parts.has(f.e) || !holds(f, base)) continue;
       seen.add(f.e);
       above.push(f);
       queue.push(f);
+      join(f);
     }
   }
+  lookRound();
   // Highest first: a body is passed everything above it before it passes its own load down.
   const height = (f: Fact): number => shapeFor(f.e).obb.centre.y;
   above.sort((a, b) => height(b) - height(a) || (a.e.id < b.e.id ? -1 : 1));
@@ -316,7 +386,7 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
     }
     const bases: Entity[] = [];
     const spots: Pt[] = [];
-    for (const f of facts) {
+    for (const f of near) {
       if (f === top) continue;
       const at = holds(top, f);
       if (!at) continue;
