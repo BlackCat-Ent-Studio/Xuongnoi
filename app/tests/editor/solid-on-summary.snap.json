@@ -727,25 +727,6 @@
   }
  },
  {
-  "id": "lesson:share-jobs",
-  "off": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b8f785d"
-  },
-  "on": {
-   "ended": "running",
-   "ticks": 900,
-   "breaks": [],
-   "error": null,
-   "colliderMismatch": 0,
-   "hash": "b8f785d"
-  }
- },
- {
   "id": "lesson:robot-to-marker",
   "off": {
    "ended": "running",
@@ -762,6 +743,25 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "e6e7abad"
+  }
+ },
+ {
+  "id": "lesson:share-jobs",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b8f785d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b8f785d"
   }
  },
  {

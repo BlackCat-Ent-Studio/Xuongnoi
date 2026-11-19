@@ -153,11 +153,11 @@ describe('try boards', () => {
 describe('lesson "Robot tự tới mốc" (robot-to-marker)', () => {
   const p = (node: string, port: string): PortRef => ({ node, port });
 
-  it('is registered once, last in the Robot chapter, ends on an info step and has unique step ids', () => {
+  it('is registered once, in the Robot chapter right before the lesson about sharing jobs, ends on an info step and has unique step ids', () => {
     const lesson = findLesson('robot-to-marker')!;
     expect(LESSONS.filter((l) => l.id === 'robot-to-marker')).toHaveLength(1);
     expect(chapterOf('robot-to-marker')?.id).toBe('robots');
-    expect(chapterOf('robot-to-marker')?.lessonIds.at(-1)).toBe('robot-to-marker');
+    expect(chapterOf('robot-to-marker')?.lessonIds.slice(-2)).toEqual(['robot-to-marker', 'share-jobs']);
     expect(lesson.steps.at(-1)!.check).toBeUndefined();
     expect(new Set(lesson.steps.map((s) => s.id)).size).toBe(lesson.steps.length);
   });
