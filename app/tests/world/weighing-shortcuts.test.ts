@@ -3,7 +3,8 @@ import { boxOverlap, colliderBox, isTurnedBody, orientedBox } from '../../src/wo
 import type { Entity } from '../../src/world/entity';
 import type { Pt } from '../../src/world/footprint-2d';
 import { DEFAULT_MASS_KG, massOn, weighSceneOf } from '../../src/world/material';
-import { footprintsOverlap, obbCorners } from '../../src/world/oriented-box';
+import { footprintsOverlap, obbCorners, obbOf, type Obb } from '../../src/world/oriented-box';
+import { createRobotBody } from '../../src/world/robot-drive';
 import { leverShares, shapeOf, supportPoint, type Shape } from '../../src/world/weighing';
 
 /**
@@ -14,10 +15,24 @@ import { leverShares, shapeOf, supportPoint, type Shape } from '../../src/world/
 
 const REST_GAP = 0.05;
 
+/**
+ * A chassis on wheel traction (with no collision box of its own) is its length by its width, turned to where it points. Written
+ * out here from the numbers, not asked of the code under test.
+ */
+function chassisObb(e: Entity): Obb | null {
+  if (!e.robot || !e.robot.traction || e.collider) return null;
+  const half = Math.atan2(-e.facing.z, e.facing.x) / 2;
+  return obbOf(e.pos, { x: e.robot.spec.length, y: e.size.y, z: e.robot.spec.width }, { x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) });
+}
+
 function restsPlain(top: Entity, base: Entity): boolean {
-  if (isTurnedBody(top) || isTurnedBody(base)) {
-    const lowT = obbCorners(orientedBox(top));
-    const highB = obbCorners(orientedBox(base));
+  // Other bodies meet such a chassis by that outline; blocks meet its upright square.
+  const withBlock = top.kind === 'block' || base.kind === 'block';
+  const outT = withBlock ? null : chassisObb(top);
+  const outB = withBlock ? null : chassisObb(base);
+  if (outT || outB || isTurnedBody(top) || isTurnedBody(base)) {
+    const lowT = obbCorners(outT ?? orientedBox(top));
+    const highB = obbCorners(outB ?? orientedBox(base));
     const bottom = Math.min(...lowT.map((c) => c.y));
     const ceiling = Math.max(...highB.map((c) => c.y));
     if (Math.abs(bottom - ceiling) > REST_GAP) return false;
@@ -37,7 +52,7 @@ function massOnPlain(list: readonly Entity[], target: Entity, parts: ReadonlySet
   const shapes = new Map<Entity, Shape>();
   const shapeFor = (e: Entity): Shape => {
     let s = shapes.get(e);
-    if (!s) shapes.set(e, (s = shapeOf(orientedBox(e))));
+    if (!s) shapes.set(e, (s = shapeOf(chassisObb(e) ?? orientedBox(e))));
     return s;
   };
   const bears = (e: Entity): boolean => e.visible && !e.inHand && !e.zone;
@@ -149,8 +164,17 @@ interface Machine {
   parts: Set<Entity>;
 }
 
-/** A yard of chassis with trays, crates on and around them (flat, leaning, stacked, on rims, in a hand), blocks and floors. */
-function yard(next: () => number): { list: Entity[]; machines: Machine[] } {
+/** Points a chassis on wheel traction along `heading` (radians), as a step of the world does. */
+function turnTo(chassis: Entity, heading: number): void {
+  chassis.robot!.heading = heading;
+  chassis.facing = { x: Math.cos(heading), y: 0, z: Math.sin(heading) };
+}
+
+/**
+ * A yard of chassis with trays, crates on and around them (flat, leaning, stacked, on rims, in a hand), blocks and floors.
+ * With `traction` the chassis drive on wheel traction: each has a length and a width of its own and stands at any heading.
+ */
+function yard(next: () => number, traction = false): { list: Entity[]; machines: Machine[] } {
   const at = (s: number): number => (next() - 0.5) * s;
   const pick = <T>(xs: readonly T[]): T => xs[Math.floor(next() * xs.length)]!;
   const turn = (how: number): Entity['rot'] => {
@@ -181,6 +205,17 @@ function yard(next: () => number): { list: Entity[]; machines: Machine[] } {
     const x = at(1);
     const z = (k - count / 2) * pitch;
     const chassis = entity('robot', { pos: { x, y: 0.15, z }, size: { x: 0.8 + next(), y: 0.3, z: 0.6 + next() * 0.6 } });
+    if (traction) {
+      // As the chassis card makes it: the box is the square round the longer side, the real length and width ride along.
+      const length = chassis.size.x;
+      const width = pick([chassis.size.z, 0.3, length]);
+      const side = Math.max(length, width);
+      chassis.size = { x: side, y: 0.3, z: side };
+      chassis.robot = createRobotBody({ length, width, mass: 5, friction: 0.8 }, 0, true);
+      turnTo(chassis, pick([0, Math.PI / 2, Math.PI / 4, at(7), at(7), 1e-12]));
+      // Now and then one with a collision box of its own, which stays upright.
+      if (next() < 0.1) chassis.collider = { size: { x: 0.5, y: 0, z: 0 }, offset: { x: 0.1, y: 0, z: 0 } };
+    }
     const parts = new Set<Entity>();
     list.push(chassis);
     let top = 0.3;
@@ -208,6 +243,20 @@ function yard(next: () => number): { list: Entity[]; machines: Machine[] } {
     }
     if (next() < 0.15) list.push(entity('item', { rigid: true, grippedBy: `tray${k}`, pos: { x: x + 3, y: 2, z }, size: { x: 0.3, y: 0.3, z: 0.3 }, mass: 2 }));
     if (next() < 0.2) list.push(entity('character', { pos: { x: x + at(0.3), y: top + 0.9, z }, size: { x: 0.5, y: 1.8, z: 0.5 } }));
+    if (traction) {
+      // Things out where the square and the turned outline differ: a crate at a corner of the bare top, one that is not rigid, a block.
+      const reach = chassis.size.x / 2;
+      if (next() < 0.5) list.push(crateOn(x + pick([-1, 1]) * reach * (0.6 + next() * 0.5), 0.3, z + pick([-1, 1]) * reach * (0.6 + next() * 0.5)));
+      if (next() < 0.3) list.push(entity('item', { pos: { x: x + at(2 * reach), y: 0.3 + 0.1, z: z + at(2 * reach) }, size: { x: 0.2, y: 0.2, z: 0.2 }, mass: 3 }));
+      if (next() < 0.2) list.push(entity('block', { pos: { x: x + at(2 * reach), y: 0.3 + 0.05, z: z + at(2 * reach) }, size: { x: 0.2, y: 0.1, z: 0.2 }, mass: 4 }));
+      // And another chassis parked on top of this one, askew.
+      if (next() < 0.1) {
+        const rider = entity('robot', { pos: { x: x + at(1.5), y: 0.3 + 0.1, z: z + at(1.5) }, size: { x: 0.5, y: 0.2, z: 0.5 } });
+        rider.robot = createRobotBody({ length: 0.5, width: 0.25, mass: 2, friction: 0.8 }, 0, true);
+        turnTo(rider, at(7));
+        list.push(rider);
+      }
+    }
   }
   // Loose things about the yard: crates on the floor, blocks, a second floor piece, something hidden, a zone.
   for (let k = 0; k < 6 + Math.floor(next() * 10); k++) list.push(crateOn(at(12), 0, at(12)));
@@ -264,11 +313,62 @@ describe('massOn with its shortcuts gives the weight of the plain rule', () => {
     expect(loaded).toBeGreaterThan(300);
   });
 
+  it('chassis on wheel traction bear by their turned outline: random yards, to the last bit', () => {
+    const next = rng(271828);
+    let loaded = 0;
+    let asked = 0;
+    let differs = 0;
+    for (let round = 0; round < 400; round++) {
+      const { list, machines } = yard(next, true);
+      for (const m of machines) {
+        const want = massOnPlain(list, m.chassis, m.parts);
+        expect(massOn(list, m.chassis, m.parts)).toBe(want);
+        asked++;
+        if (want > 0) loaded++;
+        // The same chassis as an upright square (no traction) would weigh something else here: the outline matters.
+        const body = m.chassis.robot!;
+        m.chassis.robot = { ...body, traction: false };
+        if (massOnPlain(list, m.chassis, m.parts) !== want) differs++;
+        m.chassis.robot = body;
+      }
+      const block = list.find((e) => e.kind === 'block' && !e.zone)!;
+      expect(massOn(list, block)).toBe(massOnPlain(list, block, new Set()));
+    }
+    expect(loaded).toBeGreaterThan(asked / 4);
+    expect(asked - loaded).toBeGreaterThan(asked / 10);
+    expect(differs).toBeGreaterThan(asked / 20);
+  });
+
+  it('chassis on wheel traction, one scene for chassis after chassis, each driving off and turning before the next is weighed', () => {
+    const next = rng(161803);
+    let loaded = 0;
+    for (let round = 0; round < 200; round++) {
+      const { list, machines } = yard(next, true);
+      const scene = weighSceneOf(list);
+      for (const m of [...machines, ...machines]) {
+        const want = massOnPlain(list, m.chassis, m.parts);
+        expect(massOn(list, m.chassis, m.parts, scene)).toBe(want);
+        if (want > 0) loaded++;
+        m.chassis.pos.x += (next() - 0.5) * 1.5;
+        m.chassis.pos.z += (next() - 0.5) * 1.5;
+        turnTo(m.chassis, m.chassis.robot!.heading + (next() - 0.5) * 3);
+      }
+    }
+    expect(loaded).toBeGreaterThan(300);
+  });
+
   it('with sizes and places that are not numbers', () => {
     const next = rng(5);
     for (let round = 0; round < 30; round++) {
       const { list, machines } = yard(next);
       const odd = list.filter((e) => e.kind !== 'robot');
+      odd[round % odd.length]!.pos.x = [NaN, Infinity, -Infinity][round % 3]!;
+      odd[(round * 7) % odd.length]!.size.z = [NaN, Infinity, 0][round % 3]!;
+      for (const m of machines) expect(massOn(list, m.chassis, m.parts)).toBe(massOnPlain(list, m.chassis, m.parts));
+    }
+    for (let round = 0; round < 30; round++) {
+      const { list, machines } = yard(next, true);
+      const odd = list.filter((e) => !machines.some((m) => m.chassis === e));
       odd[round % odd.length]!.pos.x = [NaN, Infinity, -Infinity][round % 3]!;
       odd[(round * 7) % odd.length]!.size.z = [NaN, Infinity, 0][round % 3]!;
       for (const m of machines) expect(massOn(list, m.chassis, m.parts)).toBe(massOnPlain(list, m.chassis, m.parts));
