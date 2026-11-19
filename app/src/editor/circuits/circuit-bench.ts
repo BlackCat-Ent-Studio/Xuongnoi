@@ -216,6 +216,7 @@ export function createCircuitBench({ state, getRuntime, applyParams, restart, no
       const locked = !here || (state.isReadOnly() && !playing);
       for (const c of stepper.el.querySelectorAll<HTMLInputElement | HTMLButtonElement>('input,button')) c.disabled = locked;
       if (!here) stepper.el.title = T.benchDeeper;
+      else if (locked) stepper.el.title = T.lockedNote;
       row.append(stepper.el);
       return row;
     }
@@ -305,9 +306,9 @@ export function createCircuitBench({ state, getRuntime, applyParams, restart, no
     const reset = actButton('reset', T.benchReset, '', T.benchResetTip, () => {
       numbers.delete(circuit.id);
       for (const set of [switched, pressed]) for (const k of [...set]) if (k.startsWith(`${circuit.id}|`)) set.delete(k);
-      // Running: the next start reads the inputs afresh.
-      render();
+      // Running: the run starts again and reads the inputs afresh; the rows are drawn from that new start.
       if (state.isPlaying()) restart();
+      render();
     });
     reset.dataset.act = 'reset';
     const exit = actButton('close', T.benchExit, '', playing ? T.benchExitLocked : T.benchExit, () => setOn(false));

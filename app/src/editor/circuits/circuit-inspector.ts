@@ -277,7 +277,7 @@ export function renderCircuitInspector(el: HTMLElement, state: EditorState, kit:
 function renderBenchSwitch(el: HTMLElement, state: EditorState, circuit: Circuit, node: GraphNode, notify: Notify): void {
   const on = isBenchCard(circuit, node.id);
   const sec = section(T.benchCard);
-  const row = h('div', 'prop-row pn-field ck-expose');
+  const row = h('div', 'prop-row pn-field ck-benchrow');
   const sw = h('button', 'pn-switch');
   sw.type = 'button';
   sw.dataset.bench = node.id;

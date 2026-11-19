@@ -65,6 +65,7 @@
 .wc-cnote-live.none { color: var(--text2); font-weight: 600; }
 
 /* a card that is there only for the bench */
+.pn-props .ck-benchrow { min-height: 30px; }
 .app .wc .wc-node.wc-benchcard { outline: 2px dashed var(--warn-line); outline-offset: 3px; }
 .wc-benchtag { position: absolute; right: 8px; top: -12px; padding: 1px 8px; border: 1px solid var(--warn-line); border-radius: 999px; background: var(--warn-bg); color: var(--warn); font: 700 11px/1.5 var(--font); white-space: nowrap; pointer-events: none; }
 
