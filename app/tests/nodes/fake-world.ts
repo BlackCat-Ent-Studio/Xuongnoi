@@ -99,6 +99,7 @@ export function makeWorld(): FakeWorld {
     setItemGrip: () => undefined,
     resizeBlock: () => undefined,
     setExactBodies: () => undefined,
+    setMount: () => undefined,
     robotWheelState: () => null,
     probeAhead: () => null,
     lineOfSight: () => true,

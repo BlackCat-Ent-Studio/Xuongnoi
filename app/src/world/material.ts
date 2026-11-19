@@ -104,13 +104,19 @@ const massKgOf = (e: Entity): number => e.mass ?? DEFAULT_MASS_KG[e.kind];
 /** A loose crate under the rigid-body engine (real physics on) that nothing carries: the only kind that is weighed by its share. */
 const isFreeCrate = (e: Entity): boolean => e.rigid === true && e.kind === 'item' && e.heldBy === null && !e.inHand && !e.bullet;
 
+const NO_PARTS: ReadonlySet<Entity> = new Set();
+
 /**
  * Total mass (kg) standing on `target`, counting everything stacked on those bodies in turn. Hidden bodies and tools in hand do not count.
  * With real physics on, a loose crate loads each thing it rests on only with its share (see `massOnShared`); without it, every body that
  * overlaps counts whole.
+ *
+ * `parts` are the pieces of a machine bolted to the target (a joint hub, a link and its solid cover, a piston, a hand): they are part of
+ * the target, so they never weigh on it, wherever they sit. What rests on one of them rests on the target, and so does a crate that a
+ * hand among them holds.
  */
-export function massOn(list: readonly Entity[], target: Entity): number {
-  return list.some(isFreeCrate) ? massOnShared(list, target) : massOnWhole(list, target);
+export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity> = NO_PARTS): number {
+  return list.some(isFreeCrate) ? massOnShared(list, target, parts) : massOnWhole(list, target, parts);
 }
 
 /**
@@ -120,7 +126,7 @@ export function massOn(list: readonly Entity[], target: Entity): number {
  * the part its centre of mass is nearer to; crates stacked on a crate pass their weight on through it. Other bodies (people, robots,
  * blocks) are shared equally between the things they stand on.
  */
-function massOnShared(list: readonly Entity[], target: Entity): number {
+function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity>): number {
   const shapes = new Map<Entity, Shape>();
   const shapeFor = (e: Entity): Shape => {
     let s = shapes.get(e);
@@ -130,7 +136,13 @@ function massOnShared(list: readonly Entity[], target: Entity): number {
     }
     return s;
   };
-  const counts = (e: Entity): boolean => e.visible && !e.inHand && !e.zone;
+  /** A body something can stand on, and a body that weighs on what it stands on (the pieces bolted to the target bear, but never weigh). */
+  const bears = (e: Entity): boolean => e.visible && !e.inHand && !e.zone;
+  const counts = (e: Entity): boolean => bears(e) && !parts.has(e);
+  /** Node ids of the bolted pieces: a crate one of them grips hangs on the target with its whole weight. */
+  const hands = new Set<string>();
+  for (const p of parts) hands.add(p.ownerNodeId);
+  const gripped = (e: Entity): boolean => e.grippedBy !== undefined && hands.has(e.grippedBy);
   /** Where `base` pushes up on `top`: for a free crate the patch middle, else any overlap that old rule says is standing on it. */
   const holds = (top: Entity, base: Entity): Pt | null => {
     if (isFreeCrate(top)) return supportPoint(shapeFor(top), shapeFor(base));
@@ -139,8 +151,16 @@ function massOnShared(list: readonly Entity[], target: Entity): number {
 
   // Everything that loads the target, directly or through other bodies.
   const above: Entity[] = [];
-  const seen = new Set<Entity>([target]);
-  const queue: Entity[] = [target];
+  const seen = new Set<Entity>([target, ...parts]);
+  const queue: Entity[] = [target, ...parts];
+  if (hands.size > 0) {
+    for (const e of list) {
+      if (!counts(e) || !gripped(e)) continue;
+      seen.add(e);
+      above.push(e);
+      queue.push(e);
+    }
+  }
   while (queue.length > 0) {
     const base = queue.pop()!;
     for (const e of list) {
@@ -162,10 +182,14 @@ function massOnShared(list: readonly Entity[], target: Entity): number {
     const kg = massKgOf(e) + (got?.kg ?? 0);
     // Centre of mass of the crate together with what stands on it.
     const centre = { x: (massKgOf(e) * own.x + (got?.x ?? 0)) / kg, z: (massKgOf(e) * own.z + (got?.z ?? 0)) / kg };
+    if (gripped(e)) {
+      total += kg;
+      continue;
+    }
     const bases: Entity[] = [];
     const spots: Pt[] = [];
     for (const b of list) {
-      if (b === e || !counts(b)) continue;
+      if (b === e || !bears(b)) continue;
       const at = holds(e, b);
       if (!at) continue;
       bases.push(b);
@@ -174,7 +198,7 @@ function massOnShared(list: readonly Entity[], target: Entity): number {
     const shares = isFreeCrate(e) ? leverShares(spots, centre, kg) : bases.map(() => kg / Math.max(1, bases.length));
     bases.forEach((b, k) => {
       const f = shares[k]!;
-      if (b === target) total += f;
+      if (b === target || parts.has(b)) total += f;
       const c = carried.get(b) ?? { kg: 0, x: 0, z: 0 };
       c.kg += f;
       c.x += f * spots[k]!.x;
@@ -186,9 +210,13 @@ function massOnShared(list: readonly Entity[], target: Entity): number {
 }
 
 /** The old rule, for worlds without rigid crates: any overlap counts the whole mass. */
-function massOnWhole(list: readonly Entity[], target: Entity): number {
+function massOnWhole(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity>): number {
   const seen = new Set<string>([target.id]);
   const queue: Entity[] = [target];
+  for (const p of parts) {
+    seen.add(p.id);
+    queue.push(p);
+  }
   let total = 0;
   while (queue.length > 0) {
     const base = queue.pop()!;

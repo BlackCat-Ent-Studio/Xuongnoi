@@ -307,10 +307,12 @@ function stepVehicle(
  * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, solids: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, world: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
   const body = r.robot;
   if (!body) return;
-  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r));
+  // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
+  const solids = own && own.size > 0 ? world.filter((s) => !own.has(s)) : world;
+  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own));
   r.vel.x = flat.x;
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
@@ -420,6 +422,8 @@ export function stepPhysics(
   rules: BodyRules | null = null,
   g: number = GRAVITY,
   crates: CrateEngine | null = null,
+  /** The pieces bolted to a body (see `massOn`): they are part of a chassis, not its load. */
+  partsOf?: (body: Entity) => ReadonlySet<Entity> | undefined,
 ): void {
   const byId = new Map(entities.map((e) => [e.id, e]));
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
@@ -454,7 +458,7 @@ export function stepPhysics(
   const tractionChassis = entities.filter((e) => e.kind === 'robot' && e.visible && e.solid && e.robot?.traction === true);
   const meets: ChassisMeets | null = tractionChassis.length > 1 ? { chassis: tractionChassis, shoved: new Map(), stepped: new Set() } : null;
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, c.robot?.traction === true ? meets : null);
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, c.robot?.traction === true ? meets : null, partsOf?.(c));
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {

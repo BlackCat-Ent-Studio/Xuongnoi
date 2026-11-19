@@ -104,6 +104,45 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
   /** Characters hit by shots in the latest step, per shooter. */
   let shotHitsNow = new Map<EntityId, EntityId[]>();
 
+  /**
+   * Real physics: what each machine piece (by node id) is bolted to, as declared this tick (`setMount`). `fresh` is cleared by every
+   * step, and a mount that was not declared again before the next one is dropped by it.
+   */
+  const mounts = new Map<string, { base: EntityId; fresh: boolean }>();
+  /** Per body, the pieces bolted to it directly or through other pieces; rebuilt when first asked after the mounts or the entities changed. */
+  let boltedTo: Map<Entity, Set<Entity>> | null = null;
+  /**
+   * What a piece is bolted onto, nearest first: down the chain of mounts to the first entity whose own node is bolted to nothing
+   * (the chassis or block the whole machine stands on). Empty for anything that is not a bolted piece.
+   */
+  function boltedOnto(e: Entity): Entity[] {
+    const out: Entity[] = [];
+    let at = e;
+    for (let n = 0; n < 64; n++) {
+      const m = mounts.get(at.ownerNodeId);
+      const base = m ? byId.get(m.base) : undefined;
+      if (!base || base === e || out.includes(base)) break;
+      out.push(base);
+      at = base;
+    }
+    return out;
+  }
+  function partsOf(body: Entity): ReadonlySet<Entity> | undefined {
+    if (mounts.size === 0) return undefined;
+    if (!boltedTo) {
+      boltedTo = new Map();
+      for (const e of list) {
+        // A piece belongs to every body on the way down (a crate on the last link also loads the first one).
+        for (const base of boltedOnto(e)) {
+          let set = boltedTo.get(base);
+          if (!set) boltedTo.set(base, (set = new Set()));
+          set.add(e);
+        }
+      }
+    }
+    return boltedTo.get(body);
+  }
+
   /** Play-camera requests by camera node; `seq` orders them by when they became active. */
   const cameraCmds = new Map<string, { seq: number; cmd: PlayCameraCommand }>();
   let cameraSeq = 0;
@@ -410,6 +449,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       }
       list.push(e);
       byId.set(id, e);
+      boltedTo = null;
       if (e.kind === 'block' && e.solid) solidRev++;
       if (spec.kind === 'block' && spec.belt) {
         const axis = mode === '2d-side' ? 'x' : spec.belt.axis;
@@ -507,7 +547,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     massOn(id: EntityId): number {
       const e = byId.get(id);
-      return e && e.visible ? massOn(list, e) : 0;
+      return e && e.visible ? massOn(list, e, partsOf(e)) : 0;
     },
     massHeld(id: EntityId): number {
       const e = byId.get(id);
@@ -761,7 +801,9 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const e = byId.get(id);
       if (!e || e.kind !== 'block' || !e.visible) return false;
       markMover(e);
-      return moveBlockTo(list, e, to, mode);
+      // A solid piece of a machine moves with what it is bolted onto: it never shoves that body out of its way.
+      const onto = mounts.size > 0 && e.solid ? boltedOnto(e) : [];
+      return moveBlockTo(onto.length > 0 ? list.filter((x) => !onto.includes(x)) : list, e, to, mode);
     },
     setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
       const robot = byId.get(body)?.robot;
@@ -788,6 +830,21 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     setExactBodies(owner: string, bodies: readonly ExactBody[] | null): void {
       crates?.setExact(owner, bodies);
+    },
+    setMount(owner: string, base: EntityId | null): void {
+      // Only with real physics: without it a board weighs what stands on a body the way it always has.
+      if (realGravity === null) return;
+      const had = mounts.get(owner);
+      if (base === null) {
+        if (had) boltedTo = null;
+        mounts.delete(owner);
+        return;
+      }
+      if (had && had.base === base) had.fresh = true;
+      else {
+        mounts.set(owner, { base, fresh: true });
+        boltedTo = null;
+      }
     },
     resizeBlock(id: EntityId, size: Vec3): void {
       const e = byId.get(id);
@@ -857,7 +914,13 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       prepareTrains(list, byId, dt, mode);
       for (const e of list) if (e.belt) syncWalls(e);
       advanceBelts(list, dt);
-      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates);
+      // A piece that did not say again what it is bolted to since the last step is bolted to nothing (unplugged, or its node is gone).
+      for (const [owner, m] of mounts) {
+        if (!m.fresh) mounts.delete(owner);
+        m.fresh = false;
+      }
+      boltedTo = null;
+      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates, partsOf);
       if (rules?.respawnFallen) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),

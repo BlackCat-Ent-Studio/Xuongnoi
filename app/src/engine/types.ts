@@ -899,6 +899,13 @@ export interface WorldApi {
    */
   setExactBodies(owner: string, bodies: readonly ExactBody[] | null): void;
   /**
+   * Real physics: declares (each tick, idempotent) that everything the node `owner` made is bolted to the entity `base` (a chassis, a
+   * block, or a piece that is itself bolted to something). Bolted pieces are part of the body at the end of that chain: they never
+   * weigh on it, and what rests on them, or is gripped by them, weighs on it (see `massOn`). A node that does not refresh its mount
+   * for a tick loses it; null drops it at once. Ignored when real physics is off, so older boards weigh as they always did.
+   */
+  setMount(owner: string, base: EntityId | null): void;
+  /**
    * What one motor's wheel really does with real physics on: its rim speed as revolutions per minute, how fast the rim runs
    * ahead of (or behind) the ground while it slips, and whether it slips. Null when real physics is off, the wheel is not
    * mounted or it has not been stepped yet.
