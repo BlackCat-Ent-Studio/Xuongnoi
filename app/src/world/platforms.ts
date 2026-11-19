@@ -122,7 +122,12 @@ function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: r
   const pushed: Entity = { ...crate, pos: { ...crate.pos } };
   pushed.pos[axis] = (d > 0 ? pb.pos[axis] + reach : pb.pos[axis] - reach) - colliderOffset(crate, axis);
   // A crate resting on the floor sinks a fraction of a millimetre into it: only a real overlap is a squeeze.
-  return solids.some((s) => (['x', 'y', 'z'] as const).every((k) => overlap(pushed, s, k) > CRUSH_DEPTH));
+  // (The crate's bounds are worked out once for all the solids: `spanOverlap` of two bounds is `overlap` of the two bodies.)
+  const where = boundsBox(pushed);
+  return solids.some((s) => {
+    const sb = boundsBox(s);
+    return spanOverlap(where, sb, 'x') > CRUSH_DEPTH && spanOverlap(where, sb, 'y') > CRUSH_DEPTH && spanOverlap(where, sb, 'z') > CRUSH_DEPTH;
+  });
 }
 
 /**

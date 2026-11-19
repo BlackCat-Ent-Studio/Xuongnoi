@@ -1,6 +1,6 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
-import { boundsBox, boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox } from './collider';
+import { boundsBox, boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox, spanOverlap } from './collider';
 import { mulQuat, obbSeparation, yawQuat } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
@@ -596,5 +596,10 @@ export function stepPhysics(
 
 /** True when the box overlaps a solid block (used to keep dropped items out of walls). */
 export function overlapsSolid(box: Entity, solids: readonly Entity[]): boolean {
-  return solids.some((s) => overlapsAll(box, s));
+  // `overlapsAll` of the box and each solid, with the box's bounds (a turned crate's take some working out) made once.
+  const bb = boundsBox(box);
+  return solids.some((s) => {
+    const sb = boundsBox(s);
+    return spanOverlap(bb, sb, 'x') > SKIN && spanOverlap(bb, sb, 'y') > SKIN && spanOverlap(bb, sb, 'z') > SKIN;
+  });
 }
