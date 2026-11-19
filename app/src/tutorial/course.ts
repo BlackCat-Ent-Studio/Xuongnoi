@@ -18,7 +18,7 @@ export interface Chapter {
  */
 export const COURSE: readonly Chapter[] = [
   { id: 'basics', title: 'Làm quen', lessonIds: ['walk-jump', 'collect-stars', 'win-lose', 'secret-door', 'step-run'] },
-  { id: 'robots', title: 'Robot', lessonIds: ['two-motor-robot', 'line-eyes', 'pid-control', 'weight-force', 'robot-arm', 'arm-steps', 'piston-push', 'share-jobs'] },
+  { id: 'robots', title: 'Robot', lessonIds: ['two-motor-robot', 'line-eyes', 'pid-control', 'weight-force', 'robot-arm', 'arm-steps', 'piston-push', 'share-jobs', 'robot-to-marker'] },
   { id: 'items', title: 'Đồ vật', lessonIds: ['carry-use', 'hand-tools', 'ui-chest'] },
   { id: 'bots', title: 'Bot tự động', lessonIds: ['make-bot', 'chores', 'chores-place', 'bot-pickaxe', 'chase-game', 'bot-senses', 'tidy-bot', 'nearest-bot', 'two-goals-bot', 'sight-forecast'] },
   { id: 'world', title: 'Thế giới', lessonIds: ['chance-zones', 'camera-portals', 'collider-gravity', 'conveyor'] },
