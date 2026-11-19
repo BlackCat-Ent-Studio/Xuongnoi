@@ -422,12 +422,13 @@ export function emptyReach(flat: 'y' | 'z' | null | undefined): HeadReach {
 
 /** Adds the way of `head` moved by `move`. False when the reach cannot be trusted for this head. */
 export function growReach(reach: HeadReach, head: Box, move: Vec3): boolean {
-  // A chassis head (`outline`) meets bodies by its outline and blocks by its box: the round of the outline holds both
-  // (its half sizes add up to more than half the side of the square that is the box).
+  // A chassis head (`outline`) meets bodies by its outline and blocks by its box: the reach holds both (the round of the
+  // outline, or half the box where that is more).
   const exact = head.exact ?? head.outline;
   // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here. (A chassis
   // outline is only ever turned about the vertical, and the round taken for it below holds it at any turn about any axis:
-  // made endless along the axis a view hides, it reaches no further along the axes the view shows.)
+  // made endless along the axis a view hides, it reaches no further along the axes the view shows. The same goes for the
+  // bodies of a flat view, which only turn about the axis it hides.)
   if (head.exact && reach.flat !== null) return false;
   const round = exact ? ROOT3 * (exact.half.x + exact.half.y + exact.half.z) : 0;
   let sum = 0;
@@ -435,7 +436,7 @@ export function growReach(reach: HeadReach, head: Box, move: Vec3): boolean {
     const start = exact ? exact.centre[k] : head.pos[k];
     const end = start + move[k];
     // The step is walked as start + direction * distance: rounding may end it a few last bits beside `end`.
-    const ext = (exact ? round : Math.abs(head.size[k]) / 2) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
+    const ext = (head.exact ? round : Math.max(round, Math.abs(head.size[k]) / 2)) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
     reach.lo[k] = Math.min(reach.lo[k], start - ext, end - ext);
     reach.hi[k] = Math.max(reach.hi[k], start + ext, end + ext);
     sum += Math.abs(start) + Math.abs(end) + ext;
@@ -470,12 +471,46 @@ export function solidsInReach(reach: HeadReach, solids: readonly Box[]): Box[] {
   });
 }
 
+/**
+ * True only when a chassis head (3D view) cannot touch, anywhere on its step, a body that lies within `round` of `centre`
+ * (`round` = how far the body reaches from that point, plus its skin). The head touches a body when no separating axis shows
+ * a gap of the skin, and the head's own three axes are among those: along one of them, the body's nearest point is at least
+ * its distance from the head's middle less `round`. So a body that stays further than that beyond the head's half size along
+ * one of the head's own axes, while the head's middle runs its step along it, is not touched. This follows the outline at any
+ * heading, where the upright reach of `HeadReach` has to take a whole round. Numbers that are not finite prove nothing.
+ */
+export function beyondOutline(outline: Obb, move: Vec3, centre: Vec3, round: number): boolean {
+  const d = { x: centre.x - outline.centre.x, y: centre.y - outline.centre.y, z: centre.z - outline.centre.z };
+  const halves = [outline.half.x, outline.half.y, outline.half.z];
+  for (let i = 0; i < 3; i++) {
+    const n = outline.axes[i]!;
+    const along = d.x * n.x + d.y * n.y + d.z * n.z;
+    const travel = move.x * n.x + move.y * n.y + move.z * n.z;
+    const far = halves[i]! + round;
+    if (!(Math.abs(along) + Math.abs(travel) + far < Infinity)) return false;
+    // The step is walked as start + direction * distance: rounding may end it a few last bits beside `travel`.
+    const slack = 1e-6 * (1 + Math.abs(along) + Math.abs(travel));
+    if (along > Math.max(0, travel) + far + slack || along < Math.min(0, travel) - far - slack) return true;
+  }
+  return false;
+}
+
+/** `beyondOutline` for a body of a plan. */
+function beyondChassisHead(outline: Obb, move: Vec3, b: PushBody): boolean {
+  const o = b.real ?? b.outline;
+  const skin = Math.abs(b.skin ?? 0);
+  return o ? beyondOutline(outline, move, o.centre, Math.hypot(o.half.x, o.half.y, o.half.z) + skin) : beyondOutline(outline, move, b.box.pos, Math.hypot(b.box.size.x, b.box.size.y, b.box.size.z) / 2 + skin);
+}
+
 /** The same push with no bodies and only the solids in reach, when the head can touch no body on its step; null otherwise. */
 function quietPush(input: PushInput, step: number): PushInput | null {
   if (input.bodies.length === 0) return null;
   const reach = emptyReach(input.flat);
-  if (!growReach(reach, input.head, { x: input.dir.x * step, y: input.dir.y * step, z: input.dir.z * step })) return null;
-  for (const b of input.bodies) if (!clearOfReach(reach, b)) return null;
+  const move = { x: input.dir.x * step, y: input.dir.y * step, z: input.dir.z * step };
+  if (!growReach(reach, input.head, move)) return null;
+  // A chassis head in the 3D view is followed by its own outline; every other head by the upright reach.
+  const chassis = !input.head.exact && !input.flat ? input.head.outline : undefined;
+  for (const b of input.bodies) if (!(chassis ? beyondChassisHead(chassis, move, b) : clearOfReach(reach, b))) return null;
   return { ...input, bodies: [], solids: solidsInReach(reach, input.solids) };
 }
 

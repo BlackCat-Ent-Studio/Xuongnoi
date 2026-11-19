@@ -35,8 +35,9 @@ const showsPush = (params: Params): boolean => strParam(params, 'showPush', 'no'
 
 /**
  * The chassis of a robot: a rigid box on the ground that never moves by itself. Motors mounted on it (the "Motor"
- * piece, one per wheel) are the only thing that pushes it. Collision uses a square footprint as wide as the chassis
- * is long, so turning never snags it on a wall.
+ * piece, one per wheel) are the only thing that pushes it. Blocks (walls, the floor) meet a square footprint as wide as
+ * the chassis is long, so turning never snags it on a wall. With "Vật lý thật" on, every other body (crates, items,
+ * people, other chassis, what rests on it) meets its real outline, length by width, turned to its heading.
  */
 export const robotBodyNode: NodeDef<RobotBodyState> = {
   kind: 'robot-body',
@@ -149,7 +150,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       kind: 'robot',
       ownerNodeId: ctx.nodeId,
       position: vec3Param(params, 'position', { x: 0, y: 0.5, z: 0 }),
-      // The collision box is a square so a turning chassis never catches a corner on a wall.
+      // The collision box is a square so a turning chassis never catches a corner on a wall (the world works out the real outline from `robot`).
       size: { x: Math.max(length, width), y: Math.max(0.1, numParam(params, 'height', 0.3)), z: Math.max(length, width) },
       color: strParam(params, 'color', '#3b82f6'),
       solid: strParam(params, 'solid', 'yes') !== 'no',
