@@ -308,7 +308,7 @@ function stepVehicle(
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
  * world, `own` the pieces bolted to this chassis, `meets` the other solid chassis it may run into (real physics only).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
   const body = r.robot;
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
@@ -324,7 +324,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   if (!meets || others.length === 0) {
     const shove = beginShove(r, entities, solids, dt, mode);
     r.onGround = integrate(r, dt, mode, solids);
-    if (shove) finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode);
+    if (shove) finishShove(r, shove, byId, solids, mode);
     settleRobot(body, r.vel, mode === '2d-side');
     return;
   }
@@ -346,7 +346,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   const rivals: Rivals = { list: shove && shove.shoved.size > 0 ? others.filter((o) => !shove.shoved.has(o.id)) : others, hit: new Set() };
   r.onGround = integrate(r, dt, mode, solids, rivals);
   if (shove) {
-    for (const [o, d] of finishShove(r, shove, new Map(entities.map((e) => [e.id, e])), solids, mode, dt)) {
+    for (const [o, d] of finishShove(r, shove, byId, solids, mode, dt)) {
       if (meets.stepped.has(o)) continue;
       const was = meets.shoved.get(o);
       meets.shoved.set(o, was ? { x: was.x + d.x, z: was.z + d.z } : d);
@@ -459,7 +459,7 @@ export function stepPhysics(
   const tractionChassis = entities.filter((e) => e.kind === 'robot' && e.visible && e.solid && e.robot?.traction === true);
   const meets: ChassisMeets | null = tractionChassis.length > 1 ? { chassis: tractionChassis, shoved: new Map(), stepped: new Set() } : null;
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, c.robot?.traction === true ? meets : null, partsOf?.(c));
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, c.robot?.traction === true ? meets : null, partsOf?.(c));
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {

@@ -1,5 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox, colliderOffset, type Box, type Collidable } from './collider';
+import { boundsBox, boxOverlap, colliderBox, colliderOffset, spanOverlap, type Box, type Collidable } from './collider';
 import type { Entity } from './entity';
 
 /**
@@ -93,11 +93,6 @@ export function crateMovedIn(scene: MoveScene, crate: Entity): void {
 export function moveSceneOf(list: readonly Entity[]): MoveScene {
   const crates = list.filter((e) => e.rigid === true && e.visible && e.heldBy === null && !e.bullet);
   return { solids: list.filter((e) => e.visible && e.solid && e.kind === 'block'), bodies: list.filter(movable), crates, crateBoxes: crates.map((c) => boundsBox(c)) };
-}
-
-/** The same number as `boxOverlap` gives for the two entities these boxes are the bounds of. */
-function spanOverlap(a: Box, b: Box, axis: Axis): number {
-  return Math.min(a.pos[axis] + a.size[axis] / 2, b.pos[axis] + b.size[axis] / 2) - Math.max(a.pos[axis] - a.size[axis] / 2, b.pos[axis] - b.size[axis] / 2);
 }
 
 export function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {

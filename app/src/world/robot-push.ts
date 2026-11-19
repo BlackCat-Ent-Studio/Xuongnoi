@@ -1,5 +1,5 @@
 import type { ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox } from './collider';
+import { boundsBox, colliderBox, spanOverlap } from './collider';
 import type { Entity } from './entity';
 import { exceeds, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
 import { materialOf } from './material';
@@ -34,12 +34,23 @@ const SKIN = 1e-6;
 /** How far below a chassis's top an item's bottom may sit and still be held up by it (it rides, it is not shoved). */
 export const SUPPORT_SINK = 0.02;
 
+/** A chassis as `restsOnChassis` reads it: its collision box (whose top carries) and its bounds (whose footprint the item must be over). */
+interface ChassisTop {
+  top: Box;
+  under: Box;
+}
+
+const chassisTop = (chassis: Entity): ChassisTop => ({ top: colliderBox(chassis), under: boundsBox(chassis) });
+
+/** `restsOnChassis` for an item whose bounds (`lying`) and a chassis whose boxes are already worked out. */
+function restsOnTop(lying: Box, c: ChassisTop): boolean {
+  const bottom = lying.pos.y - lying.size.y / 2;
+  return bottom >= c.top.pos.y + c.top.size.y / 2 - SUPPORT_SINK && spanOverlap(lying, c.under, 'x') > SKIN && spanOverlap(lying, c.under, 'z') > SKIN;
+}
+
 /** True when `item` lies on (or is landing on) the top of `chassis`. */
 export function restsOnChassis(item: Entity, chassis: Entity): boolean {
-  const lying = boundsBox(item);
-  const bottom = lying.pos.y - lying.size.y / 2;
-  const rb = colliderBox(chassis);
-  return bottom >= rb.pos.y + rb.size.y / 2 - SUPPORT_SINK && boxOverlap(item, chassis, 'x') > SKIN && boxOverlap(item, chassis, 'z') > SKIN;
+  return restsOnTop(boundsBox(item), chassisTop(chassis));
 }
 
 /** What the chassis sets up before it moves, and needs again once it has moved. */
@@ -96,13 +107,17 @@ export function availablePushN(robot: NonNullable<Entity['robot']>, travel: numb
 
 function pushBodies(r: Entity, entities: readonly Entity[], mode: ViewMode, others: readonly Entity[]): PushBody[] {
   const out: PushBody[] = [];
+  // Every item is held against every chassis here, so the boxes are worked out once per body, not once per pair.
+  const own = mode !== '2d-top' ? chassisTop(r) : null;
+  const tops = mode !== '2d-top' ? others.map(chassisTop) : [];
   for (const e of entities) {
     if (e.kind !== 'item' || !e.visible || e.bullet || e.heldBy !== null || e.inHand) continue;
-    if (mode !== '2d-top' && restsOnChassis(e, r)) continue;
+    const lying = boundsBox(e);
+    if (own && restsOnTop(lying, own)) continue;
     // What rides on another solid chassis goes where that chassis goes (it is carried, not shoved off its top).
-    if (mode !== '2d-top' && others.some((o) => restsOnChassis(e, o))) continue;
+    if (tops.some((t) => restsOnTop(lying, t))) continue;
     const m = materialOf(e);
-    out.push({ id: e.id, box: boundsBox(e), massKg: m.massKg, mu: m.mu });
+    out.push({ id: e.id, box: lying, massKg: m.massKg, mu: m.mu });
   }
   return out;
 }

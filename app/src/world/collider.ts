@@ -96,14 +96,20 @@ export function colliderOffset(e: Collidable, axis: Axis): number {
   return isTurnedBody(e) ? rotateBy(e.rot!, off)[axis] : off[axis];
 }
 
-/** Overlap length of two boxes (turned ones by their bounds) along one axis (negative = gap). */
-export function boxOverlap(a: Collidable, b: Collidable, axis: Axis): number {
-  const ba = boundsBox(a);
-  const bb = boundsBox(b);
+/** Overlap length of two upright boxes along one axis (negative = gap). */
+export function spanOverlap(ba: Box, bb: Box, axis: Axis): number {
   return (
     Math.min(ba.pos[axis] + ba.size[axis] / 2, bb.pos[axis] + bb.size[axis] / 2) -
     Math.max(ba.pos[axis] - ba.size[axis] / 2, bb.pos[axis] - bb.size[axis] / 2)
   );
+}
+
+/**
+ * Overlap length of two boxes (turned ones by their bounds) along one axis (negative = gap). Code that asks this of one body
+ * against many works out `boundsBox` once and asks `spanOverlap`: the same sum, so the same number to the last bit.
+ */
+export function boxOverlap(a: Collidable, b: Collidable, axis: Axis): number {
+  return spanOverlap(boundsBox(a), boundsBox(b), axis);
 }
 
 /** Gravity multiplier from user input: 1 = normal, 0 = floats, 2 = heavy. */
