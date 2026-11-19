@@ -75,6 +75,11 @@ export interface CircuitCanvas {
    * wire of that very copy; inside a circuit opened from the list (no copy chosen) there is none.
    */
   liveWire(wire: Wire): Wire | null;
+  /**
+   * A running output (`${flat node}|${port}`) as the open board draws it: the same card, the card inside the entered copy, or
+   * the 'out' pin of a copy that passes it on. Null when the open board does not show it.
+   */
+  shownOutput(key: string): string | null;
   /** Marks a card that is there only for the test bench. Call for every plain card drawn. */
   decorate(node: GraphNode, box: HTMLElement): void;
   /** Re-read the path: crumb, note, lock. */
@@ -295,6 +300,27 @@ export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLEleme
       if (flat) return wire;
       const id = idMap.expandedId(copies, from.id);
       return id === undefined ? null : { ...wire, from: { node: id, port: wire.from.port } };
+    },
+    shownOutput(key) {
+      if (!live) return path().length === 0 ? key : null;
+      const copies = copyPath(live);
+      if (copies === null) return null;
+      const cut = key.indexOf('|');
+      const node = key.slice(0, cut);
+      const port = key.slice(cut + 1);
+      const origin = live.idMap.origins.get(node);
+      if (!origin || origin.path.length < copies.length || copies.some((c, i) => c !== origin.path[i])) return null;
+      if (origin.path.length === copies.length) return `${origin.inner}|${port}`;
+      // Deeper than the canvas: on screen only when it is what an 'out' pin of the copy drawn here passes on.
+      const copyId = origin.path[copies.length]!;
+      const copy = state.getGraph().nodes.find((n) => n.id === copyId);
+      const circuit = copy && findCircuit(board(), circuitIdOf(copy));
+      for (const pin of circuit?.pins ?? []) {
+        if (pin.dir !== 'out') continue;
+        const at = live.idMap.pinPort([...copies, copyId], pin.id);
+        if (at && at.node === node && at.port === port) return `${copyId}|${pin.id}`;
+      }
+      return null;
     },
     decorate(node, box) {
       if (!isBenchCard(openCircuit(board(), path()), node.id)) return;

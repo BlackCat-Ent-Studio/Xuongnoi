@@ -99,6 +99,8 @@ export interface WiringCanvas {
   setOverlayInsets(insets: { right: number; bottom: number }): void;
   /** Step run: is this output pin drawn on the board right now? */
   hasOutPin(nodeId: string, portId: string): boolean;
+  /** Step run: a running output as the open board draws it (see `CircuitCanvas.shownOutput`); null when it is not on screen. */
+  shownOutput(key: string): string | null;
   /** Step run: keeps only these cards, wires and pins bright (rest fades) and brings the cards on screen; null clears. */
   setStepLight(light: StepLightSet | null): void;
 }
@@ -909,6 +911,7 @@ export function createWiringCanvas({ state, getRuntime, notify, bench }: Deps): 
       overlayBR = { w: ok(right), h: ok(bottom) };
     },
     hasOutPin: (nodeId, portId) => portEls.has(portKey(nodeId, portId, 'out')),
+    shownOutput: (key) => circuitUi.shownOutput(key),
     setStepLight(light) {
       stepLayer ??= createStepLightLayer({ root: el, wireLayer, nodeEls, portEls, wirePaths, getView: () => view, setView: (v) => { view = v; applyView(); } });
       stepLayer.set(light);

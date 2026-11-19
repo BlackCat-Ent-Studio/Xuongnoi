@@ -381,11 +381,8 @@ export function createCircuitBench({ state, getRuntime, applyParams, restart, no
     if (kind === 'scope') {
       const depth = state.getCircuitPath().length;
       // Leaving the circuit that is on the bench ends its run; back on the main board the bench closes.
-      if (run && depth < run.base) {
-        state.setPlaying(false);
-        return;
-      }
-      if (on && depth === 0 && !run) on = false;
+      if (run && depth < run.base) state.setPlaying(false);
+      if (on && depth === 0) on = false;
       if ((target()?.id ?? null) !== shownFor) changed();
       else render();
       return;

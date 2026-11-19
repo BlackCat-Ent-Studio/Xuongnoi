@@ -37,7 +37,7 @@ describe('the colour of a circuit', () => {
   });
 });
 
-/** Số cố định → So sánh (in a group with "Đảo ngược") → Hiện số is not possible, so: const → compare → not, the last two grouped. */
+/** Số cố định → So sánh → Đảo ngược → Đảo ngược; the two in the middle are grouped as "Bộ kiểm". */
 function groupedBoard(): Board {
   const graph = {
     nodes: [node('so', 'const', { value: 7 }), node('cmp', 'compare', { op: 'gt' }), node('dao', 'not'), node('ra', 'not')],

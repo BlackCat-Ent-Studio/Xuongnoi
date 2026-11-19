@@ -13,6 +13,11 @@
 
 .ck-pal-incoming { margin: 2px 6px 6px; }
 
+/* six tools per circuit: they take the whole width of the row and share it, so they stay on one line in both display modes */
+.ck-pal-item .ck-pal-tools { grid-column: 1 / -1; flex-wrap: nowrap; gap: 4px; }
+.ck-pal-item .ck-pal-tools.ask, .ck-pal-item .ck-pal-tools.colour { flex-wrap: wrap; }
+.ck-pal-item .ck-pal-tool { flex: 1 1 0; width: auto; min-width: 24px; max-width: calc(var(--ctl) + 8px); }
+
 .ck-pal-starters { margin: 4px 0 2px; border-top: 1px solid var(--line); }
 .ck-pal-starthead { display: flex; align-items: center; gap: 6px; width: 100%; height: var(--ctl); padding: 0 6px; border: 0; border-radius: 6px; background: none; color: var(--text); font: 700 var(--fs-s) var(--font); text-align: left; cursor: pointer; }
 .ck-pal-starthead:hover { background: var(--panel2); }
