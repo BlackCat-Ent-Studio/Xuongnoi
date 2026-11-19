@@ -69,6 +69,21 @@ function finiteOr(n: number, fallback: number): number {
   return Number.isFinite(n) ? n : fallback;
 }
 
+/**
+ * World calls that leave every entity view as it was: questions, and commands that only set state no view shows (the HUD, the play
+ * camera, what a machine piece is bolted to, the engine's exact boxes, which hand grips a crate). `moveBlock` and `setRobotWheel`
+ * are here because they say themselves which views they changed. Every call NOT listed drops all cached views, so a call added
+ * later is safe without being listed; list one only after checking, field by field, that `viewOf` cannot see what it changes.
+ */
+const KEEPS_VIEWS: ReadonlySet<string> = new Set<keyof World>([
+  'getEntity', 'isOnGround', 'isTouching', 'tagOf', 'materialOf', 'massOn', 'massHeld', 'tooHeavyToGrab', 'heldItem', 'isHeld', 'wasInteracted',
+  'handItem', 'isInHand', 'wasUsedOn', 'healthOf', 'wasHurt', 'solidAt', 'solidBoxes', 'solidRevision', 'cameraYaw', 'probeAhead', 'lineOfSight',
+  'cargoOf', 'cameraCommand', 'portalUser', 'isRigidCrate', 'realPhysicsOn', 'robotPushN', 'robotWheelState', 'shotHits', 'entities', 'listEntities',
+  'runSeed', 'hudItems', 'debugBodies',
+  'setHud', 'setCamera', 'setMount', 'setExactBodies', 'setItemGrip',
+  'moveBlock', 'setRobotWheel',
+]);
+
 /** The crate engine, or null when it cannot start (the world then keeps the plain item rules). */
 function startCrateEngine(rapier: NonNullable<WorldOptions['rapier']>, mode: ViewMode, gravity: number, solidBodies: boolean): CrateEngine | null {
   try {
@@ -87,6 +102,16 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
   const watcher = import.meta.env.DEV && import.meta.env.MODE !== 'test' && rules ? createPhysicsWatch() : null;
   const list: Entity[] = [];
   const byId = new Map<EntityId, Entity>();
+  /** Where each entity sits in `list`. */
+  const slot = new Map<Entity, number>();
+  /**
+   * The views `listEntities` hands out, kept between calls: many cards ask for the whole list every tick, and a view is a fresh
+   * copy of everything about an entity. `views` is null whenever something a view shows may have changed (any world call outside
+   * `KEEPS_VIEWS`, and every step); `stale` are the few entities a call changed while it left all others alone. A list that was
+   * handed out is never written again (a changed view goes into a new list), so a card that kept it sees what it saw.
+   */
+  let views: readonly EntityView[] | null = null;
+  const stale = new Set<Entity>();
   const hud = new Map<string, HudItem>();
   let contacts = new Set<string>();
   let ended: { result: GameResult; message: string } | null = null;
@@ -389,7 +414,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       if (!e.visible && e.disposable) byId.delete(e.id);
       else list[keep++] = e;
     }
+    if (keep === list.length) return;
     list.length = keep;
+    slot.clear();
+    list.forEach((e, k) => slot.set(e, k));
   }
 
   const api: World = {
@@ -447,6 +475,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
           if (collider) e.collider = collider;
         }
       }
+      slot.set(e, list.length);
       list.push(e);
       byId.set(id, e);
       boltedTo = null;
@@ -801,13 +830,19 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const e = byId.get(id);
       if (!e || e.kind !== 'block' || !e.visible) return false;
       markMover(e);
+      // A block that is not solid moves alone; a solid one may carry or push other bodies along.
+      if (e.solid) views = null;
+      else stale.add(e);
       // A solid piece of a machine moves with what it is bolted onto: it never shoves that body out of its way.
       const onto = mounts.size > 0 && e.solid ? boltedOnto(e) : [];
       return moveBlockTo(onto.length > 0 ? list.filter((x) => !onto.includes(x)) : list, e, to, mode);
     },
     setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
-      const robot = byId.get(body)?.robot;
-      if (robot) setWheel(robot, wheelId, wheel);
+      const e = byId.get(body);
+      if (!e?.robot) return;
+      setWheel(e.robot, wheelId, wheel);
+      // Only this chassis's own view lists its wheels.
+      stale.add(e);
     },
     setRobotTuning(body: EntityId, tuning: { mass: number; friction: number; maxPayload?: number; pushObjects?: boolean }): void {
       const robot = byId.get(body)?.robot;
@@ -945,7 +980,18 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       return list.map(viewOf);
     },
     listEntities(): readonly EntityView[] {
-      return list.map(viewOf);
+      if (!views) {
+        views = list.map(viewOf);
+      } else if (stale.size > 0) {
+        const next = views.slice();
+        for (const e of stale) {
+          const k = slot.get(e);
+          if (k !== undefined) next[k] = viewOf(e);
+        }
+        views = next;
+      }
+      stale.clear();
+      return views;
     },
     runSeed(): number {
       return seed;
@@ -962,6 +1008,15 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     // Development and tests only: the snapshot the physics checks read. Production builds leave it out.
     ...(import.meta.env.DEV ? { debugBodies: (): readonly BodySnapshot[] => debugSnapshot() } : {}),
   };
+  // See KEEPS_VIEWS: any other call may change what a view shows, so the cached views go before it runs.
+  for (const key of Object.keys(api)) {
+    const call = Object.getOwnPropertyDescriptor(api, key)?.value as unknown;
+    if (typeof call !== 'function' || KEEPS_VIEWS.has(key)) continue;
+    (api as unknown as Record<string, unknown>)[key] = (...args: unknown[]): unknown => {
+      views = null;
+      return (call as (...a: unknown[]) => unknown)(...args);
+    };
+  }
   return api;
 
   function debugSnapshot(): readonly BodySnapshot[] {

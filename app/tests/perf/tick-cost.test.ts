@@ -15,7 +15,7 @@ import { cloneBoard, trayFleet } from './many-machines';
  * What one tick costs as a board grows: a measuring tool, not a test. It asserts nothing (the numbers depend on what else the
  * machine is doing) and only runs when asked:
  *
- *   VITE_TICK_COST="agv:1,4,8,16 tray:8,16" npx vitest run tests/perf/tick-cost --testTimeout 3000000
+ *   VITE_TICK_COST="agv:1,4,8,16 tray:8,16" npx vitest run tests/perf/tick-cost --testTimeout 3000000 --silent=false
  *   VITE_TICK_COST="profile-agv:8" ...   (or profile-tray:16) prints where the time goes instead
  *
  * `agv:N` is N copies of the AGV sample in one flat graph, `tray:N` a fleet of N small tray chassis; 60 simulated seconds each,
