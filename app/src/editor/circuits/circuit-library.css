@@ -25,5 +25,8 @@
 .ck-pal-starthead[aria-expanded='true'] .pn-chev { transform: rotate(90deg); }
 .ck-pal-starthead .ck-ic { width: 15px; height: 15px; }
 .ck-pal-starter { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; gap: 2px 9px; align-items: start; padding: 5px 6px; color: var(--text); }
-.ck-pal-starter .pn-item-text small { display: block; color: var(--text2); white-space: normal; line-height: 1.35; }
-.ck-pal-starter .ck-pal-btn { align-self: center; }
+/* name and "Thêm" share the first line; the description runs under them across the whole row */
+.ck-pal-starter .pn-item-text { display: contents; }
+.ck-pal-starter .pn-item-text b { grid-column: 2; grid-row: 1; align-self: center; white-space: normal; }
+.ck-pal-starter .pn-item-text small { grid-column: 1 / -1; grid-row: 2; display: block; color: var(--text2); white-space: normal; line-height: 1.4; }
+.ck-pal-starter .ck-pal-btn { grid-column: 3; grid-row: 1; align-self: center; }
