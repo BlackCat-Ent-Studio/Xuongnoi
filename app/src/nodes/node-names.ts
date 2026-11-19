@@ -195,6 +195,7 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       in: {
         'who': ['Đối tượng', 'Object'],
+        'thing': ['Vật cần đọc', 'Object to read'],
       },
       out: {
         'index': ['Chỉ số màu', 'Color index'],

@@ -310,7 +310,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       randomClass:
         'Nâng cao: bật thì mỗi vật mới bốc thăm một trong các loại bên dưới (loại nào cũng dễ ra như nhau) và mang màu, khối lượng của loại đó thay cho ô "Màu" và "Khối lượng". Thẻ hiện thêm cổng "Loại vừa sinh" và "Khối lượng vừa sinh". Tắt thì mảnh ghép chạy như cũ.',
       classCount: 'Số loại được dùng, từ 2 đến 6. Chỉ các loại từ 1 tới số này được bốc thăm.',
-      ...Object.fromEntries(SPAWNER_CLASSES.map((k) => [`class${k}Color`, `Màu của vật thuộc loại ${k}.${k <= 3 ? ` Mặc định trùng "Màu ${k}" của mảnh Đọc màu.` : ''}`])),
+      ...Object.fromEntries(SPAWNER_CLASSES.map((k) => [`class${k}Color`, `Màu của vật thuộc loại ${k}. Mặc định trùng "Màu ${k}" của mảnh Đọc màu.`])),
       ...Object.fromEntries(SPAWNER_CLASSES.map((k) => [`class${k}Mass`, `Khối lượng (kg) của vật thuộc loại ${k}. Để 0 thì theo loại vật: Vật thể 10 kg, Đồ vật 1 kg.`])),
       classSeed: 'Hạt giống của việc bốc thăm loại. Để 0 thì mỗi lần chạy ra thứ tự khác nhau; đặt số khác 0 thì lần nào cũng ra y hệt.',
     },

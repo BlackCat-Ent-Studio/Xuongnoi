@@ -138,7 +138,7 @@ describe('spawner random classes: on', () => {
   });
 });
 
-describe('what "Đọc màu" can read of a spawned object today', () => {
+describe('what "Đọc màu" sees of a spawned object when it looks ahead from "Đối tượng"', () => {
   /** A viewer block looking along +x at whatever the spawner drops one unit in front of it. */
   function seenIndex(template: 'block' | 'item'): { index: number; cls: number; hitKind: string | undefined } {
     const { w, fire } = setup({ template, randomClass: 'yes', classSeed: 9, classCount: 3, position: { x: 1.2, y: 0.5, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 } });
@@ -158,12 +158,12 @@ describe('what "Đọc màu" can read of a spawned object today', () => {
     expect(r.index).toBe(r.cls);
   });
 
-  it('a spawned Đồ vật (item) is not read: the sensor only looks at blocks', () => {
+  it('a spawned Đồ vật (item) is not read this way: looking ahead only finds blocks (it is read through "Vật cần đọc")', () => {
     const r = seenIndex('item');
     expect(r.index).toBe(0);
   });
 
-  it('the sensor knows three colours, the spawner up to six classes', () => {
-    expect(getNodeDef('color-sensor')!.params.filter((p) => /^color\d$/.test(p.id))).toHaveLength(3);
+  it('the sensor knows as many colours as the spawner has classes', () => {
+    expect(getNodeDef('color-sensor')!.params.filter((p) => /^color\d$/.test(p.id))).toHaveLength(6);
   });
 });
