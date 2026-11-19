@@ -305,13 +305,14 @@ function stepVehicle(
 
 /**
  * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
- * What rests on top loads the motors (nothing rests on a chassis in the top-down view).
+ * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
+ * world, `own` the pieces bolted to this chassis, `meets` the other solid chassis it may run into (real physics only).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, world: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
   const body = r.robot;
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
-  const solids = own && own.size > 0 ? world.filter((s) => !own.has(s)) : world;
+  const solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
   const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own));
   r.vel.x = flat.x;
   r.vel.z = flat.z;
@@ -332,8 +333,8 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, world: read
   const cut = { x: 0, z: 0 };
   const far = given ? Math.hypot(given.x, given.z) : 0;
   if (given && far > 1e-12) {
-    const own = ((r.vel.x * given.x + r.vel.z * given.z) / far) * dt;
-    const take = Math.min(Math.max(own, 0), far) / (far * dt);
+    const along = ((r.vel.x * given.x + r.vel.z * given.z) / far) * dt;
+    const take = Math.min(Math.max(along, 0), far) / (far * dt);
     cut.x = given.x * take;
     cut.z = given.z * take;
     r.vel.x -= cut.x;

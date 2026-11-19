@@ -53,6 +53,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       length: 'Chiều dài thanh (mét).',
       mass: 'Khối lượng thanh (kg), tính như đặt ở giữa thanh. Đây là tải mà các khớp phía trước phải giữ.',
       thickness: 'Độ dày (mét). Để vẽ, và là độ dày của vật cản khi bật "Chắn vật".',
+      width: 'Bề rộng (mét), đo ngang sang hai bên thanh. Để 0 thì thanh rộng bằng độ dày (thanh vuông). Đặt lớn hơn, ví dụ dài 0,6, dày 0,05, rộng 0,6, thì thanh thành một tấm phẳng: gắn lên khớp gập để làm khay đỡ và nghiêng đổ thùng (khi bật "Vật lý thật", nghiêng từ 35 độ trở lên thì thùng trượt xuống).',
       solid: 'Chắn vật. Thẻ mới mặc định "Tự động": chắn đường khi bảng bật "Vật lý thật" (cánh tay thật thì chắn đường), chỉ để vẽ khi tắt; bảng đã lưu từ trước giữ "Không". "Không" luôn là chỉ để vẽ, vật đi xuyên qua, kể cả khi bật "Vật lý thật". "Có" luôn chắn, tắt hay bật. Khi chắn thì thân thanh là vật cản đang đứng đúng chỗ nó đang ở: người, robot, xe và đồ vật không đi xuyên qua. Khớp phía trước đẩy được vật nhẹ, vật nặng hay tường thì chặn thanh lại. Đổi xong cần chạy lại.',
       color: 'Màu thanh.',
     },
