@@ -2,7 +2,9 @@ import { CONNECT_FAIL_TEXT } from '../../engine/text-vi';
 import type { PortRef } from '../../engine/types';
 import type { EditorState } from '../editor-state';
 import { SNAP_PX, nearestWithin, wirePath, type Point } from './graph-geometry';
-import { checkPortPair, type Compat, type PortDir } from './port-compat';
+import { checkPairIn } from '../circuits/circuit-wiring';
+import { CIRCUIT_VI } from '../circuits/circuit-text-vi';
+import type { Compat, PortDir } from './port-compat';
 
 interface Deps {
   root: HTMLElement;
@@ -81,11 +83,13 @@ export function createWireDrag({ root, wireLayer, state, notify, toWorld, showTi
       const ref = refOf(row);
       const dir = row.dataset.dir as PortDir | undefined;
       if (!ref || !dir) return false;
-      const graph = state.getGraph();
+      // Copies of circuits and (inside a circuit) its pin cards have ports too, so the check knows the whole board.
+      const board = state.getBoard();
+      const path = state.getCircuitPath();
       entries = [...root.querySelectorAll<HTMLElement>('.wc-port')].flatMap((r) => {
         const rr = refOf(r);
         const rd = r.dataset.dir as PortDir | undefined;
-        return rr && rd ? [{ row: r, ref: rr, dir: rd, compat: checkPortPair(graph, ref, dir, rr, rd) }] : [];
+        return rr && rd ? [{ row: r, ref: rr, dir: rd, compat: checkPairIn(board, path, ref, dir, rr, rd) }] : [];
       });
       start = entries.find((en) => en.row === row) ?? null;
       if (!start) return false;
@@ -125,6 +129,7 @@ export function createWireDrag({ root, wireLayer, state, notify, toWorld, showTi
       const [src, dst] = from.dir === 'out' ? [from.ref, to.ref] : [to.ref, from.ref];
       const res = state.connect(src, dst, { replace: true });
       if (!res.ok) notify(CONNECT_FAIL_TEXT[res.reason], 'error');
+      else if (res.dropped) notify(CIRCUIT_VI.pinWiresDropped(res.dropped));
     },
     cancel: finish,
   };

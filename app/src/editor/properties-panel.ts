@@ -4,6 +4,7 @@ import { NODE_CATEGORY_LABELS } from '../nodes';
 import { createHandbookHelpButton } from '../handbook/handbook-request';
 import { SOLID_BODIES_TOPIC } from '../handbook/topic-solid-bodies';
 import { REAL_PHYSICS_TOPIC } from '../handbook/topic-real-physics';
+import { appendCreateCircuit, applyCircuitLock, renderCircuitInspector, renderExposeSection } from './circuits/circuit-inspector';
 import { h } from './dom';
 import { renderGroupInspector, renderMultiSelect } from './groups/group-inspector';
 import { createLookPicker, type LookPicker } from './look-picker';
@@ -20,6 +21,8 @@ export interface PropertiesPanelOptions {
    * Only number, vec3, colour and look params reach it. `params` is the node's full param set with the change applied.
    */
   onLiveParamChange?: (nodeId: string, params: Params) => void;
+  /** Short messages from the panel's actions (the top bar shows them). */
+  notify?: (text: string, kind?: 'info' | 'error') => void;
 }
 
 /** Whether the "Nâng cao" fold is open; kept across re-renders and selections. Teachers see it open, pupils folded. */
@@ -428,7 +431,15 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     el.append(box);
   }
 
+  const notify = (text: string, kind?: 'info' | 'error'): void => options.notify?.(text, kind);
+
   function render(): void {
+    draw();
+    // Inside a circuit that is open view-only every control is greyed, with a line that says why.
+    applyCircuitLock(el, state);
+  }
+
+  function draw(): void {
     stopKeyCapture?.();
     lookPicker?.dispose();
     lookPicker = null;
@@ -439,10 +450,13 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
     const playing = state.isPlaying();
 
     if (sel?.kind === 'group' && renderGroupInspector(el, state, sel.id)) return;
+    // A copy of a circuit, a stacked block, a pin's wire, or the entered circuit itself.
+    if (renderCircuitInspector(el, state, { paramRow, notify })) return;
     if (!sel) {
       const loose = [...state.getMulti()].filter((id) => graph.nodes.some((n) => n.id === id));
       if (loose.length >= 2) {
         renderMultiSelect(el, state, loose.length);
+        appendCreateCircuit(el, state, notify);
         return;
       }
     }
@@ -481,6 +495,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
           }
           el.append(sec);
         }
+        renderExposeSection(el, state, node);
         const ports = portsSection(node, activeInputs(def, node.params), activeOutputs(def, node.params));
         if (ports) el.append(ports);
 
@@ -523,7 +538,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
       return;
     }
     if (kind === 'graph' && editingGravity) return;
-    if (kind === 'graph' || kind === 'selection' || kind === 'board' || kind === 'playing') render();
+    if (kind === 'graph' || kind === 'selection' || kind === 'board' || kind === 'playing' || kind === 'scope') render();
   });
   // Switching the display mode resets the folds to that mode's default.
   uiPrefs().subscribe(() => {

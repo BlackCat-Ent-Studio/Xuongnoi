@@ -1,6 +1,7 @@
 import { NOTE_MIN_H, NOTE_MIN_W } from '../../engine/notes';
 import type { EditorState } from '../editor-state';
 import { h } from '../dom';
+import { PIN_PREFIX } from '../circuits/circuit-wiring';
 import { groupsOf } from '../groups/group-model';
 import { zoomAround, type Point, type View } from './graph-geometry';
 import { syncNotes, type NoteParts } from './note-view';
@@ -35,10 +36,12 @@ interface Ctx {
   onEmptyDown: () => void;
   /** Where a single dropped card ends up (it slides off the card it landed on). `box` is its dropped rectangle. */
   settle: (id: string, box: { x: number; y: number }) => { x: number; y: number };
+  /** A double-click on a card that is not a group block. True when the card opened (a copy of a circuit, a stacked block). */
+  onOpenCard?: (id: string) => boolean;
 }
 
 /** Mouse and wheel handling for the canvas: pan, zoom, move items, resize notes, marquee select, wire drags. */
-export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, getView, setView, clientToWorld, render, moveWires, knots, onTap, onEmptyDown, settle }: Ctx): void {
+export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, getView, setView, clientToWorld, render, moveWires, knots, onTap, onEmptyDown, settle, onOpenCard }: Ctx): void {
   let drag: Drag | null = null;
   const kindOf = (id: string): 'note' | 'group' | 'node' =>
     noteEls.has(id) ? 'note' : groupsOf(state.getGraph()).some((g) => g.id === id) ? 'group' : 'node';
@@ -58,7 +61,9 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     const items: { id: string; ox: number; oy: number }[] = [];
     for (const i of group ? [...multi] : [id]) {
       const g = groupsOf(graph).find((x) => x.id === i);
-      const pos = graph.nodes.find((n) => n.id === i)?.pos ?? (g ? { x: g.x, y: g.y } : undefined) ?? notes.find((n) => n.id === i)?.pos;
+      // A stacked block of copies is no node of its own: it stands where it is drawn.
+      const drawn = nodeEls.get(i);
+      const pos = graph.nodes.find((n) => n.id === i)?.pos ?? (g ? { x: g.x, y: g.y } : undefined) ?? notes.find((n) => n.id === i)?.pos ?? (drawn ? { x: drawn.offsetLeft, y: drawn.offsetTop } : undefined);
       if (pos) items.push({ id: i, ox: pos.x, oy: pos.y });
     }
     if (items.length === 0) return;
@@ -76,7 +81,7 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     const target = e.target instanceof Element ? e.target : null;
     if (!target || target.closest('.wc-ui')) return;
     el.focus({ preventScroll: true });
-    const readonly = state.isPlaying();
+    const readonly = state.isReadOnly();
     if (e.button === 1) {
       e.preventDefault();
       startPan(e);
@@ -125,7 +130,8 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     const wireId = target instanceof SVGElement ? target.dataset.wire : undefined;
     if (wireId) {
       state.select({ kind: 'wire', id: wireId });
-      if (!readonly && knots.wireDown(e, wireId)) {
+      // The link between a pin card and its inner port has no bend points.
+      if (!readonly && !wireId.startsWith(PIN_PREFIX) && knots.wireDown(e, wireId)) {
         drag = { kind: 'knot' };
         el.setPointerCapture(e.pointerId);
       }
@@ -232,7 +238,12 @@ export function attachPointer({ el, state, wires, nodeEls, noteEls, noteLayer, g
     const target = document.elementFromPoint(e.clientX, e.clientY);
     if (!target || target.closest('.wc-ui, .wc-port')) return;
     const id = target.closest<HTMLElement>('.wc-group')?.dataset.id;
-    if (id) state.enterGroup(id);
+    if (id) {
+      state.enterGroup(id);
+      return;
+    }
+    const card = target.closest<HTMLElement>('.wc-node')?.dataset.id;
+    if (card) onOpenCard?.(card);
   });
 
   el.addEventListener(

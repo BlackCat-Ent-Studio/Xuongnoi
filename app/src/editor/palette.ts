@@ -22,6 +22,8 @@ export interface PaletteDeps {
    */
   onAdd(kind: string, clientX: number | null, clientY: number | null): void;
   onAddNote(): void;
+  /** The "Bảng mạch" group (the board's circuits), shown above the piece categories. */
+  circuits?: { el: HTMLElement; filter(query: string): void };
 }
 
 interface Entry {
@@ -38,7 +40,7 @@ export type PaletteElement = HTMLElement & {
   reveal(kind: string): void;
 };
 
-export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): PaletteElement {
+export function createPalette({ state, onAdd, onAddNote, circuits }: PaletteDeps): PaletteElement {
   const el = h('aside', 'palette pn-palette') as PaletteElement;
   const title = h('div', 'panel-title pn-title', TEXT_VI.paletteTitle);
 
@@ -108,10 +110,16 @@ export function createPalette({ state, onAdd, onAddNote }: PaletteDeps): Palette
     box.classList.toggle('has', searching);
     list.replaceChildren();
     list.append(makeNoteItem());
+    if (circuits) {
+      circuits.filter(searching ? query : '');
+      list.append(circuits.el);
+    }
 
     if (searching) {
       const found = searchItems(entries, query);
-      if (found.length === 0) {
+      if (found.length === 0 && circuits && !circuits.el.hidden) {
+        // Only circuits match: they are listed above, nothing else to say.
+      } else if (found.length === 0) {
         const empty = h('div', 'pn-empty');
         empty.append(h('b', '', P.noResultTitle(query.trim())), document.createElement('br'), P.noResultHint);
         list.append(empty);

@@ -1,5 +1,6 @@
 import {
   INSTANCE_CIRCUIT,
+  MAX_CIRCUIT_DEPTH,
   UNWIRED_PIN,
   circuitLookup,
   exposedIdOfKey,
@@ -21,7 +22,6 @@ import {
   type Graph,
   type GraphNode,
   type ParamDef,
-  type ParamValue,
   type PortRef,
   type PortType,
   type Wire,
@@ -187,6 +187,40 @@ export function stacksOf(graph: Graph): Map<string, GraphNode[]> {
   return out;
 }
 
+/** Where a stacked block stands: on its first copy. Dragging the block moves every copy by the same amount. */
+export const stackAnchor = (members: readonly GraphNode[]): { x: number; y: number } => ({ x: members[0]?.pos.x ?? 0, y: members[0]?.pos.y ?? 0 });
+
+/** Card ids with every stacked block replaced by the copies it stands for. */
+export function spreadStackIds(graph: Graph, ids: Iterable<string>): Set<string> {
+  const stacks = graph.stacks ? stacksOf(graph) : null;
+  const out = new Set<string>();
+  for (const id of ids) {
+    const members = stacks?.get(circuitOfStackCard(id) ?? '');
+    if (members) for (const m of members) out.add(m.id);
+    else out.add(id);
+  }
+  return out;
+}
+
+/**
+ * The graph as the canvas lays it out when copies are stacked: one pretend node per stacked block stands in for its copies
+ * and their wires are re-pointed at it. The same graph when nothing is stacked.
+ */
+export function stackScene(graph: Graph): Graph {
+  const stacks = graph.stacks ? stacksOf(graph) : null;
+  if (!stacks || stacks.size === 0) return graph;
+  const owner = new Map<string, string>();
+  const blocks: GraphNode[] = [];
+  for (const [circuitId, members] of stacks) {
+    for (const m of members) owner.set(m.id, stackCardId(circuitId));
+    blocks.push({ id: stackCardId(circuitId), kind: CIRCUIT_KIND, params: members[0]!.params, pos: stackAnchor(members) });
+  }
+  return {
+    nodes: [...graph.nodes.filter((n) => !owner.has(n.id)), ...blocks],
+    wires: graph.wires.map((w) => ({ id: w.id, from: { node: owner.get(w.from.node) ?? w.from.node, port: w.from.port }, to: { node: owner.get(w.to.node) ?? w.to.node, port: w.to.port } })),
+  };
+}
+
 /** Draw the copies of one circuit on the open graph as one stacked block (`on`), or each on its own again. */
 export function setStacked(board: Board, path: CircuitPath, circuitId: string, on: boolean): Board {
   const graph = openGraph(board, path);
@@ -345,7 +379,7 @@ export function exposableParams(board: Pick<Board, 'circuits'>, node: GraphNode,
     return (def?.params ?? []).map((p) => ({ ...p, default: node.params[p.id] ?? p.legacyDefault ?? p.default, legacyDefault: undefined, shownWhen: undefined, advanced: undefined }));
   }
   const circuit = findCircuit(board, circuitIdOf(node));
-  if (!circuit || depth > 8) return [];
+  if (!circuit || depth > MAX_CIRCUIT_DEPTH + 1) return [];
   const own: ParamDef[] = [
     { ...POSITION_DEF, default: node.params.position ?? POSITION_DEF.default },
     { ...HEADING_DEF, default: node.params.heading ?? HEADING_DEF.default },
@@ -607,7 +641,14 @@ export function createCircuitFromSelection(board: Board, path: CircuitPath, ids:
   return { ok: true, board: next, circuitId, instanceId };
 }
 
-/** The value a copy holds for one of its settings, for display: its own, else what the circuit holds. */
-export function instanceValue(node: GraphNode, def: ParamDef): ParamValue {
-  return node.params[def.id] ?? def.default;
+/** Gives one copy on the open graph its own name; an empty name removes it, so the copy shows its circuit's name again. */
+export function setInstanceName(board: Board, path: CircuitPath, nodeId: string, name: string): Board {
+  const graph = openGraph(board, path);
+  const node = graph.nodes.find((n) => n.id === nodeId);
+  if (!node || !isInstance(node)) return board;
+  const clean = name.replace(/\s+/g, ' ').trimStart().slice(0, CIRCUIT_NAME_MAX);
+  if ((typeof node.params.name === 'string' ? node.params.name : '') === clean) return board;
+  const { name: _old, ...rest } = node.params;
+  const params = clean.trim() === '' ? rest : { ...rest, name: clean };
+  return withOpenGraph(board, path, { ...graph, nodes: graph.nodes.map((n) => (n.id === nodeId ? { ...n, params } : n)) });
 }

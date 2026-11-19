@@ -110,7 +110,7 @@ export function renderMultiSelect(el: HTMLElement, state: EditorState, count: nu
   const box = h('div', 'pn-empty-state');
   box.append(h('h3', '', T.multiTitle(count)), h('p', '', T.multiBody));
   const actions = h('div', 'pn-actions');
-  actions.append(button(GROUP_VI.group, GROUP_VI.groupTip, state.isPlaying() || state.getScope() !== null, () => state.groupSelection()));
+  actions.append(button(GROUP_VI.group, GROUP_VI.groupTip, state.isPlaying() || state.getScope() !== null || state.getCircuitPath().length > 0, () => state.groupSelection()));
   box.append(actions);
   el.append(box);
 }

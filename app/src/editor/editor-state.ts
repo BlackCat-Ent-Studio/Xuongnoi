@@ -16,7 +16,7 @@ import type {
 } from '../engine/types';
 import { removeNode } from '../engine/wiring';
 import { CIRCUIT_KIND } from '../engine/types';
-import { cleanPath, findCircuit, openGraph, pasteableGraph, pruneCircuits, withOpenGraph, type CircuitStep } from './circuits/circuit-model';
+import { cleanPath, findCircuit, openGraph, pasteableGraph, pruneCircuits, spreadStackIds, stackAnchor, stackCardId, stacksOf, withOpenGraph, type CircuitStep } from './circuits/circuit-model';
 import { connectIn, hasWireIn, removeWireIn } from './circuits/circuit-wiring';
 import { PASTE_OFFSET, buildClip, pasteClip, readStoredClip, writeStoredClip } from './clipboard';
 import {
@@ -214,7 +214,7 @@ export interface EditorState {
   /** Replace the wire bend points (one undo step). An empty set drops the field so boards without knots stay as they were. */
   setKnots(knots: KnotBook): void;
   /** `replace`: an occupied input drops its old wire inside the same undo step instead of failing. */
-  connect(from: PortRef, to: PortRef, opts?: { replace?: boolean }): ConnectResult;
+  connect(from: PortRef, to: PortRef, opts?: { replace?: boolean }): ConnectResult & { dropped?: number };
   deleteSelection(): boolean;
   addNote(pos: { x: number; y: number }): string | null;
   updateNote(id: string, patch: NotePatch): void;
@@ -322,6 +322,7 @@ export function createEditorState(initial: Board): EditorState {
     board = next;
     syncPath();
     const alive = new Set(inCircuit() ? open().nodes.map((n) => n.id) : [...board.graph.nodes.map((n) => n.id), ...groupsOf(board.graph).map((g) => g.id), ...notesOf().map((n) => n.id)]);
+    for (const circuitId of stacksOf(open()).keys()) alive.add(stackCardId(circuitId));
     if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     if (selection?.kind === 'wire') {
       if (!hasWireIn(board, path, selection.id)) selection = null;
@@ -340,6 +341,15 @@ export function createEditorState(initial: Board): EditorState {
   /** Board with the moved positions applied, or null when nothing actually moved. */
   const applyMoves = (moves: readonly Move[]): { board: Board; notesMoved: boolean } | null => {
     const byId = new Map(moves.map((m) => [m.id, m.pos]));
+    // A stacked block moves every copy it stands for by the same amount.
+    if (open().stacks) {
+      for (const [circuitId, members] of stacksOf(open())) {
+        const to = byId.get(stackCardId(circuitId));
+        if (!to) continue;
+        const at = stackAnchor(members);
+        for (const m of members) if (!byId.has(m.id)) byId.set(m.id, { x: m.pos.x + to.x - at.x, y: m.pos.y + to.y - at.y });
+      }
+    }
     const main = !inCircuit();
     const groups = (main ? groupsOf(board.graph) : []).map((g) => {
       const p = byId.get(g.id);
@@ -445,6 +455,7 @@ export function createEditorState(initial: Board): EditorState {
       if (!next || next === board) return false;
       commit(next, kinds, key);
       const alive = new Set(open().nodes.map((n) => n.id));
+      for (const circuitId of stacksOf(open()).keys()) alive.add(stackCardId(circuitId));
       if (selection?.kind === 'node' && !alive.has(selection.id)) setSelectionState(null, new Set());
       else if (selection?.kind === 'wire' && !hasWireIn(board, path, selection.id)) setSelectionState(null, new Set());
       return true;
@@ -595,7 +606,8 @@ export function createEditorState(initial: Board): EditorState {
         selection = null;
         emit('selection');
       }
-      return { ok: true };
+      // `dropped`: outside wires taken off a pin that changed type.
+      return res.dropped > 0 ? { ok: true, dropped: res.dropped } : { ok: true };
     },
     deleteSelection() {
       if (frozen()) return false;
@@ -609,7 +621,7 @@ export function createEditorState(initial: Board): EditorState {
       }
       if (multi.size === 0) return false;
       let graph = open();
-      const doomed = new Set(multi);
+      const doomed = spreadStackIds(open(), multi);
       if (!inCircuit()) for (const g of groupsOf(graph)) if (multi.has(g.id)) for (const id of g.nodeIds) doomed.add(id);
       for (const n of open().nodes) if (doomed.has(n.id)) graph = removeNode(graph, n.id);
       const keptNotes = inCircuit() ? notesOf() : notesOf().filter((n) => !multi.has(n.id));
@@ -659,7 +671,7 @@ export function createEditorState(initial: Board): EditorState {
       return true;
     },
     copy() {
-      const c = buildClip(clipSource(), multi);
+      const c = buildClip(clipSource(), spreadStackIds(open(), multi));
       if (!c) return 0;
       clip = c;
       pasteStep = 0;
@@ -676,7 +688,7 @@ export function createEditorState(initial: Board): EditorState {
     },
     duplicate() {
       if (frozen()) return 0;
-      const c = buildClip(clipSource(), multi);
+      const c = buildClip(clipSource(), spreadStackIds(open(), multi));
       return c ? insertClip(c, 1) : 0;
     },
   };
