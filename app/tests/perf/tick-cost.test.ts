@@ -172,6 +172,11 @@ describe.skipIf(plan === '')('cost of one tick as the board grows (measuring too
       const row = `| ${job.what} x${job.n} | ${run.cards} | ${run.world.entities().length} | ${f3(run.compileMs)} | ${f3(ms.reduce((a, c) => a + c, 0) / ms.length)} | ${f3(q(0.5))} | ${f3(q(0.95))} | ${f3(q(0.99))} | ${f3(sorted[sorted.length - 1]!)} | ${f3(Math.max(...ms.slice(60)))} | ${hash.toString(16)} |`;
       rows.push(row);
       console.log(row);
+      // Where in the run the time goes: the mean of every 5 simulated seconds.
+      const per = Math.round(5 / TICK_DT);
+      const parts: string[] = [];
+      for (let k = 0; k < ms.length; k += per) parts.push((ms.slice(k, k + per).reduce((a, c) => a + c, 0) / Math.min(per, ms.length - k)).toFixed(1));
+      console.log(`  ${job.what} x${job.n} by 5 s: ${parts.join(' ')}`);
       run.world.dispose?.();
     }
     console.log(rows.join('\n'));
