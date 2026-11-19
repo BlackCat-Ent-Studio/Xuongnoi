@@ -425,8 +425,10 @@ export function growReach(reach: HeadReach, head: Box, move: Vec3): boolean {
   // A chassis head (`outline`) meets bodies by its outline and blocks by its box: the round of the outline holds both
   // (its half sizes add up to more than half the side of the square that is the box).
   const exact = head.exact ?? head.outline;
-  // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here.
-  if (exact && reach.flat !== null) return false;
+  // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here. (A chassis
+  // outline is only ever turned about the vertical, and the round taken for it below holds it at any turn about any axis:
+  // made endless along the axis a view hides, it reaches no further along the axes the view shows.)
+  if (head.exact && reach.flat !== null) return false;
   const round = exact ? ROOT3 * (exact.half.x + exact.half.y + exact.half.z) : 0;
   let sum = 0;
   for (const k of reach.shown) {
