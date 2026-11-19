@@ -1,0 +1,71 @@
+ahead-sensor	Dò phía trước	in:who:object	out:blocked:bool,distance:number,thing:object,hit:bool
+and	Và	in:a:bool,b:bool	out:out:bool
+angle-diff	Chênh lệch góc	in:a:number,b:number	out:diff:number
+block	Vật thể	in:hide:bool,show:bool,pick:number,run:bool,reverse:bool,hiddenWhile:bool	out:self:object,usedOn:bool
+bool-to-number	Đổi thành số	in:on:bool	out:value:number
+camera	Máy quay	in:on:bool,target:object,zoom:number,shake:bool	out:active:bool
+cargo	Chở hàng	in:vehicle:object,load:bool,unload:bool,unloadAll:bool	out:count:number,loaded:bool,unloaded:bool,top:object,typeCount:number
+carry	Khiêng đồ	in:character:object,grab:bool,drop:bool,throw:bool	out:holding:bool,heldItem:object
+character	Nhân vật	in:moveX:number,moveY:number,jump:bool	out:self:object,onGround:bool,x:number,y:number,z:number
+chase	Đuổi / Trốn	in:self:object,target:object,go:bool	out:moveX:number,moveY:number,jump:bool,seeing:bool
+color-sensor	Đọc màu	in:who:object	out:index:number,match:bool
+compare	So sánh	in:a:number,b:number	out:out:bool
+const	Số cố định	in:	out:value:number
+counter	Bộ đếm	in:up:bool,down:bool,reset:bool,addAmount:number,add:bool,setAmount:number,set:bool	out:value:number,reached:bool
+distance	Đo khoảng cách	in:a:object,b:object	out:distance:number,within:bool
+enter-exit	Lên / Xuống xe	in:character:object,enter:bool,exit:bool,press:bool	out:inVehicle:bool,vehicle:object
+fight	Đánh địch	in:self:object,target:object,go:bool	out:moveX:number,moveY:number,jump:bool,attack:bool
+force-sensor	Cảm biến lực / Cân	in:who:object	out:force:number,mass:number,loaded:bool
+go-to	Di chuyển	in:self:object,target:object,go:bool,target2:object,useTarget2:bool	out:moveX:number,moveY:number,jump:bool,arrived:bool,arrivedPulse:bool,arrivedAt1:bool,arrivedAt2:bool
+gripper	Tay kẹp	in:base:object,close:bool,force:number	out:holding:bool,held:object,gripForce:number,slipped:bool,crushedOut:bool,inReach:bool,candidate:object
+guide-arrow	Mũi tên chỉ đường	in:from:object,to:object,show:bool	out:distance:number
+hand-tool	Cầm dụng cụ	in:character:object,equip:bool,unequip:bool,toggle:bool,use:bool	out:holding:bool,tool:object,used:bool,hit:object
+health	Máu	in:self:object,heal:bool	out:hp:number,hurtPulse:bool,dead:bool
+interact	Tương tác	in:character:object,press:bool	out:fired:bool,target:object
+item	Đồ vật	in:hide:bool,show:bool	out:self:object,held:bool,interacted:bool,inHand:bool,usedOn:bool
+joint	Khớp xoay (Servo)	in:base:object,angle:number,power:bool	out:tip:object,angleNow:number,load:number,overloaded:bool,reached:bool
+key	Phím bấm	in:	out:held:bool,pressed:bool
+latch	Công tắc nhớ	in:set:bool,reset:bool,toggle:bool	out:on:bool
+line-sensor	Cảm biến dò line	in:who:object,track:object	out:onLine:bool,level:number,entered:bool,left:bool
+line-track	Đường line	in:	out:self:object
+linear-actuator	Xi lanh đẩy	in:base:object,extend:bool,position:number	out:tip:object,positionNow:number,extended:bool,retracted:bool,force:number,overloaded:bool
+link	Thanh nối	in:base:object	out:tip:object
+map-range	Quy đổi khoảng	in:value:number	out:value:number
+math	Phép tính	in:a:number,b:number	out:out:number
+motor	Động cơ	in:body:object,power:number	out:rpm:number,turning:bool
+moving-platform	Bệ di chuyển	in:run:bool	out:self:object,moving:bool,arrived:bool
+nearest-item	Tìm đồ gần nhất	in:who:object,pause:bool,i1:object,i2:object,i3:object,i4:object	out:item:object,found:bool,distance:number
+next-free-slot	Ô trống kế tiếp	in:s1:object,s2:object,s3:object,s4:object	out:slot:object,full:bool
+not	Đảo ngược	in:in:bool	out:out:bool
+on-start	Khi bắt đầu	in:	out:fired:bool,started:bool
+or	Hoặc	in:a:bool,b:bool	out:out:bool
+patrol	Đi tuần	in:self:object,on:bool	out:moveX:number,moveY:number,atEnd:bool,route:object
+pid	Bộ điều khiển PID	in:measured:number,target:number,enable:bool,reset:bool	out:out:number,error:number,saturated:bool
+portal	Cổng dịch chuyển	in:partner:object,on:bool	out:self:object,used:bool,who:object
+random	Số ngẫu nhiên	in:roll:bool	out:value:number,rolled:bool
+robot-body	Thân robot	in:	out:self:object,speed:number,heading:number,turnRate:number
+rotating-platform	Bệ xoay	in:turn:bool,run:bool	out:self:object,angle:number,turned:bool
+route-follow	Chạy theo tuyến	in:self:object,on:bool,stop:bool,go:bool	out:moveX:number,moveY:number,jump:bool,blocked:bool,reached:bool,index:number,atPoint:bool,route:object,halted:bool
+select-number	Chọn theo số	in:value:number	out:is1:bool,is2:bool,is3:bool,is4:bool,is5:bool,is6:bool,changed:bool
+sequence	Chuỗi bước	in:next:bool,reset:bool	out:step1:bool,step2:bool,step3:bool,step4:bool,step5:bool,step6:bool,index:number,finished:bool
+shooter	Bắn đạn	in:shooter:object,target:object,fire:bool	out:hit:bool,lastHit:object
+show-number	Hiện số	in:value:number	out:
+show-text	Hiện chữ	in:show:bool,anchor:object	out:
+sight-forecast	Dự đoán tầm nhìn	in:viewer:object,target:object,patrol:object,route:object	out:window:number,safe:bool,need:number
+signal-plot	Đồ thị tín hiệu	in:a:number,b:number,c:number,pause:bool	out:
+spawner	Tạo đối tượng	in:spawn:bool,at:object,toucher:object	out:lastSpawned:object,count:number,spawned:bool,touched:bool
+speed-sensor	Đo tốc độ	in:who:object	out:speed:number,still:bool,fast:bool
+stick	Cần điều khiển	in:	out:x:number,y:number
+teleport	Dịch chuyển	in:who:object,go:bool,dest:object	out:done:bool
+timer	Hẹn giờ	in:run:bool,reset:bool	out:left:number,done:bool
+touch	Va chạm	in:a:object,b:object	out:touching:bool,began:bool,ended:bool
+ui-button	Nút bấm	in:show:bool	out:pressed:bool,held:bool
+ui-dialog	Hộp thoại	in:ask:bool	out:a1:bool,a2:bool,a3:bool,asking:bool
+ui-meter	Thanh đo	in:value:number,anchor:object,show:bool	out:
+ui-pick	Bấm vào đối tượng	in:target:object	out:pressed:bool
+ui-start	Màn hình mở đầu	in:	out:started:bool
+value-table	Bảng giá trị	in:index:number	out:value:number
+vehicle	Xe	in:moveX:number,moveY:number,stop:bool,leader:object	out:self:object,hasDriver:bool,speed:number,driver:object,crashed:bool,crashedWith:object
+vision-sensor	Tầm nhìn	in:viewer:object,target:object	out:seen:bool,gained:bool,lost:bool,nearest:object,distance:number
+win-lose	Thắng / Thua	in:win:bool,lose:bool	out:
+zone	Vùng kích hoạt	in:follow:object	out:inside:bool,entered:bool,exited:bool,count:number,first:object

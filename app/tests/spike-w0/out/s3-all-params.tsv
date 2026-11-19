@@ -1,0 +1,424 @@
+kind	param	paramKind	default	advanced	label
+ahead-sensor	reach	number	3		Tầm xa (ô)
+ahead-sensor	mountSide	number	0	adv	Gắn lệch ngang (m; âm = trái, dương = phải)
+ahead-sensor	mountForward	number	0	adv	Gắn lệch trước (m; âm = ra sau)
+ahead-sensor	lookAngle	number	0	adv	Xoay hướng nhìn (độ; âm = sang trái, dương = sang phải)
+ahead-sensor	beam	number	0	adv	Độ rộng tia (m; 0 = rộng bằng vật)
+block	position	vec3	0,0,0		Vị trí
+block	size	vec3	1,1,1		Kích thước
+block	color	color	#a3a3a3		Màu
+block	type	select	solid		Loại hộp
+block	style	select	box		Kiểu dáng
+block	signText	text			Chữ trên biển (kiểu Biển tên)
+block	color1	color	#ef4444		Màu 1
+block	color2	color	#facc15		Màu 2
+block	color3	color	#22c55e		Màu 3
+block	showHiddenOut	select	no	adv	Báo đang ẩn
+block	beltSpeed	number	0	adv	Tốc độ băng chuyền (0 = tắt)
+block	beltDir	select	x	adv	Hướng băng chuyền
+block	beltWalls	select	yes	adv	Thành chắn hai bên (kiểu Băng chuyền)
+block	colliderSize	vec3	0,0,0	adv	Cỡ vùng va chạm (0 = bằng kích thước)
+block	colliderOffset	vec3	0,0,0	adv	Lệch vùng va chạm
+block	gravityScale	number	1	adv	Hệ số trọng lực (0 = bay lơ lửng, 2 = nặng)
+block	mass	number	10	adv	Khối lượng (kg)
+block	mu	number	0.5	adv	Hệ số ma sát bề mặt (0 = trơn, 1,5 = rất nhám)
+block	crushLimit	number	0	adv	Lực chịu nén tối đa (N, 0 = không bao giờ hỏng)
+block	showDamagedOut	select	no	adv	Báo bị hỏng
+block	showWeightOut	select	no	adv	Báo trọng lượng
+bool-to-number	whenOn	number	1		Số khi bật
+bool-to-number	whenOff	number	0		Số khi tắt
+camera	mode	select	follow		Kiểu
+camera	point	vec3	0,0,0		Điểm nhìn / Lệch so với vật
+camera	zoom	number	1		Phóng to mặc định
+camera	smoothness	number	5		Độ mượt (0 = tức thì)
+camera	view	select	free		Góc nhìn (chỉ bản 3D)
+camera	shakeTime	number	0.5		Rung kéo dài (giây)
+camera	shakeStrength	number	1		Độ mạnh khi rung
+cargo	capacity	number	4		Sức chứa (số món)
+cargo	loadType	text			Loại cần chất (để trống = loại nào cũng chất)
+cargo	unloadType	text			Loại cần dỡ (để trống = món trên cùng)
+cargo	reach	number	2		Tầm với (tính từ mép xe)
+cargo	unloadGap	number	0.1	adv	Khoảng cách đặt hàng (từ mép xe)
+cargo	cellsPerLayer	select	4	adv	Số món mỗi tầng trên thùng xe
+carry	mode	select	separate		Cách dùng
+carry	throwPower	number	8		Sức ném
+carry	dropDistance	number	0	adv	Thả cách người bao xa (0 = sát người)
+carry	throwLift	number	0.5	adv	Độ ném hướng lên (0 = ném thẳng)
+carry	strength	number	0	adv	Sức nâng tối đa (kg, 0 = không giới hạn)
+carry	showTooHeavyOut	select	no	adv	Báo quá nặng
+character	position	vec3	0,1,0		Vị trí xuất hiện
+character	speed	number	5		Tốc độ chạy
+character	jumpPower	number	10		Sức nhảy
+character	color	color	#3b82f6		Màu
+character	look	select	human		Kiểu dáng
+character	role	select	player		Vai trò
+character	invulnSeconds	number	0.5	adv	Thời gian bất tử sau khi trúng đòn (giây)
+character	knockSpeed	number	7	adv	Lực bị đẩy lùi
+character	knockLift	number	5	adv	Độ bật lên khi trúng đòn
+character	colliderSize	vec3	0,0,0	adv	Cỡ vùng va chạm (0 = bằng kích thước)
+character	colliderOffset	vec3	0,0,0	adv	Lệch vùng va chạm
+character	gravityScale	number	1	adv	Hệ số trọng lực (0 = bay lơ lửng, 2 = nặng)
+character	mass	number	60	adv	Khối lượng (kg)
+character	mu	number	0.5	adv	Hệ số ma sát bề mặt (0 = trơn, 1,5 = rất nhám)
+character	crushLimit	number	0	adv	Lực chịu nén tối đa (N, 0 = không bao giờ hỏng)
+chase	mode	select	chase		Cách làm
+chase	sightRange	number	6		Tầm nhìn
+chase	giveUpRange	number	9		Bỏ cuộc khi xa hơn
+chase	catchDistance	number	0.4	adv	Khoảng bắt được
+chase	fleeReach	number	4	adv	Khoảng bắt đầu chạy trốn
+chase	slowRadius	number	0.6	adv	Chậm lại khi gần tới
+chase	pathfind	select	on		Tìm đường
+color-sensor	where	select	feet		Đọc ở
+color-sensor	want	number	1		Màu cần tìm (1, 2 hoặc 3)
+color-sensor	reach	number	1.5	adv	Đọc xa bao nhiêu (ô, khi đọc phía trước)
+color-sensor	color1	color	#ef4444	adv	Màu 1
+color-sensor	color2	color	#facc15	adv	Màu 2
+color-sensor	color3	color	#22c55e	adv	Màu 3
+compare	op	select	ge		Kiểu so sánh
+const	value	number	1		Giá trị
+counter	start	number	0		Bắt đầu từ
+counter	target	number	5		Mục tiêu
+distance	threshold	number	3		Ngưỡng "đủ gần"
+enter-exit	reach	number	1.5		Với tới xe trong (đơn vị)
+fight	range	number	1.2		Tầm đánh
+fight	attackCooldown	number	0.8		Nghỉ giữa các đòn (giây)
+fight	sightRange	number	8		Tầm nhìn
+fight	backoffSeconds	number	0.25	adv	Thời gian lùi sau mỗi đòn (giây)
+force-sensor	mode	select	scale		Cách đo
+force-sensor	smoothing	number	0		Làm mượt (giây, 0 = đo tức thì)
+go-to	targetPos	vec3	0,1,0		Vị trí đến (khi không nối Điểm đến)
+go-to	stopDistance	number	0.5		Dừng cách đích
+go-to	slowRadius	number	0.6	adv	Chậm lại khi gần tới
+go-to	settle	number	0	adv	Đứng yên bao lâu rồi mới báo "Đã đến" (giây)
+go-to	pathfind	select	on		Tìm đường
+gripper	defaultForce	number	20		Lực kẹp mặc định (N mỗi ngón)
+gripper	maxForce	number	120		Lực kẹp tối đa (N mỗi ngón)
+gripper	fingerMu	number	0.8		Ma sát của ngón μ
+gripper	width	number	1		Độ mở (m)
+gripper	grip	select	between		Cách kẹp
+gripper	reach	number	0.5		Tầm với (m, chỉ khi kẹp kiểu "trong tầm với")
+gripper	mass	number	0.5		Khối lượng tay kẹp (kg)
+gripper	fingers	number	2		Số ngón
+gripper	color	color	#f59e0b	adv	Màu
+gripper	fingerSpeed	number	1	adv	Tốc độ khép ngón (m/s)
+gripper	showFingerOuts	select	no	adv	Hiện báo ngón bị chặn
+guide-arrow	color	color	#f59e0b		Màu mũi tên
+guide-arrow	showDistance	select	yes		Hiện khoảng cách
+hand-tool	reach	number	1.3		Tầm với
+health	maxHp	number	5		Máu tối đa
+health	healAmount	number	1		Mỗi lần hồi
+health	showBar	select	yes		Thanh máu trên đầu
+interact	reach	number	1.5		Tầm với
+item	position	vec3	0,1,0		Vị trí
+item	size	vec3	0.6,0.6,0.6		Kích thước
+item	color	color	#facc15		Màu
+item	shape	select	box		Hình dạng
+item	carryable	select	yes		Cầm được không
+item	holdStyle	select	head		Cách cầm
+item	damage	number	0		Sát thương (0 = tuỳ loại)
+item	tag	text			Loại hàng (chữ, để trống nếu không cần)
+item	colliderSize	vec3	0,0,0	adv	Cỡ vùng va chạm (0 = bằng kích thước)
+item	colliderOffset	vec3	0,0,0	adv	Lệch vùng va chạm
+item	gravityScale	number	1	adv	Hệ số trọng lực (0 = bay lơ lửng, 2 = nặng)
+item	mass	number	1	adv	Khối lượng (kg)
+item	mu	number	0.5	adv	Hệ số ma sát bề mặt (0 = trơn, 1,5 = rất nhám)
+item	crushLimit	number	0	adv	Lực chịu nén tối đa (N, 0 = không bao giờ hỏng)
+item	showDamagedOut	select	no	adv	Báo bị hỏng
+item	showWeightOut	select	no	adv	Báo trọng lượng
+item	friction	number	10	adv	Độ trượt (càng lớn càng mau dừng)
+item	bounce	number	0	adv	Độ nảy (0 = không nảy, 1 = nảy lại hết)
+joint	axis	select	pitch		Trục quay
+joint	start	number	0		Góc bắt đầu (độ)
+joint	min	number	-90		Góc nhỏ nhất (độ)
+joint	max	number	90		Góc lớn nhất (độ)
+joint	maxTorque	number	50		Mô-men tối đa (N·m)
+joint	maxSpeed	number	90		Tốc độ tối đa (độ/giây)
+joint	solid	select	auto		Chắn vật (hộp khớp là vật cản; khớp quay đẩy hoặc bị chặn bởi vật)
+joint	tolerance	number	1	adv	Sai số cho phép (độ)
+joint	mount	vec3	0,0,0	adv	Lệch so với vật gắn (dọc / lên / ngang, m)
+joint	color	color	#8b5cf6	adv	Màu
+key	key	key	Space		Phím
+latch	start	select	off		Lúc đầu
+line-sensor	side	number	0		Lệch ngang (m; âm = trái, dương = phải)
+line-sensor	forward	number	0.6		Lệch trước (m; âm = ra sau)
+line-sensor	spot	number	0.3		Cỡ vòng đọc (m, đường kính)
+line-sensor	threshold	number	0.5		Ngưỡng thấy line (0 đến 1)
+line-sensor	invert	select	no		Đảo ngược (đọc nền thay vì vạch)
+line-track	shape	select	oval		Dạng đường
+line-track	center	vec3	0,0.5,0		Tâm (x, z; y = độ cao mặt sàn, m)
+line-track	length	number	12		Dài (m, các dạng có sẵn)
+line-track	breadth	number	6		Rộng (m, các dạng có sẵn)
+line-track	width	number	0.2		Bề rộng vạch (m)
+line-track	color	color	#111111		Màu vạch
+line-track	count	number	4		Số điểm (dạng "Tự vẽ")
+line-track	closed	select	yes		Khép kín thành vòng (dạng "Tự vẽ")
+line-track	smooth	select	yes		Bo tròn góc (dạng "Tự vẽ")
+line-track	radius	number	1		Bán kính bo góc (m)
+line-track	p1	vec3	-4,0,-3		Điểm 1 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p2	vec3	4,0,-3		Điểm 2 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p3	vec3	4,0,3		Điểm 3 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p4	vec3	-4,0,3		Điểm 4 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p5	vec3	0,0,0		Điểm 5 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p6	vec3	0,0,0		Điểm 6 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p7	vec3	0,0,0		Điểm 7 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p8	vec3	0,0,0		Điểm 8 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p9	vec3	0,0,0	adv	Điểm 9 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p10	vec3	0,0,0	adv	Điểm 10 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p11	vec3	0,0,0	adv	Điểm 11 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p12	vec3	0,0,0	adv	Điểm 12 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p13	vec3	0,0,0	adv	Điểm 13 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p14	vec3	0,0,0	adv	Điểm 14 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p15	vec3	0,0,0	adv	Điểm 15 (chỉ dùng x và z; dạng "Tự vẽ")
+line-track	p16	vec3	0,0,0	adv	Điểm 16 (chỉ dùng x và z; dạng "Tự vẽ")
+linear-actuator	position	vec3	0,0.3,0		Vị trí (khi chưa gắn vào vật nào)
+linear-actuator	direction	number	0		Hướng đẩy (độ, trên mặt phẳng nằm)
+linear-actuator	orient	select	ground		Hướng thẳng đứng
+linear-actuator	stroke	number	2		Hành trình (m)
+linear-actuator	maxForce	number	100		Lực đẩy tối đa (N)
+linear-actuator	speed	number	1		Tốc độ (m/s)
+linear-actuator	headSize	number	0.6		Cỡ đầu đẩy (m)
+linear-actuator	mount	vec3	0,0,0	adv	Lệch so với vật gắn (dọc / lên / ngang, m)
+linear-actuator	color	color	#0ea5e9	adv	Màu
+link	length	number	1		Chiều dài (m)
+link	mass	number	1		Khối lượng (kg)
+link	thickness	number	0.2		Độ dày (m)
+link	solid	select	auto		Chắn vật (thanh là vật cản: người, robot, xe, đồ vật không đi xuyên qua)
+link	color	color	#a3a3a3		Màu
+map-range	inMin	number	0		Thang cũ: từ
+map-range	inMax	number	1		Thang cũ: đến
+map-range	outMin	number	0		Thang mới: từ
+map-range	outMax	number	100		Thang mới: đến
+map-range	clamp	select	yes		Giữ trong khoảng
+math	op	select	add		Phép tính
+motor	side	number	0.4		Vị trí ngang trên thân (m, âm = bên trái, dương = bên phải)
+motor	forward	number	0		Vị trí dọc trên thân (m, dương = phía trước)
+motor	wheelRadius	number	0.15		Bán kính bánh (m)
+motor	maxRpm	number	120		Tốc độ tối đa (vòng/phút)
+motor	accel	number	400		Độ tăng tốc (vòng/phút mỗi giây)
+motor	maxForce	number	30		Lực kéo động cơ (N, nhân với công suất)
+motor	brakeForce	number	0	adv	Lực phanh (N mỗi động cơ, khi bật "Vật lý thật"; 0 = chỉ phanh bằng ma sát)
+motor	reverse	select	normal		Chiều quay
+motor	showTurns	select	no	adv	Hiện bộ đếm vòng ("Số vòng đã quay" và "Đặt lại vòng")
+motor	showSlip	select	no	adv	Hiện ô "Đang trượt" và "Tốc độ trượt" (khi bật "Vật lý thật")
+moving-platform	position	vec3	0,0,0		Điểm A (xuất phát)
+moving-platform	to	vec3	4,0,0		Điểm B
+moving-platform	size	vec3	3,0.5,1		Kích thước
+moving-platform	color	color	#f59e0b		Màu
+moving-platform	speed	number	2		Tốc độ (ô/giây)
+moving-platform	wait	number	1		Nghỉ ở mỗi đầu (giây)
+moving-platform	loop	select	pingpong		Cách chạy
+nearest-item	goods	text			Chỉ tìm loại hàng (để trống = mọi món)
+patrol	pointA	vec3	-3,1,0		Điểm A
+patrol	pointB	vec3	3,1,0		Điểm B
+patrol	wait	number	1		Chờ ở mỗi đầu (giây)
+patrol	turnAtEdge	select	no		Quay đầu ở mép vực
+patrol	pathfind	select	on		Tìm đường
+pid	kp	number	1		Kp (tỉ lệ)
+pid	ki	number	0		Ki (tích lũy)
+pid	kd	number	0		Kd (dự đoán)
+pid	target	number	0		Giá trị đặt (khi không nối dây)
+pid	outMin	number	-1		Điều khiển nhỏ nhất
+pid	outMax	number	1		Điều khiển lớn nhất
+pid	antiWindup	select	yes	adv	Chống tích lũy quá đà
+pid	dFilter	number	0.2	adv	Làm mượt phần D (0 đến 1)
+pid	dOnMeasurement	select	yes	adv	D tính trên giá trị đo
+pid	showParts	select	no	adv	Hiện ba phần P, I, D
+portal	position	vec3	0,1,0		Vị trí
+portal	size	vec3	1.2,2,1.2		Kích thước
+portal	color	color	#8b5cf6		Màu
+portal	pair	text			Mã cặp (hai cổng cùng mã thì nối với nhau)
+portal	cooldown	number	0.5		Nghỉ sau khi dùng (giây)
+random	min	number	1		Nhỏ nhất
+random	max	number	6		Lớn nhất
+random	whole	select	yes		Số nguyên
+random	mode	select	press		Tung khi nào
+random	seed	number	0		Hạt giống (0 = mỗi lần chạy khác nhau)
+robot-body	position	vec3	0,0.5,0		Vị trí xuất hiện
+robot-body	heading	number	0		Hướng mũi lúc đầu (độ, 0 = sang phải, 90 = xuống dưới)
+robot-body	length	number	1		Chiều dài (m)
+robot-body	width	number	0.7		Chiều rộng (m)
+robot-body	height	number	0.3		Chiều cao (m)
+robot-body	mass	number	2		Khối lượng (kg)
+robot-body	friction	number	0.8		Độ bám / ma sát mặt đất (nhỏ = trượt xa mới dừng)
+robot-body	color	color	#3b82f6		Màu
+robot-body	solid	select	yes		Chặn người đi bộ
+robot-body	maxPayload	number	0	adv	Tải tối đa (kg, 0 = không giới hạn; chở nặng hơn thì động cơ không đẩy nổi)
+robot-body	showDistance	select	no	adv	Hiện ô "Quãng đường" và "Đặt lại quãng đường"
+robot-body	showPayload	select	no	adv	Hiện ô "Khối lượng đang chở" và "Quá tải"
+robot-body	pushObjects	select	yes	adv	Đẩy được vật (thùng, đồ vật nằm trên sàn chắn đường)
+robot-body	showPush	select	no	adv	Hiện ô "Đang đẩy vật" và "Lực đang đẩy"
+robot-body	colliderSize	vec3	0,0,0	adv	Cỡ vùng va chạm (0 = bằng kích thước)
+robot-body	colliderOffset	vec3	0,0,0	adv	Lệch vùng va chạm
+robot-body	gravityScale	number	1	adv	Hệ số trọng lực (0 = bay lơ lửng, 2 = nặng)
+rotating-platform	position	vec3	0,2,0		Vị trí (tâm)
+rotating-platform	size	vec3	3,0.5,1		Kích thước
+rotating-platform	color	color	#8b5cf6		Màu
+rotating-platform	mode	select	step		Kiểu xoay
+rotating-platform	every	number	0		Tự xoay sau (giây, 0 = chỉ khi bật "Xoay")
+rotating-platform	speed	number	90		Tốc độ quay (độ/giây)
+route-follow	count	number	4		Số điểm (2 đến 32)
+route-follow	p1	vec3	-6,0.5,-6		Điểm 1
+route-follow	p2	vec3	6,0.5,-6		Điểm 2
+route-follow	p3	vec3	6,0.5,6		Điểm 3
+route-follow	p4	vec3	-6,0.5,6		Điểm 4
+route-follow	p5	vec3	0,0.5,0		Điểm 5
+route-follow	p6	vec3	0,0.5,0		Điểm 6
+route-follow	p7	vec3	0,0.5,0		Điểm 7
+route-follow	p8	vec3	0,0.5,0		Điểm 8
+route-follow	p9	vec3	0,0.5,0	adv	Điểm 9
+route-follow	p10	vec3	0,0.5,0	adv	Điểm 10
+route-follow	p11	vec3	0,0.5,0	adv	Điểm 11
+route-follow	p12	vec3	0,0.5,0	adv	Điểm 12
+route-follow	p13	vec3	0,0.5,0	adv	Điểm 13
+route-follow	p14	vec3	0,0.5,0	adv	Điểm 14
+route-follow	p15	vec3	0,0.5,0	adv	Điểm 15
+route-follow	p16	vec3	0,0.5,0	adv	Điểm 16
+route-follow	p17	vec3	0,0.5,0	adv	Điểm 17
+route-follow	p18	vec3	0,0.5,0	adv	Điểm 18
+route-follow	p19	vec3	0,0.5,0	adv	Điểm 19
+route-follow	p20	vec3	0,0.5,0	adv	Điểm 20
+route-follow	p21	vec3	0,0.5,0	adv	Điểm 21
+route-follow	p22	vec3	0,0.5,0	adv	Điểm 22
+route-follow	p23	vec3	0,0.5,0	adv	Điểm 23
+route-follow	p24	vec3	0,0.5,0	adv	Điểm 24
+route-follow	p25	vec3	0,0.5,0	adv	Điểm 25
+route-follow	p26	vec3	0,0.5,0	adv	Điểm 26
+route-follow	p27	vec3	0,0.5,0	adv	Điểm 27
+route-follow	p28	vec3	0,0.5,0	adv	Điểm 28
+route-follow	p29	vec3	0,0.5,0	adv	Điểm 29
+route-follow	p30	vec3	0,0.5,0	adv	Điểm 30
+route-follow	p31	vec3	0,0.5,0	adv	Điểm 31
+route-follow	p32	vec3	0,0.5,0	adv	Điểm 32
+route-follow	style	select	loop		Kiểu
+route-follow	follow	select	steer		Cách chạy
+route-follow	speed	number	5		Tốc độ
+route-follow	pointsFrom	select	preset	adv	Lấy điểm từ vật
+route-follow	lookAhead	number	2.5		Dừng khi có vật phía trước (đơn vị)
+route-follow	arriveRadius	number	0	adv	Bán kính tới điểm (0 = tự chọn: xe rộng hơn người)
+route-follow	railCorner	number	1.5	adv	Độ bo góc khi bám ray (0 = góc nhọn)
+route-follow	steerGain	number	2	adv	Độ gắt khi cua (xe lái bằng ga - lái)
+route-follow	stopFor	number	0	adv	Dừng ở mỗi điểm (giây, 0 = không dừng; chỉ khi chạy kiểu "Lái tới từng điểm")
+route-follow	legs	select	off	adv	Chạy từng chặng
+route-follow	readyFor	number	0	adv	Chuẩn bị trước mỗi chặng (giây, chỉ khi chạy từng chặng)
+route-follow	slowRadius	number	0.6	adv	Giảm tốc khi gần điểm (đơn vị, chỉ khi chạy từng chặng)
+route-follow	faceAtStop	select	none	adv	Khi dừng, quay mặt về
+select-number	choices	number	3		Số lựa chọn (2-12)
+sequence	stepCount	number	2		Số bước (2-12)
+sequence	loop	select	no		Làm hết thì
+sequence	showDone	select	no	adv	Hiện cổng Xong từng bước
+shooter	speed	number	14		Tốc độ đạn
+shooter	lifetime	number	1.2		Bay bao lâu (giây)
+shooter	damage	number	1		Sát thương
+shooter	size	number	0.25		Cỡ đạn
+shooter	color	color	#f97316		Màu đạn
+shooter	gravity	select	no		Rơi theo đường cong
+shooter	cooldown	number	0.3		Nghỉ giữa các phát (giây)
+show-number	label	text	Điểm		Tên hiển thị
+show-number	corner	select	top-left		Góc màn hình
+show-text	text	text	Xin chào!		Chữ
+show-text	color	color	#1d2330		Màu chữ
+show-text	corner	select	top-left		Góc màn hình (khi không gắn vào vật)
+show-text	lines	text		adv	Các dòng chữ (mỗi dòng một câu; nối "Dòng số" để chọn câu)
+sight-forecast	watch	select	point		Canh chừng
+sight-forecast	horizon	number	12	adv	Nhìn trước tối đa (giây)
+signal-plot	title	text	Tín hiệu		Tên đồ thị
+signal-plot	windowSeconds	number	10		Khoảng thời gian hiện (giây)
+signal-plot	autoScale	select	yes		Tự chỉnh thang đứng
+signal-plot	min	number	-10		Nhỏ nhất (khi không tự chỉnh)
+signal-plot	max	number	10		Lớn nhất (khi không tự chỉnh)
+signal-plot	labelA	text	Tín hiệu 1		Tên đường 1
+signal-plot	labelB	text	Tín hiệu 2		Tên đường 2
+signal-plot	labelC	text	Tín hiệu 3		Tên đường 3
+signal-plot	colorA	color	#5aa9ff		Màu đường 1
+signal-plot	colorB	color	#f7d046		Màu đường 2
+signal-plot	colorC	color	#f27ad0		Màu đường 3
+signal-plot	legend	select	yes		Hiện chú thích và số hiện tại
+signal-plot	corner	select	top-right		Góc màn hình
+signal-plot	width	number	260	adv	Rộng (điểm ảnh)
+signal-plot	height	number	150	adv	Cao (điểm ảnh)
+spawner	template	select	item		Loại
+spawner	position	vec3	0,5,0		Vị trí / lệch so với "Tại đối tượng"
+spawner	size	vec3	0.7,0.7,0.7		Kích thước
+spawner	color	color	#ef4444		Màu
+spawner	shape	select	ball		Hình dạng (đồ vật)
+spawner	solid	select	solid		Vật thể rắn không
+spawner	carryable	select	no		Đồ vật cầm được không
+spawner	maxAlive	number	3		Số lượng tối đa
+spawner	lifetime	number	5		Sống bao lâu (giây, 0 = mãi)
+spawner	mass	number	1	adv	Khối lượng (kg, 0 = theo loại: Vật thể 10, Đồ vật 1)
+spawner	mu	number	0.5	adv	Hệ số ma sát bề mặt (0 = trơn, 1,5 = rất nhám)
+spawner	crushLimit	number	0	adv	Lực chịu nén tối đa (N, 0 = không bao giờ hỏng)
+spawner	wireMaterial	select	no	adv	Hiện ô "Khối lượng" và "Lực chịu nén" (nối dây để mỗi vật mới một khác)
+speed-sensor	threshold	number	3		Ngưỡng (ô/giây)
+speed-sensor	axes	select	flat	adv	Tính theo
+stick	scheme	select	arrows		Dùng phím
+teleport	position	vec3	0,1,0		Vị trí đến (khi không nối Điểm đến)
+teleport	keepVelocity	select	no		Giữ đà đang chạy / rơi
+timer	seconds	number	30		Số giây
+timer	repeat	select	no		Tự lặp lại
+touch	grow	number	0		Nới / thu vùng chạm
+touch	mode	select	edge		Tính khi nào
+touch	hold	number	0		Chạm bao lâu mới tính (giây)
+ui-button	text	text	Bấm vào đây		Chữ trên nút
+ui-button	color	color	#2b6cff		Màu nút
+ui-button	corner	select	bottom-right		Góc màn hình
+ui-dialog	question	text	Bạn muốn làm gì?		Câu hỏi
+ui-dialog	answer1	text	Có		Câu trả lời 1
+ui-dialog	answer2	text	Không		Câu trả lời 2
+ui-dialog	answer3	text			Câu trả lời 3 (có thể để trống)
+ui-meter	label	text	Máu		Tên thanh
+ui-meter	min	number	0		Nhỏ nhất
+ui-meter	max	number	100		Lớn nhất
+ui-meter	color	color	#e11d48		Màu thanh
+ui-meter	corner	select	top-left		Góc màn hình (khi không gắn vào vật)
+ui-start	title	text	Trò chơi của tôi		Tên game
+ui-start	buttonText	text	Bấm để chơi		Chữ trên nút
+ui-start	pauseMenu	select	yes		Menu tạm dừng (nhấn Esc)
+value-table	rows	number	3		Số hàng (2-12)
+value-table	v1	number	0		Giá trị 1
+value-table	v2	number	0		Giá trị 2
+value-table	v3	number	0		Giá trị 3
+value-table	v4	number	0		Giá trị 4
+value-table	v5	number	0		Giá trị 5
+value-table	v6	number	0		Giá trị 6
+value-table	v7	number	0		Giá trị 7
+value-table	v8	number	0		Giá trị 8
+value-table	v9	number	0		Giá trị 9
+value-table	v10	number	0		Giá trị 10
+value-table	v11	number	0		Giá trị 11
+value-table	v12	number	0		Giá trị 12
+value-table	outside	select	hold		Số thứ tự ngoài bảng thì
+vehicle	position	vec3	0,0.5,0		Vị trí xuất hiện
+vehicle	model	select	car		Loại xe
+vehicle	steerMode	select	direction		Cách lái
+vehicle	maxSpeed	number	9		Tốc độ tối đa
+vehicle	accel	number	8		Độ tăng tốc
+vehicle	color	color	#ef4444		Màu
+vehicle	solid	select	yes		Chặn người đi bộ
+vehicle	control	select	driver		Ai điều khiển
+vehicle	collide	select	yes		Va chạm xe khác
+vehicle	brake	number	2	adv	Sức phanh (nhân với độ tăng tốc)
+vehicle	reverseShare	number	0.4	adv	Tốc độ lùi (phần của tốc độ tối đa)
+vehicle	crashSpeed	number	1.5	adv	Tốc độ tính là đâm
+vehicle	shove	number	0.25	adv	Lực hất khi đâm
+vehicle	towDistance	number	0	adv	Khoảng cách toa (tâm tới tâm với xe kéo; 0 = tự tính từ độ dài hai xe + khe nhỏ)
+vehicle	colliderSize	vec3	0,0,0	adv	Cỡ vùng va chạm (0 = bằng kích thước)
+vehicle	colliderOffset	vec3	0,0,0	adv	Lệch vùng va chạm
+vehicle	gravityScale	number	1	adv	Hệ số trọng lực (0 = bay lơ lửng, 2 = nặng)
+vehicle	mass	number	1000	adv	Khối lượng (kg)
+vehicle	mu	number	0.5	adv	Hệ số ma sát bề mặt (0 = trơn, 1,5 = rất nhám)
+vehicle	crushLimit	number	0	adv	Lực chịu nén tối đa (N, 0 = không bao giờ hỏng)
+vision-sensor	range	number	6		Tầm xa (ô)
+vision-sensor	angle	number	90		Góc nhìn (độ)
+vision-sensor	walls	select	yes		Tường che mắt
+vision-sensor	filter	select	player		Tính loại nào (khi chưa nối Mục tiêu)
+win-lose	winMessage	text	Bạn thắng rồi!		Lời khi thắng
+win-lose	loseMessage	text	Thua mất rồi!		Lời khi thua
+zone	center	vec3	0,1,0		Tâm vùng
+zone	size	vec3	4,3,4		Kích thước vùng
+zone	filter	select	character		Tính những gì
+zone	rotate	select	no		Xoay theo vật
+zone	goods	text			Chỉ tính loại hàng
+zone	rule	select	touch		Tính khi nào
+zone	minCount	number	1		Ít nhất bao nhiêu vật
+zone	color	color	#22c55e		Màu vùng (khi chỉnh sửa)
