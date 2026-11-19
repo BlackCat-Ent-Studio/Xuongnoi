@@ -136,16 +136,7 @@ export function countInstances(board: Board, circuitId: string): number {
  * items apart by id, and shipped boards have notes named like cards ("n1").
  */
 function freshCardId(board: Board, path: CircuitPath, graph: Graph): string {
-  const taken = new Set(graph.nodes.map((n) => n.id));
-  if (path.length === 0) {
-    for (const n of board.notes ?? []) taken.add(n.id);
-    for (const g of graph.groups ?? []) taken.add(g.id);
-  }
-  const first = nextNodeId(graph);
-  if (!taken.has(first)) return first;
-  let i = Number(first.slice(1)) + 1;
-  while (taken.has(`n${i}`)) i++;
-  return `n${i}`;
+  return nextNodeId(graph, path.length === 0 ? (board.notes ?? []).map((n) => n.id) : []);
 }
 
 export type PlaceFail = 'unknown-circuit' | 'cycle' | 'too-deep';
