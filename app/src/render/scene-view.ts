@@ -4,6 +4,7 @@ import { Humanoid } from './humanoid-model';
 import { resolveLook } from './character-styles';
 import { HealthBarLayer } from './health-bar';
 import { blockStyleOf } from '../engine/block-styles';
+import { beltLipView, isBeltFrame } from './factory-blocks';
 import { buildBlockLook, type BlockLookFigure } from './block-looks';
 import { buildItem, liesFlat, type ItemFigure } from './item-shapes';
 import { PORTAL_LOOK, PortalFigure } from './portal-model';
@@ -200,6 +201,12 @@ export class SceneView {
     };
   }
 
+  /** The view an entity is drawn from: a side wall of an open-frame belt becomes its low lip, everything else is itself. */
+  private asDrawn(e: EntityView, lipOwners: ReadonlySet<string> | null): EntityView {
+    if (!lipOwners || e.kind !== 'block' || e.zone || e.belt || e.blockStyle || !lipOwners.has(e.ownerNodeId)) return e;
+    return beltLipView(e);
+  }
+
   /** Create / update / remove objects so they match the entity list. `dt` drives character animation. */
   sync(entities: readonly EntityView[], dt = 0): void {
     const seen = new Set<string>();
@@ -210,8 +217,11 @@ export class SceneView {
     stage?.observe(entities);
     const carried = stage ? this.findCarried(entities) : null;
     const hidden = new Set<string>();
+    // Owners of open-frame belts: their side walls are drawn as a low lip, see asDrawn.
+    let lipOwners: Set<string> | null = null;
+    for (const b of entities) if (isBeltFrame(b)) (lipOwners ??= new Set()).add(b.ownerNodeId);
     for (const original of entities) {
-      const e = damagedView(original);
+      const e = this.asDrawn(damagedView(original), lipOwners);
       if (!e.visible) hidden.add(e.id);
       // A tool in hand is drawn on its holder's figure, not as a separate object.
       if (!e.visible || e.inHand) continue;
