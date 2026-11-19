@@ -21,7 +21,7 @@ export const FACTORY = {
   /** Seconds the belt stays empty before the next carton is made. */
   feedGapS: 1,
   /** A carton vanishes this long after it was made (the only thing that removes one for good). */
-  parcelLifeS: 240,
+  parcelLifeS: 150,
   belt: { topY: 0.5, fromX: 0.74, length: 2.6, width: 0.6, speed: 0.5 },
   gateX: 2.0,
   /** Where a carton stops (x of its centre): the arm lowers onto this spot. */
@@ -34,7 +34,7 @@ export const FACTORY = {
   /** The hand-over table: its centre (x, z) and the height of its top. */
   handOver: { x: -1.056, z: 0, topY: 0.34 },
   /** The chute: footprint and height (m), where its sorted cartons are put (in the chute's own frame), and how often one is moved out. */
-  chute: { side: 0.94, height: 0.75, binAt: { x: 0, y: 1.2, z: -1.5 } as Vec3, clearEveryS: 0.3 },
+  chute: { side: 0.94, height: 0.75, binAt: { x: 0, y: 1.6, z: -1.5 } as Vec3, clearEveryS: 0.3 },
   /** The rule: a carton heavier than this (kg) goes to the heavy chute whatever its colour. */
   heavyAboveKg: 5,
   heavyChute: 6,
@@ -515,7 +515,7 @@ export function createFactoryStationsBoard(): Board {
         MARGIN,
         lowest + 30,
         330,
-        'Đây là phần đứng yên của xưởng phân loại: một "Trạm nạp" và sáu "Cửa thả". Mỗi máy là một bảng mạch: bấm đúp vào khối để xem bên trong. Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ. Xe chở thùng từ bàn giao tới các cửa chưa có ở bảng này, nên thùng đầu tiên nằm trên bàn giao cho tới khi hết "Sống bao lâu" (240 giây) rồi tay máy mới gắp thùng kế.',
+        'Đây là phần đứng yên của xưởng phân loại: một "Trạm nạp" và sáu "Cửa thả". Mỗi máy là một bảng mạch: bấm đúp vào khối để xem bên trong. Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ. Xe chở thùng từ bàn giao tới các cửa chưa có ở bảng này, nên thùng đầu tiên nằm trên bàn giao cho tới khi hết "Sống bao lâu" (150 giây) rồi tay máy mới gắp thùng kế.',
       ),
       note(
         'note2',
