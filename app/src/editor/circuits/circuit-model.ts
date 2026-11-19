@@ -131,6 +131,23 @@ export function countInstances(board: Board, circuitId: string): number {
   return allGraphs(board).reduce((n, g) => n + instancesIn(g.graph, circuitId).length, 0);
 }
 
+/**
+ * An id for a new card on the open graph. On the main board it also stays clear of note and group ids: the canvas tells its
+ * items apart by id, and shipped boards have notes named like cards ("n1").
+ */
+function freshCardId(board: Board, path: CircuitPath, graph: Graph): string {
+  const taken = new Set(graph.nodes.map((n) => n.id));
+  if (path.length === 0) {
+    for (const n of board.notes ?? []) taken.add(n.id);
+    for (const g of graph.groups ?? []) taken.add(g.id);
+  }
+  const first = nextNodeId(graph);
+  if (!taken.has(first)) return first;
+  let i = Number(first.slice(1)) + 1;
+  while (taken.has(`n${i}`)) i++;
+  return `n${i}`;
+}
+
 export type PlaceFail = 'unknown-circuit' | 'cycle' | 'too-deep';
 
 const NESTING_CODES: ReadonlySet<string> = new Set(['cycle', 'too-deep']);
@@ -148,7 +165,7 @@ export type AddInstanceResult = { ok: true; board: Board; nodeId: string } | { o
 export function addInstance(board: Board, path: CircuitPath, circuitId: string, pos: { x: number; y: number }): AddInstanceResult {
   if (!findCircuit(board, circuitId)) return { ok: false, reason: 'unknown-circuit' };
   const graph = openGraph(board, path);
-  const node: GraphNode = { id: nextNodeId(graph), kind: CIRCUIT_KIND, params: instanceParams(circuitId), pos: { x: Math.round(pos.x), y: Math.round(pos.y) } };
+  const node: GraphNode = { id: freshCardId(board, path, graph), kind: CIRCUIT_KIND, params: instanceParams(circuitId), pos: { x: Math.round(pos.x), y: Math.round(pos.y) } };
   const next = withOpenGraph(board, path, { ...graph, nodes: [...graph.nodes, node] });
   const fail = nestingFail(board, next);
   return fail ? { ok: false, reason: fail } : { ok: true, board: next, nodeId: node.id };
@@ -556,12 +573,12 @@ export type FromSelectionResult =
  */
 export function createCircuitFromSelection(board: Board, path: CircuitPath, ids: ReadonlySet<string>, name = ''): FromSelectionResult {
   const host = openGraph(board, path);
-  const natural = nextNodeId(host);
+  const natural = freshCardId(board, path, host);
   const first = buildFromSelection(board, path, ids, name, natural);
   if (!first.ok) return first;
   const before = runOrder(board, null);
   if (before === null || before === runOrder(first.board, natural)) return first;
-  const taken = new Set(host.nodes.map((n) => n.id));
+  const taken = new Set([...host.nodes.map((n) => n.id), ...(path.length === 0 ? [...(board.notes ?? []).map((n) => n.id), ...(host.groups ?? []).map((g) => g.id)] : [])]);
   // An id that sorts right after each card of the host in turn, and one that sorts before them all.
   const candidates = ['!', ...[...taken].sort().map((id) => `${id}!`)].filter((id) => !taken.has(id)).slice(0, ORDER_TRIES);
   for (const id of candidates) {

@@ -10,6 +10,7 @@ import {
   deletePin,
   findCircuit,
   setStacked,
+  stackCardId,
   stacksOf,
 } from './circuit-model';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
@@ -87,7 +88,10 @@ export function openInstance(state: EditorState, nodeId: string): boolean {
 }
 
 export function stackCopies(state: EditorState, circuitId: string, on: boolean): void {
-  state.edit((b) => setStacked(b, state.getCircuitPath(), circuitId, on), ['graph']);
+  if (!state.edit((b) => setStacked(b, state.getCircuitPath(), circuitId, on), ['graph'])) return;
+  // The copy that was selected is now part of the block (or the block is gone): select what is drawn in its place.
+  if (on && stacksOf(state.getGraph()).has(circuitId)) state.select({ kind: 'node', id: stackCardId(circuitId) });
+  else if (!on && circuitOfStackCard(state.getSelection()?.id ?? '') === circuitId) state.select(null);
 }
 
 export function addPinTo(state: EditorState, circuitId: string, dir: 'in' | 'out'): void {

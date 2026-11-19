@@ -34,6 +34,8 @@ import './circuits.css';
 
 /** Room between the pin columns and the cards of the circuit (px, board units). */
 const PIN_MARGIN = 90;
+/** Height the path bar and the note under it take at the top of the board (px at 100% zoom, with some air). */
+const HEADROOM = 104;
 const PIN_WIDTH = { student: 236, teacher: 208 } as const;
 /** Where the pin columns stand when the circuit has no cards yet. */
 const EMPTY_INSIDE: Box = { x: 0, y: 0, w: 420, h: 220 };
@@ -59,6 +61,8 @@ export interface CircuitCanvas {
   renderExtras(sink: CardSink, inner: readonly Box[]): void;
   /** Boxes of the pin cards, for fitting the view and routing wires around them. */
   pinBoxes(): { id: string; box: Box }[];
+  /** Inside a circuit: a point above its cards that "fit to screen" also keeps in view, so the path bar and its note cover none of them. */
+  headroom(): Box | null;
   /** Double-click on a card: opens a copy, spreads a stack. True when it was one of those. */
   openCard(id: string): boolean;
   /** Part of the "what the cards show" signature for a card without a node definition. */
@@ -202,6 +206,10 @@ export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLEleme
         const col = el.parentElement;
         return { id, box: { x: (col?.offsetLeft ?? 0) + el.offsetLeft, y: (col?.offsetTop ?? 0) + el.offsetTop, w: el.offsetWidth, h: el.offsetHeight } };
       });
+    },
+    headroom() {
+      const first = columns[0];
+      return first ? { x: first.offsetLeft, y: first.offsetTop - HEADROOM, w: 1, h: 1 } : null;
     },
     openCard(id) {
       const stacked = circuitOfStackCard(id);

@@ -194,6 +194,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       ...(inGroup() ? [] : groupsOf(graph).map((g) => ({ x: g.x, y: g.y, ...(sizeOf(g.id) ?? { w: 200, h: 110 }) }))),
       ...stubSpots.map(stubBox),
       ...circuitUi.pinBoxes().map((p) => p.box),
+      ...[circuitUi.headroom()].filter((b): b is Box => b !== null),
       ...notesInView().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
     ];
   }
@@ -281,9 +282,15 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   }
 
   if (typeof ResizeObserver !== 'undefined') {
+    let measured = false;
     new ResizeObserver(() => {
       minimap.el.hidden = el.clientHeight < MIN_MAP_HEIGHT;
       minimap.redraw();
+      // The first draw happens before the board is on the page, when no pin has a place yet: draw the wires once it has a size.
+      if (!measured && el.clientWidth > 0) {
+        measured = true;
+        drawWires();
+      }
     }).observe(el);
   }
 
