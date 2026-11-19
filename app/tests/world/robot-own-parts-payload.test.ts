@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { TICK_DT, type ParamValue } from '../../src/engine/types';
 import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
+import { leverShares } from '../../src/world/weighing';
 import { createWorld } from '../../src/world/world';
 import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
 
@@ -40,16 +41,17 @@ function build(b: Build) {
     ['mr', 'motor', { side: 0.45, maxRpm: 90, maxForce: 6 }],
     ['p', 'const', { value: 0 }],
     ['go', 'on-start', {}],
+    ['ang', 'const', { value: 0 }],
   ];
   const wires: WireSpec[] = [
     ['body', 'self', 'ml', 'body'], ['body', 'self', 'mr', 'body'],
     ['p', 'value', 'ml', 'power'], ['p', 'value', 'mr', 'power'],
   ];
-  const joint = (z: number): Record<string, ParamValue> => ({ axis: 'pitch', start: 0, min: -90, max: 90, maxTorque: 150, mount: { x: -0.6, y: up, z }, solid: b.hub ?? 'yes' });
+  const joint = (z: number): Record<string, ParamValue> => ({ axis: 'pitch', start: 0, min: -90, max: 90, maxTorque: 150, maxSpeed: 60, mount: { x: -0.6, y: up, z }, solid: b.hub ?? 'yes' });
   let surface = TOP;
   if (b.machine === 'tray' || b.machine === 'bar') {
     nodes.push(['tilt', 'joint', joint(0)], ['tray', 'link', { length: 1, thickness: t, solid: 'yes', mass: 1, ...(b.machine === 'tray' ? { width: 0.6 } : {}) }]);
-    wires.push(['body', 'self', 'tilt', 'base'], ['go', 'started', 'tilt', 'power'], ['tilt', 'tip', 'tray', 'base']);
+    wires.push(['body', 'self', 'tilt', 'base'], ['go', 'started', 'tilt', 'power'], ['ang', 'value', 'tilt', 'angle'], ['tilt', 'tip', 'tray', 'base']);
     surface = CHASSIS.height / 2 + up + t / 2;
   } else if (b.machine === 'fork') {
     for (const [k, z] of [['a', -0.12], ['b', 0.12]] as const) {
@@ -157,6 +159,35 @@ describe('a crate resting on a piece bolted to the chassis is cargo of the chass
     expect(ratio).toBeLessThan(0.55);
     empty.world.dispose?.();
     loaded.world.dispose?.();
+  });
+});
+
+describe('a crate tipped off a tray never weighs more than it does', () => {
+  it('shares of one weight over many supports add up to the weight, wherever the centre of mass is', () => {
+    // A 3 x 3 grid of supports 0.2 m apart (the cover cells of a plate), the centre of mass inside, at an edge and beyond it.
+    const grid = [-0.2, 0, 0.2].flatMap((x) => [-0.2, 0, 0.2].map((z) => ({ x, z })));
+    for (const centre of [{ x: 0, z: 0 }, { x: 0.05, z: -0.1 }, { x: -0.2, z: 0 }, { x: -0.25, z: 0 }, { x: -0.5, z: 0.01 }, { x: -0.3, z: -0.3 }, { x: 0.7, z: 0.4 }]) {
+      const shares = leverShares(grid, centre, 3);
+      expect(shares.reduce((a, c) => a + c, 0)).toBeCloseTo(3, 9);
+      expect(Math.min(...shares)).toBeGreaterThanOrEqual(-1e-9);
+    }
+  });
+
+  it('while a 3 kg crate slides and tumbles off the tipped tray the chassis reads 3 kg, then 0: nothing in between above 3', () => {
+    const r = build({ machine: 'tray', crateKg: 3, hub: 'no' });
+    seconds(r, 1);
+    r.set('ang', { value: 45 });
+    const seen = new Set<number>();
+    for (let k = 0; k < Math.round(6 / TICK_DT); k++) {
+      r.tick();
+      const kg = Number(r.out('body', 'payload'));
+      expect(kg).toBeLessThanOrEqual(3 + 1e-6);
+      seen.add(Math.round(kg * 100) / 100);
+    }
+    expect(seen.has(3)).toBe(true);
+    expect(Number(r.out('body', 'payload'))).toBe(0);
+    expect(r.entity('crate')!.position.y).toBeLessThan(0.3);
+    r.world.dispose?.();
   });
 });
 

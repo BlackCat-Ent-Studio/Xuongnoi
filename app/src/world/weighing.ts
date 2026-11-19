@@ -124,6 +124,8 @@ export function leverShares(points: readonly Pt[], centre: Pt, weight: number): 
         }
       }
       active = best[0] === best[1] ? [best[0]] : [...best];
+      // The supports dropped here may still hold a share from an earlier pass: they carry nothing, or the shares would add up to more than the weight.
+      for (let i = 0; i < n; i++) if (!active.includes(i)) shares[i] = 0;
       continue;
     }
     // Solve M l = (W, 0, 0): the first column of the inverse of M (symmetric), by cofactors.
