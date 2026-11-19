@@ -1,5 +1,6 @@
 import { CONSOLE_TEXT as C } from './console/console-text-vi';
-import { computeIssues } from './console/issues';
+import { boardIssues } from './circuits/circuit-issues';
+import { CIRCUIT_VI } from './circuits/circuit-text-vi';
 import './console/console.css';
 import { DOCK_CONSOLE_ID } from './dock-tabs';
 import { h } from './dom';
@@ -47,7 +48,7 @@ export function mountConsoleDock(deps: { state: EditorState; onView: (nodeId: st
 
   let count = 0;
   function renderIssues(): void {
-    const issues = computeIssues(state.getGraph(), state.getMode());
+    const issues = boardIssues(state.getBoard(), state.getMode());
     count = issues.length;
     badge.hidden = count === 0;
     badge.textContent = String(count);
@@ -60,11 +61,26 @@ export function mountConsoleDock(deps: { state: EditorState; onView: (nodeId: st
       const li = h('li', 'cs-issue');
       li.append(h('span', '', it.text));
       const nodeId = it.nodeId;
-      if (nodeId) {
+      const circuitId = it.circuitId;
+      if (circuitId) {
+        // The problem is inside a circuit: go there first, then show the card when there is one.
+        const open = h('button', 'cs-btn', nodeId ? C.view : CIRCUIT_VI.issueOpen);
+        open.type = 'button';
+        open.title = CIRCUIT_VI.issueOpenTip;
+        open.addEventListener('click', () => {
+          state.exitCircuit(0);
+          state.enterCircuit({ circuit: circuitId });
+          if (nodeId) deps.onView(nodeId);
+        });
+        li.append(open);
+      } else if (nodeId) {
         const view = h('button', 'cs-btn', C.view);
         view.type = 'button';
         view.title = C.viewTip;
-        view.addEventListener('click', () => deps.onView(nodeId));
+        view.addEventListener('click', () => {
+          state.exitCircuit(0);
+          deps.onView(nodeId);
+        });
         li.append(view);
       }
       issueList.append(li);

@@ -22,6 +22,9 @@ import {
 } from '../io';
 import { createGameView } from '../render/game-view';
 import { isEnergyEnabled, setEnergyEnabled } from './graph/wire-energy';
+import { circuitFromSelection, placeInstance } from './circuits/circuit-actions';
+import { createCircuitPalette } from './circuits/circuit-palette';
+import { CIRCUIT_VI } from './circuits/circuit-text-vi';
 import { CONSOLE_TEXT } from './console/console-text-vi';
 import { mountConsoleDock, type ConsoleDock, type LogKind } from './console-dock';
 import { h, isTypingTarget } from './dom';
@@ -107,14 +110,31 @@ export function mountEditor(root: HTMLElement): void {
   });
 
   const addNoteAtCenter = (): void => {
+    if (state.getCircuitPath().length > 0) return topBar.notify(CIRCUIT_VI.noteNoNotes);
     const c = canvas.viewCenter();
     const n = state.getNotes().length % 6;
     const { blocked, visible } = canvas.placementAreas();
     state.addNote(findFreeNoteSpot({ x: c.x - 90 + n * 24, y: c.y - 55 + n * 24 }, state.getGraph(), state.getNotes(), blocked, visible));
   };
 
+  /** Where a palette item lands: where it was dropped on the board, or near the middle of the view; null when dropped elsewhere. */
+  const dropSpot = (cx: number | null, cy: number | null): { x: number; y: number } | null => {
+    if (cx !== null && cy !== null) return canvas.isOver(cx, cy) ? canvas.clientToWorld(cx, cy) : null;
+    const c = canvas.viewCenter();
+    const n = state.getGraph().nodes.length % 6;
+    return { x: c.x - 70 + n * 24, y: c.y - 40 + n * 24 };
+  };
+  const circuitPalette = createCircuitPalette({
+    state,
+    notify: (t, k) => topBar.notify(t, k),
+    onPlace(circuitId, cx, cy) {
+      const pos = dropSpot(cx, cy);
+      if (pos) placeInstance(state, circuitId, pos, (t, k) => topBar.notify(t, k));
+    },
+  });
   const palette = createPalette({
     state,
+    circuits: circuitPalette,
     onAddNote: addNoteAtCenter,
     onAdd(kind, cx, cy) {
       let pos;
@@ -175,6 +195,7 @@ export function mountEditor(root: HTMLElement): void {
     },
   });
   const props = createPropertiesPanel(state, {
+    notify: (t, k) => topBar.notify(t, k),
     onLiveParamChange(nodeId, params) {
       // The panel reports the node's full param set; send only what differs from what the running game has.
       const running = liveBase.get(nodeId) ?? {};
@@ -398,6 +419,14 @@ export function mountEditor(root: HTMLElement): void {
         { type: 'separator' },
         { type: 'item', label: GROUP_VI.group, hint: 'Ctrl G', disabled: state.isPlaying(), onSelect: groupSelected },
         { type: 'item', label: GROUP_VI.ungroup, hint: 'Ctrl Shift G', disabled: state.isPlaying(), onSelect: ungroupSelected },
+        {
+          type: 'item',
+          label: CIRCUIT_VI.fromSelectionLong,
+          disabled: state.isReadOnly() || state.getMulti().size === 0,
+          onSelect: () => {
+            if (circuitFromSelection(state, (t, k) => topBar.notify(t, k)) !== null && !isShown(canvas.el)) showCenter('graph');
+          },
+        },
         { type: 'separator' },
         { type: 'item', label: SHELL_TEXT.editArrange, icon: 'arrange', disabled: state.isPlaying(), onSelect: () => canvasAction(() => canvas.arrange()) },
         { type: 'item', label: SHELL_TEXT.editFit, icon: 'fit', onSelect: () => canvasAction(() => canvas.fitToContent()) },
@@ -513,7 +542,8 @@ export function mountEditor(root: HTMLElement): void {
   const stepRun = createStepRun({
     isPlaying: () => state.isPlaying(),
     startPlay: () => state.setPlaying(true),
-    getGraph: () => state.getGraph(),
+    // The game runs the main board's cards; inside a circuit the canvas shows none of them, so no step stops there.
+    getGraph: () => (state.getCircuitPath().length === 0 ? state.getGraph() : { nodes: [], wires: [] }),
     restingHighlight: () => state.getMulti(),
     view: gameView,
     board: canvas,
@@ -561,7 +591,8 @@ export function mountEditor(root: HTMLElement): void {
 
   const launchpad = mountLaunchpad({
     host: canvas.el,
-    nodeCount: () => state.getGraph().nodes.length,
+    // An entered circuit, even an empty one, is work in progress: the start screen stays away.
+    nodeCount: () => state.getBoard().graph.nodes.length + (state.getBoard().circuits?.length ?? 0),
     isPlaying: () => state.isPlaying(),
     tutorialActive: () => tutorial.isActive(),
     startLesson: () => tutorial.startFirst(),
@@ -799,6 +830,10 @@ export function mountEditor(root: HTMLElement): void {
       setMaximized(false);
       return;
     }
+    if (e.key === 'Escape' && state.getCircuitPath().length > 0) {
+      state.exitCircuit();
+      return;
+    }
     if (e.key === 'Escape' && state.getScope() !== null) {
       state.exitGroup();
       return;
@@ -852,6 +887,7 @@ export function mountEditor(root: HTMLElement): void {
     }
     if (e.key === 'Delete' || e.key === 'Backspace') {
       if (state.deleteSelection()) e.preventDefault();
+      else if (e.key === 'Backspace' && state.getCircuitPath().length > 0) state.exitCircuit();
       else if (e.key === 'Backspace' && state.getScope() !== null) state.exitGroup();
     }
   });

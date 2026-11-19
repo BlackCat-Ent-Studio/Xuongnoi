@@ -12,8 +12,9 @@ export const GROUP_VI = {
     'too-few': 'Chọn ít nhất 2 mảnh ghép rồi mới gom nhóm được',
     'has-group': 'Đang chọn cả một nhóm. Chưa gom nhóm vào trong nhóm được, hãy bung nhóm trước',
     'in-group': 'Đang ở trong một nhóm. Hãy quay ra bảng chính để gom nhóm',
+    'in-circuit': 'Đang ở trong một bảng mạch. Ở đây hãy dùng "Tạo bảng mạch" thay cho gom nhóm',
     locked: 'Đang chạy mô phỏng nên chưa gom được. Bấm Dừng rồi thử lại',
-  } satisfies Record<GroupFail | 'in-group' | 'locked', string>,
+  } satisfies Record<GroupFail | 'in-group' | 'in-circuit' | 'locked', string>,
   inspector: {
     name: 'Tên nhóm',
     color: 'Màu',

@@ -1,4 +1,4 @@
-import { activeInputs, activeOutputs, getNodeDef, knownOutputsOf } from '../engine/registry';
+import { activeInputs, activeOutputs, getNodeDef } from '../engine/registry';
 import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
 import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
@@ -14,10 +14,12 @@ import './graph/group.css';
 import { knotKey, wireIdOfKnotKey } from './graph/board-knots';
 import { settleDrop } from './graph/drop-settle';
 import { createKnotEditor } from './graph/knot-editor';
+import { createCircuitCanvas } from './circuits/circuit-canvas';
+import { stackScene } from './circuits/circuit-model';
+import { sceneWires, wireTypeIn } from './circuits/circuit-wiring';
 import { createGroupCrumb } from './graph/group-crumb';
 import { buildGroupView, buildStub, layoutStubs, stubBox, type StubSpot } from './graph/group-view';
 import { deriveGroupPorts, findGroup, groupOfNode, groupsOf, nodesInScope, sceneGraph } from './groups/group-model';
-import { listMissingWires } from './graph/missing-wires';
 import { createMinimap } from './graph/minimap';
 import { findFreeNodeSpot, occupiedBoxes } from './graph/node-placement';
 import { buildNodeView } from './graph/node-view';
@@ -127,6 +129,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   tip.hidden = true;
   const stubLayer = h('div', 'wc-stubs');
   world.append(wireLayer, noteLayer, stubLayer, nodeLayer, knotLayer, badgeLayer);
+  /** Copies of circuits, stacked blocks and (inside a circuit) its pin cards and path bar. */
+  const circuitUi = createCircuitCanvas({ state, layer: stubLayer, notify });
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
   let overlayBR = { w: 0, h: 0 };
@@ -173,16 +177,24 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     return { x: a.x, y: a.y, w: r.width / view.zoom, h: r.height / view.zoom };
   }
 
-  const inGroup = (): boolean => state.getScope() !== null;
-  /** Notes belong to the main board; they are hidden while a group is open. */
+  const inGroup = (): boolean => state.getScope() !== null || state.getCircuitPath().length > 0;
+  /** Notes belong to the main board; they are hidden while a group or a circuit is open. */
   const notesInView = () => (inGroup() ? [] : state.getNotes());
+
+  /** The cards of the open board, group or circuit as drawn (a stacked block counts once, its copies not at all). */
+  function innerBoxes(): Box[] {
+    const scene = stackScene({ nodes: nodesInScope(state.getGraph(), state.getScope()), wires: [] });
+    return scene.nodes.map((n) => ({ x: n.pos.x, y: n.pos.y, ...(sizeOf(n.id) ?? estimateNodeSize(n)) }));
+  }
 
   function contentBoxes(): Box[] {
     const graph = state.getGraph();
     return [
-      ...nodesInScope(graph, state.getScope()).map((n) => ({ x: n.pos.x, y: n.pos.y, ...(sizeOf(n.id) ?? estimateNodeSize(n)) })),
+      ...innerBoxes(),
       ...(inGroup() ? [] : groupsOf(graph).map((g) => ({ x: g.x, y: g.y, ...(sizeOf(g.id) ?? { w: 200, h: 110 }) }))),
       ...stubSpots.map(stubBox),
+      ...circuitUi.pinBoxes().map((p) => p.box),
+      ...[circuitUi.headroom()].filter((b): b is Box => b !== null),
       ...notesInView().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
     ];
   }
@@ -208,7 +220,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     },
     minimap.el,
   );
-  el.append(world, hint, toolbar.el, crumb.el, tip);
+  el.append(world, hint, toolbar.el, crumb.el, ...circuitUi.overlays, tip);
 
   /** Canvas-relative screen rect of an element, or null when it is not laid out. */
   function localRect(target: Element): Box | null {
@@ -270,9 +282,15 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   }
 
   if (typeof ResizeObserver !== 'undefined') {
+    let measured = false;
     new ResizeObserver(() => {
       minimap.el.hidden = el.clientHeight < MIN_MAP_HEIGHT;
       minimap.redraw();
+      // The first draw happens before the board is on the page, when no pin has a place yet: draw the wires once it has a size.
+      if (!measured && el.clientWidth > 0) {
+        measured = true;
+        drawWires();
+      }
     }).observe(el);
   }
 
@@ -287,14 +305,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     stubSpots = [];
     const graph = state.getGraph();
     const scope = state.getScope();
-    const missing = new Map<string, Set<string>>();
-    for (const m of listMissingWires(graph)) {
-      const set = missing.get(m.nodeId) ?? new Set<string>();
-      set.add(m.portId);
-      missing.set(m.nodeId, set);
-    }
+    const missing = circuitUi.missing();
     for (const node of nodesInScope(graph, scope)) {
-      const { box, dots } = buildNodeView(node, missing.get(node.id) ?? new Set());
+      if (circuitUi.hides(node.id)) continue;
+      const { box, dots } = circuitUi.card(node, missing.get(node.id)) ?? buildNodeView(node, missing.get(node.id) ?? new Set());
       for (const [k, dot] of dots) {
         const [dir, port] = k.split('|') as [PortDir, string];
         portEls.set(portKey(node.id, port, dir), dot);
@@ -303,6 +317,19 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       nodeLayer.append(box);
       nodeEls.set(node.id, box);
     }
+    circuitUi.renderExtras(
+      {
+        addCard(id, box) {
+          nodeLayer.append(box);
+          nodeEls.set(id, box);
+        },
+        addPort(node, port, dir, dot, cardId) {
+          portEls.set(portKey(node, port, dir), dot);
+          portCard.set(portKey(node, port, dir), cardId);
+        },
+      },
+      innerBoxes(),
+    );
     if (scope === null) {
       for (const group of groupsOf(graph)) {
         const inside = new Set(group.nodeIds);
@@ -333,8 +360,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   }
 
   function wireType(wire: Wire): PortType | null {
-    const from = state.getGraph().nodes.find((n) => n.id === wire.from.node);
-    return (from && knownOutputsOf(from.kind).find((p) => p.id === wire.from.port)?.type) || null;
+    return wireTypeIn(state.getBoard(), state.getCircuitPath(), wire);
   }
 
   /** Every card as a box in world space (nodes, group blocks and, inside a group, its boundary stubs). */
@@ -342,6 +368,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     const out: RouteCard[] = [];
     for (const [id, box] of nodeEls) out.push({ id, x: box.offsetLeft, y: box.offsetTop, w: box.offsetWidth, h: box.offsetHeight });
     stubSpots.forEach((spot, i) => out.push({ id: `stub:${i}`, ...stubBox(spot) }));
+    for (const p of circuitUi.pinBoxes()) out.push({ id: p.id, ...p.box });
     return out;
   }
 
@@ -428,7 +455,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     badgeEls.clear();
     const playing = state.isPlaying();
     const items: { d: Omit<WireDraw, 'g'>; a: Point; b: Point }[] = [];
-    for (const wire of state.getGraph().wires) {
+    for (const wire of sceneWires(state.getBoard(), state.getCircuitPath())) {
       const outKey = portKey(wire.from.node, wire.from.port, 'out');
       const inKey = portKey(wire.to.node, wire.to.port, 'in');
       const a = portCenter(outKey);
@@ -575,7 +602,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       .getGraph()
       .nodes.map((n) => {
         const def = getNodeDef(n.kind);
-        return def ? `${n.id}:${activeInputs(def, n.params).map((q) => q.id).join('.')}/${activeOutputs(def, n.params).map((q) => q.id).join('.')}` : n.id;
+        return def ? `${n.id}:${activeInputs(def, n.params).map((q) => q.id).join('.')}/${activeOutputs(def, n.params).map((q) => q.id).join('.')}` : circuitUi.signature(n);
       })
       .join(',');
   }
@@ -587,8 +614,9 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     syncNotes(state, noteLayer, noteEls);
     noteLayer.hidden = inGroup();
     crumb.update();
-    hint.hidden = state.getGraph().nodes.length > 0 || state.getNotes().length > 0;
-    el.classList.toggle('readonly', state.isPlaying());
+    circuitUi.update();
+    hint.hidden = state.getGraph().nodes.length > 0 || notesInView().length > 0 || state.getCircuitPath().length > 0;
+    el.classList.toggle('readonly', state.isReadOnly());
     drawWires();
   }
 
@@ -607,7 +635,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       let text: string;
       try {
         const src = state.getGraph().nodes.find((n) => n.id === wire.from.node);
-        text = formatWireValue(type, rt.getWireValue(wire), (src && getNodeDef(src.kind)?.label) || TEXT_VI.none);
+        const live = circuitUi.liveWire(wire);
+        text = live ? formatWireValue(type, rt.getWireValue(live), (src && getNodeDef(src.kind)?.label) || TEXT_VI.none) : TEXT_VI.none;
       } catch {
         text = TEXT_VI.none;
       }
@@ -624,7 +653,10 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     energyLast = now;
     if (rt) {
       try {
-        energy.update(dt, now, (w) => rt.getWireValue(w), () => rt.takeRisen?.());
+        energy.update(dt, now, (w) => {
+          const live = circuitUi.liveWire(w);
+          return live ? rt.getWireValue(live) : null;
+        }, () => rt.takeRisen?.());
       } catch {
         // A bad frame must never break the board; the next frame tries again.
       }
@@ -663,7 +695,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
 
   function findFreeSpot(want: Point, kind?: string): Point {
     const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }, liveCardMetrics()) : { w: 168, h: 90 };
-    const scene = sceneGraph(state.getGraph(), state.getScope());
+    const scene = stackScene(sceneGraph(state.getGraph(), state.getScope()));
     return findFreeNodeSpot(want, size, [...occupiedBoxes(scene, notesInView(), sizeOf), ...blockedWorld()], visibleWorld());
   }
 
@@ -748,6 +780,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     onTap: (id) => setFocus(id === focusId ? null : id),
     onEmptyDown: () => setFocus(null),
     settle: settleCard,
+    onOpenCard: (id) => circuitUi.openCard(id),
   });
 
   el.addEventListener('keydown', (e) => {
@@ -789,7 +822,12 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   state.subscribe((kind) => {
     if (kind === 'scope') {
       focusId = null;
+      // Another board is on the canvas now: its cards are not "just added".
+      seenNodes.clear();
+      for (const n of state.getGraph().nodes) seenNodes.add(n.id);
       render();
+      // The pin cards of a circuit are laid out around its cards, so they are measured once those are drawn.
+      if (state.getCircuitPath().length > 0) render();
       fitToContent();
     } else if (kind === 'board') {
       focusId = null;
@@ -820,7 +858,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     const node = group ? { id: nodeId, kind: 'group', params: {}, pos: { x: group.x, y: group.y } } : state.getGraph().nodes.find((n) => n.id === nodeId);
     if (!node) return;
     // Show the group the node lives in first (this also selects it).
-    if (!group && (groupOfNode(state.getGraph(), nodeId)?.id ?? null) !== state.getScope()) state.select({ kind: 'node', id: nodeId });
+    if (!group && state.getCircuitPath().length === 0 && (groupOfNode(state.getGraph(), nodeId)?.id ?? null) !== state.getScope()) state.select({ kind: 'node', id: nodeId });
     const size = sizeOf(nodeId) ?? estimateNodeSize(node);
     const r = el.getBoundingClientRect();
     view = {

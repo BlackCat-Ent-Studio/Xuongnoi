@@ -29,6 +29,7 @@ export const IO_TEXT = {
   circuitCycle: (names: string) => `Bảng mạch chứa chính nó (${names}).`,
   circuitTooDeep: (names: string, max: number) => `Bảng mạch lồng nhau quá ${max} tầng (${names}).`,
   badPin: (pin: string) => `Chân "${pin}" bị trùng mã, hoặc không trỏ tới một cổng đúng loại ở bên trong.`,
+  pinUnwired: (pin: string) => `Chân "${pin}" chưa nối vào mảnh ghép nào ở bên trong.`,
   pinInputWired: (pin: string) => `Chân vào "${pin}" trỏ tới một cổng đã có dây ở bên trong.`,
   badExposed: (id: string) => `Thông số mở "${id}" bị trùng mã, hoặc không trỏ tới một thông số có thật ở bên trong.`,
   badBench: (id: string) => `Mảnh ghép thử "${id}" không có trong bảng mạch.`,

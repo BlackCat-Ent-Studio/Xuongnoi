@@ -6,6 +6,7 @@ import {
   circuitLookup,
   instanceValueKey,
   isInstance,
+  isPinWired,
   isVec3,
   placeOfParams,
   type CircuitLookup,
@@ -145,7 +146,7 @@ function landing(work: Work, graph: Graph, path: readonly string[], ref: PortRef
   if (!node || !isInstance(node)) return { node: flatId(path, ref.node), port: ref.port };
   const circuit = circuitOf(work, node, path);
   const pin = circuit.pins.find((p) => p.id === ref.port && p.dir === dir);
-  if (!pin) return null;
+  if (!pin || !isPinWired(pin)) return null;
   return landing(work, circuit.graph, [...path, node.id], pin.inner, dir, new Set(circuit.benchIds));
 }
 
