@@ -8,6 +8,7 @@ import {
   circuitLookup,
   exposedIdOfKey,
   isInstance,
+  isPinWired,
   isVec3,
   portsOfNode,
   type CircuitLookup,
@@ -27,6 +28,8 @@ export type CircuitIssue =
   | { code: 'too-deep'; circuit: string; chain: string[] }
   /** A pin whose id is used twice, or whose inner port is missing, of the wrong direction or type, on a bench node, or already used by another pin. */
   | { code: 'bad-pin'; circuit: string; pin: string }
+  /** A pin that is not wired to anything inside yet. The board still loads and runs; wires on the pin lead nowhere. */
+  | { code: 'pin-unwired'; circuit: string; pin: string }
   /** An 'in' pin whose inner port already gets a wire from a card that is part of every copy. */
   | { code: 'pin-input-wired'; circuit: string; pin: string }
   /** An exposed setting whose id is used twice, or whose inner node or setting does not exist. */
@@ -84,6 +87,11 @@ function ownIssues(c: Circuit, circuits: CircuitLookup, issues: CircuitIssue[]):
   const pinIds = new Set<string>();
   const innerTaken = new Set<string>();
   for (const pin of c.pins) {
+    if (!isPinWired(pin) && !pinIds.has(pin.id)) {
+      issues.push({ code: 'pin-unwired', circuit: c.id, pin: pin.id });
+      pinIds.add(pin.id);
+      continue;
+    }
     const node = nodes.get(pin.inner.node);
     const ports = node && !bench.has(node.id) ? portsOfNode(node, circuits) : null;
     const port = (pin.dir === 'in' ? ports?.inputs : ports?.outputs)?.find((p) => p.id === pin.inner.port);
@@ -151,7 +159,10 @@ function nestingIssues(board: Pick<Board, 'graph' | 'circuits'>, circuits: Circu
   }
 }
 
-/** Every problem with the board's circuits, in a stable order; empty = `expandBoard` will run and every pin and exposed setting leads somewhere. */
+/** False for a problem a board can be saved, loaded and run with (work in progress, not damage). */
+export const isBlockingIssue = (issue: CircuitIssue): boolean => issue.code !== 'pin-unwired';
+
+/** Every problem with the board's circuits, in a stable order; none that `isBlockingIssue` = `expandBoard` will run; empty = every pin and exposed setting leads somewhere too. */
 export function validateCircuits(board: Pick<Board, 'graph' | 'circuits'>): CircuitIssue[] {
   const issues: CircuitIssue[] = [];
   const list = board.circuits ?? [];

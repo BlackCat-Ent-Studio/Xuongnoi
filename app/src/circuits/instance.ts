@@ -21,10 +21,15 @@ import {
  *   position         where the copy stands (vec3, added to every world point inside)
  *   heading          how far it is turned about the vertical axis, degrees (0 = as drawn, 90 turns +x onto +z)
  *   value:<exposed>  this copy's own value of one exposed setting; absent = the circuit's own value
+ *   name             the name the maker gave this copy; absent or empty = it shows the circuit's name
  */
 export const INSTANCE_CIRCUIT = 'circuit';
 export const INSTANCE_POSITION = 'position';
 export const INSTANCE_HEADING = 'heading';
+export const INSTANCE_NAME = 'name';
+/** A pin that is not wired to anything inside yet: wires on it lead nowhere until it is. */
+export const UNWIRED_PIN: PortRef = Object.freeze({ node: '', port: '' });
+export const isPinWired = (pin: Pick<CircuitPin, 'inner'>): boolean => pin.inner.node !== '';
 const VALUE_PREFIX = 'value:';
 
 /** Nesting levels allowed below the main board (a copy inside a copy inside ...). */
@@ -75,7 +80,7 @@ export function readInstance(node: GraphNode): CircuitInstance {
 }
 
 /** Flat params of a copy. Left-out parts read as: no own values, standing at the origin, not turned. */
-export function instanceParams(circuit: string, opts: { values?: Record<string, ParamValue>; place?: Partial<InstancePlace> } = {}): Params {
+export function instanceParams(circuit: string, opts: { values?: Record<string, ParamValue>; place?: Partial<InstancePlace>; name?: string } = {}): Params {
   const position = opts.place?.position ?? { x: 0, y: 0, z: 0 };
   const params: Params = {
     [INSTANCE_CIRCUIT]: circuit,
@@ -83,7 +88,14 @@ export function instanceParams(circuit: string, opts: { values?: Record<string, 
     [INSTANCE_HEADING]: opts.place?.heading ?? 0,
   };
   for (const [id, value] of Object.entries(opts.values ?? {})) params[instanceValueKey(id)] = typeof value === 'object' ? { ...value } : value;
+  if (opts.name) params[INSTANCE_NAME] = opts.name;
   return params;
+}
+
+/** The name typed for this copy, or '' when it has none. */
+export function instanceNameOf(node: Pick<GraphNode, 'params'>): string {
+  const v = node.params[INSTANCE_NAME];
+  return typeof v === 'string' ? v.trim() : '';
 }
 
 export type CircuitLookup = ReadonlyMap<string, Circuit>;

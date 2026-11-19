@@ -246,6 +246,8 @@ export interface Graph {
   settings?: GraphSettings;
   /** Optional wire bend points ("nút gấp") made on the wiring canvas. Drawing only: the engine ignores it. Absent whenever there are none. */
   knots?: GraphKnots;
+  /** Optional: ids of circuits whose copies on this graph the canvas draws as one stacked block ("Xe AGV ×8"). Drawing only: the engine ignores it. Absent whenever there are none. */
+  stacks?: string[];
 }
 
 /** A saved board = one game. */

@@ -1,7 +1,7 @@
 import { CONNECT_FAIL_TEXT } from '../engine/text-vi';
 import { getNodeDef } from '../engine/registry';
 import { canConnectIn, circuitLookup, isInstance, type CircuitLookup } from '../circuits/instance';
-import { validateCircuits } from '../circuits/validate';
+import { isBlockingIssue, validateCircuits } from '../circuits/validate';
 import {
   DEFAULT_GRAVITY,
   VIEW_MODES,
@@ -21,7 +21,7 @@ import { GROUP_NAME_MAX, cleanGroupName, isGroupColor, withGroups } from '../edi
 import { sanitizeKnots } from '../editor/graph/board-knots';
 import { migrateWireRule } from '../editor/graph/wire-rule-migration';
 import { registerAllNodes } from '../nodes';
-import { circuitIssueText, circuitsForFile, readCircuitHeaders, readInstanceParams } from './circuits-format';
+import { circuitIssueText, circuitsForFile, readCircuitHeaders, readInstanceParams, readStacks } from './circuits-format';
 import { CURRENT_FORMAT_VERSION, migrateToCurrent } from './migrations';
 import { IO_TEXT } from './text-vi';
 
@@ -268,6 +268,8 @@ export function parseBoard(text: string): ParseResult {
   // Wire bend points are decoration: a bad entry is dropped, and a board without any keeps no `knots` key.
   const knots = sanitizeKnots(rawGraph.knots, seenWires);
   if (knots) graph = { ...graph, knots };
+  const stacks = readStacks(rawGraph.stacks, circuits);
+  if (stacks) graph = { ...graph, stacks };
 
   const notes = parseNotes(data.notes);
   if (typeof notes === 'string') return { ok: false, error: notes };
@@ -278,12 +280,15 @@ export function parseBoard(text: string): ParseResult {
     if (typeof read === 'string') return { ok: false, error: IO_TEXT.inCircuit(circuit.name, read) };
     const innerKnots = sanitizeKnots(inner.knots, read.wireIds);
     circuit.graph = innerKnots ? { ...read.graph, knots: innerKnots } : read.graph;
+    const innerStacks = readStacks(inner.stacks, circuits);
+    if (innerStacks) circuit.graph = { ...circuit.graph, stacks: innerStacks };
   }
   const board: Board = { name: data.name, mode: mode as ViewMode, graph };
   if (notes.length > 0) board.notes = notes;
   if (headers.length > 0) {
     board.circuits = headers.map((h) => h.circuit);
-    const issue = validateCircuits(board)[0];
+    // An unfinished pin is work in progress, not damage: the board opens and the editor lists it under "Việc cần sửa".
+    const issue = validateCircuits(board).find(isBlockingIssue);
     if (issue) return { ok: false, error: circuitIssueText(issue, circuits) };
   }
   return { ok: true, board };

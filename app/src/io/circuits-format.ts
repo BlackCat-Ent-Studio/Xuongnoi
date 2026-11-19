@@ -1,6 +1,7 @@
 import {
   INSTANCE_CIRCUIT,
   INSTANCE_HEADING,
+  INSTANCE_NAME,
   INSTANCE_POSITION,
   MAX_CIRCUIT_DEPTH,
   exposedIdOfKey,
@@ -11,6 +12,19 @@ import type { CircuitIssue } from '../circuits/validate';
 import type { Circuit, CircuitExposed, CircuitPin, Params, PortType } from '../engine/types';
 import { isGroupColor } from '../editor/groups/group-model';
 import { IO_TEXT } from './text-vi';
+
+/** Longest name of a circuit or of one copy. */
+export const INSTANCE_NAME_MAX = 40;
+
+/**
+ * Reads the optional `stacks` of a graph: ids of circuits drawn as one stacked block. Drawing only, so anything that does
+ * not fit (unknown circuit, repeats) is dropped quietly; undefined when nothing is left.
+ */
+export function readStacks(raw: unknown, circuits: CircuitLookup): string[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const out = [...new Set(raw.filter((id): id is string => typeof id === 'string' && circuits.has(id)))];
+  return out.length > 0 ? out : undefined;
+}
 
 /** How the `circuits` of a board are written to and read from a file. The graphs inside are read by save-format.ts. */
 
@@ -24,7 +38,7 @@ export function circuitsForFile(circuits: readonly Circuit[]): unknown[] {
     id: c.id,
     name: c.name,
     ...(c.color ? { color: c.color } : {}),
-    graph: { nodes: c.graph.nodes, wires: c.graph.wires, ...(c.graph.knots ? { knots: c.graph.knots } : {}) },
+    graph: { nodes: c.graph.nodes, wires: c.graph.wires, ...(c.graph.knots ? { knots: c.graph.knots } : {}), ...(c.graph.stacks ? { stacks: c.graph.stacks } : {}) },
     pins: c.pins.map((p) => ({ id: p.id, label: p.label, dir: p.dir, type: p.type, inner: { node: p.inner.node, port: p.inner.port } })),
     exposed: c.exposed.map((e) => ({ id: e.id, label: e.label, inner: { node: e.inner.node, param: e.inner.param } })),
     benchIds: [...c.benchIds],
@@ -101,6 +115,8 @@ export function readInstanceParams(id: string, given: Record<string, unknown>, c
   const heading = given[INSTANCE_HEADING] ?? 0;
   if (typeof heading !== 'number' || !Number.isFinite(heading)) return IO_TEXT.badParam(id, INSTANCE_HEADING);
   const params: Params = { [INSTANCE_CIRCUIT]: circuit, [INSTANCE_POSITION]: { x: position.x, y: position.y, z: position.z }, [INSTANCE_HEADING]: heading };
+  const name = given[INSTANCE_NAME];
+  if (typeof name === 'string' && name.trim() !== '') params[INSTANCE_NAME] = name.trim().slice(0, INSTANCE_NAME_MAX);
   for (const [key, value] of Object.entries(given)) {
     if (exposedIdOfKey(key) === null) continue;
     if (typeof value === 'string' || (typeof value === 'number' && Number.isFinite(value))) params[key] = value;
@@ -125,6 +141,8 @@ export function circuitIssueText(issue: CircuitIssue, circuits: CircuitLookup): 
       return IO_TEXT.circuitTooDeep(issue.chain.map(nameOf).join(' › '), MAX_CIRCUIT_DEPTH);
     case 'bad-pin':
       return inside(IO_TEXT.badPin(issue.pin));
+    case 'pin-unwired':
+      return inside(IO_TEXT.pinUnwired(issue.pin));
     case 'pin-input-wired':
       return inside(IO_TEXT.pinInputWired(issue.pin));
     case 'bad-exposed':
