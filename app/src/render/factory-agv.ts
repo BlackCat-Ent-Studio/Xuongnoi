@@ -103,7 +103,7 @@ export class AgvFigure {
     this.wheelGroup.clear();
     const floor = -d.H / 2;
     const dimKey = `${q(d.L)}|${q(d.W)}|${q(d.H)}`;
-    const shell = bakedMesh(`agv-body|${dimKey}|${color}|${mountKey}`, () => bodyParts(d, color, mounts), undefined, true);
+    const shell = bakedMesh(`agv-body|${dimKey}|${color}|${mountKey}`, () => bodyParts(d, color, mounts));
     const lights = bakedMesh(`agv-lights|${dimKey}`, () => lightParts(d), VERTEX_GLOW);
     const { r, stripY, bh } = levels(d);
     const stripGeo = bakedGeo(`agv-strip|${dimKey}`, () => [{ geo: plate(d.L + 0.012, d.W + 0.012, Math.min(0.022, bh * 0.3), r + 0.006, 0.004, 3), color: '#ffffff', at: [0, stripY, 0] }]);

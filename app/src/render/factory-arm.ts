@@ -76,8 +76,8 @@ function trayTopParts(size: XYZ, color: string): Part[] {
 function trayBaseParts(size: XYZ): Part[] {
   const { x: L, y: T, z: W } = size;
   return [
-    { geo: cyl('z', 0.016, W * 0.8, 8), color: STEEL, at: [0.012, -T / 2 - 0.004, 0] },
-    ...[-1, 1].map((s): Part => ({ geo: box(0.03, TRAY_STAND, 0.03), color: DARK, at: [0.012, -T / 2 - TRAY_STAND / 2 - 0.004, s * W * 0.3] })),
+    { geo: cyl('z', 0.016, W * 0.8, 8), color: STEEL, at: [0.02, -T / 2 - 0.004, 0] },
+    ...[-1, 1].map((s): Part => ({ geo: box(0.03, TRAY_STAND, 0.03), color: DARK, at: [0.02, -T / 2 - TRAY_STAND / 2 - 0.004, s * W * 0.3] })),
     { geo: box(L * 0.4, TRAY_STAND + 0.006, W * 0.45), color: DARK, at: [L / 2, -T / 2 - TRAY_STAND / 2 - 0.003, 0] },
   ];
 }
@@ -100,7 +100,9 @@ function jointParts(size: XYZ, color: string): Part[] {
   return parts;
 }
 
-function hingeParts(size: XYZ): Part[] {
+/** A pitch hinge is a pin along its axis; a yaw one (a turntable under a tray) is only a low disc, so nothing pokes through the plate. */
+function hingeParts(size: XYZ, axis: 'pitch' | 'yaw'): Part[] {
+  if (axis === 'yaw') return [{ geo: cyl('z', 0.04, 0.02, 12), color: DARK }];
   const len = size.z * 0.9;
   return [
     { geo: cyl('z', 0.02, len, 8), color: STEEL },
@@ -226,7 +228,7 @@ export class FactoryArmFigure {
       }
       case 'joint': {
         const axis = hint.axis ?? 'pitch';
-        const hub = this.look === HINGE_LOOK ? bakedMesh(`arm-hinge|${sk}`, () => hingeParts(size)) : bakedMesh(`arm-joint|${sk}|${color}`, () => jointParts(size, color));
+        const hub = this.look === HINGE_LOOK ? bakedMesh(`arm-hinge|${sk}|${axis}`, () => hingeParts(size, axis)) : bakedMesh(`arm-joint|${sk}|${color}`, () => jointParts(size, color));
         if (axis === 'yaw') hub.rotation.x = Math.PI / 2;
         this.object.add(hub);
         if (warn) this.object.add(buildWarning(Math.max(size.x, size.y) * 0.56, axis));

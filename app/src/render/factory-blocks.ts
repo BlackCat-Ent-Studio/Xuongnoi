@@ -77,7 +77,7 @@ function beltFrameParts(size: Vec3, color: string): Part[] {
   const railH = Math.min(0.1, H);
   for (const s of [-1, 1]) {
     parts.push({ geo: f.rbox(L, railH, BELT_RAIL, 0.015), color, at: f.at(0, top + 0.01 - railH / 2, s * (W / 2 - BELT_RAIL / 2)) });
-    parts.push({ geo: cyl(f.acrossAxis, Math.min(0.045, H * 0.4), bw, 12), color: TYRE, at: f.at(s * (L / 2 - 0.04), top - 0.004 - Math.min(0.045, H * 0.4), 0) });
+    parts.push({ geo: cyl(f.acrossAxis, Math.min(0.045, H * 0.4), bw, 12), color: TYRE, at: f.at(s * (L / 2 - 0.05), top - 0.004 - Math.min(0.045, H * 0.4), 0) });
   }
   // Open legs under the frame, one pair about every 1.6 m; a belt lying low on the floor has none.
   const legH = H - 0.09;
@@ -87,12 +87,12 @@ function beltFrameParts(size: Vec3, color: string): Part[] {
     for (let i = 0; i < pairs; i++) {
       const u = -L / 2 + inset + ((L - 2 * inset) * i) / (pairs - 1);
       for (const s of [-1, 1]) {
-        const v = s * (W / 2 - 0.03);
+        const v = s * (W / 2 - 0.055);
         parts.push({ geo: rbox(0.05, legH, 0.05, 0.01), color: STEEL, at: f.at(u, floor + legH / 2, v) });
         parts.push({ geo: rbox(0.11, 0.02, 0.11, 0.008), color: TYRE, at: f.at(u, floor + 0.01, v) });
       }
     }
-    if (legH > 0.25) for (const s of [-1, 1]) parts.push({ geo: f.box(L - 2 * inset, 0.03, 0.03), color: STEEL, at: f.at(0, floor + Math.min(0.16, legH * 0.4), s * (W / 2 - 0.03)) });
+    if (legH > 0.25) for (const s of [-1, 1]) parts.push({ geo: f.box(L - 2 * inset, 0.03, 0.03), color: STEEL, at: f.at(0, floor + Math.min(0.16, legH * 0.4), s * (W / 2 - 0.055)) });
   }
   return parts;
 }
@@ -226,13 +226,14 @@ function chuteSolidParts(size: Vec3, boardColor: string): Part[] {
   const d = chuteDims(size);
   const parts: Part[] = [];
   for (const s of [-1, 1]) {
-    parts.push({ geo: rbox(size.x, KERB_UP, KERB, 0.018), color: YELLOW, at: [0, top + KERB_UP / 2, s * (size.z / 2 - KERB / 2)] });
-    parts.push({ geo: rbox(KERB, KERB_UP, size.z, 0.018), color: YELLOW, at: [s * (size.x / 2 - KERB / 2), top + KERB_UP / 2, 0] });
+    // sunk a few millimetres into the floor, so the rounded underside leaves no slit
+    parts.push({ geo: rbox(size.x, KERB_UP + 0.006, KERB, 0.018), color: YELLOW, at: [0, top + KERB_UP / 2 - 0.003, s * (size.z / 2 - KERB / 2)] });
+    parts.push({ geo: rbox(KERB, KERB_UP + 0.006, size.z, 0.018), color: YELLOW, at: [s * (size.x / 2 - KERB / 2), top + KERB_UP / 2 - 0.003, 0] });
   }
   const [bx, by, bz] = d.boardAt;
   const k = d.board / 0.38;
   parts.push({ geo: cyl('y', 0.022, BOARD_UP - 0.16 * k, 8), color: STEEL, at: [bx, top + (BOARD_UP - 0.16 * k) / 2, bz] });
-  parts.push({ geo: cyl('y', 0.05, 0.02, 12), color: DARK, at: [bx, top + KERB_UP + 0.008, bz] });
+  parts.push({ geo: cyl('y', 0.032, 0.02, 12), color: DARK, at: [bx, top + KERB_UP + 0.008, bz] });
   parts.push({ geo: rbox(d.board, 0.32 * k, 0.035, 0.03), color: boardColor, at: [bx, by, bz] });
   // the ring the bag hangs on
   const ringR = Math.min(d.holeX, d.holeZ) * 0.32;
@@ -254,7 +255,7 @@ function chuteShellParts(size: Vec3, bagColor: string): Part[] {
   const profile = [[0.02, 0], [0.2, 0.01], [0.28, 0.1], [0.3, 0.5], [0.27, 0.86], [0.25, 1]] as const;
   const bag = new THREE.LatheGeometry(profile.map(([r, y]) => new THREE.Vector2(r * R, y * d.bagH)), 12);
   return [
-    { geo: funnel, color: '#6b7380', at: [0, top - d.funnelH / 2, 0] },
+    { geo: funnel, color: '#6b7380', at: [0, top - 0.004 - d.funnelH / 2, 0] },
     { geo: bag, color: bagColor, at: [0, -size.y / 2, 0] },
   ];
 }
