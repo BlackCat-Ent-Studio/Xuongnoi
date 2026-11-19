@@ -9,13 +9,24 @@ import './scene/scene-tree.css';
 export interface SceneTree {
   el: HTMLElement;
   dispose(): void;
+  /** Build the tree again (what it lists changed without the board changing). */
+  refresh(): void;
 }
 
 /**
  * ARIA tree of scene objects, rebuilt from the board graph on every change.
  * Selecting an item selects that node in the editor state. The wiring canvas has no public pan API, so no pan.
  */
-export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?: (nodeId: string) => void): SceneTree {
+export interface SceneTreeSource {
+  /** The tree to show instead of the open board's own (the whole board with what sits inside copies of circuits). */
+  roots(): SceneRoot[];
+  /** Ids of the rows that stand for the current selection. */
+  selected(): ReadonlySet<string>;
+  /** Goes to the card of a row and selects it; false = not handled, the row's id is selected as it is. */
+  reveal(nodeId: string): boolean;
+}
+
+export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?: (nodeId: string) => void, source?: SceneTreeSource): SceneTree {
   const collapsed = new Set<string>(); // group keys the user collapsed; survive rebuilds
   let focusKey: string | null = null;
 
@@ -47,7 +58,7 @@ export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?:
   function activate(li: HTMLElement): void {
     const id = li.dataset.nodeId;
     if (id) {
-      state.select({ kind: 'node', id });
+      if (!source?.reveal(id)) state.select({ kind: 'node', id });
       onReveal?.(id);
     } else toggleGroup(li, li.getAttribute('aria-expanded') !== 'true');
   }
@@ -103,14 +114,14 @@ export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?:
   function syncSelection(): void {
     const tree = root.querySelector<HTMLElement>('[role=tree]');
     if (!tree) return;
-    const multi = state.getMulti();
+    const multi = source?.selected() ?? state.getMulti();
     for (const li of tree.querySelectorAll<HTMLElement>('[data-node-id]')) {
       li.setAttribute('aria-selected', String(multi.has(li.dataset.nodeId ?? '')));
     }
   }
 
   function render(): void {
-    const roots = buildSceneModel(state.getGraph(), getNodeDef);
+    const roots = source?.roots() ?? buildSceneModel(state.getGraph(), getNodeDef);
     root.replaceChildren();
     if (roots.length === 0) {
       root.append(h('div', 'st-empty', SCENE_TEXT.empty));
@@ -191,5 +202,5 @@ export function mountSceneTree(host: HTMLElement, state: EditorState, onReveal?:
   });
   render();
 
-  return { el: root, dispose: unsub };
+  return { el: root, dispose: unsub, refresh: render };
 }

@@ -1,5 +1,6 @@
 import { activeInputs, activeOutputs, getNodeDef } from '../engine/registry';
-import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
+import { curveRoute, hitsCard, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
+import { badgeSize, placeBadge } from './graph/badge-placement';
 import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
@@ -14,6 +15,7 @@ import './graph/group.css';
 import { knotKey, wireIdOfKnotKey } from './graph/board-knots';
 import { settleDrop } from './graph/drop-settle';
 import { createKnotEditor } from './graph/knot-editor';
+import type { CircuitBench } from './circuits/circuit-bench';
 import { createCircuitCanvas } from './circuits/circuit-canvas';
 import { stackScene } from './circuits/circuit-model';
 import { sceneWires, wireTypeIn } from './circuits/circuit-wiring';
@@ -98,6 +100,8 @@ export interface WiringCanvas {
   setOverlayInsets(insets: { right: number; bottom: number }): void;
   /** Step run: is this output pin drawn on the board right now? */
   hasOutPin(nodeId: string, portId: string): boolean;
+  /** Step run: a running output as the open board draws it (see `CircuitCanvas.shownOutput`); null when it is not on screen. */
+  shownOutput(key: string): string | null;
   /** Step run: keeps only these cards, wires and pins bright (rest fades) and brings the cards on screen; null clears. */
   setStepLight(light: StepLightSet | null): void;
 }
@@ -106,6 +110,8 @@ interface Deps {
   state: EditorState;
   getRuntime: () => Runtime | null;
   notify: (text: string, kind?: 'info' | 'error') => void;
+  /** The test bench of the entered circuit, when the editor has one. */
+  bench?: CircuitBench;
 }
 
 const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, className = ''): SVGElementTagNameMap[K] => {
@@ -114,7 +120,7 @@ const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, className = ''): SV
   return el;
 };
 
-export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringCanvas {
+export function createWiringCanvas({ state, getRuntime, notify, bench }: Deps): WiringCanvas {
   const el = h('div', 'wc');
   el.tabIndex = 0;
   const world = h('div', 'wc-world');
@@ -130,7 +136,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const stubLayer = h('div', 'wc-stubs');
   world.append(wireLayer, noteLayer, stubLayer, nodeLayer, knotLayer, badgeLayer);
   /** Copies of circuits, stacked blocks and (inside a circuit) its pin cards and path bar. */
-  const circuitUi = createCircuitCanvas({ state, layer: stubLayer, notify });
+  const circuitUi = createCircuitCanvas({ state, layer: stubLayer, notify, bench });
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
   let overlayBR = { w: 0, h: 0 };
@@ -309,6 +315,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     for (const node of nodesInScope(graph, scope)) {
       if (circuitUi.hides(node.id)) continue;
       const { box, dots } = circuitUi.card(node, missing.get(node.id)) ?? buildNodeView(node, missing.get(node.id) ?? new Set());
+      circuitUi.decorate(node, box);
       for (const [k, dot] of dots) {
         const [dir, port] = k.split('|') as [PortDir, string];
         portEls.set(portKey(node.id, port, dir), dot);
@@ -466,6 +473,8 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     }
     const routes = routeSpecs(items.map(({ d, a, b }) => specOf(d, a, b)), fast ? 'fast' : 'all');
     const types = new Map<string, PortType>(); // by knot key
+    const badgeBlocked: Box[] = playing ? cardRects() : [];
+    const badgeTaken: Box[] = [];
     for (const { d, a, b } of items) {
       const { wire, type } = d;
       const route = routes.get(wire.id);
@@ -486,12 +495,24 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       types.set(knotKey(state.getScope(), wire.id), type);
       if (isEnergyEnabled()) energy.addWire(wire, type, path, portEls.get(d.outKey), portEls.get(d.inKey), playing);
       if (playing) {
-        const mid = route ? midPoint(route.pts) : { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        const badge = h('div', `wc-badge type-${type}`);
-        badge.style.left = `${mid.x}px`;
-        badge.style.top = `${mid.y}px`;
-        badgeLayer.append(badge);
-        badgeEls.set(wire.id, { el: badge, wire, type });
+        // The value badge rides on its wire, as near the middle as it can be without covering a card or another badge.
+        const length = path.getTotalLength();
+        const spot = placeBadge(
+          (f) => {
+            const p = path.getPointAtLength(length * f);
+            return { x: p.x, y: p.y };
+          },
+          badgeSize(type),
+          badgeBlocked,
+          badgeTaken,
+        );
+        if (spot) {
+          const badge = h('div', `wc-badge type-${type}`);
+          badge.style.left = `${spot.x}px`;
+          badge.style.top = `${spot.y}px`;
+          badgeLayer.append(badge);
+          badgeEls.set(wire.id, { el: badge, wire, type });
+        }
       }
     }
     knots.draw(types);
@@ -905,6 +926,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
       overlayBR = { w: ok(right), h: ok(bottom) };
     },
     hasOutPin: (nodeId, portId) => portEls.has(portKey(nodeId, portId, 'out')),
+    shownOutput: (key) => circuitUi.shownOutput(key),
     setStepLight(light) {
       stepLayer ??= createStepLightLayer({ root: el, wireLayer, nodeEls, portEls, wirePaths, getView: () => view, setView: (v) => { view = v; applyView(); } });
       stepLayer.set(light);

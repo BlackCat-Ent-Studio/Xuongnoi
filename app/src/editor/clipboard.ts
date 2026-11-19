@@ -49,8 +49,10 @@ export function pasteClip(
   const idMap = new Map<string, string>();
   let work: Graph = graph;
   const newNodes: GraphNode[] = [];
+  // A new card never takes the id of a note: the canvas tells its items apart by id.
+  const noteIds = notes.map((n) => n.id);
   for (const n of clip.graph.nodes) {
-    const id = nextNodeId(work);
+    const id = nextNodeId(work, noteIds);
     idMap.set(n.id, id);
     const copy: GraphNode = {
       ...structuredClone(n),

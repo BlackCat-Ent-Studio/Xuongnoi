@@ -71,13 +71,13 @@ function cloneParam(v: ParamValue): ParamValue {
   return typeof v === 'object' ? { ...v } : v;
 }
 
-/** Builds a node with default params, or null for an unknown kind. */
-export function createNode(graph: Graph, kind: string, pos: { x: number; y: number }): GraphNode | null {
+/** Builds a node with default params, or null for an unknown kind. `takenIds`: ids the new card must also stay clear of (the board's notes). */
+export function createNode(graph: Graph, kind: string, pos: { x: number; y: number }, takenIds: Iterable<string> = []): GraphNode | null {
   const def = getNodeDef(kind);
   if (!def) return null;
   const params: Params = {};
   for (const p of def.params) params[p.id] = cloneParam(p.default);
-  return { id: nextNodeId(graph), kind, params, pos: { x: Math.round(pos.x), y: Math.round(pos.y) } };
+  return { id: nextNodeId(graph, takenIds), kind, params, pos: { x: Math.round(pos.x), y: Math.round(pos.y) } };
 }
 
 /** Adds a node to the member list of an existing group. */
@@ -578,7 +578,7 @@ export function createEditorState(initial: Board): EditorState {
     },
     addNode(kind, pos) {
       if (frozen()) return null;
-      const node = createNode(open(), kind, pos);
+      const node = createNode(open(), kind, pos, inCircuit() ? [] : notesOf().map((n) => n.id));
       if (!node) return null;
       const graph = { ...open(), nodes: [...open().nodes, node] };
       commit(put(scope === null || inCircuit() ? graph : addMember(graph, scope, node.id)), ['graph']);

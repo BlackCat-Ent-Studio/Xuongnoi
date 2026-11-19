@@ -2,9 +2,18 @@ import { instanceNameOf } from '../../circuits/instance';
 import { h } from '../dom';
 import type { EditorState } from '../editor-state';
 import { uiPrefs } from '../theme/ui-prefs';
+import type { CircuitBench } from './circuit-bench';
 import { CIRCUIT_NAME_MAX, countInstances, findCircuit, openGraph, renameCircuit } from './circuit-model';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
 import { circuitIcon } from './circuit-views';
+
+/** What the wires on screen show while the game runs: one copy's values, the bench's, or none (no copy was chosen). */
+export type LiveNote = { kind: 'copy'; name: string } | { kind: 'bench' } | { kind: 'no-copy' };
+
+export interface CrumbDeps {
+  bench?: CircuitBench | undefined;
+  liveNote?: () => LiveNote | null;
+}
 
 export interface CircuitCrumb {
   /** "Bảng chính › Trạm nạp › Tay máy" with the name box of the open circuit and "Quay ra". Hidden on the main board. */
@@ -18,7 +27,7 @@ export interface CircuitCrumb {
  * The path bar of an entered circuit. It also owns the rule of who may edit inside: in the "Giáo viên" display mode a circuit
  * opens ready to edit; in "Học sinh" it opens view-only until "Sửa mạch" is pressed.
  */
-export function createCircuitCrumb(state: EditorState): CircuitCrumb {
+export function createCircuitCrumb(state: EditorState, { bench, liveNote }: CrumbDeps = {}): CircuitCrumb {
   const el = h('div', 'wc-crumb wc-ccrumb wc-ui');
   el.hidden = true;
   const note = h('div', 'wc-cnote wc-ui');
@@ -72,6 +81,16 @@ export function createCircuitCrumb(state: EditorState): CircuitCrumb {
     name.disabled = state.isReadOnly();
     if (!typing) name.value = circuit.name;
     el.replaceChildren(...parts, h('span', 'wc-crumb-sep', '›'), name, back, h('span', 'wc-ccrumb-level', T.level(path.length + 1)));
+    if (bench && !bench.isOn()) {
+      const playing = state.isPlaying();
+      const open = h('button', 'wc-ccrumb-bench');
+      open.type = 'button';
+      open.title = playing ? T.benchOpenLocked : T.benchOpenTip;
+      open.disabled = playing;
+      open.append(circuitIcon('bench'), h('span', '', T.benchOpen));
+      open.addEventListener('click', () => bench.setOn(true));
+      el.append(open);
+    }
     if (typing) name.focus();
 
     // The copy the circuit was opened through, when there is one: "Bạn đang ở trong Xe AGV 3."
@@ -84,6 +103,13 @@ export function createCircuitCrumb(state: EditorState): CircuitCrumb {
     if (locked) text.append(h('b', '', T.viewOnly), ' ');
     text.append(T.changesAll(circuit.name, countInstances(board, circuit.id)));
     note.replaceChildren(circuitIcon(locked ? 'lock' : 'info'), text);
+    const live = liveNote?.() ?? null;
+    if (live) {
+      const say = h('span', `wc-cnote-live${live.kind === 'no-copy' ? ' none' : ''}`);
+      say.dataset.live = live.kind;
+      say.append(h('i', `wc-led${live.kind === 'no-copy' ? '' : ' on'}`), h('span', '', live.kind === 'copy' ? T.liveCopy(live.name) : live.kind === 'bench' ? T.liveBench : T.liveNoCopy));
+      note.append(say);
+    }
     note.classList.toggle('locked', locked);
     if (locked && !state.isPlaying()) {
       const edit = h('button', 'wc-cnote-edit');
@@ -103,6 +129,7 @@ export function createCircuitCrumb(state: EditorState): CircuitCrumb {
     // Coming in from the main board: pupils look first and unlock on purpose.
     if (was === 0 && depth > 0 && uiPrefs().mode() === 'student') state.setCircuitEditing(false);
   });
+  bench?.onChange(update);
   uiPrefs().subscribe(() => {
     if (uiPrefs().mode() === 'teacher' && !state.isCircuitEditing()) state.setCircuitEditing(true);
   });

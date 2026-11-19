@@ -15,14 +15,18 @@ import {
   exposedView,
   findCircuit,
   instancesIn,
+  isBenchCard,
   isExposed,
   lookupOf,
   openCircuit,
   renameCircuit,
+  setBenchCard,
+  setCircuitColor,
   setExposed,
   setInstanceName,
   stacksOf,
 } from './circuit-model';
+import { circuitSwatches } from './circuit-palette';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
 import { buildInstanceView, circuitIcon, circuitTile, instanceTitle } from './circuit-views';
 import { pinIdOfCard } from './circuit-wiring';
@@ -185,6 +189,9 @@ function renderCircuit(el: HTMLElement, state: EditorState, circuit: Circuit): v
   el.append(head(circuit, T.circuitTitle(circuit.name), T.usedAt(countInstances(board, circuit.id))));
   const form = h('div', 'pn-sec');
   form.append(textField(T.nameLabel, circuit.name, '', CIRCUIT_NAME_MAX, locked, (text) => void state.edit((b) => renameCircuit(b, circuit.id, text), ['graph'], `cname:${circuit.id}`)));
+  const colourRow = h('div', 'prop-row pn-field ck-colour');
+  colourRow.append(h('div', 'prop-label pn-label', T.colour), circuitSwatches(circuit.color, locked, (c) => void state.edit((b) => setCircuitColor(b, circuit.id, c))));
+  form.append(colourRow, h('p', 'pn-desc pn-dim ck-flat', T.colourHint));
   el.append(form);
 
   const look = section(T.outsideLook);
@@ -266,10 +273,37 @@ export function renderCircuitInspector(el: HTMLElement, state: EditorState, kit:
   return false;
 }
 
-/** "Mở ra ngoài": for a card inside the entered circuit, one switch per setting that the copies may then set for themselves. */
-export function renderExposeSection(el: HTMLElement, state: EditorState, node: GraphNode): void {
+/** "Chỉ để chạy thử": one switch that makes a card of the entered circuit a bench card (left out of every copy). */
+function renderBenchSwitch(el: HTMLElement, state: EditorState, circuit: Circuit, node: GraphNode, notify: Notify): void {
+  const on = isBenchCard(circuit, node.id);
+  const sec = section(T.benchCard);
+  const row = h('div', 'prop-row pn-field ck-benchrow');
+  const sw = h('button', 'pn-switch');
+  sw.type = 'button';
+  sw.dataset.bench = node.id;
+  sw.setAttribute('role', 'switch');
+  sw.setAttribute('aria-checked', String(on));
+  sw.setAttribute('aria-label', T.benchCardSwitch(cardLabel(state.getBoard(), node)));
+  sw.disabled = state.isReadOnly();
+  sw.addEventListener('click', () => {
+    const res = setBenchCard(state.getBoard(), circuit.id, node.id, !on);
+    if (!res.ok) notify(T.benchCardFail[res.reason], 'error');
+    else state.edit(() => res.board);
+  });
+  row.append(h('div', 'prop-label pn-label', T.benchCard), sw);
+  sec.append(row, h('p', 'pn-desc pn-dim ck-flat', T.benchCardHint));
+  el.append(sec);
+}
+
+/**
+ * For a card inside the entered circuit: the "Chỉ để chạy thử" switch, then "Mở ra ngoài" with one switch per setting that
+ * the copies may set for themselves (a bench card has none: it is in no copy).
+ */
+export function renderExposeSection(el: HTMLElement, state: EditorState, node: GraphNode, notify: Notify = () => undefined): void {
   const circuit = openCircuit(state.getBoard(), state.getCircuitPath());
   if (!circuit) return;
+  renderBenchSwitch(el, state, circuit, node, notify);
+  if (isBenchCard(circuit, node.id)) return;
   const params = exposableParams(state.getBoard(), node);
   if (params.length === 0) return;
   const locked = state.isReadOnly();

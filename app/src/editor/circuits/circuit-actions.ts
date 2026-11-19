@@ -6,6 +6,7 @@ import {
   circuitIdOf,
   circuitOfStackCard,
   createCircuit,
+  createCircuitFromGroup,
   createCircuitFromSelection,
   deletePin,
   findCircuit,
@@ -62,6 +63,26 @@ export function circuitFromSelection(state: EditorState, notify: Notify): string
   state.select({ kind: 'node', id: res.instanceId });
   const made = findCircuit(res.board, res.circuitId);
   notify(res.orderChanged ? T.madeOrderChanged(made?.name ?? '') : T.madeFromSelection(made?.name ?? '', made?.pins.length ?? 0));
+  return res.instanceId;
+}
+
+/** "Chuyển nhóm thành bảng mạch": the group becomes a circuit with one copy in its place. Returns the id of that copy. */
+export function circuitFromGroup(state: EditorState, groupId: string, notify: Notify): string | null {
+  if (state.isReadOnly() || state.getCircuitPath().length > 0) {
+    notify(T.locked, 'error');
+    return null;
+  }
+  const res = createCircuitFromGroup(state.getBoard(), groupId);
+  if (!res.ok) {
+    notify(T.fromSelectionFail[res.reason], 'error');
+    return null;
+  }
+  // The canvas may be showing the inside of the group, which is about to go.
+  state.exitGroup();
+  state.edit(() => res.board);
+  state.select({ kind: 'node', id: res.instanceId });
+  const made = findCircuit(res.board, res.circuitId);
+  notify(res.orderChanged ? T.madeOrderChanged(made?.name ?? '') : T.madeFromGroup(made?.name ?? '', made?.pins.length ?? 0));
   return res.instanceId;
 }
 

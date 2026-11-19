@@ -1,6 +1,6 @@
 import { expandBoard, type CircuitIdMap } from '../../circuits/expand';
-import { instancePorts, isInstance, isPinWired } from '../../circuits/instance';
-import type { GraphNode, Wire } from '../../engine/types';
+import { instanceNameOf, instancePorts, isInstance, isPinWired } from '../../circuits/instance';
+import type { Graph, GraphNode, PortRef, Wire } from '../../engine/types';
 import { h } from '../dom';
 import type { EditorState } from '../editor-state';
 import type { Box } from '../graph/graph-geometry';
@@ -8,7 +8,8 @@ import type { NodeViewResult } from '../graph/node-view';
 import type { PortDir } from '../graph/port-compat';
 import { uiPrefs } from '../theme/ui-prefs';
 import { addPinTo, openInstance, removePin, stackCopies, type Notify } from './circuit-actions';
-import { createCircuitCrumb } from './circuit-crumb';
+import type { CircuitBench } from './circuit-bench';
+import { createCircuitCrumb, type LiveNote } from './circuit-crumb';
 import { missingByCard } from './circuit-issues';
 import {
   cardLabel,
@@ -17,9 +18,11 @@ import {
   circuitsOf,
   exposedView,
   findCircuit,
+  isBenchCard,
   lookupOf,
   movePin,
   openCircuit,
+  openGraph,
   removeExposed,
   renameExposed,
   renamePin,
@@ -29,7 +32,7 @@ import {
 } from './circuit-model';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
 import { buildAddPinButton, buildExposedCard, buildInstanceView, buildPinCard, instanceTitle } from './circuit-views';
-import { PIN_PORT, pinCardDir, pinCardId } from './circuit-wiring';
+import { PIN_PORT, pinCardDir, pinCardId, pinIdOfCard } from './circuit-wiring';
 import './circuits.css';
 
 /** Room between the pin columns and the cards of the circuit (px, board units). */
@@ -67,19 +70,38 @@ export interface CircuitCanvas {
   openCard(id: string): boolean;
   /** Part of the "what the cards show" signature for a card without a node definition. */
   signature(node: GraphNode): string;
-  /** The wire the running game knows for a drawn wire, or null when its value cannot be read (inside a circuit). */
+  /**
+   * The wire the running game knows for a drawn wire, or null when its value cannot be read. Inside an entered copy it is the
+   * wire of that very copy; inside a circuit opened from the list (no copy chosen) there is none.
+   */
   liveWire(wire: Wire): Wire | null;
+  /**
+   * A running output (`${flat node}|${port}`) as the open board draws it: the same card, the card inside the entered copy, or
+   * the 'out' pin of a copy that passes it on. Null when the open board does not show it.
+   */
+  shownOutput(key: string): string | null;
+  /** Marks a card that is there only for the test bench. Call for every plain card drawn. */
+  decorate(node: GraphNode, box: HTMLElement): void;
   /** Re-read the path: crumb, note, lock. */
   update(): void;
 }
 
-export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLElement; notify: Notify }): CircuitCanvas {
-  const { state, layer, notify } = deps;
-  const crumb = createCircuitCrumb(state);
+/** The flat graph that is running, kept for one play: `base` levels of the circuit path belong to the bench (0 = the whole board runs). */
+interface LiveRun {
+  idMap: CircuitIdMap;
+  base: number;
+  bench: boolean;
+  /** Source output of the wire into each real input, by `node|port`. */
+  feeds: Map<string, PortRef>;
+}
+
+const feedsOf = (graph: Graph): Map<string, PortRef> => new Map(graph.wires.map((w) => [`${w.to.node}|${w.to.port}`, w.from]));
+
+export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLElement; notify: Notify; bench?: CircuitBench }): CircuitCanvas {
+  const { state, layer, notify, bench } = deps;
   let pinCards: { id: string; el: HTMLElement }[] = [];
   let columns: HTMLElement[] = [];
-  /** Pin ports of the running game, kept for one play. */
-  let live: { idMap: CircuitIdMap } | null = null;
+  let live: LiveRun | null = null;
 
   const board = () => state.getBoard();
   const path = () => state.getCircuitPath();
@@ -90,12 +112,44 @@ export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLEleme
     live = null;
     if (!state.isPlaying() || !hasCircuits()) return;
     try {
-      live = { idMap: expandBoard(board()).idMap };
+      const run = bench?.run();
+      if (run) live = { idMap: run.plan.idMap, base: run.base, bench: true, feeds: feedsOf(run.plan.graph) };
+      else {
+        const { idMap, graph } = expandBoard(board());
+        live = { idMap, base: 0, bench: false, feeds: feedsOf(graph) };
+      }
     } catch {
       // The board does not expand (the game view reports why); the wires just show no values.
       live = null;
     }
   });
+
+  /** The copies the canvas went through below what runs, outermost first; null when a level was opened from the list. */
+  function copyPath(run: LiveRun): string[] | null {
+    const out: string[] = [];
+    for (const step of path().slice(run.base)) {
+      if (step.via === undefined) return null;
+      out.push(step.via);
+    }
+    return out;
+  }
+
+  /** What the note under the path bar says about the values on screen while the game runs. */
+  function liveNote(): LiveNote | null {
+    const run = live;
+    if (!state.isPlaying() || path().length === 0 || !run) return null;
+    const steps = path().slice(run.base);
+    if (steps.some((s) => s.via === undefined)) return { kind: 'no-copy' };
+    if (steps.length === 0) return run.bench ? { kind: 'bench' } : null;
+    const names = steps.map((step, i) => {
+      const parent = openGraph(board(), path().slice(0, run.base + i));
+      const node = parent.nodes.find((n) => n.id === step.via);
+      return (node && instanceNameOf(node)) || findCircuit(board(), step.circuit)?.name || step.circuit;
+    });
+    return { kind: 'copy', name: names.join(' › ') };
+  }
+
+  const crumb = createCircuitCrumb(state, { bench, liveNote });
 
   function instanceCard(node: GraphNode, missing: ReadonlySet<string> | undefined): NodeViewResult {
     const circuit = findCircuit(board(), circuitIdOf(node));
@@ -225,12 +279,53 @@ export function createCircuitCanvas(deps: { state: EditorState; layer: HTMLEleme
       return `${node.id}:${instanceTitle(node, circuit)}:${circuit?.pins.map((p) => `${p.id}${p.type}${p.label}${isPinWired(p) ? '' : '?'}`).join('.') ?? ''}`;
     },
     liveWire(wire) {
-      if (path().length > 0) return null;
-      if (!live) return wire;
+      if (!live) return path().length === 0 ? wire : null;
+      const copies = copyPath(live);
+      if (copies === null) return null;
+      const { idMap } = live;
+      const flat = live.base === 0 && copies.length === 0;
+      // The card of an 'in' pin: what arrives on the pin is whatever feeds the real input it leads to.
+      const pinId = pinIdOfCard(wire.from.node);
+      if (pinId !== null) {
+        const port = idMap.pinPort(copies, pinId);
+        const source = port && live.feeds.get(`${port.node}|${port.port}`);
+        return source ? { ...wire, from: source } : null;
+      }
       const from = state.getGraph().nodes.find((n) => n.id === wire.from.node);
-      if (!from || !isInstance(from)) return wire;
-      const port = live.idMap.pinPort([from.id], wire.from.port);
-      return port ? { ...wire, from: port } : null;
+      if (!from) return flat ? wire : null;
+      if (isInstance(from)) {
+        const port = idMap.pinPort([...copies, from.id], wire.from.port);
+        return port ? { ...wire, from: port } : null;
+      }
+      if (flat) return wire;
+      const id = idMap.expandedId(copies, from.id);
+      return id === undefined ? null : { ...wire, from: { node: id, port: wire.from.port } };
+    },
+    shownOutput(key) {
+      if (!live) return path().length === 0 ? key : null;
+      const copies = copyPath(live);
+      if (copies === null) return null;
+      const cut = key.indexOf('|');
+      const node = key.slice(0, cut);
+      const port = key.slice(cut + 1);
+      const origin = live.idMap.origins.get(node);
+      if (!origin || origin.path.length < copies.length || copies.some((c, i) => c !== origin.path[i])) return null;
+      if (origin.path.length === copies.length) return `${origin.inner}|${port}`;
+      // Deeper than the canvas: on screen only when it is what an 'out' pin of the copy drawn here passes on.
+      const copyId = origin.path[copies.length]!;
+      const copy = state.getGraph().nodes.find((n) => n.id === copyId);
+      const circuit = copy && findCircuit(board(), circuitIdOf(copy));
+      for (const pin of circuit?.pins ?? []) {
+        if (pin.dir !== 'out') continue;
+        const at = live.idMap.pinPort([...copies, copyId], pin.id);
+        if (at && at.node === node && at.port === port) return `${copyId}|${pin.id}`;
+      }
+      return null;
+    },
+    decorate(node, box) {
+      if (!isBenchCard(openCircuit(board(), path()), node.id)) return;
+      box.classList.add('wc-benchcard');
+      box.append(h('span', 'wc-benchtag', T.benchCardTag));
     },
     update: () => crumb.update(),
   };

@@ -138,8 +138,9 @@ export function connectIn(board: Board, path: CircuitPath, from: PortRef, to: Po
   }
   let next = withOpenGraph(board, path, nextGraph);
   // The input now has a wire of the circuit's own: an 'in' pin that fed it would be overruled on every copy, so it lets go.
+  // A wire from a bench card is different: it exists only on the bench, so the pin keeps the port in every copy.
   for (const pin of circuit?.pins ?? []) {
-    if (pin.dir === 'in' && pin.inner.node === to.node && pin.inner.port === to.port) next = unwirePin(next, circuit!.id, pin.id);
+    if (pin.dir === 'in' && pin.inner.node === to.node && pin.inner.port === to.port && !circuit!.benchIds.includes(from.node)) next = unwirePin(next, circuit!.id, pin.id);
   }
   return { ok: true, board: next, dropped: 0 };
 }

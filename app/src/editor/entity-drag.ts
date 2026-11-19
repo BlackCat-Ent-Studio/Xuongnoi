@@ -1,5 +1,6 @@
 import type { GameView } from '../app-contracts';
 import type { Vec3, ViewMode } from '../engine/types';
+import { pickOnCanvas } from './circuits/circuit-scene';
 import { readPosition, snapHalf, type EditorState } from './editor-state';
 
 /**
@@ -61,9 +62,16 @@ export function installEntityDrag(container: HTMLElement, gameView: GameView, st
     'pointerdown',
     (e) => {
       if (state.isPlaying() || e.button !== 0 || !(e.target instanceof HTMLCanvasElement)) return;
-      const nodeId = gameView.pickEntityOwner(e.clientX, e.clientY);
-      if (!nodeId) {
+      const owner = gameView.pickEntityOwner(e.clientX, e.clientY);
+      if (!owner) {
         emptyDown = { pointerId: e.pointerId, x: e.clientX, y: e.clientY };
+        return;
+      }
+      // An object of a card inside a copy of a circuit: the copy is selected on the main board, nothing is dragged.
+      const nodeId = pickOnCanvas(state, owner);
+      if (nodeId === null) {
+        const shown = state.getSelection();
+        if (shown?.kind === 'node') onPicked?.(shown.id);
         return;
       }
       const cur = readPosition(state.getGraph(), nodeId);

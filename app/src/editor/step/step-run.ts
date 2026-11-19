@@ -16,6 +16,12 @@ interface Deps {
   isPlaying(): boolean;
   startPlay(): void;
   getGraph(): Graph;
+  /**
+   * The game names an output `${node}|${port}` by the card that runs. With circuits that card may sit inside a copy: this
+   * gives the same output as the board on screen draws it (a pin of the copy, or the card inside an entered copy), or null
+   * when it is not on screen. Absent = the running names are the names on screen.
+   */
+  shownKey?(key: string): string | null;
   /** Ids to glow on the stage when nothing is lit by a step (the selection). */
   restingHighlight(): ReadonlySet<string>;
   view: Pick<GameView, 'isPlaying' | 'isPaused' | 'resume' | 'setStepBreak' | 'setHighlight'>;
@@ -48,9 +54,13 @@ export function createStepRun(deps: Deps): StepRun {
     deps.view.setHighlight(deps.restingHighlight());
   }
 
-  function onBreak(fired: ReadonlySet<string>): void {
+  /** A running output as the board on screen names it; null when that board does not show it. */
+  const shown = (key: string): string | null => (deps.shownKey ? deps.shownKey(key) : key);
+
+  function onBreak(risen: ReadonlySet<string>): void {
     if (!stepping) return;
     waiting = true;
+    const fired = new Set([...risen].flatMap((key) => shown(key) ?? []));
     const graph = deps.getGraph();
     const kindOf = new Map(graph.nodes.map((n) => [n.id, n.kind]));
     const wires = graph.wires.map((w) => ({ id: w.id, from: w.from.node, fromPort: w.from.port, to: w.to.node }));
@@ -63,7 +73,9 @@ export function createStepRun(deps: Deps): StepRun {
   function arm(): void {
     stepping = true;
     deps.view.setStepBreak({
-      accepts(key) {
+      accepts(running) {
+        const key = shown(running);
+        if (key === null) return false;
         const cut = key.indexOf('|');
         const node = key.slice(0, cut);
         const port = key.slice(cut + 1);

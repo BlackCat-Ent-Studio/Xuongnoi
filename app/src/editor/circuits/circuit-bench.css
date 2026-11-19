@@ -1,0 +1,75 @@
+/* "Chạy thử máy này": the strip under the circuit canvas, the button that opens it and the mark on bench-only cards.
+   Colours come from the shell tokens, so both themes follow. */
+
+/* the strip is a second child of the board's tab: it keeps its own height, the board takes the rest */
+.pane > .ck-bench { flex: none; }
+.ck-bench { display: flex; flex-direction: column; max-height: 46%; min-height: 0; background: var(--panel); color: var(--text); border-top: 2px solid var(--accent); font-size: var(--fs-s); }
+.ck-bench[hidden] { display: none; }
+.ck-bench-head { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 6px 10px 6px 12px; background: var(--accent-soft); border-bottom: 1px solid var(--line); }
+.ck-bench-title { flex: 1 1 260px; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; min-width: 0; }
+.ck-bench-title b { font-size: var(--fs); font-weight: 700; }
+.ck-bench-title span { color: var(--text2); font-weight: 500; }
+.ck-bench-title .ck-ic { width: 18px; height: 18px; }
+.ck-bench-acts { display: flex; flex-wrap: wrap; gap: 6px; }
+.ck-bench-btn { display: inline-flex; align-items: center; gap: 6px; height: var(--ctl); padding: 0 12px; border: 1px solid var(--line2); border-radius: 7px; background: var(--panel); color: var(--text); font: 700 var(--fs-s) var(--font); white-space: nowrap; cursor: pointer; }
+.ck-bench-btn:hover:not(:disabled) { background: var(--raise); }
+.ck-bench-btn:disabled { opacity: .5; cursor: not-allowed; }
+.ck-bench-btn .ck-ic { width: 15px; height: 15px; }
+.ck-bench-btn.go { border-color: var(--run); background: var(--run); color: var(--run-ink); }
+.ck-bench-btn.go .ck-ic, .ck-bench-btn.stop .ck-ic { fill: currentColor; stroke: none; }
+.ck-bench-btn.go:hover:not(:disabled) { background: color-mix(in srgb, var(--run) 86%, var(--text)); }
+.ck-bench-btn.stop { border-color: var(--text); }
+.ck-bench-btn:focus-visible, .ck-bench-press:focus-visible, .wc-ccrumb-bench:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+
+.ck-bench-cols { flex: 1 1 auto; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: auto; }
+.ck-bench-col { min-width: 0; padding: 8px 12px 10px; border-right: 1px solid var(--line); }
+.ck-bench-col:last-child { border-right: 0; }
+.ck-bench-colh { display: flex; flex-wrap: wrap; gap: 0 6px; align-items: baseline; margin-bottom: 4px; }
+.ck-bench-colh b { font-weight: 700; }
+.ck-bench-colh span { color: var(--text2); }
+.ck-bench-rows { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.ck-bench-row { display: flex; align-items: center; gap: 8px; min-height: calc(var(--ctl) + 4px); min-width: 0; }
+.ck-bench-row .pn-shape { flex: none; width: 12px; height: 12px; margin: 0; box-sizing: border-box; border: 1.5px solid var(--pe, transparent); }
+.ck-bench-row .pn-shape.ck-none { border: 1.5px dashed var(--warn-line); }
+.ck-bench-row .pn-shape.ck-param { border: 0; }
+.ck-bench-name { font-size: var(--fs); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ck-bench-word { min-width: 26px; font-weight: 700; }
+.ck-bench-press { height: var(--ctl); padding: 0 12px; border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); color: var(--text); font: 600 var(--fs-s) var(--font); cursor: pointer; touch-action: none; user-select: none; }
+.ck-bench-press:hover { background: var(--raise); }
+.ck-bench-press.down { border-color: var(--run); background: var(--run); color: var(--run-ink); }
+.ck-bench-num.pn-num { height: var(--ctl); background: var(--bg); }
+.ck-bench-num .pn-num-btn { width: var(--ctl); height: calc(var(--ctl) - 2px); color: var(--text); }
+.ck-bench-num .pn-num-input { width: 64px; height: calc(var(--ctl) - 2px); padding: 0; border: 0; background: none; color: var(--text); text-align: center; font: 700 var(--fs) var(--font-mono, ui-monospace, Consolas, monospace); appearance: textfield; -moz-appearance: textfield; }
+.ck-bench-num .pn-num-input:disabled { opacity: .55; }
+.ck-bench-say { color: var(--text2); font-weight: 500; }
+.ck-bench-say.warn { padding: 2px 8px; border: 1px dashed var(--warn-line); border-radius: 7px; background: var(--warn-bg); color: var(--warn); font-weight: 600; }
+.ck-bench-val { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-family: var(--font-mono, ui-monospace, Consolas, monospace); }
+.ck-bench-swatch { width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--line2); }
+.ck-bench-out { display: inline-flex; align-items: center; justify-content: center; min-width: 54px; height: calc(var(--ctl) - 4px); box-sizing: border-box; padding: 0 12px; border: 1px solid var(--line2); border-radius: 999px; background: var(--panel2); color: var(--text); font: 700 var(--fs-s) var(--font-mono, ui-monospace, Consolas, monospace); white-space: nowrap; }
+.ck-bench-out.on { border-color: var(--run); background: var(--ok-bg); color: var(--run-text); }
+.ck-bench-empty, .ck-bench-broken { margin: 4px 0; color: var(--text2); }
+.ck-bench-broken { padding: 10px 12px; color: var(--warn); font-weight: 600; }
+
+/* the floating game window keeps clear of the strip */
+.dock-center.ck-benching .pip { margin-bottom: var(--ck-bench-h, 0px); }
+
+/* the button in the path bar that opens the bench */
+.app .wc-crumb .wc-ccrumb-bench { display: inline-flex; align-items: center; gap: 6px; height: 28px; margin-left: 2px; padding: 0 12px; border-radius: 7px; background: var(--accent); color: var(--accent-ink); font-weight: 700; white-space: nowrap; }
+.app .wc-crumb .wc-ccrumb-bench:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, var(--text)); color: var(--accent-ink); }
+.app .wc-crumb .wc-ccrumb-bench:disabled { opacity: .5; cursor: not-allowed; }
+.wc-ccrumb-bench .ck-ic { width: 16px; height: 16px; }
+
+/* what the wires show while the game runs */
+.wc-cnote { flex-wrap: wrap; }
+.wc-cnote-live { display: inline-flex; align-items: center; gap: 7px; padding-left: 10px; border-left: 1px solid var(--line2); color: var(--run-text); font-weight: 700; }
+.wc-cnote-live.none { color: var(--text2); font-weight: 600; }
+
+/* a card that is there only for the bench */
+.pn-props .ck-benchrow { min-height: 30px; }
+.app .wc .wc-node.wc-benchcard { outline: 2px dashed var(--warn-line); outline-offset: 3px; }
+.wc-benchtag { position: absolute; right: 8px; top: -12px; padding: 1px 8px; border: 1px solid var(--warn-line); border-radius: 999px; background: var(--warn-bg); color: var(--warn); font: 700 11px/1.5 var(--font); white-space: nowrap; pointer-events: none; }
+
+@media (max-width: 900px) {
+  .ck-bench-cols { grid-template-columns: 1fr; }
+  .ck-bench-col { border-right: 0; border-bottom: 1px solid var(--line); }
+}

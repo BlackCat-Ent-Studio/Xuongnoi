@@ -30,6 +30,7 @@ import {
 } from '../../engine/types';
 import { removeNode } from '../../engine/wiring';
 import { pruneGraphKnots } from '../graph/board-knots';
+import { findGroup, isGroupColor, ungroup } from '../groups/group-model';
 import { nextNodeId } from '../node-ids';
 
 /**
@@ -136,16 +137,7 @@ export function countInstances(board: Board, circuitId: string): number {
  * items apart by id, and shipped boards have notes named like cards ("n1").
  */
 function freshCardId(board: Board, path: CircuitPath, graph: Graph): string {
-  const taken = new Set(graph.nodes.map((n) => n.id));
-  if (path.length === 0) {
-    for (const n of board.notes ?? []) taken.add(n.id);
-    for (const g of graph.groups ?? []) taken.add(g.id);
-  }
-  const first = nextNodeId(graph);
-  if (!taken.has(first)) return first;
-  let i = Number(first.slice(1)) + 1;
-  while (taken.has(`n${i}`)) i++;
-  return `n${i}`;
+  return nextNodeId(graph, path.length === 0 ? (board.notes ?? []).map((n) => n.id) : []);
 }
 
 export type PlaceFail = 'unknown-circuit' | 'cycle' | 'too-deep';
@@ -365,10 +357,42 @@ export function wirePin(board: Board, circuitId: string, pinId: string, inner: P
   next = patchCircuit(next, circuitId, (c) => {
     const takesOver = (p: CircuitPin): boolean => pin.dir === 'in' && p.dir === 'in' && p.id !== pinId && p.inner.node === inner.node && p.inner.port === inner.port;
     const pins = c.pins.map((p) => (p.id === pinId ? { ...p, type: port.type, inner: { node: inner.node, port: inner.port } } : takesOver(p) ? { ...p, inner: { ...UNWIRED_PIN } } : p));
-    const wires = pin.dir === 'in' ? c.graph.wires.filter((w) => !(w.to.node === inner.node && w.to.port === inner.port)) : c.graph.wires;
+    // A bench card may keep feeding the port: its wire is left out of every copy, where the pin feeds it instead.
+    const wires = pin.dir === 'in' ? c.graph.wires.filter((w) => !(w.to.node === inner.node && w.to.port === inner.port) || c.benchIds.includes(w.from.node)) : c.graph.wires;
     return { ...c, pins, graph: wires.length === c.graph.wires.length ? c.graph : { ...c.graph, wires } };
   });
   return { ok: true, board: next, dropped };
+}
+
+// ---------- bench cards ("Chỉ để chạy thử") ----------
+
+export type BenchCardFail = 'has-pin' | 'has-exposed';
+export type BenchCardResult = { ok: true; board: Board } | { ok: false; reason: BenchCardFail };
+
+export const isBenchCard = (circuit: Pick<Circuit, 'benchIds'> | undefined, nodeId: string): boolean => circuit?.benchIds.includes(nodeId) ?? false;
+
+/**
+ * Marks one card of a circuit as there only for the test bench (`on`), or makes it a normal part of the circuit again.
+ * A bench card is left out of every copy, so it may not hold a pin or an exposed setting. Back to normal, a wire from it onto
+ * an input that an 'in' pin feeds would overrule the pin on every copy, so that pin lets go.
+ */
+export function setBenchCard(board: Board, circuitId: string, nodeId: string, on: boolean): BenchCardResult {
+  const circuit = findCircuit(board, circuitId);
+  if (!circuit || !circuit.graph.nodes.some((n) => n.id === nodeId) || isBenchCard(circuit, nodeId) === on) return { ok: true, board };
+  if (on) {
+    if (circuit.pins.some((p) => p.inner.node === nodeId)) return { ok: false, reason: 'has-pin' };
+    if (circuit.exposed.some((e) => e.inner.node === nodeId)) return { ok: false, reason: 'has-exposed' };
+    return { ok: true, board: patchCircuit(board, circuitId, (c) => ({ ...c, benchIds: [...c.benchIds, nodeId] })) };
+  }
+  const fed = new Set(circuit.graph.wires.filter((w) => w.from.node === nodeId).map((w) => `${w.to.node}|${w.to.port}`));
+  return {
+    ok: true,
+    board: patchCircuit(board, circuitId, (c) => ({
+      ...c,
+      benchIds: c.benchIds.filter((id) => id !== nodeId),
+      pins: c.pins.map((p) => (p.dir === 'in' && fed.has(`${p.inner.node}|${p.inner.port}`) ? { ...p, inner: { ...UNWIRED_PIN } } : p)),
+    })),
+  };
 }
 
 // ---------- exposed settings ("Thông số mở") ----------
@@ -466,6 +490,16 @@ export function createCircuit(board: Board, name = ''): { board: Board; circuitI
 export function renameCircuit(board: Board, id: string, name: string): Board {
   const clean = cleanCircuitName(name);
   return patchCircuit(board, id, (c) => (!clean || clean === c.name ? c : { ...c, name: clean }));
+}
+
+/** Gives the circuit its own colour (the dot on its icon, on every copy and in the list); null goes back to the default. */
+export function setCircuitColor(board: Board, id: string, color: string | null): Board {
+  if (color !== null && !isGroupColor(color)) return board;
+  return patchCircuit(board, id, (c) => {
+    if ((c.color ?? null) === color) return c;
+    const { color: _old, ...rest } = c;
+    return color === null ? rest : { ...rest, color };
+  });
 }
 
 /** A second circuit with the same inside; its copies are placed separately. */
@@ -700,6 +734,21 @@ function buildFromSelection(board: Board, path: CircuitPath, ids: ReadonlySet<st
   next = pruneCircuits({ ...next, graph: pruneGraphKnots(next.graph) });
   if (nestingFail(board, next) !== null) return { ok: false, reason: 'too-deep' };
   return { ok: true, board: next, circuitId, instanceId, orderChanged: false };
+}
+
+/**
+ * "Chuyển nhóm thành bảng mạch": a group of the main board (a drawing-only block) becomes a circuit with one copy where the
+ * block stood. The circuit takes the name and the colour of the group; wires that left the group become pins.
+ */
+export function createCircuitFromGroup(board: Board, groupId: string): FromSelectionResult {
+  const group = findGroup(board.graph, groupId);
+  if (!group) return { ok: false, reason: 'empty' };
+  const loose: Board = { ...board, graph: ungroup(board.graph, groupId) };
+  const res = createCircuitFromSelection(loose, [], new Set(group.nodeIds), group.name);
+  if (!res.ok) return res;
+  const coloured = group.color && isGroupColor(group.color) ? setCircuitColor(res.board, res.circuitId, group.color) : res.board;
+  const nodes = coloured.graph.nodes.map((n) => (n.id === res.instanceId ? { ...n, pos: { x: Math.round(group.x), y: Math.round(group.y) } } : n));
+  return { ...res, board: { ...coloured, graph: { ...coloured.graph, nodes } } };
 }
 
 /** Gives one copy on the open graph its own name; an empty name removes it, so the copy shows its circuit's name again. */
