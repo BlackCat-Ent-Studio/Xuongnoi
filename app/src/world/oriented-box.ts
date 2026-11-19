@@ -135,6 +135,57 @@ export function obbSeparation(a: Obb, b: Obb): number {
   return best;
 }
 
+/** The 15 separating-axis candidates of two boxes as unit vectors (a cross product of two parallel axes gives none). */
+function candidateAxes(a: Obb, b: Obb): Vec3[] {
+  const out: Vec3[] = [];
+  const add = (n: Vec3): void => {
+    const len = Math.hypot(n.x, n.y, n.z);
+    if (len >= AXIS_EPS) out.push({ x: n.x / len, y: n.y / len, z: n.z / len });
+  };
+  for (const ax of a.axes) add(ax);
+  for (const ax of b.axes) add(ax);
+  for (const ax of a.axes) for (const bx of b.axes) add(cross(ax, bx));
+  return out;
+}
+
+/**
+ * `obbSeparation` together with the direction it was found along: the unit axis of the largest gap (of the shallowest overlap,
+ * when the boxes overlap), pointing from `a` towards `b`.
+ */
+export function obbGap(a: Obb, b: Obb): { gap: number; axis: Vec3 } {
+  const t = sub(b.centre, a.centre);
+  let gap = -Infinity;
+  let axis: Vec3 = { x: 0, y: 1, z: 0 };
+  for (const u of candidateAxes(a, b)) {
+    const along = dot(t, u);
+    const g = Math.abs(along) - halfAlong(a, u) - halfAlong(b, u);
+    if (g > gap) {
+      gap = g;
+      axis = along < 0 ? { x: -u.x, y: -u.y, z: -u.z } : u;
+    }
+  }
+  return { gap, axis };
+}
+
+/**
+ * How far box `a`, which overlaps `b`, must go back against the unit direction `dir` it travelled along to just touch `b` on the
+ * side it came from. Exact for two boxes: they stop overlapping at the first distance at which one of the separating axes
+ * parts them. 0 when no distance along that line parts them.
+ */
+export function backOffAlong(a: Obb, b: Obb, dir: Vec3): number {
+  const t = sub(b.centre, a.centre);
+  let best = Infinity;
+  for (const u of candidateAxes(a, b)) {
+    const rate = dot(dir, u);
+    if (Math.abs(rate) < AXIS_EPS) continue;
+    // Going back by `d` puts `b` further ahead of `a` by `d * |rate|` along this axis: it parts them once that reaches the sum of the half sizes.
+    const ahead = dot(t, u) * Math.sign(rate);
+    const d = (halfAlong(a, u) + halfAlong(b, u) - ahead) / Math.abs(rate);
+    if (d < best) best = d;
+  }
+  return Number.isFinite(best) ? Math.max(0, best) : 0;
+}
+
 /** True when `p` is inside the box grown by `margin` on every side. */
 export function pointInObb(o: Obb, p: Vec3, margin = 0): boolean {
   const d = sub(p, o.centre);

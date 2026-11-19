@@ -11,10 +11,8 @@ import { crateOnTray, liesOnTray, trayPose, type TraySize } from '../helpers/tra
  * and the stop, and leave it when the joint tips to 35 degrees or more at no more than 60 degrees per second.
  * The crate is measured against the plate worked out from the joint's frame on every tick.
  *
- * A chassis collides as an upright square that does not turn with it, so behind a chassis standing askew to the world
- * axes a corner of that square reaches out under the tray's edge and can catch the sliding crate. The boards here
- * therefore do what a sorting robot does at its chute: square up first ("Hướng khi tới" a multiple of 90 degrees), or
- * tip steeply (60 degrees).
+ * Crates meet a chassis by its real outline, turned to its heading, so nothing reaches out under the tray's edge when the
+ * robot stands askew to the world axes: the dump works at every heading, squared up or not.
  */
 
 let rapier: RapierModule;
@@ -144,6 +142,19 @@ function ride(b: Build, secondsAfter = 6): Ride {
   return out;
 }
 
+/** A parked robot at `heading` tips its tray at once; where the crate lies after 6 s, seen from the robot. */
+function dumpStanding(heading: number, tilt: number, crateKg: number): { restY: number; restBehind: number; restAcross: number } {
+  const r = build({ crateKg, tilt, heading, goal: { x: 0, z: 0 } });
+  for (let k = 0; k < 6 / TICK_DT; k++) r.tick();
+  const crate = r.entity('crate')!;
+  const body = poseOf(r.entity('r')!);
+  const rad = (body.heading * Math.PI) / 180;
+  const dx = crate.position.x - body.x;
+  const dz = crate.position.z - body.z;
+  r.world.dispose?.();
+  return { restY: crate.position.y, restBehind: -(dx * Math.cos(rad) + dz * Math.sin(rad)), restAcross: -dx * Math.sin(rad) + dz * Math.cos(rad) };
+}
+
 describe('a crate on a tilt tray, on a robot driven by "Đi tới điểm"', () => {
   for (const kg of [1, 5]) {
     for (const [heading, face] of [[0, 0], [120, 90], [-90, 180], [45, -90]] as const) {
@@ -185,6 +196,51 @@ describe('a crate on a tilt tray, on a robot driven by "Đi tới điểm"', () 
       expect(res.offTray).toBe(0);
       expect(res.leftAfter).toBeGreaterThan(0);
       expect(res.restY).toBeLessThan(CRATE / 2 + 0.02);
+    }
+  });
+
+  // The chassis box turns with the robot, so no corner of it reaches out under the tray's edge at any heading.
+  const ARRIVALS = [10, 20, 30, 45, 60, 80, 135, -15, -30, -45, -60, -75, -120, -150, 165];
+  const towards = (deg: number): { x: number; z: number } => ({ x: 5 * Math.cos((deg * Math.PI) / 180), z: 5 * Math.sin((deg * Math.PI) / 180) });
+
+  it.each(ARRIVALS)('arriving at %s degrees to the axes without squaring up, a tilt of 35 degrees dumps the crate behind the robot', (deg) => {
+    for (const kg of [1, 5]) {
+      // It comes in along the line to the goal and turns to exactly this heading there: askew to the world axes.
+      const res = ride({ crateKg: kg, tilt: 35, goal: towards(deg), face: deg });
+      expect(res.arrivedAt, `${kg} kg`).toBeGreaterThan(0);
+      expect(Math.abs(((res.heading - deg + 540) % 360) - 180), `${kg} kg`).toBeLessThanOrEqual(4);
+      expect(res.offTray, `${kg} kg`).toBe(0);
+      expect(res.slideAlong, `${kg} kg`).toBeLessThan(0.08);
+      expect(res.slideAcross, `${kg} kg`).toBeLessThan(0.08);
+      expect(res.leftAfter, `${kg} kg`).toBeGreaterThan(0);
+      expect(res.leftAfter, `${kg} kg`).toBeLessThan(3);
+      expect(res.restY, `${kg} kg`).toBeLessThan(CRATE / 2 + 0.02);
+      expect(res.restBehind, `${kg} kg`).toBeGreaterThan(CHASSIS.length / 2 + CRATE / 2);
+      expect(res.restFromChassis, `${kg} kg`).toBeLessThan(2.5);
+      expect(res.chassisMovedAfterArrival, `${kg} kg`).toBeLessThan(0.03);
+    }
+  });
+
+  it('standing at every heading in steps of 5 degrees, a tilt of 35 degrees dumps the crate to the same place behind the robot', () => {
+    for (let deg = 0; deg < 360; deg += 5) {
+      const res = dumpStanding(deg, 35, 2);
+      expect(res.restY, `${deg}`).toBeLessThan(CRATE / 2 + 0.02);
+      expect(res.restBehind, `${deg}`).toBeGreaterThan(CHASSIS.length / 2 + CRATE / 2);
+      expect(res.restBehind, `${deg}`).toBeLessThan(1.4);
+      // Measured over the 72 headings: 1.08 to 1.18 m behind the chassis middle, at most 0.22 m to either side.
+      expect(Math.abs(res.restAcross), `${deg}`).toBeLessThan(0.3);
+    }
+  });
+
+  it('tilts of 45 and 60 degrees dump at every one of those headings too', () => {
+    for (const tilt of [45, 60]) {
+      for (const deg of [20, 30, 45, 60, 135, -30, -120]) {
+        const res = ride({ crateKg: 2, tilt, goal: towards(deg) });
+        expect(res.offTray, `${tilt} at ${deg}`).toBe(0);
+        expect(res.leftAfter, `${tilt} at ${deg}`).toBeGreaterThan(0);
+        expect(res.restY, `${tilt} at ${deg}`).toBeLessThan(CRATE / 2 + 0.02);
+        expect(res.restBehind, `${tilt} at ${deg}`).toBeGreaterThan(CHASSIS.length / 2 + CRATE / 2);
+      }
     }
   });
 

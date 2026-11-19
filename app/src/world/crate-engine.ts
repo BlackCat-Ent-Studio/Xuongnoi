@@ -1,6 +1,7 @@
 import type { Collider, ColliderDesc, RigidBody, RigidBodyDesc, World } from '@dimforge/rapier3d-deterministic-compat';
 import type { ExactBody, Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox } from './collider';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, overOutline, type Box } from './collider';
+import { yawQuat } from './oriented-box';
 import { beltVelocity } from './conveyor';
 import type { Entity } from './entity';
 import { materialOf } from './material';
@@ -13,6 +14,7 @@ import { isSolidBody } from './solid-bodies';
  * the game's own rules and is only *shown* to the engine as something solid:
  *  - blocks are fixed boxes (a belt is a box that moves at its surface speed; a block a node moves is a kinematic box);
  *  - robot chassis, vehicles (and, in solid-body worlds, characters) are kinematic boxes placed where the game put them.
+ *    A chassis is shown as its real outline (length by width) turned to its heading, so a crate meets the corner that is drawn.
  * The engine reads each crate's mass and friction from its material and gravity from the world setting.
  *
  * Crates that game code moves by itself (a gripper teleporting a held crate, a piston or an arm cube pushing one) leave
@@ -46,6 +48,9 @@ interface Rec {
   offset: Vec3;
   /** Kinematic bodies: where the body stood at the start of this tick (it travels from here to the entity's position). */
   from: Vec3;
+  /** A chassis shown by its real outline: its turn at the start of this tick and the one the game wants at its end. Null = shown upright. */
+  fromTurn: Quat | null;
+  turn: Quat | null;
   /** Where / how fast the engine last left the entity; a different value means game code moved it. */
   lastPos: Vec3;
   lastVel: Vec3;
@@ -132,8 +137,17 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     return null;
   }
 
+  /** The box the engine is shown for an entity: its collision box, or for a chassis its real outline (turned by `turnOf`). */
+  function shownBox(e: Entity, role: Role): Box {
+    const outline = role === 'kin' ? chassisOutline(e) : null;
+    return outline ? { pos: e.pos, size: { x: outline.half.x * 2, y: outline.half.y * 2, z: outline.half.z * 2 } } : colliderBox(e);
+  }
+
+  /** The turn of a chassis shown by its real outline; null for every other body (shown upright). */
+  const turnOf = (e: Entity, role: Role): Quat | null => (role === 'kin' && chassisOutline(e) ? yawQuat(e.facing) : null);
+
   function colliderDesc(e: Entity, role: Role): ColliderDesc {
-    const box = colliderBox(e);
+    const box = shownBox(e, role);
     const hx = Math.max(box.size.x / 2, 1e-4);
     const hy = Math.max(box.size.y / 2, 1e-4);
     const hz = Math.max(box.size.z / 2, 1e-4);
@@ -153,7 +167,11 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
 
   function bodyDesc(e: Entity, role: Role): RigidBodyDesc {
     if (role === 'fixed') return rapier.RigidBodyDesc.fixed().setTranslation(e.pos.x, e.pos.y, e.pos.z);
-    if (role === 'kin') return rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
+    if (role === 'kin') {
+      const desc = rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
+      const turn = turnOf(e, role);
+      return turn ? desc.setRotation(turn) : desc;
+    }
     if (role === 'belt') return rapier.RigidBodyDesc.kinematicVelocityBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
     const z = mode === '2d-side' ? 0 : e.pos.z;
     const desc = rapier.RigidBodyDesc.dynamic()
@@ -174,7 +192,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   function create(e: Entity, role: Role): Rec {
     const body = world.createRigidBody(bodyDesc(e, role));
     const collider = world.createCollider(colliderDesc(e, role), body);
-    const box = colliderBox(e);
+    const box = shownBox(e, role);
+    const turn = turnOf(e, role);
     if (role === 'crate') {
       if (mode === '2d-side') e.pos.z = 0;
       e.rot = { ...(e.rot ?? IDENTITY) };
@@ -186,6 +205,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       size: { ...box.size },
       offset: { x: box.pos.x - e.pos.x, y: box.pos.y - e.pos.y, z: box.pos.z - e.pos.z },
       from: { ...e.pos },
+      fromTurn: turn,
+      turn,
       lastPos: { ...e.pos },
       lastVel: { ...e.vel },
       parked: false,
@@ -202,7 +223,7 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
 
   /** The collision box of a fixed / kinematic entity changed (a block turned, a robot resized): build a new collider. */
   function refit(e: Entity, rec: Rec): void {
-    const box = colliderBox(e);
+    const box = shownBox(e, rec.role);
     const offset = { x: box.pos.x - e.pos.x, y: box.pos.y - e.pos.y, z: box.pos.z - e.pos.z };
     if (same3(box.size, rec.size) && same3(offset, rec.offset)) return;
     world.removeCollider(rec.collider, true);
@@ -215,6 +236,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     refit(e, rec);
     if (rec.role === 'kin') {
       rec.from = { ...rec.lastPos };
+      rec.fromTurn = rec.turn;
+      rec.turn = turnOf(e, rec.role);
     } else if (rec.role === 'belt') {
       // The belt does not travel: it is put back before every engine step and only lends its surface speed to what rests on it.
       const v = beltVelocity(e);
@@ -285,7 +308,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       if (!(o.kind === 'block' ? o.solid : o.kind === 'item' ? o.rigid === true : o.kind === 'robot' || o.kind === 'vehicle' ? o.solid : false)) continue;
       const b = boundsBox(o);
       if (Math.abs(bottom - (b.pos.y + b.size.y / 2)) > REST_GAP) continue;
-      if (boxOverlap(e, o, 'x') > 1e-6 && boxOverlap(e, o, 'z') > 1e-6) return true;
+      const outline = chassisOutline(o);
+      if (outline ? overOutline(me, outline, 1e-6) : boxOverlap(e, o, 'x') > 1e-6 && boxOverlap(e, o, 'z') > 1e-6) return true;
     }
     return false;
   }
@@ -425,6 +449,7 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
               y: rec.from.y + (e.pos.y - rec.from.y) * t,
               z: rec.from.z + (e.pos.z - rec.from.z) * t,
             });
+            if (rec.turn) rec.body.setNextKinematicRotation(rec.fromTurn ? mixTurn(rec.fromTurn, rec.turn, t) : rec.turn);
           } else if (rec.role === 'belt' && k > 1) {
             rec.body.setTranslation(e.pos, false);
           }

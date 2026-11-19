@@ -1,5 +1,5 @@
 import type { Vec3 } from '../engine/types';
-import { isTurned, obbBounds, obbOf, rotateBy, sensedTurn, type Obb, type Quat } from './oriented-box';
+import { flattenObb, isTurned, obbBounds, obbOf, obbSeparation, rotateBy, sensedTurn, yawQuat, type Obb, type Quat } from './oriented-box';
 import type { TurnState } from './platforms';
 
 /** Custom collision box of an entity, relative to its position. A size axis of 0 means the same as the visual size. */
@@ -20,6 +20,11 @@ export interface Collidable extends Box {
   rot?: Quat;
   /** Item shape: a ball rolls, but its box does not turn with it. */
   shape?: string;
+  kind?: string;
+  /** Unit direction on the ground the body points along (a robot chassis: its heading as this view shows it). */
+  facing?: { x: number; z: number };
+  /** Robot chassis: whether it drives on wheel traction ("Vật lý thật" on), and its real length and width. */
+  robot?: { traction: boolean; spec: { length: number; width: number } };
 }
 
 /** True when the entity's real outline is turned (a crate that tipped over; not a rolling ball). */
@@ -74,6 +79,47 @@ export function orientedBox(e: Collidable): Obb {
   if (!isTurned(turn)) return obbOf(b.pos, b.size);
   const swing = rotateBy(turn, { x: b.pos.x - e.pos.x, y: b.pos.y - e.pos.y, z: b.pos.z - e.pos.z });
   return obbOf({ x: e.pos.x + swing.x, y: e.pos.y + swing.y, z: e.pos.z + swing.z }, b.size, turn);
+}
+
+/**
+ * True for a robot chassis that drives on wheel traction ("Vật lý thật" on) and has no collision box of its own: other bodies
+ * meet it by its real outline (`chassisOutline`).
+ */
+export function hasChassisOutline(e: Collidable): boolean {
+  return e.robot !== undefined && e.robot.traction === true && e.collider === undefined;
+}
+
+/**
+ * The real outline of a robot chassis on wheel traction: its length by its width, turned to where it points. Null for every
+ * other body, for a chassis on the plain drive of older boards, and for a chassis that was given a collision box of its own
+ * (that box stays what it is, upright).
+ *
+ * Crates, items, people, other chassis and whatever rests on a chassis meet it by this outline. Blocks (the floor, walls,
+ * moving blocks, machine pieces) still meet the upright square of `colliderBox`, as wide as the chassis is long: that square
+ * is the same at every heading, so a chassis can turn on the spot beside a wall without a corner going into it.
+ */
+export function chassisOutline(e: Collidable): Obb | null {
+  if (!hasChassisOutline(e)) return null;
+  const spec = e.robot!.spec;
+  return obbOf(e.pos, { x: spec.length, y: e.size.y, z: spec.width }, e.facing ? yawQuat(e.facing) : undefined);
+}
+
+/**
+ * The outlines two bodies meet by when one of them is a chassis with a real outline and neither is a block; null when their
+ * upright boxes decide, as between any other two bodies.
+ */
+export function outlinePair(a: Collidable, b: Collidable): [Obb, Obb] | null {
+  if (a.robot === undefined && b.robot === undefined) return null;
+  if (a.kind === 'block' || b.kind === 'block') return null;
+  const oa = chassisOutline(a);
+  const ob = chassisOutline(b);
+  if (!oa && !ob) return null;
+  return [oa ?? orientedBox(a), ob ?? orientedBox(b)];
+}
+
+/** True when the upright box `lying` is over the outline seen from above: their shadows on the ground share more than `min` (m) of depth. */
+export function overOutline(lying: Box, outline: Obb, min: number): boolean {
+  return obbSeparation(flattenObb(obbOf(lying.pos, lying.size), 'y'), flattenObb(outline, 'y')) < -min;
 }
 
 /**
