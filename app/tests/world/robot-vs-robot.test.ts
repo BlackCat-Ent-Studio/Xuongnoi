@@ -278,6 +278,83 @@ describe('robot chassis are solid against each other with "Vật lý thật" on'
     });
   }
 
+  // Chassis are 1.2 m long and 1 m wide: at 45 degrees a corner reaches 0.778 m from the middle, the faces lie 0.6 and 0.5 m out.
+  const CORNER = (SIDE + 1) / 2 / Math.SQRT2;
+
+  for (const [name, d] of [['normal speed', NORMAL], ['top speed', MAX]] as const) {
+    it(`driving straight into a parked robot that stands at 45 degrees, at ${name}: it stops at the corner that is drawn, and stays there`, () => {
+      const p = play([{ id: 'a', x: -3, ...d }, { id: 'parked', x: 1, heading: 45 }]);
+      const at = { ...p.entity('parked')!.position };
+      const run = watch(p, 8);
+      expect(run.contactAt).toBeGreaterThan(0);
+      expect(run.deepest).toBeLessThan(TOUCH);
+      expect(run.fastest).toBeLessThanOrEqual(run.fastestBefore + 1e-9);
+      // Nose (0.6 m ahead of its middle) against the corner: 18 cm before the place the upright squares would have met.
+      const a = p.entity('a')!;
+      expect(a.position.x).toBeCloseTo(1 - CORNER - SIDE / 2, 3);
+      expect(overlapDepth(a, p.entity('parked')!)).toBeGreaterThan(-TOUCH);
+      const parked = p.entity('parked')!.position;
+      expect(Math.hypot(parked.x - at.x, parked.z - at.z)).toBeLessThan(0.001);
+      expect(p.out('a', 'pushing')).toBe(true);
+      const rest = restOver(p, 3);
+      expect(rest.drift).toBeLessThan(0.001);
+      expect(rest.deepest).toBeLessThan(TOUCH);
+      p.world.dispose?.();
+    });
+
+    it(`two robots meeting nose to nose along a diagonal (45 and 225 degrees), at ${name}: they stop face to face in the middle`, () => {
+      const far = 2.5;
+      const p = play([{ id: 'a', x: -far, z: -far, heading: 45, ...d }, { id: 'b', x: far, z: far, heading: 225, ...d }]);
+      const run = watch(p, 8);
+      expect(run.contactAt).toBeGreaterThan(0);
+      expect(run.deepest).toBeLessThan(TOUCH);
+      expect(run.fastest).toBeLessThanOrEqual(run.fastestBefore + 1e-9);
+      const [a, b] = p.views();
+      // Flush: the middles are one chassis length apart along the diagonal, and neither was pushed off it.
+      expect(Math.hypot(b!.position.x - a!.position.x, b!.position.z - a!.position.z)).toBeCloseTo(SIDE, 2);
+      expect(Math.abs(a!.position.x + b!.position.x)).toBeLessThan(0.05);
+      expect(Math.abs(a!.position.x - a!.position.z)).toBeLessThan(0.02);
+      const rest = restOver(p, 3);
+      expect(rest.drift).toBeLessThan(0.001);
+      expect(rest.speed).toBeLessThan(0.01);
+      expect(rest.deepest).toBeLessThan(TOUCH);
+      p.world.dispose?.();
+    });
+
+    it(`a robot driving at 45 degrees into the side of a parked one, at ${name}: its corner meets the face and it never goes in`, () => {
+      const p = play([{ id: 'a', x: -2.5, z: -2.5, heading: 45, ...d }, { id: 'parked', x: 0.3, z: 0 }]);
+      const at = { ...p.entity('parked')!.position };
+      const run = watch(p, 8);
+      expect(run.contactAt).toBeGreaterThan(0);
+      expect(run.deepest).toBeLessThan(TOUCH);
+      expect(run.fastest).toBeLessThanOrEqual(run.fastestBefore + 1e-9);
+      expect(restOver(p, 2).deepest).toBeLessThan(TOUCH);
+      const parked = p.entity('parked')!.position;
+      expect(Math.hypot(parked.x - at.x, parked.z - at.z)).toBeLessThan(0.001);
+      p.world.dispose?.();
+    });
+  }
+
+  it('two robots 1 m wide pass each other in lanes 1.1 m apart: they are as wide as drawn, not as wide as they are long', () => {
+    const p = play([{ id: 'a', x: -3, z: 0, ...NORMAL }, { id: 'b', x: 3, z: 1.1, heading: 180, ...NORMAL }]);
+    const alone = play([{ id: 'a', x: -3, z: 0, ...NORMAL }]);
+    let deepest = -Infinity;
+    for (let k = 0; k < Math.round(7 / TICK_DT); k++) {
+      p.tick();
+      alone.tick();
+      deepest = Math.max(deepest, deepestOverlap(p.views()));
+      // Nothing touched it: it drives exactly as it does alone.
+      expect(p.entity('a')!.position).toEqual(alone.entity('a')!.position);
+    }
+    // 10 cm of room between them as they passed; the squares round them overlap by 10 cm there.
+    expect(deepest).toBeCloseTo(-0.1, 3);
+    expect(p.entity('a')!.position.x).toBeGreaterThan(2);
+    expect(p.entity('b')!.position.x).toBeLessThan(-2);
+    expect(p.out('a', 'pushing')).toBe(false);
+    p.world.dispose?.();
+    alone.world.dispose?.();
+  });
+
   it('eight robots in a row, each driving into the next, the first one parked: every pair stays apart and the row comes to rest', () => {
     const bots: Bot[] = [{ id: 'r0', x: 12 }];
     for (let k = 1; k < 8; k++) bots.push({ id: `r${k}`, x: 12 - k * 1.7, ...MAX });
