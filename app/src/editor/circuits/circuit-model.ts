@@ -365,10 +365,42 @@ export function wirePin(board: Board, circuitId: string, pinId: string, inner: P
   next = patchCircuit(next, circuitId, (c) => {
     const takesOver = (p: CircuitPin): boolean => pin.dir === 'in' && p.dir === 'in' && p.id !== pinId && p.inner.node === inner.node && p.inner.port === inner.port;
     const pins = c.pins.map((p) => (p.id === pinId ? { ...p, type: port.type, inner: { node: inner.node, port: inner.port } } : takesOver(p) ? { ...p, inner: { ...UNWIRED_PIN } } : p));
-    const wires = pin.dir === 'in' ? c.graph.wires.filter((w) => !(w.to.node === inner.node && w.to.port === inner.port)) : c.graph.wires;
+    // A bench card may keep feeding the port: its wire is left out of every copy, where the pin feeds it instead.
+    const wires = pin.dir === 'in' ? c.graph.wires.filter((w) => !(w.to.node === inner.node && w.to.port === inner.port) || c.benchIds.includes(w.from.node)) : c.graph.wires;
     return { ...c, pins, graph: wires.length === c.graph.wires.length ? c.graph : { ...c.graph, wires } };
   });
   return { ok: true, board: next, dropped };
+}
+
+// ---------- bench cards ("Chỉ để chạy thử") ----------
+
+export type BenchCardFail = 'has-pin' | 'has-exposed';
+export type BenchCardResult = { ok: true; board: Board } | { ok: false; reason: BenchCardFail };
+
+export const isBenchCard = (circuit: Pick<Circuit, 'benchIds'> | undefined, nodeId: string): boolean => circuit?.benchIds.includes(nodeId) ?? false;
+
+/**
+ * Marks one card of a circuit as there only for the test bench (`on`), or makes it a normal part of the circuit again.
+ * A bench card is left out of every copy, so it may not hold a pin or an exposed setting. Back to normal, a wire from it onto
+ * an input that an 'in' pin feeds would overrule the pin on every copy, so that pin lets go.
+ */
+export function setBenchCard(board: Board, circuitId: string, nodeId: string, on: boolean): BenchCardResult {
+  const circuit = findCircuit(board, circuitId);
+  if (!circuit || !circuit.graph.nodes.some((n) => n.id === nodeId) || isBenchCard(circuit, nodeId) === on) return { ok: true, board };
+  if (on) {
+    if (circuit.pins.some((p) => p.inner.node === nodeId)) return { ok: false, reason: 'has-pin' };
+    if (circuit.exposed.some((e) => e.inner.node === nodeId)) return { ok: false, reason: 'has-exposed' };
+    return { ok: true, board: patchCircuit(board, circuitId, (c) => ({ ...c, benchIds: [...c.benchIds, nodeId] })) };
+  }
+  const fed = new Set(circuit.graph.wires.filter((w) => w.from.node === nodeId).map((w) => `${w.to.node}|${w.to.port}`));
+  return {
+    ok: true,
+    board: patchCircuit(board, circuitId, (c) => ({
+      ...c,
+      benchIds: c.benchIds.filter((id) => id !== nodeId),
+      pins: c.pins.map((p) => (p.dir === 'in' && fed.has(`${p.inner.node}|${p.inner.port}`) ? { ...p, inner: { ...UNWIRED_PIN } } : p)),
+    })),
+  };
 }
 
 // ---------- exposed settings ("Thông số mở") ----------

@@ -54,7 +54,7 @@ function decimalsOf(step: number): number {
 }
 
 /** Stepper: minus button, number input, plus button. Returns the wrapper and the input. */
-function numberStepper(
+export function numberStepper(
   def: ParamDef,
   value: number,
   onValue: (v: number) => void,
@@ -495,7 +495,7 @@ export function createPropertiesPanel(state: EditorState, options: PropertiesPan
           }
           el.append(sec);
         }
-        renderExposeSection(el, state, node);
+        renderExposeSection(el, state, node, notify);
         const ports = portsSection(node, activeInputs(def, node.params), activeOutputs(def, node.params));
         if (ports) el.append(ports);
 

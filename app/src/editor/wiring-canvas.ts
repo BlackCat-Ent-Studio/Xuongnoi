@@ -14,6 +14,7 @@ import './graph/group.css';
 import { knotKey, wireIdOfKnotKey } from './graph/board-knots';
 import { settleDrop } from './graph/drop-settle';
 import { createKnotEditor } from './graph/knot-editor';
+import type { CircuitBench } from './circuits/circuit-bench';
 import { createCircuitCanvas } from './circuits/circuit-canvas';
 import { stackScene } from './circuits/circuit-model';
 import { sceneWires, wireTypeIn } from './circuits/circuit-wiring';
@@ -106,6 +107,8 @@ interface Deps {
   state: EditorState;
   getRuntime: () => Runtime | null;
   notify: (text: string, kind?: 'info' | 'error') => void;
+  /** The test bench of the entered circuit, when the editor has one. */
+  bench?: CircuitBench;
 }
 
 const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, className = ''): SVGElementTagNameMap[K] => {
@@ -114,7 +117,7 @@ const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, className = ''): SV
   return el;
 };
 
-export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringCanvas {
+export function createWiringCanvas({ state, getRuntime, notify, bench }: Deps): WiringCanvas {
   const el = h('div', 'wc');
   el.tabIndex = 0;
   const world = h('div', 'wc-world');
@@ -130,7 +133,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
   const stubLayer = h('div', 'wc-stubs');
   world.append(wireLayer, noteLayer, stubLayer, nodeLayer, knotLayer, badgeLayer);
   /** Copies of circuits, stacked blocks and (inside a circuit) its pin cards and path bar. */
-  const circuitUi = createCircuitCanvas({ state, layer: stubLayer, notify });
+  const circuitUi = createCircuitCanvas({ state, layer: stubLayer, notify, bench });
 
   let view: View = { panX: 40, panY: 40, zoom: 1 };
   let overlayBR = { w: 0, h: 0 };
@@ -309,6 +312,7 @@ export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringC
     for (const node of nodesInScope(graph, scope)) {
       if (circuitUi.hides(node.id)) continue;
       const { box, dots } = circuitUi.card(node, missing.get(node.id)) ?? buildNodeView(node, missing.get(node.id) ?? new Set());
+      circuitUi.decorate(node, box);
       for (const [k, dot] of dots) {
         const [dir, port] = k.split('|') as [PortDir, string];
         portEls.set(portKey(node.id, port, dir), dot);

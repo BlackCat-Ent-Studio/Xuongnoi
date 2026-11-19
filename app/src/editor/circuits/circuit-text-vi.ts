@@ -1,4 +1,4 @@
-import type { FromSelectionFail, PlaceFail } from './circuit-model';
+import type { BenchCardFail, FromSelectionFail, PlaceFail } from './circuit-model';
 
 /** Vietnamese strings for "Bảng mạch": the block on the board, the inside of a circuit, the palette group and the inspector. */
 export const CIRCUIT_VI = {
@@ -120,6 +120,60 @@ export const CIRCUIT_VI = {
   pinWireBody: (pin: string, card: string) => `Chân "${pin}" nối với ${card}.`,
   pinWireDelete: 'Gỡ dây của chân',
   multiCreate: 'Tạo bảng mạch',
+
+  // bench ("Chạy thử máy này")
+  benchOpen: 'Chạy thử máy này',
+  benchOpenTip: 'Mở bàn thử: chỉ chạy riêng bảng mạch này, bạn tự bật tắt các chân vào',
+  benchOpenLocked: 'Dừng mô phỏng trước rồi mới mở bàn thử',
+  benchTitle: (name: string) => `Bàn thử: ${name}`,
+  benchHint: 'Chỉ chạy riêng bảng mạch này, không cần cả bảng chính.',
+  benchRun: 'Chạy thử',
+  benchRunTip: 'Chạy riêng bảng mạch này (Ctrl Enter)',
+  benchStop: 'Dừng',
+  benchReset: 'Đặt lại',
+  benchResetTip: 'Đưa các chân vào về giá trị ban đầu; đang chạy thì chạy lại từ đầu',
+  benchExit: 'Thoát bàn thử',
+  benchExitLocked: 'Dừng chạy thử trước rồi mới thoát bàn thử',
+  benchIn: 'Chân vào',
+  benchInSub: 'bạn điều khiển bằng tay',
+  benchParams: 'Thông số mở',
+  benchParamsSub: 'giá trị bảng mạch đang giữ',
+  benchOut: 'Chân ra',
+  benchOutSub: 'đọc trực tiếp',
+  benchNoIn: 'Bảng mạch này chưa có chân vào.',
+  benchNoOut: 'Bảng mạch này chưa có chân ra.',
+  benchNoParams: 'Chưa mở thông số nào.',
+  benchSwitch: (pin: string) => `Bật tắt chân "${pin}"`,
+  benchPress: 'Nhấn',
+  benchPressTip: (pin: string) => `Giữ chuột để bật chân "${pin}", thả ra thì tắt`,
+  benchOn: 'Bật',
+  benchOff: 'Tắt',
+  benchByCard: (card: string) => `Thẻ chạy thử "${card}" đang cấp`,
+  benchUnwired: 'Chưa nối bên trong',
+  benchObject: 'Cần nối ở bảng ngoài',
+  benchObjectTip: 'Chân Vật thể không bật tắt bằng tay được. Muốn thử: đặt một mảnh ghép (ví dụ Mốc sàn) vào bảng mạch, bật "Chỉ để chạy thử" cho nó rồi nối vào cổng mà chân này trỏ tới.',
+  benchIdle: '—',
+  benchIdleTip: 'Bấm "Chạy thử" để xem giá trị',
+  benchNothing: 'không có',
+  benchEdit: 'Sửa',
+  benchEditTip: (card: string) => `Chọn mảnh ghép "${card}" để sửa thông số này ở bảng bên phải`,
+  benchNextRun: 'Thông số này có hiệu lực ở lần chạy sau.',
+  benchDeeper: 'Quay ra bảng mạch đang chạy thử để đổi thông số này',
+  benchBroken: 'Bảng mạch này chưa chạy thử được. Xem "Việc cần sửa" ở bảng dưới.',
+  benchStarted: (name: string) => `Đang chạy thử riêng bảng mạch "${name}"`,
+  benchCard: 'Chỉ để chạy thử',
+  benchCardTag: 'Chạy thử',
+  benchCardSwitch: (card: string) => `Dùng "${card}" chỉ để chạy thử`,
+  benchCardHint: 'Mảnh ghép chạy thử chỉ có trên bàn thử (ví dụ một mốc sàn, một công tắc). Nó không bao giờ chạy trong các bản sao trên bảng chính.',
+  benchCardFail: {
+    'has-pin': 'Mảnh ghép này đang nối với một chân. Gỡ dây của chân trước.',
+    'has-exposed': 'Mảnh ghép này đang có thông số mở ra ngoài. Đóng thông số đó trước.',
+  } satisfies Record<BenchCardFail, string>,
+
+  // live values inside a copy
+  liveCopy: (name: string) => `Đang chạy: dòng điện của ${name}`,
+  liveBench: 'Đang chạy thử: dòng điện của riêng bảng mạch này',
+  liveNoCopy: 'Đang chạy. Bảng mạch này mở từ danh sách nên chưa chọn bản sao nào: hãy quay ra và bấm "Mở" trên một bản sao để xem dòng điện của nó.',
 
   // "Việc cần sửa"
   issueIn: (circuit: string, text: string) => `Bảng mạch "${circuit}": ${text}`,

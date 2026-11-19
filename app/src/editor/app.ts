@@ -23,6 +23,7 @@ import {
 import { createGameView } from '../render/game-view';
 import { isEnergyEnabled, setEnergyEnabled } from './graph/wire-energy';
 import { circuitFromSelection, placeInstance } from './circuits/circuit-actions';
+import { createCircuitBench } from './circuits/circuit-bench';
 import { createCircuitPalette } from './circuits/circuit-palette';
 import { CIRCUIT_VI } from './circuits/circuit-text-vi';
 import { CONSOLE_TEXT } from './console/console-text-vi';
@@ -103,10 +104,19 @@ export function mountEditor(root: HTMLElement): void {
   };
 
   const gameBox = h('div', 'game-box');
+  /** "Chạy thử máy này": inside a circuit, runs that circuit alone with its pins driven from a strip under the board. */
+  const bench = createCircuitBench({
+    state,
+    getRuntime: () => gameView.getRuntime(),
+    applyParams: (nodeId, params) => gameView.applyNodeParams(nodeId, params),
+    restart: () => restartPlay(),
+    notify: (t, k) => topBar.notify(t, k),
+  });
   const canvas = createWiringCanvas({
     state,
     getRuntime: () => gameView.getRuntime(),
     notify: (t, k) => topBar.notify(t, k),
+    bench,
   });
 
   const addNoteAtCenter = (): void => {
@@ -258,6 +268,17 @@ export function mountEditor(root: HTMLElement): void {
       syncPip();
       relayout();
     },
+  });
+  // The bench strip sits under the board, inside the same tab.
+  canvas.el.after(bench.strip);
+  bench.onChange(() => {
+    gameView.resetCamera();
+    schedulePreview();
+    relayout();
+    requestAnimationFrame(() => {
+      updateCanvasInsets();
+      if (isShown(canvas.el)) canvas.fitToContent();
+    });
   });
   const liveChip = h('span', 'livechip');
   liveChip.append(h('i'), h('span', '', SHELL_TEXT.liveChip));
@@ -543,7 +564,12 @@ export function mountEditor(root: HTMLElement): void {
     isPlaying: () => state.isPlaying(),
     startPlay: () => state.setPlaying(true),
     // The game runs the main board's cards; inside a circuit the canvas shows none of them, so no step stops there.
-    getGraph: () => (state.getCircuitPath().length === 0 ? state.getGraph() : { nodes: [], wires: [] }),
+    // A bench run is the exception: the cards on the canvas are the very cards that run.
+    getGraph: () => {
+      const run = bench.run();
+      const depth = state.getCircuitPath().length;
+      return (run ? depth === run.base : depth === 0) ? state.getGraph() : { nodes: [], wires: [] };
+    },
     restingHighlight: () => state.getMulti(),
     view: gameView,
     board: canvas,
@@ -658,9 +684,11 @@ export function mountEditor(root: HTMLElement): void {
   // ---------- preview / play ----------
 
   let previewTimer = 0;
+  /** What the game view shows and plays: the whole board, or just the circuit on the bench. */
+  const graphToRun = () => bench.graph() ?? runnableGraph(state.getBoard());
   function showPreview(): void {
     try {
-      gameView.showPreview(runnableGraph(state.getBoard()), state.getMode());
+      gameView.showPreview(graphToRun(), state.getMode());
     } catch {
       topBar.notify(TEXT_VI.playFailed, 'error');
     }
@@ -680,7 +708,7 @@ export function mountEditor(root: HTMLElement): void {
     for (const n of state.getGraph().nodes) liveBase.set(n.id, structuredClone(n.params));
     keyboard.attach();
     try {
-      gameView.play(runnableGraph(state.getBoard()), state.getMode(), () => keyboard.snapshot());
+      gameView.play(graphToRun(), state.getMode(), () => bench.input(keyboard.snapshot()));
     } catch {
       keyboard.detach();
       topBar.notify(TEXT_VI.playFailed, 'error');

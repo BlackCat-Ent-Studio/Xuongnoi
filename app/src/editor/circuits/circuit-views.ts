@@ -27,6 +27,14 @@ const GLYPHS = {
   enter: '<path d="M4 5v14M9 12h11M15.5 7.5L20 12l-4.5 4.5"/>',
   stack: '<rect x="4" y="9" width="13" height="10" rx="2"/><path d="M7.5 9V7a2 2 0 0 1 2-2H18a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-1"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+  /** A test bench: a table with a part standing on it. */
+  bench: '<path d="M3 13h18M6 13v7M18 13v7"/><rect x="8" y="5" width="8" height="8" rx="1.5"/>',
+  play: '<path d="M8 5.5v13l10.5-6.5z"/>',
+  stop: '<rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/>',
+  reset: '<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5"/><path d="M4.5 5v4.2h4.2"/>',
+  download: '<path d="M12 4v11M7.5 11l4.5 4.5 4.5-4.5M5 20h14"/>',
+  upload: '<path d="M12 16V5M7.5 9L12 4.5 16.5 9M5 20h14"/>',
+  star: '<path d="M12 4l2.4 5 5.4.7-4 3.8 1 5.4-4.8-2.7-4.8 2.7 1-5.4-4-3.8 5.4-.7z"/>',
 } as const;
 
 export type CircuitGlyph = keyof typeof GLYPHS;
