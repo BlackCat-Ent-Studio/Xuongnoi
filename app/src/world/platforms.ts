@@ -115,7 +115,7 @@ const CRUSH_DEPTH = 0.02;
  * True when pushing this rigid crate ahead of the platform would squeeze it into a solid. The crate itself is moved by the
  * crate engine (it tips and slides); this only keeps a platform from crushing a crate against a wall.
  */
-function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: readonly Entity[]): boolean {
+function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: readonly Entity[], apart: readonly Entity[]): boolean {
   if (overlap(crate, p, 'x') <= OVERLAP_MIN || overlap(crate, p, 'y') <= OVERLAP_MIN || overlap(crate, p, 'z') <= OVERLAP_MIN) return false;
   const pb = colliderBox(p);
   const reach = (pb.size[axis] + boundsBox(crate).size[axis]) / 2;
@@ -126,15 +126,16 @@ function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: r
   const where = boundsBox(pushed);
   return solids.some((s) => {
     const sb = boundsBox(s);
-    return spanOverlap(where, sb, 'x') > CRUSH_DEPTH && spanOverlap(where, sb, 'y') > CRUSH_DEPTH && spanOverlap(where, sb, 'z') > CRUSH_DEPTH;
+    return spanOverlap(where, sb, 'x') > CRUSH_DEPTH && spanOverlap(where, sb, 'y') > CRUSH_DEPTH && spanOverlap(where, sb, 'z') > CRUSH_DEPTH && s !== p && !apart.includes(s);
   });
 }
 
 /**
- * One axis of a platform move. Returns false (and changes nothing) when it would squeeze a body into a solid. `solids` is only
- * asked for when something is carried or pushed; `moved` hears of every body whose place was written.
+ * One axis of a platform move. Returns false (and changes nothing) when it would squeeze a body into a solid. `bodies` are the
+ * bodies the platform can meet on this move; the solids that stop what it moves are those of the scene other than the platform
+ * itself and `apart`. `moved` hears of every body whose place was written.
  */
-function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], solids: () => readonly Entity[], mode: ViewMode, scene: MoveScene, apart: readonly Entity[], moved?: (e: Entity) => void): boolean {
+function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], mode: ViewMode, scene: MoveScene, apart: readonly Entity[], moved?: (e: Entity) => void): boolean {
   const riders = bodies.filter((e) => standsOn(e, p, mode));
   const undo: { e: Entity; from: number }[] = [{ e: p, from: p.pos[axis] }];
   p.pos[axis] += d;
@@ -157,7 +158,7 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], s
     return false;
   };
   for (const u of undo) {
-    if (u.e !== p && solids().some((s) => overlapsBox(u.e, s))) return back();
+    if (u.e !== p && scene.solids.some((s) => s !== p && !apart.includes(s) && overlapsBox(u.e, s))) return back();
   }
   // A crate standing on the platform rides with it; any other crate in the way is pushed, so it must have room to go.
   const here = boundsBox(p);
@@ -168,9 +169,47 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], s
     if (spanOverlap(box, here, 'x') <= OVERLAP_MIN || spanOverlap(box, here, 'y') <= OVERLAP_MIN || spanOverlap(box, here, 'z') <= OVERLAP_MIN) continue;
     const c = scene.crates[k]!;
     if (apart.includes(c)) continue;
-    if (!standsOn(c, p, mode) && crushesCrate(p, c, axis, d, solids())) return back();
+    if (!standsOn(c, p, mode) && crushesCrate(p, c, axis, d, scene.solids, apart)) return back();
   }
   return true;
+}
+
+/** Beyond the block's own box, on every side, a body counts as on its way (more than `RIDE_GAP`, the furthest a rider stands off). */
+const WAY_PAD = 0.1;
+
+/**
+ * The bodies a block can carry or push on its way to `to`, in their order: those whose bounds reach into the box round all the
+ * places the block passes through (it moves axis by axis between where it is and where it is sent, so it never leaves the box
+ * round the two), grown by WAY_PAD. A body is carried or pushed only when its bounds overlap the block's, or stand within
+ * RIDE_GAP above it, and a body moves only by being carried or pushed, so a body outside that box at the start stays out of
+ * the whole move. (The side view does not ask for overlap along z to ride.) A number that is not finite rules nothing out.
+ */
+function bodiesOnTheWay(bodies: readonly Entity[], p: Entity, to: Vec3, mode: ViewMode, apart: readonly Entity[]): readonly Entity[] {
+  if (bodies.length === 0) return bodies;
+  const moving = moveAxisOf(mode);
+  const boxes = [boundsBox(p), colliderBox(p)];
+  const lo = { x: Infinity, y: Infinity, z: Infinity };
+  const hi = { x: -Infinity, y: -Infinity, z: -Infinity };
+  for (const k of ['x', 'y', 'z'] as const) {
+    const travel = moving.includes(k) ? finiteOr(to[k], p.pos[k]) - p.pos[k] : 0;
+    for (const b of boxes) {
+      const half = Math.abs(b.size[k]) / 2;
+      // The block gets there in equal steps: rounding may leave it a few last bits off.
+      const pad = WAY_PAD + 1e-9 * (Math.abs(b.pos[k]) + Math.abs(travel));
+      lo[k] = Math.min(lo[k], b.pos[k] - half - pad, b.pos[k] + travel - half - pad);
+      hi[k] = Math.max(hi[k], b.pos[k] + half + pad, b.pos[k] + travel + half + pad);
+    }
+  }
+  const axes = mode === '2d-side' ? (['x', 'y'] as const) : (['x', 'y', 'z'] as const);
+  return bodies.filter((e) => {
+    if (apart.includes(e)) return false;
+    const b = boundsBox(e);
+    for (const k of axes) {
+      const half = Math.abs(b.size[k]) / 2;
+      if (b.pos[k] - half > hi[k] || b.pos[k] + half < lo[k]) return false;
+    }
+    return true;
+  });
 }
 
 /** A block that is not solid goes straight to where it is sent: it carries, pushes and meets nothing. */
@@ -193,9 +232,7 @@ export function moveBlockIn(scene: MoveScene, p: Entity, to: Vec3, mode: ViewMod
     moved?.(p);
     return placeBlock(p, to, mode);
   }
-  let stops: Entity[] | null = null;
-  const solids = (): readonly Entity[] => (stops ??= scene.solids.filter((e) => e !== p && !apart.includes(e)));
-  const bodies = apart.length > 0 ? scene.bodies.filter((e) => !apart.includes(e)) : scene.bodies;
+  const bodies = bodiesOnTheWay(scene.bodies, p, to, mode, apart);
   let reached = true;
   for (const axis of moveAxisOf(mode)) {
     const d = finiteOr(to[axis], p.pos[axis]) - p.pos[axis];
@@ -203,7 +240,7 @@ export function moveBlockIn(scene: MoveScene, p: Entity, to: Vec3, mode: ViewMod
     // Small steps, so a long jump cannot slide over someone without pushing them.
     const n = Math.ceil(Math.abs(d) / MAX_STEP);
     for (let i = 0; i < n; i++) {
-      if (!stepAxis(p, axis, d / n, bodies, solids, mode, scene, apart, moved)) {
+      if (!stepAxis(p, axis, d / n, bodies, mode, scene, apart, moved)) {
         reached = false;
         break;
       }
