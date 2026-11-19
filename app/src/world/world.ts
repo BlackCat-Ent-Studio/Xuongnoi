@@ -22,7 +22,7 @@ import { DEFAULT_GRAVITY, cleanGravity } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
-import { moveBlockTo, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo } from './platforms';
+import { moveBlockIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDropSpot } from './solid-bodies';
@@ -112,6 +112,9 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
    */
   let views: readonly EntityView[] | null = null;
   const stale = new Set<Entity>();
+  /** What moving solid blocks look at (see `MoveScene`), kept for as long as the views are: the calls that leave it right are the same. */
+  let scene: MoveScene | null = null;
+  const markStale = (e: Entity): void => void stale.add(e);
   const hud = new Map<string, HudItem>();
   let contacts = new Set<string>();
   let ended: { result: GameResult; message: string } | null = null;
@@ -830,12 +833,10 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const e = byId.get(id);
       if (!e || e.kind !== 'block' || !e.visible) return false;
       markMover(e);
-      // A block that is not solid moves alone; a solid one may carry or push other bodies along.
-      if (e.solid) views = null;
-      else stale.add(e);
       // A solid piece of a machine moves with what it is bolted onto: it never shoves that body out of its way.
       const onto = mounts.size > 0 && e.solid ? boltedOnto(e) : [];
-      return moveBlockTo(onto.length > 0 ? list.filter((x) => !onto.includes(x)) : list, e, to, mode);
+      // Only the views of the block and of the bodies it carried or pushed change.
+      return moveBlockIn((scene ??= moveSceneOf(list)), e, to, mode, onto, markStale);
     },
     setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
       const e = byId.get(body);
@@ -1014,6 +1015,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     if (typeof call !== 'function' || KEEPS_VIEWS.has(key)) continue;
     (api as unknown as Record<string, unknown>)[key] = (...args: unknown[]): unknown => {
       views = null;
+      scene = null;
       return (call as (...a: unknown[]) => unknown)(...args);
     };
   }

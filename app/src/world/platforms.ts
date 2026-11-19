@@ -1,5 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox, colliderOffset, type Collidable } from './collider';
+import { boundsBox, boxOverlap, colliderBox, colliderOffset, type Box, type Collidable } from './collider';
 import type { Entity } from './entity';
 
 /**
@@ -70,6 +70,30 @@ function solidBlocksExcept(list: readonly Entity[], p: Entity): Entity[] {
   return list.filter((e) => e !== p && e.visible && e.solid && e.kind === 'block');
 }
 
+/**
+ * What a moving solid block looks at, sorted out of the entity list once instead of once per moved block: the solid blocks that
+ * stop what it pushes, the bodies it carries or pushes, the rigid crates it must not crush (with the upright box around each).
+ * All three keep the order of the entity list. It stays right for as long as no entity appears, disappears, changes kind, is
+ * taken up or let go, and no rigid crate moves, turns or changes size; moving blocks with `moveBlockIn` changes none of that
+ * (a block only moves itself and the bodies, never a rigid crate), so one scene serves every block moved in between.
+ */
+export interface MoveScene {
+  solids: readonly Entity[];
+  bodies: readonly Entity[];
+  crates: readonly Entity[];
+  crateBoxes: readonly Box[];
+}
+
+export function moveSceneOf(list: readonly Entity[]): MoveScene {
+  const crates = list.filter((e) => e.rigid === true && e.visible && e.heldBy === null && !e.bullet);
+  return { solids: list.filter((e) => e.visible && e.solid && e.kind === 'block'), bodies: list.filter(movable), crates, crateBoxes: crates.map((c) => boundsBox(c)) };
+}
+
+/** The same number as `boxOverlap` gives for the two entities these boxes are the bounds of. */
+function spanOverlap(a: Box, b: Box, axis: Axis): number {
+  return Math.min(a.pos[axis] + a.size[axis] / 2, b.pos[axis] + b.size[axis] / 2) - Math.max(a.pos[axis] - a.size[axis] / 2, b.pos[axis] - b.size[axis] / 2);
+}
+
 export function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
   if (mode === '2d-top') return false;
   const eb = boundsBox(e);
@@ -100,8 +124,11 @@ function crushesCrate(p: Entity, crate: Entity, axis: Axis, d: number, solids: r
   return solids.some((s) => (['x', 'y', 'z'] as const).every((k) => overlap(pushed, s, k) > CRUSH_DEPTH));
 }
 
-/** One axis of a platform move. Returns false (and changes nothing) when it would squeeze a body into a solid. */
-function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], solids: readonly Entity[], mode: ViewMode, crates: readonly Entity[]): boolean {
+/**
+ * One axis of a platform move. Returns false (and changes nothing) when it would squeeze a body into a solid. `solids` is only
+ * asked for when something is carried or pushed; `moved` hears of every body whose place was written.
+ */
+function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], solids: () => readonly Entity[], mode: ViewMode, scene: MoveScene, apart: readonly Entity[], moved?: (e: Entity) => void): boolean {
   const riders = bodies.filter((e) => standsOn(e, p, mode));
   const undo: { e: Entity; from: number }[] = [{ e: p, from: p.pos[axis] }];
   p.pos[axis] += d;
@@ -118,29 +145,51 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], s
     const reach = (pb.size[axis] + colliderBox(e).size[axis]) / 2;
     e.pos[axis] = (d > 0 ? pb.pos[axis] + reach : pb.pos[axis] - reach) - colliderOffset(e, axis);
   }
+  if (moved) for (const u of undo) moved(u.e);
+  const back = (): false => {
+    for (const u of undo) u.e.pos[axis] = u.from;
+    return false;
+  };
   for (const u of undo) {
-    if (u.e !== p && solids.some((s) => overlapsBox(u.e, s))) {
-      for (const back of undo) back.e.pos[axis] = back.from;
-      return false;
-    }
+    if (u.e !== p && solids().some((s) => overlapsBox(u.e, s))) return back();
   }
   // A crate standing on the platform rides with it; any other crate in the way is pushed, so it must have room to go.
-  if (crates.some((c) => !standsOn(c, p, mode) && crushesCrate(p, c, axis, d, solids))) {
-    for (const back of undo) back.e.pos[axis] = back.from;
-    return false;
+  const here = boundsBox(p);
+  for (let k = 0; k < scene.crates.length; k++) {
+    // Only a crate whose box reaches into the platform can be crushed (the first thing `crushesCrate` asks, here without
+    // working the crate's box out again): every other crate is passed over at once.
+    const box = scene.crateBoxes[k]!;
+    if (spanOverlap(box, here, 'x') <= OVERLAP_MIN || spanOverlap(box, here, 'y') <= OVERLAP_MIN || spanOverlap(box, here, 'z') <= OVERLAP_MIN) continue;
+    const c = scene.crates[k]!;
+    if (apart.includes(c)) continue;
+    if (!standsOn(c, p, mode) && crushesCrate(p, c, axis, d, solids())) return back();
   }
+  return true;
+}
+
+/** A block that is not solid goes straight to where it is sent: it carries, pushes and meets nothing. */
+function placeBlock(p: Entity, to: Vec3, mode: ViewMode): true {
+  for (const axis of moveAxisOf(mode)) p.pos[axis] = finiteOr(to[axis], p.pos[axis]);
   return true;
 }
 
 /** Moves a block to `to`, axis by axis. True when it got all the way there. */
 export function moveBlockTo(list: readonly Entity[], p: Entity, to: Vec3, mode: ViewMode): boolean {
+  return p.solid ? moveBlockIn(moveSceneOf(list), p, to, mode) : placeBlock(p, to, mode);
+}
+
+/**
+ * `moveBlockTo` with the scene worked out beforehand. `apart` are entities the block neither pushes nor is stopped by, as if
+ * they were not in the world (what a machine piece is bolted onto).
+ */
+export function moveBlockIn(scene: MoveScene, p: Entity, to: Vec3, mode: ViewMode, apart: readonly Entity[] = [], moved?: (e: Entity) => void): boolean {
   if (!p.solid) {
-    for (const axis of moveAxisOf(mode)) p.pos[axis] = finiteOr(to[axis], p.pos[axis]);
-    return true;
+    moved?.(p);
+    return placeBlock(p, to, mode);
   }
-  const solids = solidBlocksExcept(list, p);
-  const bodies = list.filter(movable);
-  const crates = list.filter((e) => e.rigid === true && e.visible && e.heldBy === null && !e.bullet);
+  let stops: Entity[] | null = null;
+  const solids = (): readonly Entity[] => (stops ??= scene.solids.filter((e) => e !== p && !apart.includes(e)));
+  const bodies = apart.length > 0 ? scene.bodies.filter((e) => !apart.includes(e)) : scene.bodies;
   let reached = true;
   for (const axis of moveAxisOf(mode)) {
     const d = finiteOr(to[axis], p.pos[axis]) - p.pos[axis];
@@ -148,7 +197,7 @@ export function moveBlockTo(list: readonly Entity[], p: Entity, to: Vec3, mode: 
     // Small steps, so a long jump cannot slide over someone without pushing them.
     const n = Math.ceil(Math.abs(d) / MAX_STEP);
     for (let i = 0; i < n; i++) {
-      if (!stepAxis(p, axis, d / n, bodies, solids, mode, crates)) {
+      if (!stepAxis(p, axis, d / n, bodies, solids, mode, scene, apart, moved)) {
         reached = false;
         break;
       }
