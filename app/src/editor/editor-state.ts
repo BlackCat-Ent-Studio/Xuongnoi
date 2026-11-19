@@ -14,7 +14,10 @@ import type {
   Vec3,
   ViewMode,
 } from '../engine/types';
-import { addWire, removeNode, removeWire } from '../engine/wiring';
+import { removeNode } from '../engine/wiring';
+import { CIRCUIT_KIND } from '../engine/types';
+import { cleanPath, findCircuit, openGraph, pasteableGraph, pruneCircuits, withOpenGraph, type CircuitStep } from './circuits/circuit-model';
+import { connectIn, hasWireIn, removeWireIn } from './circuits/circuit-wiring';
 import { PASTE_OFFSET, buildClip, pasteClip, readStoredClip, writeStoredClip } from './clipboard';
 import {
   cleanGroupName,
@@ -40,7 +43,7 @@ export { nextNodeId };
 /**
  * graph: structure changed (nodes/wires). params: a param value changed. layout: node moved on canvas.
  * board: a whole new board was loaded. notes: sticky notes changed. history: undo/redo availability changed.
- * scope: the canvas entered or left a group (navigation only, never a document change).
+ * scope: the canvas entered or left a group or a circuit (navigation only, never a document change).
  */
 export type ChangeKind =
   | 'graph'
@@ -114,6 +117,8 @@ export function readPosition(graph: Graph, nodeId: string): Vec3 | null {
 /** Number of nodes whose definition is hidden in the given mode (or unknown). */
 export function countUnavailable(graph: Graph, mode: ViewMode): number {
   return graph.nodes.filter((n) => {
+    // A copy of a circuit has no definition of its own and works in every mode.
+    if (n.kind === CIRCUIT_KIND) return false;
     const def = getNodeDef(n.kind);
     return !def || (def.modes !== undefined && !def.modes.includes(mode));
   }).length;
@@ -137,10 +142,11 @@ export interface NotePatch {
 
 type Move = { id: string; pos: { x: number; y: number } };
 
-export type GroupResult = { ok: true; groupId: string } | { ok: false; reason: GroupFail | 'locked' | 'in-group' };
+export type GroupResult = { ok: true; groupId: string } | { ok: false; reason: GroupFail | 'locked' | 'in-group' | 'in-circuit' };
 
 export interface EditorState {
   getBoard(): Board;
+  /** The graph the canvas shows and edits: the main board's, or the entered circuit's (see `getCircuitPath`). */
   getGraph(): Graph;
   getNotes(): readonly Note[];
   getMode(): ViewMode;
@@ -153,6 +159,23 @@ export interface EditorState {
   enterGroup(id: string): void;
   /** Back to the main board. */
   exitGroup(): void;
+  /** Circuits the canvas has gone into, outermost first; empty on the main board. */
+  getCircuitPath(): readonly CircuitStep[];
+  /** Show the inside of a circuit, one level further in. False for an unknown circuit or one already on the path. Clears the selection. */
+  enterCircuit(step: CircuitStep): boolean;
+  /** Leave circuits until only `keep` levels are open (default: one level out). */
+  exitCircuit(keep?: number): void;
+  /** Inside a circuit: may its cards be changed? Always true on the main board. */
+  isCircuitEditing(): boolean;
+  /** Lock or unlock editing inside the entered circuit (pupils press "Sửa mạch" first). Resets to unlocked on the main board. */
+  setCircuitEditing(on: boolean): void;
+  /** True while nothing on the canvas may be changed: the game is running, or the entered circuit is locked. */
+  isReadOnly(): boolean;
+  /**
+   * One undo step that may change anything on the board, circuits included. `change` gets the current board and returns the
+   * new one, or null (or the same board) for "nothing to do". Refused while read-only. Returns whether the board changed.
+   */
+  edit(change: (board: Board) => Board | null, kinds?: readonly ChangeKind[], key?: string): boolean;
   /** Gom nhóm: replace the selected loose nodes by one named block. */
   groupSelection(): GroupResult;
   /** Bung nhóm: dissolve the selected groups, or the entered one when nothing is selected. Returns how many. */
@@ -212,6 +235,8 @@ export function createEditorState(initial: Board): EditorState {
   let selection: Selection = null;
   let multi = new Set<string>();
   let scope: string | null = null;
+  let path: readonly CircuitStep[] = [];
+  let circuitEditing = true;
   let playing = false;
   let clip: Board | null = null;
   let pasteStep = 0;
@@ -221,14 +246,22 @@ export function createEditorState(initial: Board): EditorState {
   const emit = (kind: ChangeKind): void => {
     for (const fn of [...listeners]) fn(kind);
   };
+  const inCircuit = (): boolean => path.length > 0;
+  /** The graph on the canvas, and the board with that graph replaced. */
+  const open = (): Graph => openGraph(board, path);
+  const put = (graph: Graph): Board => withOpenGraph(board, path, graph);
+  /** Structure may not change: the game runs, or the entered circuit is locked. */
+  const frozen = (): boolean => playing || (inCircuit() && !circuitEditing);
+  /** Notes and groups belong to the main board; inside a circuit there are none. */
   const notesOf = (): readonly Note[] => board.notes ?? [];
-  const isNote = (id: string): boolean => notesOf().some((n) => n.id === id);
-  const isGroup = (id: string): boolean => groupsOf(board.graph).some((g) => g.id === id);
+  const isNote = (id: string): boolean => !inCircuit() && notesOf().some((n) => n.id === id);
+  const isGroup = (id: string): boolean => !inCircuit() && groupsOf(board.graph).some((g) => g.id === id);
 
   /** Records the current board for undo, then swaps in `next`. */
   const commit = (next: Board, kinds: readonly ChangeKind[], key?: string): void => {
     history.record(board, key);
-    board = { ...next, graph: pruneGraphKnots(pruneGroups(next.graph)) };
+    board = pruneCircuits({ ...next, graph: pruneGraphKnots(pruneGroups(next.graph)) });
+    syncPath();
     if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     for (const k of kinds) emit(k);
     emit('history');
@@ -266,15 +299,32 @@ export function createEditorState(initial: Board): EditorState {
     emit('selection');
   }
 
+  /** Go to another circuit path (empty = the main board). Like a group change, it only moves the canvas. */
+  function setPath(next: readonly CircuitStep[]): void {
+    if (next.length === path.length && next.every((s, i) => s.circuit === path[i]?.circuit && s.via === path[i]?.via)) return;
+    path = next;
+    if (next.length === 0) circuitEditing = true;
+    scope = null;
+    selection = null;
+    multi = new Set();
+    emit('scope');
+    emit('selection');
+  }
+  /** After the board changed under the canvas: step out of circuits that are gone. */
+  function syncPath(): void {
+    const clean = cleanPath(board, path);
+    if (clean !== path) setPath(clean);
+  }
+
   /** Swap the whole board for an undo/redo step and tell every listener what changed. */
   const restore = (next: Board): void => {
     const prev = board;
     board = next;
-    const alive = new Set([...board.graph.nodes.map((n) => n.id), ...groupsOf(board.graph).map((g) => g.id), ...notesOf().map((n) => n.id)]);
+    syncPath();
+    const alive = new Set(inCircuit() ? open().nodes.map((n) => n.id) : [...board.graph.nodes.map((n) => n.id), ...groupsOf(board.graph).map((g) => g.id), ...notesOf().map((n) => n.id)]);
     if (scope !== null && !findGroup(board.graph, scope)) setScope(null);
     if (selection?.kind === 'wire') {
-      const id = selection.id;
-      if (!board.graph.wires.some((w) => w.id === id)) selection = null;
+      if (!hasWireIn(board, path, selection.id)) selection = null;
     } else {
       multi = new Set([...multi].filter((i) => alive.has(i)));
       selection = selectionFor(multi);
@@ -289,13 +339,13 @@ export function createEditorState(initial: Board): EditorState {
 
   /** Board with the moved positions applied, or null when nothing actually moved. */
   const applyMoves = (moves: readonly Move[]): { board: Board; notesMoved: boolean } | null => {
-    const byGroup = new Map(moves.map((m) => [m.id, m.pos]));
-    const groups = groupsOf(board.graph).map((g) => {
-      const p = byGroup.get(g.id);
+    const byId = new Map(moves.map((m) => [m.id, m.pos]));
+    const main = !inCircuit();
+    const groups = (main ? groupsOf(board.graph) : []).map((g) => {
+      const p = byId.get(g.id);
       return p && (p.x !== g.x || p.y !== g.y) ? { ...g, x: p.x, y: p.y } : g;
     });
-    const groupsMoved = groups.some((g, i) => g !== groupsOf(board.graph)[i]);
-    const byId = new Map(moves.map((m) => [m.id, m.pos]));
+    const groupsMoved = main && groups.some((g, i) => g !== groupsOf(board.graph)[i]);
     const moved = <T extends { id: string; pos: { x: number; y: number } }>(items: readonly T[]): T[] | null => {
       let changed = false;
       const out = items.map((it) => {
@@ -306,10 +356,10 @@ export function createEditorState(initial: Board): EditorState {
       });
       return changed ? out : null;
     };
-    const nodes = moved(board.graph.nodes);
-    const notes = moved(notesOf());
+    const nodes = moved(open().nodes);
+    const notes = main ? moved(notesOf()) : null;
     if (!nodes && !notes && !groupsMoved) return null;
-    let next: Board = nodes ? { ...board, graph: { ...board.graph, nodes } } : board;
+    let next: Board = nodes ? put({ ...open(), nodes }) : board;
     if (groupsMoved) next = { ...next, graph: withGroups(next.graph, groups) };
     if (notes) next = { ...next, notes };
     return { board: next, notesMoved: notes !== null };
@@ -317,7 +367,18 @@ export function createEditorState(initial: Board): EditorState {
 
   const insertClip = (source: Board, step: number): number => {
     const off = PASTE_OFFSET * step;
-    const res = pasteClip(board.graph, notesOf(), source, { x: off, y: off }, scope);
+    // Copies of a circuit that is gone, or that would end up inside itself, are left out of the paste.
+    const graph = pasteableGraph(board, path, source.graph);
+    if (inCircuit()) {
+      // A circuit holds cards and wires only: groups come in loose, notes stay behind.
+      const res = pasteClip(open(), [], { ...source, graph: withGroups(graph, []), notes: [] }, { x: off, y: off }, null);
+      if (res.newIds.length === 0) return 0;
+      commit(put(res.graph), ['graph']);
+      const added = new Set(res.newIds);
+      setSelectionState(selectionFor(added), added);
+      return res.newIds.length;
+    }
+    const res = pasteClip(board.graph, notesOf(), graph === source.graph ? source : { ...source, graph }, { x: off, y: off }, scope);
     if (res.newIds.length === 0) return 0;
     const hasNotes = (source.notes?.length ?? 0) > 0;
     commit(withNotes({ ...board, graph: res.graph }, res.notes), hasNotes ? ['graph', 'notes'] : ['graph']);
@@ -326,8 +387,12 @@ export function createEditorState(initial: Board): EditorState {
     return res.newIds.length;
   };
 
+  /** What copy reads from: the main board, or just the cards and wires of the entered circuit. */
+  const clipSource = (): Board => (inCircuit() ? { name: board.name, mode: board.mode, graph: open() } : board);
+
   /** `amend` folds the move into the previous undo step (e.g. the placement nudge right after an add). */
   const moveItems = (moves: readonly Move[], opts?: { amend?: boolean }): void => {
+    if (inCircuit() && !circuitEditing) return;
     const res = applyMoves(moves);
     if (!res) return;
     const kinds: ChangeKind[] = res.notesMoved ? ['layout', 'notes'] : ['layout'];
@@ -342,7 +407,7 @@ export function createEditorState(initial: Board): EditorState {
 
   return {
     getBoard: () => board,
-    getGraph: () => board.graph,
+    getGraph: open,
     getNotes: notesOf,
     getMode: () => board.mode,
     getSelection: () => selection,
@@ -354,8 +419,39 @@ export function createEditorState(initial: Board): EditorState {
     exitGroup() {
       setScope(null);
     },
+    getCircuitPath: () => path,
+    enterCircuit(step) {
+      if (!findCircuit(board, step.circuit) || path.some((s) => s.circuit === step.circuit)) return false;
+      setPath([...path, step.via === undefined ? { circuit: step.circuit } : { circuit: step.circuit, via: step.via }]);
+      return true;
+    },
+    exitCircuit(keep = path.length - 1) {
+      setPath(path.slice(0, Math.max(0, Math.min(keep, path.length))));
+    },
+    isCircuitEditing: () => !inCircuit() || circuitEditing,
+    setCircuitEditing(on) {
+      const next = on || !inCircuit();
+      if (next === circuitEditing) return;
+      circuitEditing = next;
+      // Nothing in the document changed, but every view that greys its controls has to look again.
+      emit('scope');
+      emit('selection');
+      emit('history');
+    },
+    isReadOnly: frozen,
+    edit(change, kinds = ['graph'], key) {
+      if (frozen()) return false;
+      const next = change(board);
+      if (!next || next === board) return false;
+      commit(next, kinds, key);
+      const alive = new Set(open().nodes.map((n) => n.id));
+      if (selection?.kind === 'node' && !alive.has(selection.id)) setSelectionState(null, new Set());
+      else if (selection?.kind === 'wire' && !hasWireIn(board, path, selection.id)) setSelectionState(null, new Set());
+      return true;
+    },
     groupSelection() {
       if (playing) return { ok: false, reason: 'locked' };
+      if (inCircuit()) return { ok: false, reason: 'in-circuit' };
       if (scope !== null) return { ok: false, reason: 'in-group' };
       const ids = [...multi];
       if (ids.some(isGroup)) return { ok: false, reason: 'has-group' };
@@ -366,7 +462,7 @@ export function createEditorState(initial: Board): EditorState {
       return { ok: true, groupId: res.groupId };
     },
     ungroupSelection() {
-      if (playing) return 0;
+      if (playing || inCircuit()) return 0;
       const ids = [...multi].filter(isGroup);
       if (ids.length === 0 && scope !== null) ids.push(scope);
       if (ids.length === 0) return 0;
@@ -402,6 +498,8 @@ export function createEditorState(initial: Board): EditorState {
       selection = null;
       multi = new Set();
       scope = null;
+      path = [];
+      circuitEditing = true;
       history.clear();
       emit('board');
       emit('history');
@@ -448,8 +546,12 @@ export function createEditorState(initial: Board): EditorState {
     select(sel) {
       // A node selected from elsewhere (scene tree, issue list, game view) may live in a group the canvas is not showing.
       if (sel?.kind === 'node') {
-        const home = groupOfNode(board.graph, sel.id)?.id ?? null;
-        if (home !== scope) setScope(home);
+        // Inside a circuit only a card of the main board (picked in the scene tree or the game view) takes the canvas back out.
+        if (inCircuit() && !open().nodes.some((n) => n.id === sel.id) && board.graph.nodes.some((n) => n.id === sel.id)) setPath([]);
+        if (!inCircuit()) {
+          const home = groupOfNode(board.graph, sel.id)?.id ?? null;
+          if (home !== scope) setScope(home);
+        }
       }
       setSelectionState(sel, sel && sel.kind !== 'wire' ? new Set([sel.id]) : new Set());
     },
@@ -464,46 +566,41 @@ export function createEditorState(initial: Board): EditorState {
       setSelectionState(selectionFor(set), set);
     },
     addNode(kind, pos) {
-      if (playing) return null;
-      const node = createNode(board.graph, kind, pos);
+      if (frozen()) return null;
+      const node = createNode(open(), kind, pos);
       if (!node) return null;
-      const graph = { ...board.graph, nodes: [...board.graph.nodes, node] };
-      commit({ ...board, graph: scope === null ? graph : addMember(graph, scope, node.id) }, ['graph']);
+      const graph = { ...open(), nodes: [...open().nodes, node] };
+      commit(put(scope === null || inCircuit() ? graph : addMember(graph, scope, node.id)), ['graph']);
       setSelectionState({ kind: 'node', id: node.id }, new Set([node.id]));
       return node.id;
     },
     setParam(nodeId, paramId, value) {
-      if (playing && !isLiveParam(board.graph, nodeId, paramId)) return;
-      commit({ ...board, graph: withParam(board.graph, nodeId, paramId, value) }, ['params'], `p:${nodeId}:${paramId}`);
+      if (playing ? !isLiveParam(open(), nodeId, paramId) : frozen()) return;
+      commit(put(withParam(open(), nodeId, paramId, value)), ['params'], `p:${nodeId}:${paramId}`);
     },
     setNodePos(nodeId, pos) {
       moveItems([{ id: nodeId, pos }]);
     },
     moveItems,
     setKnots(knots) {
-      if (playing) return;
-      commit({ ...board, graph: withKnots(board.graph, knots) }, ['layout']);
+      if (frozen()) return;
+      commit(put(withKnots(open(), knots)), ['layout']);
     },
     connect(from, to, opts) {
-      if (playing) return { ok: false, reason: 'unknown-node' };
-      let graph = board.graph;
-      if (opts?.replace) {
-        const old = graph.wires.find((w) => w.to.node === to.node && w.to.port === to.port);
-        if (old) graph = removeWire(graph, old.id);
-      }
-      const res = addWire(graph, from, to);
-      if ('ok' in res) return res;
-      commit({ ...board, graph: res }, ['graph']);
-      if (selection?.kind === 'wire' && !res.wires.some((w) => w.id === selection?.id)) {
+      if (frozen()) return { ok: false, reason: 'unknown-node' };
+      const res = connectIn(board, path, from, to, opts);
+      if (!res.ok) return res;
+      commit(res.board, ['graph']);
+      if (selection?.kind === 'wire' && !hasWireIn(board, path, selection.id)) {
         selection = null;
         emit('selection');
       }
       return { ok: true };
     },
     deleteSelection() {
-      if (playing) return false;
+      if (frozen()) return false;
       if (selection?.kind === 'wire') {
-        const next = { ...board, graph: removeWire(board.graph, selection.id) };
+        const next = removeWireIn(board, path, selection.id);
         selection = null;
         multi = new Set();
         commit(next, ['graph']);
@@ -511,20 +608,20 @@ export function createEditorState(initial: Board): EditorState {
         return true;
       }
       if (multi.size === 0) return false;
-      let graph = board.graph;
+      let graph = open();
       const doomed = new Set(multi);
-      for (const g of groupsOf(graph)) if (multi.has(g.id)) for (const id of g.nodeIds) doomed.add(id);
-      for (const n of board.graph.nodes) if (doomed.has(n.id)) graph = removeNode(graph, n.id);
-      const keptNotes = notesOf().filter((n) => !multi.has(n.id));
+      if (!inCircuit()) for (const g of groupsOf(graph)) if (multi.has(g.id)) for (const id of g.nodeIds) doomed.add(id);
+      for (const n of open().nodes) if (doomed.has(n.id)) graph = removeNode(graph, n.id);
+      const keptNotes = inCircuit() ? notesOf() : notesOf().filter((n) => !multi.has(n.id));
       const notesChanged = keptNotes.length !== notesOf().length;
       selection = null;
       multi = new Set();
-      commit(withNotes({ ...board, graph }, keptNotes), notesChanged ? ['graph', 'notes'] : ['graph']);
+      commit(notesChanged ? withNotes(put(graph), [...keptNotes]) : put(graph), notesChanged ? ['graph', 'notes'] : ['graph']);
       emit('selection');
       return true;
     },
     addNote(pos) {
-      if (playing || notesOf().length >= NOTE_MAX_COUNT) return null;
+      if (playing || inCircuit() || notesOf().length >= NOTE_MAX_COUNT) return null;
       const note = createNote(notesOf(), pos);
       commit({ ...board, notes: [...notesOf(), note] }, ['notes']);
       setSelectionState({ kind: 'note', id: note.id }, new Set([note.id]));
@@ -545,24 +642,24 @@ export function createEditorState(initial: Board): EditorState {
       const notes = notesOf().map((n) => (n.id === id ? next : n));
       commit({ ...board, notes }, ['notes'], patch.text !== undefined ? `note:${id}:text` : undefined);
     },
-    canUndo: () => !playing && history.canUndo(),
-    canRedo: () => !playing && history.canRedo(),
+    canUndo: () => !frozen() && history.canUndo(),
+    canRedo: () => !frozen() && history.canRedo(),
     undo() {
-      if (playing) return false;
+      if (frozen()) return false;
       const prev = history.undo(board);
       if (!prev) return false;
       restore(prev);
       return true;
     },
     redo() {
-      if (playing) return false;
+      if (frozen()) return false;
       const next = history.redo(board);
       if (!next) return false;
       restore(next);
       return true;
     },
     copy() {
-      const c = buildClip(board, multi);
+      const c = buildClip(clipSource(), multi);
       if (!c) return 0;
       clip = c;
       pasteStep = 0;
@@ -570,7 +667,7 @@ export function createEditorState(initial: Board): EditorState {
       return multi.size;
     },
     paste() {
-      if (playing) return 0;
+      if (frozen()) return 0;
       const source = clip ?? readStoredClip();
       if (!source) return 0;
       clip = source;
@@ -578,8 +675,8 @@ export function createEditorState(initial: Board): EditorState {
       return insertClip(source, pasteStep);
     },
     duplicate() {
-      if (playing) return 0;
-      const c = buildClip(board, multi);
+      if (frozen()) return 0;
+      const c = buildClip(clipSource(), multi);
       return c ? insertClip(c, 1) : 0;
     },
   };
