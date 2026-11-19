@@ -60,7 +60,7 @@ export function circuitFromSelection(state: EditorState, notify: Notify): string
   state.edit(() => res.board);
   state.select({ kind: 'node', id: res.instanceId });
   const made = findCircuit(res.board, res.circuitId);
-  notify(T.madeFromSelection(made?.name ?? '', made?.pins.length ?? 0));
+  notify(res.orderChanged ? T.madeOrderChanged(made?.name ?? '') : T.madeFromSelection(made?.name ?? '', made?.pins.length ?? 0));
   return res.instanceId;
 }
 

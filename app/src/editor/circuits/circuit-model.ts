@@ -11,7 +11,9 @@ import {
   portsOfNode,
   type CircuitLookup,
 } from '../../circuits/instance';
+import { expandBoard } from '../../circuits/expand';
 import { validateCircuits } from '../../circuits/validate';
+import { compileGraph } from '../../engine/compile';
 import { getNodeDef } from '../../engine/registry';
 import {
   CIRCUIT_KIND,
@@ -538,14 +540,57 @@ export function pruneCircuits(board: Board): Board {
 // ---------- "Tạo bảng mạch từ các thẻ đang chọn" ----------
 
 export type FromSelectionFail = 'empty' | 'has-group' | 'too-deep';
-export type FromSelectionResult = { ok: true; board: Board; circuitId: string; instanceId: string } | { ok: false; reason: FromSelectionFail };
+export type FromSelectionResult =
+  /** `orderChanged`: no id for the copy keeps the cards running in the order they ran in before (see `createCircuitFromSelection`). */
+  | { ok: true; board: Board; circuitId: string; instanceId: string; orderChanged: boolean }
+  | { ok: false; reason: FromSelectionFail };
 
 /**
  * Turns the chosen cards of the open graph into a new circuit and puts one copy in their place. Every wire that crossed the
- * selection becomes a pin, so the board runs exactly as before: the copy stands at the origin, not turned, and the cards keep
- * their ids inside it.
+ * selection becomes a pin, the copy stands at the origin, not turned, and the cards keep their ids inside it.
+ *
+ * The engine runs cards that do not wait for each other in the order of their ids, and a card inside a copy runs under
+ * `<copy id>/<its id>`. So the id of the copy decides where the moved cards fall in that order. The id is picked so the whole
+ * board runs its cards in exactly the order it did before (then it behaves the same, tick for tick); when no id can do that,
+ * the circuit is still made and `orderChanged` says so.
  */
 export function createCircuitFromSelection(board: Board, path: CircuitPath, ids: ReadonlySet<string>, name = ''): FromSelectionResult {
+  const host = openGraph(board, path);
+  const natural = nextNodeId(host);
+  const first = buildFromSelection(board, path, ids, name, natural);
+  if (!first.ok) return first;
+  const before = runOrder(board, null);
+  if (before === null || before === runOrder(first.board, natural)) return first;
+  const taken = new Set(host.nodes.map((n) => n.id));
+  // An id that sorts right after each card of the host in turn, and one that sorts before them all.
+  const candidates = ['!', ...[...taken].sort().map((id) => `${id}!`)].filter((id) => !taken.has(id)).slice(0, ORDER_TRIES);
+  for (const id of candidates) {
+    const res = buildFromSelection(board, path, ids, name, id);
+    if (res.ok && runOrder(res.board, id) === before) return res;
+  }
+  return { ...first, orderChanged: true };
+}
+
+const ORDER_TRIES = 400;
+
+/**
+ * The order the engine runs the cards of the whole board in, and the wires it reads one tick late, as one text. `copy`: the
+ * id of a copy whose level is cut out of every id, so a board can be compared with itself before that copy existed.
+ * Null when the board does not expand.
+ */
+function runOrder(board: Board, copy: string | null): string | null {
+  let flat: Graph;
+  try {
+    flat = expandBoard(board).graph;
+  } catch {
+    return null;
+  }
+  const plain = (id: string): string => (copy === null ? id : id.split('/').filter((part) => part !== copy).join('/'));
+  const { order, backEdges } = compileGraph(flat);
+  return JSON.stringify([order.map(plain), [...backEdges].map(plain).sort()]);
+}
+
+function buildFromSelection(board: Board, path: CircuitPath, ids: ReadonlySet<string>, name: string, instanceId: string): FromSelectionResult {
   const host = openGraph(board, path);
   if ((host.groups ?? []).some((g) => ids.has(g.id) || g.nodeIds.some((id) => ids.has(id)))) return { ok: false, reason: 'has-group' };
   const chosen = host.nodes.filter((n) => ids.has(n.id));
@@ -577,7 +622,6 @@ export function createCircuitFromSelection(board: Board, path: CircuitPath, ids:
   };
 
   const circuitId = freshId(new Set(circuitsOf(board).map((c) => c.id)), 'c');
-  const instanceId = nextNodeId(host);
   const innerWires: Wire[] = [];
   const hostWires: Wire[] = [];
   for (const w of host.wires) {
@@ -638,7 +682,7 @@ export function createCircuitFromSelection(board: Board, path: CircuitPath, ids:
   }
   next = pruneCircuits({ ...next, graph: pruneGraphKnots(next.graph) });
   if (nestingFail(board, next) !== null) return { ok: false, reason: 'too-deep' };
-  return { ok: true, board: next, circuitId, instanceId };
+  return { ok: true, board: next, circuitId, instanceId, orderChanged: false };
 }
 
 /** Gives one copy on the open graph its own name; an empty name removes it, so the copy shows its circuit's name again. */

@@ -70,6 +70,7 @@ export const CIRCUIT_VI = {
   deleteNo: 'Thôi',
   created: (name: string) => `Đã tạo bảng mạch "${name}"`,
   madeFromSelection: (name: string, pins: number) => `Đã gói thành bảng mạch "${name}" với ${pins} chân`,
+  madeOrderChanged: (name: string) => `Đã gói thành bảng mạch "${name}". Thứ tự chạy của vài mảnh ghép có đổi, hãy bấm Chạy để xem lại; không ưng thì Hoàn tác.`,
   duplicated: (name: string) => `Đã nhân bản thành "${name}"`,
   deleted: (name: string) => `Đã xóa bảng mạch "${name}"`,
   deletedWith: (name: string, n: number) => `Đã xóa bảng mạch "${name}" và ${n} bản sao`,
