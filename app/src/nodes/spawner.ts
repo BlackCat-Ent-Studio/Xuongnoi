@@ -1,8 +1,8 @@
 import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type ParamDef, type Params, type PortDef, type PortValue } from '../engine/types';
 import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
-import { TRAFFIC_COLORS } from '../engine/block-styles';
 import { MAX_MASS_KG } from '../world/material';
 import { materialParams, materialSpec } from './body-params';
+import { PALETTE_COLORS } from './color-palette';
 import { ITEM_SHAPE_LABELS } from './item';
 import { createRng, hashText } from './random';
 import { asBool, asObject, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
@@ -32,8 +32,8 @@ const spawnerMaterialParams = (): ParamDef[] =>
 export const SPAWNER_MAX_CLASSES = 6;
 const MIN_CLASSES = 2;
 const DEFAULT_CLASSES = 3;
-/** The first three are the colours "Đọc màu" knows as Màu 1, 2, 3. */
-const CLASS_COLORS: readonly string[] = [...TRAFFIC_COLORS, '#3b82f6', '#a855f7', '#f97316'];
+/** Class k starts with the colour "Đọc màu" knows as Màu k. */
+const CLASS_COLORS = PALETTE_COLORS;
 const CLASS_PORT: PortDef = { id: 'lastClass', type: 'number', label: 'Loại vừa sinh', labelEn: 'Latest class' };
 const CLASS_MASS_PORT: PortDef = { id: 'lastMass', type: 'number', label: 'Khối lượng vừa sinh', labelEn: 'Latest mass' };
 

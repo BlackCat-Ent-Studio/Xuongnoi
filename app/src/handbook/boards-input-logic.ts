@@ -280,7 +280,7 @@ export const tryVisionSensor = (): Board =>
 export const tryColorSensor = (): Board =>
   build(
     'Đọc màu',
-    'Bấm Chạy, rồi bấm mũi tên phải. Nhân vật đứng trên ô đỏ nên Số màu là 1; bước sang ô xanh lá thì thành 3. Chỉ ba màu của bảng màu (đỏ, vàng, xanh lá) mới có số; màu khác ra 0.',
+    'Bấm Chạy, rồi bấm mũi tên phải. Nhân vật đứng trên ô đỏ nên Số màu là 1; bước sang ô xanh lá thì thành 3. Chỉ sáu màu của bảng màu (đỏ, vàng, xanh lá, xanh dương, tím, cam) mới có số; màu khác ra 0.',
     [
       { alias: 'stick', kind: 'stick', x: 20, y: 20 },
       { alias: 'hero', kind: 'character', x: 300, y: 20, params: { position: { x: -6, y: 1, z: 0 } } },
