@@ -150,13 +150,15 @@ function candidateAxes(a: Obb, b: Obb): Vec3[] {
 
 /**
  * `obbSeparation` together with the direction it was found along: the unit axis of the largest gap (of the shallowest overlap,
- * when the boxes overlap), pointing from `a` towards `b`.
+ * when the boxes overlap), pointing from `a` towards `b`. With `ground`, only directions on the ground plane are looked at
+ * (for two boxes that overlap in height: the shortest way to part them without lifting one).
  */
-export function obbGap(a: Obb, b: Obb): { gap: number; axis: Vec3 } {
+export function obbGap(a: Obb, b: Obb, ground = false): { gap: number; axis: Vec3 } {
   const t = sub(b.centre, a.centre);
   let gap = -Infinity;
-  let axis: Vec3 = { x: 0, y: 1, z: 0 };
+  let axis: Vec3 = ground ? { x: 1, y: 0, z: 0 } : { x: 0, y: 1, z: 0 };
   for (const u of candidateAxes(a, b)) {
+    if (ground && Math.abs(u.y) > 1e-6) continue;
     const along = dot(t, u);
     const g = Math.abs(along) - halfAlong(a, u) - halfAlong(b, u);
     if (g > gap) {
