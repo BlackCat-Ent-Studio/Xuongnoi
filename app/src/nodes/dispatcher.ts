@@ -15,6 +15,8 @@ interface DispatcherState {
   given: number;
   /** Code of the latest job each machine got. */
   codes: number[];
+  /** Code of the job handed over last, to whichever machine. */
+  lastCode: number;
 }
 
 const machinePorts = (id: string, type: PortDef['type'], vi: (k: number) => string, en: (k: number) => string, extra: Partial<PortDef> = {}): PortDef[] =>
@@ -37,6 +39,7 @@ export function machineCount(params: Params): number {
   return Math.min(DISPATCHER_MAX_MACHINES, Math.max(MIN_MACHINES, Math.round(numParam(params, 'machines', MIN_MACHINES))));
 }
 
+/** True when each machine also shows its own "Mã cho máy k" output. */
 const showsCodes = (params: Params): boolean => strParam(params, 'showCode', 'no') === 'yes';
 
 export const dispatcherNode: NodeDef<DispatcherState> = {
@@ -44,16 +47,17 @@ export const dispatcherNode: NodeDef<DispatcherState> = {
   label: 'Bộ điều phối',
   category: 'brain',
   description:
-    'Chia việc cho nhiều máy. Mỗi lần "Có việc" bật lên là có một việc mới. Mảnh ghép chọn một máy đang rảnh (cổng "Máy k đang bận" đang tắt) và bật "Giao máy k" một nhịp. Máy nào cũng bận thì việc xếp hàng chờ, có máy rảnh là giao ngay: không việc nào bị mất, không việc nào giao hai lần. "Cách chọn": "Lần lượt" chia đều cho các máy, "Máy rảnh đầu tiên" luôn ưu tiên máy số nhỏ. Ví dụ: ba xe chở hàng chia nhau các kiện hàng vừa tới. Nối "Giao máy k" vào "Bật" của một Công tắc nhớ, rồi nối "Đang bật" của nó về "Máy k đang bận".',
-  inputs: [{ id: 'job', type: 'bool', label: 'Có việc', required: true }],
+    'Chia việc cho nhiều máy. Mỗi lần "Có việc" bật lên là có một việc mới. Mảnh ghép chọn một máy đang rảnh (cổng "Máy k đang bận" đang tắt) và bật "Giao máy k" một nhịp. Máy nào cũng bận thì việc xếp hàng chờ, có máy rảnh là giao ngay: không việc nào bị mất, không việc nào giao hai lần. "Cách chọn": "Lần lượt" chia đều cho các máy, "Máy rảnh đầu tiên" luôn ưu tiên máy số nhỏ. Ví dụ: ba xe chở hàng chia nhau các kiện hàng vừa tới. Nối "Giao máy k" vào "Bật" của một Công tắc nhớ, rồi nối "Đang bật" của nó về "Máy k đang bận". Mỗi việc có thể mang theo một con số ở cổng "Mã việc" (ví dụ số cửa phải tới); lúc giao, số đó hiện ở "Mã vừa giao".',
+  inputs: [{ id: 'job', type: 'bool', label: 'Có việc', required: true }, JOB_CODE_PORT],
   optionalInputs: {
-    all: [JOB_CODE_PORT, ...busyPorts],
-    active: (params) => [...(showsCodes(params) ? [JOB_CODE_PORT] : []), ...busyPorts.slice(0, machineCount(params))],
+    all: busyPorts,
+    active: (params) => busyPorts.slice(0, machineCount(params)),
   },
   outputs: [
     { id: 'chosen', type: 'number', label: 'Máy được chọn' },
     { id: 'waiting', type: 'bool', label: 'Đang chờ' },
     { id: 'given', type: 'number', label: 'Đã giao' },
+    { id: 'lastCode', type: 'number', label: 'Mã vừa giao', labelEn: 'Latest code' },
   ],
   optionalOutputs: {
     all: [...givePorts, ...codePorts],
@@ -76,20 +80,20 @@ export const dispatcherNode: NodeDef<DispatcherState> = {
     },
     {
       id: 'showCode',
-      label: 'Hiện cổng Mã việc',
+      label: 'Hiện cổng Mã cho máy k',
       kind: 'select',
       default: 'no',
       options: [
         { value: 'no', label: 'Không' },
-        { value: 'yes', label: 'Có (mỗi việc mang một con số, chép sang "Mã cho máy k")' },
+        { value: 'yes', label: 'Có (mỗi máy có một cổng giữ mã của việc nó nhận gần nhất)' },
       ],
       advanced: true,
     },
   ],
-  create: () => ({ job: { prev: false }, waiting: [], next: 0, chosen: 0, given: 0, codes: Array.from({ length: DISPATCHER_MAX_MACHINES }, () => 0) }),
+  create: () => ({ job: { prev: false }, waiting: [], next: 0, chosen: 0, given: 0, lastCode: 0, codes: Array.from({ length: DISPATCHER_MAX_MACHINES }, () => 0) }),
   evaluate(_ctx, i, params, s) {
     const n = machineCount(params);
-    if (risingEdge(s.job, asBool(i.job))) s.waiting.push(showsCodes(params) ? asNum(i.jobId) : 0);
+    if (risingEdge(s.job, asBool(i.job))) s.waiting.push(asNum(i.jobId));
 
     // At most one hand-over per tick, so "Máy được chọn" names one machine and each "Giao máy k" is a clean pulse.
     let givenTo = -1;
@@ -100,14 +104,15 @@ export const dispatcherNode: NodeDef<DispatcherState> = {
         if (!asBool(i[`busy${k + 1}`])) givenTo = k;
       }
       if (givenTo >= 0) {
-        s.codes[givenTo] = s.waiting.shift() ?? 0;
+        s.lastCode = s.waiting.shift() ?? 0;
+        s.codes[givenTo] = s.lastCode;
         s.next = (givenTo + 1) % n;
         s.chosen = givenTo + 1;
         s.given += 1;
       }
     }
 
-    const out: PortValues = { chosen: s.chosen, waiting: s.waiting.length > 0 && givenTo < 0, given: s.given };
+    const out: PortValues = { chosen: s.chosen, waiting: s.waiting.length > 0 && givenTo < 0, given: s.given, lastCode: s.lastCode };
     for (let k = 0; k < n; k++) {
       out[`give${k + 1}`] = k === givenTo;
       out[`code${k + 1}`] = s.codes[k] ?? 0;

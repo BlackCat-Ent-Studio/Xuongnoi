@@ -4,7 +4,7 @@ import { build, type NodeSpec, type WireSpec } from './boards-robot-arm';
 /** "Thử ngay" boards for "Nhớ số", "Bộ điều phối" and the random classes of "Tạo đối tượng". */
 
 /** Cards of machine 1 sit above this canvas height, those of machine 2 below it. */
-export const SECOND_MACHINE_Y = 400;
+export const SECOND_MACHINE_Y = 480;
 export const NEW_DOOR_LABEL = 'Số cửa của việc mới';
 export const MACHINE_DOOR_LABEL = 'Máy 1 chở tới cửa';
 
@@ -27,7 +27,7 @@ export function shareJobsScene(): NodeSpec[] {
     { alias: 'clock', kind: 'timer', x: 20, y: 180, params: { seconds: 2, repeat: 'yes' } },
     { alias: 'door', kind: 'random', x: 20, y: 410, params: { min: 1, max: 6, whole: 'yes', mode: 'press', seed: 7 } },
     { alias: 'newDoor', kind: 'show-number', x: 20, y: 600, params: { label: NEW_DOOR_LABEL, corner: 'top-left' } },
-    { alias: 'machineDoor', kind: 'show-number', x: 300, y: 660, params: { label: MACHINE_DOOR_LABEL, corner: 'top-right' } },
+    { alias: 'machineDoor', kind: 'show-number', x: 300, y: 740, params: { label: MACHINE_DOOR_LABEL, corner: 'top-right' } },
     { alias: 'busy1', kind: 'latch', x: 640, y: 20 },
     { alias: 'work1', kind: 'timer', x: 900, y: 20, params: { seconds: 3 } },
     lamp('lamp1', 20, -2),

@@ -37,18 +37,19 @@ export const HANDBOOK_MEMORY_DISPATCH: readonly HandbookEntry[] = [
       'Khi có nhiều máy cùng làm một loại việc: ba xe chia nhau các kiện hàng vừa tới, hai cánh tay chia nhau các thùng trên băng chuyền, nhiều quầy chia nhau khách.',
     ports: {
       job: 'Vào: mỗi lần bật lên (từ tắt sang bật) là có một việc mới. Không nối dây thì không có việc nào.',
-      jobId: 'Vào (số), chỉ hiện khi bật "Hiện cổng Mã việc": con số đi kèm việc (ví dụ số cửa phải tới), được đọc đúng lúc "Có việc" bật lên.',
+      jobId: 'Vào (số): con số đi kèm việc (ví dụ số cửa phải tới), được đọc đúng lúc "Có việc" bật lên. Không nối dây thì mã là 0.',
       ...perMachine('busy', (k) => `Vào: bật khi máy ${k} đang bận, tắt khi máy rảnh. Không nối dây thì máy ${k} luôn được coi là rảnh.`),
       chosen: 'Ra (số): số của máy vừa được giao việc gần nhất. Chưa giao việc nào thì là 0.',
       waiting: 'Ra: bật khi còn việc đang chờ mà máy nào cũng bận.',
       given: 'Ra (số): tổng số việc đã giao từ lúc bắt đầu chạy.',
+      lastCode: 'Ra (số): mã của việc vừa được giao gần nhất, cho máy nào cũng vậy. Nối "Giao máy k" vào "Lưu" của một Nhớ số để máy k giữ lại mã của mình.',
       ...perMachine('give', (k) => `Ra: bật đúng một nhịp khi một việc được giao cho máy ${k}.`),
-      ...perMachine('code', (k) => `Ra (số), chỉ hiện khi bật "Hiện cổng Mã việc": mã của việc mà máy ${k} nhận gần nhất, giữ nguyên tới lần giao kế tiếp cho máy ${k}.`),
+      ...perMachine('code', (k) => `Ra (số), chỉ hiện khi bật "Hiện cổng Mã cho máy k": mã của việc mà máy ${k} nhận gần nhất, giữ nguyên tới lần giao kế tiếp cho máy ${k}.`),
     },
     params: {
       machines: `Số máy cùng chia việc, từ 2 đến ${DISPATCHER_MAX_MACHINES}. Mỗi máy có một cổng "Máy k đang bận" và một cổng "Giao máy k".`,
       mode: '"Lần lượt": giao xoay vòng máy 1, 2, 3... rồi quay lại máy 1, bỏ qua máy đang bận, nên các máy được chia đều. "Máy rảnh đầu tiên": luôn giao cho máy rảnh có số nhỏ nhất, nên máy 1 làm nhiều nhất.',
-      showCode: 'Nâng cao: bật thì hiện cổng vào "Mã việc" và các cổng ra "Mã cho máy k". Mỗi việc mang theo một con số, kể cả khi phải xếp hàng chờ.',
+      showCode: 'Nâng cao: bật thì mỗi máy có thêm một cổng ra "Mã cho máy k", giữ mã của việc máy đó nhận gần nhất. Việc nào cũng mang theo mã của mình, kể cả khi phải xếp hàng chờ.',
     },
     example:
       'Hẹn giờ "Hết giờ" → Bộ điều phối "Có việc"; "Giao máy 1" → Công tắc nhớ "Bật"; "Đang bật" của Công tắc nhớ → "Máy 1 đang bận". Máy làm xong thì "Tắt" Công tắc nhớ để nhận việc mới.',

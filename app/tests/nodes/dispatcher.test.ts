@@ -82,14 +82,14 @@ describe('dispatcher: one job at a time', () => {
     expect([givenTo(d, 2), d.code1, d.code2, d.given]).toEqual([[1], 33, 22, 3]);
   });
 
-  it('"Mã cho máy k" holds until the next hand-over to that machine, and reads 0 while the code ports are hidden', () => {
+  it('"Mã cho máy k" holds until the next hand-over to that machine; "Mã vừa giao" carries the code with the ports hidden', () => {
     const step = card({ showCode: 'yes' });
     step({ job: true, jobId: 7 });
     expect(step({ jobId: 99 }).code1).toBe(7);
     expect(step({ job: true, jobId: 5 }).code2).toBe(5);
     expect(step({}).code1).toBe(7);
     const plain = card();
-    expect(plain({ job: true, jobId: 7 }).code1).toBe(0);
+    expect(plain({ job: true, jobId: 7 }).lastCode).toBe(7);
   });
 
   it('a "Có việc" that is already on at the start is one job; unwired busy inputs mean always free', () => {
@@ -106,18 +106,18 @@ describe('dispatcher: one job at a time', () => {
 describe('dispatcher: ports follow "Số máy"', () => {
   const ids = (ports: { id: string }[]) => ports.map((p) => p.id);
   it('shows one busy input and one give output per machine, 2 to 12', () => {
-    expect(ids(activeInputs(dispatcherNode, defaultParams(dispatcherNode)))).toEqual(['job', 'busy1', 'busy2']);
-    expect(ids(activeOutputs(dispatcherNode, defaultParams(dispatcherNode)))).toEqual(['chosen', 'waiting', 'given', 'give1', 'give2']);
+    expect(ids(activeInputs(dispatcherNode, defaultParams(dispatcherNode)))).toEqual(['job', 'jobId', 'busy1', 'busy2']);
+    expect(ids(activeOutputs(dispatcherNode, defaultParams(dispatcherNode)))).toEqual(['chosen', 'waiting', 'given', 'lastCode', 'give1', 'give2']);
     for (const [raw, n] of [[0, 2], [5, 5], [12, 12], [99, 12], [2.6, 3]] as const) {
-      expect(activeInputs(dispatcherNode, { machines: raw }), String(raw)).toHaveLength(1 + n);
-      expect(activeOutputs(dispatcherNode, { machines: raw }), String(raw)).toHaveLength(3 + n);
+      expect(activeInputs(dispatcherNode, { machines: raw }), String(raw)).toHaveLength(2 + n);
+      expect(activeOutputs(dispatcherNode, { machines: raw }), String(raw)).toHaveLength(4 + n);
     }
   });
 
-  it('the code ports appear only with "Hiện cổng Mã việc"', () => {
+  it('the per-machine code ports appear only with "Hiện cổng Mã cho máy k"', () => {
     const on = { machines: 3, showCode: 'yes' };
     expect(ids(activeInputs(dispatcherNode, on))).toEqual(['job', 'jobId', 'busy1', 'busy2', 'busy3']);
-    expect(ids(activeOutputs(dispatcherNode, on))).toEqual(['chosen', 'waiting', 'given', 'give1', 'give2', 'give3', 'code1', 'code2', 'code3']);
+    expect(ids(activeOutputs(dispatcherNode, on))).toEqual(['chosen', 'waiting', 'given', 'lastCode', 'give1', 'give2', 'give3', 'code1', 'code2', 'code3']);
     expect(dispatcherNode.params.find((p) => p.id === 'showCode')?.advanced).toBe(true);
   });
 
@@ -126,9 +126,9 @@ describe('dispatcher: ports follow "Số máy"', () => {
     expect(flagged).toEqual(Array.from({ length: 12 }, (_, k) => `busy${k + 1}`));
   });
 
-  it('a 12-machine card is not taller than a 12-step sequence card with its done ports', () => {
+  it('a 12-machine card is at most two rows (the job code in and out) taller than a 12-step sequence card with its done ports', () => {
     const rows = (kind: string, params: Params) => activeInputs(getNodeDef(kind)!, params).length + activeOutputs(getNodeDef(kind)!, params).length;
-    expect(rows('dispatcher', { machines: 12 })).toBeLessThanOrEqual(rows('sequence', { stepCount: 12, showDone: 'yes' }));
+    expect(rows('dispatcher', { machines: 12 })).toBeLessThanOrEqual(rows('sequence', { stepCount: 12, showDone: 'yes' }) + 2);
   });
 
   it('is registered under Bộ não with Vietnamese and English names on every port', () => {
@@ -137,7 +137,7 @@ describe('dispatcher: ports follow "Số máy"', () => {
     const all = { machines: 12, showCode: 'yes' };
     for (const p of [...activeInputs(def, all), ...activeOutputs(def, all)]) expect(p.labelEn, p.id).toBeTruthy();
     expect(activeInputs(def, all).map((p) => p.label).slice(0, 4)).toEqual(['Có việc', 'Mã việc', 'Máy 1 đang bận', 'Máy 2 đang bận']);
-    expect(activeOutputs(def, all).map((p) => p.label).slice(0, 4)).toEqual(['Máy được chọn', 'Đang chờ', 'Đã giao', 'Giao máy 1']);
+    expect(activeOutputs(def, all).map((p) => p.label).slice(0, 5)).toEqual(['Máy được chọn', 'Đang chờ', 'Đã giao', 'Mã vừa giao', 'Giao máy 1']);
     expect(activeOutputs(def, all).at(-1)!.label).toBe('Mã cho máy 12');
   });
 });

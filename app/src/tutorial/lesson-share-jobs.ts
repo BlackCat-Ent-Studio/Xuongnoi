@@ -62,7 +62,7 @@ const T = {
   play2: {
     title: 'Chạy lại',
     text: `Bấm Chạy. "${MACHINE_DOOR_LABEL}" chỉ đổi khi máy 1 nhận việc mới, còn số cửa của việc mới thì đổi liên tục.`,
-    explain: 'Nếu việc phải xếp hàng chờ, hãy bật "Hiện cổng Mã việc" của Bộ điều phối để mỗi việc mang theo số của mình.',
+    explain: 'Nếu việc phải xếp hàng chờ, hãy nối số cửa vào cổng "Mã việc" của Bộ điều phối để mỗi việc mang theo số của mình, rồi lấy số ở cổng "Mã vừa giao".',
   },
   done: {
     title: 'Xong rồi!',
