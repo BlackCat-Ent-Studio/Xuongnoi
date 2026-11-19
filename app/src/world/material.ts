@@ -1,5 +1,5 @@
 import type { EntityKind, EntitySpec, Vec3 } from '../engine/types';
-import { boxOverlap, colliderBox, isTurnedBody, orientedBox } from './collider';
+import { boxOverlap, colliderBox, isTurnedBody, orientedBox, type Box } from './collider';
 import { footprintsOverlap, obbCorners } from './oriented-box';
 import type { Pt } from './footprint-2d';
 import { leverShares, shapeOf, supportPoint, type Shape } from './weighing';
@@ -113,10 +113,67 @@ const RIM_SLACK = 1e-3;
 /** Slack (m) for a turned support, whose top outline can be any small shape: its sides are longer than 1e-9 m, which forgives up to 1 m. */
 const TURNED_SLACK = 1;
 
-/** Everything of the entity's real shape, however it is turned, lies within this distance of its position. */
-function reachOf(e: Entity): number {
+/**
+ * What weighing reads of one body again and again, worked out once: whether it is a loose crate, whether it is turned, its
+ * collision box, and how far its real shape reaches from its position however it is turned.
+ */
+interface Fact {
+  e: Entity;
+  free: boolean;
+  turned: boolean;
+  box: Box;
+  reach: number;
+}
+
+function readFact(f: Fact): void {
+  const e = f.e;
   const b = colliderBox(e);
-  return Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+  f.free = isFreeCrate(e);
+  f.turned = isTurnedBody(e);
+  f.box = b;
+  f.reach = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+}
+
+function factOf(e: Entity): Fact {
+  const f: Fact = { e, free: false, turned: false, box: e, reach: 0 };
+  readFact(f);
+  return f;
+}
+
+/** A body something can stand on (and, unless it is bolted to the target, one that weighs on what it stands on). */
+const bears = (e: Entity): boolean => e.visible && !e.inHand && !e.zone;
+
+/** A body that may be somewhere else at the next weighing of the same tick: a chassis drives and shoves chassis and plain items. */
+const moves = (e: Entity): boolean => e.kind === 'robot' || (e.kind === 'item' && e.rigid !== true);
+
+/**
+ * The bodies of a world sorted out for weighing, so that several weighings in a row (every chassis is weighed on every tick)
+ * do not each read every body again. It may be passed to `massOn` for as long as nothing but chassis and plain (not rigid)
+ * items moves and no body appears, disappears, is taken up or let go: those few are read again at every weighing, the rest
+ * is kept. Without one, `massOn` reads everything itself.
+ */
+export interface WeighScene {
+  /** Every body that bears, in the order of the entity list. */
+  facts: Fact[];
+  byEntity: Map<Entity, Fact>;
+  /** The facts of the bodies that may move in between. */
+  moving: Fact[];
+  shapes: Map<Entity, Shape>;
+  anyFreeCrate: boolean;
+}
+
+export function weighSceneOf(list: readonly Entity[]): WeighScene {
+  const scene: WeighScene = { facts: [], byEntity: new Map(), moving: [], shapes: new Map(), anyFreeCrate: list.some(isFreeCrate) };
+  // Without a loose crate the old rule weighs, and it reads the list itself.
+  if (!scene.anyFreeCrate) return scene;
+  for (const e of list) {
+    if (!bears(e)) continue;
+    const f = factOf(e);
+    scene.facts.push(f);
+    scene.byEntity.set(e, f);
+    if (moves(e)) scene.moving.push(f);
+  }
+  return scene;
 }
 
 /**
@@ -124,28 +181,28 @@ function reachOf(e: Entity): number {
  * asked (it would work out both outlines to say no). Never true for a pair that could rest: a wrong "far" would change a weight.
  *
  * A crate rests on a support where its underside, seen from above, shares a patch with the support's top. The underside lies
- * within `reachOf(crate)` of the crate's position. An upright support (not turned, at least MIN_SIDE wide and deep) has its
+ * within the crate's reach of its position. An upright support (not turned, at least MIN_SIDE wide and deep) has its
  * collision box's rectangle as top, so a crate whose position is further than its reach plus RIM_SLACK outside that rectangle,
  * along x or along z, shares nothing with it. A turned support's top lies within its own reach of its position; the outline
  * maths may take a point for inside up to (1e-9 / side length) beyond a side and up to two diameters beyond a corner, hence
- * three reaches and TURNED_SLACK. Numbers that are not finite never count as far.
+ * three reaches and TURNED_SLACK. With a number that is not finite anywhere in the pair, the outline maths decides alone.
  */
-function tooFarToHold(crate: Entity, base: Entity): boolean {
-  const reach = reachOf(crate);
-  if (isTurnedBody(base)) {
-    const far = Math.hypot(crate.pos.x - base.pos.x, crate.pos.z - base.pos.z);
-    const limit = reach + 3 * reachOf(base) + TURNED_SLACK;
-    return far + limit + Math.abs(crate.pos.y) + Math.abs(base.pos.y) < Infinity && far > limit;
+function tooFarToHold(crate: Fact, base: Fact): boolean {
+  const c = crate.e.pos;
+  if (base.turned) {
+    const p = base.e.pos;
+    const far = Math.hypot(c.x - p.x, c.z - p.z);
+    const limit = crate.reach + 3 * base.reach + TURNED_SLACK;
+    return far + limit + Math.abs(c.y) + Math.abs(p.y) < Infinity && far > limit;
   }
-  const b = colliderBox(base);
+  const b = base.box;
   const halfX = Math.abs(b.size.x) / 2;
   const halfZ = Math.abs(b.size.z) / 2;
   if (!(halfX * 2 >= MIN_SIDE) || !(halfZ * 2 >= MIN_SIDE)) return false;
-  const dx = Math.abs(crate.pos.x - b.pos.x);
-  const dz = Math.abs(crate.pos.z - b.pos.z);
-  // One number that is not finite anywhere in the pair, and the outline maths decides alone.
-  if (!(dx + dz + reach + halfX + halfZ + Math.abs(crate.pos.y) + Math.abs(b.pos.y) + Math.abs(b.size.y) < Infinity)) return false;
-  return dx > reach + halfX + RIM_SLACK || dz > reach + halfZ + RIM_SLACK;
+  const dx = Math.abs(c.x - b.pos.x);
+  const dz = Math.abs(c.z - b.pos.z);
+  if (!(dx + dz + crate.reach + halfX + halfZ + Math.abs(c.y) + Math.abs(b.pos.y) + Math.abs(b.size.y) < Infinity)) return false;
+  return dx > crate.reach + halfX + RIM_SLACK || dz > crate.reach + halfZ + RIM_SLACK;
 }
 
 /**
@@ -156,9 +213,20 @@ function tooFarToHold(crate: Entity, base: Entity): boolean {
  * `parts` are the pieces of a machine bolted to the target (a joint hub, a link and its solid cover, a piston, a hand): they are part of
  * the target, so they never weigh on it, wherever they sit. What rests on one of them rests on the target, and so does a crate that a
  * hand among them holds.
+ *
+ * `scene` saves reading every body again when many bodies are weighed in a row (see `WeighScene` for when it may be passed).
  */
-export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity> = NO_PARTS): number {
-  return list.some(isFreeCrate) ? massOnShared(list, target, parts) : massOnWhole(list, target, parts);
+export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity> = NO_PARTS, scene?: WeighScene): number {
+  if (!(scene ? scene.anyFreeCrate : list.some(isFreeCrate))) return massOnWhole(list, target, parts);
+  if (!scene) return massOnShared(weighSceneOf(list), target, parts);
+  for (const f of scene.moving) {
+    readFact(f);
+    scene.shapes.delete(f.e);
+  }
+  // A target or a piece that does not bear has no fact in the scene; nothing is kept of it either.
+  scene.shapes.delete(target);
+  for (const p of parts) scene.shapes.delete(p);
+  return massOnShared(scene, target, parts);
 }
 
 /**
@@ -167,9 +235,13 @@ export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlyS
  * half over the scale and half over a block of the same height gives each half; a crate lying across the scale edge gives the scale
  * the part its centre of mass is nearer to; crates stacked on a crate pass their weight on through it. Other bodies (people, robots,
  * blocks) are shared equally between the things they stand on.
+ *
+ * Every body is held against every support of the pile, so a pair is first ruled out by a few numbers where that is certain
+ * (`tooFarToHold`, and the height tests in `holds`, each the very test the full rule would start with); only the pairs left are
+ * asked in full. The bodies are gone through in the order of the entity list, which the shares depend on.
  */
-function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity>): number {
-  const shapes = new Map<Entity, Shape>();
+function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Entity>): number {
+  const { facts, shapes } = scene;
   const shapeFor = (e: Entity): Shape => {
     let s = shapes.get(e);
     if (!s) {
@@ -178,61 +250,61 @@ function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySe
     }
     return s;
   };
-  /** A body something can stand on, and a body that weighs on what it stands on (the pieces bolted to the target bear, but never weigh). */
-  const bears = (e: Entity): boolean => e.visible && !e.inHand && !e.zone;
-  const counts = (e: Entity): boolean => bears(e) && !parts.has(e);
+  /** The target and its pieces need not bear (a hidden piece), so they may have no fact yet. */
+  const factFor = (e: Entity): Fact => scene.byEntity.get(e) ?? factOf(e);
   /** Node ids of the bolted pieces: a crate one of them grips hangs on the target with its whole weight. */
   const hands = new Set<string>();
   for (const p of parts) hands.add(p.ownerNodeId);
   const gripped = (e: Entity): boolean => e.grippedBy !== undefined && hands.has(e.grippedBy);
-  /**
-   * True only when the upright body `top` cannot stand on the turned `base` because its bottom is not at the height of the base's
-   * highest point: the first thing `restsTurned` asks, answered here without working out the corners of `top`. An upright box's
-   * lowest corner is its collision box's middle less half its height, to the last bit (the corner sum adds zeros to it); the
-   * millionth of slack leaves anything near the limit to `restsTurned` itself.
-   */
-  const wrongHeightFor = (top: Entity, base: Entity): boolean => {
-    if (isTurnedBody(top) || !isTurnedBody(base)) return false;
-    const b = colliderBox(top);
-    // With a size that is not finite the corner sum is not a number, and `restsTurned` must say what that means.
-    if (!(Math.hypot(b.size.x, b.size.y, b.size.z) < Infinity)) return false;
-    return Math.abs(b.pos.y - Math.abs(b.size.y) / 2 - shapeFor(base).highest) > REST_GAP + 1e-6;
-  };
   /** Where `base` pushes up on `top`: for a free crate the patch middle, else any overlap that old rule says is standing on it. */
-  const holds = (top: Entity, base: Entity): Pt | null => {
-    if (isFreeCrate(top)) return tooFarToHold(top, base) ? null : supportPoint(shapeFor(top), shapeFor(base));
-    if (wrongHeightFor(top, base)) return null;
-    return rests(top, base) ? { x: top.pos.x, z: top.pos.z } : null;
+  const holds = (top: Fact, base: Fact): Pt | null => {
+    if (top.free) return tooFarToHold(top, base) ? null : supportPoint(shapeFor(top.e), shapeFor(base.e));
+    if (!top.turned) {
+      const t = top.box;
+      if (!base.turned) {
+        // Two upright bodies: the height test `rests` starts with, on the same numbers.
+        const b = base.box;
+        if (Math.abs(t.pos.y - t.size.y / 2 - (b.pos.y + b.size.y / 2)) > REST_GAP) return null;
+      } else if (Math.hypot(t.size.x, t.size.y, t.size.z) < Infinity) {
+        // An upright body on a turned support: `restsTurned` starts by holding the lowest corner of the body against the
+        // highest point of the support. An upright box's lowest corner is its collision box's middle less half its height, to
+        // the last bit (the corner sum only adds zeros to it; with a size that is not finite it is not a number, and that is
+        // left to `restsTurned`). The millionth of slack leaves anything near the limit to `restsTurned` as well.
+        if (Math.abs(t.pos.y - Math.abs(t.size.y) / 2 - shapeFor(base.e).highest) > REST_GAP + 1e-6) return null;
+      }
+    }
+    return rests(top.e, base.e) ? { x: top.e.pos.x, z: top.e.pos.z } : null;
   };
 
   // Everything that loads the target, directly or through other bodies.
-  const above: Entity[] = [];
+  const above: Fact[] = [];
   const seen = new Set<Entity>([target, ...parts]);
-  const queue: Entity[] = [target, ...parts];
+  const queue: Fact[] = [factFor(target), ...[...parts].map(factFor)];
   if (hands.size > 0) {
-    for (const e of list) {
-      if (!counts(e) || !gripped(e)) continue;
-      seen.add(e);
-      above.push(e);
-      queue.push(e);
+    for (const f of facts) {
+      if (parts.has(f.e) || !gripped(f.e)) continue;
+      seen.add(f.e);
+      above.push(f);
+      queue.push(f);
     }
   }
   while (queue.length > 0) {
     const base = queue.pop()!;
-    for (const e of list) {
-      if (seen.has(e) || !counts(e) || !holds(e, base)) continue;
-      seen.add(e);
-      above.push(e);
-      queue.push(e);
+    for (const f of facts) {
+      if (seen.has(f.e) || parts.has(f.e) || !holds(f, base)) continue;
+      seen.add(f.e);
+      above.push(f);
+      queue.push(f);
     }
   }
   // Highest first: a body is passed everything above it before it passes its own load down.
-  const height = (e: Entity): number => shapeFor(e).obb.centre.y;
-  above.sort((a, b) => height(b) - height(a) || (a.id < b.id ? -1 : 1));
+  const height = (f: Fact): number => shapeFor(f.e).obb.centre.y;
+  above.sort((a, b) => height(b) - height(a) || (a.e.id < b.e.id ? -1 : 1));
 
   const carried = new Map<Entity, { kg: number; x: number; z: number }>();
   let total = 0;
-  for (const e of above) {
+  for (const top of above) {
+    const e = top.e;
     const got = carried.get(e);
     const own = shapeFor(e).obb.centre;
     const kg = massKgOf(e) + (got?.kg ?? 0);
@@ -244,14 +316,14 @@ function massOnShared(list: readonly Entity[], target: Entity, parts: ReadonlySe
     }
     const bases: Entity[] = [];
     const spots: Pt[] = [];
-    for (const b of list) {
-      if (b === e || !bears(b)) continue;
-      const at = holds(e, b);
+    for (const f of facts) {
+      if (f === top) continue;
+      const at = holds(top, f);
       if (!at) continue;
-      bases.push(b);
+      bases.push(f.e);
       spots.push(at);
     }
-    const shares = isFreeCrate(e) ? leverShares(spots, centre, kg) : bases.map(() => kg / Math.max(1, bases.length));
+    const shares = top.free ? leverShares(spots, centre, kg) : bases.map(() => kg / Math.max(1, bases.length));
     bases.forEach((b, k) => {
       const f = shares[k]!;
       if (b === target || parts.has(b)) total += f;

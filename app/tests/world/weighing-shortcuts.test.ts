@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { boxOverlap, colliderBox, isTurnedBody, orientedBox } from '../../src/world/collider';
 import type { Entity } from '../../src/world/entity';
 import type { Pt } from '../../src/world/footprint-2d';
-import { DEFAULT_MASS_KG, massOn } from '../../src/world/material';
+import { DEFAULT_MASS_KG, massOn, weighSceneOf } from '../../src/world/material';
 import { footprintsOverlap, obbCorners } from '../../src/world/oriented-box';
 import { leverShares, shapeOf, supportPoint, type Shape } from '../../src/world/weighing';
 
@@ -243,6 +243,25 @@ describe('massOn with its shortcuts gives the weight of the plain rule', () => {
     // Many of the chassis do carry something, and many carry nothing.
     expect(loaded).toBeGreaterThan(asked / 4);
     expect(asked - loaded).toBeGreaterThan(asked / 10);
+  });
+
+  it('with one scene for chassis after chassis, each driving off before the next is weighed', () => {
+    const next = rng(31337);
+    let loaded = 0;
+    for (let round = 0; round < 200; round++) {
+      const { list, machines } = yard(next);
+      const scene = weighSceneOf(list);
+      // Twice round the fleet: the second time every chassis stands somewhere else than when the scene was made.
+      for (const m of [...machines, ...machines]) {
+        const want = massOnPlain(list, m.chassis, m.parts);
+        expect(massOn(list, m.chassis, m.parts, scene)).toBe(want);
+        if (want > 0) loaded++;
+        // As in a tick: the chassis moves (from under its load, or under a neighbour's), the crates stay where they are.
+        m.chassis.pos.x += (next() - 0.5) * 1.5;
+        m.chassis.pos.z += (next() - 0.5) * 1.5;
+      }
+    }
+    expect(loaded).toBeGreaterThan(300);
   });
 
   it('with sizes and places that are not numbers', () => {
