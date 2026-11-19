@@ -139,5 +139,10 @@
  "handbook:angle-diff": "db006f25:900",
  "handbook:sample-hold": "6d02f185:900",
  "handbook:dispatcher": "fe93cc64:900",
- "lesson:share-jobs": "b8f785d:900"
+ "lesson:share-jobs": "b8f785d:900",
+ "handbook:robot-goto": "5e7ed583:900",
+ "handbook:floor-marker": "9f044ab1:900",
+ "handbook:floor-marker-sensor": "3b8a6a36:900",
+ "handbook:floor-marker-find": "16137d45:900",
+ "lesson:robot-to-marker": "e6e7abad:900"
 }
