@@ -16,7 +16,8 @@ import { cloneBoard, trayFleet } from './many-machines';
  * machine is doing) and only runs when asked:
  *
  *   VITE_TICK_COST="agv:1,4,8,16 tray:8,16" npx vitest run tests/perf/tick-cost --testTimeout 3000000 --silent=false
- *   VITE_TICK_COST="profile-agv:8" ...   (or profile-tray:16) prints where the time goes instead
+ *   VITE_TICK_COST="profile-agv:8" ...   (or profile-tray:16) prints where the time goes instead: the first 20 simulated
+ *   seconds, or VITE_TICK_COST_SECONDS of them starting at second VITE_TICK_COST_FROM
  *
  * `agv:N` is N copies of the AGV sample in one flat graph, `tray:N` a fleet of N small tray chassis; 60 simulated seconds each,
  * "Vật lý thật" on. Each row ends with a hash of every entity over the run: the same hash before and after a change to the engine
@@ -24,6 +25,7 @@ import { cloneBoard, trayFleet } from './many-machines';
  */
 const plan: string = (import.meta.env.VITE_TICK_COST as string | undefined) ?? '';
 const SECONDS = Number(import.meta.env.VITE_TICK_COST_SECONDS ?? 60);
+const FROM = Number(import.meta.env.VITE_TICK_COST_FROM ?? 0);
 
 let rapier: RapierModule;
 beforeAll(async () => {
@@ -103,6 +105,8 @@ interface ProfileNode {
 
 async function profile(what: string, n: number): Promise<void> {
   const run = make(what, n);
+  // Run up to the stretch that is to be looked at.
+  for (let k = 0; k < Math.round(FROM / TICK_DT); k++) run.tick();
   const session = new Session();
   session.connect();
   await post(session, 'Profiler.enable');
