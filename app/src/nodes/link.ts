@@ -1,6 +1,6 @@
 import type { EntityId, NodeDef } from '../engine/types';
 import { advance, localToWorld } from '../world/arm-kinematics';
-import { linkCubes, linkOutline, linkSliceCount, outlineSlices } from '../world/arm-solid';
+import { isPlate, linkCubes, linkOutline, linkSliceCount, linkWidth, outlineSlices } from '../world/arm-solid';
 import { armRegistry, baseFrame, isSolidPiece, placeBox, placeSolidCubes } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { quatFromAxes } from '../world/oriented-box';
@@ -40,8 +40,10 @@ export const linkNode: NodeDef<LinkState> = {
       ],
     },
     { id: 'color', label: 'Màu', kind: 'color', default: '#a3a3a3' },
+    // 0 = as wide as it is thick: the square bar of every card made before this setting existed, so those need no migration.
+    { id: 'width', label: 'Bề rộng (m; 0 = bằng độ dày, thanh vuông; lớn hơn thì thanh thành tấm phẳng, làm khay đỡ vật)', kind: 'number', default: 0, min: 0, max: 5, step: 0.05, advanced: true },
   ],
-  createOnly: ['length', 'thickness', 'color', 'solid'],
+  createOnly: ['length', 'thickness', 'width', 'color', 'solid'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -53,7 +55,7 @@ export const linkNode: NodeDef<LinkState> = {
       kind: 'block',
       ownerNodeId: ctx.nodeId,
       position: { x: 0, y: -1000, z: 0 },
-      size: { x: length, y: t, z: t },
+      size: { x: length, y: t, z: linkWidth(t, numParam(params, 'width', 0)) },
       color: strParam(params, 'color', '#a3a3a3'),
       solid: false,
     });
@@ -73,6 +75,7 @@ export const linkNode: NodeDef<LinkState> = {
     const end = advance(start, length);
     const mid = localToWorld(start, { x: length / 2, y: 0, z: 0 });
     const thickness = Math.max(0.05, numParam(params, 'thickness', 0.2));
+    const width = linkWidth(thickness, numParam(params, 'width', 0));
     const solid = isSolidPiece(ctx.world, params);
     // Real physics: a rigid crate meets the link's exact box (the engine is given that box, a sweep tests slices of it); the upright cubes stay for everything else.
     const exact = solid && ctx.world.realPhysicsOn();
@@ -84,13 +87,14 @@ export const linkNode: NodeDef<LinkState> = {
       masses: [{ kg: Math.max(0, numParam(params, 'mass', 1)), point: mid }],
       shape: (from) => ({
         out: advance(from, length),
-        solids: !solid ? [] : exact ? [...linkCubes(from, length, thickness).map((c) => ({ ...c, fat: true })), ...outlineSlices(linkOutline(from, length, thickness), 'x', linkSliceCount(length, thickness))] : linkCubes(from, length, thickness),
+        solids: !solid ? [] : exact ? [...linkCubes(from, length, thickness, width).map((c) => ({ ...c, fat: true })), ...outlineSlices(linkOutline(from, length, thickness, width), 'x', linkSliceCount(length, thickness))] : linkCubes(from, length, thickness, width),
       }),
     });
     placeBox(ctx.world, ctx.mode, s.id, mid, start);
-    if (solid) placeSolidCubes(ctx.world, ctx.nodeId, s.bodies, linkCubes(start, length, thickness));
+    // A plate's cover boxes change size as it turns; a square bar's cubes never do.
+    if (solid) placeSolidCubes(ctx.world, ctx.nodeId, s.bodies, linkCubes(start, length, thickness, width), isPlate(thickness, width));
     if (exact) {
-      const o = linkOutline(start, length, thickness);
+      const o = linkOutline(start, length, thickness, width);
       ctx.world.setExactBodies(ctx.nodeId, [{ centre: o.centre, size: { x: 2 * o.half.x, y: 2 * o.half.y, z: 2 * o.half.z }, rot: quatFromAxes(o.axes[0], o.axes[1], o.axes[2]) }]);
     }
     return { tip: s.id };

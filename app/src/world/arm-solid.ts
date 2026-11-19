@@ -23,9 +23,49 @@ const TINY = 1e-9;
 /** Rounding slack for "the whole step fits". */
 const FULL = 1 - 1e-9;
 
-/** Axis-aligned cubes covering a link of `length` and `thickness` that starts at `start` and points along it. */
-export function linkCubes(start: Frame, length: number, thickness: number): Box[] {
+/** A plate (a link wider or narrower than it is thick) is covered by cells about this long and wide (m), or its smaller side when that is bigger. */
+const PLATE_CELL = 0.2;
+
+/** How wide a link is sideways (m): its own width, or its thickness when none is set (the square bar every older board has). */
+export function linkWidth(thickness: number, width: number | undefined): number {
+  return width !== undefined && Number.isFinite(width) && width > 0 ? Math.max(0.01, width) : Math.max(0.01, thickness);
+}
+
+/** True when the link is a plate: its width differs from its thickness. */
+export function isPlate(thickness: number, width: number | undefined): boolean {
+  return Math.abs(linkWidth(thickness, width) - Math.max(0.01, thickness)) > 1e-9;
+}
+
+/**
+ * The upright boxes covering a plate: it is cut into a grid of cells along its length and across its width, and each cell is covered
+ * by the bounds of its real, turned outline. Standing square to the axes the cover is the plate itself; turned, it is fatter by a
+ * part of one cell (a 0.2 m cell at 45 degrees: 4 cm on each side, its corners 10 cm off the plate). The number of cells depends
+ * only on the sizes, so the boxes keep their identity while the plate turns (their sizes follow the turn).
+ */
+function plateCover(start: Frame, length: number, thickness: number, width: number): Box[] {
+  const cell = Math.max(PLATE_CELL, Math.min(thickness, width));
+  const n = Math.max(1, Math.ceil(length / cell - 1e-9));
+  const m = Math.max(1, Math.ceil(width / cell - 1e-9));
+  const turn = quatFromAxes(dirOf(start), normalOf(start), lateralOf(start));
+  const size = { x: length / n, y: thickness, z: width / m };
+  const out: Box[] = [];
+  for (let i = 0; i < n; i++) {
+    for (let j = 0; j < m; j++) {
+      const centre = localToWorld(start, { x: size.x * (i + 0.5), y: 0, z: -width / 2 + size.z * (j + 0.5) });
+      const b = obbBounds(obbOf(centre, size, turn));
+      out.push({ pos: b.pos, size: b.size });
+    }
+  }
+  return out;
+}
+
+/**
+ * Axis-aligned boxes covering a link of `length` and `thickness` that starts at `start` and points along it: a chain of cubes for a
+ * square bar, a grid of cells for a plate (`width` given and different from the thickness).
+ */
+export function linkCubes(start: Frame, length: number, thickness: number, width?: number): Box[] {
   const t = Math.max(0.01, thickness);
+  if (isPlate(thickness, width)) return plateCover(start, length, t, linkWidth(thickness, width));
   const size = { x: t, y: t, z: t };
   if (length <= t) return [{ pos: localToWorld(start, { x: length / 2, y: 0, z: 0 }), size }];
   const span = length - t;
@@ -36,10 +76,13 @@ export function linkCubes(start: Frame, length: number, thickness: number): Box[
   return out;
 }
 
-/** The exact box of a link (real physics on): `length` along the link, `thickness` across, turned with the link. */
-export function linkOutline(start: Frame, length: number, thickness: number): Obb {
+/**
+ * The exact box of a link (real physics on): `length` along the link, `thickness` up from it and `width` sideways (the thickness
+ * again when no width is set), turned with the link.
+ */
+export function linkOutline(start: Frame, length: number, thickness: number, width?: number): Obb {
   const t = Math.max(0.01, thickness);
-  return obbOf(localToWorld(start, { x: length / 2, y: 0, z: 0 }), { x: length, y: t, z: t }, quatFromAxes(dirOf(start), normalOf(start), lateralOf(start)));
+  return obbOf(localToWorld(start, { x: length / 2, y: 0, z: 0 }), { x: length, y: t, z: linkWidth(thickness, width) }, quatFromAxes(dirOf(start), normalOf(start), lateralOf(start)));
 }
 
 /**

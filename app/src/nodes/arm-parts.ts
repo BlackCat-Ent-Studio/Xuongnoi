@@ -158,8 +158,18 @@ export function placeSolidCubes(world: WorldApi, ownerNodeId: string, ids: Entit
   });
 }
 
-/** Frame of what a piece is mounted on, shifted by `mount` (local x along, y up, z sideways). Null when the object is unknown or hidden. */
+/**
+ * Frame of what a piece is mounted on, shifted by `mount` (local x along, y up, z sideways). Null when the object is unknown or hidden.
+ * Every arm piece asks this once a tick for its own mount, so this is also where the world is told what the piece is bolted to
+ * (see `WorldApi.setMount`): a piece that finds no mount is bolted to nothing.
+ */
 export function baseFrame(ctx: EvalCtx, baseId: EntityId | null, mount: Vec3): Frame | null {
+  const frame = frameOf(ctx, baseId);
+  ctx.world.setMount(ctx.nodeId, frame ? baseId : null);
+  return frame ? { pos: localToWorld(frame, mount), yaw: frame.yaw, pitch: frame.pitch } : null;
+}
+
+function frameOf(ctx: EvalCtx, baseId: EntityId | null): Frame | null {
   if (baseId === null) return null;
   const known = armRegistry(ctx.world).frames.get(baseId);
   let frame: Frame;
@@ -171,7 +181,7 @@ export function baseFrame(ctx: EvalCtx, baseId: EntityId | null, mount: Vec3): F
     // A robot chassis turns clockwise seen from above (heading 0 = +x); the arm frame turns the other way round, and the side view has no turning.
     frame = { pos: view.position, yaw: view.robot && ctx.mode !== '2d-side' ? -view.robot.heading : 0, pitch: 0 };
   }
-  return { pos: localToWorld(frame, mount), yaw: frame.yaw, pitch: frame.pitch };
+  return frame;
 }
 
 /** Puts a drawn (non-solid) box at `centre` with the arm's heading. The flat views read one turn: the side view pitch, the top view yaw. */
