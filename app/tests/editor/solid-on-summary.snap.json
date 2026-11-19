@@ -727,6 +727,25 @@
   }
  },
  {
+  "id": "lesson:share-jobs",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b8f785d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b8f785d"
+  }
+ },
+ {
   "id": "lesson:carry-use",
   "off": {
    "ended": "running",
@@ -2703,6 +2722,44 @@
    "error": null,
    "colliderMismatch": 0,
    "hash": "db006f25"
+  }
+ },
+ {
+  "id": "handbook:sample-hold",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "6d02f185"
+  }
+ },
+ {
+  "id": "handbook:dispatcher",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fe93cc64"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "fe93cc64"
   }
  }
 ]

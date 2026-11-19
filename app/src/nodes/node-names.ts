@@ -589,6 +589,37 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'sample-hold': {
+    vi: 'Nhớ số',
+    en: 'Sample and Hold',
+    was: 'Lưu số',
+    ports: {
+      in: {
+        'value': ['Giá trị', 'Value'],
+        'store': ['Lưu', 'Store'],
+        'clear': ['Xoá', 'Clear'],
+      },
+      out: {
+        'held': ['Số nhớ', 'Held value'],
+        'stored': ['Vừa lưu', 'On store'],
+      },
+    },
+  },
+  'dispatcher': {
+    vi: 'Bộ điều phối',
+    en: 'Dispatcher',
+    was: 'Chia việc',
+    ports: {
+      in: {
+        'job': ['Có việc', 'Job waiting'],
+      },
+      out: {
+        'chosen': ['Máy được chọn', 'Chosen machine'],
+        'waiting': ['Đang chờ', 'Waiting'],
+        'given': ['Đã giao', 'Jobs given'],
+      },
+    },
+  },
   'pid': {
     vi: 'Bộ điều khiển PID',
     en: 'PID Controller',

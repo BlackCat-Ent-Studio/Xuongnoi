@@ -136,5 +136,8 @@
  "sample:robot-square": "d6963b32:900",
  "handbook:bool-to-number": "ff51ae4b:900",
  "handbook:value-table": "e7cf3a41:900",
- "handbook:angle-diff": "db006f25:900"
+ "handbook:angle-diff": "db006f25:900",
+ "handbook:sample-hold": "6d02f185:900",
+ "handbook:dispatcher": "fe93cc64:900",
+ "lesson:share-jobs": "b8f785d:900"
 }
