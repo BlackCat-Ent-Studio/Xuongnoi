@@ -13,7 +13,7 @@ import { LESSONS, findLesson } from '../../src/tutorial/lessons';
 import { createRunner } from '../../src/tutorial/runner';
 import { takeSnapshot } from '../../src/tutorial/snapshot';
 import { createWorld } from '../../src/world/world';
-import { firstCardOverlap } from '../helpers/cell-run';
+import { relayoutShipped } from '../../src/editor/graph/shipped-layout';
 
 registerAllNodes();
 
@@ -49,7 +49,8 @@ describe('handbook pages of Nhớ số and Bộ điều phối', () => {
       const board = entry.tryBoard();
       expect(board.graph.nodes.some((n) => n.kind === entry.kind)).toBe(true);
       expect(parseBoard(serializeBoard(board)).ok).toBe(true);
-      expect(firstCardOverlap({ ...board, notes: [] })).toBeNull();
+      // Already clean at the biggest card size: opening it moves nothing.
+      expect(relayoutShipped(board)).toBe(board);
     });
   }
 
@@ -179,6 +180,8 @@ describe('extra try board of Tạo đối tượng: random classes', () => {
     for (const s of seen) expect(s.kg).toBe(masses[s.cls - 1]);
     expect(new Set(seen.map((s) => s.cls)).size).toBe(3);
     expect(run()).toEqual(seen);
+    const board = spawnerClassBoard();
+    expect(relayoutShipped(board)).toBe(board);
   });
 });
 
@@ -197,7 +200,7 @@ describe('lesson "Chia việc cho hai máy" (share-jobs)', () => {
   it('starts without the two new cards, with tidy cards, and nothing works yet', () => {
     const board = findLesson('share-jobs')!.createBoard();
     expect(board.graph.nodes.some((n) => n.kind === 'dispatcher' || n.kind === 'sample-hold')).toBe(false);
-    expect(firstCardOverlap(board)).toBeNull();
+    expect(relayoutShipped(board)).toBe(board);
     const latches = board.graph.nodes.filter((n) => n.kind === 'latch').map((n) => n.id);
     let worked = false;
     play(board, board.graph, 8, () => [], (out) => {
