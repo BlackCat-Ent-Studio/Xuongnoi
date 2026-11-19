@@ -20,6 +20,7 @@ import type {
 } from '../engine/types';
 import { DEFAULT_GRAVITY, cleanGravity } from '../engine/types';
 import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
+import { touchingPairs } from './contact-pairs';
 import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
 import { crateMovedIn, moveBlockIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
@@ -205,16 +206,11 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
 
   function computeContacts(): void {
     const next = new Set<string>();
-    const live = list.filter((e) => e.visible);
-    for (let i = 0; i < live.length; i++) {
-      const a = live[i]!;
-      for (let j = i + 1; j < live.length; j++) {
-        const b = live[j]!;
-        // Block-block pairs never matter; characters and items report contacts.
-        if (a.kind === 'block' && b.kind === 'block') continue;
-        if (touching(a, b)) next.add(pairKey(a.id, b.id));
-      }
-    }
+    // Only who touches whom is kept, so the order the pairs are found in does not matter.
+    touchingPairs(
+      list.filter((e) => e.visible),
+      (a, b) => next.add(pairKey(a.id, b.id)),
+    );
     contacts = next;
   }
 
