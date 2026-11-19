@@ -1,6 +1,6 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
-import { boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox } from './collider';
+import { boundsBox, boxOverlap, colliderBox, colliderOffset, isTurnedBody, orientedBox } from './collider';
 import { mulQuat, obbSeparation, yawQuat } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
@@ -70,14 +70,74 @@ export function touching(a: Entity, b: Entity): boolean {
   );
 }
 
+/** How far (world units) beyond its move the region watched around a moving body reaches, so that the body seldom leaves it. */
+const NEAR_PAD = 0.5;
+
+/**
+ * The solids a moving body can meet, picked once for its whole move instead of asking every solid of the world at every step
+ * of it. `picks` are places in `solids`, in order: every solid whose bounds reach into a region around the body. A solid only
+ * stops the body when their bounds overlap, so while the body's bounds lie inside the region no solid outside `picks` can
+ * stop it; `refresh` is asked after every change of the body's place and picks anew when the body has left the region (thrown
+ * out of a solid it stood in, say). A number that is not finite never rules a solid out.
+ */
+interface NearSolids {
+  picks: number[];
+  /** True when the picks were made anew. */
+  refresh(): boolean;
+}
+
+function nearSolids(solids: readonly Entity[], c: Entity, travel: number): NearSolids {
+  let minX = 0;
+  let maxX = 0;
+  let minY = 0;
+  let maxY = 0;
+  let minZ = 0;
+  let maxZ = 0;
+  const near: NearSolids = {
+    picks: [],
+    refresh(): boolean {
+      const b = boundsBox(c);
+      const hx = Math.abs(b.size.x) / 2;
+      const hy = Math.abs(b.size.y) / 2;
+      const hz = Math.abs(b.size.z) / 2;
+      if (b.pos.x - hx >= minX && b.pos.x + hx <= maxX && b.pos.y - hy >= minY && b.pos.y + hy <= maxY && b.pos.z - hz >= minZ && b.pos.z + hz <= maxZ) return false;
+      const m = travel + NEAR_PAD;
+      minX = b.pos.x - hx - m;
+      maxX = b.pos.x + hx + m;
+      minY = b.pos.y - hy - m;
+      maxY = b.pos.y + hy + m;
+      minZ = b.pos.z - hz - m;
+      maxZ = b.pos.z + hz + m;
+      const picks: number[] = [];
+      for (let i = 0; i < solids.length; i++) {
+        const s = boundsBox(solids[i]!);
+        const sx = Math.abs(s.size.x) / 2;
+        const sy = Math.abs(s.size.y) / 2;
+        const sz = Math.abs(s.size.z) / 2;
+        if (s.pos.x + sx < minX || s.pos.x - sx > maxX || s.pos.y + sy < minY || s.pos.y - sy > maxY || s.pos.z + sz < minZ || s.pos.z - sz > maxZ) continue;
+        picks.push(i);
+      }
+      near.picks = picks;
+      return true;
+    },
+  };
+  // An empty region holds nothing, so the first question picks.
+  minX = Infinity;
+  near.refresh();
+  return near;
+}
+
 /** Solid bodies only: other bodies that stop the mover, and the item it carries (which is stopped, and stops it, too). */
 interface Extras {
   soft: readonly Entity[];
   carried?: { item: Entity; at: (holder: Entity) => Vec3 };
 }
 
-/** Move along one axis by `delta`, pushing out of solid blocks. Returns true if blocked. */
-function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[], rivals?: Rivals, extras?: Extras): boolean {
+/**
+ * Move along one axis by `delta`, pushing out of solid blocks. Returns true if blocked. With `near` (made for `c` and `solids`)
+ * only the solids near the body are asked, in the same order as all of them would be.
+ */
+function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[], rivals?: Rivals, extras?: Extras, near?: NearSolids): boolean {
   if (delta === 0) return false;
   // Vehicles already overlapping (spawned or teleported onto each other) may drive apart instead of being snapped through.
   const free = rivals && rivals.list.length > 0 ? rivals.list.filter((r) => !overlapsAll(c, r)) : null;
@@ -93,10 +153,25 @@ function moveAxis(c: Entity, axis: Axis, delta: number, solids: readonly Entity[
   }
   c.pos[axis] += delta;
   let blocked = false;
-  for (const b of solids) {
-    if (!overlapsAll(c, b)) continue;
-    pushOut(c, b, axis, delta);
-    blocked = true;
+  if (near) {
+    near.refresh();
+    for (let k = 0; k < near.picks.length; k++) {
+      const at = near.picks[k]!;
+      const b = solids[at]!;
+      if (!overlapsAll(c, b)) continue;
+      pushOut(c, b, axis, delta);
+      blocked = true;
+      if (!near.refresh()) continue;
+      // The body was put outside the watched region: go on with the solids after this one among the new picks.
+      k = -1;
+      while (k + 1 < near.picks.length && near.picks[k + 1]! <= at) k++;
+    }
+  } else {
+    for (const b of solids) {
+      if (!overlapsAll(c, b)) continue;
+      pushOut(c, b, axis, delta);
+      blocked = true;
+    }
   }
   if (soft) {
     for (const b of soft) {
@@ -174,16 +249,18 @@ function integrate(c: Entity, dt: number, mode: ViewMode, solids: readonly Entit
   const n = Math.max(1, Math.ceil(maxDist / MAX_SUBSTEP_DISTANCE));
   const sub = dt / n;
   let grounded = false;
+  // Along each axis the body travels at most `maxDist` in all the substeps together (a blocked axis loses its speed, none gains any).
+  const near = nearSolids(solids, c, maxDist);
   for (let i = 0; i < n; i++) {
-    if (moveAxis(c, 'x', c.vel.x * sub, solids, rivals, extras)) c.vel.x = 0;
+    if (moveAxis(c, 'x', c.vel.x * sub, solids, rivals, extras, near)) c.vel.x = 0;
     if (mode !== '2d-top') {
       const dy = c.vel.y * sub;
-      if (moveAxis(c, 'y', dy, solids, undefined, extras)) {
+      if (moveAxis(c, 'y', dy, solids, undefined, extras, near)) {
         if (dy < 0) grounded = true;
         c.vel.y = 0;
       }
     }
-    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids, rivals, extras)) c.vel.z = 0;
+    if (mode !== '2d-side' && moveAxis(c, 'z', c.vel.z * sub, solids, rivals, extras, near)) c.vel.z = 0;
   }
   return grounded;
 }
