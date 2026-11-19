@@ -1,5 +1,6 @@
 import { activeInputs, activeOutputs, getNodeDef } from '../engine/registry';
-import { curveRoute, hitsCard, midPoint, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
+import { curveRoute, hitsCard, routeWires, type RouteCard, type WireRoute, type WireSpec } from '../puzzle/ui/wire-geometry';
+import { badgeSize, placeBadge } from './graph/badge-placement';
 import { knotPoints } from '../puzzle/ui/wire-knots';
 import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
 import { h } from './dom';
@@ -472,6 +473,8 @@ export function createWiringCanvas({ state, getRuntime, notify, bench }: Deps): 
     }
     const routes = routeSpecs(items.map(({ d, a, b }) => specOf(d, a, b)), fast ? 'fast' : 'all');
     const types = new Map<string, PortType>(); // by knot key
+    const badgeBlocked: Box[] = playing ? cardRects() : [];
+    const badgeTaken: Box[] = [];
     for (const { d, a, b } of items) {
       const { wire, type } = d;
       const route = routes.get(wire.id);
@@ -492,12 +495,24 @@ export function createWiringCanvas({ state, getRuntime, notify, bench }: Deps): 
       types.set(knotKey(state.getScope(), wire.id), type);
       if (isEnergyEnabled()) energy.addWire(wire, type, path, portEls.get(d.outKey), portEls.get(d.inKey), playing);
       if (playing) {
-        const mid = route ? midPoint(route.pts) : { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-        const badge = h('div', `wc-badge type-${type}`);
-        badge.style.left = `${mid.x}px`;
-        badge.style.top = `${mid.y}px`;
-        badgeLayer.append(badge);
-        badgeEls.set(wire.id, { el: badge, wire, type });
+        // The value badge rides on its wire, as near the middle as it can be without covering a card or another badge.
+        const length = path.getTotalLength();
+        const spot = placeBadge(
+          (f) => {
+            const p = path.getPointAtLength(length * f);
+            return { x: p.x, y: p.y };
+          },
+          badgeSize(type),
+          badgeBlocked,
+          badgeTaken,
+        );
+        if (spot) {
+          const badge = h('div', `wc-badge type-${type}`);
+          badge.style.left = `${spot.x}px`;
+          badge.style.top = `${spot.y}px`;
+          badgeLayer.append(badge);
+          badgeEls.set(wire.id, { el: badge, wire, type });
+        }
       }
     }
     knots.draw(types);
