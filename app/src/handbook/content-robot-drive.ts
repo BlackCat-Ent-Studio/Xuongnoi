@@ -105,6 +105,7 @@ export const HANDBOOK_ROBOT_DRIVE: readonly HandbookEntry[] = [
       friction:
         'Độ bám mặt đất. Số lớn (0.8, giày cao su) thì robot tăng tốc và dừng gấp; số nhỏ (0.1, mặt băng) thì robot trượt thêm một đoạn dài mới dừng, và cũng khó tăng tốc. Chỉnh được ngay khi đang chạy.',
       color: 'Màu thân robot. Đổi được ngay khi đang chạy.',
+      look: 'Chỉ đổi hình vẽ, không đổi cách robot chạy. "Kiểu cũ": thân hộp, bánh mâm vàng. "Xe AGV bo tròn": thân bo tròn theo màu đã chọn, bánh có vè, dải đèn chạy quanh thân (xanh dương khi xe trống, xanh lá khi đang chở hàng). Kích thước, khối lượng và vùng va chạm vẫn như cũ.',
       solid: '"Có" thì người đi bộ không đi xuyên qua robot.',
       ...BODY_PARAM_TEXT,
     },

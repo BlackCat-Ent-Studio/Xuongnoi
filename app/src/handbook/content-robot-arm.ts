@@ -28,6 +28,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       tolerance: 'Sai số cho phép (độ) để "Đã tới góc" bật. Mặc định 1.',
       mount: 'Dời điểm gắn khỏi tâm của vật (mét, theo chiều dọc / lên / ngang của vật). Ví dụ gắn lên mặt trên của cột cao 1,6 m thì đặt "lên" 0,8.',
       color: 'Màu hình hộp nhỏ vẽ tại khớp.',
+      look: 'Nâng cao. Chỉ đổi hình vẽ. "Tay máy xưởng": vòng khớp xám gọn có nắp, chốt vàng và sáu ốc. "Bản lề nhỏ": chỉ vẽ một chốt bản lề mảnh, dùng cho khớp lật khay trên xe AGV. Mô-men, tốc độ và vùng va chạm vẫn như cũ.',
     },
     example:
       'Vật thể (cột) "Đối tượng" → Khớp xoay "Gắn vào". Khởi động "Đã bắt đầu" → "Bật". Quy đổi khoảng "Giá trị ra" → "Góc đặt". Hiện số: "Mô-men đang chịu".',
@@ -56,6 +57,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       width: 'Bề rộng (mét), đo ngang sang hai bên thanh. Để 0 thì thanh rộng bằng độ dày (thanh vuông). Đặt lớn hơn, ví dụ dài 0,6, dày 0,05, rộng 0,6, thì thanh thành một tấm phẳng: gắn lên khớp gập để làm khay đỡ và nghiêng đổ thùng (khi bật "Vật lý thật", nghiêng từ 35 độ trở lên thì thùng trượt xuống).',
       solid: 'Chắn vật. Thẻ mới mặc định "Tự động": chắn đường khi bảng bật "Vật lý thật" (cánh tay thật thì chắn đường), chỉ để vẽ khi tắt; bảng đã lưu từ trước giữ "Không". "Không" luôn là chỉ để vẽ, vật đi xuyên qua, kể cả khi bật "Vật lý thật". "Có" luôn chắn, tắt hay bật. Khi chắn thì thân thanh là vật cản đang đứng đúng chỗ nó đang ở: người, robot, xe và đồ vật không đi xuyên qua. Khớp phía trước đẩy được vật nhẹ, vật nặng hay tường thì chặn thanh lại. Đổi xong cần chạy lại.',
       color: 'Màu thanh.',
+      look: 'Chỉ đổi hình vẽ. "Tay máy xưởng": thanh thuôn, hai đầu tròn, có vạch sáng. Nếu thanh có "Bề rộng" (thanh thành tấm) thì kiểu này vẽ thành khay xe AGV: mặt khay đúng bằng kích thước thật của tấm, có gờ thấp ở đầu xa và hai bên (phía bản lề để trống cho hàng trượt ra), bên dưới có chân đỡ và thanh đẩy nâng theo góc lật. Nên gắn khớp lật sao cho đáy khay cách nóc xe 5 cm.',
     },
     example: 'Khớp xoay "Đầu khớp" → Thanh nối "Gắn vào"; Thanh nối "Đầu thanh" → Khớp xoay (khuỷu) "Gắn vào".',
     tips: [
@@ -95,6 +97,7 @@ export const HANDBOOK_ROBOT_ARM: readonly HandbookEntry[] = [
       mass: 'Khối lượng của chính tay kẹp (kg), tải thêm cho các khớp.',
       fingers: 'Số ngón (1 đến 4). Hình vẽ luôn là hai ngón nhưng tính toán dùng số này.',
       color: 'Màu tay kẹp.',
+      look: 'Nâng cao. Chỉ đổi hình vẽ. "Tay máy xưởng": lòng kẹp đen bo tròn có vạch vàng, hai ngón đen có đệm vàng mỏng. Ngón vẫn mở và đóng đúng theo trạng thái thật.',
       fingerSpeed: 'Nâng cao. Tốc độ khép (và mở) của mỗi ngón khi bật "Vật lý thật", mét mỗi giây. Mặc định 1: tay mở 1 m khép trống hết 0,48 ÷ 1 = 0,48 s. Đặt 0,25 thì chậm gấp bốn. Ngón chạm thùng càng chậm thì thùng càng ít bị hất: ngón dừng cách mặt thùng 0,4 mm, ở 1 m/s hất thùng 2 kg đi chừng 2 mm, ở 0,2 m/s chưa tới 1 mm. Từ 0,05 đến 5. Tắt "Vật lý thật" thì ngón nhảy thẳng tới chỗ, không dùng số này.',
       showFingerOuts: 'Nâng cao. Bật để hiện thêm hai ô ra "Ngón bị chặn" và "Lực ngón đang ép". Mặc định "Không": thẻ y như cũ.',
     },

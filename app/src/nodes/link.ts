@@ -2,6 +2,7 @@ import type { EntityId, NodeDef } from '../engine/types';
 import { advance, localToWorld } from '../world/arm-kinematics';
 import { isPlate, linkCubes, linkOutline, linkSliceCount, linkWidth, outlineSlices } from '../world/arm-solid';
 import { armRegistry, baseFrame, isSolidPiece, placeBox, placeSolidCubes } from './arm-parts';
+import { ARM_LOOKS, CLASSIC_LOOK, lookSpec } from '../engine/factory-looks';
 import { setArmHint } from '../engine/render-hints';
 import { quatFromAxes } from '../world/oriented-box';
 import { asObject, numParam, strParam } from './util';
@@ -40,10 +41,12 @@ export const linkNode: NodeDef<LinkState> = {
       ],
     },
     { id: 'color', label: 'Màu', kind: 'color', default: '#a3a3a3' },
+    // Draw only: the link's box and mass are the same whatever the look.
+    { id: 'look', label: 'Kiểu dáng (chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...ARM_LOOKS] },
     // 0 = as wide as it is thick: the square bar of every card made before this setting existed, so those need no migration.
     { id: 'width', label: 'Bề rộng (m; 0 = bằng độ dày, thanh vuông; lớn hơn thì thanh thành tấm phẳng, làm khay đỡ vật)', kind: 'number', default: 0, min: 0, max: 5, step: 0.05, advanced: true },
   ],
-  createOnly: ['length', 'thickness', 'width', 'color', 'solid'],
+  createOnly: ['length', 'thickness', 'width', 'color', 'look', 'solid'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -58,6 +61,7 @@ export const linkNode: NodeDef<LinkState> = {
       size: { x: length, y: t, z: linkWidth(t, numParam(params, 'width', 0)) },
       color: strParam(params, 'color', '#a3a3a3'),
       solid: false,
+      ...lookSpec(params.look, ARM_LOOKS),
     });
     setArmHint(ctx.nodeId, id, { part: 'link' });
     return { id, bodies: [] };

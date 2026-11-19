@@ -5,6 +5,7 @@ import type { Box } from '../world/linear-actuator';
 import { jointCanLift } from '../world/mechanics';
 import { pushBodiesOf } from './linear-actuator';
 import { armRegistry, baseFrame, heldBeyond, isSolidPiece, massesBeyond, mountBox, placeBox, placeSolidCubes, solidsBeyond } from './arm-parts';
+import { CLASSIC_LOOK, JOINT_LOOKS, lookSpec } from '../engine/factory-looks';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
 
@@ -74,8 +75,10 @@ export const jointNode: NodeDef<JointState> = {
     { id: 'tolerance', label: 'Sai số cho phép (độ)', kind: 'number', default: 1, min: 0, max: 90, step: 0.5, advanced: true },
     { id: 'mount', label: 'Lệch so với vật gắn (dọc / lên / ngang, m)', kind: 'vec3', default: { x: 0, y: 0, z: 0 }, advanced: true },
     { id: 'color', label: 'Màu', kind: 'color', default: '#8b5cf6', advanced: true },
+    // Draw only: the hub box, torque and speed are the same whatever the look.
+    { id: 'look', label: 'Kiểu dáng (chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...JOINT_LOOKS], advanced: true },
   ],
-  createOnly: ['color', 'solid'],
+  createOnly: ['color', 'look', 'solid'],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -90,6 +93,7 @@ export const jointNode: NodeDef<JointState> = {
       size: { x: HUB, y: HUB, z: HUB },
       color: strParam(params, 'color', '#8b5cf6'),
       solid: false,
+      ...lookSpec(params.look, JOINT_LOOKS),
     });
     setArmHint(ctx.nodeId, id, { part: 'joint', axis: strParam(params, 'axis', 'pitch') === 'yaw' ? 'yaw' : 'pitch' });
     return { id, angle: clamp(numParam(params, 'start', 0), lo, hi), bodies: [], loadSpeed: 0 };

@@ -1,4 +1,5 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
+import { CLASSIC_LOOK, PARCEL_LOOKS, lookSpec } from '../engine/factory-looks';
 import { MATERIAL_OUT_PARAMS, materialPortValues, materialPortsActive, DAMAGED_PORT, WEIGHT_PORT } from './material-ports';
 import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { DEFAULT_ITEM_FRICTION } from '../world/physics';
@@ -64,6 +65,8 @@ export const itemNode: NodeDef<ItemState> = {
       default: 'box',
       options: ITEM_SHAPES.map((value) => ({ value, label: ITEM_SHAPE_LABELS[value] })),
     },
+    // Draw only: the item keeps the box, mass and behaviour of its "Hình dạng".
+    { id: 'look', label: 'Kiểu kiện hàng (chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...PARCEL_LOOKS] },
     {
       id: 'carryable',
       label: 'Cầm được không',
@@ -109,6 +112,7 @@ export const itemNode: NodeDef<ItemState> = {
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
       damage: numParam(params, 'damage', 0),
       tag: strParam(params, 'tag', '').trim(),
+      ...lookSpec(params.look, PARCEL_LOOKS),
       ...bodySpec(params),
       ...materialSpec(params, 'item'),
       friction: numParam(params, 'friction', DEFAULT_ITEM_FRICTION),

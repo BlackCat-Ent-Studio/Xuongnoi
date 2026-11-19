@@ -1,4 +1,5 @@
 import type { EntityId, NodeDef, Params, PortDef } from '../engine/types';
+import { CLASSIC_LOOK, ROBOT_LOOKS, lookSpec } from '../engine/factory-looks';
 import { BODY_PARAMS, BODY_PARAM_IDS, bodySpec } from './body-params';
 import { asBool, numParam, risingEdge, strParam, vec3Param, type EdgeState } from './util';
 
@@ -69,6 +70,8 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
     { id: 'mass', label: 'Khối lượng (kg)', kind: 'number', default: 2, min: 0.1, max: 500, step: 0.1 },
     { id: 'friction', label: 'Độ bám / ma sát mặt đất (nhỏ = trượt xa mới dừng)', kind: 'number', default: 0.8, min: 0.02, max: 2, step: 0.02 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#3b82f6' },
+    // Draw only: the chassis box, mass and motors are the same whatever the look.
+    { id: 'look', label: 'Kiểu dáng (chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...ROBOT_LOOKS] },
     {
       id: 'solid',
       label: 'Chặn người đi bộ',
@@ -135,7 +138,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
     },
     ...BODY_PARAMS,
   ],
-  createOnly: ['position', 'heading', 'length', 'width', 'height', 'color', 'solid', ...BODY_PARAM_IDS],
+  createOnly: ['position', 'heading', 'length', 'width', 'height', 'color', 'look', 'solid', ...BODY_PARAM_IDS],
   liveApply: {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
@@ -152,6 +155,7 @@ export const robotBodyNode: NodeDef<RobotBodyState> = {
       solid: strParam(params, 'solid', 'yes') !== 'no',
       robot: { length, width, mass: numParam(params, 'mass', 2), friction: numParam(params, 'friction', 0.8), ...(pushes(params) ? { pushObjects: true } : {}) },
       heading: numParam(params, 'heading', 0) / DEG,
+      ...lookSpec(params.look, ROBOT_LOOKS),
       ...bodySpec(params),
     });
     return { id, distance: 0, last: null, reset: { prev: false } };

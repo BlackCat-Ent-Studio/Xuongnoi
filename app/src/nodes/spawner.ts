@@ -1,4 +1,5 @@
 import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type ParamDef, type Params, type PortDef, type PortValue } from '../engine/types';
+import { CLASSIC_LOOK, PARCEL_LOOKS, lookSpec } from '../engine/factory-looks';
 import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
 import { MAX_MASS_KG } from '../world/material';
 import { materialParams, materialSpec } from './body-params';
@@ -99,6 +100,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
       default: 'ball',
       options: ITEM_SHAPES.map((value) => ({ value, label: ITEM_SHAPE_LABELS[value] })),
     },
+    // Draw only: a spawned item keeps the box, mass and behaviour of its "Hình dạng".
+    { id: 'look', label: 'Kiểu kiện hàng (đồ vật; chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...PARCEL_LOOKS] },
     {
       id: 'solid',
       label: 'Vật thể rắn không',
@@ -189,6 +192,7 @@ export const spawnerNode: NodeDef<SpawnerState> = {
             : {
                 shape: ((ITEM_SHAPES as readonly string[]).includes(shapeRaw) ? shapeRaw : 'ball') as ItemShape,
                 carryable: strParam(params, 'carryable', 'no') === 'yes',
+                ...lookSpec(params.look, PARCEL_LOOKS),
               }),
           ...material,
           disposable: true,

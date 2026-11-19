@@ -299,6 +299,7 @@ export const HANDBOOK_ACTION_BRAIN: readonly HandbookEntry[] = [
       size: 'Kích thước vật mới.',
       color: 'Màu vật mới.',
       shape: 'Hình dạng vật mới (chỉ khi sinh Đồ vật).',
+      look: 'Chỉ khi sinh Đồ vật, và chỉ đổi hình vẽ: vật vẫn nặng, to và va chạm đúng như "Hình dạng" và "Kích thước". "Thùng carton": thùng giấy có băng keo theo màu của vật. "Kiện hàng 1-5", "Thùng gỗ": mô hình có sẵn, kéo cho vừa khít kích thước, có nhãn tròn theo màu của vật. "Kiện hàng ngẫu nhiên": mỗi kiện một kiểu. Khi bật "Sinh ngẫu nhiên theo loại" thì băng keo hoặc nhãn tròn mang màu của loại.',
       solid: 'Chỉ khi sinh Vật thể: rắn chặn đường, hoặc cho đi xuyên qua.',
       carryable: 'Chỉ khi sinh Đồ vật: nhân vật cầm được hay không.',
       maxAlive: 'Cùng lúc tồn tại tối đa bao nhiêu cái. Đủ rồi thì không sinh thêm.',

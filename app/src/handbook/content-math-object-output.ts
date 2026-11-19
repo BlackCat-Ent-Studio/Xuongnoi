@@ -266,6 +266,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       size: 'Kích thước (rộng, cao, sâu). Mặc định nhỏ, 0.6.',
       color: 'Màu của món đồ. Đổi được ngay khi đang chạy. Thùng, bó rau, cục quặng, xô nước, quả bóng và chìa khoá là mô hình có sẵn màu nên không đổi theo.',
       shape: 'Hình dạng: hộp, chìa khoá, quả bóng, thùng, kiếm, cuốc, búa, đuốc, gậy phép, xô nước, ổ khoá, bó rau, cục quặng.',
+      look: 'Chỉ đổi hình vẽ: món đồ vẫn nặng, to và va chạm đúng như "Hình dạng" và "Kích thước". "Thùng carton": thùng giấy có băng keo theo "Màu". "Kiện hàng 1-5", "Thùng gỗ": mô hình có sẵn, kéo cho vừa khít kích thước, có nhãn tròn theo "Màu". "Theo Hình dạng" là vẽ như cũ.',
       carryable: '"Cầm được" thì nhân vật nhấc lên được. "Cố định" thì nằm yên, chỉ để bấm "Tương tác" (ví dụ ổ khoá).',
       holdStyle: '"Khiêng trên đầu" cho thùng hàng. "Cầm trên tay" cho dụng cụ như kiếm, cuốc, dùng với mảnh ghép Cầm dụng cụ.',
       damage: 'Sát thương khi dùng đánh. 0 nghĩa là tuỳ theo hình dạng.',

@@ -7,6 +7,7 @@ import { gripHolds, weight } from '../world/mechanics';
 import { conjQuat, extentOn, isTurned, mulQuat, obbOf, obbSeparation, quatFromAxes, rotateBy, sensedTurn, type Quat } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox, placeSolidCubes } from './arm-parts';
 import { pushBodiesOf } from './linear-actuator';
+import { ARM_LOOKS, CLASSIC_LOOK, lookSpec } from '../engine/factory-looks';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam } from './util';
 
@@ -276,6 +277,8 @@ export const gripperNode: NodeDef<GripperState> = {
     { id: 'mass', label: 'Khối lượng tay kẹp (kg)', kind: 'number', default: 0.5, min: 0, max: 100000, step: 0.1 },
     { id: 'fingers', label: 'Số ngón', kind: 'number', default: 2, min: 1, max: 4, step: 1 },
     { id: 'color', label: 'Màu', kind: 'color', default: '#f59e0b', advanced: true },
+    // Draw only: the palm and finger boxes and the grip are the same whatever the look.
+    { id: 'look', label: 'Kiểu dáng (chỉ đổi hình vẽ)', kind: 'select', default: CLASSIC_LOOK, options: [...ARM_LOOKS], advanced: true },
     { id: 'fingerSpeed', label: 'Tốc độ khép ngón (m/s)', kind: 'number', default: FINGER_SPEED, min: 0.05, max: 5, step: 0.05, advanced: true },
     {
       id: 'showFingerOuts',
@@ -289,7 +292,7 @@ export const gripperNode: NodeDef<GripperState> = {
       advanced: true,
     },
   ],
-  createOnly: ['width', 'color'],
+  createOnly: ['width', 'color', 'look'],
   liveApply: {
     color: (ctx, p, s) => {
       for (const id of [s.palm, ...s.fingers]) ctx.world.setEntityStyle(id, { color: String(p.color) });
@@ -299,7 +302,7 @@ export const gripperNode: NodeDef<GripperState> = {
     const width = Math.max(0.05, numParam(params, 'width', 1));
     const color = strParam(params, 'color', '#f59e0b');
     const spawn = (size: Vec3): EntityId =>
-      ctx.world.spawn({ kind: 'block', ownerNodeId: ctx.nodeId, position: { x: 0, y: -1000, z: 0 }, size, color, solid: false });
+      ctx.world.spawn({ kind: 'block', ownerNodeId: ctx.nodeId, position: { x: 0, y: -1000, z: 0 }, size, color, solid: false, ...lookSpec(params.look, ARM_LOOKS) });
     // The fingers close along the arm's normal in the side view and sideways elsewhere.
     const palm = spawn(palmSizeOf(ctx.mode, width));
     const f1 = spawn({ x: FINGER_LEN, y: FINGER_T, z: FINGER_T });
