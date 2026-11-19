@@ -1,4 +1,4 @@
-import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf } from '../engine/block-styles';
+import { BLOCK_STYLES, BLOCK_STYLE_LABELS, TRAFFIC_COLORS, blockStyleOf, type BlockStyle } from '../engine/block-styles';
 import type { EntityId, NodeDef, Params, PortDef, Vec3, ViewMode } from '../engine/types';
 import { MATERIAL_OUT_PARAMS, materialPortValues, materialPortsActive, DAMAGED_PORT, WEIGHT_PORT } from './material-ports';
 import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
@@ -10,12 +10,16 @@ const MAX_BELT_SPEED = 30;
 
 type BeltDirection = 'x' | '-x' | 'z' | '-z';
 
+/** The styles that are a conveyor by their look alone: they run without a speed being set, and have side walls. */
+const BELT_STYLES: readonly BlockStyle[] = ['conveyor', 'belt-frame'];
+
 /**
- * The conveyor settings of a block, or null when it is no belt. A speed of 0 means "off" for any style except
- * "Băng chuyền", which then runs at 2 along the block's longer horizontal side (the direction option only picks the sign).
+ * The conveyor settings of a block, or null when it is no belt. A speed of 0 means "off" for any style except the belt
+ * styles ("Băng chuyền", "Băng chuyền khung xanh"), which then run at 2 along the block's longer horizontal side (the
+ * direction option only picks the sign).
  */
 export function beltOf(params: Params, size: Vec3, mode: ViewMode): { axis: 'x' | 'z'; speed: number; walls: boolean } | null {
-  const isBelt = blockStyleOf(strParam(params, 'style', 'box')) === 'conveyor';
+  const isBelt = BELT_STYLES.includes(blockStyleOf(strParam(params, 'style', 'box')));
   const set = numParam(params, 'beltSpeed', 0);
   if (set === 0 && !isBelt) return null;
   const dir = strParam(params, 'beltDir', 'x') as BeltDirection;
@@ -48,7 +52,7 @@ export const blockNode: NodeDef<BlockState> = {
   label: 'Vật thể',
   category: 'object',
   description:
-    'Một vật thể đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn" để làm hộp biến mất, bật "Hiện" để hộp hiện ra lại (đứng chỗ cũ). "Khi bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Bật băng chuyền" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn khi bật" là cổng cũ (một cổng làm cả hai việc: ẩn khi bật, hiện lại khi tắt), chỉ để game cũ vẫn chạy; game mới dùng "Ẩn" để mở và "Hiện" để đóng. Lần đổi nào đến sau cùng thì thắng: "Ẩn"/"Hiện" vẫn dùng được, nhưng khi "Ẩn khi bật" đổi giá trị thì nó quyết định.',
+    'Một vật thể đặt trong thế giới: có thể là mặt đất/tường để đứng lên, hoặc vật nhặt được. Bật "Ẩn" để làm hộp biến mất, bật "Hiện" để hộp hiện ra lại (đứng chỗ cũ). "Khi bị dùng lên" báo một nhịp khi nhân vật vung dụng cụ trúng hộp. Mục Nâng cao có "Tốc độ băng chuyền": khác 0 thì hộp thành băng chuyền, đưa mọi thứ nằm trên mặt hộp đi theo hướng đã chọn ("Bật băng chuyền" tắt thì dừng, "Đảo chiều" bật thì chạy ngược). Chọn kiểu dáng "Băng chuyền" hoặc "Băng chuyền khung xanh" mà để tốc độ 0 thì băng tự chạy tốc độ 2 dọc theo cạnh dài hơn của hộp (có thành chắn hai bên). Kiểu "Đường ray" chỉ để trang trí. "Ẩn khi bật" là cổng cũ (một cổng làm cả hai việc: ẩn khi bật, hiện lại khi tắt), chỉ để game cũ vẫn chạy; game mới dùng "Ẩn" để mở và "Hiện" để đóng. Lần đổi nào đến sau cùng thì thắng: "Ẩn"/"Hiện" vẫn dùng được, nhưng khi "Ẩn khi bật" đổi giá trị thì nó quyết định.',
   inputs: [
     { id: 'hide', type: 'bool', label: 'Ẩn' },
     { id: 'show', type: 'bool', label: 'Hiện' },
