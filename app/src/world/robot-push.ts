@@ -1,7 +1,8 @@
 import type { ViewMode } from '../engine/types';
-import { boundsBox, colliderBox, spanOverlap } from './collider';
+import { boundsBox, chassisOutline, chassisReach, colliderBox, overOutline, spanOverlap } from './collider';
+import { obbBounds, type Obb } from './oriented-box';
 import type { Entity } from './entity';
-import { emptyReach, exceeds, growReach, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
+import { beyondOutline, emptyReach, exceeds, growReach, planPush, type Box, type PushBody, type PushPlan } from './linear-actuator';
 import { materialOf } from './material';
 import { wheelSpeed } from './robot-drive';
 import { GRAVITY_N, MIN_FRICTION } from './robot-traction';
@@ -26,6 +27,9 @@ import { GRAVITY_N, MIN_FRICTION } from './robot-traction';
  * pusher's speed along its own wheels, so its speed read-out and its wheels (dragged against their brake, or slipping)
  * tell what really happens, and it rolls on by itself until its wheels stop it once the pusher lets go.
  * Not modelled between two chassis: the pusher slowing down under the load, and a shoved chassis being turned.
+ *
+ * A chassis on wheel traction takes part by its real outline, turned to its heading (`chassisOutline`): as the head, as a
+ * chassis that is shoved or holds, and as the top that carries what rides on it.
  */
 
 /** Overlap below this counts as touching (same value physics.ts uses). */
@@ -34,18 +38,37 @@ const SKIN = 1e-6;
 /** How far below a chassis's top an item's bottom may sit and still be held up by it (it rides, it is not shoved). */
 export const SUPPORT_SINK = 0.02;
 
-/** A chassis as `restsOnChassis` reads it: its collision box (whose top carries) and its bounds (whose footprint the item must be over). */
+/**
+ * A chassis as `restsOnChassis` reads it: its collision box (whose top carries) and its bounds (whose footprint the item must be
+ * over), or, for a chassis with a real outline, that outline.
+ */
 interface ChassisTop {
   top: Box;
   under: Box;
+  outline: Obb | null;
 }
 
-const chassisTop = (chassis: Entity): ChassisTop => ({ top: colliderBox(chassis), under: boundsBox(chassis) });
+const chassisTop = (chassis: Entity): ChassisTop => ({ top: colliderBox(chassis), under: boundsBox(chassis), outline: chassisOutline(chassis) });
 
 /** `restsOnChassis` for an item whose bounds (`lying`) and a chassis whose boxes are already worked out. */
 function restsOnTop(lying: Box, c: ChassisTop): boolean {
   const bottom = lying.pos.y - lying.size.y / 2;
-  return bottom >= c.top.pos.y + c.top.size.y / 2 - SUPPORT_SINK && spanOverlap(lying, c.under, 'x') > SKIN && spanOverlap(lying, c.under, 'z') > SKIN;
+  if (!(bottom >= c.top.pos.y + c.top.size.y / 2 - SUPPORT_SINK)) return false;
+  if (c.outline) return overOutline(lying, c.outline, SKIN);
+  return spanOverlap(lying, c.under, 'x') > SKIN && spanOverlap(lying, c.under, 'z') > SKIN;
+}
+
+/** The chassis as the head of a push: its collision box, with its real outline when it has one. */
+function headOf(r: Entity): Box {
+  const box = colliderBox(r);
+  const outline = chassisOutline(r);
+  return outline ? { pos: box.pos, size: box.size, outline } : box;
+}
+
+/** Another chassis as something solid in the way: its collision box, or the bounds of its real outline together with that outline. */
+function solidOf(o: Entity): Box {
+  const outline = chassisOutline(o);
+  return outline ? { ...obbBounds(outline), outline } : colliderBox(o);
 }
 
 /** True when `item` lies on (or is landing on) the top of `chassis`. */
@@ -122,6 +145,12 @@ function pushBodies(r: Entity, entities: readonly Entity[], mode: ViewMode, othe
   return out;
 }
 
+/** Another chassis as a body that may be shoved: its collision box, or the bounds of its real outline together with that outline. */
+function shovedBox(o: Entity): Pick<PushBody, 'box' | 'outline'> {
+  const outline = chassisOutline(o);
+  return outline ? { box: obbBounds(outline), outline } : { box: colliderBox(o) };
+}
+
 /** The top view ignores height between items, but the chassis still passes under or over a block it does not reach in height. */
 function overlapsHeight(s: Box, head: Box): boolean {
   return (s.size.y + head.size.y) / 2 - Math.abs(s.pos.y - head.pos.y) > SKIN;
@@ -144,14 +173,20 @@ function planFor(head: Box, dir: { x: number; z: number }, step: number, items: 
 /**
  * False only when the step of the chassis can meet no loose item and no other chassis: its box, on its way, stays clear of the
  * box round each of them along some axis the view shows. (An item's bounds, however it is turned, lie within its collision
- * box's offset plus half its diagonal of its position, along every axis.) Then nothing is shoved, whatever else is worked out.
+ * box's offset plus half its diagonal of its position, along every axis; a chassis's real outline within half its own diagonal.)
+ * A chassis with a real outline, in the 3D view, is held against each of them along its own length, width and height instead
+ * (`beyondOutline`), which stays as tight when it stands askew. Then nothing is shoved, whatever else is worked out.
  */
 export function somethingOnTheWay(r: Entity, entities: readonly Entity[], others: readonly Entity[], move: { x: number; z: number }, mode: ViewMode): boolean {
   const reach = emptyReach(flatOf(mode));
-  if (!growReach(reach, colliderBox(r), { x: move.x, y: 0, z: move.z })) return true;
+  const head = headOf(r);
+  const step = { x: move.x, y: 0, z: move.z };
+  if (!growReach(reach, head, step)) return true;
+  const outline = reach.flat === null ? head.outline : undefined;
   const clear = (e: Entity): boolean => {
     const b = colliderBox(e);
-    const round = Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2;
+    const round = Math.max(chassisReach(e), Math.hypot(b.pos.x - e.pos.x, b.pos.y - e.pos.y, b.pos.z - e.pos.z) + Math.hypot(b.size.x, b.size.y, b.size.z) / 2);
+    if (outline) return beyondOutline(outline, step, e.pos, round);
     for (const k of reach.shown) if (e.pos[k] - round > reach.hi[k] || e.pos[k] + round < reach.lo[k]) return true;
     return false;
   };
@@ -187,16 +222,16 @@ export function beginShove(r: Entity, entities: readonly Entity[], solids: reado
   let walls: Box[] = [];
   if (others.length > 0) {
     const sideView = mode === '2d-side';
-    items = [...loose, ...others.map((o): PushBody => ({ id: o.id, box: colliderBox(o), massKg: o.robot?.spec.mass ?? 0, mu: o.robot?.spec.friction ?? 0, holdN: holdForceN(o, dir, len / dt, sideView) }))];
+    items = [...loose, ...others.map((o): PushBody => ({ id: o.id, ...shovedBox(o), massKg: o.robot?.spec.mass ?? 0, mu: o.robot?.spec.friction ?? 0, holdN: holdForceN(o, dir, len / dt, sideView) }))];
   }
-  let plan = planFor(colliderBox(r), dir, len, items, solids, mode);
+  let plan = planFor(headOf(r), dir, len, items, solids, mode);
   let held = false;
   if (plan.loadIds.some((id) => chassis.has(id)) && cannotPush(plan, availableN, chassis)) {
     // The chassis ahead hold: for this tick they are walls, for this chassis (its usual move stops flush at them) and for what it pushes.
     held = true;
     items = loose;
-    walls = others.map((o) => colliderBox(o));
-    plan = planFor(colliderBox(r), dir, len, items, solids, mode, walls);
+    walls = others.map(solidOf);
+    plan = planFor(headOf(r), dir, len, items, solids, mode, walls);
     body.pushing = true;
     body.pushForce = availableN;
   }
@@ -230,8 +265,9 @@ export function finishShove(r: Entity, state: ShoveState, byId: ReadonlyMap<stri
   const len = Math.hypot(mx, mz);
   if (len < 1e-9) return shoved;
   const dir = { x: mx / len, z: mz / len };
-  const now = colliderBox(r);
-  const head = { pos: { x: now.pos.x - mx, y: now.pos.y, z: now.pos.z - mz }, size: now.size };
+  const now = headOf(r);
+  const back = { x: now.pos.x - mx, y: now.pos.y, z: now.pos.z - mz };
+  const head: Box = { pos: back, size: now.size, ...(now.outline ? { outline: { ...now.outline, centre: { x: now.outline.centre.x - mx, y: now.outline.centre.y, z: now.outline.centre.z - mz } } } : {}) };
   const plan = planFor(head, dir, len, state.items, solids, mode, state.walls);
   const stop = (to: number): void => {
     r.pos.x = state.before.x + dir.x * to;

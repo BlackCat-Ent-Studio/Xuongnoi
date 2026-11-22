@@ -1,5 +1,5 @@
 import type { Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox, colliderOffset, spanOverlap, type Box, type Collidable } from './collider';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, overOutline, spanOverlap, type Box, type Collidable } from './collider';
 import type { Entity } from './entity';
 
 /**
@@ -100,6 +100,9 @@ export function standsOn(e: Entity, p: Entity, mode: ViewMode): boolean {
   const eb = boundsBox(e);
   const pb = colliderBox(p);
   if (Math.abs(eb.pos.y - eb.size.y / 2 - (pb.pos.y + pb.size.y / 2)) > RIDE_GAP) return false;
+  // What rides on a chassis with a real outline stands over that outline, not over the square round it.
+  const outline = e.kind !== 'block' ? chassisOutline(p) : null;
+  if (outline) return overOutline(eb, outline, OVERLAP_MIN);
   if (overlap(e, p, 'x') <= OVERLAP_MIN) return false;
   return mode === '2d-side' || overlap(e, p, 'z') > OVERLAP_MIN;
 }

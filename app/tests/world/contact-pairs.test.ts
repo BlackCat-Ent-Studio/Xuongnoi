@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { touchingPairs } from '../../src/world/contact-pairs';
 import type { Entity } from '../../src/world/entity';
 import { touching } from '../../src/world/physics';
+import { createRobotBody } from '../../src/world/robot-drive';
 
 /**
  * The grid may only save questions, never change an answer: on any scene it must report exactly the pairs the plain double
@@ -89,6 +90,12 @@ function scene(next: () => number, n: number, spread: number): Entity[] {
     if (kind === 'block' && next() < 0.3) {
       e.solid = false;
       e.turn = { base: { ...e.size }, quarter: 0, offset: 0, spin: at(7), spinning: next() < 0.8, plane: next() < 0.5 ? 'xy' : 'xz' };
+    }
+    if (kind === 'robot' && next() < 0.7) {
+      // A chassis on wheel traction touches other bodies by its length and width turned to its heading, whatever its box is.
+      const heading = pick([0, Math.PI / 4, at(7), at(7)]);
+      e.robot = createRobotBody({ length: 0.2 + next() * 3, width: 0.2 + next() * 3, mass: 2, friction: 0.8 }, heading, true);
+      e.facing = { x: Math.cos(heading), y: 0, z: Math.sin(heading) };
     }
     if (kind === 'block' && e.solid && e.collider && next() < 0.5) e.turn = { base: { ...e.size }, quarter: 1, offset: 0, spin: 0, spinning: false, plane: 'xz' };
     list.push(e);

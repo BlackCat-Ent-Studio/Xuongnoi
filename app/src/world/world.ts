@@ -183,6 +183,12 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     }
     return boltedTo.get(body);
   }
+  /** For a bolted piece, the body its machine stands on (the last of `boltedOnto`); nothing for any other body or without mounts. */
+  const machineOf = (e: Entity): Entity | undefined => {
+    if (mounts.size === 0 || !mounts.has(e.ownerNodeId)) return undefined;
+    const chain = boltedOnto(e);
+    return chain[chain.length - 1];
+  };
 
   /** Play-camera requests by camera node; `seq` orders them by when they became active. */
   const cameraCmds = new Map<string, { seq: number; cmd: PlayCameraCommand }>();
@@ -590,7 +596,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     massOn(id: EntityId): number {
       const e = byId.get(id);
-      return e && e.visible ? massOn(list, e, partsOf(e)) : 0;
+      return e && e.visible ? massOn(list, e, partsOf(e), undefined, machineOf) : 0;
     },
     massHeld(id: EntityId): number {
       const e = byId.get(id);
@@ -983,7 +989,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         m.fresh = false;
       }
       boltedTo = null;
-      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates, partsOf);
+      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates, partsOf, machineOf);
       if (rules?.respawnFallen) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),

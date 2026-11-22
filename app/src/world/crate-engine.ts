@@ -1,6 +1,7 @@
 import type { Collider, ColliderDesc, RigidBody, RigidBodyDesc, World } from '@dimforge/rapier3d-deterministic-compat';
 import type { ExactBody, Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, colliderBox } from './collider';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, overOutline, type Box } from './collider';
+import { yawQuat } from './oriented-box';
 import { beltVelocity } from './conveyor';
 import type { Entity } from './entity';
 import { materialOf } from './material';
@@ -13,6 +14,7 @@ import { isSolidBody } from './solid-bodies';
  * the game's own rules and is only *shown* to the engine as something solid:
  *  - blocks are fixed boxes (a belt is a box that moves at its surface speed; a block a node moves is a kinematic box);
  *  - robot chassis, vehicles (and, in solid-body worlds, characters) are kinematic boxes placed where the game put them.
+ *    A chassis is shown as its real outline (length by width) turned to its heading, so a crate meets the corner that is drawn.
  * The engine reads each crate's mass and friction from its material and gravity from the world setting.
  *
  * Crates that game code moves by itself (a gripper teleporting a held crate, a piston or an arm cube pushing one) leave
@@ -46,6 +48,9 @@ interface Rec {
   offset: Vec3;
   /** Kinematic bodies: where the body stood at the start of this tick (it travels from here to the entity's position). */
   from: Vec3;
+  /** A chassis shown by its real outline: its turn at the start of this tick and the one the game wants at its end. Null = shown upright. */
+  fromTurn: Quat | null;
+  turn: Quat | null;
   /** Where / how fast the engine last left the entity; a different value means game code moved it. */
   lastPos: Vec3;
   lastVel: Vec3;
@@ -68,6 +73,16 @@ interface ExactRec {
 }
 
 type Quat = { x: number; y: number; z: number; w: number };
+
+/** The angle (rad) of a turn about the vertical. */
+const yawOf = (q: Quat): number => 2 * Math.atan2(q.y, q.w);
+
+/** An angle brought into -pi .. pi. */
+function wrapPi(a: number): number {
+  const two = Math.PI * 2;
+  const d = a % two;
+  return d > Math.PI ? d - two : d <= -Math.PI ? d + two : d;
+}
 
 /** Normalised linear mix of two turns (the hand turns a degree or two per tick, so this is as good as a slerp). */
 function mixTurn(a: Quat, b: Quat, t: number): Quat {
@@ -100,6 +115,7 @@ export interface CrateEngineOptions {
 const finite3 = (v: Vec3): boolean => Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 const same3 = (a: Vec3, b: Vec3): boolean => a.x === b.x && a.y === b.y && a.z === b.z;
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
+const sameTurn = (a: Quat, b: Quat): boolean => a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
 
 export function createCrateEngine(rapier: RapierModule, options: CrateEngineOptions): CrateEngine {
   const { mode } = options;
@@ -132,8 +148,17 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     return null;
   }
 
+  /** The box the engine is shown for an entity: its collision box, or for a chassis its real outline (turned by `turnOf`). */
+  function shownBox(e: Entity, role: Role): Box {
+    const outline = role === 'kin' ? chassisOutline(e) : null;
+    return outline ? { pos: e.pos, size: { x: outline.half.x * 2, y: outline.half.y * 2, z: outline.half.z * 2 } } : colliderBox(e);
+  }
+
+  /** The turn of a chassis shown by its real outline; null for every other body (shown upright). */
+  const turnOf = (e: Entity, role: Role): Quat | null => (role === 'kin' && chassisOutline(e) ? yawQuat(e.facing) : null);
+
   function colliderDesc(e: Entity, role: Role): ColliderDesc {
-    const box = colliderBox(e);
+    const box = shownBox(e, role);
     const hx = Math.max(box.size.x / 2, 1e-4);
     const hy = Math.max(box.size.y / 2, 1e-4);
     const hz = Math.max(box.size.z / 2, 1e-4);
@@ -153,7 +178,11 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
 
   function bodyDesc(e: Entity, role: Role): RigidBodyDesc {
     if (role === 'fixed') return rapier.RigidBodyDesc.fixed().setTranslation(e.pos.x, e.pos.y, e.pos.z);
-    if (role === 'kin') return rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
+    if (role === 'kin') {
+      const desc = rapier.RigidBodyDesc.kinematicPositionBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
+      const turn = turnOf(e, role);
+      return turn ? desc.setRotation(turn) : desc;
+    }
     if (role === 'belt') return rapier.RigidBodyDesc.kinematicVelocityBased().setTranslation(e.pos.x, e.pos.y, e.pos.z);
     const z = mode === '2d-side' ? 0 : e.pos.z;
     const desc = rapier.RigidBodyDesc.dynamic()
@@ -174,7 +203,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
   function create(e: Entity, role: Role): Rec {
     const body = world.createRigidBody(bodyDesc(e, role));
     const collider = world.createCollider(colliderDesc(e, role), body);
-    const box = colliderBox(e);
+    const box = shownBox(e, role);
+    const turn = turnOf(e, role);
     if (role === 'crate') {
       if (mode === '2d-side') e.pos.z = 0;
       e.rot = { ...(e.rot ?? IDENTITY) };
@@ -186,6 +216,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       size: { ...box.size },
       offset: { x: box.pos.x - e.pos.x, y: box.pos.y - e.pos.y, z: box.pos.z - e.pos.z },
       from: { ...e.pos },
+      fromTurn: turn,
+      turn,
       lastPos: { ...e.pos },
       lastVel: { ...e.vel },
       parked: false,
@@ -202,7 +234,7 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
 
   /** The collision box of a fixed / kinematic entity changed (a block turned, a robot resized): build a new collider. */
   function refit(e: Entity, rec: Rec): void {
-    const box = colliderBox(e);
+    const box = shownBox(e, rec.role);
     const offset = { x: box.pos.x - e.pos.x, y: box.pos.y - e.pos.y, z: box.pos.z - e.pos.z };
     if (same3(box.size, rec.size) && same3(offset, rec.offset)) return;
     world.removeCollider(rec.collider, true);
@@ -215,6 +247,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     refit(e, rec);
     if (rec.role === 'kin') {
       rec.from = { ...rec.lastPos };
+      rec.fromTurn = rec.turn;
+      rec.turn = turnOf(e, rec.role);
     } else if (rec.role === 'belt') {
       // The belt does not travel: it is put back before every engine step and only lends its surface speed to what rests on it.
       const v = beltVelocity(e);
@@ -285,7 +319,8 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       if (!(o.kind === 'block' ? o.solid : o.kind === 'item' ? o.rigid === true : o.kind === 'robot' || o.kind === 'vehicle' ? o.solid : false)) continue;
       const b = boundsBox(o);
       if (Math.abs(bottom - (b.pos.y + b.size.y / 2)) > REST_GAP) continue;
-      if (boxOverlap(e, o, 'x') > 1e-6 && boxOverlap(e, o, 'z') > 1e-6) return true;
+      const outline = chassisOutline(o);
+      if (outline ? overOutline(me, outline, 1e-6) : boxOverlap(e, o, 'x') > 1e-6 && boxOverlap(e, o, 'z') > 1e-6) return true;
     }
     return false;
   }
@@ -301,6 +336,105 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
       rec.body.setTranslation({ x: p.x, y: rec.plane, z: p.z }, false);
       rec.body.setLinvel({ x: v.x, y: 0, z: v.z }, false);
     }
+  }
+
+  /**
+   * Makes the engine work out afresh where a turning chassis touches what stands on it.
+   *
+   * Why: for two bodies that do not move against each other the engine keeps the contact it worked out before, and with it
+   * where the touching points lay in the world at that time. A crate riding on a chassis that turns is such a pair, and it
+   * swings those points round the chassis's middle. Friction then aims the crate at the speed the deck had where the crate
+   * *was*, so the crate leaves along a line that points outwards. Measured in a bare scene (one turning plate, one cube on
+   * it): the cube moves outwards by 0.096 x its distance from the plate's middle per radian turned, the same for any step
+   * size, solver passes, friction, mass and turn speed; with the contact worked out afresh every step it keeps its place
+   * (what is left is the step error, 0.0006 x that distance per radian at 1 rad/s).
+   * Setting the box's place on its body again, to the same value, is what marks the contact as changed.
+   */
+  function refreshContacts(rec: Rec): void {
+    rec.collider.setTranslationWrtParent(rec.offset);
+  }
+
+  /**
+   * A chassis that turns in this tick, as the engine is shown it: it goes from where it stood to where the game put it along
+   * the arc of one steady turn (about `pivot`, by `angle`), cut into the engine's steps.
+   *
+   * Why an arc: cut into straight pieces, the deck would keep one speed for a whole tick and change it at once at the next, and
+   * a crate on a chassis that drives round a bend would need all the friction of that bend in one engine step. It then slips
+   * a little every tick (measured in a bare scene, 1 m/s round a 1.3 m bend: 1.2 mm outwards per radian). Along the arc the
+   * change is spread over the steps and it does not slip (0.02 mm per radian).
+   */
+  interface Arc {
+    e: Entity;
+    /** The turn of the whole tick about the vertical (rad). */
+    angle: number;
+    /** From the point it turns about to where it stood at the start of the tick (ground plane). */
+    arm: { x: number; z: number };
+    /** Where its middle stood before the engine step just made, and the ground speed (m/s) it had in that step. */
+    at: { x: number; z: number };
+    vel: { x: number; z: number };
+  }
+  const turning = new Map<Rec, Arc>();
+  /** The crates in the simulation by the handle of their box (filled only in a tick in which a chassis turns). */
+  const crateByHandle = new Map<number, { e: Entity; rec: Rec }>();
+
+  function arcOf(e: Entity, rec: Rec): Arc {
+    const angle = wrapPi(yawOf(rec.turn!) - yawOf(rec.fromTurn!));
+    const dx = e.pos.x - rec.from.x;
+    const dz = e.pos.z - rec.from.z;
+    // Turning (x, z) by `angle` about the vertical gives (x cos + z sin, z cos - x sin). The arm that this turn takes from the
+    // start to the end of the tick's move (dx, dz):
+    const k = Math.abs(angle) > 1e-9 ? 1 / Math.tan(angle / 2) : 0;
+    const arm = k !== 0 ? { x: -(dx + k * dz) / 2, z: -(dz - k * dx) / 2 } : { x: 0, z: 0 };
+    return { e, angle, arm, at: { x: rec.from.x, z: rec.from.z }, vel: { x: 0, z: 0 } };
+  }
+
+  /** Where the middle of a turning chassis stands after share `t` of its tick (the end of the tick is exactly where the game put it). */
+  function arcPoint(rec: Rec, arc: Arc, t: number): Vec3 {
+    const e = arc.e;
+    const y = rec.from.y + (e.pos.y - rec.from.y) * t;
+    const finiteArm = Number.isFinite(arc.arm.x) && Number.isFinite(arc.arm.z) && (arc.arm.x !== 0 || arc.arm.z !== 0);
+    if (t >= 1 || !finiteArm) return { x: rec.from.x + (e.pos.x - rec.from.x) * t, y, z: rec.from.z + (e.pos.z - rec.from.z) * t };
+    const c = Math.cos(arc.angle * t) - 1;
+    const s = Math.sin(arc.angle * t);
+    return { x: rec.from.x + c * arc.arm.x + s * arc.arm.z, y, z: rec.from.z + c * arc.arm.z - s * arc.arm.x };
+  }
+
+  /**
+   * After an engine step in which a chassis turned: the crates that static friction holds on its deck follow the arc the deck
+   * made under them, not the straight line the engine moved them along.
+   *
+   * Why: the engine gives such a crate the speed of the deck under it and moves it straight on for the whole step, while the
+   * deck itself goes round. Each step ends the crate a little further from the middle of the chassis than the deck under it:
+   * by (1 - cos of the angle turned) x its distance from that middle, 0.6 mm per radian for a crate 0.3 m out at 1 rad/s.
+   * That bit is taken back here, and nothing else is touched (speed, height, turn and every contact stay the engine's).
+   * Only for a crate that stands on the deck and does not slide on it: the speed it has against the deck under it is no more
+   * than its friction can take away in one step (mu x g x step). A crate that slides, because the turn is too hard for its
+   * friction or because a wall or a hand holds it back, is left alone.
+   */
+  function followArc(chassis: Rec, arc: Arc, dt: number): void {
+    const step = dt / SUBSTEPS;
+    const angle = arc.angle / SUBSTEPS;
+    const back = 1 - Math.cos(angle);
+    const spin = angle / step;
+    const middle = chassis.body.translation();
+    world.contactPairsWith(chassis.collider, (other) => {
+      const crate = crateByHandle.get(other.handle);
+      if (!crate) return;
+      let stands = false;
+      world.contactPair(crate.rec.collider, chassis.collider, (m, flipped) => {
+        if (m.numContacts() > 0 && m.normal().y * (flipped ? -1 : 1) < -GROUND_NORMAL_Y) stands = true;
+      });
+      if (!stands) return;
+      const body = crate.rec.body;
+      const p = body.translation();
+      const v = body.linvel();
+      const rx = p.x - middle.x;
+      const rz = p.z - middle.z;
+      // The deck under the crate moves with the chassis's own speed plus its turn rate across the arm to the crate.
+      const slide = Math.hypot(v.x - (arc.vel.x + spin * rz), v.z - (arc.vel.z - spin * rx));
+      if (!(slide <= materialOf(crate.e).mu * gravity * (crate.e.gravityScale ?? 1) * step)) return;
+      body.setTranslation({ x: p.x - back * rx, y: p.y, z: p.z - back * rz }, false);
+    });
   }
 
   function standing(rec: Rec): boolean {
@@ -416,15 +550,32 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
         }
         for (const [e, rec] of recs) if (rec.role === 'crate' && !rec.parked) floorFriction(e, rec, belts, dt);
       }
+      turning.clear();
+      for (const [e, rec] of recs) if (rec.role === 'kin' && rec.turn && rec.fromTurn && !sameTurn(rec.fromTurn, rec.turn)) turning.set(rec, arcOf(e, rec));
+      if (turning.size > 0) {
+        crateByHandle.clear();
+        for (const [e, rec] of recs) if (rec.role === 'crate' && !rec.parked) crateByHandle.set(rec.collider.handle, { e, rec });
+      }
       for (let k = 1; k <= SUBSTEPS; k++) {
         const t = k / SUBSTEPS;
         for (const [e, rec] of recs) {
           if (rec.role === 'kin') {
+            const arc = turning.get(rec);
+            if (arc) {
+              const to = arcPoint(rec, arc, t);
+              arc.vel = { x: ((to.x - arc.at.x) * SUBSTEPS) / dt, z: ((to.z - arc.at.z) * SUBSTEPS) / dt };
+              arc.at = { x: to.x, z: to.z };
+              rec.body.setNextKinematicTranslation(to);
+              rec.body.setNextKinematicRotation(mixTurn(rec.fromTurn!, rec.turn!, t));
+              refreshContacts(rec);
+              continue;
+            }
             rec.body.setNextKinematicTranslation({
               x: rec.from.x + (e.pos.x - rec.from.x) * t,
               y: rec.from.y + (e.pos.y - rec.from.y) * t,
               z: rec.from.z + (e.pos.z - rec.from.z) * t,
             });
+            if (rec.turn) rec.body.setNextKinematicRotation(rec.fromTurn ? mixTurn(rec.fromTurn, rec.turn, t) : rec.turn);
           } else if (rec.role === 'belt' && k > 1) {
             rec.body.setTranslation(e.pos, false);
           }
@@ -436,6 +587,7 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
           }
         }
         world.step();
+        for (const [rec, arc] of turning) followArc(rec, arc, dt);
         if (mode !== '3d') for (const rec of recs.values()) if (rec.role === 'crate' && !rec.parked) flatten(rec);
       }
       for (const [e, rec] of recs) if (rec.role === 'crate') writeBack(e, rec, entities);

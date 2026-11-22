@@ -2,7 +2,7 @@ import type { EntityId, Vec3, ViewMode } from '../engine/types';
 import { DEG, type Frame } from './arm-kinematics';
 import { tipForceN } from './crate-tipping';
 import { accelFromForce, frictionForce, weight } from './mechanics';
-import { flattenObb, obbOf, obbSeparation, type Obb } from './oriented-box';
+import { backOffAlong, flattenObb, obbGap, obbOf, obbSeparation, type Obb } from './oriented-box';
 
 /**
  * Pure maths of the linear actuator (piston): where the rod points, what its head pushes along one step and how much force
@@ -33,6 +33,12 @@ export interface Box {
    * (it still meets every other body and every solid).
    */
   fat?: boolean;
+  /**
+   * The real, turned outline of a robot chassis whose box is only the upright square (or the bounds) round it.
+   * On a head: it meets every body, and every solid that has an outline itself, by this outline; solids without one are met by its box.
+   * On a solid (a chassis that holds its ground): a pushed body is in its way only where it enters this outline.
+   */
+  outline?: Obb;
 }
 
 export interface PushBody {
@@ -53,6 +59,11 @@ export interface PushBody {
   real?: Obb;
   /** How close (m) along the direction of travel a pusher counts as touching this body. Absent = only when the boxes overlap. */
   skin?: number;
+  /**
+   * A robot chassis: its real, turned outline, of which `box` is the upright bounds. Pushers meet it, and it meets what it
+   * pushes in turn, by this outline. Unlike `real` it says nothing about tipping.
+   */
+  outline?: Obb;
   /**
    * Force (N) it takes to move this body, whatever stands on it included, when that is not its sliding friction μ · m · g: a robot
    * chassis is held by its wheels (brakes and grip). Absent = it slides on its own surface.
@@ -134,7 +145,7 @@ function shifted(b: Box, d: Vec3): Box {
 
 /** Where an exact head's outline is after it has travelled `d` of the step. */
 function exactAt(input: PushInput, d: number): Obb | null {
-  const a = input.head.exact;
+  const a = input.head.exact ?? input.head.outline;
   if (!a) return null;
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const b = input.headEnd;
@@ -153,7 +164,9 @@ function exactAt(input: PushInput, d: number): Obb | null {
 }
 
 /** The outline a body is tested by: its real outline when it has one, else its box. */
-const outlineOf = (b: PushBody): Obb => b.real ?? obbOf(b.box.pos, b.box.size);
+const outlineOf = (b: PushBody): Obb => b.real ?? b.outline ?? obbOf(b.box.pos, b.box.size);
+
+const movedObb = (o: Obb, d: Vec3): Obb => ({ centre: { x: o.centre.x + d.x, y: o.centre.y + d.y, z: o.centre.z + d.z }, half: o.half, axes: o.axes });
 
 /** The outline as the view sees it: a flat view has no depth along its hidden axis. */
 const seen = (o: Obb, flat: PushInput['flat']): Obb => (flat === 'y' || flat === 'z' ? flattenObb(o, flat) : o);
@@ -174,6 +187,18 @@ function exactClearance(head: Obb, body: Obb, dir: Vec3, reach: number): number 
     else lo = mid;
   }
   return hi;
+}
+
+/**
+ * `exactClearance` for a chassis outline (as the pusher or as the body), worked out instead of searched for: a shoved chassis
+ * must travel exactly as far as its pusher, to the last bit, or it would read a speed nobody gave it.
+ */
+function outlineClearance(pusher: Obb, body: Obb, dir: Vec3): number {
+  // As for plain boxes: only a body that lies ahead of the pusher is pushed clear; one beside or behind its middle is not
+  // carried through the whole pusher (it stays, and what it sits in then stops the pusher).
+  const ahead = (body.centre.x - pusher.centre.x) * dir.x + (body.centre.y - pusher.centre.y) * dir.y + (body.centre.z - pusher.centre.z) * dir.z;
+  if (!(ahead > 0)) return 0;
+  return backOffAlong(body, pusher, { x: -dir.x, y: -dir.y, z: -dir.z });
 }
 
 /** Distance along `dir` that the box `body` must move to be clear of `pusher` (0 when it cannot be separated that way). */
@@ -203,6 +228,15 @@ function contactSet(input: PushInput, d: number, early: boolean): ContactSet {
   const exactHead = realHead ? seen(realHead, input.flat) : null;
   /** Parallel to `pushers`: true for a rigid crate that is being pushed (the head itself is false). */
   const rigidPusher: boolean[] = [false];
+  /** Parallel to `pushers`: the turned outline of a pushed chassis where it ends up, as the view sees it (null for the head and every other body). */
+  const chassisPusher: (Obb | null)[] = [null];
+  /** Outline against outline: for a pushed chassis as the pusher, or as the body, when the head's own test does not apply. */
+  const byOutline = (p: Box, k: number, b: PushBody): [Obb, Obb] | null => {
+    if (k === 0 && exactHead) return null;
+    const po = chassisPusher[k] ?? null;
+    if (!po && !b.outline) return null;
+    return [po ?? seen(obbOf(p.pos, p.size), input.flat), seen(outlineOf(b), input.flat)];
+  };
   const sideways = input.flat !== 'y' && Math.abs(input.dir.y) <= 0.5;
   // An exact head cannot touch a body whose centre is further from its own than both can reach (see `HeadReach`; 3D only):
   // with `early`, such a body is not put through the separating-axis test.
@@ -222,14 +256,30 @@ function contactSet(input: PushInput, d: number, early: boolean): ContactSet {
       if (pushed.has(b.id)) continue;
       // A rigid crate counts as touched a few millimetres before the faces meet: the engine already pushes it from that close.
       const skin = b.skin ?? 0;
-      const hit = pushers.find(
-        (p, k) =>
-          (k === 0 && exactHead ? !beyondHead(b, skin) && -obbSeparation(exactHead, seen(outlineOf(b), input.flat)) > TOUCH - skin : axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH))) &&
-          // Pushed sideways, a rigid crate does not push what only holds it up: the engine rests it a hair inside that body.
-          !(sideways && rigidPusher[k] && holdsUp(b.box, p)),
-      );
+      let turned: [Obb, Obb] | null = null;
+      const hit = pushers.find((p, k) => {
+        const pair = byOutline(p, k, b);
+        const meets =
+          k === 0 && exactHead
+            ? !beyondHead(b, skin) && -obbSeparation(exactHead, seen(outlineOf(b), input.flat)) > TOUCH - skin
+            : pair
+              ? -obbSeparation(pair[0], pair[1]) > TOUCH - skin
+              : axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH));
+        // Pushed sideways, a rigid crate does not push what only holds it up: the engine rests it a hair inside that body.
+        if (!meets || (sideways && rigidPusher[k] && holdsUp(b.box, p))) return false;
+        turned = pair;
+        return true;
+      });
       if (!hit) continue;
-      const t = hit === pushers[0] && exactHead && realHead ? exactClearance(exactHead, seen(outlineOf(b), input.flat), input.dir, 2 * (Math.hypot(realHead.half.x, realHead.half.y, realHead.half.z) + Math.hypot(outlineOf(b).half.x, outlineOf(b).half.y, outlineOf(b).half.z))) : clearance(hit, b.box, input.dir, axes);
+      const pair = turned as [Obb, Obb] | null;
+      const t =
+        hit === pushers[0] && exactHead && realHead
+          ? input.head.exact
+            ? exactClearance(exactHead, seen(outlineOf(b), input.flat), input.dir, 2 * (Math.hypot(realHead.half.x, realHead.half.y, realHead.half.z) + Math.hypot(outlineOf(b).half.x, outlineOf(b).half.y, outlineOf(b).half.z)))
+            : outlineClearance(exactHead, seen(outlineOf(b), input.flat), input.dir)
+          : pair
+            ? outlineClearance(pair[0], pair[1], input.dir)
+            : clearance(hit, b.box, input.dir, axes);
       const delta = { x: input.dir.x * t, y: input.dir.y * t, z: input.dir.z * t };
       pushed.set(b.id, delta);
       pushedBy.set(b.id, hit);
@@ -237,6 +287,7 @@ function contactSet(input: PushInput, d: number, early: boolean): ContactSet {
       boxes.set(b.id, moved);
       pushers.push(moved);
       rigidPusher.push(b.crossTol !== undefined);
+      chassisPusher.push(b.outline ? seen(movedObb(b.outline, delta), input.flat) : null);
       again = true;
     }
   }
@@ -314,8 +365,16 @@ function forceFor(input: PushInput, set: ContactSet): { total: number; needs: Ma
   return { total, needs };
 }
 
-/** True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it). */
-function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3, crossTol = SOLID_TOL): boolean {
+/**
+ * True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it).
+ * A solid with an outline (a chassis that holds its ground) is entered where `a`'s own outline (`real`, else its box) enters
+ * that outline: strictly when the shallowest way out lies along the travel at all, with the same slack when it lies across it.
+ */
+function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3, crossTol = SOLID_TOL, real?: Obb, flat?: PushInput['flat']): boolean {
+  if (s.outline) {
+    const { gap, axis } = obbGap(seen(real ?? obbOf(a.pos, a.size), flat), seen(s.outline, flat));
+    return -gap > (Math.abs(axis.x * dir.x + axis.y * dir.y + axis.z * dir.z) > 1e-9 ? TOUCH : crossTol);
+  }
   return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : crossTol));
 }
 
@@ -325,13 +384,16 @@ function clearOfSolids(input: PushInput, d: number, early: boolean): boolean {
   const move = { x: input.dir.x * d, y: input.dir.y * d, z: input.dir.z * d };
   const head = shifted(input.head, move);
   const exactHead = input.head.exact !== undefined;
+  const headOutline = input.head.outline ? movedObb(input.head.outline, move) : undefined;
   const byId = new Map(input.bodies.map((b) => [b.id, b]));
   for (const s of input.solids) {
     // An exact head comes with the upright cover that meets the solids (see `Box.fat`): only what it pushes is checked here.
-    if (!exactHead && inSolid(head, s, axes, input.dir)) return false;
+    if (!exactHead && inSolid(head, s, axes, input.dir, SOLID_TOL, headOutline, input.flat)) return false;
     for (const [id, delta] of pushed) {
       const b = byId.get(id);
-      if (b && inSolid(shifted(b.box, delta), s, axes, input.dir, b.crossTol)) return false;
+      if (!b) continue;
+      const own = s.outline ? (b.real ?? b.outline) : undefined;
+      if (inSolid(shifted(b.box, delta), s, axes, input.dir, b.crossTol, own ? movedObb(own, delta) : undefined, input.flat)) return false;
     }
   }
   return true;
@@ -364,16 +426,21 @@ export function emptyReach(flat: 'y' | 'z' | null | undefined): HeadReach {
 
 /** Adds the way of `head` moved by `move`. False when the reach cannot be trusted for this head. */
 export function growReach(reach: HeadReach, head: Box, move: Vec3): boolean {
-  const exact = head.exact;
-  // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here.
-  if (exact && reach.flat !== null) return false;
+  // A chassis head (`outline`) meets bodies by its outline and blocks by its box: the reach holds both (the round of the
+  // outline, or half the box where that is more).
+  const exact = head.exact ?? head.outline;
+  // The flat views flatten an exact outline along the hidden axis: its reach is then not what is worked out here. (A chassis
+  // outline is only ever turned about the vertical, and the round taken for it below holds it at any turn about any axis:
+  // made endless along the axis a view hides, it reaches no further along the axes the view shows. The same goes for the
+  // bodies of a flat view, which only turn about the axis it hides.)
+  if (head.exact && reach.flat !== null) return false;
   const round = exact ? ROOT3 * (exact.half.x + exact.half.y + exact.half.z) : 0;
   let sum = 0;
   for (const k of reach.shown) {
     const start = exact ? exact.centre[k] : head.pos[k];
     const end = start + move[k];
     // The step is walked as start + direction * distance: rounding may end it a few last bits beside `end`.
-    const ext = (exact ? round : Math.abs(head.size[k]) / 2) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
+    const ext = (head.exact ? round : Math.max(round, Math.abs(head.size[k]) / 2)) + 1e-6 * (1 + Math.abs(start) + Math.abs(end));
     reach.lo[k] = Math.min(reach.lo[k], start - ext, end - ext);
     reach.hi[k] = Math.max(reach.hi[k], start + ext, end + ext);
     sum += Math.abs(start) + Math.abs(end) + ext;
@@ -408,12 +475,46 @@ export function solidsInReach(reach: HeadReach, solids: readonly Box[]): Box[] {
   });
 }
 
+/**
+ * True only when a chassis head (3D view) cannot touch, anywhere on its step, a body that lies within `round` of `centre`
+ * (`round` = how far the body reaches from that point, plus its skin). The head touches a body when no separating axis shows
+ * a gap of the skin, and the head's own three axes are among those: along one of them, the body's nearest point is at least
+ * its distance from the head's middle less `round`. So a body that stays further than that beyond the head's half size along
+ * one of the head's own axes, while the head's middle runs its step along it, is not touched. This follows the outline at any
+ * heading, where the upright reach of `HeadReach` has to take a whole round. Numbers that are not finite prove nothing.
+ */
+export function beyondOutline(outline: Obb, move: Vec3, centre: Vec3, round: number): boolean {
+  const d = { x: centre.x - outline.centre.x, y: centre.y - outline.centre.y, z: centre.z - outline.centre.z };
+  const halves = [outline.half.x, outline.half.y, outline.half.z];
+  for (let i = 0; i < 3; i++) {
+    const n = outline.axes[i]!;
+    const along = d.x * n.x + d.y * n.y + d.z * n.z;
+    const travel = move.x * n.x + move.y * n.y + move.z * n.z;
+    const far = halves[i]! + round;
+    if (!(Math.abs(along) + Math.abs(travel) + far < Infinity)) return false;
+    // The step is walked as start + direction * distance: rounding may end it a few last bits beside `travel`.
+    const slack = 1e-6 * (1 + Math.abs(along) + Math.abs(travel));
+    if (along > Math.max(0, travel) + far + slack || along < Math.min(0, travel) - far - slack) return true;
+  }
+  return false;
+}
+
+/** `beyondOutline` for a body of a plan. */
+function beyondChassisHead(outline: Obb, move: Vec3, b: PushBody): boolean {
+  const o = b.real ?? b.outline;
+  const skin = Math.abs(b.skin ?? 0);
+  return o ? beyondOutline(outline, move, o.centre, Math.hypot(o.half.x, o.half.y, o.half.z) + skin) : beyondOutline(outline, move, b.box.pos, Math.hypot(b.box.size.x, b.box.size.y, b.box.size.z) / 2 + skin);
+}
+
 /** The same push with no bodies and only the solids in reach, when the head can touch no body on its step; null otherwise. */
 function quietPush(input: PushInput, step: number): PushInput | null {
   if (input.bodies.length === 0) return null;
   const reach = emptyReach(input.flat);
-  if (!growReach(reach, input.head, { x: input.dir.x * step, y: input.dir.y * step, z: input.dir.z * step })) return null;
-  for (const b of input.bodies) if (!clearOfReach(reach, b)) return null;
+  const move = { x: input.dir.x * step, y: input.dir.y * step, z: input.dir.z * step };
+  if (!growReach(reach, input.head, move)) return null;
+  // A chassis head in the 3D view is followed by its own outline; every other head by the upright reach.
+  const chassis = !input.head.exact && !input.flat ? input.head.outline : undefined;
+  for (const b of input.bodies) if (!(chassis ? beyondChassisHead(chassis, move, b) : clearOfReach(reach, b))) return null;
   return { ...input, bodies: [], solids: solidsInReach(reach, input.solids) };
 }
 

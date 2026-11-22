@@ -134,4 +134,57 @@ describe('planPush gives what the whole plan gives', () => {
     expect(stopped).toBeGreaterThan(300);
     expect(free).toBeGreaterThan(300);
   });
+
+  it('for a chassis head with a turned outline, among chassis that are shoved or hold and loose bodies, in every view', () => {
+    const next = rng(577215);
+    const at = (s: number): number => (next() - 0.5) * s;
+    // A chassis as the world shows it to the plan: length by width turned about the vertical (not at all in the side view).
+    const chassis = (x: number, z: number, flat: SweepInput['flat']) => {
+      const length = 0.4 + next() * 1.2;
+      const width = 0.3 + next() * 1;
+      const half = flat === 'z' ? 0 : at(7) / 2;
+      const pos = { x, y: 0.15, z: flat === 'z' ? 0 : z };
+      const outline = obbOf(pos, { x: length, y: 0.3, z: width }, { x: 0, y: Math.sin(half), z: 0, w: Math.cos(half) });
+      const side = Math.max(length, width);
+      return { pos, square: { x: side, y: 0.3, z: side }, outline };
+    };
+    let pushing = 0;
+    let stopped = 0;
+    let free = 0;
+    for (let round = 0; round < 4000; round++) {
+      const flat = ([null, null, 'y', 'z'] as const)[Math.floor(round / 4) % 4]!;
+      const spread = [1.5, 3, 8, 40][round % 4]!;
+      const me = chassis(at(1), at(1), flat);
+      const bodies: PushBody[] = [];
+      const solids: Box[] = [];
+      for (let k = 0; k < Math.floor(next() * 6); k++) {
+        const pos = { x: at(spread), y: 0.15 + (flat === 'y' ? at(1) : 0), z: flat === 'z' ? 0 : at(spread) };
+        const size = { x: 0.2 + next() * 0.4, y: 0.3, z: 0.2 + next() * 0.4 };
+        bodies.push({ id: `b${k}`, box: { pos, size }, massKg: 1 + next() * 20, mu: 0.4 });
+      }
+      for (let k = 0; k < Math.floor(next() * 3); k++) {
+        const o = chassis(at(spread), at(spread), flat);
+        if (next() < 0.5) bodies.push({ id: `o${k}`, box: obbBounds(o.outline), outline: o.outline, massKg: 5, mu: 0.8, holdN: next() * 40 });
+        else solids.push({ ...obbBounds(o.outline), outline: o.outline });
+      }
+      for (let k = 0; k < Math.floor(next() * 3); k++) solids.push({ pos: { x: at(spread), y: 0.3, z: flat === 'z' ? 0 : at(spread) }, size: { x: 0.2 + next(), y: 0.6, z: 0.2 + next() } });
+      const heading = flat === 'z' ? (next() < 0.5 ? 0 : Math.PI) : next() * Math.PI * 2;
+      const input = {
+        head: { pos: me.pos, size: me.square, outline: me.outline },
+        dir: { x: Math.cos(heading), y: 0, z: flat === 'z' ? 0 : Math.sin(heading) },
+        step: [0.002, 0.03, 0.3, 0][Math.floor(next() * 4)]!,
+        bodies,
+        solids,
+        flat,
+      };
+      const want = planWhole(input);
+      expect(planPush(input)).toEqual(want);
+      if (want.moves.length > 0) pushing++;
+      else if (want.blocked) stopped++;
+      else free++;
+    }
+    expect(pushing).toBeGreaterThan(200);
+    expect(stopped).toBeGreaterThan(50);
+    expect(free).toBeGreaterThan(300);
+  });
 });
