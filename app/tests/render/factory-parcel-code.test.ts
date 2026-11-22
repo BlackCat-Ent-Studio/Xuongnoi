@@ -201,7 +201,7 @@ describe('the code display', () => {
   it('stays inside its block and shows the number on all four upright faces', () => {
     const before = pictures.length;
     const fig = buildBlockLook('code-display', '#a3a3a3', size, '7', 'n');
-    fig.update(view('7'));
+    fig.update!(view('7'));
     fig.object.scale.set(size.x, size.y, size.z);
     fig.object.updateMatrixWorld(true);
     const got = new THREE.Box3().setFromObject(fig.object).getSize(new THREE.Vector3());
@@ -223,7 +223,7 @@ describe('the code display', () => {
   it('an empty display shows a dash, not a number', () => {
     const before = pictures.length;
     const fig = buildBlockLook('code-display', '#a3a3a3', size, '', 'n');
-    fig.update(view());
+    fig.update!(view());
     expect(pictures[before]!.texts).toEqual([]);
     expect(pictures[before]!.rects).toHaveLength(1);
     fig.dispose();
