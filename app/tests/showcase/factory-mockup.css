@@ -1,0 +1,22 @@
+/* One look by choice: the scene is the game's own daylight floor, so the page keeps a light frame. */
+:root { --ink: #1c2330; --muted: #5b6577; --line: #d5d9e0; --panel: rgba(255, 255, 255, 0.95); --soft: #eef0f3; --belt: #2a6fd0; --warn: #b26a00; color-scheme: light; }
+html, body { height: 100%; }
+body { margin: 0; background: #e6e8ec; color: var(--ink); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; overflow: hidden; }
+canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.panel { position: fixed; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
+#top { top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); max-width: min(520px, calc(100vw - 24px)); }
+#top h1 { margin: 0 0 4px; font-size: 18px; text-wrap: balance; }
+#top p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+#top b { color: var(--warn); }
+#layouts { margin: 8px 0 6px; }
+#note { color: var(--ink) !important; font-weight: 600; }
+#stats { top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 13px; min-width: 230px; }
+#stats table { border-collapse: collapse; width: 100%; }
+#stats td { padding: 2px 0; }
+#stats td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 12px; white-space: nowrap; }
+#bar { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center; width: max-content; max-width: calc(100vw - 24px); }
+.g { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 13px; color: var(--muted); }
+button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #c9ced6; background: var(--soft); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"], button.primary { background: var(--belt); border-color: var(--belt); color: #fff; }
+button:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
+@media (max-width: 720px) { #stats { display: none; } #top p:not(#note) { display: none; } }
