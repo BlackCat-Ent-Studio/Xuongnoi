@@ -28,6 +28,7 @@ const ROWS: [Approach, string, Record<string, ParamValue>][] = [
   ['hold', 'tuned', TUNED],
   ['hold-flow', 'default', {}],
   ['eyes-turn', 'default', {}],
+  ['hold-flow', 'fast', { power: 1, slowDistance: 0.5 }],
 ];
 
 describe.each(ROWS.filter(([a, d]) => !only || only === `${a}:${d}`))('%s, drive %s, 900 s', (approach, driveName, drive) => {
