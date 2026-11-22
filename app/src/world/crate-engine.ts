@@ -105,6 +105,7 @@ export interface CrateEngineOptions {
 const finite3 = (v: Vec3): boolean => Number.isFinite(v.x) && Number.isFinite(v.y) && Number.isFinite(v.z);
 const same3 = (a: Vec3, b: Vec3): boolean => a.x === b.x && a.y === b.y && a.z === b.z;
 const IDENTITY = { x: 0, y: 0, z: 0, w: 1 };
+const sameTurn = (a: Quat, b: Quat): boolean => a.x === b.x && a.y === b.y && a.z === b.z && a.w === b.w;
 
 export function createCrateEngine(rapier: RapierModule, options: CrateEngineOptions): CrateEngine {
   const { mode } = options;
@@ -327,6 +328,22 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
     }
   }
 
+  /**
+   * Makes the engine work out afresh where a turning chassis touches what stands on it.
+   *
+   * Why: for two bodies that do not move against each other the engine keeps the contact it worked out before, and with it
+   * where the touching points lay in the world at that time. A crate riding on a chassis that turns is such a pair, and it
+   * swings those points round the chassis's middle. Friction then aims the crate at the speed the deck had where the crate
+   * *was*, so the crate leaves along a line that points outwards. Measured in a bare scene (one turning plate, one cube on
+   * it): the cube moves outwards by 0.096 x its distance from the plate's middle per radian turned, the same for any step
+   * size, solver passes, friction, mass and turn speed; with the contact worked out afresh every step it keeps its place
+   * (what is left is the step error, 0.0006 x that distance per radian at 1 rad/s).
+   * Setting the box's place on its body again, to the same value, is what marks the contact as changed.
+   */
+  function refreshContacts(rec: Rec): void {
+    rec.collider.setTranslationWrtParent(rec.offset);
+  }
+
   function standing(rec: Rec): boolean {
     let found = false;
     world.contactPairsWith(rec.collider, (other) => {
@@ -449,7 +466,10 @@ export function createCrateEngine(rapier: RapierModule, options: CrateEngineOpti
               y: rec.from.y + (e.pos.y - rec.from.y) * t,
               z: rec.from.z + (e.pos.z - rec.from.z) * t,
             });
-            if (rec.turn) rec.body.setNextKinematicRotation(rec.fromTurn ? mixTurn(rec.fromTurn, rec.turn, t) : rec.turn);
+            if (rec.turn) {
+              rec.body.setNextKinematicRotation(rec.fromTurn ? mixTurn(rec.fromTurn, rec.turn, t) : rec.turn);
+              if (rec.fromTurn && !sameTurn(rec.fromTurn, rec.turn)) refreshContacts(rec);
+            }
           } else if (rec.role === 'belt' && k > 1) {
             rec.body.setTranslation(e.pos, false);
           }
