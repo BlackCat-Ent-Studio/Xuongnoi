@@ -479,8 +479,9 @@ export function createFactoryCircuits(): Circuit[] {
 const note = (id: string, color: NoteColor, x: number, y: number, w: number, h: number, text: string): Note => ({ id, color, pos: { x, y }, size: { w, h }, text });
 
 /** The main board: four columns (the first one holds the widest card, the camera) under a note that spans them. */
-const MAIN_COLS = [0, 330, 615, 900, 1185] as const;
-const BANNER_H = 112;
+const MAIN_COLS = [0, 330, 630, 930, 1230] as const;
+const BANNER_H = 150;
+const STACK_STEP = 104;
 
 /** The main board "Xưởng (phần trạm)": one "Trạm nạp", six "Cửa thả", the rule, the totals. Fresh objects on every call. */
 export function createFactoryStationsBoard(): Board {
@@ -514,6 +515,12 @@ export function createFactoryStationsBoard(): Board {
   ];
   const nodes = laid.map(([n]) => n);
   layOut(nodes, laid.map(([, col]) => col), (n) => rows.get(String(n.params.circuit)) ?? 4, (col) => MAIN_COLS[col] ?? 0, MARGIN + BANNER_H + GAP_Y);
+  // Copies drawn as one stacked block: the block stands where the first copy is; the others wait close under it (the
+  // smallest step the app leaves between two cards), so their wires stay in one bundle.
+  for (const stacked of [FACTORY_IDS.chute, FACTORY_IDS.adder]) {
+    const members = nodes.filter((n) => n.params.circuit === stacked);
+    members.forEach((n, k) => (n.pos = { x: members[0]!.pos.x, y: members[0]!.pos.y + k * STACK_STEP }));
+  }
   const notesX = MARGIN + MAIN_COLS[4];
   const graph: Graph = {
     nodes,
@@ -549,7 +556,7 @@ export function createFactoryStationsBoard(): Board {
         MARGIN,
         MAIN_COLS[3] + 180,
         BANNER_H,
-        'XƯỞNG ĐANG DỰNG DỞ: mới có phần đứng yên là một "Trạm nạp" và sáu "Cửa thả". Đội xe chở thùng (AGV) CHƯA có. Tạm thời khối "Chuyển tạm (thay xe)" làm thay xe: thùng nằm trên bàn giao 2 giây thì được "Dịch chuyển" tới phía trên đúng cửa mà luật chỉ ra, rồi rơi vào cửa. Bấm Chạy để xem. Bấm "Mở" trên một khối để xem bên trong.',
+        'XƯỞNG ĐANG DỰNG DỞ: mới có một "Trạm nạp" và sáu "Cửa thả". Đội xe chở thùng (AGV) CHƯA có: khối "Chuyển tạm (thay xe)" tạm làm thay xe, thùng nằm trên bàn giao 2 giây thì được "Dịch chuyển" tới phía trên đúng cửa mà luật chỉ ra rồi rơi vào cửa. Bấm Chạy để xem. Bấm "Mở" trên một khối để xem bên trong.',
       ),
       note(
         'note2',
