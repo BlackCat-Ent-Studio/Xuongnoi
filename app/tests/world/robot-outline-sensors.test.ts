@@ -138,6 +138,32 @@ describe('pistons and arm pieces meet the turned outline', () => {
     on.world.dispose?.();
   });
 
+  it('a piston that runs into the corner of a parked chassis at 45 degrees moves it by that corner, never inside it', { timeout: 60_000 }, () => {
+    // The corner that points back along x is at (-0.566, -0.071); the 0.2 m head comes along +x on that line, its face from x = -0.6.
+    const b = bot({ id: 'r', x: 0, z: 0, floor: 0, heading: 45 });
+    const nodes: NodeSpec[] = [...b.nodes, ['p', 'linear-actuator', { position: { x: -3, y: 0.2, z: -0.071 }, direction: 0, stroke: 2, headSize: 0.2, speed: 0.5, maxForce: 500 }], ['e', 'key', { key: 'KeyE' }]];
+    const r = play(nodes, [...b.wires, ['e', 'held', 'p', 'extend']]);
+    r.hold('KeyE');
+    let deepest = -Infinity;
+    let faceAtFirstMove = NaN;
+    for (let k = 0; k < seconds(6); k++) {
+      r.tick();
+      const e = r.entity('r')!;
+      const head = r.world.entities().find((v) => v.ownerNodeId === 'p' && v.size.x === 0.2 && v.size.y === 0.2)!;
+      deepest = Math.max(deepest, overlapDepth(e, head));
+      if (Number.isNaN(faceAtFirstMove) && Math.hypot(e.position.x, e.position.z) > 1e-6) faceAtFirstMove = head.position.x + 0.1;
+    }
+    const e = r.entity('r')!;
+    r.world.dispose?.();
+    // It starts to move when the head's face reaches the corner (within the step of one tick), not 12 cm later at the square.
+    expect(faceAtFirstMove).toBeGreaterThan(-0.566 - 0.001);
+    expect(faceAtFirstMove).toBeLessThan(-0.566 + 0.01);
+    expect(deepest).toBeLessThan(0.001);
+    // Rod out by 2 m: the head's face is at x = 1.4 and the corner sits on it.
+    expect(e.position.x).toBeCloseTo(1.4 + (0.45 + 0.35) * Math.SQRT1_2, 2);
+    expect(e.position.y).toBeCloseTo(0.12, 9);
+  });
+
   for (const heading of [30, 45, 60]) {
     it(`a chassis at ${heading} degrees driven into the head of a piston stops with its corner on the head`, { timeout: 60_000 }, () => {
       const a = bot({ id: 'a', x: 0, z: 0, floor: 0, heading, power: [0.5, 0.5] });

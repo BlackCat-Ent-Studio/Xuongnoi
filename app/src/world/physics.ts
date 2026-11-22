@@ -45,7 +45,7 @@ function gravityOf(e: Entity, g: number): number {
 
 /**
  * The outlines a mover and a solid (or two bodies that may touch) meet by when one of them is a chassis with a real outline;
- * null when their upright boxes decide. A block that is nowhere near the chassis is told apart without working the outlines out.
+ * null when their upright boxes decide.
  */
 function metByOutline(a: Entity, b: Entity): [Obb, Obb] | null {
   if (a.robot === undefined && b.robot === undefined) return null;
