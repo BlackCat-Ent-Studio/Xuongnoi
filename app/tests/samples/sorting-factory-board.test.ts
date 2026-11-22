@@ -3,6 +3,7 @@ import { instanceParams } from '../../src/circuits/instance';
 import { runnableGraph } from '../../src/circuits/runnable';
 import { validateCircuits } from '../../src/circuits/validate';
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
+import { relayoutShipped } from '../../src/editor/graph/shipped-layout';
 import { CIRCUIT_KIND, TICK_DT, type Board, type Graph, type GraphNode, type ParamValue } from '../../src/engine/types';
 import { listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
@@ -155,6 +156,15 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
     expect(board.graph.settings?.realPhysics).toBe(true);
     const text = board.notes!.map((n) => n.text).join(' ');
     for (const said of ['CHƯA có', 'Chuyển tạm (thay xe)', 'Dịch chuyển', 'từ 4 kg trở lên']) expect(text, said).toContain(said);
+  });
+
+  it('is shown as it was laid out: at the biggest card size the app has no card to move, on the main board or inside a circuit', () => {
+    const board = shipped();
+    expect(relayoutShipped(board)).toBe(board);
+    for (const c of board.circuits!) {
+      const inside: Board = { name: c.name, mode: '3d', graph: c.graph };
+      expect(relayoutShipped(inside), c.name).toBe(inside);
+    }
   });
 
   it('is saved with its circuits and reads back to the same text', () => {

@@ -74,20 +74,23 @@ function card(id: string, kind: string, given: Record<string, ParamValue> = {}):
   return { id, kind, params, pos: { x: 0, y: 0 } };
 }
 
-/** Height of a card on the canvas: a header band and one row per port it shows. */
+/**
+ * Height of a card on the canvas at the biggest card size ("Học sinh"): a header band and one row per port it shows. The app
+ * spreads a shipped board at that size when it opens it, so a layout made with it is shown as it was laid out.
+ */
 function cardHeight(node: GraphNode, rowsOfCopy: number): number {
   const def = getNodeDef(node.kind);
   const rows = def ? activeInputs(def, node.params).length + activeOutputs(def, node.params).length : rowsOfCopy;
-  return 48 + 26 * Math.max(1, rows);
+  return 60 + 34 * Math.max(1, rows);
 }
 
 /** Stacks the cards of each column downwards in the order given, so no two overlap. Returns the lowest edge. */
-function layOut(nodes: GraphNode[], cols: readonly number[], rowsOfCopy: (node: GraphNode) => number = () => 4, colW = COL_W, top = MARGIN): number {
+function layOut(nodes: GraphNode[], cols: readonly number[], rowsOfCopy: (node: GraphNode) => number = () => 4, colX: (col: number) => number = (col) => col * COL_W, top = MARGIN): number {
   const bottoms = new Map<number, number>();
   nodes.forEach((n, i) => {
     const col = cols[i] ?? 0;
     const y = bottoms.get(col) ?? top;
-    n.pos = { x: MARGIN + col * colW, y };
+    n.pos = { x: MARGIN + colX(col), y };
     bottoms.set(col, y + cardHeight(n, rowsOfCopy(n)) + GAP_Y);
   });
   return Math.max(MARGIN, ...bottoms.values());
@@ -475,14 +478,15 @@ export function createFactoryCircuits(): Circuit[] {
 
 const note = (id: string, color: NoteColor, x: number, y: number, w: number, h: number, text: string): Note => ({ id, color, pos: { x, y }, size: { w, h }, text });
 
-/** The main board: narrower columns than inside the circuits (few cards, short wires), under a note that spans them. */
-const MAIN_COL_W = 285;
+/** The main board: four columns (the first one holds the widest card, the camera) under a note that spans them. */
+const MAIN_COLS = [0, 330, 615, 900, 1185] as const;
 const BANNER_H = 112;
 
 /** The main board "Xưởng (phần trạm)": one "Trạm nạp", six "Cửa thả", the rule, the totals. Fresh objects on every call. */
 export function createFactoryStationsBoard(): Board {
   const circuits = createFactoryCircuits();
-  const rows = new Map(circuits.map((c) => [c.id, c.pins.length]));
+  // A copy shows its in pins and its out pins side by side.
+  const rows = new Map(circuits.map((c) => [c.id, Math.max(c.pins.filter((q) => q.dir === 'in').length, c.pins.filter((q) => q.dir === 'out').length)]));
   const copy = (id: string, circuit: string, name: string, at: Vec3, values: Record<string, ParamValue> = {}): GraphNode => ({
     id,
     kind: CIRCUIT_KIND,
@@ -490,7 +494,8 @@ export function createFactoryStationsBoard(): Board {
     pos: { x: 0, y: 0 },
   });
   const chutes = CHUTES;
-  const hud = (id: string, label: string): GraphNode => card(id, 'show-number', { label, corner: 'top-left' });
+  // The lines of the waiting carton stand on the left of the screen, the two totals on the right.
+  const hud = (id: string, label: string, corner = 'top-left'): GraphNode => card(id, 'show-number', { label, corner });
   const laid: [GraphNode, number][] = [
     [card('bat-dau', 'on-start'), 0],
     [card('may-quay', 'camera', { mode: 'fixed', point: { x: 0, y: 0.6, z: -2.2 }, zoom: 1.1, view: 'tilted' }), 0],
@@ -504,12 +509,12 @@ export function createFactoryStationsBoard(): Board {
     ...chutes.map((k): [GraphNode, number] => [copy(`cua-${k}`, FACTORY_IDS.chute, `Cửa ${k}`, chutePlace(k), { 'so-cua': String(k), 'mau-nhan': chuteAccepts(k) }), 1]),
     [copy('tong-kien', FACTORY_IDS.adder, 'Tổng kiện', { x: 0, y: 0, z: 0 }), 2],
     [copy('tong-sai', FACTORY_IDS.adder, 'Tổng kiện sai', { x: 0, y: 0, z: 0 }), 2],
-    [hud('hien-kien', 'Kiện đã vào cửa'), 3],
-    [hud('hien-sai', 'Kiện vào sai cửa'), 3],
+    [hud('hien-kien', 'Kiện đã vào cửa', 'top-right'), 3],
+    [hud('hien-sai', 'Kiện vào sai cửa', 'top-right'), 3],
   ];
   const nodes = laid.map(([n]) => n);
-  layOut(nodes, laid.map(([, col]) => col), (n) => rows.get(String(n.params.circuit)) ?? 4, MAIN_COL_W, MARGIN + BANNER_H + GAP_Y);
-  const notesX = MARGIN + 4 * MAIN_COL_W;
+  layOut(nodes, laid.map(([, col]) => col), (n) => rows.get(String(n.params.circuit)) ?? 4, (col) => MAIN_COLS[col] ?? 0, MARGIN + BANNER_H + GAP_Y);
+  const notesX = MARGIN + MAIN_COLS[4];
   const graph: Graph = {
     nodes,
     wires: wires([
@@ -542,7 +547,7 @@ export function createFactoryStationsBoard(): Board {
         'yellow',
         MARGIN,
         MARGIN,
-        4 * MAIN_COL_W - 60,
+        MAIN_COLS[3] + 180,
         BANNER_H,
         'XƯỞNG ĐANG DỰNG DỞ: mới có phần đứng yên là một "Trạm nạp" và sáu "Cửa thả". Đội xe chở thùng (AGV) CHƯA có. Tạm thời khối "Chuyển tạm (thay xe)" làm thay xe: thùng nằm trên bàn giao 2 giây thì được "Dịch chuyển" tới phía trên đúng cửa mà luật chỉ ra, rồi rơi vào cửa. Bấm Chạy để xem. Bấm "Mở" trên một khối để xem bên trong.',
       ),
@@ -553,7 +558,7 @@ export function createFactoryStationsBoard(): Board {
         MARGIN,
         360,
         250,
-        'Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ. Ba dòng đầu trên màn hình là của thùng đang chờ trên bàn giao: màu (số), khối lượng, cửa phải tới.',
+        'Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ. Ba dòng bên trái màn hình là của thùng đang chờ trên bàn giao: màu (số), khối lượng, cửa phải tới. Hai dòng bên phải là tổng của sáu cửa.',
       ),
       note(
         'note3',
