@@ -357,5 +357,5 @@ export const spikeJobsNode: NodeDef<JobState> = {
 };
 
 export function registerSpikeNodes(): void {
-  for (const def of [gridRouteNode, cellHoldNode, spikeJobsNode] as NodeDef<never>[]) if (!getNodeDef(def.kind)) registerNode(def);
+  for (const def of [gridRouteNode, cellHoldNode, spikeJobsNode] as unknown as NodeDef<never>[]) if (!getNodeDef(def.kind)) registerNode(def);
 }

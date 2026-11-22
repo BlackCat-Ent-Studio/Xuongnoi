@@ -9,7 +9,6 @@
  *
  * Everything is measured from the entity views on every tick.
  */
-import { performance } from 'node:perf_hooks';
 import { TICK_DT, type EntityView, type ParamValue } from '../../src/engine/types';
 import type { RapierModule } from '../../src/world/rapier-loader';
 import type { NodeSpec, WireSpec } from '../helpers/arm-rig';
