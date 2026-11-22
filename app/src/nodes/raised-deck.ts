@@ -144,13 +144,13 @@ export const raisedDeckNode: NodeDef<DeckState> = {
   inputs: [],
   outputs: [{ id: 'self', type: 'object', label: 'Đối tượng' }],
   params: [
-    { id: 'position', label: 'Vị trí (x, z = giữa sàn; y = độ cao mặt đất bên dưới, m)', kind: 'vec3', default: DEFAULT_POSITION, place: 'point' },
-    { id: 'top', label: 'Cao mặt sàn (m, tính từ mặt đất bên dưới)', kind: 'number', default: 2.6, min: 0.3, max: MAX_TOP, step: 0.1 },
+    { id: 'position', label: 'Vị trí (y = mặt đất bên dưới)', kind: 'vec3', default: DEFAULT_POSITION, place: 'point' },
+    { id: 'top', label: 'Cao mặt sàn (m)', kind: 'number', default: 2.6, min: 0.3, max: MAX_TOP, step: 0.1 },
     { id: 'holeCols', label: 'Số lỗ theo trục X', kind: 'number', default: 1, min: 1, max: DECK_MAX_HOLES, step: 1 },
     { id: 'holeRows', label: 'Số lỗ theo trục Z', kind: 'number', default: 1, min: 1, max: DECK_MAX_HOLES, step: 1 },
     { id: 'hole', label: 'Cạnh lỗ (m)', kind: 'number', default: 0.7, min: MIN_HOLE, max: MAX_HOLE, step: 0.05 },
-    { id: 'pitch', label: 'Khoảng cách giữa hai lỗ (tâm tới tâm, m)', kind: 'number', default: 2, min: MIN_HOLE + MIN_LAND, max: MAX_PITCH, step: 0.1 },
-    { id: 'margin', label: 'Lề từ lỗ ngoài cùng tới mép sàn (m)', kind: 'number', default: 1.3, min: MIN_MARGIN, max: MAX_MARGIN, step: 0.1 },
+    { id: 'pitch', label: 'Khoảng cách giữa hai lỗ (m)', kind: 'number', default: 2, min: MIN_HOLE + MIN_LAND, max: MAX_PITCH, step: 0.1 },
+    { id: 'margin', label: 'Lề quanh lỗ ngoài cùng (m)', kind: 'number', default: 1.3, min: MIN_MARGIN, max: MAX_MARGIN, step: 0.1 },
     { id: 'thickness', label: 'Bề dày sàn (m)', kind: 'number', default: 0.2, min: MIN_THICKNESS, max: MAX_THICKNESS, step: 0.05 },
     { id: 'color', label: 'Màu mặt sàn', kind: 'color', default: DEFAULT_COLOR },
     {

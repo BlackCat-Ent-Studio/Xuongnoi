@@ -41,5 +41,6 @@
  "sample:robot-line-follow": "9e629b9a:900",
  "sample:robot-avoid": "d6a7f032:900",
  "sample:robot-square": "5a7a0:900",
- "sample:auto-door": "9365a0f4:900"
+ "sample:auto-door": "9365a0f4:900",
+ "handbook:raised-deck": "80da227:900"
 }
