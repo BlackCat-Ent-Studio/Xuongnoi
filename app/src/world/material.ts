@@ -279,10 +279,22 @@ function tooFarToHold(crate: Fact, base: Fact): boolean {
  * hand among them holds.
  *
  * `scene` saves reading every body again when many bodies are weighed in a row (see `WeighScene` for when it may be passed).
+ *
+ * `machineOf` tells, for a piece bolted to a machine, the body that machine stands on (nothing for any other body). A bolted
+ * piece is held up by its machine: it can weigh on that body and on the other pieces of the same machine, never on a body it
+ * only hangs over (the fingers of an arm lowered round a crate do not weigh on the crate, or on the robot under it).
  */
-export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity> = NO_PARTS, scene?: WeighScene): number {
-  if (!(scene ? scene.anyFreeCrate : list.some(isFreeCrate))) return massOnWhole(list, target, parts);
-  if (!scene) return massOnShared(weighSceneOf(list), target, parts);
+export type MachineOf = (e: Entity) => Entity | undefined;
+
+/** False when `top` is a piece of a machine that `base` is no part of: it then cannot rest on `base`, however near it hangs. */
+function mayRestOn(top: Entity, base: Entity, machineOf: MachineOf | undefined): boolean {
+  const machine = machineOf?.(top);
+  return machine === undefined || base === machine || machineOf!(base) === machine;
+}
+
+export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity> = NO_PARTS, scene?: WeighScene, machineOf?: MachineOf): number {
+  if (!(scene ? scene.anyFreeCrate : list.some(isFreeCrate))) return massOnWhole(list, target, parts, machineOf);
+  if (!scene) return massOnShared(weighSceneOf(list), target, parts, machineOf);
   for (const f of scene.moving) {
     readFact(f);
     scene.shapes.delete(f.e);
@@ -290,7 +302,7 @@ export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlyS
   // A target or a piece that does not bear has no fact in the scene; nothing is kept of it either.
   scene.shapes.delete(target);
   for (const p of parts) scene.shapes.delete(p);
-  return massOnShared(scene, target, parts);
+  return massOnShared(scene, target, parts, machineOf);
 }
 
 /**
@@ -305,7 +317,7 @@ export function massOn(list: readonly Entity[], target: Entity, parts: ReadonlyS
  * asked in full. The bodies are gone through in the order of the entity list, which the shares depend on. And only the bodies
  * round the pile are gone through at all: those whose ground box (see `Fact`) meets the box round the whole pile so far.
  */
-function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Entity>): number {
+function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Entity>, machineOf?: MachineOf): number {
   const { facts, shapes } = scene;
   const shapeFor = (e: Entity): Shape => {
     let s = shapes.get(e);
@@ -388,7 +400,7 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
     // `base` joined the pile before it was queued, so the bodies round the pile hold all that can rest on it.
     lookRound();
     for (const f of near) {
-      if (seen.has(f.e) || parts.has(f.e) || !holds(f, base)) continue;
+      if (seen.has(f.e) || parts.has(f.e) || !mayRestOn(f.e, base.e, machineOf) || !holds(f, base)) continue;
       seen.add(f.e);
       above.push(f);
       queue.push(f);
@@ -416,7 +428,7 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
     const bases: Entity[] = [];
     const spots: Pt[] = [];
     for (const f of near) {
-      if (f === top) continue;
+      if (f === top || !mayRestOn(e, f.e, machineOf)) continue;
       const at = holds(top, f);
       if (!at) continue;
       bases.push(f.e);
@@ -437,7 +449,7 @@ function massOnShared(scene: WeighScene, target: Entity, parts: ReadonlySet<Enti
 }
 
 /** The old rule, for worlds without rigid crates: any overlap counts the whole mass. */
-function massOnWhole(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity>): number {
+function massOnWhole(list: readonly Entity[], target: Entity, parts: ReadonlySet<Entity>, machineOf?: MachineOf): number {
   const seen = new Set<string>([target.id]);
   const queue: Entity[] = [target];
   for (const p of parts) {
@@ -449,7 +461,7 @@ function massOnWhole(list: readonly Entity[], target: Entity, parts: ReadonlySet
     const base = queue.pop()!;
     for (const e of list) {
       if (seen.has(e.id) || !e.visible || e.inHand || e.zone) continue;
-      if (!rests(e, base)) continue;
+      if (!mayRestOn(e, base, machineOf) || !rests(e, base)) continue;
       seen.add(e.id);
       total += e.mass ?? DEFAULT_MASS_KG[e.kind];
       queue.push(e);

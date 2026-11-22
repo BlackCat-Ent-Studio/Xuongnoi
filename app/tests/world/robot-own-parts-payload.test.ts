@@ -253,6 +253,34 @@ describe('the weighing rule on the world itself', () => {
     expect(s.w.massOn(tip)).toBeCloseTo(2, 6);
     s.w.dispose?.();
   });
+
+  it('a piece of a machine that stands elsewhere does not weigh on a crate, or on the chassis under it, that it only hangs over', () => {
+    const s = scene();
+    // A stand on the floor beside the robot, and a finger bolted to it that hangs 1 cm over the crate on the chassis.
+    const stand = s.w.spawn({ kind: 'block', ownerNodeId: 'stand', position: { x: 0, y: 0.5, z: 1.5 }, size: { x: 0.3, y: 1, z: 0.3 }, color: '#333', solid: true });
+    const finger = s.w.spawn({ kind: 'block', ownerNodeId: 'finger', position: { x: 0, y: 0.3 + 0.4 + 0.01 + 0.05, z: 0.3 }, size: { x: 0.3, y: 0.1, z: 0.3 }, color: '#333', solid: true });
+    const crate = s.w.spawn({ kind: 'item', ownerNodeId: 'crate', position: { x: 0, y: 0.3 + 0.2, z: 0.3 }, size: { x: 0.4, y: 0.4, z: 0.4 }, color: '#fa0', solid: false, mass: 2 });
+    const declare = (bolted: boolean): void => {
+      s.w.setMount('hand', s.body);
+      if (bolted) s.w.setMount('finger', stand);
+    };
+    for (let k = 0; k < 30; k++) {
+      declare(true);
+      s.w.step(TICK_DT);
+    }
+    declare(true);
+    expect(s.w.massOn(s.body)).toBeCloseTo(2, 6);
+    expect(s.w.massOn(crate)).toBe(0);
+    expect(s.w.massOn(finger)).toBe(0);
+    // The same block bolted to nothing is a plain body lying on the crate: it weighs on it and on the chassis.
+    for (let k = 0; k < 2; k++) {
+      s.w.step(TICK_DT);
+      declare(false);
+    }
+    expect(s.w.massOn(crate)).toBe(10);
+    expect(s.w.massOn(s.body)).toBeCloseTo(12, 6);
+    s.w.dispose?.();
+  });
 });
 
 describe('with "Vật lý thật" off the weighing is the one older boards have', () => {

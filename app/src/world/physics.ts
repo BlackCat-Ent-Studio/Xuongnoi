@@ -7,7 +7,7 @@ import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
 import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
-import { massOn, weighSceneOf, type WeighScene } from './material';
+import { massOn, weighSceneOf, type MachineOf, type WeighScene } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
 import { driveRobot, settleRobot } from './robot-drive';
 import { beginShove, finishShove, restsOnChassis } from './robot-push';
@@ -407,14 +407,14 @@ function stepVehicle(
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
  * world, `own` the pieces bolted to this chassis, `meets` the other solid chassis it may run into (real physics only).
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>, machineOf?: MachineOf): void {
   const body = r.robot;
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
   const solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
   const headingWas = body.heading;
   const facingWas = r.facing;
-  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh()));
+  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf));
   r.vel.x = flat.x;
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
@@ -571,6 +571,8 @@ export function stepPhysics(
   crates: CrateEngine | null = null,
   /** The pieces bolted to a body (see `massOn`): they are part of a chassis, not its load. */
   partsOf?: (body: Entity) => ReadonlySet<Entity> | undefined,
+  /** For a piece bolted to a machine, the body that machine stands on (see `massOn`). */
+  machineOf?: MachineOf,
 ): void {
   const byId = new Map(entities.map((e) => [e.id, e]));
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
@@ -609,7 +611,7 @@ export function stepPhysics(
   let weighing: WeighScene | null = null;
   const weigh = (): WeighScene => (weighing ??= weighSceneOf(entities));
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c));
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c), machineOf);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {
