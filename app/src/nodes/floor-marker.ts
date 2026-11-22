@@ -46,10 +46,12 @@ export function markerByNumber(world: WorldApi, number: number): MarkerSpot | nu
  * The marker whose tile the point stands on (the nearest middle when tiles overlap), or null. The side view shows the
  * floor edge-on, so only x counts there.
  */
-export function markerUnder(world: WorldApi, mode: ViewMode, at: { x: number; z: number }): MarkerSpot | null {
+export function markerUnder(world: WorldApi, mode: ViewMode, at: { x: number; z: number }, feetY?: number): MarkerSpot | null {
   let best: MarkerSpot | null = null;
   let bestD = Infinity;
   for (const m of listMarkers(world)) {
+    // EXPERIMENTAL (spike/deck, not for merge): only a marker painted on the floor the object stands on is read.
+    if (import.meta.env.VITE_SPIKE_MARKER_LEVEL && feetY !== undefined && Math.abs((world.getEntity(m.id)?.position.y ?? feetY) - feetY) > Number(import.meta.env.VITE_SPIKE_MARKER_LEVEL)) continue;
     const dx = Math.abs(at.x - m.x);
     const dz = mode === '2d-side' ? 0 : Math.abs(at.z - m.z);
     if (dx > m.size / 2 || dz > m.size / 2) continue;

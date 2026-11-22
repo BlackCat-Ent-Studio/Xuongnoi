@@ -26,7 +26,7 @@ export const floorMarkerSensorNode: NodeDef<MarkerSensorState> = {
   evaluate(ctx, i, _params, s) {
     const id = asObject(i.who);
     const self = id !== null ? ctx.world.getEntity(id) : undefined;
-    const found = self && self.visible ? markerUnder(ctx.world, ctx.mode, self.position) : null;
+    const found = self && self.visible ? markerUnder(ctx.world, ctx.mode, self.position, self.position.y - self.size.y / 2) : null;
     const number = found?.number ?? 0;
     const entered = number !== 0 && number !== s.prev;
     s.prev = number;
