@@ -86,6 +86,59 @@ describe('floor marker figure', () => {
     fig.dispose();
   });
 
+  const meshesOf = (fig: FloorMarkerFigure): THREE.Mesh[] => {
+    const out: THREE.Mesh[] = [];
+    fig.object.traverse((o) => {
+      if (o instanceof THREE.Mesh) out.push(o);
+    });
+    return out;
+  };
+
+  it('a marker without arrows has exactly the meshes it always had; arrows add one flat mesh in the marker colour that follows a repaint', () => {
+    const plain = new FloorMarkerFigure(tile(), '3d');
+    const none = new FloorMarkerFigure(tile({ blockStyle: 'box' }), '3d');
+    expect(meshesOf(plain)).toHaveLength(2);
+    expect(meshesOf(none)).toHaveLength(2);
+    const fig = new FloorMarkerFigure(tile({ blockStyle: 'marker-exits:ES' }), '3d');
+    const [plate, , arrows] = meshesOf(fig) as [THREE.Mesh, THREE.Mesh, THREE.Mesh];
+    expect(meshesOf(fig)).toHaveLength(3);
+    expect((arrows.material as THREE.MeshBasicMaterial).color.getHexString()).toBe('f59e0b');
+    fig.update(tile({ blockStyle: 'marker-exits:ES', color: '#ef4444' }));
+    expect((arrows.material as THREE.MeshBasicMaterial).color.getHexString()).toBe('ef4444');
+    expect((plate.material as THREE.MeshLambertMaterial).color.getHexString()).toBe('2c3038');
+    fig.object.traverse((o) => expect(o.userData.ownerNodeId).toBe('n1'));
+    // The side view shows the floor edge-on: no arrows there.
+    expect(meshesOf(new FloorMarkerFigure(tile({ blockStyle: 'marker-exits:ES' }), '2d-side'))).toHaveLength(2);
+  });
+
+  it('each arrow lies inside the tile, above it, and reaches toward the edge it points at', () => {
+    const reach = (exits: string): THREE.Box3 => {
+      const fig = new FloorMarkerFigure(tile({ blockStyle: `marker-exits:${exits}` }), '3d');
+      fig.object.updateMatrixWorld(true);
+      return new THREE.Box3().setFromObject(meshesOf(fig)[2]!);
+    };
+    // The tile is 1.4 m wide round (3, -2): east is +x, south is +z.
+    const e = reach('E');
+    expect(e.min.x).toBeGreaterThan(3 + 0.2);
+    expect(e.max.x).toBeGreaterThan(3 + 0.6);
+    expect(e.max.x).toBeLessThan(3 + 0.7);
+    expect(Math.abs((e.min.z + e.max.z) / 2 + 2)).toBeLessThan(1e-6);
+    expect(e.min.y).toBeGreaterThan(0.5);
+    const w = reach('W');
+    expect(w.min.x).toBeGreaterThan(3 - 0.7);
+    expect(w.min.x).toBeLessThan(3 - 0.6);
+    const south = reach('S');
+    expect(south.max.z).toBeGreaterThan(-2 + 0.6);
+    expect(south.max.z).toBeLessThan(-2 + 0.7);
+    expect(Math.abs((south.min.x + south.max.x) / 2 - 3)).toBeLessThan(1e-6);
+    const n = reach('N');
+    expect(n.min.z).toBeLessThan(-2 - 0.6);
+    expect(n.min.z).toBeGreaterThan(-2 - 0.7);
+    const both = reach('WS');
+    expect(both.min.x).toBeLessThan(3 - 0.6);
+    expect(both.max.z).toBeGreaterThan(-2 + 0.6);
+  });
+
   it('the scene draws a marker as this figure (not as a zone box), moves it with the entity and removes it', () => {
     const view = new SceneView();
     view.setMode('3d');

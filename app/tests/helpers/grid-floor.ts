@@ -3,10 +3,9 @@ import { runnableGraph } from '../../src/circuits/runnable';
 import { getNodeDef, registerNode } from '../../src/engine/registry';
 import { createRuntime } from '../../src/engine/runtime';
 import { CIRCUIT_KIND, TICK_DT, type Board, type Circuit, type EntityView, type GraphNode, type NodeDef, type ParamValue, type Runtime, type Wire, type World, type WorldApi } from '../../src/engine/types';
-import { GRID_BOT, GRID_BOT_WIRES, gridBotCircuit } from '../../src/handbook/boards-grid-floor';
+import { GRID_BOT, GRID_BOT_WIRES, gridBotCircuit, laneArrows } from '../../src/handbook/boards-grid-floor';
 import { registerAllNodes } from '../../src/nodes';
-import { listMarkers } from '../../src/nodes/floor-marker';
-import { laneGraph, routeOnLanes } from '../../src/nodes/grid-lanes';
+import { lanesOfWorld, routeOnLanes } from '../../src/nodes/grid-lanes';
 import { asBool, asNum, numParam } from '../../src/nodes/util';
 import type { RapierModule } from '../../src/world/rapier-loader';
 import { createWorld } from '../../src/world/world';
@@ -37,10 +36,8 @@ export const cellNumber = (g: GridShape, r: number, c: number): number => r * g.
 export const cellOf = (g: GridShape, n: number): readonly [row: number, col: number] => [Math.floor((n - 1) / g.cols), (n - 1) % g.cols];
 export const isLane = (g: GridShape, r: number, c: number): boolean => r >= 0 && c >= 0 && r < g.rows && c < g.cols && (r % 2 === 0 || c % 2 === 0);
 
-/** Arrows of a lane cell: even rows run east, west, east...; even columns run north, south, north... A crossing has both. */
-export function arrowsOf(r: number, c: number): string {
-  return `${r % 2 === 0 ? ((r / 2) % 2 === 0 ? 'E' : 'W') : ''}${c % 2 === 0 ? ((c / 2) % 2 === 1 ? 'S' : 'N') : ''}`;
-}
+/** Arrows of a lane cell: even rows run east, west, east...; even columns run north, south, north... A crossing has both; none points off the floor. */
+export const arrowsOf = (r: number, c: number, g: GridShape = LAYOUT_A): string => laneArrows(r, c, g.rows, g.cols);
 
 export const node = (id: string, kind: string, params: Record<string, ParamValue> = {}): GraphNode => ({ id, kind, params, pos: { x: 0, y: 0 } });
 const wire = (from: string, to: string): Wire => {
@@ -56,7 +53,7 @@ export function laneMarkers(g: GridShape, pitch: number, opts: { y?: number; fir
     for (let c = 0; c < g.cols; c++) {
       if (!isLane(g, r, c)) continue;
       const number = cellNumber(g, r, c) + (opts.first ?? 1) - 1;
-      out.push(node(`${opts.prefix ?? 'm'}${number}`, 'floor-marker', { number, position: { x: c * pitch, y: opts.y ?? 0, z: r * pitch }, size: pitch, exits: arrowsOf(r, c) || 'none' }));
+      out.push(node(`${opts.prefix ?? 'm'}${number}`, 'floor-marker', { number, position: { x: c * pitch, y: opts.y ?? 0, z: r * pitch }, size: pitch, exits: arrowsOf(r, c, g) || 'none' }));
     }
   }
   return out;
@@ -160,7 +157,7 @@ const gridJobsNode: NodeDef<JobState> = {
     const at = Math.round(asNum(i.at));
     const here = asBool(i.stood) && at === s.goal;
     const t = ctx.tick * ctx.dt;
-    const lanes = laneGraph(listMarkers(ctx.world));
+    const lanes = lanesOfWorld(ctx.world, ctx.tick);
     const far = (from: number, to: number): number => (from === to ? 0 : routeOnLanes(lanes, from, to).length || Infinity);
     const rnd = (): number => {
       s.seed = (Math.imul(s.seed, 1664525) + 1013904223) >>> 0;

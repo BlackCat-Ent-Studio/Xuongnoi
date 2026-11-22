@@ -1,6 +1,5 @@
 import type { NodeDef } from '../engine/types';
-import { listMarkers } from './floor-marker';
-import { detourOnLanes, laneGraph, routeOnLanes } from './grid-lanes';
+import { detourOnLanes, lanesOfWorld, routeOnLanes } from './grid-lanes';
 import { asBool, asNum, numParam } from './util';
 
 interface GridRouteState {
@@ -44,7 +43,7 @@ export const gridRouteNode: NodeDef<GridRouteState> = {
       s.waited = 0;
       s.detour = false;
     }
-    const graph = laneGraph(listMarkers(ctx.world));
+    const graph = lanesOfWorld(ctx.world, ctx.tick);
     const usual = routeOnLanes(graph, at, goal);
 
     // Patience: every time the wait has lasted the set time, the robot is sent through the other exit (and back again).

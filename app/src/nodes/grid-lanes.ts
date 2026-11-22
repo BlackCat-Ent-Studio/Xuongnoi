@@ -1,4 +1,5 @@
-import { EXIT_DIRS, EXIT_STEP, type ExitDir, type MarkerSpot } from './floor-marker';
+import type { WorldApi } from '../engine/types';
+import { EXIT_DIRS, EXIT_STEP, listMarkers, type ExitDir, type MarkerSpot } from './floor-marker';
 
 /**
  * One-way lanes read off the floor: every marker with arrows is a cell, and each arrow leads to the nearest marker that
@@ -50,6 +51,20 @@ export function laneGraph(markers: readonly MarkerSpot[]): LaneGraph {
     }
     graph.set(m.number, exits);
   }
+  return graph;
+}
+
+const read = new WeakMap<WorldApi, { tick: number; graph: LaneGraph }>();
+
+/**
+ * The lanes of the markers on the floor right now. Every card that asks on the same tick gets the one graph read on that
+ * tick (markers do not change within a tick), so a fleet of route finders reads the floor once.
+ */
+export function lanesOfWorld(world: WorldApi, tick: number): LaneGraph {
+  const kept = read.get(world);
+  if (kept && kept.tick === tick) return kept.graph;
+  const graph = laneGraph(listMarkers(world));
+  read.set(world, { tick, graph });
   return graph;
 }
 

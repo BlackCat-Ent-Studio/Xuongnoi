@@ -61,9 +61,15 @@ const note = (text: string, x: number, y: number, w = 420, h = 230): Note => ({ 
 
 // ---------------------------------------------------------------- floors
 
-/** Arrows of a cell of a floor whose holes sit on (odd row, odd column): even rows run east, west, east...; even columns north, south, north... */
-export function laneArrows(row: number, col: number): string {
-  return `${row % 2 === 0 ? ((row / 2) % 2 === 0 ? 'E' : 'W') : ''}${col % 2 === 0 ? ((col / 2) % 2 === 1 ? 'S' : 'N') : ''}`;
+/**
+ * Arrows of a cell of a floor of `rows` x `cols` cells whose holes sit on (odd row, odd column): even rows run east, west,
+ * east...; even columns north, south, north... An arrow that would point off the floor is left out.
+ */
+export function laneArrows(row: number, col: number, rows: number, cols: number): string {
+  const along = row % 2 === 0 ? ((row / 2) % 2 === 0 ? 'E' : 'W') : '';
+  const across = col % 2 === 0 ? ((col / 2) % 2 === 1 ? 'S' : 'N') : '';
+  const stays = (d: string): boolean => (d === 'E' ? col + 1 < cols : d === 'W' ? col > 0 : d === 'S' ? row + 1 < rows : d === 'N' ? row > 0 : false);
+  return [along, across].filter(stays).join('');
 }
 
 export const RING_PITCH = 1.4;
@@ -311,7 +317,7 @@ function fleetFloorCircuit(): Circuit {
   for (let r = 0; r < FLEET.rows; r++) {
     for (let c = 0; c < FLEET.cols; c++) {
       if (r % 2 !== 0 && c % 2 !== 0) continue;
-      const n = card(`o-${fleetCell(r, c)}`, 'floor-marker', { number: fleetCell(r, c), position: { x: c * FLEET.pitch, y: 0, z: r * FLEET.pitch }, size: FLEET.pitch, exits: laneArrows(r, c) || 'none' });
+      const n = card(`o-${fleetCell(r, c)}`, 'floor-marker', { number: fleetCell(r, c), position: { x: c * FLEET.pitch, y: 0, z: r * FLEET.pitch }, size: FLEET.pitch, exits: laneArrows(r, c, FLEET.rows, FLEET.cols) || 'none' });
       n.pos = { x: MARGIN + c * 260, y: MARGIN + r * 230 };
       nodes.push(n);
     }
