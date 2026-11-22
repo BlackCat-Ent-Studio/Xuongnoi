@@ -144,7 +144,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
     stage.add(gate, b.mesh);
     const door: DoorLive = { plan: d, g: group, rear, gate, cages: [], state: 'open', t: 0, off: 0, v: 0, busy: false, trucks: 0, board: b, text: '' };
     group.position.set(d.x, gy - PIT, TRUCK_Z);
-    for (let i = 0; i < [2, 3, 1, 0, 2][j % 5]!; i++) {
+    for (let i = 0; i < [3, 2, 3, 1, 2][j % 5]!; i++) {
       const c = newCage(), dest = d.holes[(i + j) % d.holes.length]!;
       for (let k = 0; k < CAP; k++) { const p = o.makeCarton(dest); stow(c, p, slot(c, p)); }
       load(door, c);
