@@ -15,6 +15,8 @@ const MAX_MARGIN = 10;
 const MIN_THICKNESS = 0.05;
 const MAX_THICKNESS = 1;
 const MAX_TOP = 20;
+/** Thickness of the deck where it is only paint on the floor (the top-down view). */
+const PAINT = 0.02;
 
 const DEFAULT_POSITION = { x: 0, y: 0.5, z: 0 };
 const DEFAULT_COLOR = '#93a1b3';
@@ -173,13 +175,13 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     const mode = ctx.world.mode;
     const shape = deckShape(params);
     const at = vec3Param(params, 'position', DEFAULT_POSITION);
-    const thickness = clamp(numParam(params, 'thickness', 0.2), MIN_THICKNESS, MAX_THICKNESS);
-    // The floor never dips below the ground it stands on.
-    const top = clamp(numParam(params, 'top', 2.6), thickness, MAX_TOP);
-    const legs = strParam(params, 'legs', 'yes') !== 'no' ? top - thickness : 0;
-    const color = strParam(params, 'color', DEFAULT_COLOR);
-    // Seen from straight above there is no height: the deck is paint on the floor and blocks nothing.
+    // Seen from straight above there is no height: the deck is paint on the floor, blocks nothing and hides nothing that stands on it.
     const flat = mode === '2d-top';
+    const thickness = flat ? PAINT : clamp(numParam(params, 'thickness', 0.2), MIN_THICKNESS, MAX_THICKNESS);
+    // The floor never dips below the ground it stands on.
+    const top = flat ? PAINT : clamp(numParam(params, 'top', 2.6), thickness, MAX_TOP);
+    const legs = !flat && strParam(params, 'legs', 'yes') !== 'no' ? top - thickness : 0;
+    const color = strParam(params, 'color', DEFAULT_COLOR);
     const ids = platesFor(shape, mode).map((p, i) =>
       ctx.world.spawn({
         kind: 'block',

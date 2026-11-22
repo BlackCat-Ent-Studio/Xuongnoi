@@ -25,6 +25,9 @@ const BEAM_UP = 0.012;
 const LEG = 0.1;
 const LEG_INSET = 0.12;
 const LEG_SPAN = 3;
+/** Thickness of the top layer of a plate, the only part that takes shadows (m). */
+const SKIN = 0.004;
+const TRIM_NAME = 'deck-trim';
 
 /** Leg positions along one edge of length `side`: both ends, and enough between them to keep every gap under `LEG_SPAN`. */
 function legStops(side: number): number[] {
@@ -85,12 +88,19 @@ export class RaisedDeckFigure {
   private build(view: EntityView, color: string): void {
     this.object.clear();
     const size = view.size;
-    this.object.add(bakedMesh(`deck-plate|${sizeKey(size)}|${color}`, () => [{ geo: box(size.x, size.y, size.z), color }], undefined, true));
+    // Only the walked-on face takes shadows: the underside and the sides face away from the sun and stay evenly dark.
+    const skin = Math.min(SKIN, size.y / 2);
+    const top = bakedMesh(`deck-skin|${sizeKey({ x: size.x, y: skin, z: size.z })}|${color}`, () => [{ geo: box(size.x, skin, size.z), color }], undefined, true);
+    top.position.y = size.y / 2 - skin / 2;
+    const body = bakedMesh(`deck-body|${sizeKey({ x: size.x, y: size.y - skin, z: size.z })}|${color}`, () => [{ geo: box(size.x, size.y - skin, size.z), color }]);
+    body.position.y = -skin / 2;
+    this.object.add(top, body);
     const frame = frameOfLabel(view.label);
     if (frame) {
       // The first plate is the strip before the first row of holes: the middle of the deck lies half a deck further along z.
       const trim = bakedMesh(`deck-frame|${view.label}`, () => frameParts(frame));
       trim.position.set(0, size.y / 2, deckSize(frame).z / 2 - size.z / 2);
+      trim.name = TRIM_NAME;
       this.object.add(trim);
     }
     this.object.traverse((o) => {
@@ -110,7 +120,7 @@ export class RaisedDeckFigure {
 
   /** True for the one plate of a deck that also draws the trim and the legs. */
   get hasTrim(): boolean {
-    return this.object.children.length > 1;
+    return this.object.getObjectByName(TRIM_NAME) !== undefined;
   }
 
   /** The baked shapes are shared by every deck of the same size and stay for the life of the page. */

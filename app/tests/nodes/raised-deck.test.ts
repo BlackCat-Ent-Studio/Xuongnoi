@@ -143,6 +143,9 @@ describe('raised deck: the plates it lays', () => {
     const flat = rig([['deck', 'raised-deck', { holeCols: 3, holeRows: 3 }]], [], '2d-top').world;
     expect(solidFlags(flat)).toEqual(Array(16).fill(false));
     expect(flat.entities().every((e) => e.zone === true && e.look === RAISED_DECK_LOOK)).toBe(true);
+    // It lies on the floor the card names (y = 0.5 by default), 2 cm thick, so what drives there is drawn on top of it.
+    for (const e of flat.entities()) expect([e.position.y - e.size.y / 2, e.position.y + e.size.y / 2]).toEqual([expect.closeTo(0.5, 9), expect.closeTo(0.52, 9)]);
+    expect(frameOfLabel(flat.entities()[0]!.label)!.legs).toBe(0);
   });
 
   it('the plate list of the pure layout is what the world gets, strips first', () => {
@@ -276,8 +279,8 @@ describe('raised deck: how it is drawn', () => {
     view.scene.traverse((o) => {
       if (o instanceof THREE.Mesh && typeof o.userData.ownerNodeId === 'string') owners.set(o.userData.ownerNodeId, (owners.get(o.userData.ownerNodeId) ?? 0) + 1);
     });
-    // 5 plates + the trim of the deck.
-    expect(owners.get('deck')).toBe(6);
+    // 5 plates (a top layer and a body each) + the trim of the deck.
+    expect(owners.get('deck')).toBe(11);
     // A changed colour redraws the plates in place; a removed deck leaves nothing behind.
     view.sync([...deck.map((e) => ({ ...e, color: '#445566' })), plain], 0);
     view.sync([plain], 0);
