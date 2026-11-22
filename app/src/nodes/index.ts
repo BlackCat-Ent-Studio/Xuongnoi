@@ -57,6 +57,7 @@ import { aheadSensorNode } from './ahead-sensor';
 import { visionSensorNode } from './vision-sensor';
 import { sightForecastNode } from './sight-forecast';
 import { colorSensorNode } from './color-sensor';
+import { codeReaderNode } from './code-reader';
 import { cameraNode } from './camera';
 import { teleportNode } from './teleport';
 import { portalNode } from './portal';
@@ -167,6 +168,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   floorMarkerNode,
   floorMarkerSensorNode,
   floorMarkerFindNode,
+  codeReaderNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.

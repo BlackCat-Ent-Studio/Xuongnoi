@@ -1,6 +1,7 @@
 import { ITEM_SHAPES, type EntityId, type ItemShape, type NodeDef, type ParamDef, type Params, type PortDef, type PortValue } from '../engine/types';
 import { CLASSIC_LOOK, PARCEL_LOOKS, lookSpec } from '../engine/factory-looks';
-import { addToSpawnPool, createSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
+import { PARCEL_CODE_MAX, PARCEL_CODE_MIN, lookWithCode, parcelCodeOfValue, parcelCodeTag } from '../engine/parcel-code';
+import { addToSpawnPool, createSpawnPool, recallFromSpawnPool, tickSpawnPool, type SpawnPool } from '../world/spawner';
 import { MAX_MASS_KG } from '../world/material';
 import { materialParams, materialSpec } from './body-params';
 import { PALETTE_COLORS } from './color-palette';
@@ -11,6 +12,7 @@ import { asBool, asObject, numParam, risingEdge, strParam, vec3Param, type EdgeS
 interface SpawnerState {
   pool: SpawnPool;
   spawn: EdgeState;
+  recall: EdgeState;
   last: EntityId | null;
   /** Picks the class of each new object while "Sinh ngẫu nhiên theo loại" is on. */
   next: () => number;
@@ -19,7 +21,8 @@ interface SpawnerState {
   lastMass: number;
 }
 
-const MAX_ALIVE_LIMIT = 50;
+/** The most objects one card keeps alive at a time (the top of "Số lượng tối đa"). */
+export const MAX_ALIVE_LIMIT = 200;
 
 const MASS_PORT: PortDef = { id: 'mass', type: 'number', label: 'Khối lượng' };
 const CRUSH_PORT: PortDef = { id: 'crushLimit', type: 'number', label: 'Lực chịu nén' };
@@ -56,6 +59,12 @@ const classParams: ParamDef[] = Array.from({ length: SPAWNER_MAX_CLASSES }, (_, 
 });
 
 const takesWiredMaterial = (params: Params): boolean => strParam(params, 'wireMaterial', 'no') === 'yes';
+
+const CODE_PORT: PortDef = { id: 'code', type: 'number', label: 'Mã gắn lên vật', labelEn: 'Code for new object' };
+const RECALL_THING_PORT: PortDef = { id: 'recallThing', type: 'object', label: 'Vật cần thu hồi', labelEn: 'Object to recall' };
+const RECALL_PORT: PortDef = { id: 'recall', type: 'bool', label: 'Thu hồi', labelEn: 'Recall' };
+const takesWiredCode = (params: Params): boolean => strParam(params, 'wireCode', 'no') === 'yes';
+const hasRecallPorts = (params: Params): boolean => strParam(params, 'recallPorts', 'no') === 'yes';
 const wired = (v: PortValue | undefined): number | undefined => (typeof v === 'number' && Number.isFinite(v) ? v : undefined);
 
 export const spawnerNode: NodeDef<SpawnerState> = {
@@ -69,8 +78,15 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     { id: 'at', type: 'object', label: 'Tại đối tượng' },
     { id: 'toucher', type: 'object', label: 'Chạm thử với' },
   ],
-  // Only while "Nhận khối lượng từ dây" is on, so a spawner card keeps its size on every old board.
-  optionalInputs: { all: [MASS_PORT, CRUSH_PORT], active: (params) => (takesWiredMaterial(params) ? [MASS_PORT, CRUSH_PORT] : []) },
+  // Each group only while its own advanced switch is on, so a spawner card keeps its size on every old board.
+  optionalInputs: {
+    all: [MASS_PORT, CRUSH_PORT, CODE_PORT, RECALL_THING_PORT, RECALL_PORT],
+    active: (params) => [
+      ...(takesWiredMaterial(params) ? [MASS_PORT, CRUSH_PORT] : []),
+      ...(takesWiredCode(params) ? [CODE_PORT] : []),
+      ...(hasRecallPorts(params) ? [RECALL_THING_PORT, RECALL_PORT] : []),
+    ],
+  },
   outputs: [
     { id: 'lastSpawned', type: 'object', label: 'Đối tượng mới nhất' },
     { id: 'count', type: 'number', label: 'Số đang có' },
@@ -150,18 +166,46 @@ export const spawnerNode: NodeDef<SpawnerState> = {
     { id: 'classCount', label: `Số loại (${MIN_CLASSES}-${SPAWNER_MAX_CLASSES})`, kind: 'number', default: DEFAULT_CLASSES, min: MIN_CLASSES, max: SPAWNER_MAX_CLASSES, step: 1, advanced: true, shownWhen: randomClasses },
     ...classParams,
     { id: 'classSeed', label: 'Hạt giống (0 = mỗi lần chạy khác nhau)', kind: 'number', default: 0, step: 1, advanced: true, shownWhen: randomClasses },
+    {
+      id: 'wireCode',
+      label: 'Gắn mã cho vật mới',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: `Có (hiện ô "Mã gắn lên vật": số ${PARCEL_CODE_MIN} đến ${PARCEL_CODE_MAX} trên dây lúc tạo là mã của đồ vật mới)` },
+      ],
+      advanced: true,
+    },
+    {
+      id: 'recallPorts',
+      label: 'Hiện ô Thu hồi',
+      kind: 'select',
+      default: 'no',
+      options: [
+        { value: 'no', label: 'Không' },
+        { value: 'yes', label: 'Có (hiện ô "Vật cần thu hồi" và "Thu hồi": lấy lại một vật do chính mảnh này tạo ra)' },
+      ],
+      advanced: true,
+    },
   ],
   createOnly: ['classSeed'],
   create(ctx, params) {
     // Same rule as "Số ngẫu nhiên": seed 0 follows the run, any other number repeats the same draws on every run.
     const seed = Math.trunc(numParam(params, 'classSeed', 0));
     const base = seed !== 0 ? seed : ctx.world.runSeed();
-    return { pool: createSpawnPool(), spawn: { prev: false }, last: null, next: createRng((base ^ hashText(ctx.nodeId)) >>> 0), lastClass: 0, lastMass: 0 };
+    return { pool: createSpawnPool(), spawn: { prev: false }, recall: { prev: false }, last: null, next: createRng((base ^ hashText(ctx.nodeId)) >>> 0), lastClass: 0, lastMass: 0 };
   },
   evaluate(ctx, i, params, s) {
     const world = ctx.world;
     let alive = tickSpawnPool(s.pool, ctx.dt, world);
     let spawned = false;
+
+    // Before "Tạo", so the place a recalled object frees can be filled on the same tick.
+    if (hasRecallPorts(params) && risingEdge(s.recall, asBool(i.recall))) {
+      const named = asObject(i.recallThing);
+      if (named !== null && recallFromSpawnPool(s.pool, named, world)) alive--;
+    }
 
     if (risingEdge(s.spawn, asBool(i.spawn))) {
       const max = Math.min(MAX_ALIVE_LIMIT, Math.max(1, Math.floor(numParam(params, 'maxAlive', 3))));
@@ -180,6 +224,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
           material.mass = wired(i.mass) ?? material.mass;
           material.crushLimit = wired(i.crushLimit) ?? material.crushLimit;
         }
+        // A code only goes on a loose item: it is the item's goods type, written as digits.
+        const code = !isBlock && takesWiredCode(params) ? parcelCodeOfValue(i.code) : 0;
         const id = world.spawn({
           kind: isBlock ? 'block' : 'item',
           ownerNodeId: ctx.nodeId,
@@ -192,7 +238,8 @@ export const spawnerNode: NodeDef<SpawnerState> = {
             : {
                 shape: ((ITEM_SHAPES as readonly string[]).includes(shapeRaw) ? shapeRaw : 'ball') as ItemShape,
                 carryable: strParam(params, 'carryable', 'no') === 'yes',
-                ...lookSpec(params.look, PARCEL_LOOKS),
+                ...lookWithCode(lookSpec(params.look, PARCEL_LOOKS), code),
+                ...(code > 0 ? { tag: parcelCodeTag(code) } : {}),
               }),
           ...material,
           disposable: true,
