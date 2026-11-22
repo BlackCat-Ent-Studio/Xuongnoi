@@ -16,6 +16,7 @@ import { FactoryArmFigure } from '../../src/render/factory-arm';
 import { buildParcel } from '../../src/render/factory-parcels';
 import { FloorMarkerFigure } from '../../src/render/floor-marker-figure';
 import { SceneView } from '../../src/render/scene-view';
+import { GROUND, addBuilding } from './factory-mockup-building';
 
 type P3 = { x: number; y: number; z: number };
 type Cell = readonly [number, number];
@@ -52,7 +53,7 @@ view.setBackdrop(0xe6e8ec);
 view.setGrid('3d', false);
 view.sync([]);
 const scene = view.scene;
-const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 300);
+const camera = new THREE.PerspectiveCamera(35, 1, 0.1, 400);
 /** Everything that belongs to the layout on show; emptied when another layout is chosen. */
 let stage = new THREE.Group();
 scene.add(stage);
@@ -201,7 +202,6 @@ function build(layout: Layout): void {
   seed = 20261122; time = 0; done = 0; lastScanText = '—';
 
   const W = (COLS - 1) * PITCH, D = (ROWS - 1) * PITCH;
-  flat(W + 16, D + 9, '#cfd2d7', 0, W / 2, D / 2);
   flat(W + PITCH + 0.5, D + PITCH + 0.5, '#2c3038', 0.002, W / 2, D / 2);
   // one floor marker (the game's own tile) on every lane cell, as on a real sorting floor
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
@@ -239,6 +239,12 @@ function build(layout: Layout): void {
     robots.push(robot);
     occupied.set(key(at), robot);
   }
+  // the warehouse around the sorting floor
+  disposers.push(addBuilding(stage, {
+    id: L.id, W, D,
+    holes: holes.map((h) => ({ n: h.n, x: h.x, z: h.z, color: COLORS[(h.n - 1) % COLORS.length]! })),
+    stations: stations.map((s) => ({ x: s.x, z: s.z, dir: s.dir, beltFar: beltX(s, 0) })),
+  }));
   setCamera('all');
   $('note').textContent = L.note;
 }
@@ -335,7 +341,7 @@ function stepRobot(r: Robot, dt: number): void {
     if (r.state === 'loaded') {
       r.state = 'dumping'; r.timer = 0;
       const h = r.hole!;
-      flying.push({ p: r.load!, from: onTray(r, r.load!), to: { x: h.x, y: -0.35, z: h.z }, t: -0.45, hole: h, landed: false });
+      flying.push({ p: r.load!, from: onTray(r, r.load!), to: { x: h.x, y: -GROUND + 0.9, z: h.z }, t: -0.45, hole: h, landed: false });
       return;
     }
     r.goal = [];
@@ -430,13 +436,14 @@ function present(): void {
 const cam = { target: { x: 0, y: 0, z: 0 }, yaw: 0.25, pitch: 0.8, dist: 20 };
 function setCamera(name: string): void {
   const W = (COLS - 1) * PITCH, D = (ROWS - 1) * PITCH;
-  const mid = { x: W / 2, y: 0, z: D / 2 };
+  const mid = { x: W / 2, y: -0.8, z: D / 2 + 0.6 };
   const s = stations[0]!, h = holes[Math.floor(holes.length / 2)]!;
-  const far = Math.max(W + 12, (D + 6) * 1.9) * 0.95;
+  const far = Math.max(W + 20, (D + 9) * 2.0);
   if (name === 'station') Object.assign(cam, { target: { x: s.x - s.dir * 1.6, y: 0.5, z: s.z }, yaw: s.dir * -0.6, pitch: 0.5, dist: 8 });
   else if (name === 'hole') Object.assign(cam, { target: { x: h.x, y: 0.2, z: h.z }, yaw: 0.5, pitch: 0.6, dist: 7.5 });
-  else if (name === 'top') Object.assign(cam, { target: mid, yaw: 0, pitch: 1.5, dist: far * 0.95 });
-  else Object.assign(cam, { target: mid, yaw: 0.22, pitch: 0.82, dist: far });
+  else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.35, y: -GROUND + 1.0, z: D * 0.5 }, yaw: -0.45, pitch: 0.1, dist: Math.max(14, W * 0.95) });
+  else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: D / 2 }, yaw: 0, pitch: 1.5, dist: far * 0.8 });
+  else Object.assign(cam, { target: mid, yaw: 0.32, pitch: 0.6, dist: far });
   document.querySelectorAll('[data-cam]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.cam === name)));
 }
 function aim(): void {
@@ -451,10 +458,10 @@ canvas.addEventListener('pointerup', () => { dragging = null; canvas.style.curso
 canvas.addEventListener('pointermove', (e) => {
   if (!dragging) return;
   cam.yaw -= (e.clientX - dragging.x) * 0.006;
-  cam.pitch = Math.min(1.52, Math.max(0.12, cam.pitch + (e.clientY - dragging.y) * 0.005));
+  cam.pitch = Math.min(1.52, Math.max(0.05, cam.pitch + (e.clientY - dragging.y) * 0.005));
   dragging = { x: e.clientX, y: e.clientY };
 });
-canvas.addEventListener('wheel', (e) => { e.preventDefault(); cam.dist = Math.min(70, Math.max(3, cam.dist * (e.deltaY > 0 ? 1.1 : 0.9))); }, { passive: false });
+canvas.addEventListener('wheel', (e) => { e.preventDefault(); cam.dist = Math.min(110, Math.max(3, cam.dist * (e.deltaY > 0 ? 1.1 : 0.9))); }, { passive: false });
 
 // ---------------------------------------------------------------- counters and controls
 function $(id: string): HTMLElement { return document.getElementById(id)!; }
