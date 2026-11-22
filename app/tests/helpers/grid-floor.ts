@@ -2,7 +2,8 @@ import { instanceParams } from '../../src/circuits/instance';
 import { runnableGraph } from '../../src/circuits/runnable';
 import { getNodeDef, registerNode } from '../../src/engine/registry';
 import { createRuntime } from '../../src/engine/runtime';
-import { CIRCUIT_KIND, TICK_DT, type Board, type Circuit, type CircuitPin, type EntityView, type GraphNode, type NodeDef, type ParamValue, type Runtime, type Wire, type World, type WorldApi } from '../../src/engine/types';
+import { CIRCUIT_KIND, TICK_DT, type Board, type Circuit, type EntityView, type GraphNode, type NodeDef, type ParamValue, type Runtime, type Wire, type World, type WorldApi } from '../../src/engine/types';
+import { GRID_BOT, GRID_BOT_WIRES, gridBotCircuit } from '../../src/handbook/boards-grid-floor';
 import { registerAllNodes } from '../../src/nodes';
 import { listMarkers } from '../../src/nodes/floor-marker';
 import { laneGraph, routeOnLanes } from '../../src/nodes/grid-lanes';
@@ -63,62 +64,16 @@ export function laneMarkers(g: GridShape, pitch: number, opts: { y?: number; fir
 
 // ---------------------------------------------------------------- the robot circuit a learner wires
 
-export const BOT = 'xe-luoi';
+export const BOT = GRID_BOT;
 export const DEFAULT_DRIVE: Record<string, ParamValue> = { power: 0.6, tolerance: 0.1, slowDistance: 1 };
 export const TUNED_DRIVE: Record<string, ParamValue> = { power: 0.8, slowDistance: 0.6 };
 
-/** Inner wires of the robot circuit, as `from > to`. The anti-forced tests cut them one at a time. */
-export const BOT_WIRES: readonly string[] = [
-  'than.self>trai.body',
-  'than.self>phai.body',
-  'than.self>lai.robot',
-  'than.self>doc-moc.who',
-  'bat-dau.started>lai.go',
-  'lai.left>trai.power',
-  'lai.right>phai.power',
-  'doc-moc.number>tim-duong.at',
-  'tim-moc.marker>lai.target',
-];
+/** Inner wires of the robot circuit, as `from>to`. The anti-forced tests cut them one at a time. */
+export const BOT_WIRES: readonly string[] = GRID_BOT_WIRES.map(([from, to]) => `${from}>${to}`);
 
-const pin = (id: string, label: string, dir: 'in' | 'out', type: CircuitPin['type'], inner: string): CircuitPin => {
-  const [n, p] = inner.split('.') as [string, string];
-  return { id, label, dir, type, inner: { node: n, port: p } };
-};
-
-/**
- * "Xe trên lưới": chassis, two motors, the driver, the marker reader, the route finder and the marker lookup. What it
- * shares with the rest of the floor goes through its pins and nowhere else.
- */
+/** "Xe trên lưới" as the app ships it (src/handbook/boards-grid-floor.ts), with the drive settings of the run. */
 export function botCircuit(drive: Record<string, ParamValue> = {}, detourAfter = 3): Circuit {
-  const half = CHASSIS.width / 2 - 0.05;
-  return {
-    id: BOT,
-    name: 'Xe trên lưới',
-    graph: {
-      nodes: [
-        node('than', 'robot-body', { position: { x: 0, y: CHASSIS_Y, z: 0 }, heading: 0, length: CHASSIS.length, width: CHASSIS.width, height: 0.3, mass: 5, friction: 0.8 }),
-        node('trai', 'motor', { side: -half }),
-        node('phai', 'motor', { side: half }),
-        node('lai', 'robot-goto', { ...DEFAULT_DRIVE, ...drive }),
-        node('bat-dau', 'on-start'),
-        node('doc-moc', 'floor-marker-sensor'),
-        node('tim-duong', 'grid-route', { detourAfter }),
-        node('tim-moc', 'floor-marker-find'),
-      ],
-      wires: BOT_WIRES.map((w) => wire(...(w.split('>') as [string, string]))),
-    },
-    pins: [
-      pin('o-dich', 'Ô đích', 'in', 'number', 'tim-duong.goal'),
-      pin('o-duoc-di', 'Ô được đi', 'in', 'number', 'tim-moc.number'),
-      pin('dang-cho', 'Đang chờ ô', 'in', 'bool', 'tim-duong.avoid'),
-      pin('robot', 'Robot', 'out', 'object', 'than.self'),
-      pin('o-muon', 'Ô muốn tới', 'out', 'number', 'tim-duong.next'),
-      pin('o-dang-dung', 'Ô đang đứng', 'out', 'number', 'doc-moc.number'),
-      pin('con-phai-di', 'Còn phải đi', 'out', 'bool', 'tim-duong.hasNext'),
-    ],
-    exposed: [],
-    benchIds: [],
-  };
+  return gridBotCircuit({ drive: { ...DEFAULT_DRIVE, ...drive }, detourAfter, bodyY: CHASSIS_Y });
 }
 
 /** A copy of the robot circuit standing on a cell middle, nose along `heading` (degrees). */
@@ -317,12 +272,14 @@ export function floorBoard(o: FloorOptions): Board {
   return { name: 'Sàn lưới thử', mode: '3d', graph: { nodes, wires: wiresOf(wires), settings: { wireRule: true, realPhysics: true } }, circuits: [botCircuit(o.drive, o.detourAfter ?? 3)] };
 }
 
+const isLink = (w: Wire, link: string): boolean => `${w.from.node}.${w.from.port}>${w.to.node}.${w.to.port}` === link;
+
 /** The same board with one inner wire of the robot circuit taken out; throws when the wire is not there. */
 export function cutInBot(board: Board, link: string): Board {
   const b = structuredClone(board);
   const g = b.circuits!.find((c) => c.id === BOT)!.graph;
   const before = g.wires.length;
-  g.wires = g.wires.filter((w) => w.id !== link);
+  g.wires = g.wires.filter((w) => !isLink(w, link));
   if (g.wires.length !== before - 1) throw new Error(`wire not found in the robot circuit: ${link}`);
   return b;
 }
@@ -331,7 +288,7 @@ export function cutInBot(board: Board, link: string): Board {
 export function cutOnMain(board: Board, link: string): Board {
   const b = structuredClone(board);
   const before = b.graph.wires.length;
-  b.graph.wires = b.graph.wires.filter((w) => w.id !== link);
+  b.graph.wires = b.graph.wires.filter((w) => !isLink(w, link));
   if (b.graph.wires.length !== before - 1) throw new Error(`wire not found on the main board: ${link}`);
   return b;
 }

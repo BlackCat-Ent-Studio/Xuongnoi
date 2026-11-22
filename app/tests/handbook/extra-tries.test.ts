@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { runnableGraph } from '../../src/circuits/runnable';
 import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type InputSnapshot } from '../../src/engine/types';
 import { HANDBOOK, handbookEntry } from '../../src/handbook';
@@ -11,8 +12,8 @@ registerAllNodes();
 const extras = HANDBOOK.flatMap((e) => (e.extraTries ?? []).map((t) => ({ kind: e.kind, ...t })));
 
 describe('handbook extra try-boards', () => {
-  it('exist for route-follow pointsFrom, block showHiddenOut the line sensor in 3D, changing text, random crate mass and random crate classes', () => {
-    expect(extras.map((e) => e.kind).sort()).toEqual(['block', 'line-sensor', 'route-follow', 'show-text', 'spawner', 'spawner']);
+  it('exist for route-follow pointsFrom, block showHiddenOut the line sensor in 3D, changing text, random crate mass, random crate classes and the grid floor fleet', () => {
+    expect(extras.map((e) => e.kind).sort()).toEqual(['block', 'cell-hold', 'line-sensor', 'route-follow', 'show-text', 'spawner', 'spawner']);
   });
 
   for (const extra of extras) {
@@ -22,7 +23,8 @@ describe('handbook extra try-boards', () => {
       expect((board.notes ?? []).length).toBeGreaterThan(0);
       expect(parseBoard(serializeBoard(board)).ok).toBe(true);
       const world = createWorld(board.mode);
-      const rt = createRuntime(board.graph, world, board.mode);
+      // A board that uses circuits runs as its flat graph, like everywhere else.
+      const rt = createRuntime(runnableGraph(board), world, board.mode);
       for (let i = 0; i < 180; i++) {
         rt.tick({ keysDown: new Set<string>() });
         world.step(TICK_DT);
