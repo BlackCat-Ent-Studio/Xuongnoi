@@ -198,9 +198,12 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
     for (const c of board.circuits!) for (const n of c.graph.nodes) expect(['show-number', 'show-text', 'camera', 'key', 'ui-button'].includes(n.kind), `${c.id}/${n.id}`).toBe(false);
     expect(board.graph.nodes.filter((n) => n.kind === 'show-number').length).toBe(5);
     expect(board.graph.nodes.some((n) => ['key', 'stick', 'ui-button', 'ui-start'].includes(n.kind))).toBe(false);
-    // Cards of the main board, and of every circuit, do not lie on each other.
+    // Cards of the main board, and of every circuit, do not lie on each other. Of the copies drawn as one stacked block only
+    // the first is a card on the canvas: the block stands where that copy is.
     const rows = new Map(board.circuits!.map((c) => [c.id, c.pins.length]));
-    const boxes = board.graph.nodes.map((n) => ({ id: n.id, x: n.pos.x, y: n.pos.y, ...(n.kind === CIRCUIT_KIND ? { w: 220, h: 48 + 26 * (rows.get(String(n.params.circuit)) ?? 4) } : estimateNodeSize(n)) }));
+    const drawn = board.graph.nodes.filter((n) => !board.graph.stacks!.includes(String(n.params.circuit)) || n === board.graph.nodes.find((m) => m.params.circuit === n.params.circuit));
+    expect(drawn.length).toBe(13);
+    const boxes = drawn.map((n) => ({ id: n.id, x: n.pos.x, y: n.pos.y, ...(n.kind === CIRCUIT_KIND ? { w: 220, h: 48 + 26 * (rows.get(String(n.params.circuit)) ?? 4) } : estimateNodeSize(n)) }));
     for (const p of boxes) for (const q of boxes) if (p.id < q.id) expect(p.x < q.x + q.w && p.x + p.w > q.x && p.y < q.y + q.h && p.y + p.h > q.y, `${p.id}/${q.id}`).toBe(false);
     for (const c of board.circuits!) {
       const inner = c.graph.nodes.map((n) => ({ id: n.id, x: n.pos.x, y: n.pos.y, ...estimateNodeSize(n) }));
