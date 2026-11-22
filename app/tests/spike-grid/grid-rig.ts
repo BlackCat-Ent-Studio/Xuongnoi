@@ -35,6 +35,8 @@ export interface FloorOptions {
   drive?: Record<string, ParamValue>;
   /** 'hold' circuits: route around held cells after waiting this long (s); 0 = never. */
   detourAfter?: number;
+  /** Route piece: 0 = a whole way clear of held cells, 1 = only the next cell must be free. */
+  detourRule?: number;
   /** 'eyes' circuit: reach of the straight-ahead eye (m). */
   frontReach?: number;
   stress?: Stress;
@@ -66,7 +68,7 @@ export const DEFAULT_DRIVE: Record<string, ParamValue> = { power: 0.6, tolerance
 function robotCircuit(id: string, index: number, cell: number, o: FloorOptions): { nodes: NodeSpec[]; wires: WireSpec[] } {
   const [r, c] = cellOf(GRID, cell);
   const bot = navBot({ id, x: c * o.pitch, z: r * o.pitch, heading: headingBetween(cell, exitsOf(GRID, cell)[0]!), length: CHASSIS.length, width: CHASSIS.width, drive: { ...DEFAULT_DRIVE, ...(o.drive ?? {}) } });
-  const nodes: NodeSpec[] = [...bot.nodes, [`${id}-route`, 'x-grid-route', { ...GRID }], [`${id}-jobs`, 'x-spike-jobs', { ...GRID, seed: o.seed, index, stationA: STATIONS[0], stationB: STATIONS[1], ...(o.loadS !== undefined ? { loadS: o.loadS } : {}), ...(o.tipS !== undefined ? { tipS: o.tipS } : {}) }]];
+  const nodes: NodeSpec[] = [...bot.nodes, [`${id}-route`, 'x-grid-route', { ...GRID, detour: o.detourRule ?? 0 }], [`${id}-jobs`, 'x-spike-jobs', { ...GRID, seed: o.seed, index, stationA: STATIONS[0], stationB: STATIONS[1], ...(o.loadS !== undefined ? { loadS: o.loadS } : {}), ...(o.tipS !== undefined ? { tipS: o.tipS } : {}) }]];
   const wires: WireSpec[] = [...bot.wires, [id, 'self', `${id}-jobs`, 'who'], [id, 'self', `${id}-route`, 'who'], [`${id}-jobs`, 'goal', `${id}-route`, 'goal'], [`${id}-go`, 'arrived', `${id}-jobs`, 'arrived']];
 
   if (o.approach === 'eyes' || o.approach === 'eyes-turn') {

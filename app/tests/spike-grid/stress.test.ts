@@ -29,10 +29,12 @@ const CASES: [string, Stress, number, number][] = [
   ['both: station A silent 60 s and robot 2 stays 30 s', { outage: { station: STATIONS[0], from: 200, to: 260 }, freeze: { robot: 1, from: 200, seconds: 30 } }, 200, 260],
 ];
 
-describe.each([['hold-flow', 0], ['hold-flow', 1], ['eyes-turn', 0]] as [Approach, number][])('%s, detour after %s s', (approach, detourAfter) => {
+const ROWS: [Approach, number, number][] = process.env.SPIKE_STRESS === 'step' ? [['hold-flow', 1, 1], ['hold-flow', 3, 1]] : [['hold-flow', 0, 0], ['hold-flow', 1, 0], ['eyes-turn', 0, 0]];
+
+describe.each(ROWS)('%s, detour after %s s, detour rule %s', (approach, detourAfter, detourRule) => {
   it.each(CASES)('%s', (name, stress, from, to) => {
     const marks = { before: 0, during: 0, after: 0 };
-    const f = buildFloor({ robots: 6, pitch: 1.4, approach, seed: 20261122, drive: approach === 'eyes-turn' ? {} : DRIVE, detourAfter, stress: structuredClone(stress) }, rapier);
+    const f = buildFloor({ robots: 6, pitch: 1.4, approach, seed: 20261122, drive: approach === 'eyes-turn' ? {} : DRIVE, detourAfter, detourRule, stress: structuredClone(stress) }, rapier);
     const delivered = (): number => f.ids.reduce((sum, id) => sum + Number(f.rig.out(`${id}-jobs`, 'delivered')), 0);
     const x = runFloor(f, 600, (t) => {
       if (Math.abs(t - from) < 1e-6) marks.before = delivered();
@@ -40,7 +42,7 @@ describe.each([['hold-flow', 0], ['hold-flow', 1], ['eyes-turn', 0]] as [Approac
       if (Math.abs(t - 600) < 1e-6) marks.after = delivered();
     });
     const rate = (count: number, seconds: number): string => (count / (seconds / 60)).toFixed(1);
-    say(line(`STRESS ${approach} detour ${detourAfter} [${name}]`, x));
+    say(line(`STRESS ${approach} detour ${detourAfter}${detourRule ? ' rule next-cell' : ''} [${name}]`, x));
     say(`   per minute: before ${rate(marks.before, from)}, from the start of the trouble to 40 s after it ${rate(marks.during - marks.before, to + 40 - from)}, afterwards ${rate(marks.after - marks.during, 600 - to - 40)}`);
     if (approach !== 'eyes-turn') {
       expect(x.minGap).toBeGreaterThan(0);

@@ -131,6 +131,7 @@ export const gridRouteNode: NodeDef<RouteState> = {
   params: [
     { id: 'rows', label: 'Số hàng ô', kind: 'number', default: 7, min: 1, max: 9, step: 2 },
     { id: 'cols', label: 'Số cột ô', kind: 'number', default: 7, min: 1, max: 9, step: 2 },
+    { id: 'detour', label: 'Cách tránh (0 = cả đường không ô bị giữ, 1 = chỉ ô kế tiếp phải trống)', kind: 'number', default: 0, min: 0, max: 1, step: 1 },
   ],
   create: () => ({ at: 0, cameFrom: 0 }),
   evaluate(ctx, i, params, s) {
@@ -146,8 +147,21 @@ export const gridRouteNode: NodeDef<RouteState> = {
       const me = asObject(i.who);
       const taken = new Set<number>();
       for (const [cell, holder] of sharedOf(ctx.world).holds) if (holder !== me) taken.add(cell);
-      const detour = routeOnGrid(g, at, goal, taken);
-      if (detour.length > 0 && !taken.has(detour[0]!)) path = detour;
+      if (numParam(params, 'detour', 0) >= 1) {
+        // Step rule: only the very next cell must be free. Take the free exit that still leads to the goal soonest.
+        let best: number[] = [];
+        for (const exit of exitsOf(g, at)) {
+          if (taken.has(exit)) continue;
+          const rest = exit === goal ? [] : routeOnGrid(g, exit, goal);
+          if (exit !== goal && rest.length === 0) continue;
+          if (best.length === 0 || rest.length + 1 < best.length) best = [exit, ...rest];
+        }
+        if (best.length > 0) path = best;
+      } else {
+        // Path rule (as in the mock-up): a whole way that touches no held cell.
+        const detour = routeOnGrid(g, at, goal, taken);
+        if (detour.length > 0 && !taken.has(detour[0]!)) path = detour;
+      }
     }
     const next = path[0] ?? at;
     const straight = path.length > 0 && s.cameFrom > 0 && next - at === at - s.cameFrom;

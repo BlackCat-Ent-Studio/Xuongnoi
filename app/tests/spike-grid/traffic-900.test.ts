@@ -50,6 +50,14 @@ describe.runIf(!only || only === 'seeds')('other seeds, 6 robots, hold-flow tune
   });
 });
 
+describe.runIf(only === 'seeds8')('other seeds, 8 robots (one more than a ring of 8 cells can never hold), hold-flow tuned, 900 s', () => {
+  it.each([1, 2, 3, 4])('seed %s', (seed) => {
+    const x = runFloor(buildFloor({ robots: 8, pitch: 1.4, approach: 'hold-flow', seed, drive: TUNED }, rapier), 900);
+    say(line(`SEED900 hold-flow tuned x8 seed ${seed}`, x));
+    expect(x.minGap).toBeGreaterThan(0);
+  });
+});
+
 describe.runIf(!only || only === 'determinism')('determinism', () => {
   it.each([['hold-flow', 6], ['hold-flow', 8], ['eyes-turn', 4]] as [Approach, number][])('%s with %s robots: the same seed twice gives the same state on every tick of 900 s', (approach, robots) => {
     const a = runFloor(buildFloor({ robots, pitch: 1.4, approach, seed: SEED, drive: TUNED }, rapier), 900);
