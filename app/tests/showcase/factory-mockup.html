@@ -9,24 +9,34 @@
   <body>
     <div id="top" class="panel">
       <h1>Xưởng phân loại kiện hàng · bản mẫu 3D</h1>
-      <p>Sàn robot trên tầng lửng, lồng hàng bên dưới, kiểu trung tâm chia chọn hiện đại. Xe, tay máy, băng chuyền, lỗ thả, thùng, mốc sàn là <b>hình thật của game</b>; nhà kho, lồng hàng, kệ, xe nâng là <b>hình mới vẽ cùng kiểu</b>; chuyển động là <b>minh hoạ</b>, chưa chạy bằng mảnh ghép và vật lý thật. Kéo để xoay, lăn chuột để phóng to.</p>
+      <p><b>Hình thật của game:</b> xe AGV, tay máy, băng chuyền, cổng quét, lỗ thả, thùng, mốc sàn. <b>Mới vẽ cùng kiểu, game chưa có:</b> nhà kho, lồng hàng, xe kéo lồng, xe tải, cửa bến, đèn và nắp khoá lỗ. <b>Mọi chuyển động chỉ là minh hoạ</b>, chưa chạy bằng mảnh ghép và vật lý thật.</p>
+      <details>
+        <summary>Luồng xuất hàng chạy thế nào?</summary>
+        <p>Mỗi lỗ là một tuyến, bên dưới có một lồng. Lồng gần đầy: đèn vàng, gọi xe kéo. Lồng đầy hoặc đang đổi: đèn đỏ, lỗ đóng nắp, xe chia chọn chờ hoặc chạy một vòng. Xe kéo mang lồng rỗng tới, đổi lấy lồng đầy, chở ra cửa bến của tuyến và đẩy lên xe tải. Xe tải đủ 4 lồng thì đóng cửa, rời bến; xe rỗng lùi vào. Lồng rỗng quay về qua cửa “LỒNG RỖNG” (xe chở lồng rỗng về không được vẽ).</p>
+      </details>
       <div id="layouts" class="g"></div>
       <p id="note"></p>
+      <p class="hint">Kéo để xoay, lăn chuột để phóng to.</p>
     </div>
     <div id="stats" class="panel">
       <table>
         <tr><td>Quy mô</td><td id="s-size">—</td></tr>
-        <tr><td>Kiện đã vào lỗ</td><td id="s-done">0</td></tr>
+        <tr><td>Kiện đã vào lồng</td><td id="s-done">0</td></tr>
         <tr><td>Kiện mỗi phút</td><td id="s-rate">—</td></tr>
         <tr><td>Chờ trên băng chuyền</td><td id="s-wait">0</td></tr>
-        <tr><td>Xe đang rảnh</td><td id="s-idle">0</td></tr>
+        <tr><td>Xe chia chọn đang rảnh</td><td id="s-idle">0</td></tr>
         <tr><td>Kiện vừa quét</td><td id="s-scan">—</td></tr>
+        <tr class="sep"><td>Lồng đã xuất bến</td><td id="s-cages">0</td></tr>
+        <tr><td>Xe tải đã rời bến</td><td id="s-trucks">0</td></tr>
+        <tr><td>Lỗ đang khoá</td><td id="s-locked">0</td></tr>
+        <tr><td>Xe kéo đang chờ việc</td><td id="s-tugs">0</td></tr>
       </table>
+      <div id="routes"></div>
     </div>
     <div id="bar" class="panel">
       <div class="g"><button id="play" class="primary" type="button">Tạm dừng</button><button id="reset" type="button">Đặt lại</button></div>
       <div class="g">Tốc độ <button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="4" aria-pressed="false">4×</button></div>
-      <div class="g">Góc nhìn <button type="button" data-cam="all" aria-pressed="true">Toàn cảnh</button><button type="button" data-cam="station" aria-pressed="false">Trạm nạp</button><button type="button" data-cam="hole" aria-pressed="false">Lỗ thả</button><button type="button" data-cam="ground" aria-pressed="false">Tầng dưới</button><button type="button" data-cam="top" aria-pressed="false">Từ trên</button></div>
+      <div class="g">Góc nhìn <button type="button" data-cam="all" aria-pressed="true">Toàn cảnh</button><button type="button" data-cam="station" aria-pressed="false">Trạm nạp</button><button type="button" data-cam="hole" aria-pressed="false">Lỗ thả</button><button type="button" data-cam="ground" aria-pressed="false">Tầng dưới</button><button type="button" data-cam="dock" aria-pressed="false">Cửa bến</button><button type="button" data-cam="top" aria-pressed="false">Từ trên</button></div>
     </div>
     <script type="module" src="./factory-mockup.ts"></script>
   </body>
