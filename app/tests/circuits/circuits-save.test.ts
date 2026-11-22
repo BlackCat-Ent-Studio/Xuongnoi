@@ -91,7 +91,8 @@ describe('circuits in the save format', () => {
   });
 
   it('a board without circuits is written exactly as before, and reads back to the same text', () => {
-    const samples = listAllSamples().map((s) => s.board);
+    // The one shipped sample that holds circuits has its own save checks (tests/samples/sorting-factory-board).
+    const samples = listAllSamples().map((s) => s.board).filter((b) => !b.circuits?.length);
     const boards: Board[] = [...samples, ...LESSONS.map((l) => l.createBoard()), ...HANDBOOK.map((e) => e.tryBoard())];
     expect(boards.length).toBeGreaterThan(100);
     for (const board of boards) {

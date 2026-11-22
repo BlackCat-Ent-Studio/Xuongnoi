@@ -491,6 +491,29 @@
   }
  },
  {
+  "id": "sample:sorting-factory",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "sensor-without-contact x1 from 6.4s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5018498e"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "sensor-without-contact x1 from 6.4s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5018498e"
+  }
+ },
+ {
   "id": "lesson:walk-jump",
   "off": {
    "ended": "running",
