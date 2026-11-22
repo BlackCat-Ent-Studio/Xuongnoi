@@ -75,6 +75,24 @@ describe('a chassis meets walls by its turned outline', () => {
     expect(deepest).toBeLessThan(0.001);
   });
 
+  it('the same chassis shoves a crate through that gap: what it pushes does not make the walls stop its square', { timeout: 60_000 }, () => {
+    const b = bot({ id: 'r', x: 0, z: 0, floor: 0, power: [0.5, 0.5], chassis: { length: 1.2, width: 0.4, height: 0.24 }, body: { pushObjects: 'yes' } });
+    const crate: NodeSpec = ['crate', 'item', { shape: 'crate', position: { x: 1.2, y: 0.15, z: 0 }, size: { x: 0.3, y: 0.3, z: 0.3 }, mass: 1 }];
+    const r = deckRig([wall('left', 2, 4, -3, -0.3), wall('right', 2, 4, 0.3, 3), crate, ...b.nodes], b.wires, rapier);
+    let deepest = -Infinity;
+    for (let k = 0; k < seconds(8); k++) {
+      r.tick();
+      const e = r.entity('r')!;
+      deepest = Math.max(deepest, overlapDepth(e, r.entity('left')!), overlapDepth(e, r.entity('right')!));
+    }
+    const x = r.entity('r')!.position.x;
+    const cx = r.entity('crate')!.position.x;
+    r.world.dispose?.();
+    expect(x).toBeGreaterThan(5);
+    expect(cx).toBeGreaterThan(x + 0.6);
+    expect(deepest).toBeLessThan(0.001);
+  });
+
   it('pivots a full turn in a lane wider than its diagonal without moving or touching the walls', { timeout: 60_000 }, () => {
     // 0.9 x 0.7 m: diagonal 1.14 m; lane 1.2 m.
     const b = bot({ id: 'r', x: 0, z: 0, floor: 0, power: [0.3, -0.3] });
@@ -160,6 +178,34 @@ describe('a chassis meets walls by its turned outline', () => {
     }
     r.world.dispose?.();
     expect(deepest).toBeLessThan(0.001);
+  });
+
+  it('a block moved into the corner of a parked chassis at 45 degrees pushes it clear, by what it went in', { timeout: 60_000 }, () => {
+    // The corner that points back along x is at (-0.566, -0.071): outside the 0.9 m square (its side is at -0.45).
+    const b = bot({ id: 'r', x: 0, z: 0, floor: 0, heading: 45 });
+    const r = deckRig([['ram', 'block', { position: { x: -0.8, y: 0.5, z: -0.071 }, size: { x: 0.2, y: 1, z: 0.2 } }], ...b.nodes], b.wires, rapier);
+    r.tick(10);
+    const ram = r.entity('ram')!.id;
+    let deepest = -Infinity;
+    // 1 cm per tick up to the square's side: its face goes from x = -0.7 to x = -0.47.
+    for (let k = 1; k <= 23; k++) {
+      r.world.moveBlock(ram, { x: -0.8 + 0.01 * k, y: 0.5, z: -0.071 });
+      r.tick();
+      deepest = Math.max(deepest, overlapDepth(r.entity('r')!, r.entity('ram')!));
+    }
+    r.tick(30);
+    deepest = Math.max(deepest, overlapDepth(r.entity('r')!, r.entity('ram')!));
+    const e = r.entity('r')!;
+    r.world.dispose?.();
+    // Never deeper than the one step the block makes before the chassis gives way.
+    expect(deepest).toBeLessThan(0.0101);
+    // It stayed on the floor: a block that comes in from the side does not lift it onto itself.
+    expect(e.position.y).toBeCloseTo(0.12, 9);
+    // It gave way by about what the block went in (0.096 m along x, less if it slipped sideways off the corner).
+    const moved = Math.hypot(e.position.x, e.position.z);
+    expect(moved).toBeGreaterThan(0.04);
+    expect(moved).toBeLessThan(0.11);
+    expect(e.robot!.heading).toBeCloseTo(Math.PI / 4, 9);
   });
 
   it('with the switch off a chassis still meets the wall by its upright square', () => {

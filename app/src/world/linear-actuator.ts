@@ -35,7 +35,7 @@ export interface Box {
   fat?: boolean;
   /**
    * The real, turned outline of a robot chassis whose box is only the upright square (or the bounds) round it.
-   * On a head: it meets every body, and every solid that has an outline itself, by this outline; solids without one are met by its box.
+   * On a head: it meets every body and every solid by this outline.
    * On a solid (a chassis that holds its ground): a pushed body is in its way only where it enters this outline.
    */
   outline?: Obb;
@@ -369,10 +369,12 @@ function forceFor(input: PushInput, set: ContactSet): { total: number; needs: Ma
  * True when `a` is inside `s`: strictly along the travel axes, with a hair of slack across them (resting on the floor is not "in" it).
  * A solid with an outline (a chassis that holds its ground) is entered where `a`'s own outline (`real`, else its box) enters
  * that outline: strictly when the shallowest way out lies along the travel at all, with the same slack when it lies across it.
+ * The same goes for `a` with an outline of its own (`real`: a chassis as the head) against a plain solid: a wall stops it where
+ * its outline enters the wall, not where the square round it does.
  */
 function inSolid(a: Box, s: Box, axes: readonly ('x' | 'y' | 'z')[], dir: Vec3, crossTol = SOLID_TOL, real?: Obb, flat?: PushInput['flat']): boolean {
-  if (s.outline) {
-    const { gap, axis } = obbGap(seen(real ?? obbOf(a.pos, a.size), flat), seen(s.outline, flat));
+  if (s.outline || real) {
+    const { gap, axis } = obbGap(seen(real ?? obbOf(a.pos, a.size), flat), seen(s.outline ?? obbOf(s.pos, s.size), flat));
     return -gap > (Math.abs(axis.x * dir.x + axis.y * dir.y + axis.z * dir.z) > 1e-9 ? TOUCH : crossTol);
   }
   return axes.every((ax) => overlapAlong(a, s, ax) > (Math.abs(dir[ax]) > 1e-9 ? TOUCH : crossTol));

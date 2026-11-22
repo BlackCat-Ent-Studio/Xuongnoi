@@ -436,6 +436,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
   const solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
+  giveWay(r, solids);
   const headingWas = body.heading;
   const facingWas = r.facing;
   const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf));
@@ -490,6 +491,29 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   // Stopped by a chassis that itself moves, it keeps the speed it really travelled at (a wall takes all of it, as ever).
   const done = rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel;
   settleRobot(body, { x: done.x + cut.x, z: done.z + cut.z }, mode === '2d-side');
+}
+
+/**
+ * A block has come into a chassis from the side since its last move: a moving block or a machine piece that pushes bodies by
+ * the upright square round them reaches the corner of a chassis that stands askew before it reaches that square. The chassis
+ * gives way the shortest way out on the ground, by what the block went in, as if pushed by it. A block whose shortest way out
+ * is up or down is left alone (the chassis stands a hair in the floor it rests on; a piece that presses on its top does not
+ * shove it sideways). Only a chassis with a real outline; nothing else is moved.
+ */
+function giveWay(r: Entity, solids: readonly Entity[]): void {
+  if (r.robot === undefined || !hasChassisOutline(r)) return;
+  for (let pass = 0; pass < TURN_PASSES; pass++) {
+    let moved = false;
+    for (const s of solids) {
+      if (!outlineNearBox(r, boundsBox(s), SKIN)) continue;
+      const { gap, axis } = obbGap(chassisOutline(r)!, orientedBox(s));
+      if (!(gap < -SKIN) || Math.abs(axis.y) > 1e-6) continue;
+      r.pos.x += axis.x * gap;
+      r.pos.z += axis.z * gap;
+      moved = true;
+    }
+    if (!moved) return;
+  }
 }
 
 /** A chassis backs off at most this many times for one turn (once per body its corner went into; more means it is wedged). */

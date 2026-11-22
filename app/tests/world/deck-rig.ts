@@ -1,4 +1,4 @@
-import { TICK_DT, type EntityView } from '../../src/engine/types';
+import { TICK_DT, type EntityView, type ParamValue } from '../../src/engine/types';
 import type { RapierModule } from '../../src/world/rapier-loader';
 import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
 import { FLOOR } from '../helpers/nav-rig';
@@ -25,7 +25,7 @@ export interface Bot {
   drive?: Record<string, number | string>;
   chassis?: { length: number; width: number; height: number };
   /** Extra settings of the chassis card. */
-  body?: Record<string, number | string | boolean>;
+  body?: Record<string, ParamValue>;
 }
 
 /** A bare chassis with two motors; `id` is the chassis, `${id}-ml` / `-mr` the motors, `${id}-go` the controller when it has a goal. */

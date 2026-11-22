@@ -298,13 +298,30 @@ export interface ViewShape {
   size: Vec3;
   collider?: { position: Vec3; size: Vec3 };
   rotation?: Quat;
+  /** A robot chassis: its real length and width and where it points; `slip` is there only on wheel traction ("Vật lý thật" on). */
+  robot?: { length: number; width: number; heading: number; slip?: readonly number[] };
+}
+
+/**
+ * The real outline of a robot chassis on wheel traction, from its view: its length by its width, as high as it is drawn, turned
+ * to its heading (the same box as `chassisOutline` gives for the entity). Null for every other view, for a chassis on the plain
+ * drive of older boards and for one with a collision box of its own. (The side view never turns a chassis: one that was set
+ * down there with a heading other than 0 is read as turned by it all the same.)
+ */
+export function chassisOutlineOfView(v: ViewShape): Obb | null {
+  const r = v.robot;
+  if (!r || r.slip === undefined || v.collider) return null;
+  return obbOf(v.position, { x: r.length, y: v.size.y, z: r.width }, yawQuat({ x: Math.cos(r.heading), z: Math.sin(r.heading) }));
 }
 
 /**
  * The real shape behind an entity view: its collision box when `useCollider` and it has one, else its drawn size, turned by the
- * view's rotation about the view's position (so a collision box off the middle swings round with it).
+ * view's rotation about the view's position (so a collision box off the middle swings round with it). A robot chassis on wheel
+ * traction is its real outline (`chassisOutlineOfView`), not the upright square its size says.
  */
 export function obbOfView(v: ViewShape, useCollider = true): Obb {
+  const chassis = chassisOutlineOfView(v);
+  if (chassis) return chassis;
   const box = useCollider && v.collider ? v.collider : v;
   const turn = sensedTurn(v.rotation, v.shape);
   if (!isTurned(turn)) return obbOf(box.position, box.size);
@@ -312,9 +329,13 @@ export function obbOfView(v: ViewShape, useCollider = true): Obb {
   return obbOf({ x: v.position.x + swing.x, y: v.position.y + swing.y, z: v.position.z + swing.z }, box.size, turn);
 }
 
-/** True when the view shows a body whose real outline is turned (a crate that tipped over; not a rolling ball). */
+/**
+ * True when the view shows a body whose real outline is not its upright box: a crate that tipped over (not a rolling ball), or
+ * a robot chassis on wheel traction, whose outline is its length by its width at whatever heading. Zones, the touch card and
+ * a click on the scene then read `obbOfView`.
+ */
 export function isTurnedView(v: ViewShape): boolean {
-  return isTurned(sensedTurn(v.rotation, v.shape));
+  return (v.robot !== undefined && v.robot.slip !== undefined && !v.collider) || isTurned(sensedTurn(v.rotation, v.shape));
 }
 
 /** The turn that carries the x, y and z axes onto the three given orthonormal, right-handed axes. */

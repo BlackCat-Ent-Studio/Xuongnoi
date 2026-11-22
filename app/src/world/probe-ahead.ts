@@ -1,7 +1,8 @@
 import type { EntityId, ProbeAim, ViewMode } from '../engine/types';
-import { colliderBox, type Box } from './collider';
+import { chassisOutline, colliderBox, type Box } from './collider';
 import type { Entity } from './entity';
 import { groundHeading, turnDirection } from './heading';
+import { halfAlong, type Obb } from './oriented-box';
 import { sameTrain } from './vehicle-train';
 
 /** Ignore things this far above or below the prober's body (the floor it drives on, roofs high overhead). */
@@ -12,6 +13,33 @@ const LANE_SHARE = 0.9;
 const LANE_EPS = 1e-9;
 
 type Hit = { id: EntityId; distance: number };
+
+/**
+ * Something the probe can run into: its collision box, and for a robot chassis on wheel traction ("Vật lý thật") its real
+ * outline, turned to its heading, which is what the probe then reads instead of the upright square round it.
+ */
+interface Obstacle {
+  box: Box;
+  outline: Obb | null;
+}
+
+/** The obstacle `e` is for `self`, or null when it is none. */
+function obstacleOf(self: Entity, e: Entity): Obstacle | null {
+  const box = obstacleBox(self, e);
+  return box ? { box, outline: e.robot ? chassisOutline(e) : null } : null;
+}
+
+/** The four corners of an outline seen from above (it only ever turns about the vertical). */
+function footprint(o: Obb): { x: number; z: number }[] {
+  const a = o.axes[0];
+  const c = o.axes[2];
+  return [
+    [-1, -1],
+    [1, -1],
+    [1, 1],
+    [-1, 1],
+  ].map(([i, j]) => ({ x: o.centre.x + a.x * o.half.x * i! + c.x * o.half.z * j!, z: o.centre.z + a.z * o.half.x * i! + c.z * o.half.z * j! }));
+}
 
 /** The collision box of something the probe can run into, or null when it is not an obstacle for `self`. */
 function obstacleBox(self: Entity, e: Entity): Box | null {
@@ -62,8 +90,9 @@ function probeAlongFacing(entities: readonly Entity[], self: Entity, reach: numb
 
   let best: Hit | null = null;
   for (const e of entities) {
-    const eb = obstacleBox(self, e);
-    if (!eb) continue;
+    const found = obstacleOf(self, e);
+    if (!found) continue;
+    const eb = found.box;
     if (eb.pos.y + eb.size.y / 2 <= selfBottom || eb.pos.y - eb.size.y / 2 >= selfTop) continue;
 
     const dx = eb.pos.x - sb.pos.x;
@@ -71,8 +100,8 @@ function probeAlongFacing(entities: readonly Entity[], self: Entity, reach: numb
     const along = dx * ux + dz * uz;
     if (along <= 0) continue;
     const lat = dx * px + dz * pz;
-    const eAlong = (Math.abs(ux) * eb.size.x + Math.abs(uz) * eb.size.z) / 2;
-    const eLat = (Math.abs(px) * eb.size.x + Math.abs(pz) * eb.size.z) / 2;
+    const eAlong = found.outline ? halfAlong(found.outline, { x: ux, y: 0, z: uz }) : (Math.abs(ux) * eb.size.x + Math.abs(uz) * eb.size.z) / 2;
+    const eLat = found.outline ? halfAlong(found.outline, { x: px, y: 0, z: pz }) : (Math.abs(px) * eb.size.x + Math.abs(pz) * eb.size.z) / 2;
     if (Math.abs(lat) >= eLat + selfLat * LANE_SHARE) continue;
     const gap = Math.max(0, along - eAlong - selfAlong);
     if (gap > reach) continue;
@@ -115,10 +144,23 @@ function exitDistance(box: Box, o: { x: number; z: number }, u: { x: number; z: 
   return Number.isFinite(t) ? Math.max(0, t) : 0;
 }
 
+/** `exitDistance` for a chassis outline: the same question asked along the outline's own length and width. */
+function exitOutline(o: Obb, from: { x: number; z: number }, u: { x: number; z: number }): number {
+  let t = Infinity;
+  for (const [axis, half] of [[o.axes[0], o.half.x], [o.axes[2], o.half.z]] as const) {
+    const at = (from.x - o.centre.x) * axis.x + (from.z - o.centre.z) * axis.z;
+    const rate = u.x * axis.x + u.z * axis.z;
+    if (rate > 1e-9) t = Math.min(t, (half - at) / rate);
+    else if (rate < -1e-9) t = Math.min(t, (-half - at) / rate);
+  }
+  return Number.isFinite(t) ? Math.max(0, t) : 0;
+}
+
 /**
  * A beam from a point on the body (`aim.side` / `aim.forward` off its middle) along the nose turned by `aim.angle`, as wide
  * as the body or `aim.beam`. Exact for any heading: each obstacle box is cut to the beam and the nearest cut point counts.
- * The gap is measured from where the beam leaves the sensor's own collision box, so it is 0 when the body touches the obstacle.
+ * The gap is measured from where the beam leaves the sensor's own collision box (the real outline of a chassis on wheel
+ * traction), so it is 0 when the body touches the obstacle.
  */
 function probeBeam(entities: readonly Entity[], self: Entity, reach: number, aim: ProbeAim, mode: ViewMode): Hit | null {
   if (!(reach >= 0)) return null;
@@ -135,27 +177,28 @@ function probeBeam(entities: readonly Entity[], self: Entity, reach: number, aim
 
   const bodyWidth = self.robot ? self.robot.spec.width : Math.abs(pz.x) * sb.size.x + Math.abs(pz.z) * sb.size.z;
   const half = (aim.beam ?? 0) > 0 ? (aim.beam as number) / 2 : (bodyWidth / 2) * LANE_SHARE;
-  const start = exitDistance(sb, origin, u);
+  const own = self.robot ? chassisOutline(self) : null;
+  const start = own ? exitOutline(own, origin, u) : exitDistance(sb, origin, u);
   const selfBottom = sb.pos.y - sb.size.y / 2 + VERTICAL_MARGIN;
   const selfTop = sb.pos.y + sb.size.y / 2 - VERTICAL_MARGIN;
 
   let best: Hit | null = null;
   for (const e of entities) {
-    const eb = obstacleBox(self, e);
-    if (!eb) continue;
+    const found = obstacleOf(self, e);
+    if (!found) continue;
+    const eb = found.box;
     if (eb.pos.y + eb.size.y / 2 <= selfBottom || eb.pos.y - eb.size.y / 2 >= selfTop) continue;
     const hx = eb.size.x / 2;
     const hz = flat ? 0 : eb.size.z / 2;
-    const corners: Pt[] = [
-      [-hx, -hz],
-      [hx, -hz],
-      [hx, hz],
-      [-hx, hz],
-    ].map(([cx, cz]) => {
-      const dx = eb.pos.x + cx! - origin.x;
-      const dz = eb.pos.z + cz! - origin.z;
-      return { a: dx * u.x + dz * u.z, l: dx * pz.x + dz * pz.z };
-    });
+    const seen = (dx: number, dz: number): Pt => ({ a: dx * u.x + dz * u.z, l: dx * pz.x + dz * pz.z });
+    const corners: Pt[] = found.outline
+      ? footprint(found.outline).map((c) => seen(c.x - origin.x, c.z - origin.z))
+      : [
+          [-hx, -hz],
+          [hx, -hz],
+          [hx, hz],
+          [-hx, hz],
+        ].map(([cx, cz]) => seen(eb.pos.x + cx! - origin.x, eb.pos.z + cz! - origin.z));
     if (flat) {
       // The side view has no depth: the lane is the whole line, so only the span along the look direction matters.
       const a = corners.map((c) => c.a);
