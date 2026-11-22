@@ -130,17 +130,36 @@ export function outlinePair(a: Collidable, b: Collidable): [Obb, Obb] | null {
 }
 
 /**
- * False only when a chassis with a real outline (`chassis`) cannot be inside the upright box `box` by more than `skin`: the
- * outline lies within half its diagonal of the chassis position on the ground and within half its height of it, so a box that
- * is further away than that along a world axis is clear. Saves the full test of the two outlines for every block that is
- * nowhere near (and for the floor a chassis stands on, which it touches without being in it).
+ * `obbSeparation` of the real outline of `chassis` (which must have one) and the upright box `box`, without building either
+ * as a turned box: the outline only turns about the vertical, so five directions can part the two (up, the two world axes on
+ * the ground, the chassis's own length and width). Positive = a gap of at least that much, negative = they overlap by the
+ * smallest push that would part them. `facing` stands in for the chassis's own (the heading it had before a turn, say).
+ * This is the test a chassis makes against every block near it every tick, so it is kept free of any allocation.
  */
-export function outlineNearBox(chassis: Collidable, box: Box, skin: number): boolean {
+export function outlineBoxSeparation(chassis: Collidable, box: Box, facing: { x: number; z: number } | undefined = chassis.facing): number {
   const spec = chassis.robot!.spec;
-  const round = Math.hypot(spec.length, spec.width) / 2;
-  if (Math.abs(box.pos.x - chassis.pos.x) - Math.abs(box.size.x) / 2 - round >= -skin) return false;
-  if (Math.abs(box.pos.z - chassis.pos.z) - Math.abs(box.size.z) / 2 - round >= -skin) return false;
-  return Math.abs(box.pos.y - chassis.pos.y) - (Math.abs(box.size.y) + Math.abs(chassis.size.y)) / 2 < -skin;
+  let fx = 1;
+  let fz = 0;
+  if (facing) {
+    const len = Math.hypot(facing.x, facing.z);
+    if (len > 1e-9) {
+      fx = facing.x / len;
+      fz = facing.z / len;
+    }
+  }
+  const hl = spec.length / 2;
+  const hw = spec.width / 2;
+  const bx = Math.abs(box.size.x) / 2;
+  const bz = Math.abs(box.size.z) / 2;
+  const dx = box.pos.x - chassis.pos.x;
+  const dz = box.pos.z - chassis.pos.z;
+  const ax = Math.abs(fx);
+  const az = Math.abs(fz);
+  let gap = Math.abs(box.pos.y - chassis.pos.y) - (Math.abs(box.size.y) + Math.abs(chassis.size.y)) / 2;
+  gap = Math.max(gap, Math.abs(dx) - (ax * hl + az * hw) - bx);
+  gap = Math.max(gap, Math.abs(dz) - (az * hl + ax * hw) - bz);
+  gap = Math.max(gap, Math.abs(dx * fx + dz * fz) - hl - (ax * bx + az * bz));
+  return Math.max(gap, Math.abs(dz * fx - dx * fz) - hw - (az * bx + ax * bz));
 }
 
 /** True when the upright box `lying` is over the outline seen from above: their shadows on the ground share more than `min` (m) of depth. */

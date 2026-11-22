@@ -1,8 +1,8 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
 import { chassisSupport, type ChassisSupport } from './chassis-support';
-import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, hasChassisOutline, isTurnedBody, meetingPair, orientedBox, outlineNearBox, spanOverlap, type Box } from './collider';
-import { backOffAlong, mulQuat, obbBounds, obbGap, obbSeparation, yawQuat, type Obb } from './oriented-box';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, hasChassisOutline, isTurnedBody, meetingPair, orientedBox, outlineBoxSeparation, spanOverlap, type Box } from './collider';
+import { backOffAlong, mulQuat, obbBounds, obbGap, obbOf, obbSeparation, yawQuat, type Obb } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
@@ -52,11 +52,14 @@ function metByOutline(a: Entity, b: Entity): [Obb, Obb] | null {
   return meetingPair(a, b);
 }
 
-/** A chassis with a real outline and a block: true when the block is too far for the two to be inside each other at all. */
-function blockOutOfReach(a: Entity, b: Entity): boolean {
-  if (b.kind === 'block' && a.robot !== undefined && hasChassisOutline(a)) return !outlineNearBox(a, boundsBox(b), SKIN);
-  if (a.kind === 'block' && b.robot !== undefined && hasChassisOutline(b)) return !outlineNearBox(b, boundsBox(a), SKIN);
-  return false;
+/**
+ * How far apart a chassis with a real outline and an upright block are (`outlineBoxSeparation`: negative = inside each other);
+ * null for any other pair. A chassis asks this of every block near it every tick, so it is answered without building the outlines.
+ */
+function chassisBlockGap(a: Entity, b: Entity): number | null {
+  if (b.kind === 'block' && a.robot !== undefined && hasChassisOutline(a) && !isTurnedBody(b)) return outlineBoxSeparation(a, colliderBox(b));
+  if (a.kind === 'block' && b.robot !== undefined && hasChassisOutline(b) && !isTurnedBody(a)) return outlineBoxSeparation(b, colliderBox(a));
+  return null;
 }
 
 /**
@@ -82,7 +85,8 @@ function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
 function overlapsAll(a: Entity, b: Entity): boolean {
   // A chassis with a real outline meets every other body, blocks too, by that outline (see `chassisOutline`).
   if (a.robot !== undefined || b.robot !== undefined) {
-    if (blockOutOfReach(a, b)) return false;
+    const gap = chassisBlockGap(a, b);
+    if (gap !== null) return gap < -SKIN;
     const pair = meetingPair(a, b);
     if (pair) return obbSeparation(pair[0], pair[1]) < -SKIN;
   }
@@ -95,6 +99,8 @@ export function touching(a: Entity, b: Entity): boolean {
   if (isSpinner(a)) return spinnerTouches(a, b);
   if (isSpinner(b)) return spinnerTouches(b, a);
   // A chassis with a real outline touches other bodies, blocks too, through it.
+  const gap = a.robot !== undefined || b.robot !== undefined ? chassisBlockGap(a, b) : null;
+  if (gap !== null) return gap <= CONTACT_EPS;
   const pair = metByOutline(a, b);
   if (pair) return obbSeparation(pair[0], pair[1]) <= CONTACT_EPS;
   // A turned crate touches through its real outline, not through the upright box around it.
@@ -544,7 +550,7 @@ function giveWay(r: Entity, solids: readonly Entity[]): void {
   for (let pass = 0; pass < TURN_PASSES; pass++) {
     let moved = false;
     for (const s of solids) {
-      if (!outlineNearBox(r, boundsBox(s), SKIN)) continue;
+      if (isTurnedBody(s) || !(outlineBoxSeparation(r, colliderBox(s)) < -SKIN)) continue;
       const { gap, axis } = obbGap(chassisOutline(r)!, orientedBox(s));
       if (!(gap < -SKIN) || Math.abs(axis.y) > 1e-6) continue;
       r.pos.x += axis.x * gap;
@@ -557,6 +563,8 @@ function giveWay(r: Entity, solids: readonly Entity[]): void {
 
 /** A chassis backs off at most this many times for one turn (once per body its corner went into; more means it is wedged). */
 const TURN_PASSES = 4;
+/** Blocks further than this (m) from a chassis that has just turned cannot come into its way while it backs off (a back-off is millimetres). */
+const BACK_OFF_REACH = 0.5;
 
 /**
  * A chassis has just turned on its wheels. Walls and other chassis are solid for it by its real outline, so the turn may have
@@ -569,22 +577,25 @@ function settleTurn(r: Entity, facingWas: Vec3, others: readonly Entity[], solid
   const before = chassisOutline({ ...r, facing: facingWas });
   if (!before) return true;
   // Only bodies it was clear of before the turn count: what it already stood in (spawned so, or set down into it) may still part.
-  const met: Obb[] = [];
+  const rivals: Obb[] = [];
   for (const o of others) {
     const pair = meetingPair(r, o);
-    if (pair && obbSeparation(before, pair[1]) >= -SKIN) met.push(pair[1]);
+    if (pair && obbSeparation(before, pair[1]) >= -SKIN) rivals.push(pair[1]);
   }
+  // Blocks: those within reach of a back-off (the floor under the wheels is among them: it is touched, never entered).
+  const walls: Box[] = [];
   for (const s of solids) {
-    // Half the diagonal holds the outline at both headings: a block beyond it (or the floor under the wheels) is not looked at twice.
-    if (!outlineNearBox(r, boundsBox(s), SKIN)) continue;
-    const box = orientedBox(s);
-    if (obbSeparation(before, box) >= -SKIN) met.push(box);
+    if (isTurnedBody(s)) continue;
+    const box = colliderBox(s);
+    if (outlineBoxSeparation(r, box) < BACK_OFF_REACH && outlineBoxSeparation(r, box, facingWas) >= -SKIN) walls.push(box);
   }
-  if (met.length === 0) return true;
   const start = { x: r.pos.x, z: r.pos.z };
+  /** The body its corner is in now, as a turned box. */
   const inside = (): Obb | undefined => {
+    for (const box of walls) if (outlineBoxSeparation(r, box) < -SKIN) return obbOf(box.pos, box.size);
+    if (rivals.length === 0) return undefined;
     const now = chassisOutline(r)!;
-    return met.find((o) => obbSeparation(now, o) < -SKIN);
+    return rivals.find((o) => obbSeparation(now, o) < -SKIN);
   };
   let hit = inside();
   for (let pass = 0; hit && pass < TURN_PASSES; pass++) {
