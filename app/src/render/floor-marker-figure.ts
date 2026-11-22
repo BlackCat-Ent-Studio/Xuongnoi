@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../engine/types';
+import { EXIT_DIRS, markerExits, type ExitDir } from '../nodes/floor-marker';
 import { canvasTexture } from './factory-kit';
 
 /** The tile floats this far above the floor so it never fights with it (or with a painted line) for the same pixels. */
@@ -57,7 +58,7 @@ function ringTexture(): THREE.Texture | null {
 function numberTexture(text: string): THREE.Texture | null {
   if (!text) return null;
   return canvasTexture(`floor-marker-number|${text}`, 128, 128, (g, W) => {
-    const px = W * (text.length > 1 ? 0.56 : 0.74);
+    const px = W * (text.length > 2 ? 0.4 : text.length > 1 ? 0.56 : 0.74);
     g.textAlign = 'center';
     g.textBaseline = 'middle';
     g.font = `800 ${px}px "Segoe UI",Arial,sans-serif`;
@@ -72,11 +73,38 @@ function numberTexture(text: string): THREE.Texture | null {
 
 const UNIT_PLANE = new THREE.PlaneGeometry(1, 1);
 
+/** An arrow on the unit tile, pointing along +x: a stem that starts clear of the ring and a head that stops short of the edge. */
+const ARROW = { from: 0.17, neck: 0.31, tip: 0.46, stem: 0.03, head: 0.085 };
+/** Quarter turns that take the +x arrow to each direction. The tile's own "up" is the far side of the floor (-z). */
+const ARROW_TURN: Record<ExitDir, number> = { E: 0, N: Math.PI / 2, W: Math.PI, S: -Math.PI / 2 };
+const arrowShapes = new Map<string, THREE.ShapeGeometry>();
+
+/** The arrows of one set of directions as one flat shape, shared by every marker that has that set. */
+function arrowGeometry(exits: string): THREE.ShapeGeometry {
+  let geo = arrowShapes.get(exits);
+  if (!geo) {
+    const shapes = EXIT_DIRS.filter((d) => exits.includes(d)).map((d) => {
+      const c = Math.cos(ARROW_TURN[d]);
+      const k = Math.sin(ARROW_TURN[d]);
+      const at = (x: number, y: number): [number, number] => [x * c - y * k, x * k + y * c];
+      const outline: [number, number][] = [at(ARROW.from, -ARROW.stem), at(ARROW.neck, -ARROW.stem), at(ARROW.neck, -ARROW.head), at(ARROW.tip, 0), at(ARROW.neck, ARROW.head), at(ARROW.neck, ARROW.stem), at(ARROW.from, ARROW.stem)];
+      const shape = new THREE.Shape();
+      outline.forEach(([x, y], n) => (n === 0 ? shape.moveTo(x, y) : shape.lineTo(x, y)));
+      shape.closePath();
+      return shape;
+    });
+    geo = new THREE.ShapeGeometry(shapes);
+    arrowShapes.set(exits, geo);
+  }
+  return geo;
+}
+
 /**
  * A floor marker: a dark floor tile exactly as wide and deep as the marker, with a ring and centre dot in the marker's
  * colour on the grid node, dashed light lines running to the four neighbours and the marker's number in the front-right
  * corner. In the side view, where the floor is seen edge-on, it is a short dark strip with a band in the marker's colour
- * and the number standing above it. Drawn only; nothing collides with it. Three flat meshes.
+ * and the number standing above it. A marker with one-way arrows gets them as a fourth flat mesh in the marker's colour,
+ * from near the ring toward each edge it may be left by (not in the side view). Drawn only; nothing collides with it.
  */
 export class FloorMarkerFigure {
   readonly object = new THREE.Group();
@@ -85,6 +113,8 @@ export class FloorMarkerFigure {
   /** Ring and dot in the marker's colour (the coloured band in the side view). */
   private readonly face: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   private readonly digits: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
+  /** The one-way arrows, in the marker's colour; absent for a marker without arrows and in the side view. */
+  private readonly arrows: THREE.Mesh<THREE.ShapeGeometry, THREE.MeshBasicMaterial> | null = null;
   private color = '';
 
   constructor(view: EntityView, private readonly mode: ViewMode) {
@@ -104,6 +134,12 @@ export class FloorMarkerFigure {
       this.digits.scale.set(NUMBER_SHARE, NUMBER_SHARE, 1);
       this.digits.position.set(NUMBER_AT, -NUMBER_AT, 0.004);
       flat.add(this.digits);
+    }
+    const exits = side ? '' : markerExits(view);
+    if (exits) {
+      this.arrows = new THREE.Mesh(arrowGeometry(exits), new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+      this.arrows.position.z = 0.003;
+      flat.add(this.arrows);
     }
     // The planes are built upright (facing +z); on the floor they lie down facing up, with the number readable from the front (+z).
     if (!side) flat.rotation.x = -Math.PI / 2;
@@ -133,6 +169,7 @@ export class FloorMarkerFigure {
     if (view.color !== this.color) {
       this.color = view.color;
       this.face.material.color.set(view.color);
+      this.arrows?.material.color.set(view.color);
     }
   }
 
@@ -141,5 +178,6 @@ export class FloorMarkerFigure {
     this.rim.material.dispose();
     this.face.material.dispose();
     this.digits?.material.dispose();
+    this.arrows?.material.dispose();
   }
 }

@@ -129,6 +129,9 @@ export function botCopy(id: string, x: number, z: number, heading: number, y = 0
 /** The four wires between copy `id` and row k of the hold card `hold`, as `from > to`. */
 export const holdWires = (id: string, k: number, hold = 'giu-o'): string[] => [`${id}.robot>${hold}.robot${k}`, `${id}.o-muon>${hold}.want${k}`, `${hold}.cell${k}>${id}.o-duoc-di`, `${hold}.wait${k}>${id}.dang-cho`];
 
+/** A board of plain cards and wires (`from.port>to.port`), no circuits. */
+export const flatBoard = (nodes: GraphNode[], wires: readonly string[] = [], mode: Board['mode'] = '3d'): Board => ({ name: 'thử', mode, graph: { nodes, wires: wiresOf(wires), settings: { wireRule: true } } });
+
 export const wiresOf = (rows: readonly string[]): Wire[] => rows.map((w) => wire(...(w.split('>') as [string, string])));
 
 // ---------------------------------------------------------------- test-only stand-in for stations, routes and tipping
@@ -343,9 +346,9 @@ export interface Played {
   entity(ownerNodeId: string): EntityView | undefined;
 }
 
-/** Plays a board headless with "Vật lý thật" on, circuits expanded the way the app does it. */
-export function play(board: Board, rapier: RapierModule): Played {
-  const world = createWorld(board.mode, { realPhysics: true, rapier });
+/** Plays a board headless, circuits expanded the way the app does it: with "Vật lý thật" on when the crate engine is given, else under the plain rules. */
+export function play(board: Board, rapier?: RapierModule): Played {
+  const world = rapier ? createWorld(board.mode, { realPhysics: true, rapier }) : createWorld(board.mode);
   const rt = createRuntime(runnableGraph(board), world, board.mode);
   const entity = (owner: string): EntityView | undefined => world.entities().find((e) => e.ownerNodeId === owner);
   return {

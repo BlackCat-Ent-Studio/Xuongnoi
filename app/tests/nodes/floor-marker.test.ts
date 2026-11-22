@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { TICK_DT } from '../../src/engine/types';
-import { FLOOR_MARKER_LOOK, listMarkers, markerByNumber, markerNumber, markerUnder } from '../../src/nodes/floor-marker';
+import { FLOOR_MARKER_LOOK, listMarkers, markerByNumber, markerExits, markerNumber, markerUnder } from '../../src/nodes/floor-marker';
 import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
 import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
 import { marker, navRig, CHASSIS_Y } from '../helpers/nav-rig';
@@ -47,11 +47,11 @@ describe('Mốc sàn', () => {
     expect(r.world.solidBoxes().some((b) => Math.abs(b.position.x - 3) < 0.01 && Math.abs(b.position.z + 2) < 0.01)).toBe(false);
   });
 
-  it('the number is kept whole and within 1..99; only a marker has one', () => {
-    const r = navRig([['a', 'floor-marker', { number: 0 }], ['b', 'floor-marker', { number: 250, position: { x: 3, y: 0, z: 0 } }], ['c', 'floor-marker', { number: 4.6, position: { x: 6, y: 0, z: 0 } }]], [], rapier);
+  it('the number is kept whole and within 1..999; only a marker has one', () => {
+    const r = navRig([['a', 'floor-marker', { number: 0 }], ['b', 'floor-marker', { number: 2500, position: { x: 3, y: 0, z: 0 } }], ['c', 'floor-marker', { number: 4.6, position: { x: 6, y: 0, z: 0 } }]], [], rapier);
     r.tick();
-    expect([r.out('a', 'number'), r.out('b', 'number'), r.out('c', 'number')]).toEqual([1, 99, 5]);
-    expect(listMarkers(r.world).map((m) => m.number)).toEqual([1, 99, 5]);
+    expect([r.out('a', 'number'), r.out('b', 'number'), r.out('c', 'number')]).toEqual([1, 999, 5]);
+    expect(listMarkers(r.world).map((m) => m.number)).toEqual([1, 999, 5]);
     expect(markerNumber(r.entity('floor')!)).toBe(0);
   });
 
@@ -72,6 +72,28 @@ describe('Mốc sàn', () => {
     r.tick(180);
     expect(r.entity('crate')!.position.y).toBeCloseTo(0.2, 2);
     expect(r.world.massOn(r.entity('m1')!.id)).toBe(0);
+  });
+
+  it('a marker without arrows is the tile it always was; arrows travel on the tile and are read back in a fixed order', () => {
+    const r = navRig(
+      [
+        ['plain', 'floor-marker', { number: 1 }],
+        ['none', 'floor-marker', { number: 2, exits: 'none', position: { x: 2, y: 0.5, z: 0 } }],
+        ['east', 'floor-marker', { number: 3, exits: 'E', position: { x: 4, y: 0.5, z: 0 } }],
+        ['turn', 'floor-marker', { number: 4, exits: 'WS', position: { x: 6, y: 0.5, z: 0 } }],
+        ['odd', 'floor-marker', { number: 5, exits: 'SxE?', position: { x: 8, y: 0.5, z: 0 } }],
+      ],
+      [],
+      rapier,
+    );
+    r.tick();
+    // No arrows: the entity view has exactly the fields it had before arrows existed.
+    expect(Object.keys(r.entity('plain')!).sort()).toEqual(Object.keys(r.entity('none')!).sort());
+    expect('blockStyle' in r.entity('plain')!).toBe(false);
+    expect('blockStyle' in r.entity('none')!).toBe(false);
+    expect(['plain', 'none', 'east', 'turn', 'odd'].map((id) => markerExits(r.entity(id)!))).toEqual(['', '', 'E', 'WS', 'ES']);
+    expect(listMarkers(r.world).sort((a, b) => a.number - b.number).map((m) => m.exits)).toEqual(['', '', 'E', 'WS', 'ES']);
+    expect(markerExits(r.entity('floor')!)).toBe('');
   });
 
   it('"Dò phía trước" does not see it', () => {
@@ -116,6 +138,40 @@ describe('Đọc mốc sàn', () => {
     expect([r.out('lone', 'number'), r.out('lone', 'on'), r.out('lone', 'marker')]).toEqual([0, false, null]);
     expect(markerUnder(r.world, '3d', { x: 0.3, z: 0 })?.number).toBe(2);
     expect(markerUnder(r.world, '3d', { x: 0.3, z: 1.2 })).toBeNull();
+  });
+
+  it('two floors: where a deck tile lies above a ground tile each robot reads the tile nearest its own feet', () => {
+    // Ground tiles 1, 2 at height 0; a deck 2.6 m up carries tiles 101, 102 at the same x, z. One tile of each floor is bigger
+    // or shifted, so "nearest middle" alone would pick the wrong floor.
+    const deck: NodeSpec = ['deck', 'block', { position: { x: 0, y: 2.5, z: 0 }, size: { x: 8, y: 0.2, z: 4 } }];
+    const r = navRig(
+      [
+        deck,
+        ['g1', 'floor-marker', { number: 1, position: { x: -1, y: 0, z: 0 }, size: 2 }],
+        ['g2', 'floor-marker', { number: 2, position: { x: 1.2, y: 0, z: 0 }, size: 2 }],
+        ['d1', 'floor-marker', { number: 101, position: { x: -1.2, y: 2.6, z: 0 }, size: 2 }],
+        ['d2', 'floor-marker', { number: 102, position: { x: 1, y: 2.6, z: 0 }, size: 2 }],
+        ['low', 'robot-body', { position: { x: -1.15, y: CHASSIS_Y, z: 0 }, length: 0.9, width: 0.7, height: 0.3, mass: 5 }],
+        ['high', 'robot-body', { position: { x: 1.15, y: 2.6 + CHASSIS_Y, z: 0 }, length: 0.9, width: 0.7, height: 0.3, mass: 5 }],
+        ['readLow', 'floor-marker-sensor', {}],
+        ['readHigh', 'floor-marker-sensor', {}],
+      ],
+      [['low', 'self', 'readLow', 'who'], ['high', 'self', 'readHigh', 'who']],
+      rapier,
+    );
+    r.tick(30);
+    // The low robot is nearer the middle of deck tile 101 (0.05 m) than of ground tile 1 (0.15 m); the high one nearer ground tile 2.
+    expect(r.entity('high')!.position.y).toBeGreaterThan(2.6);
+    expect(r.out('readLow', 'number')).toBe(1);
+    expect(r.out('readHigh', 'number')).toBe(102);
+    expect(r.out('readLow', 'marker')).toBe(r.entity('g1')!.id);
+    expect(r.out('readHigh', 'marker')).toBe(r.entity('d2')!.id);
+    // The helper itself: without a height the nearest middle wins as before; with one the nearest floor wins first.
+    expect(markerUnder(r.world, '3d', { x: 1.02, z: 0 })?.number).toBe(102);
+    expect(markerUnder(r.world, '3d', { x: 1.02, z: 0, y: 0 })?.number).toBe(2);
+    expect(markerUnder(r.world, '3d', { x: 1.18, z: 0, y: 2.6 })?.number).toBe(102);
+    // An old marker left floating at the card's default height is still read from the floor under it.
+    expect(markerUnder(r.world, '3d', { x: -1, z: 0, y: 0.9 })?.number).toBe(1);
   });
 
   it('side view: only x counts', () => {
