@@ -9,8 +9,8 @@ import { createWorld } from '../../src/world/world';
 
 /**
  * Test-only runners for the sorting factory stations: one circuit on the bench, or a whole board, with "Vật lý thật" on.
- * The helper that takes a carton off the hand-over table (`takeAfterS`) stands in for the vehicles of the finished
- * factory; it is test code and no board contains it.
+ * On the bench the helper that takes a carton off the hand-over table (`takeAfterS`) stands in for whatever collects it;
+ * it is test code and no board contains it. The whole board is run as shipped, with nothing added.
  */
 
 export type Link = readonly [from: string, to: string];
@@ -19,7 +19,7 @@ export type Link = readonly [from: string, to: string];
 export const colourOfClass = (k: number): number => PALETTE_COLORS.findIndex((c) => c === FACTORY.classColors[k - 1]) + 1;
 
 /** The chute the rule sends a carton of spawner class k to. */
-export const chuteOfClass = (k: number): number => (FACTORY.classMasses[k - 1]! > FACTORY.heavyAboveKg ? FACTORY.heavyChute : colourOfClass(k));
+export const chuteOfClass = (k: number): number => (FACTORY.classMasses[k - 1]! >= FACTORY.heavyFromKg ? FACTORY.heavyChute : colourOfClass(k));
 
 export const circuitOf = (board: Board, id: string): Circuit => board.circuits!.find((c) => c.id === id)!;
 

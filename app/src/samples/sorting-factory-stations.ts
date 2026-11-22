@@ -7,15 +7,16 @@ import { registerAllNodes } from '../nodes';
  * "Xưởng phân loại kiện hàng", the stations that stand still: the feeding station "Trạm nạp" (belt, scan gate, scale, arm,
  * hand-over table), the drop chute "Cửa thả" (used six times), the sorting rule "Luật chia cửa" and a small adder "Cộng sáu
  * số". Every one is a circuit board made of palette pieces and wires; the main board only holds copies of them, the floor
- * and the read-outs. The vehicles that carry a parcel from the hand-over table to a chute are not here.
+ * and the read-outs. The vehicles that carry a parcel from the hand-over table to a chute are not here: the circuit "Chuyển
+ * tạm (thay xe)" stands in their place and says so.
  */
 
 /** Numbers the notes and the tests quote. All positions are in the station's own frame: the arm stands at the origin. */
 export const FACTORY = {
-  /** Cartons: size (m), and the six classes the spawner draws from: tape colour and mass (kg). Class 6 is a heavy carton with the tape of class 1. */
+  /** Cartons: size (m), and the six classes the spawner draws from: tape colour and mass (kg). Classes 1-5 are the five colours; class 6 is a heavy carton with the tape of class 1. */
   parcel: { x: 0.32, y: 0.26, z: 0.28 },
   classColors: ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#a855f7', '#ef4444'] as const,
-  classMasses: [1, 2, 3, 2, 4, 8] as const,
+  classMasses: [1, 2, 3, 2, 3, 8] as const,
   classCount: 6,
   seed: 7,
   /** Seconds the belt stays empty before the next carton is made. */
@@ -43,8 +44,8 @@ export const FACTORY = {
     /** Where a carton taken out of the chute is put: on the start of that belt. */
     binAt: { x: 0, y: 0.68, z: -1.1 } as Vec3,
   },
-  /** The rule: a carton heavier than this (kg) goes to the heavy chute whatever its colour. */
-  heavyAboveKg: 5,
+  /** The rule: a carton of this mass (kg) or more goes to the heavy chute whatever its colour. */
+  heavyFromKg: 4,
   heavyChute: 6,
   chuteCount: 6,
   /** The stand-in for the vehicles: a carton leaves the hand-over table this long (s) after it was set down, and appears this high above its chute. */
@@ -371,11 +372,11 @@ export const RULE_WIRES: readonly WireSpec[] = [
   ['cua-nang.value', 'cua-toi.b'],
 ];
 
-/** Chute of a carton = its colour number; a carton heavier than the threshold goes to the heavy chute instead. */
+/** Chute of a carton = its colour number; a carton as heavy as the threshold or heavier goes to the heavy chute instead. */
 function ruleCircuit(): Circuit {
   const specs: CardSpec[] = [
-    ['nguong-nang', 'const', 0, { value: FACTORY.heavyAboveKg }],
-    ['la-nang', 'compare', 0, { op: 'gt' }],
+    ['nguong-nang', 'const', 0, { value: FACTORY.heavyFromKg }],
+    ['la-nang', 'compare', 0, { op: 'ge' }],
     ['he-so-mau', 'bool-to-number', 1, { whenOn: 0, whenOff: 1 }],
     ['cua-nang', 'bool-to-number', 1, { whenOn: FACTORY.heavyChute, whenOff: 0 }],
     ['cua-theo-mau', 'math', 2, { op: 'mul' }],
@@ -391,7 +392,7 @@ function ruleCircuit(): Circuit {
       pin('kg', 'Khối lượng', 'in', 'number', 'la-nang.a'),
       pin('cua', 'Cửa phải tới', 'out', 'number', 'cua-toi.out'),
     ],
-    exposed: [open('nguong', 'Nặng hơn bao nhiêu kg thì là kiện nặng', 'nguong-nang.value'), open('cua-nang', 'Cửa cho kiện nặng', 'cua-nang.whenOn')],
+    exposed: [open('nguong', 'Từ bao nhiêu kg trở lên là kiện nặng', 'nguong-nang.value'), open('cua-nang', 'Cửa cho kiện nặng', 'cua-nang.whenOn')],
     benchIds: [],
   };
 }
@@ -418,6 +419,9 @@ function adderCircuit(): Circuit {
 
 /** Where chute k (1..6) stands on the main board: a row behind the station. */
 export const chutePlace = (k: number): Vec3 => ({ x: -3.75 + (k - 1) * 1.5, y: 0, z: -3.2 });
+
+/** Name of the sample in the "Bài mẫu" menu and on the board. */
+export const FACTORY_STATIONS_NAME = 'Xưởng phân loại kiện hàng (đang dựng: phần trạm)';
 
 /** The colour chute k takes: its own number, and 0 (every colour) for the heavy chute. */
 export const chuteAccepts = (k: number): number => (k === FACTORY.heavyChute ? 0 : k);
@@ -482,19 +486,22 @@ export function createFactoryStationsBoard(): Board {
     pos: { x: 0, y: 0 },
   });
   const chutes = CHUTES;
+  const hud = (id: string, label: string): GraphNode => card(id, 'show-number', { label, corner: 'top-left' });
   const laid: [GraphNode, number][] = [
-    [card('san', 'block', { position: { x: 0, y: -0.5, z: -1 }, size: { x: 16, y: 1, z: 12 }, color: '#cfd2d7' }), 0],
+    [card('san', 'block', { position: { x: 0, y: -0.5, z: -3.5 }, size: { x: 16, y: 1, z: 14 }, color: '#cfd2d7' }), 0],
     [card('bat-dau', 'on-start'), 0],
-    [card('may-quay', 'camera', { mode: 'fixed', point: { x: 0, y: 0.6, z: -1 }, zoom: 1.5, view: 'tilted' }), 0],
+    [card('may-quay', 'camera', { mode: 'fixed', point: { x: 0, y: 0.6, z: -2.2 }, zoom: 1.1, view: 'tilted' }), 0],
     [copy('tram-nap', FACTORY_IDS.station, 'Trạm nạp', { x: 0, y: 0, z: 0 }), 1],
     [copy('luat', FACTORY_IDS.rule, 'Luật chia cửa', { x: 0, y: 0, z: 0 }), 2],
     [copy('chuyen-tam', FACTORY_IDS.carry, 'Chuyển tạm (thay xe)', { x: 0, y: 0, z: 0 }), 2],
-    [card('hien-cua', 'show-number', { label: 'Kiện đang chờ phải tới cửa số', corner: 'top-left' }), 3],
+    [hud('hien-mau', 'Màu kiện đang chờ (số)'), 3],
+    [hud('hien-kg', 'Khối lượng kiện đang chờ (kg)'), 3],
+    [hud('hien-cua', 'Kiện đang chờ phải tới cửa số'), 3],
     ...chutes.map((k): [GraphNode, number] => [copy(`cua-${k}`, FACTORY_IDS.chute, `Cửa ${k}`, chutePlace(k), { 'so-cua': String(k), 'mau-nhan': chuteAccepts(k) }), 1]),
     [copy('tong-kien', FACTORY_IDS.adder, 'Tổng kiện', { x: 0, y: 0, z: 0 }), 2],
     [copy('tong-sai', FACTORY_IDS.adder, 'Tổng kiện sai', { x: 0, y: 0, z: 0 }), 2],
-    [card('hien-kien', 'show-number', { label: 'Kiện đã vào cửa', corner: 'top-left' }), 3],
-    [card('hien-sai', 'show-number', { label: 'Kiện vào sai cửa', corner: 'top-left' }), 3],
+    [hud('hien-kien', 'Kiện đã vào cửa'), 3],
+    [hud('hien-sai', 'Kiện vào sai cửa'), 3],
   ];
   const nodes = laid.map(([n]) => n);
   const lowest = layOut(nodes, laid.map(([, col]) => col), (n) => rows.get(String(n.params.circuit)) ?? 4);
@@ -505,6 +512,8 @@ export function createFactoryStationsBoard(): Board {
       ['bat-dau.started', 'may-quay.on'],
       ['tram-nap.loai', 'luat.loai'],
       ['tram-nap.kg', 'luat.kg'],
+      ['tram-nap.loai', 'hien-mau.value'],
+      ['tram-nap.kg', 'hien-kg.value'],
       ['luat.cua', 'hien-cua.value'],
       ['tram-nap.co-kien', 'chuyen-tam.co-kien'],
       ['luat.cua', 'chuyen-tam.cua'],
@@ -519,7 +528,7 @@ export function createFactoryStationsBoard(): Board {
     stacks: [FACTORY_IDS.chute, FACTORY_IDS.adder],
   };
   return {
-    name: 'Xưởng (phần trạm)',
+    name: FACTORY_STATIONS_NAME,
     mode: '3d',
     graph,
     notes: [
@@ -528,16 +537,16 @@ export function createFactoryStationsBoard(): Board {
         'yellow',
         MARGIN,
         lowest + 30,
-        330,
-        'Đây là phần đứng yên của xưởng phân loại: một "Trạm nạp" và sáu "Cửa thả". Mỗi máy là một bảng mạch: bấm đúp vào khối để xem bên trong. Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ. Xe chở thùng từ bàn giao tới các cửa chưa có ở bảng này, nên thùng đầu tiên nằm trên bàn giao cho tới khi hết "Sống bao lâu" (150 giây) rồi tay máy mới gắp thùng kế.',
+        360,
+        'Xưởng đang dựng dở: mới có phần đứng yên là một "Trạm nạp" và sáu "Cửa thả". Đội xe chở thùng (AGV) CHƯA có. Tạm thời khối "Chuyển tạm (thay xe)" làm thay xe: thùng nằm trên bàn giao 2 giây thì được "Dịch chuyển" tới phía trên đúng cửa mà luật chỉ ra, rồi rơi vào cửa. Khi có đội xe, khối này sẽ được gỡ đi. Mỗi máy là một bảng mạch: bấm đúp vào khối để xem bên trong. Trạm nạp tự tạo thùng hàng (mỗi loại một màu băng dán và một khối lượng), cho thùng chạy qua cổng quét để đọc màu, cân thùng trên băng chuyền, rồi tay máy gắp thùng đặt lên bàn giao. Bàn giao còn thùng thì tay máy đứng chờ.',
       ),
       note(
         'note2',
         'green',
         MARGIN + 360,
         lowest + 30,
-        330,
-        'Luật chia cửa (khối "Luật chia cửa", làm từ So sánh, Đổi thành số, Phép tính): thùng mang màu số mấy thì tới cửa số đó (đỏ 1, vàng 2, xanh lá 3, xanh dương 4, tím 5). Riêng thùng nặng hơn 5 kg thì tới cửa 6, màu gì cũng vậy: thùng đỏ 8 kg tới cửa 6 chứ không tới cửa 1. Mỗi "Cửa thả" tự đếm số thùng rơi vào và số thùng mang màu không phải màu cửa đó nhận (cửa 6 nhận mọi màu). Thùng rơi vào cửa được "Dịch chuyển" ra tấm gom phía sau. Hai khối "Cộng sáu số" cộng số đếm của sáu cửa để hiện lên màn hình.',
+        360,
+        'Luật chia cửa (khối "Luật chia cửa", làm từ So sánh, Đổi thành số, Phép tính): thùng mang màu số mấy thì tới cửa số đó (đỏ 1, vàng 2, xanh lá 3, xanh dương 4, tím 5). Riêng thùng nặng từ 4 kg trở lên thì tới cửa 6, màu gì cũng vậy: thùng đỏ 8 kg tới cửa 6 chứ không tới cửa 1. Mỗi "Cửa thả" tự đếm số thùng rơi vào và số thùng mang màu không phải màu cửa đó nhận (cửa 6 nhận mọi màu). Thùng đã đếm được đưa lên băng ra phía sau cửa và xếp hàng ở cuối băng (chứa được 17 thùng) cho tới khi hết "Sống bao lâu" (150 giây). Hai khối "Cộng sáu số" cộng số đếm của sáu cửa để hiện lên màn hình.',
       ),
     ],
     circuits,

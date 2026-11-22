@@ -23,6 +23,7 @@ import { createAutoDoorBoard } from '../samples/auto-door-board';
 import { createAutoArmBoard } from '../samples/auto-arm-board';
 import { createWeightSorterBoard } from '../samples/weight-sorter-board';
 import { createAgvBoard } from '../samples/agv-board';
+import { FACTORY_STATIONS_NAME, createFactoryStationsBoard } from '../samples/sorting-factory-stations';
 import { parseBoard, serializeBoard } from './save-format';
 
 /**
@@ -36,6 +37,7 @@ const SAMPLES: { id: string; label: string; json: unknown }[] = [
   { id: 'auto-arm', label: 'Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)', json: JSON.parse(serializeBoard(createAutoArmBoard())) },
   { id: 'weight-sorter', label: 'Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)', json: JSON.parse(serializeBoard(createWeightSorterBoard())) },
   { id: 'agv-shuttle', label: 'Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)', json: JSON.parse(serializeBoard(createAgvBoard())) },
+  { id: 'sorting-factory', label: `${FACTORY_STATIONS_NAME}: trạm nạp + 6 cửa thả là bảng mạch; chưa có đội xe AGV, khối "Chuyển tạm" đưa thùng tới cửa thay xe`, json: JSON.parse(serializeBoard(createFactoryStationsBoard())) },
 ];
 
 /** The old game samples: out of the menus, still loadable by id so their engine tests keep running. */
