@@ -40,7 +40,7 @@ function sign(text: string, w: number, h: number, fg: string, bg: string): THREE
 }
 
 /** Adds the warehouse to `stage`; returns what must be freed when the layout changes. */
-export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
+export function addBuilding(stage: THREE.Group, plan: FloorPlan): { deck: THREE.Mesh; dispose: () => void } {
   const { W, D } = plan;
   const west = plan.stations.some((s) => s.dir === 1), east = plan.stations.some((s) => s.dir === -1);
   const x0 = west ? -6.6 : -1.3, x1 = east ? W + 6.6 : W + 1.3, z0 = -1.3, z1 = D + 3.6;
@@ -51,7 +51,8 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   const free: (() => void)[] = [];
 
   // ---- mezzanine: deck plate, yellow edge, columns
-  add(box(x1 - x0, 0.25, z1 - z0), STEEL, (x0 + x1) / 2, -0.131, (z0 + z1) / 2);
+  // the plate is a mesh of its own so the page can make it see-through to show the floor below
+  const deck = bakedMesh(`mock-deck|${plan.id}`, () => [{ geo: box(x1 - x0, 0.25, z1 - z0), color: STEEL, at: [(x0 + x1) / 2, -0.131, (z0 + z1) / 2] }], undefined, true);
   add(box(x1 - x0 + 0.06, 0.3, 0.06), YELLOW, (x0 + x1) / 2, -0.15, z0); add(box(x1 - x0 + 0.06, 0.3, 0.06), YELLOW, (x0 + x1) / 2, -0.15, z1);
   add(box(0.06, 0.3, z1 - z0), YELLOW, x0, -0.15, (z0 + z1) / 2); add(box(0.06, 0.3, z1 - z0), YELLOW, x1, -0.15, (z0 + z1) / 2);
   const colH = G - 0.25;
@@ -240,7 +241,7 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   for (const s of plan.stations) for (const k of [-0.7, 0.7]) add(cyl('y', 0.03, 2.5, 8), STEEL_DARK, s.beltFar + s.dir * 0.2 + k, 1.25, s.z);
   const building = bakedMesh(`mock-building|${plan.id}`, () => parts, undefined, true);
   const lights = bakedMesh(`mock-lights|${plan.id}`, () => glow, VERTEX_GLOW);
-  stage.add(building, lights);
+  stage.add(building, lights, deck);
 
   // ground floor
   // The hall floor ends at the docks; between the trucks it runs on to the wall as islands, and the road the trucks
@@ -272,7 +273,7 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   place(sign('LỒNG RỖNG', 1.9, 0.42, '#ffffff', TEAL), laneX, hatchTop + 0.5, zN + 0.2);
   place(sign('XE KÉO CHỜ', 2.2, 0.36, '#ffffff', TEAL), -2.14, -0.55, D / 2, -Math.PI / 2);
   // the number of each hole, readable from below
-  for (const h of plan.holes) place(sign(`LỖ ${h.n}`, 0.56, 0.2, '#1c2330', '#ffffff'), h.x, -1.0, h.z + 0.585);
+  for (const h of plan.holes) place(sign(`LỖ ${h.n}`, 0.56, 0.2, '#1c2330', '#ffffff'), h.x, -0.5, h.z + 0.585);
 
   // spare robots on charge (the game's own AGV figure)
   for (let i = 0; i < Math.min(3, bays); i++) {
@@ -284,5 +285,5 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
     stage.add(fig.object);
     free.push(() => fig.dispose());
   }
-  return () => free.forEach((f) => f());
+  return { deck, dispose: () => free.forEach((f) => f()) };
 }

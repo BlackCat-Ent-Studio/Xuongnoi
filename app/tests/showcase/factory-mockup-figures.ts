@@ -136,7 +136,7 @@ export function holeLightGeo(): THREE.BufferGeometry {
     const parts: Part[] = [], add = part(parts);
     for (const s of [-1, 1]) {
       add(box(1.1, 0.03, 0.05), '#ffffff', [0, 0.02, s * 0.525]); add(box(0.05, 0.03, 1.0), '#ffffff', [s * 0.525, 0.02, 0]);
-      add(box(1.16, 0.09, 0.06), '#ffffff', [0, -0.82, s * 0.55]); add(box(0.06, 0.09, 1.04), '#ffffff', [s * 0.55, -0.82, 0]);
+      add(box(1.16, 0.09, 0.06), '#ffffff', [0, -0.69, s * 0.55]); add(box(0.06, 0.09, 1.04), '#ffffff', [s * 0.55, -0.69, 0]);
     }
     add(cyl('y', 0.085, 0.16, 12), '#ffffff', [0.6, 0.62, 0.6]);
     return parts;

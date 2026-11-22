@@ -16,6 +16,7 @@ import { AgvFigure } from '../../src/render/factory-agv';
 import { FactoryArmFigure } from '../../src/render/factory-arm';
 import { buildParcel } from '../../src/render/factory-parcels';
 import { FloorMarkerFigure } from '../../src/render/floor-marker-figure';
+import { VERTEX_TOON } from '../../src/render/factory-kit';
 import { SceneView } from '../../src/render/scene-view';
 import { addBuilding } from './factory-mockup-building';
 import { DOCK_Z, GROUND, PITCH, TRUCK_CAGES, WALL_Z, planGround, type GroundPlan } from './factory-mockup-ground';
@@ -71,7 +72,7 @@ function addLook(style: Parameters<typeof buildBlockLook>[0], v: EntityView, lab
   stage.add(fig.object);
   return fig;
 }
-function flat(w: number, d: number, color: string, y: number, x: number, z: number): void {
+function flat(w: number, d: number, color: string, y: number, x: number, z: number): THREE.Mesh {
   const geo = new THREE.PlaneGeometry(w, d), mat = new THREE.MeshLambertMaterial({ color });
   const m = new THREE.Mesh(geo, mat);
   m.rotation.x = -Math.PI / 2;
@@ -79,6 +80,7 @@ function flat(w: number, d: number, color: string, y: number, x: number, z: numb
   m.receiveShadow = true;
   stage.add(m);
   disposers.push(() => { geo.dispose(); mat.dispose(); });
+  return m;
 }
 function solid(size: P3, color: string, pos: P3): void {
   const geo = new THREE.BoxGeometry(size.x, size.y, size.z), mat = new THREE.MeshLambertMaterial({ color });
@@ -214,13 +216,15 @@ function build(layout: Layout): void {
   ground = planGround(L.holeRows, L.holeCols);
 
   const W = (COLS - 1) * PITCH, D = (ROWS - 1) * PITCH;
-  flat(W + PITCH + 0.5, D + PITCH + 0.5, '#2c3038', 0.002, W / 2, D / 2);
+  deckParts = [flat(W + PITCH + 0.5, D + PITCH + 0.5, '#2c3038', 0.002, W / 2, D / 2)];
+  floorMarks = [];
   // one floor marker (the game's own tile) on every lane cell, as on a real sorting floor
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     if (!isLane(r, c)) continue;
     const p = posOf([r, c]);
     const m = new FloorMarkerFigure(block(`m${r}-${c}`, { x: p.x, y: 0.004, z: p.z }, { x: PITCH, y: 0.01, z: PITCH }, { color: '#f59e0b' }), '3d');
     stage.add(m.object);
+    floorMarks.push(m.object);
     disposers.push(() => m.dispose());
   }
   // drop holes in rows and columns
@@ -258,14 +262,32 @@ function build(layout: Layout): void {
     occupied.set(key(at), robot);
   }
   // the warehouse around the sorting floor
-  disposers.push(addBuilding(stage, {
+  const building = addBuilding(stage, {
     id: L.id, W, D,
     holes: holes.map((h) => ({ n: h.n, x: h.x, z: h.z, color: COLORS[(h.n - 1) % COLORS.length]! })),
     stations: stations.map((s) => ({ x: s.x, z: s.z, dir: s.dir, beltFar: beltX(s, 0) })),
     ground,
-  }));
+  });
+  disposers.push(building.dispose);
+  deckParts.push(building.deck);
+  showThrough(seeThrough);
   setCamera('all');
   $('note').textContent = L.note;
+}
+
+/** The deck plate and the dark floor on it (made see-through on request so the cages and tugs below can be watched) and the floor markers (hidden meanwhile). */
+let deckParts: THREE.Mesh[] = [], floorMarks: THREE.Object3D[] = [], seeThrough = false;
+const GLASS = Object.assign(VERTEX_TOON.clone(), { transparent: true, opacity: 0.16, depthWrite: false });
+function showThrough(on: boolean): void {
+  seeThrough = on;
+  for (const m of deckParts) {
+    if (m.material === VERTEX_TOON || m.material === GLASS) m.material = on ? GLASS : VERTEX_TOON;
+    else Object.assign(m.material as THREE.Material, { transparent: on, opacity: on ? 0.28 : 1, depthWrite: !on, needsUpdate: true });
+    m.castShadow = !on && m.material === VERTEX_TOON;
+    m.renderOrder = on ? 2 : 0;
+  }
+  for (const m of floorMarks) m.visible = !on;
+  $('xray').setAttribute('aria-pressed', String(on));
 }
 
 // ---------------------------------------------------------------- the animation
@@ -482,7 +504,7 @@ function setCamera(name: string): void {
   if (name === 'station') Object.assign(cam, { target: { x: s.x - s.dir * 1.6, y: 0.5, z: s.z }, yaw: s.dir * -0.6, pitch: 0.5, dist: 8 });
   else if (name === 'hole') Object.assign(cam, { target: { x: h.x, y: 0.2, z: h.z }, yaw: 0.5, pitch: 0.6, dist: 7.5 });
   else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.4, y: -GROUND + 1.0, z: D * 0.42 }, yaw: -0.5, pitch: 0.06, dist: Math.max(14, W * 0.95) });
-  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 - 0.4, y: -GROUND + 1.0, z: DOCK_Z - 0.3 }, yaw: 1.1, pitch: 0.5, dist: Math.max(16, W * 1.2) });
+  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 + 2.6, y: -GROUND + 1.0, z: DOCK_Z - 0.6 }, yaw: 0.92, pitch: 0.46, dist: Math.max(16, W * 1.2) });
   else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: mid.z - 1.2 }, yaw: 0, pitch: 1.5, dist: far * 0.92 });
   else Object.assign(cam, { target: mid, yaw: 0.42, pitch: 0.68, dist: far });
   document.querySelectorAll('[data-cam]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.cam === name)));
@@ -532,6 +554,7 @@ $('play').addEventListener('click', () => { running = !running; $('play').textCo
 $('reset').addEventListener('click', () => { build(L); counters(); });
 document.querySelectorAll<HTMLElement>('[data-speed]').forEach((b) => b.addEventListener('click', () => { speed = Number(b.dataset.speed); press('[data-speed]', b); }));
 document.querySelectorAll<HTMLElement>('[data-cam]').forEach((b) => b.addEventListener('click', () => setCamera(b.dataset.cam!)));
+$('xray').addEventListener('click', () => showThrough(!seeThrough));
 
 function fit(): void {
   const w = window.innerWidth, h = window.innerHeight, k = renderer.getPixelRatio();
@@ -586,6 +609,7 @@ Object.assign(window, {
       return null;
     },
     run: (on: boolean) => { running = on; },
+    through: showThrough,
     look: (view: Partial<typeof cam>) => { Object.assign(cam, view); },
   },
 });
