@@ -29,9 +29,9 @@ type Cell = readonly [number, number];
 interface Layout { id: string; name: string; note: string; holeRows: number; holeCols: number; west: number; east: number; robots: number; cage: number; tugs: number }
 const LAYOUTS: Layout[] = [
   { id: 'gon', name: 'A · Sàn gọn', note: '9 lỗ thả (3 × 3), 2 trạm nạp một cạnh, 6 xe chia chọn; tầng dưới 3 xe kéo lồng, 3 cửa bến. Bản đã chọn.', holeRows: 3, holeCols: 3, west: 2, east: 0, robots: 6, cage: 6, tugs: 3 },
-  { id: 'vua', name: 'B · Sàn vừa', note: '15 lỗ thả (3 × 5), 3 trạm nạp một cạnh, 12 xe chia chọn; 4 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 3, east: 0, robots: 12, cage: 6, tugs: 4 },
-  { id: 'haidau', name: 'C · Nạp hai đầu', note: '15 lỗ thả (3 × 5), trạm nạp ở cả hai cạnh (2 + 2), 14 xe chia chọn; 4 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 2, east: 2, robots: 14, cage: 6, tugs: 4 },
-  { id: 'lon', name: 'D · Sàn lớn', note: '35 lỗ thả (5 × 7), trạm nạp hai cạnh (3 + 3), 22 xe chia chọn; 6 xe kéo lồng, 5 cửa bến. Nặng máy nhất.', holeRows: 5, holeCols: 7, west: 3, east: 3, robots: 22, cage: 6, tugs: 6 },
+  { id: 'vua', name: 'B · Sàn vừa', note: '15 lỗ thả (3 × 5), 3 trạm nạp một cạnh, 12 xe chia chọn; 5 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 3, east: 0, robots: 12, cage: 6, tugs: 5 },
+  { id: 'haidau', name: 'C · Nạp hai đầu', note: '15 lỗ thả (3 × 5), trạm nạp ở cả hai cạnh (2 + 2), 14 xe chia chọn; 6 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 2, east: 2, robots: 14, cage: 6, tugs: 6 },
+  { id: 'lon', name: 'D · Sàn lớn', note: '35 lỗ thả (5 × 7), trạm nạp hai cạnh (3 + 3), 22 xe chia chọn; 10 xe kéo lồng, 5 cửa bến. Nặng máy nhất.', holeRows: 5, holeCols: 7, west: 3, east: 3, robots: 22, cage: 6, tugs: 10 },
 ];
 
 // ---------------------------------------------------------------- sizes (the game's own showcase sizes)
@@ -137,7 +137,9 @@ interface Parcel { dest: number; kg: number; u: number; scanned: boolean; fig: R
 interface Hole { n: number; cell: Cell; x: number; z: number; stops: Cell[] }
 interface ArmSet { j1: FactoryArmFigure; l1: FactoryArmFigure; j2: FactoryArmFigure; l2: FactoryArmFigure; palm: FactoryArmFigure; f1: FactoryArmFigure; f2: FactoryArmFigure }
 interface Station {
-  pick: Cell; dir: 1 | -1; x: number; z: number; belt: Parcel[]; spawnIn: number; claim: Robot | null;
+  pick: Cell; dir: 1 | -1; x: number; z: number; belt: Parcel[]; spawnIn: number;
+  /** Robots called to this station: the one being loaded and the one on its way behind it. */
+  claims: Robot[]; serving: Robot | null;
   beltView: EntityView; beltFig: BlockLookFigure; gateFig: BlockLookFigure; gateU: number; lastScan: number; scanColor: string;
   shoulder: P3; rest: P3; arm: ArmSet; phase: 'rest' | 'reach' | 'carry' | 'back'; t: number; hand: P3; open: number; holding: Parcel | null;
 }
@@ -188,7 +190,7 @@ function makeStation(pick: Cell, dir: 1 | -1, n: number): Station {
   const shoulder: P3 = { x: base.x, y: ARM.baseH + 0.12, z: base.z };
   const rest: P3 = { x: base.x + dir * 0.4, y: 1.05, z: base.z + 0.55 };
   return {
-    pick, dir, x: p.x, z: p.z, belt: [], spawnIn: 0.3 + n * 0.5, claim: null, beltView, beltFig, gateFig, gateU, lastScan: -9, scanColor: '#a3a3a3',
+    pick, dir, x: p.x, z: p.z, belt: [], spawnIn: 0.3 + n * 0.5, claims: [], serving: null, beltView, beltFig, gateFig, gateU, lastScan: -9, scanColor: '#a3a3a3',
     shoulder, rest, arm: { j1: part('joint'), l1: part('link'), j2: part('joint'), l2: part('link'), palm: part('palm'), f1: part('finger'), f2: part('finger') },
     phase: 'rest', t: 0, hand: { ...rest }, open: 0.4, holding: null,
   };
@@ -289,16 +291,16 @@ function stepStation(s: Station, dt: number): void {
     p.u = Math.min(i === 0 ? BELT_END : s.belt[i - 1]!.u - BELT.gap, p.u + BELT.speed * dt);
     if (!p.scanned && p.u >= s.gateU) { p.scanned = true; s.lastScan = time; s.scanColor = COLORS[(p.dest - 1) % COLORS.length]!; lastScanText = `${p.kg} kg → lỗ ${p.dest}`; }
   });
-  const robot = s.claim && s.claim.state === 'atPick' ? s.claim : null;
+  const robot = s.claims.find((r) => r.state === 'atPick') ?? null;
   const front = s.belt[0];
   s.t += dt;
-  if (s.phase === 'rest') { if (robot && !robot.load && front && front.u >= BELT_END - 0.005 && front.scanned) { s.phase = 'reach'; s.t = 0; } }
+  if (s.phase === 'rest') { if (robot && !robot.load && front && front.u >= BELT_END - 0.005 && front.scanned) { s.serving = robot; s.phase = 'reach'; s.t = 0; } }
   else if (s.phase === 'reach') {
     const k = Math.min(1, s.t / 0.45);
     s.hand = lerp3(s.rest, grip(front!, onBelt(s, front!)), ease(k)); s.open = 0.4 - 0.1 * k;
     if (k >= 1) { s.holding = s.belt.shift()!; s.phase = 'carry'; s.t = 0; }
   } else if (s.phase === 'carry') {
-    const p = s.holding!, k = Math.min(1, s.t / 0.9), target = s.claim!;
+    const p = s.holding!, k = Math.min(1, s.t / 0.9), target = s.serving!;
     s.hand = lerp3(grip(p, onBelt(s, p, BELT_END)), grip(p, onTray(target, p)), ease(k), 0.22); s.open = p.size.z + 0.02;
     if (k >= 1) { target.load = p; s.holding = null; s.phase = 'back'; s.t = 0; }
   } else {
@@ -311,12 +313,12 @@ function stepStation(s: Station, dt: number): void {
 const CRUISE = 1.7, HOLD = 4;
 function assign(r: Robot): void {
   if (r.state === 'idle') {
-    const free = stations.filter((s) => !s.claim);
+    const free = stations.filter((s) => s.claims.length < 2);
     if (free.length > 0) {
       // the nearest free station by lane distance
       let best: Station | null = null, bestLen = Infinity;
       for (const s of free) { const len = key(r.cell) === key(s.pick) ? 0 : route(r.cell, [s.pick]).length || Infinity; if (len < bestLen) { bestLen = len; best = s; } }
-      if (best) { best.claim = r; r.station = best; r.state = 'toPick'; r.goal = [best.pick]; r.path = []; return; }
+      if (best) { best.claims.push(r); r.station = best; r.state = 'toPick'; r.goal = [best.pick]; r.path = []; return; }
     }
     if (r.goal.length === 0 || key(r.goal[0]!) === key(r.cell)) {
       // nothing to fetch: drift along the cross lanes so the floor never jams
@@ -336,6 +338,8 @@ function stepRobot(r: Robot, dt: number): void {
     // loaded: let go of the station and head for the hole
     const hole = holes[r.load.dest - 1]!;
     r.hole = hole; r.state = 'loaded'; r.goal = hole.stops; r.path = [];
+    // the station is free to call the next robot while this one pulls away
+    if (r.station) { r.station.claims = r.station.claims.filter((q) => q !== r); r.station = null; }
   }
   if (r.next) {
     const a = posOf(r.cell), b = posOf(r.next);
@@ -348,7 +352,6 @@ function stepRobot(r: Robot, dt: number): void {
     r.t += d; r.spin += (d * PITCH) / AGV.wheelR;
     if (r.t >= 1) {
       occupied.delete(key(r.cell));
-      if (r.station && key(r.cell) === key(r.station.pick)) { r.station.claim = null; r.station = null; }
       r.cell = r.next; r.next = null; r.t = 0; r.wait = 0;
     }
     return;
@@ -478,8 +481,8 @@ function setCamera(name: string): void {
   const far = Math.max(W + 24, (D + 3.6 - WALL_Z) * 1.55);
   if (name === 'station') Object.assign(cam, { target: { x: s.x - s.dir * 1.6, y: 0.5, z: s.z }, yaw: s.dir * -0.6, pitch: 0.5, dist: 8 });
   else if (name === 'hole') Object.assign(cam, { target: { x: h.x, y: 0.2, z: h.z }, yaw: 0.5, pitch: 0.6, dist: 7.5 });
-  else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.4, y: -GROUND + 0.9, z: D * 0.42 }, yaw: -0.5, pitch: 0.13, dist: Math.max(14, W * 0.95) });
-  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 + 0.5, y: -GROUND + 1.1, z: DOCK_Z - 0.6 }, yaw: 0.62, pitch: 0.42, dist: Math.max(15, W * 1.15) });
+  else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.4, y: -GROUND + 1.0, z: D * 0.42 }, yaw: -0.5, pitch: 0.06, dist: Math.max(14, W * 0.95) });
+  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 - 0.4, y: -GROUND + 1.0, z: DOCK_Z - 0.3 }, yaw: 1.1, pitch: 0.5, dist: Math.max(16, W * 1.2) });
   else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: mid.z - 1.2 }, yaw: 0, pitch: 1.5, dist: far * 0.92 });
   else Object.assign(cam, { target: mid, yaw: 0.42, pitch: 0.68, dist: far });
   document.querySelectorAll('[data-cam]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.cam === name)));
