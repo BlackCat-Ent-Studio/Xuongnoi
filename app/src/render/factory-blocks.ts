@@ -97,6 +97,27 @@ function beltFrameParts(size: Vec3, color: string): Part[] {
   return parts;
 }
 
+/** Drawn height and thickness of the low lip that stands for a side wall of the open-frame belt (m). */
+const BELT_LIP_HEIGHT = 0.07;
+const BELT_LIP_THICK = 0.04;
+
+/** True for a block that is an open-frame belt (not one of its walls). */
+export function isBeltFrame(e: EntityView): boolean {
+  return e.kind === 'block' && e.belt !== undefined && e.blockStyle === 'belt-frame';
+}
+
+/**
+ * A side wall of the open-frame belt as it is drawn: a low lip in the frame's colour along the foot of the wall.
+ * The real wall keeps its full height; a tall slab would hide what rides on the belt.
+ */
+export function beltLipView(wall: EntityView): EntityView {
+  const across: 'x' | 'z' = wall.size.x <= wall.size.z ? 'x' : 'z';
+  const height = Math.min(BELT_LIP_HEIGHT, wall.size.y);
+  const size = { ...wall.size, y: height };
+  size[across] = Math.min(BELT_LIP_THICK, wall.size[across]);
+  return { ...wall, size, color: ownColor(wall.color, BELT_BLUE), position: { ...wall.position, y: wall.position.y - wall.size.y / 2 + height / 2 } };
+}
+
 function chevronTexture(): THREE.Texture | null {
   return canvasTexture('belt-chevron', 128, 128, (g, W) => {
     g.fillStyle = '#2f333b';
