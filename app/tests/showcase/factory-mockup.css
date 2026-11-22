@@ -33,4 +33,4 @@ button:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
 #routes .legend { margin-top: 5px; font-size: 11px; color: var(--muted); }
 #routes .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 6px; vertical-align: -1px; }
 #routes .legend i:first-child { margin-left: 0; }
-@media (max-width: 720px) { #stats { display: none; } #top p:not(#note) { display: none; } }
+@media (max-width: 720px) { #stats { display: none; } #top details, #top .hint { display: none; } #top p:not(#note) { font-size: 11px; line-height: 1.3; } }

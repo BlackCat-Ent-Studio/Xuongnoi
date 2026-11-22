@@ -504,7 +504,7 @@ function setCamera(name: string): void {
   if (name === 'station') Object.assign(cam, { target: { x: s.x - s.dir * 1.6, y: 0.5, z: s.z }, yaw: s.dir * -0.6, pitch: 0.5, dist: 8 });
   else if (name === 'hole') Object.assign(cam, { target: { x: h.x, y: 0.2, z: h.z }, yaw: 0.5, pitch: 0.6, dist: 7.5 });
   else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.4, y: -GROUND + 1.0, z: D * 0.42 }, yaw: -0.5, pitch: 0.06, dist: Math.max(14, W * 0.95) });
-  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 + 2.6, y: -GROUND + 1.0, z: DOCK_Z - 0.6 }, yaw: 0.92, pitch: 0.46, dist: Math.max(16, W * 1.2) });
+  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 + 3.4, y: -GROUND + 1.0, z: DOCK_Z - 1.7 }, yaw: 0.92, pitch: 0.46, dist: Math.max(16, W * 1.2) });
   else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: mid.z - 1.2 }, yaw: 0, pitch: 1.5, dist: far * 0.92 });
   else Object.assign(cam, { target: mid, yaw: 0.42, pitch: 0.68, dist: far });
   document.querySelectorAll('[data-cam]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.cam === name)));
@@ -628,6 +628,8 @@ Object.assign(window, {
     },
     run: (on: boolean) => { running = on; },
     through: showThrough,
+    /** Draw calls and triangles of the last frame. */
+    cost: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
     look: (view: Partial<typeof cam>) => { Object.assign(cam, view); },
   },
 });
