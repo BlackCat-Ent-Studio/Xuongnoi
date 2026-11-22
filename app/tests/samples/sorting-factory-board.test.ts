@@ -1,9 +1,10 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { instanceParams } from '../../src/circuits/instance';
 import { runnableGraph } from '../../src/circuits/runnable';
 import { validateCircuits } from '../../src/circuits/validate';
 import { estimateNodeSize } from '../../src/editor/graph/graph-geometry';
-import { CIRCUIT_KIND, TICK_DT, type Board } from '../../src/engine/types';
-import { listSamples } from '../../src/io';
+import { CIRCUIT_KIND, TICK_DT, type Board, type Graph, type GraphNode, type ParamValue } from '../../src/engine/types';
+import { listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { CARRY_WIRES, FACTORY, FACTORY_IDS, FACTORY_STATIONS_NAME, RULE_WIRES, chuteAccepts, chutePlace } from '../../src/samples/sorting-factory-stations';
 import { loadRapier } from '../../src/world/rapier-loader';
@@ -87,6 +88,63 @@ function runFactory(board: Board, seconds: number): FactoryResult {
 
 const sum = (list: number[]): number => list.reduce((a, b) => a + b, 0);
 
+const plain = (id: string, kind: string, params: Record<string, ParamValue> = {}): GraphNode => ({ id, kind, params, pos: { x: 0, y: 0 } });
+
+/** The rule circuit of `board` alone, fed with two numbers: gives the chute it answers for a colour number and a mass. */
+function ruleAnswers(board: Board): (colour: number, kg: number) => number {
+  const rule = board.circuits!.find((c) => c.id === FACTORY_IDS.rule)!;
+  return (colour, kg) => {
+    const graph: Graph = {
+      nodes: [...structuredClone(rule.graph.nodes), plain('mau', 'const', { value: colour }), plain('kg', 'const', { value: kg })],
+      wires: [...rule.graph.wires, { id: 'x1', from: { node: 'mau', port: 'value' }, to: { node: 'cua-theo-mau', port: 'a' } }, { id: 'x2', from: { node: 'kg', port: 'value' }, to: { node: 'la-nang', port: 'a' } }],
+    };
+    const run = start(graph);
+    run.tick();
+    run.tick();
+    const chute = Number(run.rt.getOutput('cua-toi', 'out'));
+    run.dispose();
+    return chute;
+  };
+}
+
+/**
+ * The stand-in circuit of `board` alone with a table and one carton on it, told to go to chute `k`: gives the chute the
+ * carton hangs above four seconds later, or 0 when it is still on the table.
+ */
+function carriedTo(board: Board, k: number): number {
+  const { handOver, parcel } = FACTORY;
+  const test: Board = {
+    name: 'stand-in test',
+    mode: '3d',
+    circuits: board.circuits,
+    graph: {
+      nodes: [
+        plain('san', 'block', { position: { x: 0, y: -0.5, z: -3.5 }, size: { x: 16, y: 1, z: 14 } }),
+        plain('ban', 'block', { position: { x: handOver.x, y: handOver.topY / 2, z: handOver.z }, size: { x: 0.6, y: handOver.topY, z: 0.6 } }),
+        plain('thung', 'item', { position: { x: handOver.x, y: handOver.topY + parcel.y / 2 + 0.01, z: handOver.z }, size: { ...parcel }, shape: 'crate' }),
+        plain('bat-dau', 'on-start'),
+        plain('so-cua', 'const', { value: k }),
+        { id: 'chuyen', kind: CIRCUIT_KIND, params: instanceParams(FACTORY_IDS.carry, {}), pos: { x: 0, y: 0 } },
+      ],
+      wires: [
+        { id: 'w1', from: { node: 'bat-dau', port: 'started' }, to: { node: 'chuyen', port: 'co-kien' } },
+        { id: 'w2', from: { node: 'so-cua', port: 'value' }, to: { node: 'chuyen', port: 'cua' } },
+      ],
+      settings: { wireRule: true, realPhysics: true },
+    },
+  };
+  expect(validateCircuits(test)).toEqual([]);
+  const run = start(runnableGraph(test));
+  let above = 0;
+  for (let i = 0; i < Math.round(4 / TICK_DT) && above === 0; i++) {
+    run.tick();
+    const p = run.items()[0]!.position;
+    above = CHUTES.find((c) => Math.abs(p.x - chutePlace(c).x) < 0.3 && Math.abs(p.z - chutePlace(c).z) < 0.3) ?? 0;
+  }
+  run.dispose();
+  return above;
+}
+
 describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: phần trạm)" (Vật lý thật)', () => {
   it('is in the "Bài mẫu" menu under a name that says it is unfinished, and its notes say what stands in for the vehicles', () => {
     const entry = listSamples().find((s) => s.id === 'sorting-factory')!;
@@ -97,6 +155,16 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
     expect(board.graph.settings?.realPhysics).toBe(true);
     const text = board.notes!.map((n) => n.text).join(' ');
     for (const said of ['CHƯA có', 'Chuyển tạm (thay xe)', 'Dịch chuyển', 'từ 4 kg trở lên']) expect(text, said).toContain(said);
+  });
+
+  it('is saved with its circuits and reads back to the same text', () => {
+    const board = shipped();
+    const file = serializeBoard(board);
+    const loaded = parseBoard(file);
+    expect(loaded.ok).toBe(true);
+    if (!loaded.ok) return;
+    expect(loaded.board.circuits!.map((c) => c.id)).toEqual([FACTORY_IDS.station, FACTORY_IDS.chute, FACTORY_IDS.rule, FACTORY_IDS.adder, FACTORY_IDS.carry]);
+    expect(serializeBoard(loaded.board)).toBe(file);
   });
 
   it('holds one Trạm nạp, six Cửa thả set to their colours, the rule, the stand-in and the read-outs; the read-outs are on the main board only', () => {
@@ -133,24 +201,47 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
   it('the rule sends colours 1-5 to chutes 1-5 and every carton of 4 kg or more to chute 6', () => {
     expect([1, 2, 3, 4, 5, 6].map(chuteOfClass)).toEqual([1, 2, 3, 4, 5, 6]);
     expect([1, 2, 3, 4, 5, 6].map(colourOfClass)).toEqual([1, 2, 3, 4, 5, 1]);
-    const rule = shipped().circuits!.find((c) => c.id === FACTORY_IDS.rule)!;
-    const graph = { nodes: [...structuredClone(rule.graph.nodes), { id: 'mau', kind: 'const', params: { value: 0 }, pos: { x: 0, y: 0 } }, { id: 'kg', kind: 'const', params: { value: 0 }, pos: { x: 0, y: 0 } }], wires: [...rule.graph.wires, { id: 'x1', from: { node: 'mau', port: 'value' }, to: { node: 'cua-theo-mau', port: 'a' } }, { id: 'x2', from: { node: 'kg', port: 'value' }, to: { node: 'la-nang', port: 'a' } }] };
-    const chuteFor = (colour: number, kg: number): number => {
-      const g = structuredClone(graph);
-      g.nodes.find((n) => n.id === 'mau')!.params.value = colour;
-      g.nodes.find((n) => n.id === 'kg')!.params.value = kg;
-      const run = start(g);
-      run.tick();
-      run.tick();
-      const chute = Number(run.rt.getOutput('cua-toi', 'out'));
-      run.dispose();
-      return chute;
-    };
+    const chuteFor = ruleAnswers(shipped());
     for (const colour of [1, 2, 3, 4, 5]) {
       expect(chuteFor(colour, 1), `colour ${colour}, 1 kg`).toBe(colour);
       expect(chuteFor(colour, 3.9), `colour ${colour}, 3.9 kg`).toBe(colour);
       expect(chuteFor(colour, 4), `colour ${colour}, 4 kg`).toBe(6);
       expect(chuteFor(colour, 8), `colour ${colour}, 8 kg`).toBe(6);
+    }
+  });
+
+  it('the rule is anti-forced: cut one of its wires and it answers wrongly in the way that wire explains', () => {
+    const light = [1, 2, 3, 4, 5].map((c) => [c, 2] as const);
+    const heavy = [1, 2, 3, 4, 5].map((c) => [c, 8] as const);
+    const groups: { name: string; wires: Link[]; light: (colour: number) => number; heavy: (colour: number) => number }[] = [
+      { name: 'the threshold is missing (0 kg): every carton counts as heavy', wires: [['nguong-nang.value', 'la-nang.b']], light: () => 6, heavy: () => 6 },
+      { name: 'the heavy chute is never named: a heavy carton is sent nowhere (0)', wires: [['la-nang.out', 'cua-nang.on'], ['cua-nang.value', 'cua-toi.b']], light: (c) => c, heavy: () => 0 },
+      { name: 'a heavy carton is sent to its colour number plus 6: a chute that does not exist', wires: [['la-nang.out', 'he-so-mau.on']], light: (c) => c, heavy: (c) => c + 6 },
+      { name: 'the colour never reaches the answer: a light carton is sent nowhere (0)', wires: [['he-so-mau.value', 'cua-theo-mau.b'], ['cua-theo-mau.out', 'cua-toi.a']], light: () => 0, heavy: () => 6 },
+    ];
+    expect(groups.flatMap((g) => g.wires.map((w) => w.join('>'))).sort()).toEqual(RULE_WIRES.map((w) => w.join('>')).sort());
+    for (const g of groups) {
+      for (const w of g.wires) {
+        const chuteFor = ruleAnswers(cutInside(shipped(), FACTORY_IDS.rule, w));
+        const label = `${g.name}: ${w.join(' -> ')}`;
+        for (const [c, kg] of light) expect(chuteFor(c, kg), `${label} (colour ${c}, ${kg} kg)`).toBe(g.light(c));
+        for (const [c, kg] of heavy) expect(chuteFor(c, kg), `${label} (colour ${c}, ${kg} kg)`).toBe(g.heavy(c));
+      }
+    }
+  });
+
+  it('the stand-in for the vehicles: a carton that waited on the table is put above the chute it is told, and every wire of that branch is needed', { timeout: 300_000 }, () => {
+    const intact = shipped();
+    for (const k of CHUTES) expect(carriedTo(intact, k), `chute ${k}`).toBe(k);
+    // A chute number that does not exist moves nothing.
+    expect(carriedTo(intact, 0)).toBe(0);
+    expect(carriedTo(intact, 7)).toBe(0);
+    for (const w of CARRY_WIRES) {
+      const k = Number(/-(\d)\./.exec(w[1])![1]);
+      const cut = cutInside(shipped(), FACTORY_IDS.carry, w);
+      expect(carriedTo(cut, k), `cut ${w.join(' -> ')}: chute ${k}`).toBe(0);
+      const other = (k % FACTORY.chuteCount) + 1;
+      expect(carriedTo(cut, other), `cut ${w.join(' -> ')}: chute ${other}`).toBe(other);
     }
   });
 
@@ -189,13 +280,16 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
     expect(b.counts).toEqual(a.counts);
   });
 
-  it('is anti-forced: cut a wire of the main board, the rule or the stand-in and the factory fails in the way that wire explains', { timeout: 1_800_000 }, () => {
-    const SECONDS = 75;
+  it('is anti-forced: cut a wire of the main board and the factory fails in the way that wire explains', { timeout: 900_000 }, () => {
+    const SECONDS = 60;
     const base = runFactory(shipped(), SECONDS);
     const baseTotal = sum(base.counts);
     expect(baseTotal).toBeGreaterThanOrEqual(5);
     expect(sum(base.wrongs)).toBe(0);
     expect(base.shownTotal).toBe(baseTotal);
+    // A heavy carton and a light one were offered in this time, so the rule wires can be told apart.
+    expect(base.offers.some((o) => o.kg >= FACTORY.heavyFromKg)).toBe(true);
+    expect(base.offers.some((o) => o.kg < FACTORY.heavyFromKg)).toBe(true);
 
     type Check = (r: FactoryResult, label: string) => void;
     const nothingLeavesTheTable: Check = (r, l) => {
@@ -257,53 +351,5 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
       if (listedOutside.has(key)) continue;
       expect(/^(cua-\d\.(so-kien|sai)>tong-(kien|sai)\.so-\d|tong-sai\.tong>hien-sai\.value|tram-nap\.(loai|kg)>hien-(mau|kg)\.value|luat\.cua>hien-cua\.value|bat-dau\.started>may-quay\.on)$/.test(key), key).toBe(true);
     }
-
-    // Inside the rule.
-    const rule: { name: string; wires: Link[]; check: Check }[] = [
-      {
-        name: 'nothing is ever heavy: the heavy chute stays empty',
-        wires: [
-          ['nguong-nang.value', 'la-nang.b'],
-          ['la-nang.out', 'cua-nang.on'],
-          ['cua-nang.value', 'cua-toi.b'],
-        ],
-        check: (r, l) => expect(r.counts[6], l).toBe(0),
-      },
-      {
-        name: 'a heavy carton is sent to a chute that does not exist (its colour number plus 6) and stays on the table',
-        wires: [['la-nang.out', 'he-so-mau.on']],
-        check: (r, l) => {
-          expect(r.counts[6], l).toBe(0);
-          expect(r.offers.some((o) => o.chute > 6), l).toBe(true);
-        },
-      },
-      {
-        name: 'the colour never reaches the answer: only heavy cartons leave the table',
-        wires: [
-          ['he-so-mau.value', 'cua-theo-mau.b'],
-          ['cua-theo-mau.out', 'cua-toi.a'],
-        ],
-        check: (r, l) => {
-          expect(sum(r.counts.slice(1, 6)), l).toBe(0);
-          expect(r.offers.every((o) => o.chute === 0 || o.chute === 6), l).toBe(true);
-        },
-      },
-    ];
-    expect(rule.flatMap((g) => g.wires.map((w) => w.join('>'))).sort()).toEqual(RULE_WIRES.map((w) => w.join('>')).sort());
-    for (const g of rule) for (const w of g.wires) g.check(runFactory(cutInside(shipped(), FACTORY_IDS.rule, w), SECONDS), `${g.name}: ${w.join(' -> ')}`);
-
-    // Inside the stand-in: every wire of chute k's branch is needed for chute k and for no other.
-    const carried = new Set<string>();
-    for (const w of CARRY_WIRES) {
-      const k = Number(/-(\d)\./.exec(w[1])![1]);
-      // Only the branches of chutes that received something in the base run can be told apart in this time.
-      if (base.counts[k]! === 0) continue;
-      const r = runFactory(cutInside(shipped(), FACTORY_IDS.carry, w), SECONDS);
-      const label = `stand-in, chute ${k}: ${w.join(' -> ')}`;
-      expect(r.counts[k], label).toBe(0);
-      expect(sum(r.wrongs), label).toBe(0);
-      carried.add(w.join('>'));
-    }
-    expect(carried.size).toBeGreaterThanOrEqual(8);
   });
 });
