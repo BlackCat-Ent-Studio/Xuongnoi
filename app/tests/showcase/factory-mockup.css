@@ -10,7 +10,7 @@ canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; t
 #top b { color: var(--warn); }
 #layouts { margin: 8px 0 6px; }
 #note { color: var(--ink) !important; font-weight: 600; }
-#stats { top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 13px; min-width: 230px; }
+#stats { top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 13px; min-width: 230px; max-width: 290px; }
 #stats table { border-collapse: collapse; width: 100%; }
 #stats td { padding: 2px 0; }
 #stats td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 12px; white-space: nowrap; }
@@ -19,4 +19,18 @@ canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; t
 button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #c9ced6; background: var(--soft); color: var(--ink); cursor: pointer; }
 button[aria-pressed="true"], button.primary { background: var(--belt); border-color: var(--belt); color: #fff; }
 button:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
-@media (max-width: 720px) { #stats { display: none; } #top p:not(#note) { display: none; } }
+#top details { margin-top: 4px; font-size: 13px; color: var(--muted); }
+#top summary { cursor: pointer; font-weight: 600; color: var(--belt); }
+#top .hint { font-size: 12px; margin-top: 4px; }
+#stats tr.sep td { border-top: 1px solid var(--line); padding-top: 5px; }
+#stats tr.sep { height: 26px; vertical-align: bottom; }
+#routes .cap { margin: 7px 0 3px; color: var(--muted); font-size: 12px; }
+#routes .doors { display: flex; flex-wrap: wrap; gap: 3px 10px; font-variant-numeric: tabular-nums; }
+#routes .grid { display: grid; gap: 3px; }
+#routes .grid i { font-style: normal; font-weight: 700; font-size: 12px; text-align: center; padding: 2px 3px; border-radius: 5px; color: #10151d; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#routes .grid small { font-weight: 600; opacity: 0.65; margin-right: 4px; }
+#routes i.green { background: #9fe8b5; } #routes i.amber { background: #ffd27a; } #routes i.red { background: #ff9c95; }
+#routes .legend { margin-top: 5px; font-size: 11px; color: var(--muted); }
+#routes .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 6px; vertical-align: -1px; }
+#routes .legend i:first-child { margin-left: 0; }
+@media (max-width: 720px) { #stats { display: none; } #top details, #top .hint { display: none; } #top p:not(#note) { font-size: 11px; line-height: 1.3; } }

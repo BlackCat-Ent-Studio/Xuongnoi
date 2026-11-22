@@ -3,9 +3,10 @@
  * floor, in the style of robot sorting centres: a grid floor with drop holes in rows and columns, robots driving one-way
  * lanes between them, feeding stations along the edges. Several layouts can be switched to compare them.
  *
- * Every figure is the game's real drawing code (AGV, arm parts, belt, scan gate, chute, carton, floor marker), but the
- * motion is a plain animation written here: no nodes, no wires, no physics. It exists so a layout can be approved before
- * the sample is built from pieces.
+ * The figures of the sorting floor are the game's real drawing code (AGV, arm parts, belt, scan gate, chute, carton,
+ * floor marker); the warehouse and the outbound side (roll cages, cage tugs, trucks, docks) are drawn for this page
+ * only. All motion is a plain animation written here: no nodes, no wires, no physics. It exists so a layout can be
+ * approved before the sample is built from pieces.
  */
 import * as THREE from 'three';
 import type { EntityView } from '../../src/engine/types';
@@ -15,23 +16,26 @@ import { AgvFigure } from '../../src/render/factory-agv';
 import { FactoryArmFigure } from '../../src/render/factory-arm';
 import { buildParcel } from '../../src/render/factory-parcels';
 import { FloorMarkerFigure } from '../../src/render/floor-marker-figure';
+import { VERTEX_TOON } from '../../src/render/factory-kit';
 import { SceneView } from '../../src/render/scene-view';
-import { GROUND, addBuilding } from './factory-mockup-building';
+import { addBuilding } from './factory-mockup-building';
+import { DOCK_Z, GROUND, PITCH, TRUCK_CAGES, WALL_Z, planGround, type GroundPlan } from './factory-mockup-ground';
+import { createOutbound, type Outbound } from './factory-mockup-outbound';
 
 type P3 = { x: number; y: number; z: number };
 type Cell = readonly [number, number];
 
 // ---------------------------------------------------------------- layouts
-interface Layout { id: string; name: string; note: string; holeRows: number; holeCols: number; west: number; east: number; robots: number }
+/** `cage` = cartons a roll cage takes, `tugs` = cage tugs on the ground floor. */
+interface Layout { id: string; name: string; note: string; holeRows: number; holeCols: number; west: number; east: number; robots: number; cage: number; tugs: number }
 const LAYOUTS: Layout[] = [
-  { id: 'gon', name: 'A · Sàn gọn', note: '9 lỗ thả (3 × 3), 2 trạm nạp một cạnh, 6 xe. Nhỏ nhất, ít rủi ro nhất.', holeRows: 3, holeCols: 3, west: 2, east: 0, robots: 6 },
-  { id: 'vua', name: 'B · Sàn vừa', note: '15 lỗ thả (3 × 5), 3 trạm nạp một cạnh, 12 xe. Ra dáng nhà máy, vừa sức máy.', holeRows: 3, holeCols: 5, west: 3, east: 0, robots: 12 },
-  { id: 'haidau', name: 'C · Nạp hai đầu', note: '15 lỗ thả (3 × 5), trạm nạp ở cả hai cạnh (2 + 2), 14 xe. Xe đỡ dồn về một phía.', holeRows: 3, holeCols: 5, west: 2, east: 2, robots: 14 },
-  { id: 'lon', name: 'D · Sàn lớn', note: '35 lỗ thả (5 × 7), trạm nạp hai cạnh (3 + 3), 22 xe. Hoành tráng nhất, nặng máy và khó nhất.', holeRows: 5, holeCols: 7, west: 3, east: 3, robots: 22 },
+  { id: 'gon', name: 'A · Sàn gọn', note: '9 lỗ thả (3 × 3), 2 trạm nạp một cạnh, 6 xe chia chọn; tầng dưới 3 xe kéo lồng, 3 cửa bến. Bản đã chọn.', holeRows: 3, holeCols: 3, west: 2, east: 0, robots: 6, cage: 6, tugs: 3 },
+  { id: 'vua', name: 'B · Sàn vừa', note: '15 lỗ thả (3 × 5), 3 trạm nạp một cạnh, 12 xe chia chọn; 5 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 3, east: 0, robots: 12, cage: 6, tugs: 5 },
+  { id: 'haidau', name: 'C · Nạp hai đầu', note: '15 lỗ thả (3 × 5), trạm nạp ở cả hai cạnh (2 + 2), 14 xe chia chọn; 6 xe kéo lồng, 3 cửa bến.', holeRows: 3, holeCols: 5, west: 2, east: 2, robots: 14, cage: 6, tugs: 6 },
+  { id: 'lon', name: 'D · Sàn lớn', note: '35 lỗ thả (5 × 7), trạm nạp hai cạnh (3 + 3), 22 xe chia chọn; 10 xe kéo lồng, 5 cửa bến. Nặng máy nhất.', holeRows: 5, holeCols: 7, west: 3, east: 3, robots: 22, cage: 6, tugs: 10 },
 ];
 
 // ---------------------------------------------------------------- sizes (the game's own showcase sizes)
-const PITCH = 1.4;
 const AGV = { L: 0.9, W: 0.7, H: 0.24, wheelR: 0.085, tray: { L: 0.74, W: 0.62, T: 0.05 }, stand: 0.05 };
 const TRAY_TOP = AGV.H + AGV.stand + AGV.tray.T;
 const BELT = { len: 3.0, y: 0.5, w: 0.6, speed: 0.5, gap: 0.6, near: 2.25 };
@@ -68,7 +72,7 @@ function addLook(style: Parameters<typeof buildBlockLook>[0], v: EntityView, lab
   stage.add(fig.object);
   return fig;
 }
-function flat(w: number, d: number, color: string, y: number, x: number, z: number): void {
+function flat(w: number, d: number, color: string, y: number, x: number, z: number): THREE.Mesh {
   const geo = new THREE.PlaneGeometry(w, d), mat = new THREE.MeshLambertMaterial({ color });
   const m = new THREE.Mesh(geo, mat);
   m.rotation.x = -Math.PI / 2;
@@ -76,6 +80,7 @@ function flat(w: number, d: number, color: string, y: number, x: number, z: numb
   m.receiveShadow = true;
   stage.add(m);
   disposers.push(() => { geo.dispose(); mat.dispose(); });
+  return m;
 }
 function solid(size: P3, color: string, pos: P3): void {
   const geo = new THREE.BoxGeometry(size.x, size.y, size.z), mat = new THREE.MeshLambertMaterial({ color });
@@ -131,27 +136,33 @@ function route(from: Cell, goals: readonly Cell[], blocked?: ReadonlySet<number>
 
 // ---------------------------------------------------------------- things on the floor
 interface Parcel { dest: number; kg: number; u: number; scanned: boolean; fig: ReturnType<typeof buildParcel>; size: P3 }
-interface Hole { n: number; cell: Cell; x: number; z: number; count: number; stops: Cell[] }
+interface Hole { n: number; cell: Cell; x: number; z: number; stops: Cell[] }
 interface ArmSet { j1: FactoryArmFigure; l1: FactoryArmFigure; j2: FactoryArmFigure; l2: FactoryArmFigure; palm: FactoryArmFigure; f1: FactoryArmFigure; f2: FactoryArmFigure }
 interface Station {
-  pick: Cell; dir: 1 | -1; x: number; z: number; belt: Parcel[]; spawnIn: number; claim: Robot | null;
+  pick: Cell; dir: 1 | -1; x: number; z: number; belt: Parcel[]; spawnIn: number;
+  /** Robots called to this station: the one being loaded and the one on its way behind it. */
+  claims: Robot[]; serving: Robot | null;
   beltView: EntityView; beltFig: BlockLookFigure; gateFig: BlockLookFigure; gateU: number; lastScan: number; scanColor: string;
   shoulder: P3; rest: P3; arm: ArmSet; phase: 'rest' | 'reach' | 'carry' | 'back'; t: number; hand: P3; open: number; holding: Parcel | null;
 }
 interface Robot {
   id: number; cell: Cell; path: Cell[]; next: Cell | null; t: number; v: number; heading: number; spin: number; wait: number;
   state: 'idle' | 'toPick' | 'atPick' | 'loaded' | 'dumping'; goal: Cell[]; station: Station | null; hole: Hole | null; load: Parcel | null; timer: number;
+  /** Waiting at a locked hole, then `away` on a lap round the floor before trying again; `still` = time without moving on. */
+  hold: number; away: boolean; still: number;
   body: AgvFigure; tray: FactoryArmFigure; hinge: FactoryArmFigure;
 }
 let holes: Hole[] = [], stations: Station[] = [], robots: Robot[] = [];
-let flying: { p: Parcel; from: P3; to: P3; t: number; hole: Hole; landed: boolean }[] = [];
+let flying: { p: Parcel; from: P3; to: P3; t: number; hole: Hole }[] = [];
 let occupied = new Map<number, Robot>();
-let time = 0, done = 0, seed = 1, speed = 1, running = true;
+let ground: GroundPlan = planGround(1, 1);
+let out: Outbound | null = null;
+/** Cartons fed on the belts, cartons that stood in cages and trucks when the layout opened, and the longest a robot stood. */
+let time = 0, done = 0, fed = 0, stock = 0, robotStuckMax = 0, seed = 1, speed = 1, running = true;
 let lastScanText = '—';
 const rnd = (): number => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
 
-function newParcel(): Parcel {
-  const dest = 1 + Math.floor(rnd() * holes.length);
+function makeParcel(dest: number): Parcel {
   const kg = rnd() < 0.17 ? 4 + Math.floor(rnd() * 3) : 1 + Math.floor(rnd() * 3);
   const size = sizeOf(kg);
   const fig = buildParcel('parcel-carton', COLORS[(dest - 1) % COLORS.length]!, `p${seed}`);
@@ -160,6 +171,7 @@ function newParcel(): Parcel {
   scene.add(fig.object);
   return { dest, kg, u: 0.25, scanned: false, fig, size };
 }
+function newParcel(): Parcel { fed++; return makeParcel(1 + Math.floor(rnd() * holes.length)); }
 const dropParcel = (p: Parcel): void => { scene.remove(p.fig.object); p.fig.dispose(); };
 function place(p: Parcel, pos: P3, yaw = 0, roll = 0): void {
   p.fig.object.position.set(pos.x, pos.y, pos.z);
@@ -180,7 +192,7 @@ function makeStation(pick: Cell, dir: 1 | -1, n: number): Station {
   const shoulder: P3 = { x: base.x, y: ARM.baseH + 0.12, z: base.z };
   const rest: P3 = { x: base.x + dir * 0.4, y: 1.05, z: base.z + 0.55 };
   return {
-    pick, dir, x: p.x, z: p.z, belt: [], spawnIn: 0.3 + n * 0.5, claim: null, beltView, beltFig, gateFig, gateU, lastScan: -9, scanColor: '#a3a3a3',
+    pick, dir, x: p.x, z: p.z, belt: [], spawnIn: 0.3 + n * 0.5, claims: [], serving: null, beltView, beltFig, gateFig, gateU, lastScan: -9, scanColor: '#a3a3a3',
     shoulder, rest, arm: { j1: part('joint'), l1: part('link'), j2: part('joint'), l2: part('link'), palm: part('palm'), f1: part('finger'), f2: part('finger') },
     phase: 'rest', t: 0, hand: { ...rest }, open: 0.4, holding: null,
   };
@@ -193,22 +205,26 @@ function build(layout: Layout): void {
   for (const r of robots) { scene.remove(r.body.object, r.tray.object, r.hinge.object); if (r.load) dropParcel(r.load); }
   for (const s of stations) { s.belt.forEach(dropParcel); if (s.holding) dropParcel(s.holding); }
   flying.forEach((f) => dropParcel(f.p));
+  out?.dispose();
   disposers.forEach((d) => d());
   scene.remove(stage);
   stage = new THREE.Group();
   scene.add(stage);
   disposers = []; holes = []; stations = []; robots = []; flying = []; occupied = new Map();
   L = layout; ROWS = 2 * L.holeRows + 1; COLS = 2 * L.holeCols + 1;
-  seed = 20261122; time = 0; done = 0; lastScanText = '—';
+  seed = 20261122; time = 0; done = 0; fed = 0; stock = 0; robotStuckMax = 0; lastScanText = '—';
+  ground = planGround(L.holeRows, L.holeCols);
 
   const W = (COLS - 1) * PITCH, D = (ROWS - 1) * PITCH;
-  flat(W + PITCH + 0.5, D + PITCH + 0.5, '#2c3038', 0.002, W / 2, D / 2);
+  deckParts = [flat(W + PITCH + 0.5, D + PITCH + 0.5, '#2c3038', 0.002, W / 2, D / 2)];
+  floorMarks = [];
   // one floor marker (the game's own tile) on every lane cell, as on a real sorting floor
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     if (!isLane(r, c)) continue;
     const p = posOf([r, c]);
     const m = new FloorMarkerFigure(block(`m${r}-${c}`, { x: p.x, y: 0.004, z: p.z }, { x: PITCH, y: 0.01, z: PITCH }, { color: '#f59e0b' }), '3d');
     stage.add(m.object);
+    floorMarks.push(m.object);
     disposers.push(() => m.dispose());
   }
   // drop holes in rows and columns
@@ -218,8 +234,14 @@ function build(layout: Layout): void {
     const p = posOf([r, c]);
     flat(HOLE - 0.08, HOLE - 0.08, '#0c0e12', 0.012, p.x, p.z);
     addLook('chute', block(`hole${n}`, { x: p.x, y: 0.02 - DROP / 2, z: p.z }, { x: HOLE, y: DROP, z: HOLE }, { color: COLORS[(n - 1) % COLORS.length]!, blockStyle: 'chute', label: String(n) }), String(n));
-    holes.push({ n, cell: [r, c], x: p.x, z: p.z, count: 0, stops: [[r - 1, c], [r + 1, c]] });
+    holes.push({ n, cell: [r, c], x: p.x, z: p.z, stops: [[r - 1, c], [r + 1, c]] });
   }
+  // the outbound side under and behind the floor: live cages, tugs, trucks
+  out = createOutbound(stage, {
+    plan: ground, capacity: L.cage, tugs: L.tugs,
+    holes: holes.map((h) => ({ n: h.n, x: h.x, z: h.z, row: (h.cell[0] - 1) / 2, col: (h.cell[1] - 1) / 2 })),
+    makeCarton: (dest) => { stock++; return makeParcel(dest); },
+  });
   // feeding stations along the west and / or east edge, at the middle of a lane stretch
   const rowsFor = (count: number): number[] => { const all = Array.from({ length: L.holeRows }, (_, i) => 2 * i + 1); const step = all.length / count; return Array.from({ length: count }, (_, i) => all[Math.min(all.length - 1, Math.floor(i * step + step / 2))]!); };
   let sn = 0;
@@ -235,22 +257,43 @@ function build(layout: Layout): void {
     const body = new AgvFigure(), tray = new FactoryArmFigure('link', 'factory'), hinge = new FactoryArmFigure('joint', 'hinge');
     scene.add(body.object, tray.object, hinge.object);
     const first = exits(at)[0]!;
-    const robot: Robot = { id: i + 1, cell: at, path: [], next: null, t: 0, v: 0, heading: Math.atan2(first[0] - at[0], first[1] - at[1]), spin: 0, wait: 0, state: 'idle', goal: [], station: null, hole: null, load: null, timer: 0, body, tray, hinge };
+    const robot: Robot = { id: i + 1, cell: at, path: [], next: null, t: 0, v: 0, heading: Math.atan2(first[0] - at[0], first[1] - at[1]), spin: 0, wait: 0, state: 'idle', goal: [], station: null, hole: null, load: null, timer: 0, hold: 0, away: false, still: 0, body, tray, hinge };
     robots.push(robot);
     occupied.set(key(at), robot);
   }
   // the warehouse around the sorting floor
-  disposers.push(addBuilding(stage, {
+  const building = addBuilding(stage, {
     id: L.id, W, D,
     holes: holes.map((h) => ({ n: h.n, x: h.x, z: h.z, color: COLORS[(h.n - 1) % COLORS.length]! })),
     stations: stations.map((s) => ({ x: s.x, z: s.z, dir: s.dir, beltFar: beltX(s, 0) })),
-  }));
+    ground,
+  });
+  disposers.push(building.dispose);
+  deckParts.push(building.deck);
+  showThrough(seeThrough);
   setCamera('all');
   $('note').textContent = L.note;
 }
 
+/** The deck plate and the dark floor on it (made see-through on request so the cages and tugs below can be watched) and the floor markers (hidden meanwhile). */
+let deckParts: THREE.Mesh[] = [], floorMarks: THREE.Object3D[] = [], seeThrough = false;
+const GLASS = Object.assign(VERTEX_TOON.clone(), { transparent: true, opacity: 0.16, depthWrite: false });
+function showThrough(on: boolean): void {
+  seeThrough = on;
+  for (const m of deckParts) {
+    if (m.material === VERTEX_TOON || m.material === GLASS) m.material = on ? GLASS : VERTEX_TOON;
+    else Object.assign(m.material as THREE.Material, { transparent: on, opacity: on ? 0.28 : 1, depthWrite: !on, needsUpdate: true });
+    m.castShadow = !on && m.material === VERTEX_TOON;
+    m.renderOrder = on ? 2 : 0;
+  }
+  for (const m of floorMarks) m.visible = !on;
+  $('xray').setAttribute('aria-pressed', String(on));
+}
+
 // ---------------------------------------------------------------- the animation
 const ease = (t: number): number => t * t * (3 - 2 * t);
+/** Seconds from the tray starting to tip until the carton rests in the cage. */
+const FALL = 0.85;
 const lerp3 = (a: P3, b: P3, t: number, lift = 0): P3 => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t + Math.sin(Math.PI * t) * lift, z: a.z + (b.z - a.z) * t });
 const grip = (p: Parcel, centre: P3): P3 => ({ x: centre.x, y: centre.y + p.size.y / 2 + 0.1, z: centre.z });
 const onBelt = (s: Station, p: Parcel, u = p.u): P3 => ({ x: beltX(s, u), y: BELT.y + p.size.y / 2 + 0.004, z: s.z });
@@ -270,16 +313,16 @@ function stepStation(s: Station, dt: number): void {
     p.u = Math.min(i === 0 ? BELT_END : s.belt[i - 1]!.u - BELT.gap, p.u + BELT.speed * dt);
     if (!p.scanned && p.u >= s.gateU) { p.scanned = true; s.lastScan = time; s.scanColor = COLORS[(p.dest - 1) % COLORS.length]!; lastScanText = `${p.kg} kg → lỗ ${p.dest}`; }
   });
-  const robot = s.claim && s.claim.state === 'atPick' ? s.claim : null;
+  const robot = s.claims.find((r) => r.state === 'atPick') ?? null;
   const front = s.belt[0];
   s.t += dt;
-  if (s.phase === 'rest') { if (robot && !robot.load && front && front.u >= BELT_END - 0.005 && front.scanned) { s.phase = 'reach'; s.t = 0; } }
+  if (s.phase === 'rest') { if (robot && !robot.load && front && front.u >= BELT_END - 0.005 && front.scanned) { s.serving = robot; s.phase = 'reach'; s.t = 0; } }
   else if (s.phase === 'reach') {
     const k = Math.min(1, s.t / 0.45);
     s.hand = lerp3(s.rest, grip(front!, onBelt(s, front!)), ease(k)); s.open = 0.4 - 0.1 * k;
     if (k >= 1) { s.holding = s.belt.shift()!; s.phase = 'carry'; s.t = 0; }
   } else if (s.phase === 'carry') {
-    const p = s.holding!, k = Math.min(1, s.t / 0.9), target = s.claim!;
+    const p = s.holding!, k = Math.min(1, s.t / 0.9), target = s.serving!;
     s.hand = lerp3(grip(p, onBelt(s, p, BELT_END)), grip(p, onTray(target, p)), ease(k), 0.22); s.open = p.size.z + 0.02;
     if (k >= 1) { target.load = p; s.holding = null; s.phase = 'back'; s.t = 0; }
   } else {
@@ -289,15 +332,15 @@ function stepStation(s: Station, dt: number): void {
   }
 }
 
-const CRUISE = 1.7;
+const CRUISE = 1.7, HOLD = 4;
 function assign(r: Robot): void {
   if (r.state === 'idle') {
-    const free = stations.filter((s) => !s.claim);
+    const free = stations.filter((s) => s.claims.length < 2);
     if (free.length > 0) {
       // the nearest free station by lane distance
       let best: Station | null = null, bestLen = Infinity;
       for (const s of free) { const len = key(r.cell) === key(s.pick) ? 0 : route(r.cell, [s.pick]).length || Infinity; if (len < bestLen) { bestLen = len; best = s; } }
-      if (best) { best.claim = r; r.station = best; r.state = 'toPick'; r.goal = [best.pick]; r.path = []; return; }
+      if (best) { best.claims.push(r); r.station = best; r.state = 'toPick'; r.goal = [best.pick]; r.path = []; return; }
     }
     if (r.goal.length === 0 || key(r.goal[0]!) === key(r.cell)) {
       // nothing to fetch: drift along the cross lanes so the floor never jams
@@ -317,6 +360,8 @@ function stepRobot(r: Robot, dt: number): void {
     // loaded: let go of the station and head for the hole
     const hole = holes[r.load.dest - 1]!;
     r.hole = hole; r.state = 'loaded'; r.goal = hole.stops; r.path = [];
+    // the station is free to call the next robot while this one pulls away
+    if (r.station) { r.station.claims = r.station.claims.filter((q) => q !== r); r.station = null; }
   }
   if (r.next) {
     const a = posOf(r.cell), b = posOf(r.next);
@@ -329,7 +374,6 @@ function stepRobot(r: Robot, dt: number): void {
     r.t += d; r.spin += (d * PITCH) / AGV.wheelR;
     if (r.t >= 1) {
       occupied.delete(key(r.cell));
-      if (r.station && key(r.cell) === key(r.station.pick)) { r.station.claim = null; r.station = null; }
       r.cell = r.next; r.next = null; r.t = 0; r.wait = 0;
     }
     return;
@@ -339,12 +383,20 @@ function stepRobot(r: Robot, dt: number): void {
     r.v = 0;
     if (r.state === 'toPick') { r.state = 'atPick'; return; }
     if (r.state === 'loaded') {
-      r.state = 'dumping'; r.timer = 0;
       const h = r.hole!;
-      flying.push({ p: r.load!, from: onTray(r, r.load!), to: { x: h.x, y: -GROUND + 0.9, z: h.z }, t: -0.45, hole: h, landed: false });
-      return;
-    }
-    r.goal = [];
+      if (r.away) { r.away = false; r.goal = h.stops; r.path = []; }
+      else if (out!.canDrop(h.n)) {
+        r.state = 'dumping'; r.timer = 0; r.hold = 0;
+        flying.push({ p: r.load!, from: onTray(r, r.load!), to: out!.reserve(h.n, r.load!), t: -0.45, hole: h });
+        return;
+      } else {
+        // the hole is locked (cage full or being swapped): wait beside it a moment, then take a lap and come back
+        r.hold += dt;
+        if (r.hold < HOLD) return;
+        r.hold = 0; r.away = true; r.path = [];
+        do r.goal = [[2 * Math.floor(rnd() * (L.holeRows + 1)), 1 + 2 * Math.floor(rnd() * L.holeCols)]]; while (key(r.goal[0]!) === key(r.cell));
+      }
+    } else r.goal = [];
   }
   assign(r);
   if (r.goal.length === 0) return;
@@ -371,9 +423,16 @@ function stepRobot(r: Robot, dt: number): void {
 function step(dt: number): void {
   time += dt;
   for (const s of stations) stepStation(s, dt);
-  for (const r of robots) stepRobot(r, dt);
-  for (const f of flying) { f.t += dt; if (f.t >= 0.8 && !f.landed) { f.landed = true; f.hole.count++; done++; } }
-  flying = flying.filter((f) => { if (f.t < 0.95) return true; dropParcel(f.p); return false; });
+  for (const r of robots) {
+    const cell = r.cell, state = r.state;
+    stepRobot(r, dt);
+    r.still = r.cell !== cell || r.state !== state || r.next ? 0 : r.still + dt;
+    robotStuckMax = Math.max(robotStuckMax, r.still);
+  }
+  // a carton that has fallen through its hole comes to rest in the cage below and stays there
+  for (const f of flying) f.t += dt;
+  flying = flying.filter((f) => { if (f.t < FALL) return true; out!.land(f.hole.n, f.p); done++; return false; });
+  out!.step(dt);
 }
 
 // ---------------------------------------------------------------- drawing the state with the real figures
@@ -427,23 +486,27 @@ function present(): void {
     if (r.load && r.state !== 'dumping') place(r.load, onTray(r, r.load), r.heading);
   }
   for (const f of flying) {
-    const k = Math.max(0, Math.min(1, f.t / 0.8));
-    place(f.p, { x: f.from.x + (f.to.x - f.from.x) * ease(k), y: f.from.y + (f.to.y - f.from.y) * k * k + Math.sin(Math.PI * Math.min(1, k * 1.3)) * 0.05, z: f.from.z + (f.to.z - f.from.z) * ease(k) }, 0, k * 0.9);
+    // slides off the tipped tray to over the hole, then falls straight down into the cage
+    const k = Math.max(0, Math.min(1, f.t / FALL)), side = ease(Math.min(1, k / 0.4)), fall = Math.max(0, (k - 0.25) / 0.75) ** 2;
+    place(f.p, { x: f.from.x + (f.to.x - f.from.x) * side, y: f.from.y - 0.12 * side + (f.to.y - f.from.y + 0.12) * fall, z: f.from.z + (f.to.z - f.from.z) * side }, 0, Math.sin(Math.PI * Math.min(1, k / 0.55)) * 0.5);
   }
+  out!.present();
 }
 
 // ---------------------------------------------------------------- camera: drag to orbit, wheel to zoom
 const cam = { target: { x: 0, y: 0, z: 0 }, yaw: 0.25, pitch: 0.8, dist: 20 };
 function setCamera(name: string): void {
   const W = (COLS - 1) * PITCH, D = (ROWS - 1) * PITCH;
-  const mid = { x: W / 2, y: -0.8, z: D / 2 + 0.6 };
+  // the whole plant from the far end of the deck to the dock wall
+  const mid = { x: W / 2, y: -1.0, z: (D + 3.6 + WALL_Z) / 2 + 1.2 };
   const s = stations[0]!, h = holes[Math.floor(holes.length / 2)]!;
-  const far = Math.max(W + 20, (D + 9) * 2.0);
+  const far = Math.max(W + 24, (D + 3.6 - WALL_Z) * 1.55);
   if (name === 'station') Object.assign(cam, { target: { x: s.x - s.dir * 1.6, y: 0.5, z: s.z }, yaw: s.dir * -0.6, pitch: 0.5, dist: 8 });
   else if (name === 'hole') Object.assign(cam, { target: { x: h.x, y: 0.2, z: h.z }, yaw: 0.5, pitch: 0.6, dist: 7.5 });
-  else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.35, y: -GROUND + 1.0, z: D * 0.5 }, yaw: -0.45, pitch: 0.1, dist: Math.max(14, W * 0.95) });
-  else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: D / 2 }, yaw: 0, pitch: 1.5, dist: far * 0.8 });
-  else Object.assign(cam, { target: mid, yaw: 0.32, pitch: 0.6, dist: far });
+  else if (name === 'ground') Object.assign(cam, { target: { x: W * 0.4, y: -GROUND + 1.0, z: D * 0.42 }, yaw: -0.5, pitch: 0.06, dist: Math.max(14, W * 0.95) });
+  else if (name === 'dock') Object.assign(cam, { target: { x: W / 2 + 3.4, y: -GROUND + 1.0, z: DOCK_Z - 1.7 }, yaw: 0.92, pitch: 0.46, dist: Math.max(16, W * 1.2) });
+  else if (name === 'top') Object.assign(cam, { target: { x: W / 2, y: 0, z: mid.z - 1.2 }, yaw: 0, pitch: 1.5, dist: far * 0.92 });
+  else Object.assign(cam, { target: mid, yaw: 0.42, pitch: 0.68, dist: far });
   document.querySelectorAll('[data-cam]').forEach((b) => b.setAttribute('aria-pressed', String((b as HTMLElement).dataset.cam === name)));
 }
 function aim(): void {
@@ -472,15 +535,26 @@ function counters(): void {
   $('s-idle').textContent = `${robots.filter((r) => r.state === 'idle').length} / ${robots.length}`;
   $('s-scan').textContent = lastScanText;
   $('s-size').textContent = `${holes.length} lỗ · ${stations.length} trạm`;
+  const o = out!.stats();
+  $('s-cages').textContent = String(o.cagesShipped);
+  $('s-trucks').textContent = String(o.trucksOut);
+  $('s-locked').textContent = `${o.locked} / ${holes.length}`;
+  $('s-tugs').textContent = `${o.tugsWaiting} / ${o.tugs}`;
+  const doors = o.doors.map((d) => `<span>Cửa ${d.n}: <b>${d.away ? 'đổi xe' : `${d.cages}/${TRUCK_CAGES}`}</b></span>`).join('');
+  const routes = o.routes.map((r) => `<i class="${r.light}" title="Lỗ ${r.n}">${holes.length > 15 ? '' : `<small>${r.n}</small>`}${r.count}/${o.capacity}</i>`).join('');
+  const html = `<div class="cap">Lồng đã lên xe tải ở từng cửa</div><div class="doors">${doors}</div><div class="cap">Kiện trong lồng của từng lỗ</div><div class="grid" style="grid-template-columns:repeat(${L.holeCols},1fr)">${routes}</div><div class="legend"><i class="green"></i>mở <i class="amber"></i>gần đầy, đã gọi xe kéo <i class="red"></i>khoá</div>`;
+  if (html !== routesHtml) { routesHtml = html; $('routes').innerHTML = html; }
 }
+let routesHtml = '';
 const press = (sel: string, el: Element): void => document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
-$('layouts').innerHTML = LAYOUTS.map((l) => `<button type="button" data-layout="${l.id}" aria-pressed="${l.id === 'vua'}">${l.name}</button>`).join('');
+$('layouts').innerHTML = LAYOUTS.map((l, i) => `<button type="button" data-layout="${l.id}" aria-pressed="${i === 0}">${l.name}</button>`).join('');
 function warm(): void { for (let i = 0; i < 20 * 60; i++) step(1 / 60); counters(); }
 document.querySelectorAll<HTMLElement>('[data-layout]').forEach((b) => b.addEventListener('click', () => { build(LAYOUTS.find((l) => l.id === b.dataset.layout)!); warm(); press('[data-layout]', b); }));
 $('play').addEventListener('click', () => { running = !running; $('play').textContent = running ? 'Tạm dừng' : 'Chạy'; });
 $('reset').addEventListener('click', () => { build(L); counters(); });
 document.querySelectorAll<HTMLElement>('[data-speed]').forEach((b) => b.addEventListener('click', () => { speed = Number(b.dataset.speed); press('[data-speed]', b); }));
 document.querySelectorAll<HTMLElement>('[data-cam]').forEach((b) => b.addEventListener('click', () => setCamera(b.dataset.cam!)));
+$('xray').addEventListener('click', () => showThrough(!seeThrough));
 
 function fit(): void {
   const w = window.innerWidth, h = window.innerHeight, k = renderer.getPixelRatio();
@@ -497,13 +571,66 @@ function frame(now: number): void {
   if (++frames % 10 === 0) counters();
   requestAnimationFrame(frame);
 }
-build(LAYOUTS[1]!);
+build(LAYOUTS[0]!);
 warm();
+
+// ---------------------------------------------------------------- checks (used by the headless trial and the pictures)
+/** Where every carton is; what went in must equal what is somewhere or has left on a truck. */
+function report(): Record<string, unknown> {
+  const o = out!.stats();
+  const onBelts = stations.reduce((n, s) => n + s.belt.length + (s.holding ? 1 : 0), 0), onRobots = robots.filter((r) => r.load && r.state !== 'dumping').length;
+  const accounted = onBelts + onRobots + flying.length + o.inHoleCages + o.inMovingCages + o.inTrucks + o.cartonsShipped;
+  const round = (v: number): number => Math.round(v * 10) / 10;
+  return {
+    id: L.id, seconds: Math.round(time), fed, stock, sorted: done, perMin: round((done / time) * 60),
+    swaps: o.swaps, cagesShipped: o.cagesShipped, trucksOut: o.trucksOut, cartonsShipped: o.cartonsShipped,
+    lockedNow: o.locked, lockAvg: round(o.lockAvg), lockMax: round(o.lockMax), robotStuckMax: round(robotStuckMax), tugStuckMax: round(o.tugStuckMax), tugStuckAt: o.tugStuckAt,
+    where: { onBelts, onRobots, falling: flying.length, inHoleCages: o.inHoleCages, inMovingCages: o.inMovingCages, inTrucks: o.inTrucks, shipped: o.cartonsShipped },
+    conserved: fed + stock === accounted, in: fed + stock, accounted,
+    jam: robotStuckMax > 30 || o.tugStuckMax > 30,
+  };
+}
+/** Two sorting robots closer than their bodies allow, if any. */
+function robotOverlap(): string | null {
+  for (let i = 0; i < robots.length; i++) for (let j = i + 1; j < robots.length; j++) {
+    const a = robotPos(robots[i]!), b = robotPos(robots[j]!);
+    if (Math.hypot(a.x - b.x, a.z - b.z) < 0.9) return `robots ${robots[i]!.id} and ${robots[j]!.id} t=${time.toFixed(1)}`;
+  }
+  return null;
+}
+const SEEK: Record<string, () => { x: number; z: number } | null> = {
+  /** A sorting robot standing beside a locked hole with its carton. */
+  locked: () => { const r = robots.find((q) => q.state === 'loaded' && q.hold > 1.2 && !q.next); return r ? { x: r.hole!.x, z: r.hole!.z } : null; },
+  swap: () => out!.probe().tugs.find((t) => t.state === 'swap' && t.carrying && t.moving) ?? null,
+  load: () => out!.probe().tugs.find((t) => t.state === 'load' && t.z < DOCK_Z - 0.5 && t.carrying) ?? null,
+  leaving: () => { const d = out!.probe().doors.find((q) => q.state === 'leaving' && q.off < -2.2); return d ? { x: d.x, z: DOCK_Z } : null; },
+  arriving: () => { const d = out!.probe().doors.find((q) => q.state === 'arriving' && q.off > -6); return d ? { x: d.x, z: DOCK_Z } : null; },
+};
 Object.assign(window, {
   __mock: {
-    state: () => ({ layout: L.id, done, time, robots: robots.length, stuck: robots.filter((r) => r.wait > 5).length }),
+    state: report,
     /** Runs a layout headless for a number of simulated seconds (for checks). */
-    trial: (id: string, seconds: number) => { build(LAYOUTS.find((l) => l.id === id)!); for (let i = 0; i < seconds * 60; i++) step(1 / 60); return { id, done, perMin: (done / time) * 60, idle: robots.filter((r) => r.state === 'idle').length, waiting: robots.filter((r) => r.wait > 3).length }; },
+    trial: (id: string, seconds: number) => {
+      build(LAYOUTS.find((l) => l.id === id)!);
+      let overlaps = 0, first: string | null = null;
+      for (let i = 0; i < seconds * 60; i++) {
+        step(1 / 60);
+        if (i % 4 !== 0) continue;
+        const hit = out!.audit() ?? robotOverlap();
+        if (hit) { overlaps++; first ??= hit; }
+      }
+      return { ...report(), overlaps, firstOverlap: first };
+    },
+    /** Steps the layout on show until a moment worth a picture comes up, then stops the clock; returns where it is. */
+    seek: (what: string, maxSeconds = 600) => {
+      for (let i = 0; i < maxSeconds * 60; i++) { step(1 / 60); const at = SEEK[what]!(); if (at) { running = false; counters(); return { ...at, time }; } }
+      return null;
+    },
+    run: (on: boolean) => { running = on; },
+    through: showThrough,
+    /** Draw calls and triangles of the last frame. */
+    cost: () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles }),
+    look: (view: Partial<typeof cam>) => { Object.assign(cam, view); },
   },
 });
 requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });

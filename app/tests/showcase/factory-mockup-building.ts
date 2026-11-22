@@ -8,10 +8,11 @@ import * as THREE from 'three';
 import type { EntityView } from '../../src/engine/types';
 import { AgvFigure } from '../../src/render/factory-agv';
 import { VERTEX_GLOW, bakedMesh, box, canvasTexture, cyl, rbox, type Part } from '../../src/render/factory-kit';
+import { GATE, TEAL } from './factory-mockup-figures';
+import { DOCK_Z, GROUND, PIT, WALL_Z, type GroundPlan } from './factory-mockup-ground';
 
-export const GROUND = 2.6;
 const G = GROUND;
-const STEEL = '#7f8894', STEEL_DARK = '#4a515c', YELLOW = '#f2b90f', BLUE = '#2a6fd0', BELT_DARK = '#2f333b', CARTON = '#c8975a', WALL = '#e3e6ea', WALL_BAND = '#8e98a5', ORANGE = '#f08a1c', PALLET = '#b98a55', WIRE = '#aab2bd';
+const STEEL = '#7f8894', STEEL_DARK = '#4a515c', YELLOW = '#f2b90f', BLUE = '#2a6fd0', BELT_DARK = '#2f333b', CARTON = '#c8975a', WALL = '#e3e6ea', WALL_BAND = '#8e98a5', ORANGE = '#f08a1c', PALLET = '#b98a55';
 const WRAPS = [CARTON, '#d8c9a8', '#b9c8dc', CARTON, '#cfd6de'];
 
 export interface FloorPlan {
@@ -21,6 +22,8 @@ export interface FloorPlan {
   holes: readonly { n: number; x: number; z: number; color: string }[];
   /** Feeding stations: hand-over cell and which way the belt runs (+1 = from the west). */
   stations: readonly { x: number; z: number; dir: 1 | -1; beltFar: number }[];
+  /** The lanes, docks and bays of the ground floor. */
+  ground: GroundPlan;
 }
 
 function sign(text: string, w: number, h: number, fg: string, bg: string): THREE.Mesh | null {
@@ -37,7 +40,7 @@ function sign(text: string, w: number, h: number, fg: string, bg: string): THREE
 }
 
 /** Adds the warehouse to `stage`; returns what must be freed when the layout changes. */
-export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
+export function addBuilding(stage: THREE.Group, plan: FloorPlan): { deck: THREE.Mesh; dispose: () => void } {
   const { W, D } = plan;
   const west = plan.stations.some((s) => s.dir === 1), east = plan.stations.some((s) => s.dir === -1);
   const x0 = west ? -6.6 : -1.3, x1 = east ? W + 6.6 : W + 1.3, z0 = -1.3, z1 = D + 3.6;
@@ -48,14 +51,19 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   const free: (() => void)[] = [];
 
   // ---- mezzanine: deck plate, yellow edge, columns
-  add(box(x1 - x0, 0.25, z1 - z0), STEEL, (x0 + x1) / 2, -0.131, (z0 + z1) / 2);
+  // the plate is a mesh of its own so the page can make it see-through to show the floor below
+  const deck = bakedMesh(`mock-deck|${plan.id}`, () => [{ geo: box(x1 - x0, 0.25, z1 - z0), color: STEEL, at: [(x0 + x1) / 2, -0.131, (z0 + z1) / 2] }], undefined, true);
   add(box(x1 - x0 + 0.06, 0.3, 0.06), YELLOW, (x0 + x1) / 2, -0.15, z0); add(box(x1 - x0 + 0.06, 0.3, 0.06), YELLOW, (x0 + x1) / 2, -0.15, z1);
   add(box(0.06, 0.3, z1 - z0), YELLOW, x0, -0.15, (z0 + z1) / 2); add(box(0.06, 0.3, z1 - z0), YELLOW, x1, -0.15, (z0 + z1) / 2);
   const colH = G - 0.25;
   const column = (x: number, z: number): void => { add(rbox(0.2, colH, 0.2, 0.03), STEEL_DARK, x, -0.25 - colH / 2, z); add(box(0.42, 0.04, 0.42), STEEL_DARK, x, gy + 0.02, z); };
-  for (let x = 0; x <= W + 0.01; x += 2.8) for (let z = 0; z <= D + 0.01; z += 2.8) column(x, z);
-  for (const x of [x0 + 0.3, x1 - 0.3]) for (let z = z0 + 0.3; z <= z1; z += 2.8) if (x < -0.5 || x > W + 0.5) column(x, z);
-  for (let x = 0; x <= W + 0.01; x += 2.8) column(x, z1 - 0.3);
+  // the columns stand where four ground cells meet, so no lane, cage or bay ever has one in it
+  const lines = (from: number, to: number): number[] => {
+    const out = [from];
+    for (let v = -0.7 - 2.8 * 8; v < to - 1.5; v += 2.8) if (v > from + 1.5) out.push(v);
+    return [...out, to];
+  };
+  for (const x of lines(west ? x0 + 0.3 : -0.7, east ? x1 - 0.3 : W + 0.7)) for (const z of lines(-0.7, D + 3.5)) column(x, z);
 
   // ---- railing round the deck, open where a ramp or the stairs meet it
   const stairX = W * 0.72;
@@ -89,27 +97,27 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
     for (const k of [0, 0.5, 1]) add(cyl('y', 0.025, 1.0, 8), YELLOW, stairX + s * 0.63, -G * k + 0.45, z1 + steps * run * k);
   }
 
-  // ---- roll cages under every hole, a few parcels in each, aisle lines on the floor
-  for (const h of plan.holes) {
-    const b = gy + 0.16;
-    add(rbox(0.98, 0.06, 0.98, 0.02), STEEL_DARK, h.x, b, h.z);
-    for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]] as const) {
-      add(cyl('x', 0.06, 0.05, 10), '#22262d', h.x + sx * 0.4, gy + 0.06, h.z + sz * 0.4);
-      add(cyl('y', 0.022, 1.45, 8), WIRE, h.x + sx * 0.47, b + 0.75, h.z + sz * 0.47);
-    }
-    for (const y of [0.45, 0.95, 1.45]) {
-      for (const s of [-1, 1]) { add(cyl('x', 0.014, 0.94, 6), WIRE, h.x, b + y, h.z + s * 0.47); add(cyl('z', 0.014, 0.94, 6), WIRE, h.x + s * 0.47, b + y, h.z); }
-    }
-    for (const s of [-0.24, 0, 0.24]) add(cyl('y', 0.01, 1.4, 6), WIRE, h.x + s, b + 0.74, h.z - 0.47);
-    add(box(0.5, 0.2, 0.02), h.color, h.x, b + 1.2, h.z + 0.49);
-    const fill = 1 + ((h.n * 7) % 4);
-    for (let i = 0; i < fill; i++) {
-      const s = 0.26 + ((h.n + i * 3) % 3) * 0.06;
-      add(rbox(s + 0.08, s, s, 0.02), CARTON, h.x + ((i % 2) - 0.5) * 0.4, b + 0.04 + s / 2 + Math.floor(i / 2) * 0.36, h.z + (((i + h.n) % 2) - 0.5) * 0.36, [0, (h.n + i) * 0.4, 0]);
-    }
+  // ---- paint on the ground floor: tug lanes with arrows, a bay under every hole, waiting bays, the empty-cage lane
+  const gp = plan.ground, PAINT = '#0f8f80';
+  const square = (x: number, z: number, side: number, color: string, w = 0.05): void => {
+    for (const s of [-1, 1]) { add(box(side, 0.012, w), color, x, gy + 0.008, z + (s * (side - w)) / 2); add(box(w, 0.012, side), color, x + (s * (side - w)) / 2, gy + 0.008, z); }
+  };
+  for (const a of gp.nodes.values()) for (const id of a.out) {
+    const b = gp.nodes.get(id)!, dx = b.x - a.x, dz = b.z - a.z, len = Math.hypot(dx, dz);
+    add(box(Math.abs(dx) > 0.01 ? len : 0.06, 0.01, Math.abs(dz) > 0.01 ? len : 0.06), PAINT, (a.x + b.x) / 2, gy + 0.006, (a.z + b.z) / 2);
+    if ((a.r + a.c) % 2 === 0) add(cyl('y', 0.17, 0.012, 3), PAINT, (a.x + b.x) / 2, gy + 0.007, (a.z + b.z) / 2, [0, Math.atan2(dx, dz), 0]);
   }
-  const rowsZ = [...new Set(plan.holes.map((h) => h.z))];
-  for (const z of rowsZ) for (const s of [-1, 1]) add(box(W + 1.6, 0.012, 0.08), YELLOW, W / 2, gy + 0.007, z + s * 0.78);
+  for (const h of plan.holes) {
+    square(h.x, h.z, 1.2, YELLOW);
+    // the post of the hole's beacon on the deck
+    add(cyl('y', 0.02, 0.54, 8), STEEL_DARK, h.x + 0.6, 0.27, h.z + 0.6);
+    add(cyl('y', 0.05, 0.03, 10), STEEL_DARK, h.x + 0.6, 0.015, h.z + 0.6);
+  }
+  for (const id of gp.pockets) { const p = gp.nodes.get(id)!; square(p.x, p.z, 1.16, PAINT, 0.07); }
+  const laneX = gp.buffer.x, laneZ0 = WALL_Z + 0.15, laneZ1 = gp.nodes.get(gp.buffer.node)!.z + 0.6, laneLen = laneZ1 - laneZ0, laneMid = (laneZ0 + laneZ1) / 2;
+  for (const s of [-1, 1]) { add(box(0.05, 0.02, laneLen), STEEL_DARK, laneX + s * 0.3, gy + 0.01, laneMid); add(box(0.07, 0.012, laneLen), YELLOW, laneX + s * 0.64, gy + 0.008, laneMid); }
+  for (let z = laneZ0 + 0.3; z < laneZ1; z += 0.55) add(box(0.5, 0.014, 0.06), STEEL, laneX, gy + 0.008, z);
+  add(box(1.35, 0.012, 0.07), YELLOW, laneX, gy + 0.008, laneZ1);
 
   // ---- inbound: a trunk conveyor on the ground along each fed side, a ramp up to every station belt
   for (const dir of [1, -1] as const) {
@@ -134,28 +142,52 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   }
 
   // ---- the building: back wall with dock doors, one side wall, pallet racking, lamps
-  const zN = z0 - 9.5, xw0 = x0 - 13, xw1 = x1 + 13, H = 9.5, wy = gy + H / 2;
+  const zN = WALL_Z, xw0 = x0 - 13, xw1 = x1 + 13, H = 9.5, wy = gy + H / 2;
   const wallLen = xw1 - xw0, sideLen = z1 + 12 - zN;
-  add(box(wallLen, H, 0.3), WALL, (xw0 + xw1) / 2, wy, zN);
-  add(box(wallLen, 1.3, 0.36), WALL_BAND, (xw0 + xw1) / 2, gy + 0.65, zN);
+  // The back wall is built round its openings: a dock door per truck (down to the road, which lies `PIT` below the
+  // hall floor so a truck bed is level with it) and the small door the empty cages come back through.
+  const pitY = gy - PIT, doorTop = pitY + GATE.h, hatchTop = gy + 2.2, half = GATE.w / 2;
+  const openings = [{ a: laneX - 0.7, b: laneX + 0.7, top: hatchTop, sill: gy }, ...gp.doors.map((d) => ({ a: d.x - half, b: d.x + half, top: doorTop, sill: pitY }))].sort((m, n) => m.a - n.a);
+  let wallAt = xw0;
+  const wallRun = (a: number, b: number): void => {
+    if (b - a < 0.01) return;
+    add(box(b - a, H + PIT, 0.3), WALL, (a + b) / 2, wy - PIT / 2, zN);
+    add(box(b - a, 1.3, 0.36), WALL_BAND, (a + b) / 2, gy + 0.65, zN);
+  };
+  for (const o of openings) {
+    wallRun(wallAt, o.a);
+    add(box(o.b - o.a, gy + H - o.top, 0.3), WALL, (o.a + o.b) / 2, (gy + H + o.top) / 2, zN);
+    if (o.sill > pitY) add(box(o.b - o.a, o.sill - pitY, 0.3), WALL_BAND, (o.a + o.b) / 2, (o.sill + pitY) / 2, zN);
+    wallAt = o.b;
+  }
+  wallRun(wallAt, xw1);
   add(box(wallLen, 0.4, 0.34), BLUE, (xw0 + xw1) / 2, gy + 5.6, zN);
   add(box(0.3, H, sideLen), WALL, xw0, wy, zN + sideLen / 2);
   add(box(0.36, 1.3, sideLen), WALL_BAND, xw0, gy + 0.65, zN + sideLen / 2);
   add(box(0.34, 0.4, sideLen), BLUE, xw0, gy + 5.6, zN + sideLen / 2);
-  for (let x = xw0; x <= xw1 + 0.01; x += wallLen / 8) add(box(0.4, H, 0.4), '#c5cad2', x, wy, zN + 0.05);
+  const dockA = laneX - 2.4, dockB = gp.doors[gp.doors.length - 1]!.x + 3.2;
+  for (let x = xw0; x <= xw1 + 0.01; x += wallLen / 8) if (x < dockA || x > dockB) add(box(0.4, H, 0.4), '#c5cad2', x, wy, zN + 0.05);
   for (let z = zN; z <= zN + sideLen + 0.01; z += sideLen / 6) add(box(0.4, H, 0.4), '#c5cad2', xw0 + 0.05, wy, z);
-  const doors = Math.max(3, Math.round(wallLen / 9));
-  for (let i = 0; i < doors; i++) {
-    const x = xw0 + (wallLen * (i + 0.5)) / doors;
-    add(box(3.4, 3.8, 0.38), '#39404b', x, gy + 1.9, zN + 0.02);
-    for (let k = 0; k < 9; k++) add(box(3.3, 0.04, 0.4), '#566070', x, gy + 0.35 + k * 0.4, zN + 0.03);
-    add(box(3.8, 0.3, 0.42), YELLOW, x, gy + 3.95, zN + 0.03);
-    for (const s of [-1, 1]) add(box(0.22, 3.8, 0.42), YELLOW, x + s * 1.8, gy + 1.9, zN + 0.03);
-    add(rbox(0.5, 0.9, 0.3, 0.05), '#22262d', x - 1.3, gy + 0.9, zN + 0.3); add(rbox(0.5, 0.9, 0.3, 0.05), '#22262d', x + 1.3, gy + 0.9, zN + 0.3);
+  for (const d of gp.doors) {
+    // door frame, the islands of hall floor either side are drawn below; rubber buffers where the truck bed meets the floor
+    add(box(GATE.w + 0.5, 0.3, 0.42), YELLOW, d.x, doorTop + 0.15, zN + 0.03);
+    for (const s of [-1, 1]) {
+      add(box(0.22, GATE.h, 0.42), YELLOW, d.x + s * (half + 0.11), pitY + GATE.h / 2, zN + 0.03);
+      add(box(0.1, 0.012, DOCK_Z - zN - 0.4), YELLOW, d.x + s * (half + 0.1), gy + 0.008, (DOCK_Z + zN) / 2 + 0.1);
+      add(rbox(0.3, 0.5, 0.12, 0.03), '#22262d', d.x + s * 1.05, gy - 0.3, DOCK_Z - 0.0);
+    }
+    add(box(GATE.w, PIT, 0.2), '#8b929c', d.x, gy - PIT / 2, DOCK_Z + 0.1);
+    add(box(GATE.w, 0.012, 0.1), YELLOW, d.x, gy + 0.008, DOCK_Z + 0.16);
   }
-  // pallet racking along the back wall
+  // the door of the empty-cage lane: frame, strip curtain, and a ledge outside for the cages that wait to come in
+  add(box(1.8, 0.2, 0.4), YELLOW, laneX, hatchTop + 0.1, zN + 0.03);
+  for (const s of [-1, 1]) add(box(0.16, 2.2, 0.4), YELLOW, laneX + s * 0.78, gy + 1.1, zN + 0.03);
+  for (let k = -3; k <= 3; k++) add(box(0.185, 2.2, 0.03), k % 2 === 0 ? '#3f6f9f' : '#35608c', laneX + k * 0.2, gy + 1.1, zN + (k % 2 === 0 ? 0.0 : 0.02));
+  add(box(1.9, PIT, 2.4), '#b3b8bf', laneX, gy - PIT / 2 - 0.001, zN - 1.35);
+  // pallet racking along the back wall, clear of the docks
   const rackZ = zN + 1.5, bay = 2.9, levels = [0.15, 1.9, 3.65];
   for (let x = xw0 + 2.5, i = 0; x + bay < xw1 - 1; x += bay, i++) {
+    if (x + bay > dockA && x < dockB) continue;
     for (const s of [0, bay]) for (const k of [-0.5, 0.5]) add(rbox(0.1, 5.4, 0.1, 0.01), '#2a5fb0', x + s, gy + 2.7, rackZ + k);
     for (const y of levels.slice(1).concat(5.3)) for (const k of [-0.5, 0.5]) add(box(bay, 0.12, 0.06), ORANGE, x + bay / 2, gy + y - 0.1, rackZ + k);
     levels.forEach((y, l) => {
@@ -209,16 +241,27 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   for (const s of plan.stations) for (const k of [-0.7, 0.7]) add(cyl('y', 0.03, 2.5, 8), STEEL_DARK, s.beltFar + s.dir * 0.2 + k, 1.25, s.z);
   const building = bakedMesh(`mock-building|${plan.id}`, () => parts, undefined, true);
   const lights = bakedMesh(`mock-lights|${plan.id}`, () => glow, VERTEX_GLOW);
-  stage.add(building, lights);
+  stage.add(building, lights, deck);
 
   // ground floor
-  const groundGeo = new THREE.PlaneGeometry(xw1 - xw0 + 4, sideLen + 6), groundMat = new THREE.MeshLambertMaterial({ color: '#c3c7cd' });
-  const ground = new THREE.Mesh(groundGeo, groundMat);
-  ground.rotation.x = -Math.PI / 2;
-  ground.position.set((xw0 + xw1) / 2, gy, zN + sideLen / 2);
-  ground.receiveShadow = true;
-  stage.add(ground);
-  free.push(() => { groundGeo.dispose(); groundMat.dispose(); });
+  // The hall floor ends at the docks; between the trucks it runs on to the wall as islands, and the road the trucks
+  // stand on lies lower and carries on outside.
+  const groundMat = new THREE.MeshLambertMaterial({ color: '#c3c7cd' }), roadMat = new THREE.MeshLambertMaterial({ color: '#a4a9b1' });
+  free.push(() => { groundMat.dispose(); roadMat.dispose(); });
+  const slab = (mat: THREE.Material, xa: number, xb: number, za: number, zb: number, top: number, thick: number): void => {
+    const geo = thick > 0 ? new THREE.BoxGeometry(xb - xa, thick, zb - za) : new THREE.PlaneGeometry(xb - xa, zb - za);
+    const m = new THREE.Mesh(geo, mat);
+    if (thick <= 0) m.rotation.x = -Math.PI / 2;
+    m.position.set((xa + xb) / 2, top - Math.max(0, thick) / 2, (za + zb) / 2);
+    m.receiveShadow = true;
+    stage.add(m);
+    free.push(() => geo.dispose());
+  };
+  slab(groundMat, xw0 - 2, xw1 + 2, DOCK_Z, zN + sideLen + 3, gy, 0);
+  slab(roadMat, xw0 - 2, xw1 + 2, zN - 22, DOCK_Z, pitY, 0);
+  let islandAt = xw0 - 2;
+  for (const d of gp.doors) { slab(groundMat, islandAt, d.x - half, zN + 0.15, DOCK_Z, gy, PIT); islandAt = d.x + half; }
+  slab(groundMat, islandAt, xw1 + 2, zN + 0.15, DOCK_Z, gy, PIT);
 
   // signs
   const place = (m: THREE.Mesh | null, x: number, y: number, z: number, ry = 0): void => { if (!m) return; m.position.set(x, y, z); m.rotation.y = ry; stage.add(m); free.push(() => { m.geometry.dispose(); (m.material as THREE.Material).dispose(); }); };
@@ -226,7 +269,11 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
   place(sign('KHU SẠC XE', 3.2, 0.5, '#1c2330', YELLOW), 0.4 + 1.5, 1.6, z1 - 0.02, Math.PI);
   place(sign('KHU SẠC XE', 3.2, 0.5, '#1c2330', YELLOW), 0.4 + 1.5, 1.6, z1 - 0.03);
   for (const s of plan.stations) for (const ry of [0, Math.PI]) place(sign('NẠP HÀNG', 1.5, 0.3, '#ffffff', BLUE), s.beltFar + s.dir * 0.2, 2.35, s.z + (ry === 0 ? 0.012 : -0.012), ry);
-  for (let i = 0; i < doors; i++) place(sign(`CỬA ${i + 1}`, 1.6, 0.5, '#1c2330', '#ffffff'), xw0 + (wallLen * (i + 0.5)) / doors, gy + 4.6, zN + 0.2);
+  for (const d of gp.doors) place(sign(`CỬA ${d.n} · LỖ ${d.holes[0]}–${d.holes[d.holes.length - 1]}`, 2.9, 0.52, '#1c2330', '#ffffff'), d.x, doorTop + 1.3, zN + 0.2);
+  place(sign('LỒNG RỖNG', 1.9, 0.42, '#ffffff', TEAL), laneX, hatchTop + 0.5, zN + 0.2);
+  place(sign('XE KÉO CHỜ', 2.2, 0.36, '#ffffff', TEAL), -2.14, -0.55, D / 2, -Math.PI / 2);
+  // the number of each hole, readable from below
+  for (const h of plan.holes) place(sign(`LỖ ${h.n}`, 0.56, 0.2, '#1c2330', '#ffffff'), h.x, -0.5, h.z + 0.585);
 
   // spare robots on charge (the game's own AGV figure)
   for (let i = 0; i < Math.min(3, bays); i++) {
@@ -238,5 +285,5 @@ export function addBuilding(stage: THREE.Group, plan: FloorPlan): () => void {
     stage.add(fig.object);
     free.push(() => fig.dispose());
   }
-  return () => free.forEach((f) => f());
+  return { deck, dispose: () => free.forEach((f) => f()) };
 }
