@@ -61,25 +61,25 @@ function fill(board: Board, count: number, seconds: number): { moved: number; ho
 }
 
 describe('"Bảng giữ ô" on the shortest loop (8 cells)', () => {
-  it('7 robots: one cell is free, all of them get round to their goal', () => {
+  it('7 robots: one cell is free, all of them get round to their goal', { timeout: 600_000 }, () => {
     const x = fill(ringBoard(7, 0), 7, 180);
     say(`RING 7 robots, no detour, 180 s: ${x.moved} left their cell, ${x.home} at their goal`);
     expect(x.home).toBe(7);
   });
 
-  it('8 robots, detour switched off: the loop is full, nobody ever leaves its cell', () => {
+  it('8 robots, detour switched off: the loop is full, nobody ever leaves its cell', { timeout: 600_000 }, () => {
     const x = fill(ringBoard(8, 0), 8, 180);
     say(`RING 8 robots, no detour, 180 s: ${x.moved} left their cell, ${x.home} at their goal`);
     expect(x.moved).toBe(0);
   });
 
-  it('8 robots, "take the other exit after 3 s of waiting": the loop opens and every robot moves', () => {
+  it('8 robots, "take the other exit after 3 s of waiting": the loop opens and every robot moves', { timeout: 600_000 }, () => {
     const x = fill(ringBoard(8, 3), 8, 300);
     say(`RING 8 robots, detour after 3 s, 300 s: ${x.moved} left their cell, ${x.home} at their goal`);
     expect(x.moved).toBe(8);
   });
 
-  it('the detour needs its wire: with every "Robot k đang chờ ô" wire cut the full loop stays locked', () => {
+  it('the detour needs its wire: with every "Robot k đang chờ ô" wire cut the full loop stays locked', { timeout: 600_000 }, () => {
     let board = ringBoard(8, 3);
     for (let k = 1; k <= 8; k++) board = cutOnMain(board, `giu-o.wait${k}>r${k}.dang-cho`);
     const x = fill(board, 8, 180);

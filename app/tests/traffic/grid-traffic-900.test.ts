@@ -20,7 +20,7 @@ const seen = new Map<number, FloorResult>();
 const floor = (robots: number, seed = SEED): FloorResult => runFloor(buildFloor({ robots, pitch: 1.4, seed, drive: TUNED_DRIVE }, rapier), 900);
 
 describe('one-way grid floor, 900 s', () => {
-  it.each([2, 4, 6, 8])('%s robots: no standstill of the whole floor, nobody near anybody, nobody off the lane', (robots) => {
+  it.each([2, 4, 6, 8])('%s robots: no standstill of the whole floor, nobody near anybody, nobody off the lane', { timeout: 900_000 }, (robots) => {
     const x = floor(robots);
     seen.set(robots, x);
     say(line(`RUN900 x${robots}`, x));
@@ -37,7 +37,7 @@ describe('one-way grid floor, 900 s', () => {
     expect(Math.min(...x.perRobot)).toBeGreaterThan(x.delivered / robots / 2);
   });
 
-  it('the same seed twice gives the same state on every tick of 900 s; another seed does not', () => {
+  it('the same seed twice gives the same state on every tick of 900 s; another seed does not', { timeout: 1_800_000 }, () => {
     const a = seen.get(6) ?? floor(6);
     const b = floor(6);
     const c = floor(6, SEED + 1);

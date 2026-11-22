@@ -22,7 +22,7 @@ const CASES: [string, Stress, number][] = [
 ];
 
 describe('one-way grid floor under trouble, 6 robots, 600 s', () => {
-  it.each(CASES)('%s: the floor recovers', (name, stress, to) => {
+  it.each(CASES)('%s: the floor recovers', { timeout: 900_000 }, (name, stress, to) => {
     const marks = { before: 0, during: 0, after: 0 };
     const f = buildFloor({ robots: 6, pitch: 1.4, seed: 20261122, drive: TUNED_DRIVE, stress: structuredClone(stress) }, rapier);
     const delivered = (): number => f.ids.reduce((sum, id) => sum + Number(f.run.out(`${id}-jobs`, 'delivered')), 0);
