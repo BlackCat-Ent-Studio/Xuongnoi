@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import type { EntityView } from '../../src/engine/types';
 import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
-import type { NodeSpec, WireSpec } from '../helpers/arm-rig';
+import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
 import { overlapDepth } from '../helpers/chassis-metrics';
 import { CHASSIS, bot, bottomOf, deckRig, holeDeck, marker, seconds, slab } from './deck-rig';
 
@@ -226,5 +226,26 @@ describe('a hole in the deck', () => {
     const settling = steps.filter((s) => s.bottom > 0.001);
     expect(settling.length).toBeGreaterThan(5);
     expect(settling[settling.length - 1]!.x).toBeGreaterThan(0.001);
+  });
+});
+
+describe('the side view', () => {
+  it('rolls off the end of a ledge and falls; on the ledge it keeps its height', () => {
+    const b = bot({ id: 'r', x: -2, z: 0, floor: 1, power: [0.5, 0.5] });
+    const r = rig([['ledge', 'block', { position: { x: -3, y: 0.5, z: 0 }, size: { x: 6, y: 1, z: 1 } }], ['ground', 'block', { position: { x: 0, y: -0.5, z: 0 }, size: { x: 60, y: 1, z: 1 } }], ...b.nodes], b.wires, '2d-side', false, true, rapier);
+    let deepest = -Infinity;
+    const steps: Step[] = [];
+    for (let k = 0; k < seconds(6); k++) {
+      r.tick();
+      const v = r.entity('r')!;
+      steps.push({ x: v.position.x, z: v.position.z, bottom: bottomOf(v), heading: v.robot!.heading });
+      deepest = Math.max(deepest, 0.45 + 3 - Math.abs(v.position.x + 3) > 0 && bottomOf(v) < 1 ? Math.min(0.45 + 3 - Math.abs(v.position.x + 3), 1 - bottomOf(v)) : -1);
+    }
+    r.world.dispose?.();
+    for (const s of steps.filter((p) => p.x < -0.01)) expect(s.bottom).toBe(1);
+    expect(steps[steps.length - 1]!.bottom).toBeLessThan(0.001);
+    expect(steps[steps.length - 1]!.x).toBeGreaterThan(0.45);
+    // Never inside the ledge (overlap along x and in height at once).
+    expect(deepest).toBeLessThan(0.001);
   });
 });
