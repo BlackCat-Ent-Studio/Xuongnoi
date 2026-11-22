@@ -54,6 +54,8 @@ const chassisTop = (chassis: Entity): ChassisTop => ({ top: colliderBox(chassis)
 function restsOnTop(lying: Box, c: ChassisTop): boolean {
   const bottom = lying.pos.y - lying.size.y / 2;
   if (!(bottom >= c.top.pos.y + c.top.size.y / 2 - SUPPORT_SINK)) return false;
+  // EXPERIMENTAL (spike/deck, not for merge): an item far above the top (on a deck over the chassis) does not ride on it.
+  if (import.meta.env.VITE_SPIKE_REST_CEILING && bottom > c.top.pos.y + c.top.size.y / 2 + Number(import.meta.env.VITE_SPIKE_REST_CEILING)) return false;
   if (c.outline) return overOutline(lying, c.outline, SKIN);
   return spanOverlap(lying, c.under, 'x') > SKIN && spanOverlap(lying, c.under, 'z') > SKIN;
 }
