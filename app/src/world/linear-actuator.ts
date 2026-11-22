@@ -194,6 +194,10 @@ function exactClearance(head: Obb, body: Obb, dir: Vec3, reach: number): number 
  * must travel exactly as far as its pusher, to the last bit, or it would read a speed nobody gave it.
  */
 function outlineClearance(pusher: Obb, body: Obb, dir: Vec3): number {
+  // As for plain boxes: only a body that lies ahead of the pusher is pushed clear; one beside or behind its middle is not
+  // carried through the whole pusher (it stays, and what it sits in then stops the pusher).
+  const ahead = (body.centre.x - pusher.centre.x) * dir.x + (body.centre.y - pusher.centre.y) * dir.y + (body.centre.z - pusher.centre.z) * dir.z;
+  if (!(ahead > 0)) return 0;
   return backOffAlong(body, pusher, { x: -dir.x, y: -dir.y, z: -dir.z });
 }
 
