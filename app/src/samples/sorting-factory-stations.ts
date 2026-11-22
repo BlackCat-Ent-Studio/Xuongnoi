@@ -34,7 +34,15 @@ export const FACTORY = {
   /** The hand-over table: its centre (x, z) and the height of its top. */
   handOver: { x: -1.056, z: 0, topY: 0.34 },
   /** The chute: footprint and height (m), where its sorted cartons are put (in the chute's own frame), and how often one is moved out. */
-  chute: { side: 0.94, height: 0.75, binAt: { x: 0, y: 1.6, z: -1.5 } as Vec3, clearEveryS: 0.3 },
+  chute: {
+    side: 0.94,
+    height: 0.75,
+    clearEveryS: 0.3,
+    /** The way out behind the chute: a belt (top height, where it starts, length, width, speed) with a stop (height, thickness) at its end. */
+    out: { topY: 0.5, fromZ: -0.8, length: 4.8, width: 0.6, speed: 1, stopH: 0.9, stopT: 0.08 },
+    /** Where a carton taken out of the chute is put: on the start of that belt. */
+    binAt: { x: 0, y: 0.68, z: -1.1 } as Vec3,
+  },
   /** The rule: a carton heavier than this (kg) goes to the heavy chute whatever its colour. */
   heavyAboveKg: 5,
   heavyChute: 6,
@@ -286,7 +294,8 @@ function stationCircuit(): Circuit {
 
 /** Wires of "Cửa thả" between its own cards (the bench spawner's wires are apart). */
 export const CHUTE_WIRES: readonly WireSpec[] = [
-  // What lies in the chute is read, then moved out to the sorted pile, one carton per beat
+  // What lies in the chute is read, then put on the belt that leads to the pen, one carton per beat
+  ['bat-dau.started', 'bang-ra.run'],
   ['vung.first', 'doc-mau.thing'],
   ['vung.inside', 'nhip-gom.run'],
   ['vung.first', 'dua-di.who'],
@@ -304,15 +313,21 @@ export const CHUTE_WIRES: readonly WireSpec[] = [
 ];
 
 const CHUTE_BENCH_WIRES: readonly WireSpec[] = [
-  ['bat-dau-thu.started', 'nhip-thu.run'],
+  ['bat-dau.started', 'nhip-thu.run'],
   ['nhip-thu.done', 'tha-thu.spawn'],
 ];
 
 function chuteCircuit(): Circuit {
   const { chute, parcel } = FACTORY;
+  const { out } = chute;
+  const endZ = out.fromZ - out.length;
   const specs: CardSpec[] = [
     ['cua', 'block', 0, { position: { x: 0, y: chute.height / 2, z: 0 }, size: { x: chute.side, y: chute.height, z: chute.side }, type: 'pickup', style: 'chute', signText: '1' }],
-    ['tam-gom', 'block', 0, { position: { x: chute.binAt.x, y: 0.04, z: chute.binAt.z }, size: { x: 1.1, y: 0.08, z: 1.1 }, color: '#8d6e4a' }],
+    ['bat-dau', 'on-start', 0],
+    // The way out: a belt that carries each sorted carton away from the chute; the cartons line up against the stop at its
+    // end. Cartons put down on one fixed spot would stack into a column that falls back into the chute and is counted again.
+    ['bang-ra', 'block', 0, { position: { x: 0, y: out.topY / 2, z: out.fromZ - out.length / 2 }, size: { x: out.width, y: out.topY, z: out.length }, style: 'belt-frame', beltSpeed: out.speed, beltDir: '-z' }],
+    ['chan-cuoi', 'block', 0, { position: { x: 0, y: out.stopH / 2, z: endZ - out.stopT / 2 }, size: { x: out.width + 0.2, y: out.stopH, z: out.stopT }, color: '#94a3b8' }],
     ['vung', 'zone', 1, { center: { x: 0, y: 0.3, z: 0 }, size: { x: chute.side, y: 0.6, z: chute.side }, filter: 'item', rule: 'center', color: '#38bdf8' }],
     ['doc-mau', 'color-sensor', 1, { color6: '#f97316' }],
     ['nhip-gom', 'timer', 1, { seconds: chute.clearEveryS, repeat: 'yes' }],
@@ -326,7 +341,6 @@ function chuteCircuit(): Circuit {
     ['dem-sai', 'counter', 4],
     // --- bench only: a floor and a spawner that drops a carton of a random class into the chute every two seconds
     benchFloor(5),
-    ['bat-dau-thu', 'on-start', 5],
     ['nhip-thu', 'timer', 5, { seconds: 2, repeat: 'yes' }],
     [
       'tha-thu',
@@ -342,7 +356,7 @@ function chuteCircuit(): Circuit {
     graph: { nodes: cards(specs), wires: wires([...CHUTE_WIRES, ...CHUTE_BENCH_WIRES]) },
     pins: [pin('so-kien', 'Số kiện', 'out', 'number', 'dem.value'), pin('sai', 'Kiện sai loại', 'out', 'number', 'dem-sai.value')],
     exposed: [open('so-cua', 'Số cửa (ghi trên biển)', 'cua.signText'), open('mau-nhan', 'Màu được nhận (1-6, 0 = màu nào cũng nhận)', 'mau-nhan.value'), open('cho-gom', 'Chỗ gom kiện đã thả', 'dua-di.position')],
-    benchIds: ['san-thu', 'bat-dau-thu', 'nhip-thu', 'tha-thu'],
+    benchIds: ['san-thu', 'nhip-thu', 'tha-thu'],
   };
 }
 
