@@ -25,7 +25,7 @@ export const CHASSIS = { length: 0.9, width: 0.7 };
 export const HOLE = 0.94;
 export const STATIONS = [cellNumber(GRID, 1, 0), cellNumber(GRID, 5, 0)] as const;
 
-export type Approach = 'hold' | 'hold-flow' | 'eyes';
+export type Approach = 'hold' | 'hold-flow' | 'eyes' | 'eyes-turn';
 
 export interface FloorOptions {
   robots: number;
@@ -70,7 +70,7 @@ function robotCircuit(id: string, index: number, cell: number, o: FloorOptions):
   const nodes: NodeSpec[] = [...bot.nodes, [`${id}-route`, 'x-grid-route', { ...GRID }], [`${id}-jobs`, 'x-spike-jobs', { ...GRID, seed: o.seed, index, stationA: STATIONS[0], stationB: STATIONS[1], ...(o.loadS !== undefined ? { loadS: o.loadS } : {}), ...(o.tipS !== undefined ? { tipS: o.tipS } : {}) }]];
   const wires: WireSpec[] = [...bot.wires, [id, 'self', `${id}-jobs`, 'who'], [id, 'self', `${id}-route`, 'who'], [`${id}-jobs`, 'goal', `${id}-route`, 'goal'], [`${id}-go`, 'arrived', `${id}-jobs`, 'arrived']];
 
-  if (o.approach === 'eyes') {
+  if (o.approach === 'eyes' || o.approach === 'eyes-turn') {
     const p = o.pitch;
     nodes.push(
       [`${id}-cell`, 'sample-hold', { start: cell }],
@@ -96,8 +96,22 @@ function robotCircuit(id: string, index: number, cell: number, o: FloorOptions):
       [`${id}-eye`, 'blocked', `${id}-any`, 'a'],
       [`${id}-eyeR`, 'blocked', `${id}-any`, 'b'],
       [`${id}-any`, 'out', `${id}-free`, 'in'],
-      [`${id}-free`, 'out', `${id}-go`, 'go'],
     );
+    if (o.approach === 'eyes') wires.push([`${id}-free`, 'out', `${id}-go`, 'go']);
+    else {
+      // The eyes turn with the nose, so while the robot turns on the spot they sweep over the neighbours. Here they are
+      // believed only while the nose points at the next cell (heading error under 20 degrees: error x error < 400).
+      nodes.push([`${id}-err2`, 'math', { op: 'mul' }], [`${id}-lim`, 'const', { value: 400 }], [`${id}-turning`, 'compare', { op: 'gt' }], [`${id}-may`, 'or', {}]);
+      wires.push(
+        [`${id}-go`, 'headingError', `${id}-err2`, 'a'],
+        [`${id}-go`, 'headingError', `${id}-err2`, 'b'],
+        [`${id}-err2`, 'out', `${id}-turning`, 'a'],
+        [`${id}-lim`, 'value', `${id}-turning`, 'b'],
+        [`${id}-free`, 'out', `${id}-may`, 'a'],
+        [`${id}-turning`, 'out', `${id}-may`, 'b'],
+        [`${id}-may`, 'out', `${id}-go`, 'go'],
+      );
+    }
     return { nodes, wires };
   }
 
