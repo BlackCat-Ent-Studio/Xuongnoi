@@ -20,7 +20,9 @@ import { applyPlacement, clonePack, onPackLoaded, packTemplate, pickVariant, typ
  * A pack model shows the carton until it has loaded (and for good if it cannot load).
  *
  * A carton whose look carries a code (`parcel-carton#7`) prints that number on a white tile on its top and on its two
- * long sides; the tape keeps the item's colour. A carton without a code is drawn exactly as before.
+ * long sides; the tape keeps the item's colour. A carton without a code is drawn exactly as before. A carton that also
+ * shows its "N kg" tag (see load-tag.ts: front and back faces) carries the side numbers on its two end faces instead, so
+ * neither covers the other.
  */
 
 const CARTON = '#cf9f62';
@@ -110,10 +112,13 @@ function tileGeo(side: number): THREE.PlaneGeometry {
   return g;
 }
 
-/** Where the code tiles of a carton sit: one on the top, one on each of the two long sides (the faces across the shorter side). */
-export function codeTilePlaces(size: Vec3): { side: number; at: [number, number, number]; turn: [number, number, number] }[] {
+/**
+ * Where the code tiles of a carton sit: one on the top, one on each of the two long sides (the faces across the shorter
+ * side). `frontTaken`: the front and back faces already show the mass tag, so the side tiles go on the other two faces.
+ */
+export function codeTilePlaces(size: Vec3, frontTaken = false): { side: number; at: [number, number, number]; turn: [number, number, number] }[] {
   const top = Math.min(size.x, size.z) * 0.71;
-  const alongX = size.x >= size.z;
+  const alongX = size.x >= size.z && !frontTaken;
   const flank = Math.min(alongX ? size.x : size.z, size.y) * 0.69;
   const out = alongX ? size.z / 2 + 0.003 : size.x / 2 + 0.003;
   return [
@@ -125,10 +130,10 @@ export function codeTilePlaces(size: Vec3): { side: number; at: [number, number,
 }
 
 /** The code tiles of a carton; an empty list where pictures cannot be drawn. */
-function codeTiles(size: Vec3, code: number): THREE.Mesh[] {
+function codeTiles(size: Vec3, code: number, frontTaken: boolean): THREE.Mesh[] {
   const mat = codeMaterial(code);
   if (!mat) return [];
-  return codeTilePlaces(size).map((p) => {
+  return codeTilePlaces(size, frontTaken).map((p) => {
     const tile = new THREE.Mesh(tileGeo(p.side), mat);
     tile.position.set(...p.at);
     tile.rotation.set(...p.turn);
@@ -181,12 +186,13 @@ export function buildParcel(look: string, color: string, seed = ''): ItemFigure 
   const path = parcelModelOf(plain, seed);
   let tint = hexOf(color);
   let size: Vec3 | null = null;
+  let massTag = false;
   let laid = '';
 
   const layout = (): void => {
     if (!size) return;
     const template = path ? packTemplate(path) : null;
-    const key = `${sizeKey(size)}|${tint}|${template ? 'model' : 'carton'}`;
+    const key = `${sizeKey(size)}|${tint}|${template ? 'model' : 'carton'}|${massTag ? 'kg' : ''}`;
     if (key === laid) return;
     laid = key;
     inner.clear();
@@ -199,7 +205,7 @@ export function buildParcel(look: string, color: string, seed = ''): ItemFigure 
       inner.add(bakedMesh(`parcel-sticker|${sizeKey(s)}|${c}`, () => stickerParts(s, c)));
     } else {
       inner.add(bakedMesh(`carton|${sizeKey(s)}|${c}`, () => cartonParts(s, c), VERTEX_TOON, true));
-      if (code > 0) for (const tile of codeTiles(s, code)) inner.add(tile);
+      if (code > 0) for (const tile of codeTiles(s, code, massTag)) inner.add(tile);
     }
     const owner: unknown = object.userData.ownerNodeId;
     inner.traverse((o) => {
@@ -216,7 +222,9 @@ export function buildParcel(look: string, color: string, seed = ''): ItemFigure 
       tint = hexOf(c);
       layout();
     },
-    update(view: Pick<EntityView, 'size'>) {
+    update(view: Pick<EntityView, 'size'> & Partial<Pick<EntityView, 'mass' | 'shape'>>) {
+      // Same rule as the mass tag layer: a box or crate with a mass the user set shows "N kg" on its front and back.
+      massTag = code > 0 && view.mass !== undefined && (view.shape === undefined || view.shape === 'box' || view.shape === 'crate');
       const { x, y, z } = view.size;
       if (!size || size.x !== x || size.y !== y || size.z !== z) {
         size = { x, y, z };

@@ -386,7 +386,7 @@ function addDisplay(parent: THREE.Group, size: Vec3, text: string): { tick(): vo
   const born = performance.now();
   return {
     tick() {
-      const t = (performance.now() - born) / 1000;
+      const t = Math.max(0, (performance.now() - born) / 1000);
       glow.opacity = t < DISPLAY_FLASH_S ? 0.85 * (1 - t / DISPLAY_FLASH_S) : 0;
     },
     dispose: () => glow.dispose(),

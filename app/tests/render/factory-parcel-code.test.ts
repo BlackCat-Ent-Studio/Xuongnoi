@@ -144,6 +144,28 @@ describe('the number printed on a carton', () => {
     }
   });
 
+  it('a carton that shows its "N kg" tag on the front and back carries the side numbers on its two ends instead', () => {
+    const normals = (mass: number | undefined, shape: 'crate' | 'ball' = 'crate'): number[][] => {
+      const fig = buildParcel('parcel-carton#7', '#ef4444', 'seed');
+      fig.update!({ size: PARCEL, shape, ...(mass !== undefined ? { mass } : {}) } as Pick<EntityView, 'size'>);
+      fig.object.updateMatrixWorld(true);
+      const out: number[][] = [];
+      fig.object.traverse((o) => {
+        if (o.userData.parcelCode === undefined) return;
+        const n = new THREE.Vector3(0, 0, 1).applyQuaternion(o.getWorldQuaternion(new THREE.Quaternion()));
+        out.push([Math.round(n.x) + 0, Math.round(n.y) + 0, Math.round(n.z) + 0]);
+      });
+      return out;
+    };
+    expect(normals(undefined)).toEqual([[0, 1, 0], [0, 0, 1], [0, 0, -1]]);
+    expect(normals(3)).toEqual([[0, 1, 0], [1, 0, 0], [-1, 0, 0]]);
+    // A shape that gets no mass tag keeps the long sides.
+    expect(normals(3, 'ball')).toEqual([[0, 1, 0], [0, 0, 1], [0, 0, -1]]);
+    const [, end] = codeTilePlaces(PARCEL, true);
+    expect(end!.side).toBeLessThanOrEqual(Math.min(PARCEL.z, PARCEL.y));
+    expect(end!.at[0]).toBeCloseTo(PARCEL.x / 2 + 0.003, 5);
+  });
+
   it('writes the digits of the code, and a line under 6 and 9 but not under 7 or 8', () => {
     const drawn = (code: number): Painted => {
       const before = pictures.length;
