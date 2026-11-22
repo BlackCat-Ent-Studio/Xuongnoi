@@ -1,5 +1,6 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
+import { chassisSupport, type ChassisSupport } from './chassis-support';
 import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, hasChassisOutline, isTurnedBody, meetingPair, orientedBox, outlineNearBox, spanOverlap, type Box } from './collider';
 import { backOffAlong, mulQuat, obbBounds, obbGap, obbSeparation, yawQuat, type Obb } from './oriented-box';
 import { lockMotion } from './combat';
@@ -9,7 +10,7 @@ import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
 import { massOn, weighSceneOf, type MachineOf, type WeighScene } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
-import { driveRobot, settleRobot } from './robot-drive';
+import { driveRobot, settleRobot, type RobotBody } from './robot-drive';
 import { beginShove, finishShove, restsOnChassis, type PartsOf } from './robot-push';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
@@ -426,7 +427,34 @@ function stepVehicle(
 }
 
 /**
+ * A chassis whose middle hangs beyond everything under it slides off, away from what still holds it: it gains ground speed
+ * that way at the pull of gravity times the share of its reach it hangs out by (a hair over the edge it creeps, half over it
+ * goes). That stands for its tipping over the edge, which this model cannot show: once it is off (in the air) or held again
+ * (on its wheels or on its underside) the slide is gone, and it drops with the speed its wheels gave it. Returns that velocity.
+ */
+function slideOff(body: RobotBody, support: ChassisSupport | null, pull: number, dt: number): { x: number; z: number } | null {
+  if (!support || !support.away) {
+    if (body.slide) delete body.slide;
+    return null;
+  }
+  const gain = Math.abs(pull) * support.away.share * dt;
+  const had = body.slide ?? { x: 0, z: 0 };
+  body.slide = { x: had.x + support.away.x * gain, z: had.z + support.away.z * gain };
+  return body.slide;
+}
+
+/** The ground velocity the wheels' own travel is left with after a move: the move's velocity less the slide (an axis a wall stopped has neither). */
+function drivenVel(vel: { x: number; z: number }, slide: { x: number; z: number } | null): { x: number; z: number } {
+  if (!slide) return vel;
+  if (vel.x === 0) slide.x = 0;
+  if (vel.z === 0) slide.z = 0;
+  return { x: vel.x - slide.x, z: vel.z - slide.z };
+}
+
+/**
  * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
+ * With real physics on, only wheels with ground under them drive it, and it slides off an edge its middle hangs over
+ * (chassis-support.ts).
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
  * world, `own` the pieces bolted to this chassis (`partsOf` gives them for any chassis), `meets` the other solid chassis it may
  * run into (real physics only).
@@ -439,7 +467,12 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   giveWay(r, solids);
   const headingWas = body.heading;
   const facingWas = r.facing;
-  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf));
+  const support = body.traction ? chassisSupport(r, solids, mode, body.landed === true) : null;
+  // It appeared with no floor near under some wheel: it is not being set down, it is in the air or over an edge from the start.
+  if (support && !body.landed) body.landed = true;
+  const grip = support ? { wheels: support.grip, belly: support.state === 'belly' } : undefined;
+  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf), grip);
+  const slide = body.traction ? slideOff(body, support, gravityOf(r, g), dt) : null;
   r.vel.x = flat.x;
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
@@ -456,11 +489,16 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
     r.vel.x = Math.cos(headingWas) * body.travel;
     r.vel.z = Math.sin(headingWas) * body.travel;
   }
+  if (slide) {
+    r.vel.x += slide.x;
+    r.vel.z += slide.z;
+  }
   if (!meets || others.length === 0) {
     const shove = beginShove(r, entities, solids, dt, mode, [], partsOf);
     r.onGround = integrate(r, dt, mode, solids);
+    if (r.onGround && body.traction) body.landed = true;
     if (shove) finishShove(r, shove, byId, solids, mode);
-    settleRobot(body, r.vel, mode === '2d-side');
+    settleRobot(body, drivenVel(r.vel, slide), mode === '2d-side');
     return;
   }
   // Another chassis that already shoved this one along this tick has given it that much of its own move: it does not travel it twice.
@@ -480,6 +518,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   // The chassis it shoves move once it has moved; every other one stops it like a wall.
   const rivals: Rivals = { list: shove && shove.shoved.size > 0 ? others.filter((o) => !shove.shoved.has(o.id)) : others, hit: new Set() };
   r.onGround = integrate(r, dt, mode, solids, rivals);
+  if (r.onGround) body.landed = true;
   if (shove) {
     for (const [o, d] of finishShove(r, shove, byId, solids, mode, dt)) {
       if (meets.stepped.has(o)) continue;
@@ -489,7 +528,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   }
   meets.stepped.add(r);
   // Stopped by a chassis that itself moves, it keeps the speed it really travelled at (a wall takes all of it, as ever).
-  const done = rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel;
+  const done = drivenVel(rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel, slide);
   settleRobot(body, { x: done.x + cut.x, z: done.z + cut.z }, mode === '2d-side');
 }
 
