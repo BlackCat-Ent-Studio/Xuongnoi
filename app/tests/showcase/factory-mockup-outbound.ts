@@ -10,7 +10,7 @@
  */
 import * as THREE from 'three';
 import { glowMat } from '../../src/render/factory-kit';
-import { CAGE_FLOOR, GATE, cageMesh, gateMesh, hatchMesh, holeLightGeo, truckFigure, tugFigure } from './factory-mockup-figures';
+import { CAGE_FLOOR, CAGE_SIDE, GATE, cageMesh, gateMesh, hatchMesh, holeLightGeo, truckFigure, tugFigure } from './factory-mockup-figures';
 import { DOCK_Z, GROUND, PIT, TRUCK_CAGES, WALL_Z, groundRoute, type DoorPlan, type GroundPlan } from './factory-mockup-ground';
 
 type P3 = { x: number; y: number; z: number };
@@ -44,6 +44,8 @@ export interface Outbound {
   stats: () => OutboundStats;
   /** Where things are, for the camera presets and the checks. */
   probe: () => { tugs: { x: number; z: number; state: string; carrying: boolean; moving: boolean }[]; doors: { x: number; state: string; cages: number; off: number }[]; locked: number[] };
+  /** Check for the trial: a note about the first two cages or two tugs found overlapping, or null. */
+  audit: () => string | null;
   dispose: () => void;
 }
 
@@ -141,6 +143,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
     b.mesh.position.set(d.x, gy - PIT + GATE.h + 0.72, WALL_Z + 0.22);
     stage.add(gate, b.mesh);
     const door: DoorLive = { plan: d, g: group, rear, gate, cages: [], state: 'open', t: 0, off: 0, v: 0, busy: false, trucks: 0, board: b, text: '' };
+    group.position.set(d.x, gy - PIT, TRUCK_Z);
     for (let i = 0; i < [2, 3, 1, 0, 2][j % 5]!; i++) {
       const c = newCage(), dest = d.holes[(i + j) % d.holes.length]!;
       for (let k = 0; k < CAP; k++) { const p = o.makeCarton(dest); stow(c, p, slot(c, p)); }
@@ -171,6 +174,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
       if (d.off >= 0) { d.v = 0; d.state = 'gateDown'; d.t = 0; }
     } else if (d.state === 'gateDown') { if (d.t >= 1.1) { d.state = 'opening'; d.t = 0; } }
     else if (d.t >= 0.9) { d.state = 'open'; d.t = 0; }
+    d.g.position.set(d.plan.x, gy - PIT, TRUCK_Z + d.off);
   }
 
   // ---------------------------------------------------------------- holes
@@ -326,7 +330,8 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
     }
     if (t.state === 'atDock') {
       const d = t.door!;
-      if (d.state === 'open' && !d.busy && d.cages.length < TRUCK_CAGES) startLoad(t, d);
+      // the tug before this one must be clear of the cell beside the bay: the cage swings past it on the way in
+      if (d.state === 'open' && !d.busy && d.cages.length < TRUCK_CAGES && !occupied.has(d.plan.exit)) startLoad(t, d);
       return;
     }
     if (t.state === 'atBuffer') {
@@ -384,7 +389,6 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
       h.hatch.scale.x = Math.max(0.01, ease(h.hatchK));
     }
     for (const d of doors) {
-      d.g.position.set(d.plan.x, gy - PIT, TRUCK_Z + d.off);
       const rearShut = d.state === 'open' ? 0 : d.state === 'shut' ? ease(Math.min(1, d.t / 0.8)) : d.state === 'opening' ? 1 - ease(Math.min(1, d.t / 0.8)) : 1;
       d.rear.scale.y = 0.04 + 0.96 * rearShut;
       const gateOpen = d.state === 'gateUp' ? ease(Math.min(1, d.t)) : d.state === 'gateDown' ? 1 - ease(Math.min(1, d.t)) : d.state === 'leaving' || d.state === 'arriving' ? 1 : 0;
@@ -426,6 +430,16 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
       doors: doors.map((d) => ({ x: d.plan.x, state: d.state, cages: d.cages.length, off: d.off })),
       locked: holes.filter(isLocked).map((h) => h.n),
     }),
+    audit: () => {
+      const spots = [...allCages].map((c) => ({ x: c.g.position.x + (c.g.parent === stage ? 0 : c.g.parent!.position.x), z: c.g.position.z + (c.g.parent === stage ? 0 : c.g.parent!.position.z) }));
+      for (let i = 0; i < spots.length; i++) for (let j = i + 1; j < spots.length; j++) {
+        if (Math.abs(spots[i]!.x - spots[j]!.x) < CAGE_SIDE - 0.01 && Math.abs(spots[i]!.z - spots[j]!.z) < CAGE_SIDE - 0.01) return `cages at ${spots[i]!.x.toFixed(2)},${spots[i]!.z.toFixed(2)} and ${spots[j]!.x.toFixed(2)},${spots[j]!.z.toFixed(2)} t=${time.toFixed(1)}`;
+      }
+      for (let i = 0; i < tugs.length; i++) for (let j = i + 1; j < tugs.length; j++) {
+        if (Math.hypot(tugs[i]!.x - tugs[j]!.x, tugs[i]!.z - tugs[j]!.z) < 0.75) return `tugs ${tugs[i]!.id} and ${tugs[j]!.id} at ${tugs[i]!.x.toFixed(2)},${tugs[i]!.z.toFixed(2)} t=${time.toFixed(1)}`;
+      }
+      return null;
+    },
     dispose: () => {
       for (const c of [...allCages]) scrap(c);
       for (const d of doors) d.board.dispose();

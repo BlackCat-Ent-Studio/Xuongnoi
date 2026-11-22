@@ -19,8 +19,8 @@ export interface DoorPlan {
   /** 1-based door number and the hole numbers (routes) it ships. */
   n: number; holes: number[];
   x: number;
-  /** The bay cell in front of the truck. */
-  bay: number;
+  /** The bay cell in front of the truck, and the cell beside it a tug leaves by. */
+  bay: number; exit: number;
   /** Where the cages stand in the truck, in loading order (deepest first). */
   slots: { x: number; z: number }[];
 }
@@ -84,7 +84,7 @@ export function planGround(holeRows: number, holeCols: number): GroundPlan {
     if (exit !== bufferIn) link(exit, node(-2, col - 1, 'lane'));
     const x = col * PITCH, slots: { x: number; z: number }[] = [];
     for (const depth of [2.1, 0.95]) for (const side of [-1, 1]) slots.push({ x: x + side * 0.57, z: DOCK_Z - 0.06 - depth });
-    doors.push({ n: j + 1, holes: Array.from({ length: holeCols }, (_, i) => j * holeCols + i + 1), x, bay: bay.id, slots });
+    doors.push({ n: j + 1, holes: Array.from({ length: holeCols }, (_, i) => j * holeCols + i + 1), x, bay: bay.id, exit: exit.id, slots });
   }
   const queue: number[] = [];
   for (let z = buffer.z; z > WALL_Z + 0.9; z -= 1.1) queue.push(z);

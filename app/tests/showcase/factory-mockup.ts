@@ -590,6 +590,14 @@ function report(): Record<string, unknown> {
     jam: robotStuckMax > 30 || o.tugStuckMax > 30,
   };
 }
+/** Two sorting robots closer than their bodies allow, if any. */
+function robotOverlap(): string | null {
+  for (let i = 0; i < robots.length; i++) for (let j = i + 1; j < robots.length; j++) {
+    const a = robotPos(robots[i]!), b = robotPos(robots[j]!);
+    if (Math.hypot(a.x - b.x, a.z - b.z) < 0.9) return `robots ${robots[i]!.id} and ${robots[j]!.id} t=${time.toFixed(1)}`;
+  }
+  return null;
+}
 const SEEK: Record<string, () => { x: number; z: number } | null> = {
   /** A sorting robot standing beside a locked hole with its carton. */
   locked: () => { const r = robots.find((q) => q.state === 'loaded' && q.hold > 1.2 && !q.next); return r ? { x: r.hole!.x, z: r.hole!.z } : null; },
@@ -602,7 +610,17 @@ Object.assign(window, {
   __mock: {
     state: report,
     /** Runs a layout headless for a number of simulated seconds (for checks). */
-    trial: (id: string, seconds: number) => { build(LAYOUTS.find((l) => l.id === id)!); for (let i = 0; i < seconds * 60; i++) step(1 / 60); return report(); },
+    trial: (id: string, seconds: number) => {
+      build(LAYOUTS.find((l) => l.id === id)!);
+      let overlaps = 0, first: string | null = null;
+      for (let i = 0; i < seconds * 60; i++) {
+        step(1 / 60);
+        if (i % 4 !== 0) continue;
+        const hit = out!.audit() ?? robotOverlap();
+        if (hit) { overlaps++; first ??= hit; }
+      }
+      return { ...report(), overlaps, firstOverlap: first };
+    },
     /** Steps the layout on show until a moment worth a picture comes up, then stops the clock; returns where it is. */
     seek: (what: string, maxSeconds = 600) => {
       for (let i = 0; i < maxSeconds * 60; i++) { step(1 / 60); const at = SEEK[what]!(); if (at) { running = false; counters(); return { ...at, time }; } }
