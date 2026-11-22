@@ -94,9 +94,9 @@ export function hasChassisOutline(e: Collidable): boolean {
  * other body, for a chassis on the plain drive of older boards, and for a chassis that was given a collision box of its own
  * (that box stays what it is, upright).
  *
- * Crates, items, people, other chassis and whatever rests on a chassis meet it by this outline. Blocks (the floor, walls,
- * moving blocks, machine pieces) still meet the upright square of `colliderBox`, as wide as the chassis is long: that square
- * is the same at every heading, so a chassis can turn on the spot beside a wall without a corner going into it.
+ * Everything meets it by this outline: crates, items, people, other chassis, what rests on it, and blocks (the floor, walls,
+ * moving blocks, machine pieces) that stop it or that it touches (`meetingPair`). Only the scale still weighs a block that
+ * rests on a chassis, or a chassis on a block, by the upright square of `colliderBox` (`outlinePair`).
  */
 export function chassisOutline(e: Collidable): Obb | null {
   if (!hasChassisOutline(e)) return null;
@@ -112,16 +112,35 @@ export function chassisReach(e: Collidable): number {
 }
 
 /**
- * The outlines two bodies meet by when one of them is a chassis with a real outline and neither is a block; null when their
- * upright boxes decide, as between any other two bodies.
+ * The outlines two bodies meet by when one of them is a chassis with a real outline (the other may be a block: a wall, the
+ * floor, a machine piece); null when their upright boxes decide, as between any other two bodies.
  */
-export function outlinePair(a: Collidable, b: Collidable): [Obb, Obb] | null {
+export function meetingPair(a: Collidable, b: Collidable): [Obb, Obb] | null {
   if (a.robot === undefined && b.robot === undefined) return null;
-  if (a.kind === 'block' || b.kind === 'block') return null;
   const oa = chassisOutline(a);
   const ob = chassisOutline(b);
   if (!oa && !ob) return null;
   return [oa ?? orientedBox(a), ob ?? orientedBox(b)];
+}
+
+/** `meetingPair` for the scale, which leaves blocks to the upright boxes: null when one of the two is a block. */
+export function outlinePair(a: Collidable, b: Collidable): [Obb, Obb] | null {
+  if (a.kind === 'block' || b.kind === 'block') return null;
+  return meetingPair(a, b);
+}
+
+/**
+ * False only when a chassis with a real outline (`chassis`) cannot be inside the upright box `box` by more than `skin`: the
+ * outline lies within half its diagonal of the chassis position on the ground and within half its height of it, so a box that
+ * is further away than that along a world axis is clear. Saves the full test of the two outlines for every block that is
+ * nowhere near (and for the floor a chassis stands on, which it touches without being in it).
+ */
+export function outlineNearBox(chassis: Collidable, box: Box, skin: number): boolean {
+  const spec = chassis.robot!.spec;
+  const round = Math.hypot(spec.length, spec.width) / 2;
+  if (Math.abs(box.pos.x - chassis.pos.x) - Math.abs(box.size.x) / 2 - round >= -skin) return false;
+  if (Math.abs(box.pos.z - chassis.pos.z) - Math.abs(box.size.z) / 2 - round >= -skin) return false;
+  return Math.abs(box.pos.y - chassis.pos.y) - (Math.abs(box.size.y) + Math.abs(chassis.size.y)) / 2 < -skin;
 }
 
 /** True when the upright box `lying` is over the outline seen from above: their shadows on the ground share more than `min` (m) of depth. */

@@ -1,7 +1,7 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
-import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, isTurnedBody, orientedBox, outlinePair, spanOverlap, type Box } from './collider';
-import { backOffAlong, mulQuat, obbBounds, obbGap, obbSeparation, yawQuat } from './oriented-box';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, hasChassisOutline, isTurnedBody, meetingPair, orientedBox, outlineNearBox, spanOverlap, type Box } from './collider';
+import { backOffAlong, mulQuat, obbBounds, obbGap, obbSeparation, yawQuat, type Obb } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
@@ -43,11 +43,29 @@ function gravityOf(e: Entity, g: number): number {
 }
 
 /**
+ * The outlines a mover and a solid (or two bodies that may touch) meet by when one of them is a chassis with a real outline;
+ * null when their upright boxes decide. A block that is nowhere near the chassis is told apart without working the outlines out.
+ */
+function metByOutline(a: Entity, b: Entity): [Obb, Obb] | null {
+  if (a.robot === undefined && b.robot === undefined) return null;
+  return meetingPair(a, b);
+}
+
+/** A chassis with a real outline and a block: true when the block is too far for the two to be inside each other at all. */
+function blockOutOfReach(a: Entity, b: Entity): boolean {
+  if (b.kind === 'block' && a.robot !== undefined && hasChassisOutline(a)) return !outlineNearBox(a, boundsBox(b), SKIN);
+  if (a.kind === 'block' && b.robot !== undefined && hasChassisOutline(b)) return !outlineNearBox(b, boundsBox(a), SKIN);
+  return false;
+}
+
+/**
  * Puts `c` flush against `b` on one side along `axis` (collision boxes touch; offsets are respected). When one of the two is a
- * chassis with a real outline (and neither is a block), `c` goes back the way it came just far enough for the outlines to touch.
+ * chassis with a real outline, `c` goes back the way it came just far enough for the outlines to touch. Up and down, a chassis
+ * and a block are set flush by their boxes as ever: the outline only turns about the vertical, so its top and underside are the
+ * box's, and a chassis that stands on a floor stands at the same height to the last bit, whatever its heading.
  */
 function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
-  const pair = outlinePair(c, b);
+  const pair = axis === 'y' && (c.kind === 'block' || b.kind === 'block') ? null : metByOutline(c, b);
   if (pair) {
     const dir = { x: 0, y: 0, z: 0 };
     dir[axis] = delta > 0 ? 1 : -1;
@@ -61,9 +79,12 @@ function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
 }
 
 function overlapsAll(a: Entity, b: Entity): boolean {
-  // A chassis with a real outline meets other bodies by that outline (see `chassisOutline`); blocks meet its upright square.
-  const pair = outlinePair(a, b);
-  if (pair) return obbSeparation(pair[0], pair[1]) < -SKIN;
+  // A chassis with a real outline meets every other body, blocks too, by that outline (see `chassisOutline`).
+  if (a.robot !== undefined || b.robot !== undefined) {
+    if (blockOutOfReach(a, b)) return false;
+    const pair = meetingPair(a, b);
+    if (pair) return obbSeparation(pair[0], pair[1]) < -SKIN;
+  }
   return overlapOn(a, b, 'x') > SKIN && overlapOn(a, b, 'y') > SKIN && overlapOn(a, b, 'z') > SKIN;
 }
 
@@ -72,8 +93,8 @@ export function touching(a: Entity, b: Entity): boolean {
   // A spinning block touches through its rotated outline, not its bounding box.
   if (isSpinner(a)) return spinnerTouches(a, b);
   if (isSpinner(b)) return spinnerTouches(b, a);
-  // A chassis with a real outline touches other bodies through it (blocks stop it by its upright square, so they touch that).
-  const pair = outlinePair(a, b);
+  // A chassis with a real outline touches other bodies, blocks too, through it.
+  const pair = metByOutline(a, b);
   if (pair) return obbSeparation(pair[0], pair[1]) <= CONTACT_EPS;
   // A turned crate touches through its real outline, not through the upright box around it.
   if (isTurnedBody(a) || isTurnedBody(b)) return obbSeparation(orientedBox(a), orientedBox(b)) <= CONTACT_EPS;
@@ -94,8 +115,9 @@ const NEAR_PAD = 0.5;
  * of it. `picks` are places in `solids`, in order: every solid whose bounds reach into a region around the body. A solid only
  * stops the body when their bounds overlap, so while the body's bounds lie inside the region no solid outside `picks` can
  * stop it; `refresh` is asked after every change of the body's place and picks anew when the body has left the region (thrown
- * out of a solid it stood in, say). A number that is not finite never rules a solid out. A chassis among the solids stops the
- * body by its real outline, which reaches past its square when it stands askew: its bounds here are those of the outline.
+ * out of a solid it stood in, say). A number that is not finite never rules a solid out. A chassis, among the solids or as the
+ * body that moves, meets the others by its real outline, which reaches past its square when it stands askew: its bounds here
+ * are those of the outline (for the mover: half its diagonal round its position, which holds them at any heading).
  */
 function reachOf(solid: Entity): Box {
   const outline = chassisOutline(solid);
@@ -119,9 +141,10 @@ function nearSolids(solids: readonly Entity[], c: Entity, travel: number): NearS
     picks: [],
     refresh(): boolean {
       const b = boundsBox(c);
-      const hx = Math.abs(b.size.x) / 2;
+      const round = c.robot !== undefined && hasChassisOutline(c) ? Math.hypot(c.robot.spec.length, c.robot.spec.width) / 2 : 0;
+      const hx = Math.max(round, Math.abs(b.size.x) / 2);
       const hy = Math.abs(b.size.y) / 2;
-      const hz = Math.abs(b.size.z) / 2;
+      const hz = Math.max(round, Math.abs(b.size.z) / 2);
       if (b.pos.x - hx >= minX && b.pos.x + hx <= maxX && b.pos.y - hy >= minY && b.pos.y + hy <= maxY && b.pos.z - hz >= minZ && b.pos.z + hz <= maxZ) return false;
       const m = travel + NEAR_PAD;
       minX = b.pos.x - hx - m;
@@ -423,21 +446,21 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r, g) * dt);
   if (mode === '2d-side') r.pos.z = 0;
   const others = meets && r.solid ? meets.chassis.filter((o) => o !== r) : [];
+  if (body.heading !== headingWas && !settleTurn(r, facingWas, others, solids)) {
+    // The turn would take a corner into a wall or another chassis and there is no room to back off: it does not turn this
+    // tick, and travels on along the heading it keeps.
+    body.heading = headingWas;
+    body.turnRate = 0;
+    r.facing = facingWas;
+    r.vel.x = Math.cos(headingWas) * body.travel;
+    r.vel.z = Math.sin(headingWas) * body.travel;
+  }
   if (!meets || others.length === 0) {
     const shove = beginShove(r, entities, solids, dt, mode, [], partsOf);
     r.onGround = integrate(r, dt, mode, solids);
     if (shove) finishShove(r, shove, byId, solids, mode);
     settleRobot(body, r.vel, mode === '2d-side');
     return;
-  }
-  if (body.heading !== headingWas && !settleTurn(r, facingWas, others, solids)) {
-    // The turn would take a corner into another chassis and there is no room to back off: it does not turn this tick, and
-    // travels on along the heading it keeps.
-    body.heading = headingWas;
-    body.turnRate = 0;
-    r.facing = facingWas;
-    r.vel.x = Math.cos(headingWas) * body.travel;
-    r.vel.z = Math.sin(headingWas) * body.travel;
   }
   // Another chassis that already shoved this one along this tick has given it that much of its own move: it does not travel it twice.
   const given = meets.shoved.get(r);
@@ -469,37 +492,45 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   settleRobot(body, { x: done.x + cut.x, z: done.z + cut.z }, mode === '2d-side');
 }
 
-/** A chassis backs off at most this many times for one turn (once per chassis its corner went into; more means it is wedged). */
+/** A chassis backs off at most this many times for one turn (once per body its corner went into; more means it is wedged). */
 const TURN_PASSES = 4;
 
 /**
- * A chassis has just turned on its wheels. Chassis are solid for each other by their real outlines, so the turn may have swung
- * a corner into another one that it was clear of before. It then backs off the shortest way out (its wheels slip sideways by
- * those few millimetres), as a real robot pivoting against another is pushed away from it. False when that is not possible
- * (the place it would back off to is inside a block or yet another chassis): the caller undoes the turn. Nothing is changed then.
+ * A chassis has just turned on its wheels. Walls and other chassis are solid for it by its real outline, so the turn may have
+ * swung a corner into one that it was clear of before. It then backs off the shortest way out on the ground (its wheels slip
+ * sideways by those few millimetres), as a real robot pivoting against a wall or another robot is pushed away from it. False
+ * when that is not possible (backing off one takes it into another: a lane narrower than its diagonal, a corner): the caller
+ * undoes the turn. Nothing is changed then. No other body is ever moved by it.
  */
 function settleTurn(r: Entity, facingWas: Vec3, others: readonly Entity[], solids: readonly Entity[]): boolean {
   const before = chassisOutline({ ...r, facing: facingWas });
   if (!before) return true;
-  // Only chassis it was clear of before the turn count: two that already overlap (spawned so) may still part.
-  const rivals: Entity[] = [];
+  // Only bodies it was clear of before the turn count: what it already stood in (spawned so, or set down into it) may still part.
+  const met: Obb[] = [];
   for (const o of others) {
-    const pair = outlinePair(r, o);
-    if (pair && obbSeparation(before, pair[1]) >= -SKIN) rivals.push(o);
+    const pair = meetingPair(r, o);
+    if (pair && obbSeparation(before, pair[1]) >= -SKIN) met.push(pair[1]);
   }
-  if (rivals.length === 0) return true;
+  for (const s of solids) {
+    // Half the diagonal holds the outline at both headings: a block beyond it (or the floor under the wheels) is not looked at twice.
+    if (!outlineNearBox(r, boundsBox(s), SKIN)) continue;
+    const box = orientedBox(s);
+    if (obbSeparation(before, box) >= -SKIN) met.push(box);
+  }
+  if (met.length === 0) return true;
   const start = { x: r.pos.x, z: r.pos.z };
-  const inside = (): Entity | undefined => rivals.find((o) => obbSeparation(chassisOutline(r)!, outlinePair(r, o)![1]) < -SKIN);
+  const inside = (): Obb | undefined => {
+    const now = chassisOutline(r)!;
+    return met.find((o) => obbSeparation(now, o) < -SKIN);
+  };
   let hit = inside();
-  if (!hit) return true;
-  const stoodIn = solids.filter((s) => overlapsAll(r, s));
   for (let pass = 0; hit && pass < TURN_PASSES; pass++) {
-    const { gap, axis } = obbGap(chassisOutline(r)!, outlinePair(r, hit)![1], true);
+    const { gap, axis } = obbGap(chassisOutline(r)!, hit, true);
     r.pos.x += axis.x * gap;
     r.pos.z += axis.z * gap;
     hit = inside();
   }
-  if (!hit && !solids.some((s) => overlapsAll(r, s) && !stoodIn.includes(s))) return true;
+  if (!hit) return true;
   r.pos.x = start.x;
   r.pos.z = start.z;
   return false;

@@ -208,8 +208,8 @@ describe('a chassis that turns beside another one', () => {
   });
 
   it('with a wall on its other side it has no room to back off: the turn stops, nothing overlaps, nothing shakes', () => {
-    // The wall stands 1 cm from the square of "a" (the square is what a block meets).
-    const wall: NodeSpec = ['wall', 'block', { position: { x: 0, y: 0.5, z: -0.6 - 0.01 - 0.25 }, size: { x: 4, y: 1, z: 0.5 } }];
+    // The wall stands 1 cm from the side of "a" (1 m wide: a block meets the chassis by its outline, as the other chassis does).
+    const wall: NodeSpec = ['wall', 'block', { position: { x: 0, y: 0.5, z: -0.5 - 0.01 - 0.25 }, size: { x: 4, y: 1, z: 0.5 } }];
     const r = play([{ id: 'a', x: 0, z: 0, left: 0.4, right: -0.4 }, { id: 'b', x: 0, z: 1.02 }], [wall]);
     let deepest = -Infinity;
     for (let k = 0; k < 4 / TICK_DT; k++) {
