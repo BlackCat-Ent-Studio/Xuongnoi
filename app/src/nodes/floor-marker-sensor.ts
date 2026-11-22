@@ -1,5 +1,5 @@
 import type { NodeDef } from '../engine/types';
-import { markerUnder } from './floor-marker';
+import { feetOf, markerUnder } from './floor-marker';
 import { asObject } from './util';
 
 interface MarkerSensorState {
@@ -13,7 +13,7 @@ export const floorMarkerSensorNode: NodeDef<MarkerSensorState> = {
   label: 'Đọc mốc sàn',
   category: 'logic',
   description:
-    'Cho biết một vật (thân robot, xe, nhân vật) đang đứng trên Mốc sàn số mấy, giống robot kho hàng đọc mã dán dưới sàn. Tâm của vật phải nằm trong ô của mốc. Không đứng trên mốc nào thì "Số mốc" là 0. "Khi vào mốc" bật một nhịp mỗi lần vật vừa vào một mốc khác.',
+    'Cho biết một vật (thân robot, xe, nhân vật) đang đứng trên Mốc sàn số mấy, giống robot kho hàng đọc mã dán dưới sàn. Tâm của vật phải nằm trong ô của mốc. Không đứng trên mốc nào thì "Số mốc" là 0. Hai tầng sàn chồng lên nhau thì đọc mốc của tầng ngay dưới chân. "Khi vào mốc" bật một nhịp mỗi lần vật vừa vào một mốc khác.',
   inputs: [{ id: 'who', type: 'object', label: 'Đối tượng', required: true }],
   outputs: [
     { id: 'number', type: 'number', label: 'Số mốc' },
@@ -26,7 +26,7 @@ export const floorMarkerSensorNode: NodeDef<MarkerSensorState> = {
   evaluate(ctx, i, _params, s) {
     const id = asObject(i.who);
     const self = id !== null ? ctx.world.getEntity(id) : undefined;
-    const found = self && self.visible ? markerUnder(ctx.world, ctx.mode, self.position) : null;
+    const found = self && self.visible ? markerUnder(ctx.world, ctx.mode, feetOf(self)) : null;
     const number = found?.number ?? 0;
     const entered = number !== 0 && number !== s.prev;
     s.prev = number;
