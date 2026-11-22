@@ -128,14 +128,13 @@ describe('a crate rests on the chassis that is drawn, not on the square round it
     const swept = Math.abs(Math.atan2(c.z, c.x) - startAngle) * DEG;
     const turned = Math.abs(headingOf(r.entity('r')!)) - startHeading;
     expect(turned).toBeGreaterThan(80);
-    // It goes round with the chassis (measured: 2 % behind it).
-    expect(swept).toBeGreaterThan(turned * 0.96);
+    // It goes round with the chassis and keeps its distance from the middle (measured: the same angle to 0.0001 degrees,
+    // 0.2999 m; see robot-bare-deck.test.ts for long turns, bends, sliding off and being held back).
+    expect(swept).toBeGreaterThan(turned * 0.999);
     expect(swept).toBeLessThan(turned * 1.001);
-    // The engine lets a body on a turning support creep outwards, about a tenth of its distance from the middle per radian
-    // turned (measured: 0.3 m becomes 0.35 m over this quarter turn). It must not be more than that.
     const radius = Math.hypot(c.x, c.z);
-    expect(radius).toBeGreaterThan(0.3 - 0.005);
-    expect(radius).toBeLessThan(0.3 * 1.2);
+    expect(radius).toBeGreaterThan(0.3 - 0.001);
+    expect(radius).toBeLessThan(0.3 + 0.001);
     expect(r.out('r', 'payload')).toBeCloseTo(2, 3);
     r.world.dispose?.();
   });

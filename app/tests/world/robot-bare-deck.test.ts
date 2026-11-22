@@ -93,7 +93,7 @@ describe('a crate 0.3 m from the middle of a bare deck keeps its place while the
       expect(run.rate).toBeLessThan(c.rate[1]);
       expect(run.speed).toBeGreaterThanOrEqual(c.speed[0]);
       expect(run.speed).toBeLessThan(c.speed[1]);
-      // Measured: 0.1 to 0.4 mm.
+      // Measured: 0.18 to 0.34 mm.
       expect(worst).toBeLessThan(0.002);
       expect(Number(r.out('r', 'payload'))).toBeCloseTo(2, 6);
       r.world.dispose?.();
@@ -145,7 +145,6 @@ describe('what holds the crate back still holds it', () => {
     const wall = (id: string, z: number): NodeSpec => [id, 'block', { position: { x: 0.3, y: DECK + 0.06 + 0.25, z }, size: { x: 1.4, y: 0.5, z: 0.1 } }];
     const reach = CRATE / 2 + 0.01;
     const r = play(0.3, -0.3, [crate(0.3, 0), wall('w1', reach + 0.05), wall('w2', -reach - 0.05)]);
-    r.tick(30);
     const x0 = r.entity('c')!.position.x;
     let worstZ = 0;
     let worstX = 0;
@@ -153,13 +152,17 @@ describe('what holds the crate back still holds it', () => {
       const c = r.entity('c')!.position;
       worstZ = Math.max(worstZ, Math.abs(c.z));
       worstX = Math.max(worstX, Math.abs(c.x - x0));
-      expect(Math.abs(c.y - (DECK + CRATE / 2))).toBeLessThan(0.005);
+      expect(Math.abs(c.y - (DECK + CRATE / 2))).toBeLessThan(0.006);
     });
     expect(run.turned).toBeGreaterThan(9);
     expect(run.rate).toBeGreaterThan(0.8);
-    // Never through a wall (2 mm is what the engine lets a pressed crate sink in), and not taken round: it stays where it stood.
+    // The deck takes it 7 mm towards one wall and turns it a few degrees, until it sits askew between the two walls; there it
+    // stays (measured: 7 mm along the walls from where it stood), never through a wall and not taken round.
+    expect(worstZ).toBeGreaterThan(0.003);
     expect(worstZ).toBeLessThan(0.01 + 0.002);
-    expect(worstX).toBeLessThan(0.05);
+    expect(worstX).toBeLessThan(0.02);
+    const end = r.entity('c')!.position;
+    expect(Math.hypot(end.x - 0.3, end.z)).toBeLessThan(0.02);
     expect(Number(r.out('r', 'payload'))).toBeCloseTo(2, 6);
     r.world.dispose?.();
   });
