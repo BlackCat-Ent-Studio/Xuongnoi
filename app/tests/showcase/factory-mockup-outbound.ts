@@ -31,7 +31,7 @@ export interface OutboundStats {
   doors: { n: number; cages: number; trucks: number; away: boolean }[];
   /** Cartons standing in cages under holes, in cages on the move, and in trucks at the docks. */
   inHoleCages: number; inMovingCages: number; inTrucks: number;
-  tugs: number; tugsWaiting: number; tugStuckMax: number; lockAvg: number; lockMax: number;
+  tugs: number; tugsWaiting: number; tugStuckMax: number; tugStuckAt: string; lockAvg: number; lockMax: number;
 }
 export interface Outbound {
   /** May a sorting robot tip its carton into this hole now? */
@@ -68,8 +68,8 @@ interface Tug {
 interface Board { mesh: THREE.Mesh; set: (text: string) => void; dispose: () => void }
 
 const LIGHTS: Record<Light, string> = { green: '#3ddc6e', amber: '#ffb21e', red: '#ff3b30' };
-const CRUISE = 1.9, WAIT_FULL = 10, LATCH = 0.3, LANE_SPEED = 1.0;
-const TRUCK_Z = DOCK_Z - 0.06, TRUCK_AWAY = -15;
+const CRUISE = 1.9, WAIT_FULL = 6, LATCH = 0.3, LANE_SPEED = 1.0;
+const TRUCK_Z = DOCK_Z - 0.06, TRUCK_AWAY = -11.5;
 
 function board(w: number, h: number): Board {
   const canvas = document.createElement('canvas');
@@ -100,7 +100,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
   const { plan } = o, CAP = o.capacity, gy = -GROUND;
   const at = (id: number): { x: number; z: number } => plan.nodes.get(id)!;
   const allCages = new Set<Cage>();
-  let time = 0, swaps = 0, cagesShipped = 0, trucksOut = 0, cartonsShipped = 0, tugStuckMax = 0, lockSum = 0, lockN = 0, lockMax = 0;
+  let time = 0, swaps = 0, cagesShipped = 0, trucksOut = 0, cartonsShipped = 0, tugStuckMax = 0, tugStuckAt = '', lockSum = 0, lockN = 0, lockMax = 0;
 
   // ---------------------------------------------------------------- cages
   function newCage(): Cage {
@@ -163,14 +163,14 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
     else if (d.state === 'shut') { if (d.t >= 0.9) { d.state = 'gateUp'; d.t = 0; } }
     else if (d.state === 'gateUp') { if (d.t >= 1.1) { d.state = 'leaving'; d.t = 0; d.v = 0; } }
     else if (d.state === 'leaving') {
-      d.v = Math.min(4.5, d.v + 1.8 * dt); d.off -= d.v * dt;
+      d.v = Math.min(4.5, d.v + 2.2 * dt); d.off -= d.v * dt;
       if (d.off <= TRUCK_AWAY) {
         for (const c of d.cages) { cartonsShipped += c.cartons.length; cagesShipped++; scrap(c); }
         d.cages = []; d.trucks++; trucksOut++; d.state = 'arriving'; d.t = 0;
       }
     } else if (d.state === 'arriving') {
       // backing in: brakes to a stop at the dock
-      d.v = Math.min(3.2, d.t * 2.5, Math.sqrt(2 * 1.2 * Math.max(0, -d.off)) + 0.12); d.off = Math.min(0, d.off + d.v * dt);
+      d.v = Math.min(3.4, d.t * 3, Math.sqrt(2 * 1.6 * Math.max(0, -d.off)) + 0.14); d.off = Math.min(0, d.off + d.v * dt);
       if (d.off >= 0) { d.v = 0; d.state = 'gateDown'; d.t = 0; }
     } else if (d.state === 'gateDown') { if (d.t >= 1.1) { d.state = 'opening'; d.t = 0; } }
     else if (d.t >= 0.9) { d.state = 'open'; d.t = 0; }
@@ -182,7 +182,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
   const holes: HoleLive[] = o.holes.map((h) => {
     const cage = newCage();
     setCage(cage, h.x, h.z);
-    for (let k = (h.n * 5 + 2) % (CAP - 1); k > 0; k--) { const p = o.makeCarton(h.n); stow(cage, p, slot(cage, p)); }
+    for (let k = (h.n * 3 + 1) % (CAP - 1); k > 0; k--) { const p = o.makeCarton(h.n); stow(cage, p, slot(cage, p)); }
     const light = new THREE.Mesh(lightGeo, glowMat(LIGHTS.green));
     light.position.set(h.x, 0, h.z);
     const hatch = hatchMesh();
@@ -373,7 +373,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
       const x = t.x, z = t.z, hd = t.heading;
       stepTug(t, dt);
       t.still = t.state === 'parked' || x !== t.x || z !== t.z || hd !== t.heading ? 0 : t.still + dt;
-      tugStuckMax = Math.max(tugStuckMax, t.still);
+      if (t.still > tugStuckMax) { tugStuckMax = t.still; tugStuckAt = t.state; }
       if (t.cage) setCage(t.cage, t.x, t.z);
     }
     stepLane(dt);
@@ -406,7 +406,7 @@ export function createOutbound(stage: THREE.Group, o: OutboundOptions): Outbound
       routes: holes.map((h) => ({ n: h.n, count: countOf(h), light: lightOf(h) })),
       doors: doors.map((d) => ({ n: d.plan.n, cages: d.cages.length, trucks: d.trucks, away: d.state === 'leaving' || d.state === 'arriving' })),
       inHoleCages, inTrucks, inMovingCages: sum(allCages) - inHoleCages - inTrucks,
-      tugs: tugs.length, tugsWaiting: tugs.filter((t) => t.state === 'parked').length, tugStuckMax, lockAvg: lockN > 0 ? lockSum / lockN : 0, lockMax,
+      tugs: tugs.length, tugsWaiting: tugs.filter((t) => t.state === 'parked').length, tugStuckMax, tugStuckAt, lockAvg: lockN > 0 ? lockSum / lockN : 0, lockMax,
     };
   }
 

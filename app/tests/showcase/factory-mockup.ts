@@ -584,7 +584,7 @@ function report(): Record<string, unknown> {
   return {
     id: L.id, seconds: Math.round(time), fed, stock, sorted: done, perMin: round((done / time) * 60),
     swaps: o.swaps, cagesShipped: o.cagesShipped, trucksOut: o.trucksOut, cartonsShipped: o.cartonsShipped,
-    lockedNow: o.locked, lockAvg: round(o.lockAvg), lockMax: round(o.lockMax), robotStuckMax: round(robotStuckMax), tugStuckMax: round(o.tugStuckMax),
+    lockedNow: o.locked, lockAvg: round(o.lockAvg), lockMax: round(o.lockMax), robotStuckMax: round(robotStuckMax), tugStuckMax: round(o.tugStuckMax), tugStuckAt: o.tugStuckAt,
     where: { onBelts, onRobots, falling: flying.length, inHoleCages: o.inHoleCages, inMovingCages: o.inMovingCages, inTrucks: o.inTrucks, shipped: o.cartonsShipped },
     conserved: fed + stock === accounted, in: fed + stock, accounted,
     jam: robotStuckMax > 30 || o.tugStuckMax > 30,
