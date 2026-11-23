@@ -9,8 +9,8 @@ import { laneArrows } from '../../src/handbook/boards-grid-floor';
 import { listSamples, parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
 import { FACTORY_STATIONS_NAME } from '../../src/samples/sorting-factory-stations';
-import { GRID_FLOOR_NAME, GRID_MAIN_WIRES, catchPlace, createGridFloorBoard } from '../../src/samples/sorting-grid-floor';
-import { CATCH, GRID, GRID_IDS, ROUTES, STARTS, STATION_CELLS, cellNumber, cellPlace, isLaneCell, stationNumber } from '../../src/samples/sorting-grid-plan';
+import { GRID_FLOOR_NAME, GRID_MAIN_WIRES, LAMP_ROWS, SWAP_BUTTON, cageLabel, catchPlace, createGridFloorBoard, lockNumber } from '../../src/samples/sorting-grid-floor';
+import { CAGE, CARTON, CATCH, COVER, GRID, GRID_IDS, LAMP, LOCK_WAIT_S, ROBOT, ROUTES, STARTS, STATION_CELLS, cellNumber, cellPlace, isLaneCell, stationNumber } from '../../src/samples/sorting-grid-plan';
 import { GRID_SAMPLE_ID, shippedGrid } from '../helpers/grid-sample-run';
 
 beforeAll(() => registerAllNodes());
@@ -49,14 +49,14 @@ describe('the grid-floor sorting sample as it ships', () => {
     expect(boardIssues(board, board.mode)).toEqual([]);
   });
 
-  it('is made of five circuits: one floor, two stations, six robots on one hold card, nine catch boxes, two adders', () => {
+  it('is made of five circuits: one floor, two stations, six robots on one hold card, nine holes, three adders', () => {
     const board = shippedGrid();
-    expect(board.circuits!.map((c) => c.name)).toEqual(['Sàn lưới', 'Trạm nạp', 'Xe phân loại', 'Ô nhận tuyến', 'Cộng chín số']);
+    expect(board.circuits!.map((c) => c.name)).toEqual(['Sàn lưới', 'Trạm nạp', 'Xe phân loại', 'Lỗ thả', 'Cộng chín số']);
     expect(copiesOf(board, GRID_IDS.floor).length).toBe(1);
     expect(copiesOf(board, GRID_IDS.station).length).toBe(2);
     expect(copiesOf(board, GRID_IDS.robot).length).toBe(GRID.robots);
     expect(copiesOf(board, GRID_IDS.catch).length).toBe(GRID.routes);
-    expect(copiesOf(board, GRID_IDS.adder).length).toBe(2);
+    expect(copiesOf(board, GRID_IDS.adder).length).toBe(3);
     expect(board.graph.nodes.filter((n) => n.kind === 'cell-hold').length).toBe(1);
     expect(board.graph.nodes.find((n) => n.kind === 'cell-hold')!.params.robots).toBe(GRID.robots);
     // Every robot is wired to its own row of the one hold card with four wires.
@@ -64,18 +64,25 @@ describe('the grid-floor sorting sample as it ships', () => {
     for (let k = 1; k <= GRID.robots; k++) {
       for (const w of [`xe-${k}.robot>giu-o.robot${k}`, `xe-${k}.o-muon>giu-o.want${k}`, `giu-o.cell${k}>xe-${k}.o-duoc-di`, `giu-o.stood${k}>xe-${k}.dung-giua-o`]) expect(links, w).toContain(w);
     }
-    // No wire leads from a robot to a station or to a catch box: they meet only in the world.
+    // No wire leads from a robot to a station or to a hole: they meet only in the world. Besides the hold card a robot
+    // has one more wire: the lock number, the sum of what the nine holes report.
     for (const [from, to] of GRID_MAIN_WIRES) {
       const ends = [from.split('.')[0]!, to.split('.')[0]!];
-      if (ends.some((e) => e.startsWith('xe-'))) expect(ends.some((e) => e === 'giu-o'), `${from} -> ${to}`).toBe(true);
+      if (ends.some((e) => e.startsWith('xe-'))) expect(ends.some((e) => e === 'giu-o' || e === 'tong-khoa'), `${from} -> ${to}`).toBe(true);
     }
+    for (let k = 1; k <= GRID.robots; k++) expect(links).toContain(`tong-khoa.tong>xe-${k}.so-khoa`);
+    for (const r of ROUTES) expect(links).toContain(`o-${r.code}.bao-khoa>tong-khoa.so-${r.code}`);
     // No circuit prints on the screen or needs a key: copies of one circuit would print the same line on top of each other.
     for (const c of board.circuits!) for (const n of c.graph.nodes) expect(['show-number', 'show-text', 'camera', 'key', 'stick', 'ui-button'].includes(n.kind), `${c.id}/${n.id}`).toBe(false);
+    // One button on the main board stands in for swapping the cages.
+    expect(board.graph.nodes.filter((n) => n.kind === 'ui-button').map((n) => n.params.text)).toEqual([SWAP_BUTTON]);
+    expect(SWAP_BUTTON).toBe('Đổi lồng');
+    expect(board.notes!.some((n) => n.text.includes('"Đổi lồng"') && n.text.includes('ĐỨNG THAY'))).toBe(true);
     expect(board.graph.nodes.filter((n) => n.kind === 'show-number').map((n) => n.params.label)).toEqual([
       'Tổng kiện đã phân loại',
       'Kiện vào sai ô',
       'Kiện nằm lại trên mặt sàn',
-      ...ROUTES.map((r) => `Tuyến ${r.code}`),
+      ...ROUTES.map((r) => cageLabel(r.code)),
       'Trạm 1: mã kiện đang chờ',
       'Trạm 2: mã kiện đang chờ',
     ]);
@@ -127,14 +134,49 @@ describe('the grid-floor sorting sample as it ships', () => {
         expect(row(`xe-${x}/o-do`, r.code)).toBe(cellNumber(...r.stop));
         expect(row(`xe-${x}/ben-do`, r.code)).toBe(r.turn);
         expect(row(`xe-${x}/tram-ve`, r.code)).toBe(r.home);
+        // The lap cell is the next cell down the lane of the stop cell; the two tables that pick digit k of the lock number hold 10^k and 10^(k-1).
+        const [sr, sc] = r.stop;
+        expect(r.lap).toEqual([sr, laneArrows(sr, sc, GRID.rows, GRID.cols) === 'E' ? sc + 1 : sc - 1]);
+        expect(isLaneCell(...r.lap)).toBe(true);
+        expect(row(`xe-${x}/o-vong`, r.code)).toBe(cellNumber(...r.lap));
+        expect(row(`xe-${x}/muoi-mu-k`, r.code)).toBe(10 * lockNumber(r.code));
+        expect(row(`xe-${x}/muoi-mu-k-1`, r.code)).toBe(lockNumber(r.code));
       }
+      expect(flat.nodes.find((n) => n.id === `xe-${x}/dem-cho`)!.params).toMatchObject({ seconds: 4, repeat: 'no' });
+      expect(LOCK_WAIT_S).toBe(4);
       expect(flat.nodes.find((n) => n.id === `xe-${x}/nho-ma`)!.params.start).toBe(STARTS[x - 1]!.route);
       expect(flat.nodes.find((n) => n.id === `xe-${x}/than`)!.params.look).toBe('agv');
     }
     for (const r of ROUTES) {
       expect(flat.nodes.find((n) => n.id === `o-${r.code}/tuyen`)!.params.value).toBe(r.code);
-      // The box stands under its hole; its belt lies between the stop cell and the hole and runs towards the hole.
+      // A locked hole k reports 10^(k-1): digit k of the sum.
+      expect(flat.nodes.find((n) => n.id === `o-${r.code}/so-khoa`)!.params).toMatchObject({ whenOn: 10 ** (r.code - 1), whenOff: 0 });
+      // The cage stands under its hole; the belt lies between the stop cell and the hole and runs towards the hole.
       const at = catchPlace(r.code);
+      const cage = flat.nodes.find((n) => n.id === `o-${r.code}/long`)!;
+      expect(cage.kind).toBe('container');
+      expect(cage.params).toMatchObject({ position: at, inside: 1, wall: 1, capacity: 6, clearance: 0.35, look: 'roll-cage' });
+      // The lamp stands on the deck in a corner of the hole's cell, clear of the lanes; it is green, amber from 5, red from 6.
+      const lamp = flat.nodes.find((n) => n.id === `o-${r.code}/den`)!.params;
+      expect(lamp).toMatchObject({ style: 'signal-tower', type: 'pickup', size: LAMP.size });
+      const lampAt = lamp.position as { x: number; y: number; z: number };
+      // To the millimetre: positions on the board are rounded to it.
+      expect(lampAt.y - LAMP.size.y / 2).toBeCloseTo(GRID.top, 2);
+      expect(Math.max(Math.abs(lampAt.x - at.x), Math.abs(lampAt.z - at.z)) + LAMP.size.x / 2).toBeLessThan(GRID.pitch / 2);
+      expect(Math.min(Math.abs(lampAt.x - at.x), Math.abs(lampAt.z - at.z)) - LAMP.size.x / 2).toBeGreaterThan(GRID.hole / 2);
+      // The plate over the hole covers the whole opening and lies on the deck; the parked one lies just south of it.
+      const over = flat.nodes.find((n) => n.id === `o-${r.code}/nap-dong`)!.params;
+      const beside = flat.nodes.find((n) => n.id === `o-${r.code}/nap-mo`)!.params;
+      expect(over).toMatchObject({ style: 'hole-cover', type: 'solid', size: COVER.size });
+      expect(beside).toMatchObject({ style: 'hole-cover', type: 'pickup', size: COVER.size });
+      const overAt = over.position as { x: number; y: number; z: number };
+      const besideAt = beside.position as { x: number; y: number; z: number };
+      expect(overAt.y - COVER.size.y / 2).toBeCloseTo(GRID.top, 9);
+      expect(COVER.size.x / 2).toBeGreaterThan(GRID.hole / 2);
+      expect(overAt.z - COVER.size.z / 2).toBeCloseTo(at.z - GRID.hole / 2, 9);
+      expect(overAt.z + COVER.size.z / 2).toBeGreaterThan(at.z + GRID.hole / 2);
+      expect(besideAt.z - overAt.z).toBeCloseTo(COVER.size.z, 9);
+      expect(besideAt.x).toBe(overAt.x);
       expect(at.x).toBeCloseTo(r.hole[1] * GRID.pitch, 9);
       expect(at.z).toBeCloseTo(r.hole[0] * GRID.pitch, 9);
       expect(at.y).toBe(0);
@@ -151,6 +193,18 @@ describe('the grid-floor sorting sample as it ships', () => {
     // The two stations draw their codes from different seeds.
     expect(flat.nodes.find((n) => n.id === 'tram-1/xuc-xac')!.params.seed).not.toBe(flat.nodes.find((n) => n.id === 'tram-2/xuc-xac')!.params.seed);
     for (const s of [1, 2]) expect(flat.nodes.find((n) => n.id === `tram-${s}/tao-kien`)!.params).toMatchObject({ wireCode: 'yes', recallPorts: 'yes', lifetime: 0, look: 'parcel-carton' });
+    // One station alone may hold every carton the floor has room for: nine full cages, six trays, two tables.
+    expect(CARTON.maxAlive).toBeGreaterThanOrEqual(GRID.routes * CAGE.capacity + GRID.robots + 2);
+    expect(CARTON.maxAlive).toBeLessThanOrEqual(200);
+    expect(LAMP_ROWS).toEqual([3, 3, 3, 3, 2, 1]);
+    expect([LAMP.red, LAMP.amber, LAMP.green]).toEqual([1, 2, 3]);
+    // The zone of "Đổi lồng" spans the inside of all nine cages, from the floor plates to the rims, and the shaft zone of a hole lies between the rim and the deck.
+    const swapZone = flat.nodes.find((n) => n.id === 'vung-thu-hoi')!.params;
+    expect((swapZone.center as { y: number }).y - (swapZone.size as { y: number }).y / 2).toBeCloseTo(CAGE.clearance + 0.05, 9);
+    expect((swapZone.center as { y: number }).y + (swapZone.size as { y: number }).y / 2).toBeCloseTo(CAGE.clearance + 0.05 + CAGE.wall, 9);
+    expect(CATCH.shaft.from).toBeGreaterThan(CAGE.rimY);
+    expect(CATCH.shaft.to).toBeLessThan(GRID.top - 0.2);
+    expect(CAGE.clearance).toBeGreaterThan(ROBOT.height);
   });
 
   it('no card lies on another at the biggest card size, on the main board and inside every circuit', () => {

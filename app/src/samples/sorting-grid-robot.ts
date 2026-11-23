@@ -1,12 +1,16 @@
 import type { Circuit } from '../engine/types';
 import { cards, open, pin, table, wires, type CardSpec, type Link } from './sorting-grid-kit';
-import { GRID_IDS, ROBOT, ROUTES, TRAY_TOP, cellNumber, mm } from './sorting-grid-plan';
+import { GRID_IDS, LOCK_WAIT_S, ROBOT, ROUTES, TRAY_TOP, cellNumber, mm } from './sorting-grid-plan';
 
 /**
  * "Xe phân loại": a two-motor robot for a floor of one-way lanes, with a tray that tips to either side. Everything it
  * decides it decides from what it senses itself: the cell under it, the carton on its tray and that carton's code. An
  * empty robot drives to a station cell; with a carton on the tray it drives to the stop cell of the carton's route, tips,
  * and drives back. What it shares with the other robots goes through its pins to the one "Bảng giữ ô" on the main board.
+ *
+ * A hole can be locked (its cage is full). The robot gets one number for all nine holes on a pin: a locked hole k adds
+ * 10^(k-1) to it, so digit k of that number is 1 while hole k is locked. Standing beside a locked hole the robot does not
+ * tip: it waits, then drives to the next cell down its lane, and the one-way lanes bring it round to the stop cell again.
  */
 
 const MOTOR_SIDE = mm(ROBOT.width / 2 - 0.05);
@@ -40,30 +44,64 @@ export const ROBOT_WIRES: readonly Link[] = [
   ['khay-trong.out', 'cho-yen.reset'],
   ['doc-ma.code', 'nho-ma.value'],
   ['cho-yen.done', 'nho-ma.store'],
-  // Goal: with a carton, the stop cell of its route; empty, the station the last route leads back to
+  // Goal: with a carton, the stop cell of its route (the lap cell while on a lap); empty, the station the last route leads back to
   ['doc-ma.code', 'o-do.index'],
   ['nho-ma.held', 'tram-ve.index'],
   ['khay-trong.out', 've-tram.on'],
   ['tram-ve.value', 'o-tram.a'],
   ['ve-tram.value', 'o-tram.b'],
-  ['o-do.value', 'o-dich.a'],
+  ['o-do.value', 'o-co-hang.a'],
+  ['o-co-hang.out', 'o-dich.a'],
   ['o-tram.out', 'o-dich.b'],
   ['o-dich.out', 'tim-duong.goal'],
-  // Standing on the middle of the goal cell with a taken carton, the tray first turns to the side this route's hole is on
+  // Standing on the middle of the goal cell with a taken carton
   ['tim-duong.hasNext', 'da-toi.in'],
   ['da-toi.out', 'dung-o-dich.b'],
   ['dung-o-dich.out', 'toi-noi.a'],
   ['cho-yen.done', 'toi-noi.b'],
+  // Is the hole of this carton locked? Digit k of the lock number is 1 when what is left after dividing by 10^k is at least 10^(k-1)
+  ['doc-ma.code', 'muoi-mu-k.index'],
+  ['doc-ma.code', 'muoi-mu-k-1.index'],
+  ['muoi-mu-k.value', 'phan-du.b'],
+  ['phan-du.out', 'lo-khoa.a'],
+  ['muoi-mu-k-1.value', 'lo-khoa.b'],
+  ['lo-khoa.out', 'lo-mo.in'],
+  // Beside an open hole the tray first turns to the side this route's hole is on
+  ['toi-noi.out', 'duoc-do.a'],
+  ['lo-mo.out', 'duoc-do.b'],
   ['doc-ma.code', 'ben-do.index'],
   ['ben-do.value', 'nho-ben.value'],
-  ['toi-noi.out', 'nho-ben.store'],
+  ['duoc-do.out', 'nho-ben.store'],
   ['nho-ben.held', 'ban-xoay.angle'],
   // ... then tips, until the carton has left the tray
-  ['toi-noi.out', 'lenh-do.a'],
+  ['duoc-do.out', 'lenh-do.a'],
   ['ban-xoay.reached', 'lenh-do.b'],
   ['lenh-do.out', 'goc-nghieng.on'],
   ['goc-nghieng.value', 'khop-nghieng.angle'],
   ['lenh-do.out', 'dem-do.up'],
+  // Standing still on the stop cell of its carton while that hole is locked: wait, then take a lap. The goal is the lap
+  // cell until the robot is on it, then the stop cell again
+  ['doc-moc.number', 'o-o-do.a'],
+  ['o-do.value', 'o-o-do.b'],
+  ['than.self', 'dung-yen.who'],
+  ['o-o-do.out', 'dung-canh-lo.a'],
+  ['dung-yen.still', 'dung-canh-lo.b'],
+  ['dung-canh-lo.out', 'cho-lo.a'],
+  ['lo-khoa.out', 'cho-lo.b'],
+  ['cho-lo.out', 'dem-cho.run'],
+  ['cho-lo.out', 'thoi-cho.in'],
+  ['thoi-cho.out', 'dem-cho.reset'],
+  ['dem-cho.done', 'di-vong.set'],
+  ['doc-ma.code', 'o-vong.index'],
+  ['doc-moc.number', 'toi-o-vong.a'],
+  ['o-vong.value', 'toi-o-vong.b'],
+  ['toi-o-vong.out', 'di-vong.reset'],
+  ['di-vong.on', 'dang-vong.on'],
+  ['o-vong.value', 'lech-vong.a'],
+  ['o-do.value', 'lech-vong.b'],
+  ['lech-vong.out', 'them-vong.a'],
+  ['dang-vong.value', 'them-vong.b'],
+  ['them-vong.out', 'o-co-hang.b'],
   // Drive: only while the tray is where it was told to be (flat, or tipped at the goal, where there is nowhere to drive to), and either empty or with the carton taken
   ['khop-nghieng.reached', 'chay.a'],
   ['khay-trong.out', 'duoc-di.a'],
@@ -100,11 +138,13 @@ export function robotCircuit(): Circuit {
     ['tram-ve', 'value-table', 4, table(ROUTES.map((r) => r.home))],
     ['ve-tram', 'bool-to-number', 5, { whenOn: 1, whenOff: 0 }],
     ['o-tram', 'math', 5, { op: 'mul' }],
+    ['o-co-hang', 'math', 5, { op: 'add' }],
     ['o-dich', 'math', 5, { op: 'add' }],
     // --- when to turn the tray, when to tip, when to drive
     ['da-toi', 'not', 6],
     ['dung-o-dich', 'and', 6],
     ['toi-noi', 'and', 6],
+    ['duoc-do', 'and', 6],
     ['ben-do', 'value-table', 6, table(ROUTES.map((r) => r.turn))],
     ['nho-ben', 'sample-hold', 6, { start: 90 }],
     ['lenh-do', 'and', 7],
@@ -112,6 +152,26 @@ export function robotCircuit(): Circuit {
     ['dem-do', 'counter', 7],
     ['duoc-di', 'or', 8],
     ['chay', 'and', 8],
+    // --- is the hole of this carton locked
+    ['muoi-mu-k', 'value-table', 9, table(ROUTES.map((r) => 10 ** r.code), 'zero')],
+    // With no carton (code 0) the row above gives 0 and this one its first row, so an empty tray never reads as "locked"
+    ['muoi-mu-k-1', 'value-table', 9, table(ROUTES.map((r) => 10 ** (r.code - 1)))],
+    ['phan-du', 'math', 9, { op: 'mod' }],
+    ['lo-khoa', 'compare', 9, { op: 'ge' }],
+    ['lo-mo', 'not', 9],
+    // --- waiting beside a locked hole, then a lap
+    ['o-o-do', 'compare', 10, { op: 'eq' }],
+    ['dung-yen', 'speed-sensor', 10],
+    ['dung-canh-lo', 'and', 10],
+    ['cho-lo', 'and', 10],
+    ['thoi-cho', 'not', 10],
+    ['dem-cho', 'timer', 10, { seconds: LOCK_WAIT_S, repeat: 'no' }],
+    ['di-vong', 'latch', 11],
+    ['o-vong', 'value-table', 11, table(ROUTES.map((r) => cellNumber(...r.lap)), 'zero')],
+    ['toi-o-vong', 'compare', 11, { op: 'eq' }],
+    ['dang-vong', 'bool-to-number', 12, { whenOn: 1, whenOff: 0 }],
+    ['lech-vong', 'math', 12, { op: 'sub' }],
+    ['them-vong', 'math', 12, { op: 'mul' }],
   ];
   return {
     id: GRID_IDS.robot,
@@ -121,6 +181,7 @@ export function robotCircuit(): Circuit {
     pins: [
       pin('o-duoc-di', 'Ô được đi', 'in', 'number', 'tim-moc.number'),
       pin('dung-giua-o', 'Đứng giữa ô', 'in', 'bool', 'dung-o-dich.a'),
+      pin('so-khoa', 'Số khoá các lỗ', 'in', 'number', 'phan-du.a'),
       pin('robot', 'Robot', 'out', 'object', 'than.self'),
       pin('o-muon', 'Ô muốn tới', 'out', 'number', 'tim-duong.next'),
       pin('da-do', 'Số kiện đã đổ', 'out', 'number', 'dem-do.value'),

@@ -35,6 +35,8 @@ export interface Route {
   hole: readonly [row: number, col: number];
   /** The lane cell the robot stops on: the one just north of the hole. */
   stop: readonly [row: number, col: number];
+  /** The lane cell a robot drives to when the hole stays locked: the next cell down its lane. From there the one-way lanes lead it round and back to the stop cell. */
+  lap: readonly [row: number, col: number];
   /** Angle of the tray's turntable (degrees): 90 tips to the robot's right, -90 to its left. */
   turn: number;
   /** The station cell the robot drives back to after this route. */
@@ -60,7 +62,7 @@ export const ROUTES: readonly Route[] = Array.from({ length: GRID.routes }, (_, 
   const hr = 1 + 2 * Math.floor(n / 3);
   const hc = 1 + 2 * (n % 3);
   const eastbound = ((hr - 1) / 2) % 2 === 0;
-  return { code: n + 1, hole: [hr, hc], stop: [hr - 1, hc], turn: eastbound ? 90 : -90, home: stationNumber(HOME_1.includes(n + 1) ? 1 : 2) };
+  return { code: n + 1, hole: [hr, hc], stop: [hr - 1, hc], lap: [hr - 1, eastbound ? hc + 1 : hc - 1], turn: eastbound ? 90 : -90, home: stationNumber(HOME_1.includes(n + 1) ? 1 : 2) };
 });
 
 /** The robot: chassis, tray and the carton it carries (m, kg, degrees). */
@@ -86,8 +88,8 @@ export const CARTON = {
   /** Tape colour and mass of the three classes the stations draw from. */
   classColors: ['#ef4444', '#22c55e', '#3b82f6'] as const,
   classMasses: [1, 2, 3] as const,
-  /** Cartons one station may have in the world at once. */
-  maxAlive: 20,
+  /** Cartons one station may have in the world at once: more than nine full cages, six trays and two tables hold together, so a station never stops for this number. */
+  maxAlive: 64,
 } as const;
 
 /** The feeding station, in its own frame: the hand-over cell's middle is the origin, the deck's face is y = 0, the table lies to the west. */
@@ -104,15 +106,37 @@ export const STATION = {
   base: { x0: -3.2, x1: -GRID.pitch / 2, width: 1.6 },
 } as const;
 
-/** The catch box under a hole and the short belt on the deck that carries a tipped carton into the hole (m). */
+/** The roll cage under a hole (m): its settings, and what follows from them. */
+export const CAGE = {
+  inside: 1,
+  wall: 1,
+  clearance: 0.35,
+  /** Cartons at which the cage says "Đã đầy" and the hole is locked. */
+  capacity: 6,
+  /** Cartons from which the lamp is amber. */
+  almost: 5,
+  /** Height of the upper face of the cage's floor plate and of its rim above the ground. */
+  floorY: 0.4,
+  rimY: 1.4,
+} as const;
+
+/** "Đặt màu" of the lamp tower: the numbers the block piece takes. */
+export const LAMP = { red: 1, amber: 2, green: 3, size: { x: 0.14, y: 0.865, z: 0.14 }, /** Where it stands from the hole's middle, along x and along z. */ offset: 0.52 } as const;
+
+/** The plate that closes a locked hole: it lies on the deck, from the end of the short belt to a little past the far edge of the hole. An open hole shows the same plate parked beside it. */
+export const COVER = { size: { x: 0.78, y: 0.03, z: 0.72 }, shiftZ: 0.01 } as const;
+
+/** Seconds a robot waits beside a locked hole before it drives a lap. */
+export const LOCK_WAIT_S = 4;
+
+/** What stands at a hole besides the cage (m): the short belt on the deck that carries a tipped carton into the hole, and the sensor zone in the shaft between the deck and the cage. */
 export const CATCH = {
-  inner: 1.2,
-  wallH: 1,
-  wallT: 0.1,
   /** The belt lies between the stop cell and the hole: from / to are distances from the middle line of the stop cell's lane. */
   belt: { from: 0.5, to: 1.05, length: 0.8, height: 0.1, speed: 1 },
-  /** Seconds between two "Thu hồi" beats. */
-  recallEveryS: 0.25,
+  /** The zone a falling carton passes: its side, and its lower and upper face above the ground. */
+  shaft: { side: 0.9, from: 1.45, to: 2.35 },
+  /** Seconds between two "Thu hồi" beats while the cages are being swapped. */
+  recallEveryS: 0.1,
 } as const;
 
 /** Where the six robots start: cell and heading (degrees) of its lane, and the route they "remember" at the start (it picks their first station). */
