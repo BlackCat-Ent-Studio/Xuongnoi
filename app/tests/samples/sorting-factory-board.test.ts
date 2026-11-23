@@ -150,7 +150,8 @@ describe('the shipped board "Xưởng phân loại kiện hàng (đang dựng: p
   it('is in the "Bài mẫu" menu under a name that says it is unfinished, and its notes say what stands in for the vehicles', () => {
     const entry = listSamples().find((s) => s.id === 'sorting-factory')!;
     expect(entry.label).toContain('đang dựng');
-    expect(entry.label).toContain('chưa có đội xe');
+    // The menu shows the short name only; what is missing is said in the notes on the board.
+    expect(entry.label).toBe(FACTORY_STATIONS_NAME);
     const board = entry.board;
     expect(board.name).toBe(FACTORY_STATIONS_NAME);
     expect(board.graph.settings?.realPhysics).toBe(true);

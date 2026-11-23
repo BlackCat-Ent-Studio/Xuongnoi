@@ -22,6 +22,7 @@ export const SHIPS_WITH_REAL_PHYSICS = new Set([
   'sample:robot-line-follow',
   'sample:robot-square',
   'sample:sorting-factory',
+  'sample:sorting-factory-grid',
   'sample:weight-sorter',
 ]);
 
