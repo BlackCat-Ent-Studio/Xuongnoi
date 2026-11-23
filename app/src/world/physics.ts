@@ -7,6 +7,7 @@ import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
 import type { Entity } from './entity';
+import { beginHitches, followHitches, heldByCarrier, ownMassOf, type Hitch } from './hitch';
 import { isSpinner, spinnerTouches } from './platforms';
 import { massOn, weighSceneOf, type MachineOf, type WeighScene } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
@@ -463,13 +464,18 @@ function drivenVel(vel: { x: number; z: number }, slide: { x: number; z: number 
  * (chassis-support.ts).
  * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
  * world, `own` the pieces bolted to this chassis (`partsOf` gives them for any chassis), `meets` the other solid chassis it may
- * run into (real physics only).
+ * run into (real physics only). `held` are the bodies it holds by a hitch (hitch.ts): they are never in its own way, and with
+ * `weigh` they and what lies in them load its motors as well.
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>, machineOf?: MachineOf, partsOf?: PartsOf): void {
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>, machineOf?: MachineOf, partsOf?: PartsOf, held?: { bodies: readonly Entity[]; weigh: boolean }): void {
   const body = r.robot;
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
-  const solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
+  let solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
+  if (held) solids = solids.filter((s) => !held.bodies.includes(s));
+  // What it holds is part of it for the weighing: the bodies weigh what they are, and what rests on them rests on the chassis.
+  const parts = held?.weigh ? new Set([...(own ?? []), ...held.bodies]) : own;
+  const heldKg = held?.weigh ? ownMassOf(held.bodies) : 0;
   giveWay(r, solids);
   const headingWas = body.heading;
   const facingWas = r.facing;
@@ -477,7 +483,7 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   // It appeared with no floor near under some wheel: it is not being set down, it is in the air or over an edge from the start.
   if (support && !body.landed) body.landed = true;
   const grip = support ? { wheels: support.grip, belly: support.state === 'belly' } : undefined;
-  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf), grip);
+  const flat = driveRobot(body, dt, mode === '2d-side', (mode === '2d-top' ? 0 : massOn(entities, r, parts, weigh(), machineOf)) + heldKg, grip);
   const slide = body.traction ? slideOff(body, support, gravityOf(r, g), dt) : null;
   r.vel.x = flat.x;
   r.vel.z = flat.z;
@@ -680,7 +686,11 @@ export function stepPhysics(
   partsOf?: (body: Entity) => ReadonlySet<Entity> | undefined,
   /** For a piece bolted to a machine, the body that machine stands on (see `massOn`). */
   machineOf?: MachineOf,
+  /** The carriers that hold a body (hitch.ts); `weigh` = what is held loads its carrier ("Vật lý thật"). */
+  hitches?: { list: readonly Hitch[]; weigh: boolean },
 ): void {
+  const held = hitches && hitches.list.length > 0 ? heldByCarrier(hitches.list) : null;
+  if (hitches && held) beginHitches(hitches.list);
   const byId = new Map(entities.map((e) => [e.id, e]));
   const solids = entities.filter((e) => e.visible && e.solid && e.kind === 'block');
 
@@ -718,7 +728,9 @@ export function stepPhysics(
   let weighing: WeighScene | null = null;
   const weigh = (): WeighScene => (weighing ??= weighSceneOf(entities));
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c), machineOf, partsOf);
+    if (c.kind !== 'robot' || !c.visible) continue;
+    const bodies = held?.get(c);
+    stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c), machineOf, partsOf, bodies ? { bodies, weigh: hitches!.weigh } : undefined);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {
@@ -746,11 +758,20 @@ export function stepPhysics(
     if (rules && extras?.carried) settleCarried(c, extras.carried.item, [...walkSolids, ...extras.soft], rules, mode);
   }
 
+  // Every carrier has made its move: what it holds goes with it, before the loose items (and the crates) make theirs.
+  if (hitches && held) followHitches(hitches.list, entities, mode, dt);
+
   const cargo = cargoPositions(entities, mode);
   // Loose items rest on the top of a solid robot chassis; they pass through it everywhere else.
   const chassis = mode === '2d-top' ? [] : entities.filter((e) => e.kind === 'robot' && e.visible && e.solid);
   for (const item of entities) {
     if (item.kind !== 'item' || !item.visible || item.bullet) continue;
+    if (item.hitchedBy !== undefined) {
+      // Held by a hitch: it was put in its place above and keeps the turn it was taken with.
+      item.vel.x = item.vel.y = item.vel.z = 0;
+      item.onGround = false;
+      continue;
+    }
     const holder = item.heldBy !== null ? byId.get(item.heldBy) : undefined;
     if (holder) {
       const slot = cargo.get(item.id);

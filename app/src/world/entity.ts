@@ -100,6 +100,8 @@ export interface Entity {
   heldTurn?: { x: number; y: number; z: number; w: number };
   /** Rigid items: node id of the gripper whose fingers hold it; the crate engine leaves it to that hand and the hand's own solid cubes ignore it. */
   grippedBy?: string;
+  /** Loose items and blocks a carrier holds (see hitch.ts): node id of the hitch that holds it. A held item also has `heldBy` set to the carrier. */
+  hitchedBy?: string;
 
   // ---- collision and body tuning; unset = plain visual box and normal physics ----
   collider?: ColliderSpec;
