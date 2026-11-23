@@ -117,6 +117,7 @@ export function makeWorld(): FakeWorld {
     portalUser: () => null,
     setBeltSpeed: () => undefined,
     moveBlock: () => true,
+    moveBlocks: () => true,
     setBlockAngle: () => true,
     setBlockTilt: () => undefined,
     shoot: () => null,

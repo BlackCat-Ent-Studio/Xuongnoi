@@ -23,7 +23,7 @@ import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { touchingPairs } from './contact-pairs';
 import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
-import { crateMovedIn, moveBlockIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
+import { crateMovedIn, moveBlockIn, moveBlocksIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
 import { RESPAWN_BELOW, bodyRules, isCovered, isSolidBody, overlapsBox, solidDropSpot } from './solid-bodies';
@@ -84,7 +84,7 @@ const KEEPS_VIEWS: ReadonlySet<string> = new Set<keyof World>([
   'cargoOf', 'cameraCommand', 'portalUser', 'isRigidCrate', 'realPhysicsOn', 'robotPushN', 'robotWheelState', 'shotHits', 'entities', 'listEntities',
   'runSeed', 'hudItems', 'debugBodies',
   'setHud', 'setCamera', 'setMount', 'setExactBodies', 'setItemGrip',
-  'moveBlock', 'setRobotWheel', 'setRobotTuning', 'resizeBlock', 'setBlockAngle', 'setBlockTilt',
+  'moveBlock', 'moveBlocks', 'setRobotWheel', 'setRobotTuning', 'resizeBlock', 'setBlockAngle', 'setBlockTilt',
   'applySqueeze', 'setItemRotation', 'teleport',
 ]);
 
@@ -865,6 +865,26 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       const onto = mounts.size > 0 && e.solid ? boltedOnto(e) : [];
       // Only the views of the block and of the bodies it carried or pushed change.
       return moveBlockIn((scene ??= moveSceneOf(list)), e, to, mode, onto, markStale);
+    },
+    moveBlocks(ids: readonly EntityId[], to: Vec3): boolean {
+      const blocks: Entity[] = [];
+      for (const id of ids) {
+        const e = byId.get(id);
+        if (!e || e.kind !== 'block' || !e.visible) return false;
+        blocks.push(e);
+      }
+      if (blocks.length === 0) return false;
+      for (const e of blocks) markMover(e);
+      // What any solid one of them is bolted onto is not shoved out of the way of the body, as for a block that moves alone.
+      const onto: Entity[] = [];
+      if (mounts.size > 0) {
+        for (const e of blocks) {
+          if (!e.solid) continue;
+          for (const base of boltedOnto(e)) if (!onto.includes(base) && !blocks.includes(base)) onto.push(base);
+        }
+      }
+      // Only the views of the blocks and of the bodies they carried or pushed change.
+      return moveBlocksIn((scene ??= moveSceneOf(list)), blocks, to, mode, onto, markStale);
     },
     setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
       const e = byId.get(body);

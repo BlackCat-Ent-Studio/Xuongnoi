@@ -2,8 +2,6 @@ import { CELL_HOLD_MAX_ROBOTS } from '../nodes/cell-hold';
 import { tryCellHold, tryGridFleet, tryGridRoute } from './boards-grid-floor';
 import type { HandbookEntry } from './types';
 
-/** No lesson teaches these two pieces yet (see tutorial/course-pack-n.ts); the pages and their "Thử ngay" boards explain them. */
-const LESSON = 'grid-floor';
 
 const robots = Array.from({ length: CELL_HOLD_MAX_ROBOTS }, (_, k) => k + 1);
 const perRobot = (id: string, text: (k: number) => string): Record<string, string> => Object.fromEntries(robots.map((k) => [`${id}${k}`, text(k)]));
@@ -38,7 +36,7 @@ export const HANDBOOK_GRID_FLOOR: readonly HandbookEntry[] = [
       'Mảnh này không biết có robot khác. Muốn nhiều robot không đụng nhau phải dùng thêm Bảng giữ ô.',
       'Muốn biết "đã tới đích để đổ hàng": dùng "Còn phải đi" tắt VÀ "Robot k đứng giữa ô" của Bảng giữ ô bật.',
     ],
-    lessonId: LESSON,
+    lessonId: 'grid-find-way',
     tryBoard: tryGridRoute,
   },
   {
@@ -71,7 +69,7 @@ export const HANDBOOK_GRID_FLOOR: readonly HandbookEntry[] = [
       'Trên sàn một chiều, kẹt cứng chỉ xảy ra khi robot đứng kín một vòng ô. Vòng nhỏ nhất quanh một lỗ có 8 ô, nên 7 robot trở xuống không thể tự kẹt.',
       'Chỉ nhìn bằng cảm biến Dò phía trước thì từ 4 robot trở lên là kẹt: cảm biến không phân biệt được "xe kia muốn vào ô của mình" với "xe kia chỉ đang đứng đó".',
     ],
-    lessonId: LESSON,
+    lessonId: 'two-robots-one-cell',
     tryBoard: tryCellHold,
     extraTries: [{ label: 'Thử: 4 robot trên sàn 9 lỗ', board: tryGridFleet }],
   },

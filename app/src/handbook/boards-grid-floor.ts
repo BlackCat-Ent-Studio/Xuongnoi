@@ -182,7 +182,7 @@ export function tryCellHold(): Board {
     graph: { nodes, wires: wires([...robot('1'), ...robot('2'), ['giu-o.held', 'hien-giu.value']]) },
     notes: [
       note(
-        'Nhìn từ trên xuống. Robot xanh dương (số 1) muốn tới ô 9; robot xanh lá (số 2) đứng ở ô 3 và chưa có đích. Bấm Chạy: ô nào đang có robot giữ thì đổi sang màu đỏ. Robot 1 sang ô 2 rồi phải đứng chờ, vì ô 3 đang bị robot 2 giữ. Đang chạy, đổi "Giá trị" của Số cố định thứ hai (đích của robot 2) từ 0 thành 7: robot 2 đi, ô 3 trống ra, robot 1 đi tiếp tới ô 9. Thử gỡ dây "Ô robot 1 được đi": robot 1 không bao giờ nhúc nhích.',
+        'Nhìn từ trên xuống. Robot màu cam (số 1) muốn tới ô 9; robot xanh lá (số 2) đứng ở ô 3 và chưa có đích. Bấm Chạy: ô nào đang có robot giữ thì đổi sang màu đỏ. Robot 1 sang ô 2 rồi phải đứng chờ, vì ô 3 đang bị robot 2 giữ. Đang chạy, đổi "Giá trị" của Số cố định thứ hai (đích của robot 2) từ 0 thành 7: robot 2 đi, ô 3 trống ra, robot 1 đi tiếp tới ô 9. Thử gỡ dây "Ô robot 1 được đi": robot 1 không bao giờ nhúc nhích.',
         MARGIN,
         bottom + 10,
         460,

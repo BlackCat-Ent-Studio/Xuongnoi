@@ -115,10 +115,14 @@ describe('handbook pages of the grid floor pieces', () => {
     expect(handbookEntry('cell-hold')!.params.robots).toContain(`Mặc định ${value('cell-hold', 'robots')}`);
   });
 
-  it('no lesson teaches the two pieces yet: the course pack names the kinds and the pages offer no lesson', () => {
+  it('each page points at the lesson that teaches its piece; the first course pack still only names the kinds', () => {
     expect(COVERS).toEqual(['grid-route', 'cell-hold']);
     expect(createCoursePackN({} as Parameters<typeof createCoursePackN>[0])).toEqual([]);
-    for (const entry of HANDBOOK_GRID_FLOOR) expect(findLesson(entry.lessonId)).toBeUndefined();
+    expect(HANDBOOK_GRID_FLOOR.map((e) => [e.kind, e.lessonId])).toEqual([
+      ['grid-route', 'grid-find-way'],
+      ['cell-hold', 'two-robots-one-cell'],
+    ]);
+    for (const entry of HANDBOOK_GRID_FLOOR) expect(findLesson(entry.lessonId), entry.kind).toBeDefined();
   });
 });
 
