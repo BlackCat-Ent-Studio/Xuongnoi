@@ -43,8 +43,8 @@ interface Bot {
   /** Point "Đi tới điểm" drives to; absent = it stays where it is. */
   goal?: { x: number; z: number };
   drive?: Record<string, ParamValue>;
-  /** A side tray with a carton on it that tips when the run starts: which side (1 = the robot's right), and the carton's mass. */
-  tray?: { side: 1 | -1; kg: number };
+  /** A side tray with a carton on it that tips when the run starts: which side (1 = the robot's right), the carton's mass, and the parcel code printed on it (none = a plain crate). */
+  tray?: { side: 1 | -1; kg: number; code?: number };
 }
 
 /** A two-motor chassis driven by "Đi tới điểm", optionally with the side-dump tray of the sorting robots. */
@@ -77,7 +77,7 @@ function bot(b: Bot): Parts {
       [`${id}-tilt`, 'joint', { axis: 'pitch', start: 0, min: -90, max: 90, maxTorque: 150, maxSpeed: 60, solid: 'no' }],
       [`${id}-tray`, 'link', { length: TRAY.length, thickness: TRAY.thickness, width: TRAY.width, solid: 'yes', mass: 1 }],
       [`${id}-angle`, 'bool-to-number', { whenOn: 35, whenOff: 0 }],
-      [`${id}-crate`, 'item', { shape: 'crate', position: { x: b.x - Math.sin(rad) * across, y: y0 + up + TRAY.thickness / 2 + CARTON.y / 2 + 0.005, z: b.z + Math.cos(rad) * across }, size: CARTON, mass: b.tray.kg }],
+      [`${id}-crate`, 'item', { shape: 'crate', position: { x: b.x - Math.sin(rad) * across, y: y0 + up + TRAY.thickness / 2 + CARTON.y / 2 + 0.005, z: b.z + Math.cos(rad) * across }, size: CARTON, mass: b.tray.kg, ...(b.tray.code !== undefined ? { look: 'parcel-carton', tag: String(b.tray.code) } : {}) }],
     );
     wires.push(
       [id, 'self', `${id}-turn`, 'base'],
@@ -260,5 +260,97 @@ describe('raised deck: the level below', () => {
     expect(worstGap(upper, single)).toBe(0);
     const closest = Math.min(...paths.a.map((p, i) => Math.hypot(p.x - paths.b[i]!.x, p.z - paths.b[i]!.z)));
     expect(closest).toBeLessThan(0.1);
+  });
+});
+
+describe('raised deck: a robot that drives onto a hole', () => {
+  // One 0.7 m hole in the middle of the deck; the robot drives along +x on the line z = `offset` from x = -3 towards x = 3.
+  const across = (offset: number, floor: number): Parts => bot({ id: 'a', x: -3, z: offset, floor, heading: 0, goal: { x: 3, z: offset }, drive: { tolerance: 0.02 } });
+  const oneHole: Parts = { nodes: [deck({ hole: 0.7, margin: 4 })], wires: [] };
+
+  it('0.9 x 0.7 m chassis straight onto the 0.7 m hole: its wheels lose the floor and it ends stuck astride the hole, still level with the deck', { timeout: 60_000 }, () => {
+    const r = play(oneHole, across(0, TOP));
+    const path = drive(r, 'a', seconds(14));
+    r.world.dispose?.();
+    const last = path.points[path.points.length - 1]!;
+    const before = path.points[path.points.length - 1 - seconds(2)]!;
+    expect(path.arrivedAt).toBe(-1);
+    // Its middle is over the hole (the hole reaches 0.35 m each way), it has not dropped, and it is at rest.
+    expect(Math.abs(last.x)).toBeLessThan(0.35);
+    expect(last.y).toBeCloseTo(TOP + CHASSIS.height / 2, 6);
+    expect(Math.abs(last.x - before.x)).toBeLessThan(1e-6);
+    expect(Math.abs(last.z - before.z)).toBeLessThan(1e-6);
+    // The same drive on the ground, where there is no hole, arrives: it is the hole that stopped it.
+    const ground = play(across(0, 0));
+    expect(drive(ground, 'a', seconds(14)).arrivedAt).toBeGreaterThan(0);
+    ground.world.dispose?.();
+  });
+
+  it('in the lane beside the hole (0.75 m from its middle, every wheel on the deck) it drives tick for tick as on the ground', { timeout: 60_000 }, () => {
+    const up = play(oneHole, across(0.75, TOP));
+    const onDeck = drive(up, 'a', seconds(14));
+    up.world.dispose?.();
+    const down = play(across(0.75, 0));
+    const onGround = drive(down, 'a', seconds(14));
+    down.world.dispose?.();
+    expect(onDeck.arrivedAt).toBeGreaterThan(0);
+    expect(onDeck.arrivedAt).toBe(onGround.arrivedAt);
+    expect(worstGap(onDeck, onGround, TOP)).toBeLessThan(1e-9);
+  });
+});
+
+describe('raised deck: floor markers on two levels', () => {
+  it('a robot on the deck reads the tile on the deck, a robot under it reads the tile on the ground', () => {
+    // Lane z = 1 of a 3 x 3 deck. Each level has two tiles on that lane; one tile of each level is shifted, so that the
+    // nearest middle alone would give the low robot the deck tile and the high robot the ground tile.
+    const tiles: NodeSpec[] = [
+      ['g1', 'floor-marker', { number: 1, position: { x: -1, y: 0, z: 1 }, size: 2 }],
+      ['g2', 'floor-marker', { number: 2, position: { x: 1.2, y: 0, z: 1 }, size: 2 }],
+      ['d1', 'floor-marker', { number: 101, position: { x: -1.2, y: TOP, z: 1 }, size: 2 }],
+      ['d2', 'floor-marker', { number: 102, position: { x: 1, y: TOP, z: 1 }, size: 2 }],
+      ['readLow', 'floor-marker-sensor', {}],
+      ['readHigh', 'floor-marker-sensor', {}],
+    ];
+    const r = play(
+      { nodes: [deck({ holeCols: 3, holeRows: 3 }), ...tiles], wires: [['low', 'self', 'readLow', 'who'], ['high', 'self', 'readHigh', 'who']] },
+      bot({ id: 'low', x: -1.15, z: 1, floor: 0 }),
+      bot({ id: 'high', x: 1.15, z: 1, floor: TOP }),
+    );
+    r.tick(30);
+    expect(r.entity('high')!.position.y).toBeCloseTo(TOP + CHASSIS.height / 2, 6);
+    expect(r.entity('low')!.position.y).toBeCloseTo(CHASSIS.height / 2, 6);
+    expect(r.out('readLow', 'number')).toBe(1);
+    expect(r.out('readHigh', 'number')).toBe(102);
+    expect(r.out('readLow', 'marker')).toBe(r.entity('g1')!.id);
+    expect(r.out('readHigh', 'marker')).toBe(r.entity('d2')!.id);
+    r.world.dispose?.();
+  });
+});
+
+describe('raised deck: a carton with a parcel code tipped into a hole', () => {
+  it('lands on the ground below with its code, and "Đọc mã" wired to a zone on the ground under the deck reads it', { timeout: 60_000 }, () => {
+    // The robot stands 0.7 m beside the hole and tips its tray towards it. The carton slides off with some speed and falls 2.6 m, so it
+    // comes to rest on the ground up to 1.5 m past the hole: the zone that feeds the reader covers 4 x 4 m of ground under the deck.
+    const below: Parts = {
+      nodes: [
+        ['under', 'zone', { center: { x: 0, y: 0.2, z: 0 }, size: { x: 4, y: 0.4, z: 4 }, filter: 'item', rule: 'center' }],
+        ['reader', 'code-reader', {}],
+      ],
+      wires: [['under', 'first', 'reader', 'thing']],
+    };
+    const r = play({ nodes: [deck({ hole: 0.7, margin: 4 })], wires: [] }, below, bot({ id: 'r', x: 0, z: -0.7, floor: TOP, heading: 0, tray: { side: 1, kg: 2, code: 37 } }));
+    expect(r.entity('r-crate')!.look).toBe('parcel-carton#37');
+    // While it is still up on the tray the reader below has nothing to read.
+    r.tick(5);
+    expect(r.out('reader', 'has')).toBe(false);
+    r.tick(seconds(7));
+    const landed = r.entity('r-crate')!;
+    expect(Math.abs(crateBottom(landed))).toBeLessThan(0.02);
+    expect(landed.look).toBe('parcel-carton#37');
+    expect(r.world.tagOf(landed.id)).toBe('37');
+    expect(r.out('under', 'first')).toBe(landed.id);
+    expect(r.out('reader', 'code')).toBe(37);
+    expect(r.out('reader', 'has')).toBe(true);
+    r.world.dispose?.();
   });
 });
