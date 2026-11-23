@@ -11,6 +11,9 @@ import {
 } from '../../src/handbook/handbook-model';
 import type { HandbookEntry } from '../../src/handbook/types';
 import { LESSONS } from '../../src/tutorial/lessons';
+import { listNodeDefs } from '../../src/engine/registry';
+import { handbookEntry } from '../../src/handbook';
+import { registerAllNodes } from '../../src/nodes';
 
 const entry = (lessonId: string): HandbookEntry => ({
   kind: 'x', purpose: '', whenToUse: '', ports: {}, params: {}, example: '', tips: [], lessonId, tryBoard: () => { throw new Error('unused'); },
@@ -83,6 +86,19 @@ describe('filterRows', () => {
     expect(filterRows(rows(), 'nhan vat').map((r) => r.kind)).toEqual(['b']);
     expect(filterRows(rows(), 'bo dem').map((r) => r.kind)).toEqual(['a']);
     expect(filterRows(rows(), 'lai xe')[0]?.kind).toBe('c');
+  });
+  it('puts the row whose name is exactly the query first, whatever its accents and capitals; the rest keep their order', () => {
+    const row = (kind: string, label: string): HandbookRow => ({ kind, label, category: 'logic', description: '', level: 3, position: 0 });
+    const list = [row('colour', 'Đọc màu'), row('tile', 'Đọc mốc sàn'), row('code', 'Đọc mã'), row('other', 'Máy đọc mã vạch')];
+    expect(filterRows(list, 'Đọc mã').map((r) => r.kind)).toEqual(['code', 'colour', 'other']);
+    expect(filterRows(list, '  DOC   MA ').map((r) => r.kind)).toEqual(['code', 'colour', 'other']);
+    expect(filterRows(list, 'đọc m').map((r) => r.kind)).toEqual(['colour', 'tile', 'code', 'other']);
+  });
+  it('the real handbook list answers "Đọc mã" with the page "Đọc mã" first', () => {
+    registerAllNodes();
+    const real = buildRows(listNodeDefs(), handbookEntry);
+    expect(filterRows(real, 'Đọc mã')[0]?.kind).toBe('code-reader');
+    expect(filterRows(real, 'doc mau')[0]?.kind).toBe('color-sensor');
   });
   it('returns nothing when no word matches', () => {
     expect(filterRows(rows(), 'zzzz')).toEqual([]);

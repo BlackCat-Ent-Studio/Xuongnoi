@@ -62,7 +62,7 @@ export function buildRows(defs: readonly DefLike[], entryOf: (kind: string) => H
   });
 }
 
-/** Rows matching every word of the query (accent-insensitive) on label, kind or description; label matches first. */
+/** Rows matching every word of the query (accent- and case-insensitive) on label, kind or description; the row named exactly like the query first, then label matches. */
 export function filterRows(rows: readonly HandbookRow[], query: string): HandbookRow[] {
   const q = normalizeText(query);
   if (!q) return [...rows];
@@ -72,7 +72,7 @@ export function filterRows(rows: readonly HandbookRow[], query: string): Handboo
     const label = normalizeText(row.label);
     const all = `${label} ${normalizeText(row.description)} ${normalizeText((row.aliases ?? []).join(' '))} ${row.kind}`;
     if (!words.every((w) => all.includes(w))) continue;
-    scored.push({ row, score: label.startsWith(q) ? 3 : label.includes(q) ? 2 : words.every((w) => label.includes(w)) ? 1.5 : 1 });
+    scored.push({ row, score: label === q ? 4 : label.startsWith(q) ? 3 : label.includes(q) ? 2 : words.every((w) => label.includes(w)) ? 1.5 : 1 });
   }
   // Array.sort is stable, so equal scores keep their incoming order.
   scored.sort((a, b) => b.score - a.score);
