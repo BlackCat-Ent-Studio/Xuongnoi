@@ -23,6 +23,7 @@ import { PUNCH_DAMAGE, createCombat, itemDamage } from './combat';
 import { touchingPairs } from './contact-pairs';
 import { createCrateEngine, type CrateEngine } from './crate-engine';
 import { toView, type Entity } from './entity';
+import { ownMassOf, type Hitch } from './hitch';
 import { crateMovedIn, moveBlockIn, moveBlocksIn, moveSceneOf, settleTurns, spinBlockTo, tiltBlockTo, turnSolidTo, type MoveScene } from './platforms';
 import { advanceBelts, syncBeltWalls } from './conveyor';
 import { carryAt, handPosition, overlapsSolid, stepPhysics, touching } from './physics';
@@ -82,7 +83,7 @@ const KEEPS_VIEWS: ReadonlySet<string> = new Set<keyof World>([
   'getEntity', 'isOnGround', 'isTouching', 'tagOf', 'materialOf', 'massOn', 'massHeld', 'tooHeavyToGrab', 'heldItem', 'isHeld', 'wasInteracted',
   'handItem', 'isInHand', 'wasUsedOn', 'healthOf', 'wasHurt', 'solidAt', 'solidBoxes', 'solidRevision', 'cameraYaw', 'probeAhead', 'lineOfSight',
   'cargoOf', 'cameraCommand', 'portalUser', 'isRigidCrate', 'realPhysicsOn', 'robotPushN', 'robotWheelState', 'shotHits', 'entities', 'listEntities',
-  'runSeed', 'hudItems', 'debugBodies',
+  'runSeed', 'hudItems', 'debugBodies', 'hitched',
   'setHud', 'setCamera', 'setMount', 'setExactBodies', 'setItemGrip',
   'moveBlock', 'moveBlocks', 'setRobotWheel', 'setRobotTuning', 'resizeBlock', 'setBlockAngle', 'setBlockTilt',
   'applySqueeze', 'setItemRotation', 'teleport',
@@ -190,6 +191,29 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     const chain = boltedOnto(e);
     return chain[chain.length - 1];
   };
+
+  /** What each hitch (by node id) holds, see hitch.ts. */
+  const hitches = new Map<string, Hitch>();
+  /** The hitch lets go: what it held stays where it is, at rest. */
+  function letGoHitch(owner: string): void {
+    const h = hitches.get(owner);
+    if (!h) return;
+    hitches.delete(owner);
+    for (const b of h.bodies) {
+      delete b.hitchedBy;
+      if (b.kind !== 'item') continue;
+      b.heldBy = null;
+      delete b.heldTurn;
+      b.vel = { x: 0, y: 0, z: 0 };
+    }
+  }
+  /** The bodies a carrier holds by hitches, when held bodies weigh on their carrier (real physics). */
+  function hitchedLoad(carrier: Entity): Entity[] | null {
+    if (realGravity === null || hitches.size === 0) return null;
+    let out: Entity[] | null = null;
+    for (const h of hitches.values()) if (h.carrier === carrier) (out ??= []).push(...h.bodies);
+    return out;
+  }
 
   /** Play-camera requests by camera node; `seq` orders them by when they became active. */
   const cameraCmds = new Map<string, { seq: number; cmd: PlayCameraCommand }>();
@@ -527,6 +551,8 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     hide(id: EntityId): void {
       const e = byId.get(id);
       if (!e) return;
+      // A hidden carrier lets go of what it holds by a hitch, and a hidden body leaves its hitch.
+      for (const h of [...hitches.values()]) if (h.carrier === e || h.bodies.includes(e)) letGoHitch(h.owner);
       // Hiding a carried item, or a character holding one, lets go of it where it is.
       letGoOfAll(e);
       if (e.visible && e.kind === 'block' && e.solid) solidRev++;
@@ -601,7 +627,11 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     massOn(id: EntityId): number {
       const e = byId.get(id);
-      return e && e.visible ? massOn(list, e, partsOf(e), undefined, machineOf) : 0;
+      if (!e || !e.visible) return 0;
+      // What a carrier holds by a hitch weighs on it whole, with what lies in it.
+      const held = hitchedLoad(e);
+      if (!held) return massOn(list, e, partsOf(e), undefined, machineOf);
+      return massOn(list, e, new Set([...(partsOf(e) ?? []), ...held]), undefined, machineOf) + ownMassOf(held);
     },
     massHeld(id: EntityId): number {
       const e = byId.get(id);
@@ -886,6 +916,51 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
       // Only the views of the blocks and of the bodies they carried or pushed change.
       return moveBlocksIn((scene ??= moveSceneOf(list)), blocks, to, mode, onto, markStale);
     },
+    hitch(owner: string, carrier: EntityId, bodies: readonly EntityId[], offset: Vec3): boolean {
+      const c = byId.get(carrier);
+      if (!c || !c.visible || ![offset.x, offset.y, offset.z].every(Number.isFinite)) return false;
+      const held: Entity[] = [];
+      for (const id of bodies) {
+        const e = byId.get(id);
+        if (!e || e === c || !e.visible || held.includes(e)) return false;
+        const mine = e.hitchedBy === owner;
+        if (e.hitchedBy !== undefined && !mine) return false;
+        if (e.kind === 'item') {
+          // A shot, a tool in hand and anything a character, a vehicle or a hand already has are not free.
+          if (e.bullet || e.inHand || e.grippedBy !== undefined || (e.heldBy !== null && !mine)) return false;
+        } else if (e.kind !== 'block' || e.belt) return false;
+        held.push(e);
+      }
+      // One loose item, or blocks that go as one body.
+      if (held.length === 0 || (held[0]!.kind === 'item' && held.length > 1) || held.some((e) => e.kind !== held[0]!.kind)) return false;
+      const had = hitches.get(owner);
+      if (had && had.carrier === c && had.bodies.length === held.length && had.bodies.every((b, k) => b === held[k])) {
+        // The same hold: only where the body sits against the carrier changes.
+        had.offset = { ...offset };
+        return true;
+      }
+      letGoHitch(owner);
+      for (const e of held) {
+        e.hitchedBy = owner;
+        if (e.kind === 'block') {
+          markMover(e);
+          continue;
+        }
+        e.heldBy = c.id;
+        e.thrownBy = null;
+        e.vel = { x: 0, y: 0, z: 0 };
+        // A crate that lies turned keeps that turn while it is held (it does not follow the carrier's heading).
+        if (e.rot && isTurnedBody(e)) e.heldTurn = { ...e.rot };
+      }
+      hitches.set(owner, { owner, carrier: c, bodies: held, offset: { ...offset }, from: { x: c.pos.x, z: c.pos.z } });
+      return true;
+    },
+    unhitch(owner: string): void {
+      letGoHitch(owner);
+    },
+    hitched(owner: string): EntityId | null {
+      return hitches.get(owner)?.bodies[0]?.id ?? null;
+    },
     setRobotWheel(body: EntityId, wheelId: string, wheel: RobotWheelSpec | null): void {
       const e = byId.get(body);
       if (!e?.robot) return;
@@ -1014,7 +1089,7 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
         m.fresh = false;
       }
       boltedTo = null;
-      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates, partsOf, machineOf);
+      stepPhysics(list, dt, mode, yaw, rules, realGravity !== null ? -realGravity : undefined, crates, partsOf, machineOf, hitches.size > 0 ? { list: [...hitches.values()], weigh: realGravity !== null } : undefined);
       if (rules?.respawnFallen) respawnFallen();
       shotHitsNow = stepBullets(list, dt, mode, {
         strike: (victim, damage, dx, dz) => combat.strike(victim, damage, dx, dz),

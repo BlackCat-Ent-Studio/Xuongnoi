@@ -933,6 +933,22 @@ export interface WorldApi {
    */
   moveBlocks(ids: readonly EntityId[], to: Vec3): boolean;
   /**
+   * The hitch whose node id is `owner` takes hold of `bodies` for `carrier`: one loose item, or blocks that go as one body
+   * (the first of them leading, as for `moveBlocks`). From the next step on the leading body is put, after the carrier has
+   * moved, where the carrier is plus `offset`: `x` metres ahead of the carrier's middle and `z` metres to its right (along
+   * the carrier's own heading), `y` metres above it. The body keeps its own heading. A held body never enters a solid block:
+   * it goes as far as it can and the carrier is put back by what the body could not go, so the two stop as one outline. With
+   * real physics on, what is held and what lies in it weighs on the carrier (`massOn`, the payload of a chassis).
+   * False (and nothing is held) when the carrier or a body is missing or hidden, or a body is not free: held by another hitch,
+   * carried, gripped or loaded, a shot, a belt. Calling it again with the same carrier and bodies only changes `offset`; with
+   * other bodies the hitch lets go of what it had first.
+   */
+  hitch(owner: string, carrier: EntityId, bodies: readonly EntityId[], offset: Vec3): boolean;
+  /** The hitch `owner` lets go: what it held stays where it is, at rest. A hidden carrier or body ends the hold by itself. */
+  unhitch(owner: string): void;
+  /** The leading body the hitch `owner` holds now, or null. */
+  hitched(owner: string): EntityId | null;
+  /**
    * Turns a block to `rad`. Solid blocks only take quarter turns (nearest multiple of 90 degrees; width and depth swap so collision
    * stays exact) and wait (false) while whoever is in the way has no free spot to be moved to. Non-solid blocks spin freely and
    * touch through their real rotated outline.
