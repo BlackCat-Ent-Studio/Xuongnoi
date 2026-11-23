@@ -3,7 +3,7 @@ import type { Board } from '../../src/engine/types';
 import { say } from '../traffic/traffic-log';
 import { GRID_IDS } from '../../src/samples/sorting-grid-plan';
 import { circuitOf } from './factory-run';
-import { runGrid, shippedGrid, type GridResult } from './grid-sample-run';
+import { envFlag, runGrid, shippedGrid, type GridResult } from './grid-sample-run';
 
 /**
  * "Nothing happens without its wire" for the grid-floor sorting sample: the board is played once as it is and once with
@@ -11,8 +11,12 @@ import { runGrid, shippedGrid, type GridResult } from './grid-sample-run';
  * reference run (entity views, card outputs, the numbers on the screen); it must be absent on the board before the cut.
  */
 
-/** Simulated seconds of every run: long enough for each robot to load, drive and tip at least once. */
+/** Simulated seconds of a run: long enough for each robot to load, drive and tip at least once. */
 export const CUT_SECONDS = 45;
+/** Seconds for the symptoms that show at once (whole: every robot has left its cell and a carton lies on a tray after 10 s). */
+export const QUICK_SECONDS = 20;
+const QUICK = /^(no carton is made|no carton gets onto a tray|no robot leaves its cell|robot \d+ never leaves its cell)$/;
+const secondsOf = (cut: Cut): number => cut.seconds ?? (QUICK.test(cut.symptom) ? QUICK_SECONDS : CUT_SECONDS);
 
 const sum = (list: readonly number[]): number => list.reduce((a, b) => a + b, 0);
 
@@ -71,9 +75,10 @@ export interface Cut {
   /** The board with the wire out. */
   board: () => Board;
   symptom: Symptom;
+  /** Simulated seconds, when not the usual. */
+  seconds?: number;
   /** The board before the cut when that is not the shipped one (a board on which the thing the wire reports does happen), and a name for it. */
   from?: { name: string; board: () => Board };
-  seconds?: number;
 }
 
 /** A board whose stations make cartons of route k only, so that route is fed from the first tip on. */
@@ -89,24 +94,24 @@ export const cutLine = (x: GridResult): string =>
 
 const bases = new Map<string, GridResult>();
 function baseRun(cut: Cut): GridResult {
-  const key = `${cut.from?.name ?? 'as shipped'} ${cut.seconds ?? CUT_SECONDS}`;
+  const key = `${cut.from?.name ?? 'as shipped'} ${secondsOf(cut)}`;
   let res = bases.get(key);
   if (!res) {
-    res = runGrid((cut.from?.board ?? shippedGrid)(), cut.seconds ?? CUT_SECONDS);
+    res = runGrid((cut.from?.board ?? shippedGrid)(), secondsOf(cut));
     bases.set(key, res);
     say(`BASE [${key}]: ${cutLine(res)}`);
   }
   return res;
 }
 
-/** With VITE_GRID_CUT_FIND=1 nothing is asserted: every symptom that shows is printed, to fill in a table. */
-const FIND = Boolean((import.meta as { env?: Record<string, string | undefined> }).env?.VITE_GRID_CUT_FIND);
+/** With GRID_CUT_FIND=1 nothing is asserted: every symptom that shows is printed, to fill in a table. */
+const FIND = envFlag('GRID_CUT_FIND');
 
 /** One test per cut. */
 export function cutTests(cuts: readonly Cut[]): void {
   it.each(cuts.map((c) => [c.name, c] as const))('%s', { timeout: 600_000 }, (_name, cut) => {
     const base = baseRun(cut);
-    const x = runGrid(cut.board(), cut.seconds ?? CUT_SECONDS);
+    const x = runGrid(cut.board(), secondsOf(cut));
     if (FIND) {
       const all = (Object.keys(SYMPTOMS) as Symptom[]).filter((s) => shows(s, x, base) && !shows(s, base, base));
       say(`FIND [${cut.name}]: ${all.join(' | ') || 'NOTHING SHOWS'} :: ${cutLine(x)}`);

@@ -9,7 +9,7 @@ import { shippedGrid } from '../helpers/grid-sample-run';
 
 /**
  * "Xe phân loại" without one of its inner wires (the wire is gone from all six copies), first half: chassis, way finding, tray mounting, the carton on the tray and the choice of the goal cell.
- * The table names what each cut does to a 45 s run.
+ * The table names what each cut does to a run of 45 s (20 s where it shows at once).
  */
 
 beforeAll(async () => {

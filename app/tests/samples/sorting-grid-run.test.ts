@@ -3,12 +3,12 @@ import { registerAllNodes } from '../../src/nodes';
 import { CARTON, GRID, ROBOT } from '../../src/samples/sorting-grid-plan';
 import { loadRapier } from '../../src/world/rapier-loader';
 import { say } from '../traffic/traffic-log';
-import { ROBOTS, ROUTE_CODES, gridLine, runGrid, shippedGrid, type GridResult } from '../helpers/grid-sample-run';
+import { ROBOTS, ROUTE_CODES, envFlag, gridLine, runGrid, shippedGrid, type GridResult } from '../helpers/grid-sample-run';
 
 /**
  * The grid-floor sorting sample played as it ships, "Vật lý thật" on, for 300 simulated seconds. Nothing is added to the
  * board and nothing is taken away; every number is measured from the entity views and the outputs of the board's cards.
- * Run with --silent=false to read the result lines. VITE_GRID_900=1 adds a 900 s run that is reported, not asserted.
+ * Run with --silent=false to read the result lines. GRID_900=1 adds a 900 s run that is reported, not asserted.
  */
 
 beforeAll(async () => {
@@ -93,7 +93,7 @@ describe('the grid-floor sorting sample, 300 s', () => {
     expect(b.made).toBe(a.made);
   });
 
-  it.runIf((import.meta as { env?: Record<string, string | undefined> }).env?.VITE_GRID_900)('900 s, reported only', { timeout: 3_600_000 }, () => {
+  it.runIf(envFlag('GRID_900'))('900 s, reported only', { timeout: 3_600_000 }, () => {
     say(gridLine('GRID900', runGrid(shippedGrid(), 900)));
   });
 });

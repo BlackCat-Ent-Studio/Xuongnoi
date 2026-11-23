@@ -7,7 +7,7 @@ import { GRID, GRID_IDS } from '../../src/samples/sorting-grid-plan';
 import { loadRapier } from '../../src/world/rapier-loader';
 import { circuitOf, cutInside, cutOutside, type Link } from '../helpers/factory-run';
 import { cutTests, onlyRoute, type Cut, type Symptom } from '../helpers/grid-sample-cuts';
-import { shippedGrid } from '../helpers/grid-sample-run';
+import { envFlag, shippedGrid } from '../helpers/grid-sample-run';
 
 /**
  * The main board, "Ô nhận tuyến" and "Cộng chín số" without one wire. A wire that only reports a fault (a carton in a wrong box, a
@@ -15,7 +15,7 @@ import { shippedGrid } from '../helpers/grid-sample-run';
  * a board differs from the shipped one by settings or by one other missing wire, named in the test.
  *
  * Six robots and nine boxes are wired alike. This file cuts the wires of robot 1 and box 1 and everything that exists
- * once; VITE_GRID_CUT_ALL=1 adds the same cuts for robots 2-6 and boxes 2-9.
+ * once; GRID_CUT_ALL=1 adds the same cuts for robots 2-6 and boxes 2-9.
  */
 
 beforeAll(async () => {
@@ -23,7 +23,7 @@ beforeAll(async () => {
   await loadRapier();
 });
 
-const ALL = Boolean((import.meta as { env?: Record<string, string | undefined> }).env?.VITE_GRID_CUT_ALL);
+const ALL = envFlag('GRID_CUT_ALL');
 const text = (w: Link): string => w.join(' > ');
 const mainWire = (from: string, to: string): Link => {
   const w = GRID_MAIN_WIRES.find((x) => x[0] === from && x[1] === to);

@@ -16,6 +16,9 @@ import { stateHash } from './nav-rig';
 
 export const GRID_SAMPLE_ID = 'sorting-factory-grid';
 
+/** True when the environment variable is set for this run (read when the test runs, e.g. `GRID_900=1 npx vitest run ...`). */
+export const envFlag = (name: string): boolean => Boolean((globalThis as { process?: { env: Record<string, string | undefined> } }).process?.env[name]);
+
 /** The board exactly as the "Bài mẫu" menu hands it out. */
 export const shippedGrid = (): Board => structuredClone(listSamples().find((s) => s.id === GRID_SAMPLE_ID)!.board);
 

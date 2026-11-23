@@ -9,7 +9,7 @@ import { shippedGrid } from '../helpers/grid-sample-run';
 
 /**
  * "Xe phân loại" without one of its inner wires (the wire is gone from all six copies), second half: turning the tray, tipping, and when the robot may drive.
- * The table names what each cut does to a 45 s run.
+ * The table names what each cut does to a run of 45 s (20 s where it shows at once).
  */
 
 beforeAll(async () => {

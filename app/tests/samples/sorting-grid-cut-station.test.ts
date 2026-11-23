@@ -9,7 +9,7 @@ import { shippedGrid } from '../helpers/grid-sample-run';
 
 /**
  * "Trạm nạp" without one of its inner wires (the wire is gone from both copies). The table names what each cut does to
- * a 45 s run.
+ * a run of 45 s (20 s where it shows at once).
  */
 
 beforeAll(async () => {
