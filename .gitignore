@@ -58,8 +58,6 @@ GoogleService-Info.plist
 
 repomix-output.xml
 .serena/cache
-plans/**/*
-!plans/templates/*
 screenshots/*
 docs/screenshots/*
 logs.txt
@@ -106,4 +104,5 @@ release-manifest.json
 !app/package-lock.json
 
 # Licensed 3D model pack (MEGA PACK WORLD, ~570 MB); copied from D:sset\hieu333_extracted, not versioned
-app/public/models/
+
+# 2026-11-24: plans (reports, previews, screenshots) and the model pack are versioned so the whole project can be reviewed from the repository
