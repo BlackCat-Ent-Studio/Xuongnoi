@@ -769,6 +769,44 @@
   }
  },
  {
+  "id": "lesson:grid-find-way",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b31277ed"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "b31277ed"
+  }
+ },
+ {
+  "id": "lesson:two-robots-one-cell",
+  "off": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hai robot đụng nhau ở ô 5!\"}",
+   "ticks": 40,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "34ba2927"
+  },
+  "on": {
+   "ended": "{\"result\":\"lose\",\"message\":\"Hai robot đụng nhau ở ô 5!\"}",
+   "ticks": 40,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "34ba2927"
+  }
+ },
+ {
   "id": "lesson:share-jobs",
   "off": {
    "ended": "running",

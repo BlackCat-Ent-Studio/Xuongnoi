@@ -157,7 +157,7 @@ describe('lesson "Robot tự tới mốc" (robot-to-marker)', () => {
     const lesson = findLesson('robot-to-marker')!;
     expect(LESSONS.filter((l) => l.id === 'robot-to-marker')).toHaveLength(1);
     expect(chapterOf('robot-to-marker')?.id).toBe('robots');
-    expect(chapterOf('robot-to-marker')?.lessonIds.slice(-2)).toEqual(['robot-to-marker', 'share-jobs']);
+    expect(chapterOf('robot-to-marker')?.lessonIds.slice(-4)).toEqual(['robot-to-marker', 'grid-find-way', 'two-robots-one-cell', 'share-jobs']);
     expect(lesson.steps.at(-1)!.check).toBeUndefined();
     expect(new Set(lesson.steps.map((s) => s.id)).size).toBe(lesson.steps.length);
   });
