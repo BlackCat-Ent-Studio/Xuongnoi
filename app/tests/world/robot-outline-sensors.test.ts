@@ -164,6 +164,47 @@ describe('pistons and arm pieces meet the turned outline', () => {
     expect(e.position.y).toBeCloseTo(0.12, 9);
   });
 
+  it('a piston too weak for a chassis at 45 degrees stalls with its head on the corner: the chassis stays, "Lực đang đẩy" shows the limit and "Quá tải" is on', { timeout: 60_000 }, () => {
+    // Same line as above: the corner is at x = -0.566. Sliding this chassis takes a pusher 9.81 N (2 kg on friction 0.5, what the world gives as its material).
+    const push = (maxForce: number) => {
+      const b = bot({ id: 'r', x: 0, z: 0, floor: 0, heading: 45 });
+      const nodes: NodeSpec[] = [...b.nodes, ['p', 'linear-actuator', { position: { x: -3, y: 0.2, z: -0.071 }, direction: 0, stroke: 2, headSize: 0.2, speed: 0.5, maxForce }], ['e', 'key', { key: 'KeyE' }]];
+      const r = play(nodes, [...b.wires, ['e', 'held', 'p', 'extend']]);
+      r.hold('KeyE');
+      const face = (): number => r.world.entities().find((v) => v.ownerNodeId === 'p' && v.size.x === 0.2 && v.size.y === 0.2)!.position.x + 0.1;
+      const res = { overloadedAtFace: NaN, forceAtFace: NaN, moved: 0, face: 0, force: 0, mostForce: 0, overloaded: false };
+      for (let k = 0; k < seconds(6); k++) {
+        r.tick();
+        const e = r.entity('r')!;
+        res.moved = Math.max(res.moved, Math.hypot(e.position.x, e.position.z));
+        res.force = Number(r.out('p', 'force'));
+        res.mostForce = Math.max(res.mostForce, res.force);
+        res.overloaded = r.out('p', 'overloaded') === true;
+        if (Number.isNaN(res.overloadedAtFace) && res.overloaded) res.overloadedAtFace = face();
+        if (Number.isNaN(res.forceAtFace) && res.force > 0) res.forceAtFace = face();
+      }
+      res.face = face();
+      r.world.dispose?.();
+      return res;
+    };
+    const weak = push(5);
+    // It reports the overload when its face reaches the corner (within the step of one tick), and that is where it stays.
+    expect(weak.overloadedAtFace).toBeGreaterThan(-0.566 - 0.01);
+    expect(weak.overloadedAtFace).toBeLessThan(-0.566 + 0.001);
+    expect(weak.face).toBeGreaterThan(-0.566 - 0.01);
+    expect(weak.face).toBeLessThan(-0.566 + 0.001);
+    expect(weak.moved).toBeLessThan(1e-6);
+    expect(weak.overloaded).toBe(true);
+    expect(weak.force).toBe(5);
+    // With force to spare the same piston slides the same chassis: it reads the 9.81 N from the corner on and is never overloaded.
+    const strong = push(100);
+    expect(strong.moved).toBeGreaterThan(1);
+    expect(Number.isNaN(strong.overloadedAtFace)).toBe(true);
+    expect(strong.forceAtFace).toBeGreaterThan(-0.566 - 0.01);
+    expect(strong.forceAtFace).toBeLessThan(-0.566 + 0.01);
+    expect(strong.mostForce).toBeCloseTo(9.81, 6);
+  });
+
   for (const heading of [30, 45, 60]) {
     it(`a chassis at ${heading} degrees driven into the head of a piston stops with its corner on the head`, { timeout: 60_000 }, () => {
       const a = bot({ id: 'a', x: 0, z: 0, floor: 0, heading, power: [0.5, 0.5] });

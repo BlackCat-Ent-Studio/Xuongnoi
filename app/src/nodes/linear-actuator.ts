@@ -1,7 +1,7 @@
 import type { EntityId, EntityView, NodeDef, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
 import { actuatorFrame, approach, exceeds, loadLimitedAdvance, planPush, RIGID_CONTACT_SKIN, RIGID_CROSS_TOL, targetLength, type PushBody, type PushMove, type PushOrient } from '../world/linear-actuator';
-import { isTurnedView, obbBounds, obbOfView } from '../world/oriented-box';
+import { chassisOutlineOfView, isTurnedView, obbBounds, obbOfView } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
 import { asBool, asObject, clamp, numParam, strParam, vec3Param } from './util';
@@ -59,7 +59,9 @@ export function pushBodiesOf(world: WorldApi, except: EntityId | null = null, al
     if (!mat) continue;
     const base = { id: e.id, massKg: mat.massKg, mu: mat.mu };
     if (!world.isRigidCrate(e.id)) {
-      bodies.push({ ...base, box: boxOf(e) });
+      // A robot chassis comes with its turned outline, so the head's force limit applies where it meets a corner.
+      const outline = chassisOutlineOfView(e);
+      bodies.push(outline ? { ...base, box: obbBounds(outline), outline } : { ...base, box: boxOf(e) });
       continue;
     }
     const real = obbOfView(e);
