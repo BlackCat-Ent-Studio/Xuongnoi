@@ -3,7 +3,7 @@ import { laneArrows } from '../handbook/boards-grid-floor';
 import { CIRCUIT_KIND, type Board, type Circuit, type Graph, type GraphNode, type Note, type NoteColor, type ParamValue, type Vec3 } from '../engine/types';
 import { registerAllNodes } from '../nodes';
 import { GAP_Y, MARGIN, card, cards, layOut, open, pin, wires, type CardSpec, type Link } from './sorting-grid-kit';
-import { CATCH, GRID, GRID_IDS, ROUTES, STARTS, cellNumber, cellPlace, isLaneCell, stationCell } from './sorting-grid-plan';
+import { CATCH, GRID, GRID_IDS, ROUTES, STARTS, cellNumber, cellPlace, isLaneCell, mm, stationCell } from './sorting-grid-plan';
 import { robotCircuit } from './sorting-grid-robot';
 import { gridStationCircuit } from './sorting-grid-station';
 
@@ -25,8 +25,8 @@ const ROBOT_NUMBERS = Array.from({ length: GRID.robots }, (_, n) => n + 1);
 
 /** The deck and one "Mốc sàn" per lane cell; on the canvas the marker cards lie as the cells lie on the floor. */
 function floorCircuit(): Circuit {
-  const middle = ((GRID.cols - 1) * GRID.pitch) / 2;
-  const side = GRID.cols * GRID.pitch;
+  const middle = mm(((GRID.cols - 1) * GRID.pitch) / 2);
+  const side = mm(GRID.cols * GRID.pitch);
   const deck = card('san', 'raised-deck', { position: { x: middle, y: 0, z: middle }, top: GRID.top, holeCols: 3, holeRows: 3, hole: GRID.hole, pitch: 2 * GRID.pitch, length: side, width: side, legs: 'solid' });
   deck.pos = { x: MARGIN, y: MARGIN };
   const nodes: GraphNode[] = [deck];
@@ -64,14 +64,14 @@ export const CATCH_WIRES: readonly Link[] = [
 function catchCircuit(): Circuit {
   const { inner, wallH, wallT, belt } = CATCH;
   const out = inner / 2 + wallT / 2;
-  const wall = (id: string, x: number, z: number, sx: number, sz: number): CardSpec => [id, 'block', 0, { position: { x, y: wallH / 2, z }, size: { x: sx, y: wallH, z: sz }, color: '#64748b' }];
+  const wall = (id: string, x: number, z: number, sx: number, sz: number): CardSpec => [id, 'block', 0, { position: { x: mm(x), y: wallH / 2, z: mm(z) }, size: { x: mm(sx), y: wallH, z: mm(sz) }, color: '#64748b' }];
   const specs: CardSpec[] = [
     wall('vach-tay', -out, 0, wallT, inner + 2 * wallT),
     wall('vach-dong', out, 0, wallT, inner + 2 * wallT),
     wall('vach-bac', 0, -out, inner, wallT),
     wall('vach-nam', 0, out, inner, wallT),
     ['bat-dau', 'on-start', 1],
-    ['bang-dan', 'block', 1, { position: { x: 0, y: GRID.top + belt.height / 2, z: -GRID.pitch + (belt.from + belt.to) / 2 }, size: { x: belt.length, y: belt.height, z: belt.to - belt.from }, style: 'belt-frame', beltSpeed: belt.speed, beltDir: 'z', beltWalls: 'no' }],
+    ['bang-dan', 'block', 1, { position: { x: 0, y: mm(GRID.top + belt.height / 2), z: mm(-GRID.pitch + (belt.from + belt.to) / 2) }, size: { x: belt.length, y: belt.height, z: mm(belt.to - belt.from) }, style: 'belt-frame', beltSpeed: belt.speed, beltDir: 'z', beltWalls: 'no' }],
     ['vung', 'zone', 2, { center: { x: 0, y: wallH / 2, z: 0 }, size: { x: inner, y: wallH, z: inner }, filter: 'item', rule: 'center', color: '#38bdf8' }],
     ['dem', 'counter', 2],
     ['doc-ma', 'code-reader', 3],
@@ -117,7 +117,7 @@ export function createGridFloorCircuits(): Circuit[] {
 /** Where the catch box of route k stands: under its hole, on the ground. */
 export const catchPlace = (k: number): Vec3 => {
   const [r, c] = ROUTES[k - 1]!.hole;
-  return { x: c * GRID.pitch, y: 0, z: r * GRID.pitch };
+  return { x: mm(c * GRID.pitch), y: 0, z: mm(r * GRID.pitch) };
 };
 
 /** The five wires between copy k of "Xe phân loại" and row k of the hold card. */
@@ -159,7 +159,7 @@ export const GRID_MAIN_WIRES: readonly Link[] = [
 const note = (id: string, color: NoteColor, x: number, y: number, w: number, h: number, text: string): Note => ({ id, color, pos: { x, y }, size: { w, h }, text });
 
 const MAIN_COLS = [0, 330, 660, 1060, 1390, 1720] as const;
-const BANNER_H = 170;
+const BANNER_H = 220;
 /** Step between the copies of a stacked block (the smallest the app leaves between two cards). */
 const STACK_STEP = 104;
 
@@ -174,13 +174,13 @@ export function createGridFloorBoard(): Board {
     pos: { x: 0, y: 0 },
   });
   const hud = (id: string, label: string, corner: string): GraphNode => card(id, 'show-number', { label, corner });
-  const middle = ((GRID.cols - 1) * GRID.pitch) / 2;
-  const side = GRID.cols * GRID.pitch;
+  const middle = mm(((GRID.cols - 1) * GRID.pitch) / 2);
+  const side = mm(GRID.cols * GRID.pitch);
   const stationPlace = (s: 1 | 2): Vec3 => cellPlace(...stationCell(s));
   const laid: [GraphNode, number][] = [
     [card('bat-dau', 'on-start'), 0],
-    [card('may-quay', 'camera', { mode: 'fixed', point: { x: middle - 1, y: GRID.top, z: middle + 0.4 }, zoom: 0.55, view: 'tilted' }), 0],
-    [card('nen', 'block', { position: { x: middle - 1, y: -0.5, z: middle }, size: { x: 20, y: 1, z: 16 }, color: '#cfd2d7' }), 0],
+    [card('may-quay', 'camera', { mode: 'fixed', point: { x: mm(middle - 1), y: GRID.top, z: mm(middle + 0.4) }, zoom: 0.55, view: 'tilted' }), 0],
+    [card('nen', 'block', { position: { x: mm(middle - 1), y: -0.5, z: middle }, size: { x: 20, y: 1, z: 16 }, color: '#cfd2d7' }), 0],
     [copy('san-luoi', GRID_IDS.floor, 'Sàn lưới', null), 0],
     [copy('tram-1', GRID_IDS.station, 'Trạm nạp 1', stationPlace(1), { 'hat-giong': GRID.seed + 1 }), 1],
     [copy('tram-2', GRID_IDS.station, 'Trạm nạp 2', stationPlace(2), { 'hat-giong': GRID.seed + 2 }), 1],
@@ -189,9 +189,9 @@ export function createGridFloorBoard(): Board {
     ...ROUTE_NUMBERS.map((k): [GraphNode, number] => [copy(`o-${k}`, GRID_IDS.catch, `Ô nhận tuyến ${k}`, catchPlace(k), { tuyen: k }), 3]),
     [copy('tong-kien', GRID_IDS.adder, 'Tổng kiện', null), 3],
     [copy('tong-sai', GRID_IDS.adder, 'Tổng kiện sai', null), 3],
-    [card('vung-thu-hoi', 'zone', { center: { x: middle, y: 0.3, z: middle }, size: { x: 4 * GRID.pitch + CATCH.inner, y: 0.6, z: 4 * GRID.pitch + CATCH.inner }, filter: 'item', rule: 'center', color: '#ef4444' }), 4],
+    [card('vung-thu-hoi', 'zone', { center: { x: middle, y: 0.3, z: middle }, size: { x: mm(4 * GRID.pitch + CATCH.inner), y: 0.6, z: mm(4 * GRID.pitch + CATCH.inner) }, filter: 'item', rule: 'center', color: '#ef4444' }), 4],
     [card('nhip-thu-hoi', 'timer', { seconds: CATCH.recallEveryS, repeat: 'yes' }), 4],
-    [card('tren-san', 'zone', { center: { x: middle, y: GRID.top + 0.11, z: middle }, size: { x: side, y: 0.2, z: side }, filter: 'item', rule: 'center', color: '#a855f7' }), 4],
+    [card('tren-san', 'zone', { center: { x: middle, y: mm(GRID.top + 0.11), z: middle }, size: { x: side, y: 0.2, z: side }, filter: 'item', rule: 'center', color: '#a855f7' }), 4],
     [card('san-trong', 'not'), 4],
     [card('nam-lau', 'timer', { seconds: 1, repeat: 'no' }), 4],
     [card('dem-roi', 'counter'), 4],
@@ -233,7 +233,7 @@ export function createGridFloorBoard(): Board {
         'yellow',
         MARGIN,
         MARGIN,
-        MAIN_COLS[4] + 280,
+        800,
         BANNER_H,
         'XƯỞNG ĐANG DỰNG DỞ, PHẦN SÀN LƯỚI: một sàn nâng cao 2,6 m có 9 lỗ thả, chia thành 7 x 7 ô; các làn chạy một chiều theo mũi tên trên ô. Hai "Trạm nạp" ở mép tây tạo thùng có mã tuyến 1-9 rồi đẩy thùng lên khay của xe đang đỗ. Sáu "Xe phân loại" tự đọc mã thùng trên khay, chạy tới ô cạnh lỗ của tuyến đó, nghiêng khay cho thùng trượt lên băng dẫn vào lỗ, rồi quay về trạm. Dưới mỗi lỗ có một "Ô nhận tuyến" đếm thùng. Tầng dưới chưa có xe. Bấm Chạy để xem; bấm "Mở" trên một khối để xem bên trong.',
       ),

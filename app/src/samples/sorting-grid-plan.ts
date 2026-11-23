@@ -18,10 +18,13 @@ export const GRID = {
   seed: 20261123,
 } as const;
 
+/** A length rounded to the millimetre, so that a setting reads 4.2 and not 4.199999999999999. */
+export const mm = (v: number): number => Math.round(v * 1000) / 1000;
+
 /** Number of the cell in row r, column c (both from 0): the number its "Mốc sàn" carries. */
 export const cellNumber = (r: number, c: number): number => r * GRID.cols + c + 1;
 /** Middle of a cell on the deck (x, z); y is the deck's upper face. */
-export const cellPlace = (r: number, c: number): Vec3 => ({ x: c * GRID.pitch, y: GRID.top, z: r * GRID.pitch });
+export const cellPlace = (r: number, c: number): Vec3 => ({ x: mm(c * GRID.pitch), y: GRID.top, z: mm(r * GRID.pitch) });
 /** Holes sit on (odd row, odd column); every other cell is lane. */
 export const isLaneCell = (r: number, c: number): boolean => r % 2 === 0 || c % 2 === 0;
 
@@ -74,7 +77,7 @@ export const ROBOT = {
   drive: { power: 0.8, slowDistance: 0.6 },
 } as const;
 /** Height of the tray's upper face above the floor the robot stands on. */
-export const TRAY_TOP = ROBOT.height + ROBOT.tray.gap + ROBOT.tray.thickness;
+export const TRAY_TOP = mm(ROBOT.height + ROBOT.tray.gap + ROBOT.tray.thickness);
 
 export const CARTON = {
   size: { x: 0.32, y: 0.26, z: 0.28 },
@@ -90,7 +93,7 @@ export const STATION = {
   /** Seconds between "table empty" and the next carton. */
   feedGapS: 0.5,
   /** The table: from x0 to x1, its width along z; its top is 1 cm above the tray. */
-  table: { x0: -1.2, x1: -0.46, width: 0.5, topY: TRAY_TOP + 0.01 },
+  table: { x0: -1.2, x1: -0.46, width: 0.5, topY: mm(TRAY_TOP + 0.01) },
   /** Where a new carton's middle is (x). */
   cartonX: -0.8,
   /** The pusher: head size, speed, and where the head's front face stands when it is in and when it is out (x). */

@@ -1,6 +1,6 @@
 import type { Circuit } from '../engine/types';
 import { cards, open, pin, table, wires, type CardSpec, type Link } from './sorting-grid-kit';
-import { GRID_IDS, ROBOT, ROUTES, TRAY_TOP, cellNumber } from './sorting-grid-plan';
+import { GRID_IDS, ROBOT, ROUTES, TRAY_TOP, cellNumber, mm } from './sorting-grid-plan';
 
 /**
  * "Xe phân loại": a two-motor robot for a floor of one-way lanes, with a tray that tips to either side. Everything it
@@ -9,9 +9,9 @@ import { GRID_IDS, ROBOT, ROUTES, TRAY_TOP, cellNumber } from './sorting-grid-pl
  * and drives back. What it shares with the other robots goes through its pins to the one "Bảng giữ ô" on the main board.
  */
 
-const MOTOR_SIDE = ROBOT.width / 2 - 0.05;
+const MOTOR_SIDE = mm(ROBOT.width / 2 - 0.05);
 /** Middle of the tray plate above the middle of the chassis. */
-const TRAY_UP = ROBOT.height / 2 + ROBOT.tray.gap + ROBOT.tray.thickness / 2;
+const TRAY_UP = mm(ROBOT.height / 2 + ROBOT.tray.gap + ROBOT.tray.thickness / 2);
 
 /** Inner wires of "Xe phân loại" (exported so the tests can cut them one at a time). */
 export const ROBOT_WIRES: readonly Link[] = [
@@ -93,7 +93,7 @@ export function robotCircuit(): Circuit {
     ['khop-nghieng', 'joint', 2, { axis: 'pitch', start: 0, min: 0, max: 60, maxTorque: 150, maxSpeed: 60, mount: { x: -tray.across / 2, y: 0, z: 0 }, ...hinge }],
     ['khay', 'link', 2, { length: tray.across, width: tray.along, thickness: tray.thickness, solid: 'yes', mass: 1, look: 'factory' }],
     // --- the carton on the tray
-    ['tren-khay', 'zone', 3, { center: { x: 0, y: TRAY_TOP - ROBOT.height / 2 + 0.18, z: 0 }, size: { x: 0.8, y: 0.4, z: 0.72 }, filter: 'item', rotate: 'yes', rule: 'center', color: '#a855f7' }],
+    ['tren-khay', 'zone', 3, { center: { x: 0, y: mm(TRAY_TOP - ROBOT.height / 2 + 0.18), z: 0 }, size: { x: 0.8, y: 0.4, z: 0.72 }, filter: 'item', rotate: 'yes', rule: 'center', color: '#a855f7' }],
     ['doc-ma', 'code-reader', 3],
     ['khay-trong', 'not', 3],
     ['cho-yen', 'timer', 3, { seconds: ROBOT.settleS, repeat: 'no' }],

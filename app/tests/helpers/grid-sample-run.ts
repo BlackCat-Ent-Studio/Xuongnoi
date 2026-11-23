@@ -43,8 +43,16 @@ export interface GridResult {
   goneRight: number;
   goneWrong: number;
   goneElsewhere: number;
-  /** Per route (index 1..9): cartons that ended in that route's box, by the measurement above. */
+  /** Cartons lying in a catch box when the run ends (counted, not yet taken back): in the box of their own route, in another one. */
+  lyingRight: number;
+  lyingWrong: number;
+  /** Per route (index 1..9): cartons that reached that route's box (taken back from it or lying in it at the end), by the measurement above. */
   truth: number[];
+  /** Cartons that reached the box of their own route / another route's box. */
+  sortedRight: number;
+  sortedWrong: number;
+  /** Robots that left the cell they started on. */
+  moved: number[];
   /** What the counters of the catch boxes say (index 1..9), and their "wrong route" counters. */
   counts: number[];
   wrongs: number[];
@@ -96,7 +104,7 @@ const BOX_HALF = CATCH.inner / 2 + 0.02;
 
 function whereIs(e: EntityView): Where {
   const { x, y, z } = e.position;
-  if (y < CATCH.wallH + 0.1) {
+  if (y <= CATCH.wallH) {
     for (const r of ROUTES) {
       const at = catchPlace(r.code);
       if (Math.abs(x - at.x) <= BOX_HALF && Math.abs(z - at.z) <= BOX_HALF) return `box${r.code}`;
@@ -121,7 +129,7 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
   const ms = new Float64Array(ticks);
   const nums = (f: (k: number) => unknown, list: readonly number[]): number[] => [0, ...list.map((k) => Number(f(k)))];
   const res: GridResult = {
-    seconds, made: 0, alive: 0, maxAlive: 0, goneRight: 0, goneWrong: 0, goneElsewhere: 0, truth: ROUTE_CODES.map(() => 0), counts: [], wrongs: [], shownTotal: 0, shownWrong: 0, shownOnDeck: 0,
+    seconds, made: 0, alive: 0, maxAlive: 0, goneRight: 0, goneWrong: 0, goneElsewhere: 0, lyingRight: 0, lyingWrong: 0, truth: [], sortedRight: 0, sortedWrong: 0, moved: [], counts: [], wrongs: [], shownTotal: 0, shownWrong: 0, shownOnDeck: 0,
     onDeck: [], onGround: [], loads: [], tips: [], perMinute: 0, minGap: Infinity, holeTicks: 0, fallen: [], deadlocks: [], stuckAtEnd: false, longestStandstill: 0, standstillBy: '', heldMax: 0,
     msMean: 0, msP95: 0, msMax: 0, hash: 2166136261,
   };
@@ -130,6 +138,7 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
   const onDeck = new Set<string>();
   const onGround = new Set<string>();
   const anchor = ROBOTS.map((k) => g.robot(k)).map((v) => ({ x: v.position.x, z: v.position.z, h: v.robot!.heading, since: 0 }));
+  const starts = ROBOTS.map((k) => ({ x: g.robot(k).position.x, z: g.robot(k).position.z }));
   let allStillSince = 0;
   for (let i = 0; i < ticks; i++) {
     const t0 = performance.now();
@@ -156,11 +165,10 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
     for (const [id, c] of cartons) {
       if (seen.has(id)) continue;
       cartons.delete(id);
-      if (c.where === `box${c.code}`) {
-        res.goneRight += 1;
-        res.truth[c.code]! += 1;
-      } else if (c.where.startsWith('box')) res.goneWrong += 1;
+      if (c.where === `box${c.code}`) res.goneRight += 1;
+      else if (c.where.startsWith('box')) res.goneWrong += 1;
       else res.goneElsewhere += 1;
+      if (c.where.startsWith('box')) res.truth[Number(c.where.slice(3))]! += 1;
     }
     res.maxAlive = Math.max(res.maxAlive, items.length);
     // --- robots
@@ -193,6 +201,15 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
     res.stuckAtEnd = true;
   }
   res.alive = run.items().length;
+  for (const c of cartons.values()) {
+    if (!c.where.startsWith('box')) continue;
+    if (c.where === `box${c.code}`) res.lyingRight += 1;
+    else res.lyingWrong += 1;
+    res.truth[Number(c.where.slice(3))]! += 1;
+  }
+  res.sortedRight = res.goneRight + res.lyingRight;
+  res.sortedWrong = res.goneWrong + res.lyingWrong;
+  res.moved = ROBOTS.filter((k) => Math.hypot(g.robot(k).position.x - starts[k - 1]!.x, g.robot(k).position.z - starts[k - 1]!.z) > GRID.pitch / 2 || Number(out(`xe-${k}/dem-do`, 'value')) > 0);
   res.onDeck = [...onDeck];
   res.onGround = [...onGround];
   res.counts = nums((k) => out(`o-${k}/dem`, 'value'), ROUTE_CODES);
@@ -202,7 +219,7 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
   res.shownOnDeck = Number(out('dem-roi', 'value'));
   res.loads = nums((s) => out(`tram-${s}/dem-nap`, 'value'), [1, 2]);
   res.tips = nums((k) => out(`xe-${k}/dem-do`, 'value'), ROBOTS);
-  res.perMinute = (res.goneRight + res.goneWrong) / (seconds / 60);
+  res.perMinute = (res.sortedRight + res.sortedWrong) / (seconds / 60);
   res.fallen = ROBOTS.filter((k) => g.robot(k).position.y < GRID.top);
   const sorted = Array.from(ms).sort((a, b) => a - b);
   res.msMean = sorted.reduce((a, b) => a + b, 0) / ticks;
@@ -215,7 +232,7 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
 export function gridLine(name: string, x: GridResult): string {
   const mm = (v: number): string => (v * 1000).toFixed(0);
   return [
-    `${name} (${x.seconds} s): made ${x.made}, in own box ${x.goneRight}, in another box ${x.goneWrong}, taken back elsewhere ${x.goneElsewhere}, alive ${x.alive} (max ${x.maxAlive}) = ${x.perMinute.toFixed(2)} sorted/min`,
+    `${name} (${x.seconds} s): made ${x.made}, reached own box ${x.sortedRight}, another box ${x.sortedWrong}, taken back from a box ${x.goneRight + x.goneWrong} / from elsewhere ${x.goneElsewhere}, alive ${x.alive} (max ${x.maxAlive}) = ${x.perMinute.toFixed(2)} sorted/min`,
     `  counters ${x.counts.slice(1).join('/')} (truth ${x.truth.slice(1).join('/')}), wrong ${x.wrongs.slice(1).join('/')}; shown total ${x.shownTotal}, wrong ${x.shownWrong}, on deck ${x.shownOnDeck}`,
     `  on the deck floor > 1 s: ${x.onDeck.length}, on the ground outside a box: ${x.onGround.length}; loads ${x.loads.slice(1).join('/')}, tips ${x.tips.slice(1).join('/')}`,
     `  min gap ${mm(x.minGap)} mm, middle in a hole cell ${x.holeTicks} ticks, fallen [${x.fallen.join(',')}], deadlocks ${x.deadlocks.length}${x.deadlocks.length ? ` [${x.deadlocks.map((d) => d.toFixed(0)).join(', ')} s]${x.stuckAtEnd ? ' STUCK AT END' : ''}` : ''}, longest standstill ${x.longestStandstill.toFixed(1)} s (${x.standstillBy}), held max ${x.heldMax}`,
