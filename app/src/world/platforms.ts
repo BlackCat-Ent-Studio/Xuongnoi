@@ -1,6 +1,7 @@
 import type { Vec3, ViewMode } from '../engine/types';
-import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, overOutline, spanOverlap, type Box, type Collidable } from './collider';
+import { boundsBox, boxOverlap, chassisOutline, chassisReach, colliderBox, colliderOffset, hasChassisOutline, outlineBoxSeparation, overOutline, spanOverlap, type Box, type Collidable } from './collider';
 import type { Entity } from './entity';
+import { backOffAlong, obbOf } from './oriented-box';
 
 /**
  * Moving and turning blocks.
@@ -53,6 +54,16 @@ function overlapsBox(a: Collidable, b: Collidable): boolean {
     if (boxOverlap(a, b, axis) <= OVERLAP_MIN) return false;
   }
   return true;
+}
+
+/**
+ * True when the body is inside the block. A robot chassis with a real outline (see `chassisOutline`) is inside where that
+ * outline is, not where the upright square round it is: a block beside its long side has not touched it yet, and the corner of
+ * a chassis that stands askew is met where it really is.
+ */
+function insideBlock(e: Entity, block: Entity): boolean {
+  if (hasChassisOutline(e)) return outlineBoxSeparation(e, colliderBox(block)) < -OVERLAP_MIN;
+  return overlapsBox(e, block);
 }
 
 function finiteOr(n: number, fallback: number): number {
@@ -147,7 +158,23 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], m
     r.pos[axis] += d;
   }
   for (const e of bodies) {
-    if (riders.includes(e) || overlap(e, p, 'x') <= OVERLAP_MIN || overlap(e, p, 'y') <= OVERLAP_MIN || overlap(e, p, 'z') <= OVERLAP_MIN) {
+    if (riders.includes(e)) continue;
+    if (hasChassisOutline(e)) {
+      // A chassis with a real outline is pushed where the block meets that outline, and only as far as it takes to clear it.
+      // Up and down the outline is the box (it only turns about the vertical), so there it is set flush by the boxes as ever.
+      const pb = colliderBox(p);
+      if (!(outlineBoxSeparation(e, pb) < -OVERLAP_MIN)) continue;
+      undo.push({ e, from: e.pos[axis] });
+      if (axis === 'y') {
+        e.pos.y = pb.pos.y + (Math.sign(d) * (pb.size.y + colliderBox(e).size.y)) / 2;
+      } else {
+        const dir = { x: 0, y: 0, z: 0 };
+        dir[axis] = d > 0 ? 1 : -1;
+        e.pos[axis] += dir[axis] * backOffAlong(obbOf(pb.pos, pb.size), chassisOutline(e)!, dir);
+      }
+      continue;
+    }
+    if (overlap(e, p, 'x') <= OVERLAP_MIN || overlap(e, p, 'y') <= OVERLAP_MIN || overlap(e, p, 'z') <= OVERLAP_MIN) {
       continue;
     }
     undo.push({ e, from: e.pos[axis] });
@@ -161,7 +188,7 @@ function stepAxis(p: Entity, axis: Axis, d: number, bodies: readonly Entity[], m
     return false;
   };
   for (const u of undo) {
-    if (u.e !== p && scene.solids.some((s) => s !== p && !apart.includes(s) && overlapsBox(u.e, s))) return back();
+    if (u.e !== p && scene.solids.some((s) => s !== p && !apart.includes(s) && insideBlock(u.e, s))) return back();
   }
   // A crate standing on the platform rides with it; any other crate in the way is pushed, so it must have room to go.
   const here = boundsBox(p);
@@ -207,8 +234,10 @@ function bodiesOnTheWay(bodies: readonly Entity[], p: Entity, to: Vec3, mode: Vi
   return bodies.filter((e) => {
     if (apart.includes(e)) return false;
     const b = boundsBox(e);
+    // A chassis that stands askew reaches past its square with the corners of its real outline.
+    const round = chassisReach(e);
     for (const k of axes) {
-      const half = Math.abs(b.size[k]) / 2;
+      const half = Math.max(round, Math.abs(b.size[k]) / 2);
       if (b.pos[k] - half > hi[k] || b.pos[k] + half < lo[k]) return false;
     }
     return true;
