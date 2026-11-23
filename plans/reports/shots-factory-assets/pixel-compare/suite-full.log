@@ -1,0 +1,9 @@
+
+ RUN  v5.0.5 D:/workspace/GameBuilder-assets/app
+
+
+ Test Files  279 passed | 1 skipped (280)
+      Tests  4184 passed | 1 skipped (4185)
+   Start at  16:48:38
+   Duration  359.49s (tests 96%, import 3%)
+

@@ -1,0 +1,15 @@
+const { chromium } = await import('file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs');
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const p = await b.newPage({ viewport: { width: 1280, height: 720 } });
+await p.goto('http://localhost:5208/giai-do.html');
+await p.evaluate(() => { localStorage.setItem('xuongnoi.puzzle.progress', JSON.stringify({ 'du-ba-thung': { stars: 1 }, 'ne-linh-gac': { stars: 1 }, 'phan-loai-mau': { stars: 1 }, 'bot-dau-tien': { stars: 1 }, 'cua-kho': { stars: 1 }, 'nhat-sao': { stars: 1 }, 'hai-nut-mot-cua': { stars: 1 } })); });
+await p.goto('about:blank');
+await p.goto('http://localhost:5208/giai-do.html#/level/du-ba-thung');
+await p.waitForTimeout(2500);
+const btn = p.locator('.pz-viewtoggle').first();
+console.log('before', await btn.innerText(), await btn.getAttribute('class'));
+await btn.click({ force: true });
+await p.waitForTimeout(800);
+console.log('after', await btn.innerText());
+await p.screenshot({ path: 'C:/Users/trong/AppData/Local/Temp/toggle-probe.png' });
+await b.close();

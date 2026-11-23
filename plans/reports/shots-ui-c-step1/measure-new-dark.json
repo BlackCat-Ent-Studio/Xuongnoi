@@ -1,0 +1,178 @@
+{
+ "label": "new",
+ "theme": "dark",
+ "samples": {
+  "student": {
+   "Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)": {
+    "cards": 19,
+    "overlaps": 1,
+    "pairs": [
+     "mat-phai/hien-truot 184x6"
+    ],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 194,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   },
+   "Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)": {
+    "cards": 50,
+    "overlaps": 4,
+    "pairs": [
+     "che-do/hien-toc-do 184x8",
+     "san/vat-1 184x34",
+     "tuong-tren/vat-2 184x34"
+    ],
+    "wireEnds": 114,
+    "worstEndErrorPx": 0,
+    "avgCardH": 188,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 296, 16)"
+   },
+   "Robot đi hình vuông (quãng đường, chênh lệch góc, chuỗi bước, 3D)": {
+    "cards": 32,
+    "overlaps": 1,
+    "pairs": [
+     "dem-canh/hien-vuong 184x28"
+    ],
+    "wireEnds": 80,
+    "worstEndErrorPx": 0,
+    "avgCardH": 178,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 296, 16)"
+   },
+   "Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn thật)": {
+    "cards": 26,
+    "overlaps": 14,
+    "pairs": [
+     "floor/path 184x54",
+     "path/pad-a 184x54",
+     "pad-a/pad-b 184x54"
+    ],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 220,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 302, 22)"
+   },
+   "Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)": {
+    "cards": 40,
+    "overlaps": 23,
+    "pairs": [
+     "floor/pillar 184x54",
+     "pillar/feed 184x54",
+     "feed/out-belt 184x54"
+    ],
+    "wireEnds": 104,
+    "worstEndErrorPx": 0,
+    "avgCardH": 227,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)": {
+    "cards": 31,
+    "overlaps": 19,
+    "pairs": [
+     "floor/go 184x54",
+     "feed/scale 184x54",
+     "scale/belt-end 184x54"
+    ],
+    "wireEnds": 62,
+    "worstEndErrorPx": 0,
+    "avgCardH": 214,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 302, 22)"
+   },
+   "Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)": {
+    "cards": 15,
+    "overlaps": 6,
+    "pairs": [
+     "san/duong 184x44",
+     "tru/ban-cap 184x44",
+     "ban-cap/de-xi-lanh 184x44"
+    ],
+    "wireEnds": 76,
+    "worstEndErrorPx": 0,
+    "avgCardH": 318,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   }
+  },
+  "teacher": {
+   "Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)": {
+    "cards": 19,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 142,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   },
+   "Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)": {
+    "cards": 50,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 114,
+    "worstEndErrorPx": 0,
+    "avgCardH": 138,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 296, 16)"
+   },
+   "Robot đi hình vuông (quãng đường, chênh lệch góc, chuỗi bước, 3D)": {
+    "cards": 32,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 80,
+    "worstEndErrorPx": 0,
+    "avgCardH": 131,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 296, 16)"
+   },
+   "Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn thật)": {
+    "cards": 26,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 161,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)": {
+    "cards": 40,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 104,
+    "worstEndErrorPx": 0,
+    "avgCardH": 165,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)": {
+    "cards": 31,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 62,
+    "worstEndErrorPx": 0,
+    "avgCardH": 157,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)": {
+    "cards": 15,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 76,
+    "worstEndErrorPx": 0,
+    "avgCardH": 232,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   }
+  }
+ },
+ "ui": {
+  "student": {
+   "minFont": 12,
+   "minEl": "span.pip-chip \"Đang sửa\"",
+   "textBelow12": {},
+   "minHit": 30,
+   "minHitEl": "button.cs-btn on 65x30",
+   "hitBelow24": {}
+  },
+  "teacher": {
+   "minFont": 12,
+   "minEl": "button.btn \"📘 Hướng dẫn\"",
+   "textBelow12": {},
+   "minHit": 24,
+   "minHitEl": "div.wc-port in 182x24",
+   "hitBelow24": {}
+  }
+ }
+}

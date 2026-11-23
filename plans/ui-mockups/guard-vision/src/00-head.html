@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Bot · Màn 6 Lẻn qua mắt lính gác (bản xem thử)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&family=Be+Vietnam+Pro:wght@400;600&display=swap">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+:root { --wood-0:#241510; --wood-1:#3a2417; --wood-2:#5a3a22; --wood-3:#7a4f2e; --wood-4:#a06b3c; --wood-5:#c8955a;
+  --cream:#fff1d0; --cream-2:#f3dcaa; --cream-3:#d9bd84; --honey:#ffb938; --amber-deep:#a85c0c; --sage:#93b58c; --ink:#3b2314;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--wood-0); color:var(--cream); }
+body { font-family:var(--body); background:radial-gradient(120% 60% at 50% 0,#4a2e1b,var(--wood-0) 70%); min-height:100vh; overflow-x:hidden; }
+h1,h2 { font-family:var(--display); margin:0; }
+header { max-width:1320px; margin:0 auto; padding:14px 16px 2px; }
+header h1 { font-size:clamp(22px,3vw,30px); color:var(--cream); line-height:1.1; }
+header p { margin:4px 0 0; color:var(--cream-3); font-size:13px; max-width:90ch; line-height:1.45; }
+main { display:grid; grid-template-columns:minmax(0,1fr) 326px; gap:16px; max-width:1320px; margin:0 auto; padding:10px 16px 28px; align-items:start; }
+.left { min-width:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.bezel { background:#1a0f09; border-radius:20px; padding:8px; box-shadow:0 20px 36px -18px rgba(0,0,0,.85), inset 0 0 0 2px #4a2e1b; max-width:100%; }
+.stage { position:relative; overflow:hidden; border-radius:13px; background:
+  repeating-linear-gradient(90deg,transparent 0 4.4%,rgba(120,70,30,.16) 4.4% 4.7%), linear-gradient(#f3dcaa,#e2c283 72%,#b98550); }
+.stage[data-frame=stage] { width:370px; height:390px; }
+.stage[data-frame=phone] { width:844px; height:390px; }
+.stage[data-frame=desktop] { width:min(880px,calc(100vw - 400px)); aspect-ratio:16/9; }
+.stage canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.mask { position:absolute; inset:0; pointer-events:none; display:none; }
+.mask.on { display:block; }
+.mask i { position:absolute; border:2px dashed rgba(224,85,63,.85); background:rgba(224,85,63,.16); color:#fff; font:600 11px var(--body); font-style:normal; padding:3px 6px; }
+.mask .mb { left:0; right:0; bottom:0; height:29%; } .mask .mt { left:0; top:0; width:58%; height:12%; }
+#labels { position:absolute; inset:0; pointer-events:none; }
+#labels span { position:absolute; transform:translate(-50%,0); font:600 11px/1.1 var(--body); color:var(--cream); background:rgba(36,21,16,.78); padding:3px 7px; border-radius:99px; white-space:nowrap; }
+#hud { position:absolute; right:8px; top:6px; font:600 11px var(--body); color:#fff8; background:rgba(36,21,16,.55); padding:2px 8px; border-radius:99px; pointer-events:none; }
+.caption { margin:0; font-size:12.5px; color:var(--cream-3); text-align:center; max-width:78ch; line-height:1.5; min-height:3em; }
+aside { background:linear-gradient(#4b2f1c,#3a2417); border-radius:20px; padding:14px; box-shadow:0 14px 24px -14px rgba(0,0,0,.8), inset 0 0 0 2px var(--wood-3); min-width:0; display:flex; flex-direction:column; gap:12px; }
+aside h2 { font-size:16px; color:var(--honey); margin-bottom:6px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+button { font:600 13px/1.2 var(--body); color:var(--cream); background:var(--wood-3); border:0; border-radius:12px; padding:9px 8px; min-height:42px; cursor:pointer; box-shadow:0 3px 0 var(--wood-0); transition:transform .1s; }
+button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--wood-0); }
+button[aria-pressed="true"] { background:var(--honey); color:var(--ink); box-shadow:0 3px 0 var(--amber-deep); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid var(--cream); outline-offset:2px; }
+.row { display:flex; align-items:center; gap:8px; margin:7px 0; font-size:13px; }
+.row label { flex:0 0 96px; }
+.row input[type=range] { flex:1; min-width:0; accent-color:var(--honey); height:30px; }
+.row output { flex:0 0 38px; text-align:right; color:var(--cream-3); font-variant-numeric:tabular-nums; }
+.chk { display:flex; align-items:center; gap:8px; font-size:13px; margin:8px 0; min-height:30px; }
+.chk input { width:18px; height:18px; accent-color:var(--honey); }
+select { font:600 13px var(--body); background:var(--wood-2); color:var(--cream); border:0; border-radius:10px; padding:8px; min-height:38px; }
+textarea { display:none; width:100%; min-height:130px; margin-top:8px; background:#1a0f09; color:var(--cream); border:2px solid var(--wood-3); border-radius:10px; padding:8px; font:12px/1.4 ui-monospace,Consolas,monospace; }
+#status { min-height:1.3em; margin:6px 0 0; font-size:12.5px; color:#a8f0c6; }
+#triList { margin:0; padding:0; list-style:none; font-size:12px; color:var(--cream-3); }
+#triList li { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dotted rgba(217,189,132,.25); }
+[hidden] { display:none !important; }
+@media (max-width:1000px) { main { grid-template-columns:minmax(0,1fr); } .stage[data-frame=desktop] { width:min(880px,calc(100vw - 50px)); } .stage[data-frame=phone] { width:min(844px,100%); height:auto; aspect-ratio:844/390; } }
+body.bare { background:#000; overflow:hidden; }
+body.bare header, body.bare aside, body.bare .caption { display:none; }
+body.bare main { display:block; padding:0; max-width:none; }
+body.bare .left { display:block; }
+body.bare .bezel { padding:0; border-radius:0; background:none; box-shadow:none; }
+body.bare .stage { width:100vw !important; height:100vh !important; border-radius:0; aspect-ratio:auto !important; }
+body.bare #hud { display:none; }
+
+.stage[data-frame=desktop] { width:min(900px,calc(100vw - 400px)); aspect-ratio:16/9; }
+.chip { position:absolute; left:10px; bottom:10px; font:600 13px var(--body); padding:7px 12px; border-radius:99px; background:rgba(36,21,16,.82); color:var(--cream); border:2px solid transparent; pointer-events:none; }
+.chip[data-k=hidden] { border-color:#93b58c; } .chip[data-k=safe] { border-color:#ffb938; color:#ffe9a8; } .chip[data-k=danger] { border-color:#e0553f; background:rgba(120,25,15,.9); }
+.think { position:absolute; transform:translate(-50%,-100%); font:700 13px var(--body); padding:6px 11px; border-radius:14px; background:rgba(255,248,230,.95); color:#3b2314; border:2px solid #d9bd84; white-space:nowrap; pointer-events:none; display:none; box-shadow:0 4px 10px -4px rgba(0,0,0,.5); }
+.think[data-k=go] { border-color:#3f9a4d; color:#1f5a2a; } .think[data-k=wait] { border-color:#e8891a; color:#7a4300; } .think[data-k=off] { border-color:#9a9a9a; color:#555; }
+.timer { position:absolute; left:10px; top:8px; font:600 12px var(--body); color:#fff; background:rgba(36,21,16,.6); padding:2px 9px; border-radius:99px; pointer-events:none; }
+.banner { position:absolute; left:50%; top:10px; transform:translateX(-50%); text-align:center; padding:8px 26px; border-radius:20px; display:none; pointer-events:none; box-shadow:0 14px 30px -10px rgba(0,0,0,.7); }
+.banner.on { display:block; } .banner b { display:block; font:800 30px/1.1 var(--display); } .banner span { font:600 15px var(--body); }
+.banner.win { background:#2f6b3a; color:#eaffd9; border:4px solid #93b58c; } .banner.lose { background:#8e2a1c; color:#ffe4dc; border:4px solid #e0553f; }
+.sub { font-size:12px; color:var(--cream-3); margin:2px 0 6px; line-height:1.4; }
+.row label { flex:0 0 118px; } .row output { flex:0 0 48px; }
+.bigbtns { display:grid; gap:7px; }
+.bigbtns button.go { background:#3f7a45; box-shadow:0 3px 0 #1f4a26; } .bigbtns button.bad { background:#8a5a34; } .bigbtns button.reset { background:var(--wood-2); }
+table.res { width:100%; border-collapse:collapse; font-size:12px; margin-top:8px; }
+table.res td, table.res th { padding:4px 4px; border-bottom:1px dotted rgba(217,189,132,.3); text-align:left; }
+table.res .w { color:#a8f0c6; font-weight:600; } table.res .l { color:#ffb3a3; font-weight:600; }
+aside { max-height:none; }
+
+</style>
+</head>
+<body>
+<header>
+  <h1>Màn 6 · Lẻn qua mắt lính gác · bản xem thử (v2)</h1>
+  <p>Chỉ là bản xem thử (chưa phải mã game). Mèo nhỏ nấp sau thùng, nhìn lính gác tuần rồi TÍNH GIỜ: chỉ chạy tới thùng kế khi còn đủ thời gian (cần + 0,5 giây dự phòng), không thì nấp chờ. Đã rời chỗ nấp là chạy một mạch tới thùng kế, không dừng giữa đường. Lính gác thấy mèo ngoài chỗ nấp là THUA ngay. Bấm 4 nút chạy để so sánh, kéo thanh chỉnh, rồi “Sao chép thông số” gửi lại.</p>
+</header>
+<main>
+  <section class="left">
+    <div class="bezel"><div class="stage" id="stage" data-frame="desktop">
+      <div class="timer" id="timer"></div>
+      <div class="think" id="think"></div>
+      <div class="chip" id="chip" data-k="hidden"></div>
+      <div class="banner" id="banner"><b id="bTitle"></b><span id="bWhy"></span></div>
+    </div></div>
+    <p class="caption" id="caption"></p>
+  </section>
+  <aside>
+    <section><h2>Chạy thử</h2>
+      <div class="bigbtns">
+        <button type="button" class="go" id="bCorrect">Lời giải đúng (tính giờ)</button>
+        <button type="button" class="bad" id="bOld">Cách cũ (đo khoảng cách)</button>
+        <button type="button" class="bad" id="bRash">Chạy liều (không tính)</button>
+        <button type="button" class="bad" id="bNone">Không nối gì</button>
+        <button type="button" class="reset" id="bReset">Đặt lại</button>
+      </div>
+      <p class="sub">Lời giải đúng: “So sánh: [Lính còn bao lâu mới nhìn tới đoạn kế] &gt; [Mèo cần bao lâu chạy qua + 0,5]” rồi nối vào “Chạy tới chỗ nấp kế”. Cách cũ: chạy khi lính cách xa từ 6 ô. Chạy liều: chạy bất cứ lúc lính chưa nhìn đoạn kế. Không nối gì: mèo không dám rời chỗ nấp.</p>
+      <button type="button" id="bCheck" style="width:100%">Kiểm tra cả 4 cách với thông số này</button>
+      <table class="res" id="res" hidden></table>
+    </section>
+    <section><h2>Lính gác</h2>
+      <div class="row"><label for="pLen">Đường tuần (ô)</label><input type="range" id="pLen" min="1" max="3.4" step="0.1"><output id="oLen"></output></div>
+      <div class="row"><label for="pGs">Tốc độ đi tuần</label><input type="range" id="pGs" min="0.5" max="3" step="0.1"><output id="oGs"></output></div>
+      <div class="row"><label for="pRange">Tầm nhìn xa (ô)</label><input type="range" id="pRange" min="4" max="12" step="0.5"><output id="oRange"></output></div>
+      <div class="row"><label for="pAngle">Góc nhìn (độ)</label><input type="range" id="pAngle" min="30" max="180" step="5"><output id="oAngle"></output></div>
+    </section>
+    <section><h2>Mèo nhỏ</h2>
+      <div class="row"><label for="pHs">Tốc độ chạy</label><input type="range" id="pHs" min="2" max="6" step="0.1"><output id="oHs"></output></div>
+      <p class="sub">Dự phòng 0,5 giây cố định (luật của lời giải đúng).</p>
+    </section>
+    <section><h2>Thùng nấp (3 chỗ nấp)</h2>
+      <div class="grid3" id="presets">
+        <button type="button" data-preset="A" aria-pressed="true">Cách xếp A</button>
+        <button type="button" data-preset="B" aria-pressed="false">Cách xếp B</button>
+        <button type="button" data-preset="C" aria-pressed="false">Cách xếp C</button>
+      </div>
+    </section>
+    <section><h2>Hiển thị</h2>
+      <label class="chk"><input type="checkbox" id="cLane" checked> Hiện vạch đường chạy và chỗ nấp</label>
+      <div class="row"><label for="selFloor">Kiểu sàn</label><select id="selFloor"><option value="plank">Ván gỗ</option><option value="tile">Gạch ấm</option></select></div>
+    </section>
+    <section><button type="button" id="bCopy" style="width:100%">Sao chép thông số</button><p id="status" role="status" aria-live="polite"></p>
+      <textarea id="copyOut" readonly aria-label="Thông số JSON"></textarea></section>
+  </aside>
+</main>
+<script type="module">

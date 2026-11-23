@@ -1,0 +1,939 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Làm dây nối gọn gàng - xem trước</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap&subset=vietnamese">
+<style>
+/* ===== tokens (same values as app/src/style.css + puzzle.css) ===== */
+:root {
+  --bg: #121418; --chrome: #17191e; --panel: #1c1f25; --panel2: #23272e; --raise: #2b3038; --line: #2c3139; --line2: #3a404a;
+  --text: #e7e9ec; --text2: #aab2bd; --text3: #8f98a4; --accent: #3ecf8e; --accent-ink: #05140d; --accent-soft: rgba(62, 207, 142, .14);
+  --warn: #f2b33d; --danger: #ff7b7b;
+  --t-bool: #f7d046; --t-num: #5aa9ff; --t-obj: #f27ad0;
+  --c-input: #4cc9d9; --c-logic: #a894ff; --c-math: #a9d861; --c-object: #f0965a; --c-action: #ff7f7f; --c-brain: #d3b48a; --c-output: #b9c4d0;
+  --board: #1f2a5c; --board-dot: #33428a; --sun: #ffd23f;
+  --font: 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif; --display: 'Baloo 2', 'Be Vietnam Pro', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.45 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* ===== page chrome ===== */
+.app { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.top { flex: none; padding: 10px 14px 8px; background: var(--chrome); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
+.top h1 { margin: 0; font: 800 20px/1.1 var(--display); letter-spacing: .01em; }
+.top .lead { margin: 0; color: var(--text2); max-width: 90ch; }
+.row { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--panel); border: 1px solid var(--line2); border-radius: 10px; }
+.seg button { border: 0; background: none; border-radius: 7px; padding: 6px 12px; font-weight: 700; color: var(--text2); }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--text); box-shadow: inset 0 0 0 1px var(--line2); }
+.seg button.after[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.btn { border: 1px solid var(--line2); background: var(--panel); border-radius: 10px; padding: 6px 12px; font-weight: 700; }
+.btn.go { background: var(--sun); color: #2b2100; border-color: transparent; }
+.btn:hover { filter: brightness(1.12); }
+.cmp { display: inline-flex; align-items: center; gap: 6px; color: var(--text2); font-weight: 600; cursor: pointer; user-select: none; }
+.cmp input { accent-color: var(--accent); width: 16px; height: 16px; }
+.togs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tog { display: inline-flex; align-items: center; gap: 7px; padding: 5px 11px 5px 6px; border-radius: 999px; border: 1.5px solid var(--line2); background: var(--panel); color: var(--text2); font-weight: 600; white-space: nowrap; user-select: none; }
+.tog .n { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--raise); font-weight: 800; color: var(--text); }
+.tog[aria-pressed="true"] { border-color: var(--accent); color: var(--text); background: color-mix(in srgb, var(--accent) 14%, var(--panel)); }
+.tog[aria-pressed="true"] .n { background: var(--accent); color: var(--accent-ink); }
+.help { margin: 0; min-height: 20px; color: var(--text2); }
+.help b { color: var(--text); }
+main#boards { flex: 1; min-height: 0; display: grid; gap: 8px; padding: 8px; grid-template-columns: 1fr; }
+main#boards.two { grid-template-columns: 1fr 1fr; }
+.pane { position: relative; min-width: 0; min-height: 0; display: flex; flex-direction: column; border-radius: 14px; overflow: hidden; border: 1px solid var(--line2); }
+.pane-label { position: absolute; z-index: 6; left: 10px; top: 8px; padding: 2px 10px; border-radius: 999px; font: 800 12px/20px var(--display); letter-spacing: .06em; text-transform: uppercase; background: #0e1330; color: var(--text2); border: 1px solid var(--board-dot); pointer-events: none; }
+.pane-label.after { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+.score { position: absolute; z-index: 6; left: 10px; bottom: 10px; padding: 6px 12px; border-radius: 12px; background: rgba(10, 13, 32, .88); border: 1px solid var(--board-dot); pointer-events: none; max-width: calc(100% - 120px); }
+.score b { font: 800 15px/1.2 var(--display); }
+.score b em { font-style: normal; font-size: 22px; color: var(--sun); margin-left: 4px; }
+.score small { display: block; color: var(--text2); font-size: 11.5px; margin-top: 1px; }
+.score.good b em { color: var(--accent); }
+.zoom { position: absolute; z-index: 6; right: 10px; bottom: 10px; display: flex; flex-direction: column; padding: 3px; background: rgba(10, 13, 32, .88); border: 1px solid var(--board-dot); border-radius: 10px; }
+.zoom button { width: 34px; height: 30px; border: 0; background: none; border-radius: 7px; font-weight: 800; font-size: 16px; color: var(--text2); }
+.zoom button:hover { background: var(--raise); color: var(--text); }
+.legend { position: absolute; z-index: 6; right: 10px; top: 8px; display: flex; gap: 10px; padding: 3px 10px; border-radius: 999px; background: rgba(10, 13, 32, .88); border: 1px solid var(--board-dot); font-size: 11.5px; color: var(--text2); pointer-events: none; }
+.legend i { display: inline-block; width: 9px; height: 9px; margin-right: 5px; background: var(--pc); }
+.legend .type-bool i { border-radius: 50%; } .legend .type-number i { transform: rotate(45deg) scale(.86); border-radius: 1px; } .legend .type-object i { border-radius: 2px; }
+.type-bool { --pc: var(--t-bool); } .type-number { --pc: var(--t-num); } .type-object { --pc: var(--t-obj); }
+
+/* ===== board (copied patterns: graph.css / node-cards.css / wire-energy.css / puzzle.css) ===== */
+.wc { flex: 1; position: relative; overflow: hidden; min-width: 0; min-height: 0; outline: none; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background-color: var(--board); background-image: radial-gradient(var(--board-dot) 1.4px, transparent 1.6px); background-size: 24px 24px;
+  color: var(--text); font-size: 13px; line-height: 1.45; }
+.wc.panning { cursor: grabbing; }
+.wc-world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.wc-world.smooth { transition: transform .4s cubic-bezier(.3, .85, .3, 1); }
+.wc-wires, .wc-over { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.wc-nodes, .wc-chips { position: absolute; left: 0; top: 0; }
+.wc-chips { pointer-events: none; }
+
+.wc .wc-wire { fill: none; stroke: var(--pc); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.wc .wc-wire-hit { fill: none; stroke: transparent; stroke-width: 22; pointer-events: stroke; cursor: pointer; }
+.wc .wc-wire-glow { fill: none; stroke: var(--pc); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.wc .wc-wire-flow { fill: none; stroke: color-mix(in srgb, var(--pc) 35%, #fff); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 2 14; opacity: .5; pointer-events: none; animation: wc-flow 2.4s steps(12) infinite; }
+@keyframes wc-flow { to { stroke-dashoffset: -16; } }
+.wc.lowzoom .wc-wire-flow { display: none; }
+.wc .wire-g { transition: opacity .25s; }
+.wc .wire-g.dim { opacity: .2; }
+.wc .wire-g.hl .wc-wire { stroke-width: 4; }
+.wc .wire-g.hl .wc-wire-glow { opacity: .3; }
+.wc .wire-g.hl .wc-wire-flow { opacity: .95; stroke-width: 3; }
+.wc .wire-g.stubbed { display: none; }
+
+.wc .wc-node { --card: #222832; --cc: var(--text2); position: absolute; width: max-content; min-width: 168px; white-space: nowrap; user-select: none; cursor: default;
+  background: var(--card); color: var(--text); border: 2px solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 18px;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 14px 22px -12px rgba(0, 0, 0, .8); transition: opacity .25s, box-shadow .25s; }
+.wc .wc-node.dragging { z-index: 4; opacity: .94; box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 18px 30px -8px rgba(0, 0, 0, .9); }
+.wc .wc-node.picked { border-color: var(--sun); box-shadow: 0 0 0 4px var(--sun), 0 0 22px 7px rgba(255, 210, 63, .55), 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10); z-index: 3; }
+.wc .wc-node.faded { opacity: .62; }
+.wc .cat-input { --cc: var(--c-input); } .wc .cat-logic { --cc: var(--c-logic); } .wc .cat-math { --cc: var(--c-math); } .wc .cat-object { --cc: var(--c-object); }
+.wc .cat-action { --cc: var(--c-action); } .wc .cat-brain { --cc: var(--c-brain); } .wc .cat-output { --cc: var(--c-output); }
+.wc .wc-node-head { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: var(--cc); color: #10151b; border-radius: 15px 15px 0 0; cursor: grab; touch-action: none; }
+.wc .wc-tile { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .35); color: #10151b; display: grid; place-items: center; }
+.wc .wc-tile svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; flex: 1 1 0; min-width: min-content; }
+.wc .wc-name { font-weight: 800; font-size: 13.5px; }
+.wc .wc-sub { font-size: 11px; font-weight: 600; color: rgba(16, 21, 27, .72); display: block; contain: inline-size; overflow: hidden; text-overflow: ellipsis; }
+.wc .wc-ports-body { display: flex; flex-direction: column; padding: 3px 0 5px; }
+.wc .wc-ports { display: flex; flex-direction: column; }
+.wc .wc-ports.outs { align-items: flex-end; }
+.wc .wc-port { position: relative; display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; }
+.wc .wc-port.out { flex-direction: row-reverse; }
+.wc .wc-dot { position: static; flex: none; width: 15px; height: 15px; margin: 0; border: 0; background: var(--pc); }
+.wc .wc-dot.type-bool { border-radius: 50%; }
+.wc .wc-dot.type-number { transform: rotate(45deg) scale(.86); border-radius: 2px; }
+.wc .wc-dot.type-object { border-radius: 3px; }
+/* item 1: pins half outside the card edge */
+.wc.edge-pins .wc-port { padding: 0 14px; }
+.wc.edge-pins .wc-dot { position: absolute; top: 50%; margin-top: -7.5px; box-shadow: 0 0 0 2.5px var(--card); }
+.wc.edge-pins .wc-port.in .wc-dot { left: -9.5px; }
+.wc.edge-pins .wc-port.out .wc-dot { right: -9.5px; }
+
+/* knots (item 4) and label chips (item 6) */
+.wc .knot-g { pointer-events: auto; cursor: grab; }
+.wc .knot-ring { fill: var(--board); stroke: var(--pc); stroke-width: 3; }
+.wc .knot-core { fill: var(--pc); }
+.wc .knot-g:hover .knot-ring { stroke-width: 4.5; }
+.wc .knot-hit { fill: transparent; }
+.wc .chip { position: absolute; pointer-events: auto; display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px 1px 6px; line-height: 20px; height: 22px; border-radius: 11px; font: 700 11.5px/20px var(--font); white-space: nowrap;
+  background: #2a1233; color: #ffd9f1; border: 1.5px solid var(--t-obj); transform: translate(-100%, -50%); transition: opacity .25s, box-shadow .2s; cursor: pointer; }
+.wc .chip.src { transform: translate(0, -50%); padding: 0 7px; background: var(--t-obj); color: #2a0f23; }
+.wc .chip.dim { opacity: .2; }
+.wc .chip.on { box-shadow: 0 0 0 3px rgba(242, 122, 208, .5), 0 0 14px var(--t-obj); }
+.wc .chip:hover { filter: brightness(1.2); }
+.wc .full-wire .wc-wire { stroke-width: 4.2; stroke-dasharray: none; }
+main#boards.two .hintbar { display: none; }
+.hintbar { position: absolute; z-index: 5; left: 50%; bottom: 10px; transform: translateX(-50%); padding: 3px 12px; border-radius: 999px; background: rgba(10, 13, 32, .8); color: var(--text2); font-size: 11.5px; pointer-events: none; white-space: nowrap; max-width: 46%; overflow: hidden; text-overflow: ellipsis; }
+
+@media (max-width: 760px) { main#boards.two { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; } .hintbar { display: none; } }
+@media (max-height: 520px) {
+  .top { padding: 5px 10px 5px; gap: 5px; } .top h1, .top .lead, .help { display: none; }
+  .top .togs { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; } .tog { padding: 3px 9px 3px 4px; }
+  .seg button { padding: 4px 10px; } .btn { padding: 4px 10px; }
+  main#boards { padding: 4px; } .hintbar, .legend { display: none; }
+  .score { padding: 3px 9px; left: 6px; bottom: 6px; } .score b { font-size: 12px; } .score b em { font-size: 17px; } .score small { display: none; }
+  .zoom { right: 6px; bottom: 6px; } .zoom button { height: 26px; width: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { .wc .wc-wire-flow { display: none; } .wc .wire-g, .wc .wc-node { transition: none; } .wc-world.smooth { transition: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1>Làm dây nối gọn gàng <span style="color:var(--text3);font-weight:600;font-size:14px">(kiểu Blueprint / Visual Scripting)</span></h1>
+    <p class="lead">Hai bảng thật lấy từ lời giải mẫu của màn 5 và màn 7. Bật từng nút ①-⑥ để thấy từng thay đổi, hoặc bấm <b>Sau</b> để bật hết. Con số "Số chỗ dây cắt nhau" càng thấp thì bảng càng dễ nhìn.</p>
+    <div class="row">
+      <div class="seg" id="tabs" role="group" aria-label="Chọn màn"><button data-lv="5" aria-pressed="true">Màn 5</button><button data-lv="7" aria-pressed="false">Màn 7</button></div>
+      <div class="seg" id="mode" role="group" aria-label="Trước hoặc sau"><button data-m="before" aria-pressed="true">Trước</button><button data-m="after" class="after" aria-pressed="false">Sau</button></div>
+      <label class="cmp"><input type="checkbox" id="cmp"> So sánh cạnh nhau</label>
+      <button class="btn go" id="arrangeBtn" title="Tự xếp các thẻ từ trái sang phải theo đường đi của tín hiệu">✨ Sắp xếp gọn</button>
+    </div>
+    <div class="togs" id="togs"></div>
+    <p class="help" id="help"></p>
+  </header>
+  <main id="boards"></main>
+</div>
+
+<script>
+'use strict';
+/* =====================================================================================================
+   Data: node definitions (labels / ports exactly as app/src/nodes + node-names.ts) and the two boards
+   ===================================================================================================== */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const sv = (tag, attrs = {}, cls) => { const e = document.createElementNS(SVGNS, tag); if (cls) e.setAttribute('class', cls); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const P = (id, type, label) => ({ id, type, label });
+const SLOT_IN = [1, 2, 3, 4].map((n) => P('s' + n, 'object', 'Ô ' + n));
+const DEFS = {
+  character: { vi: 'Nhân vật', en: 'Character', cat: 'object',
+    in: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy')],
+    out: [P('self', 'object', 'Nhân vật'), P('onGround', 'bool', 'Đang đứng đất'), P('x', 'number', 'Vị trí X'), P('y', 'number', 'Vị trí Y'), P('z', 'number', 'Vị trí Z')] },
+  block: { vi: 'Vật thể', en: 'Object', cat: 'object', in: [], out: [P('self', 'object', 'Vật thể'), P('usedOn', 'bool', 'Bị dùng lên')] },
+  'nearest-item': { vi: 'Tìm vật gần nhất', en: 'Nearest Item', cat: 'logic',
+    in: [P('who', 'object', 'Ai'), P('pause', 'bool', 'Tạm nghỉ'), ...[1, 2, 3, 4].map((n) => P('i' + n, 'object', 'Bỏ qua đồ trên ô ' + n))],
+    out: [P('item', 'object', 'Vật gần nhất'), P('found', 'bool', 'Có'), P('distance', 'number', 'Khoảng cách')] },
+  'next-free-slot': { vi: 'Ô trống kế tiếp', en: 'Next Free Slot', cat: 'logic', in: SLOT_IN, out: [P('slot', 'object', 'Ô trống'), P('full', 'bool', 'Đầy')] },
+  'go-to': { vi: 'Đi tới', en: 'Move To', cat: 'brain',
+    in: [P('self', 'object', 'Bot'), P('target', 'object', 'Đích (vật)'), P('go', 'bool', 'Cho đi'), P('target2', 'object', 'Đích 2 (vật)'), P('useTarget2', 'bool', 'Dùng đích 2')],
+    out: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy'), P('arrived', 'bool', 'Đã tới'), P('arrivedPulse', 'bool', 'Vừa tới')] },
+  carry: { vi: 'Khiêng đồ', en: 'Carry', cat: 'action',
+    in: [P('character', 'object', 'Nhân vật'), P('grab', 'bool', 'Nhấc lên'), P('drop', 'bool', 'Thả'), P('throw', 'bool', 'Ném')],
+    out: [P('holding', 'bool', 'Đang khiêng'), P('heldItem', 'object', 'Món đang khiêng')] },
+  'route-follow': { vi: 'Chạy theo tuyến', en: 'Follow Path', cat: 'brain',
+    in: [P('self', 'object', 'Ai'), P('on', 'bool', 'Bật'), P('stop', 'bool', 'Dừng'), P('go', 'bool', 'Chạy')],
+    out: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy'), P('blocked', 'bool', 'Đang bị chặn'), P('reached', 'bool', 'Tới điểm'), P('index', 'number', 'Điểm hiện tại'), P('atPoint', 'bool', 'Đang ở điểm')] },
+  'color-sensor': { vi: 'Đọc màu', en: 'Color Check', cat: 'logic', in: [P('who', 'object', 'Vật')], out: [P('index', 'number', 'Số màu'), P('match', 'bool', 'Đúng màu')] },
+  and: { vi: 'Và', en: 'AND', cat: 'logic', in: [P('a', 'bool', 'A'), P('b', 'bool', 'B')], out: [P('out', 'bool', 'Kết quả')] },
+  math: { vi: 'Phép tính', en: 'Math', cat: 'math', in: [P('a', 'number', 'Số A'), P('b', 'number', 'Số B')], out: [P('out', 'number', 'Kết quả')] },
+};
+const GLYPH = {
+  input: 'M2 8h7M6.5 4.5L10 8l-3.5 3.5M13 3v10', logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10',
+  object: 'M8 2l5.5 3v6L8 14l-5.5-3V5z', action: 'M9.5 2L4 9h4l-1 5 5.5-7H8.5z', brain: 'M8 2.5a4 4 0 00-4 4c0 1.6 1 2.4 1 3.9v1.1h6v-1.1c0-1.5 1-2.3 1-3.9a4 4 0 00-4-4zM6.5 13.5h3', output: 'M4 2v12M4 3h8l-2 3 2 3H4',
+};
+/** Role of each kind, left to right: objects, finders/sensors, logic, math + movement, actions. Used only by "Sắp xếp gọn". */
+const STAGE = { character: 0, block: 0, 'nearest-item': 1, 'color-sensor': 1, 'next-free-slot': 1, 'route-follow': 1, and: 2, or: 2, not: 2, 'go-to': 3, math: 3.5, carry: 4 };
+
+const ROBOT = { name: 'Rô-bốt chân', chip: ['🤖', 'Rô-bốt'] };
+const slots = (inShown) => [0, 1, 2].map((i) => ({ id: 'slot-' + (i + 1), kind: 'block', name: 'Ô kho ' + (i + 1), x: 10, y: 128 + i * 80, show: { in: [], out: ['self'] }, chip: ['📦', 'Ô kho ' + (i + 1)] }));
+const W = (id, f, fp, t, tp) => ({ id, from: { node: f, port: fp }, to: { node: t, port: tp } });
+const LEVELS = {
+  5: {
+    title: 'Màn 5 - Đủ ba thùng',
+    nodes: [
+      { id: 'robot', kind: 'character', ...ROBOT, x: 10, y: 10, show: { in: ['moveX', 'moveY'], out: ['self'] } },
+      ...slots(),
+      { id: 's-find', kind: 'nearest-item', x: 260, y: 20 },
+      { id: 's-go', kind: 'go-to', x: 480, y: 120 },
+      { id: 's-next', kind: 'next-free-slot', x: 260, y: 300 },
+      { id: 's-hands', kind: 'carry', x: 480, y: 400 },
+    ],
+    wires: [
+      W('sw1', 'robot', 'self', 's-find', 'who'), W('sw2', 'slot-1', 'self', 's-find', 'i1'), W('sw3', 'slot-2', 'self', 's-find', 'i2'), W('sw4', 'slot-3', 'self', 's-find', 'i3'),
+      W('sw5', 's-find', 'item', 's-go', 'target'), W('sw6', 'robot', 'self', 's-go', 'self'),
+      W('sw7', 'slot-1', 'self', 's-next', 's1'), W('sw8', 'slot-2', 'self', 's-next', 's2'), W('sw9', 'slot-3', 'self', 's-next', 's3'),
+      W('sw10', 's-next', 'slot', 's-go', 'target2'), W('sw11', 'robot', 'self', 's-hands', 'character'),
+      W('sw12', 's-hands', 'holding', 's-go', 'useTarget2'), W('sw13', 's-go', 'arrived', 's-hands', 'grab'),
+      W('sw14', 's-go', 'moveX', 'robot', 'moveX'), W('sw15', 's-go', 'moveY', 'robot', 'moveY'),
+    ],
+  },
+  7: {
+    title: 'Màn 7 - Phân loại thùng màu',
+    nodes: [
+      { id: 'robot', kind: 'character', ...ROBOT, x: 10, y: 10, show: { in: ['moveX'], out: ['self'] } },
+      ...slots(),
+      { id: 's-route', kind: 'route-follow', x: 620, y: 20 },
+      { id: 's-sum', kind: 'math', x: 820, y: 20 },
+      { id: 's-eye', kind: 'color-sensor', x: 620, y: 260 },
+      { id: 's-and', kind: 'and', x: 820, y: 200 },
+      { id: 's-hands', kind: 'carry', x: 820, y: 330 },
+      { id: 's-next', kind: 'next-free-slot', x: 620, y: 400 },
+      { id: 's-goto', kind: 'go-to', x: 820, y: 450 },
+    ],
+    wires: [
+      W('sw1', 'robot', 'self', 's-route', 'self'), W('sw2', 's-route', 'moveX', 's-sum', 'a'), W('sw3', 's-sum', 'out', 'robot', 'moveX'),
+      W('sw4', 'robot', 'self', 's-eye', 'who'), W('sw5', 's-eye', 'match', 's-and', 'a'), W('sw6', 's-route', 'atPoint', 's-and', 'b'),
+      W('sw7', 'robot', 'self', 's-hands', 'character'), W('sw8', 's-and', 'out', 's-hands', 'grab'), W('sw9', 's-hands', 'holding', 's-route', 'stop'),
+      W('sw10', 'slot-1', 'self', 's-next', 's1'), W('sw11', 'slot-2', 'self', 's-next', 's2'), W('sw12', 'slot-3', 'self', 's-next', 's3'),
+      W('sw13', 'robot', 'self', 's-goto', 'self'), W('sw14', 's-next', 'slot', 's-goto', 'target'), W('sw15', 's-hands', 'holding', 's-goto', 'go'),
+      W('sw16', 's-goto', 'moveX', 's-sum', 'b'), W('sw17', 's-goto', 'arrived', 's-hands', 'drop'),
+    ],
+  },
+};
+
+const TOGGLES = [
+  { k: 'pins', n: '①', t: 'Chân nối ở mép thẻ', d: 'Chân nối nằm nửa trong nửa ngoài mép thẻ, nên dây không còn chui vào trong thẻ để đè lên chữ.' },
+  { k: 'avoid', n: '②', t: 'Dây đi ngược tự vòng', d: 'Dây nào phải đi ngược về bên trái (hoặc sẽ cắt ngang một thẻ) sẽ tự vòng qua khoảng trống giữa các thẻ, không đi xuyên qua chữ.' },
+  { k: 'focus', n: '③', t: 'Soi dây', d: 'Chạm (hoặc rê chuột) vào một thẻ: dây của thẻ đó sáng lên, các dây khác mờ đi còn 20%. Chạm vào chỗ trống để trở lại bình thường.' },
+  { k: 'knots', n: '④', t: 'Nút bẻ dây', d: 'Chạm đôi vào một dây để thêm nút bẻ, kéo nút để đổi đường đi của dây. Chạm đôi vào nút để bỏ nó.' },
+  { k: 'arrange', n: '⑤', t: 'Sắp xếp gọn', d: 'Các thẻ tự xếp từ trái sang phải theo đường đi của tín hiệu: nhân vật / vật thể, rồi cảm biến, rồi logic, rồi hành động. Có thể kéo thẻ bằng phần đầu thẻ.' },
+  { k: 'labels', n: '⑥', t: 'Dây vật thể dạng nhãn', d: 'Một nguồn (dây hồng) nối tới từ 3 nơi trở lên: chỉ vẽ đoạn ngắn kèm nhãn tên, ví dụ "🤖 Rô-bốt". Chạm nhãn để xem cả sợi dây.' },
+];
+const KEYS = TOGGLES.map((x) => x.k);
+const NONE = Object.fromEntries(KEYS.map((k) => [k, false]));
+const ALL = Object.fromEntries(KEYS.map((k) => [k, true]));
+
+/* =====================================================================================================
+   Geometry helpers (wirePath is the game's, app/src/editor/graph/graph-geometry.ts)
+   ===================================================================================================== */
+const wirePath = (x1, y1, x2, y2) => { const dx = Math.max(40, Math.abs(x2 - x1) / 2); return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`; };
+function bezierPts(a, b, n = 36) {
+  const dx = Math.max(40, Math.abs(b.x - a.x) / 2), c1 = { x: a.x + dx, y: a.y }, c2 = { x: b.x - dx, y: b.y }, out = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t; out.push({ x: u * u * u * a.x + 3 * u * u * t * c1.x + 3 * u * t * t * c2.x + t * t * t * b.x, y: u * u * u * a.y + 3 * u * u * t * c1.y + 3 * u * t * t * c2.y + t * t * t * b.y }); }
+  return out;
+}
+const polyD = (pts) => 'M ' + pts.map((p) => `${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' L ');
+function segX(p, p2, q, q2) {
+  const rx = p2.x - p.x, ry = p2.y - p.y, sx = q2.x - q.x, sy = q2.y - q.y, d = rx * sy - ry * sx;
+  if (Math.abs(d) < 1e-9) return false;
+  const t = ((q.x - p.x) * sy - (q.y - p.y) * sx) / d, u = ((q.x - p.x) * ry - (q.y - p.y) * rx) / d;
+  return t >= 0 && t < 1 && u >= 0 && u < 1;
+}
+function resample(pts, step) {
+  const out = [pts[0]];
+  for (let i = 1; i < pts.length; i++) {
+    const a = pts[i - 1], b = pts[i], len = Math.hypot(b.x - a.x, b.y - a.y), n = Math.max(1, Math.ceil(len / step));
+    for (let j = 1; j <= n; j++) out.push({ x: a.x + ((b.x - a.x) * j) / n, y: a.y + ((b.y - a.y) * j) / n });
+  }
+  return out;
+}
+const PIN_ZONE = 26;
+/** Number of cards (other than the wire's own pin zones) that the polyline runs across. */
+function cardHits(pts, ends, cards) {
+  const rs = resample(pts, 4);
+  let n = 0;
+  for (const c of cards) {
+    const own = ends.filter((e) => e.card === c.id).map((e) => e.pin);
+    const x0 = c.x + 1, y0 = c.y + 1, x1 = c.x + c.w - 1, y1 = c.y + c.h - 1;
+    for (const p of rs) {
+      if (p.x > x0 && p.x < x1 && p.y > y0 && p.y < y1 && !own.some((q) => Math.hypot(p.x - q.x, p.y - q.y) < PIN_ZONE)) { n++; break; }
+    }
+  }
+  return n;
+}
+/** wire x wire crossings (wires sharing a pin are skipped: they fan out from the same point). wire x card crossings. */
+function countCrossings(routes, cards) {
+  let ww = 0, wc = 0;
+  for (let i = 0; i < routes.length; i++) {
+    const A = routes[i];
+    for (let j = i + 1; j < routes.length; j++) {
+      const B = routes[j];
+      if (A.fromKey === B.fromKey || A.toKey === B.toKey) continue;
+      for (let a = 1; a < A.pts.length; a++) for (let b = 1; b < B.pts.length; b++) if (segX(A.pts[a - 1], A.pts[a], B.pts[b - 1], B.pts[b])) ww++;
+    }
+    if (!A.stub) wc += cardHits(A.pts, A.ends, cards);
+  }
+  return { ww, wc, total: ww + wc };
+}
+
+/* ----- orthogonal router (grid A*) for wires that run backwards or would cross a card ----- */
+const G = 8, CLEAR = 10, STUB = 18, TURN = 5, OVER = 16, CROSS = 14, BZ = 6;
+class MinHeap {
+  constructor() { this.k = []; this.v = []; }
+  get size() { return this.k.length; }
+  push(key, val) { const k = this.k, v = this.v; let i = k.length; k.push(key); v.push(val); while (i > 0) { const p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; } k[i] = key; v[i] = val; }
+  pop() {
+    const k = this.k, v = this.v, top = v[0], lk = k.pop(), lv = v.pop();
+    if (k.length) { let i = 0; const n = k.length; for (;;) { let c = 2 * i + 1; if (c >= n) break; if (c + 1 < n && k[c + 1] < k[c]) c++; if (k[c] >= lk) break; k[i] = k[c]; v[i] = v[c]; i = c; } k[i] = lk; v[i] = lv; }
+    return top;
+  }
+}
+function makeGrid(cards) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const c of cards) { x0 = Math.min(x0, c.x); y0 = Math.min(y0, c.y); x1 = Math.max(x1, c.x + c.w); y1 = Math.max(y1, c.y + c.h); }
+  const ox = Math.floor((x0 - 64) / G) * G, oy = Math.floor((y0 - 64) / G) * G;
+  const cols = Math.ceil((x1 + 64 - ox) / G) + 1, rows = Math.ceil((y1 + 64 - oy) / G) + 1;
+  const blocked = new Uint8Array(cols * rows);
+  for (const c of cards) {
+    const a = Math.floor((c.x - CLEAR - ox) / G), b = Math.ceil((c.x + c.w + CLEAR - ox) / G), d = Math.floor((c.y - CLEAR - oy) / G), e = Math.ceil((c.y + c.h + CLEAR - oy) / G);
+    for (let cy = Math.max(0, d); cy <= Math.min(rows - 1, e); cy++) for (let cx = Math.max(0, a); cx <= Math.min(cols - 1, b); cx++) {
+      const px = ox + cx * G, py = oy + cy * G;
+      if (px > c.x - CLEAR && px < c.x + c.w + CLEAR && py > c.y - CLEAR && py < c.y + c.h + CLEAR) blocked[cy * cols + cx] = 1;
+    }
+  }
+  return { ox, oy, cols, rows, blocked, h: new Uint8Array(cols * rows), v: new Uint8Array(cols * rows), bz: new Uint8Array(cols * rows) };
+}
+const cellOf = (g, p) => ({ cx: Math.min(g.cols - 1, Math.max(0, Math.round((p.x - g.ox) / G))), cy: Math.min(g.rows - 1, Math.max(0, Math.round((p.y - g.oy) / G))) });
+const cellPt = (g, cx, cy) => ({ x: g.ox + cx * G, y: g.oy + cy * G });
+function markBezier(g, pts) {
+  const rs = resample(pts, 3);
+  for (let i = 1; i < rs.length; i++) { const c = cellOf(g, rs[i]); g.bz[c.cy * g.cols + c.cx] = 1; }
+}
+const DX = [1, 0, -1, 0], DY = [0, 1, 0, -1];
+/** Returns corner points (cell centres) from cell s to cell t, or null. */
+function astar(g, s, t) {
+  const { cols, rows, blocked } = g, N = cols * rows;
+  const best = new Float32Array(N * 4).fill(Infinity), prev = new Int32Array(N * 4).fill(-1), heap = new MinHeap();
+  const sc = s.cy * cols + s.cx, tc = t.cy * cols + t.cx, hh = (cx, cy) => Math.abs(cx - t.cx) + Math.abs(cy - t.cy);
+  for (let d = 0; d < 4; d++) { best[sc * 4 + d] = 0; heap.push(hh(s.cx, s.cy), sc * 4 + d); }
+  let goal = -1, steps = 0;
+  while (heap.size && steps++ < 90000) {
+    const st = heap.pop(), cell = st >> 2, d = st & 3, cx = cell % cols, cy = (cell / cols) | 0;
+    if (cell === tc) { goal = st; break; }
+    const gcost = best[st];
+    if (gcost + hh(cx, cy) > 1e8) continue;
+    for (let nd = 0; nd < 4; nd++) {
+      if (nd === ((d + 2) & 3)) continue;
+      const nx = cx + DX[nd], ny = cy + DY[nd];
+      if (nx < 0 || ny < 0 || nx >= cols || ny >= rows) continue;
+      const nc = ny * cols + nx;
+      if (blocked[nc] && nc !== tc && nc !== sc) continue;
+      let c = 1;
+      if (nd !== d) c += TURN;
+      const horiz = nd % 2 === 0;
+      if (horiz) { if (g.h[nc]) c += OVER; if (g.v[nc]) c += CROSS; } else { if (g.v[nc]) c += OVER; if (g.h[nc]) c += CROSS; }
+      if (g.bz[nc]) c += BZ;
+      const ng = gcost + c, ns = nc * 4 + nd;
+      if (ng < best[ns]) { best[ns] = ng; prev[ns] = st; heap.push(ng + hh(nx, ny), ns); }
+    }
+  }
+  if (goal < 0) return null;
+  const cells = [];
+  for (let st = goal; st >= 0; st = prev[st]) cells.push({ cx: (st >> 2) % cols, cy: (((st >> 2) / cols) | 0) });
+  cells.reverse();
+  const corners = [cells[0]];
+  for (let i = 1; i < cells.length - 1; i++) {
+    const a = cells[i - 1], b = cells[i], c = cells[i + 1];
+    if ((b.cx - a.cx) * (c.cy - b.cy) !== (b.cy - a.cy) * (c.cx - b.cx)) corners.push(b);
+  }
+  corners.push(cells[cells.length - 1]);
+  return corners;
+}
+function markRoute(g, corners) {
+  for (let i = 1; i < corners.length; i++) {
+    const a = corners[i - 1], b = corners[i], horiz = a.cy === b.cy, n = Math.max(Math.abs(b.cx - a.cx), Math.abs(b.cy - a.cy));
+    for (let j = 0; j <= n; j++) {
+      const cx = a.cx + Math.sign(b.cx - a.cx) * j, cy = a.cy + Math.sign(b.cy - a.cy) * j;
+      (horiz ? g.h : g.v)[cy * g.cols + cx] = 1;
+    }
+  }
+}
+/** Corner cells -> world polyline that starts exactly at S1 and ends exactly at S2, every segment horizontal or vertical. */
+function orthoPoints(g, corners, S1, S2) {
+  const c = corners.map((q) => cellPt(g, q.cx, q.cy));
+  if (c.length === 1) c.push({ ...c[0] });
+  const p = c.map((q) => ({ ...q }));
+  const n = p.length;
+  if (n >= 2) {
+    if (Math.abs(c[0].y - c[1].y) < 1e-6) p[1].y = S1.y; else p[1].x = S1.x;
+    if (Math.abs(c[n - 1].y - c[n - 2].y) < 1e-6) p[n - 2].y = S2.y; else p[n - 2].x = S2.x;
+  }
+  p[0] = { x: S1.x, y: S1.y }; p[n - 1] = { x: S2.x, y: S2.y };
+  const out = [p[0]];
+  let lastH = null;
+  for (let i = 1; i < p.length; i++) {
+    const a = out[out.length - 1], b = p[i];
+    if (Math.abs(b.x - a.x) > 0.5 && Math.abs(b.y - a.y) > 0.5) {
+      const corner = lastH === false ? { x: b.x, y: a.y } : lastH === true ? { x: a.x, y: b.y } : { x: b.x, y: a.y };
+      out.push(corner);
+    }
+    const q = out[out.length - 1];
+    lastH = Math.abs(b.y - q.y) < 0.5 && Math.abs(b.x - q.x) >= 0.5 ? true : Math.abs(b.x - q.x) < 0.5 && Math.abs(b.y - q.y) >= 0.5 ? false : lastH;
+    out.push(b);
+  }
+  const res = [out[0]];
+  for (let i = 1; i < out.length - 1; i++) {
+    const a = res[res.length - 1], b = out[i], c2 = out[i + 1];
+    if (Math.hypot(b.x - a.x, b.y - a.y) < 0.5) continue;
+    if (Math.abs((b.x - a.x) * (c2.y - b.y) - (b.y - a.y) * (c2.x - b.x)) < 1e-6) continue;
+    res.push(b);
+  }
+  res.push(out[out.length - 1]);
+  return res;
+}
+function roundedD(pts, r = 9) {
+  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const a = pts[i - 1], b = pts[i], c = pts[i + 1], l1 = Math.hypot(b.x - a.x, b.y - a.y), l2 = Math.hypot(c.x - b.x, c.y - b.y), rr = Math.min(r, l1 / 2, l2 / 2);
+    const p1 = { x: b.x - ((b.x - a.x) / l1) * rr, y: b.y - ((b.y - a.y) / l1) * rr }, p2 = { x: b.x + ((c.x - b.x) / l2) * rr, y: b.y + ((c.y - b.y) / l2) * rr };
+    d += ` L ${p1.x.toFixed(1)} ${p1.y.toFixed(1)} Q ${b.x.toFixed(1)} ${b.y.toFixed(1)} ${p2.x.toFixed(1)} ${p2.y.toFixed(1)}`;
+  }
+  const z = pts[pts.length - 1];
+  return d + ` L ${z.x.toFixed(1)} ${z.y.toFixed(1)}`;
+}
+function permutations(arr) {
+  if (arr.length <= 1) return [arr.slice()];
+  const out = [];
+  arr.forEach((x, i) => { for (const r of permutations([...arr.slice(0, i), ...arr.slice(i + 1)])) out.push([x, ...r]); });
+  return out;
+}
+
+/* =====================================================================================================
+   Board
+   ===================================================================================================== */
+class Board {
+  constructor(host, levelKey, toggles, opts = {}) {
+    this.host = host; this.lv = LEVELS[levelKey]; this.t = { ...NONE }; this.opts = opts;
+    this.nodes = this.lv.nodes.map((n) => ({ ...n })); this.byId = Object.fromEntries(this.nodes.map((n) => [n.id, n]));
+    this.wires = this.lv.wires; this.knots = {}; this.view = { x: 0, y: 0, k: 1 }; this.metrics = {}; this.routes = []; this.routeById = {};
+    this.focusNode = null; this.hoverNode = null; this.focusWire = null; this.chipSel = null; this.animating = false; this.raf = 0; this.taps = {};
+    this.build();
+    this.measure();
+    this.orig = this.spreadOrig();
+    this.applyPos(this.orig);
+    this.applyToggles(toggles, false);
+    this.fit(false);
+    this.baseline = this.snapshot(NONE); this.after = this.snapshot(ALL);
+    this.render();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!this.dead) { this.measure(); this.orig = this.spreadOrig(); this.applyPos(this.t.arrange ? this.arrangeTarget(this.t) : this.orig); this.baseline = this.snapshot(NONE); this.after = this.snapshot(ALL); this.render(); this.fit(false); } });
+  }
+  /* ----- DOM ----- */
+  build() {
+    const host = this.host;
+    host.classList.add('wc'); host.tabIndex = 0;
+    this.world = el('div', 'wc-world');
+    this.wireSvg = sv('svg', {}, 'wc-wires'); this.nodeLayer = el('div', 'wc-nodes'); this.overSvg = sv('svg', {}, 'wc-over'); this.chipLayer = el('div', 'wc-chips');
+    this.world.append(this.wireSvg, this.nodeLayer, this.overSvg, this.chipLayer);
+    host.append(this.world);
+    for (const n of this.nodes) { n.box = this.buildCard(n); this.nodeLayer.append(n.box); }
+    this.wireEls = {};
+    for (const w of this.wires) {
+      const type = this.portDef(w.from.node, 'out', w.from.port).type;
+      w.type = type;
+      const g = sv('g', {}, 'wire-g type-' + type); g.dataset.wire = w.id;
+      const glow = sv('path', {}, 'wc-wire-glow'), path = sv('path', {}, 'wc-wire'), flow = sv('path', {}, 'wc-wire-flow'), hit = sv('path', {}, 'wc-wire-hit');
+      hit.dataset.wire = w.id;
+      g.append(glow, path, flow, hit); this.wireSvg.append(g);
+      this.wireEls[w.id] = { g, glow, path, flow, hit };
+      hit.addEventListener('pointerdown', (e) => this.onWireDown(e, w));
+    }
+    this.bindInput();
+  }
+  portDef(nodeId, dir, portId) { const n = this.byId[nodeId]; return DEFS[n.kind][dir === 'in' ? 'in' : 'out'].find((p) => p.id === portId); }
+  buildCard(n) {
+    const def = DEFS[n.kind], box = el('div', 'wc-node cat-' + def.cat); box.dataset.id = n.id;
+    const head = el('div', 'wc-node-head'), tile = el('span', 'wc-tile'), svg = sv('svg', { viewBox: '0 0 16 16', 'aria-hidden': 'true' });
+    svg.append(sv('path', { d: GLYPH[def.cat] })); tile.append(svg);
+    const title = el('span', 'wc-title'); title.append(el('b', 'wc-name', def.vi), el('small', 'wc-sub', n.name || def.en));
+    head.append(tile, title); box.append(head);
+    const ins = n.show ? def.in.filter((p) => n.show.in.includes(p.id)) : def.in, outs = n.show ? def.out.filter((p) => n.show.out.includes(p.id)) : def.out;
+    n.dots = {};
+    if (ins.length + outs.length) {
+      const body = el('div', 'wc-ports-body');
+      for (const [dir, list] of [['in', ins], ['out', outs]]) {
+        const col = el('div', 'wc-ports ' + dir + 's');
+        for (const p of list) {
+          const row = el('div', 'wc-port ' + dir), dot = el('span', 'wc-dot type-' + p.type);
+          row.dataset.port = p.id; row.append(dot, el('span', 'wc-pl', p.label)); col.append(row);
+          n.dots[dir + '|' + p.id] = { row, dot };
+        }
+        body.append(col);
+      }
+      box.append(body);
+    }
+    return box;
+  }
+  /** Card sizes and the centre of every pin, relative to the card's top-left corner. */
+  measure() {
+    for (const n of this.nodes) {
+      const m = { w: n.box.offsetWidth, h: n.box.offsetHeight, pins: {} };
+      for (const key in n.dots) { const { row, dot } = n.dots[key]; m.pins[key] = { x: n.box.clientLeft + row.offsetLeft + dot.offsetLeft + dot.offsetWidth / 2, y: n.box.clientTop + row.offsetTop + dot.offsetTop + dot.offsetHeight / 2 }; }
+      this.metrics[n.id] = m;
+    }
+  }
+  pin(nid, dir, pid) { const n = this.byId[nid], p = this.metrics[nid].pins[dir + '|' + pid]; return { x: n.x + p.x, y: n.y + p.y }; }
+  cards() { return this.nodes.map((n) => ({ id: n.id, x: n.x, y: n.y, w: this.metrics[n.id].w, h: this.metrics[n.id].h })); }
+  /* The game places the saved layout then pushes overlapping cards down (spreadOverlaps): same here, with measured sizes. */
+  spreadOrig() {
+    const placed = [], out = {};
+    for (const n of [...this.lv.nodes].sort((a, b) => a.y - b.y || a.x - b.x)) {
+      const m = this.metrics[n.id], box = { x: n.x, y: n.y, w: m.w, h: m.h };
+      for (let hit = placed.find((p) => this.overlap(box, p)); hit; hit = placed.find((p) => this.overlap(box, p))) box.y = hit.y + hit.h + 16;
+      out[n.id] = { x: box.x, y: box.y }; placed.push(box);
+    }
+    return out;
+  }
+  overlap(a, b) { return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y; }
+  applyPos(pos) { for (const n of this.nodes) { n.x = pos[n.id].x; n.y = pos[n.id].y; } }
+  /* ----- toggles ----- */
+  applyToggles(t, animate = true) {
+    const old = this.t; this.t = { ...t };
+    this.host.classList.toggle('edge-pins', !!t.pins);
+    this.measure();
+    if (!t.knots) this.dragKnot = null;
+    if (!t.focus) { this.focusNode = this.hoverNode = this.focusWire = null; }
+    if (!t.labels) this.chipSel = null;
+    const wasArr = old.arrange, wantArr = t.arrange;
+    if (wantArr !== wasArr || (wantArr && old.pins !== t.pins)) {
+      const target = wantArr ? this.arrangeTarget(t) : this.orig;
+      this.knots = {};
+      if (animate) this.animateTo(target); else { this.applyPos(target); this.render(); }
+    } else this.render();
+  }
+  replay() { this.applyPos(this.orig); this.knots = {}; this.t.arrange = true; this.animateTo(this.arrangeTarget(this.t)); }
+  animateTo(target, ms = 620) {
+    cancelAnimationFrame(this.raf);
+    const from = Object.fromEntries(this.nodes.map((n) => [n.id, { x: n.x, y: n.y }]));
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) ms = 0;
+    const t0 = performance.now();
+    this.animating = true;
+    const step = (now) => {
+      const k = ms ? Math.min(1, (now - t0) / ms) : 1, e = k < .5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+      for (const n of this.nodes) { n.x = from[n.id].x + (target[n.id].x - from[n.id].x) * e; n.y = from[n.id].y + (target[n.id].y - from[n.id].y) * e; }
+      if (k < 1) { this.render(); this.raf = requestAnimationFrame(step); } else { this.animating = false; this.render(); this.fit(true); }
+    };
+    this.raf = requestAnimationFrame(step);
+  }
+  /* ----- routing ----- */
+  computeRoutes(t, fast) {
+    const cards = this.cards(), grid = makeGrid(cards), stubbed = new Set();
+    if (t.labels) {
+      const cnt = {};
+      for (const w of this.wires) if (w.type === 'object') { const k = w.from.node + '|' + w.from.port; (cnt[k] = cnt[k] || []).push(w.id); }
+      for (const k in cnt) if (cnt[k].length >= 3) cnt[k].forEach((id) => stubbed.add(id));
+    }
+    const info = this.wires.map((w) => {
+      const a = this.pin(w.from.node, 'out', w.from.port), b = this.pin(w.to.node, 'in', w.to.port);
+      return { w, a, b, fromKey: w.from.node + '|out|' + w.from.port, toKey: w.to.node + '|in|' + w.to.port, ends: [{ card: w.from.node, pin: a }, { card: w.to.node, pin: b }] };
+    });
+    const routes = {};
+    const mk = (i, pts, d, extra = {}) => ({ id: i.w.id, type: i.w.type, pts, d, a: i.a, b: i.b, fromKey: i.fromKey, toKey: i.toKey, ends: i.ends, ...extra });
+    const bezRoute = (i) => mk(i, bezierPts(i.a, i.b), wirePath(i.a.x, i.a.y, i.b.x, i.b.y), { kind: 'bez' });
+    const todo = [];
+    for (const i of info) {
+      const ks = t.knots ? this.knots[i.w.id] : null;
+      if (stubbed.has(i.w.id)) {
+        const S1 = { x: i.a.x + 16, y: i.a.y }, S2 = { x: i.b.x - 14, y: i.b.y };
+        routes[i.w.id] = mk(i, [i.a, S1], '', { kind: 'stub', stub: true, S1, S2 });
+        routes[i.w.id].stubB = [S2, i.b];
+        continue;
+      }
+      const knotted = !!(ks && ks.length), ortho = t.avoid && !fast;
+      if (knotted && !ortho) {
+        const wp = [i.a, ...ks, i.b], pts = [], tag = [];
+        for (let q = 0; q < wp.length - 1; q++) bezierPts(wp[q], wp[q + 1], 28).forEach((p, j) => { if (q && !j) return; pts.push(p); tag.push(j || !q ? q : q); });
+        tag[0] = 0;
+        routes[i.w.id] = mk(i, pts, this.chainD(wp), { kind: 'knot', tag });
+        continue;
+      }
+      const r = bezRoute(i);
+      const need = ortho && (knotted || i.b.x < i.a.x + 36 || cardHits(r.pts, i.ends, cards) > 0);
+      if (need) todo.push(i); else { routes[i.w.id] = r; markBezier(grid, r.pts); }
+    }
+    todo.sort((p, q) => Math.abs(p.b.x - p.a.x) + Math.abs(p.b.y - p.a.y) - (Math.abs(q.b.x - q.a.x) + Math.abs(q.b.y - q.a.y)));
+    const routeOrtho = (i) => {
+      const ca = cards.find((c) => c.id === i.w.from.node), cb = cards.find((c) => c.id === i.w.to.node);
+      const S1 = { x: Math.max(i.a.x, ca.x + ca.w) + STUB, y: i.a.y }, S2 = { x: Math.min(i.b.x, cb.x) - STUB, y: i.b.y };
+      const ks = (t.knots && this.knots[i.w.id]) || [];
+      const wps = [S1, ...ks.map((k) => ({ x: Math.round(k.x / G) * G, y: Math.round(k.y / G) * G })), S2];
+      let pts = [i.a], tag = [0];
+      for (let q = 0; q < wps.length - 1; q++) {
+        const s = cellOf(grid, wps[q]), e = cellOf(grid, wps[q + 1]);
+        grid.blocked[s.cy * grid.cols + s.cx] = 0; grid.blocked[e.cy * grid.cols + e.cx] = 0;
+        const corners = astar(grid, s, e);
+        if (!corners) return bezRoute(i);
+        markRoute(grid, corners);
+        orthoPoints(grid, corners, wps[q], wps[q + 1]).forEach((p, j) => { if (q && !j) return; pts.push(p); tag.push(q); });
+      }
+      pts.push(i.b); tag.push(wps.length - 2);
+      const keep = [0];
+      for (let j = 1; j < pts.length - 1; j++) {
+        const a = pts[keep[keep.length - 1]], b = pts[j], c = pts[j + 1];
+        if (Math.hypot(b.x - a.x, b.y - a.y) < 0.5) continue;
+        if (tag[j] === tag[j + 1] && Math.abs((b.x - a.x) * (c.y - b.y) - (b.y - a.y) * (c.x - b.x)) < 1e-6) continue;
+        keep.push(j);
+      }
+      keep.push(pts.length - 1);
+      const fp = keep.map((j) => pts[j]), ft = keep.map((j) => tag[j]);
+      return mk(i, fp, roundedD(fp), { kind: 'ortho', tag: ft });
+    };
+    for (const i of todo) routes[i.w.id] = routeOrtho(i);
+    // the full wire of a label that was tapped (drawn on top, not counted)
+    let full = null;
+    if (this.chipSel && routes[this.chipSel] && routes[this.chipSel].stub) {
+      const i = info.find((q) => q.w.id === this.chipSel), r = bezRoute(i);
+      const need = t.avoid && !fast && (i.b.x < i.a.x + 36 || cardHits(r.pts, i.ends, cards) > 0);
+      full = need ? routeOrtho(i) : r; full.kind = 'full'; full.id = i.w.id;
+    }
+    return { list: info.map((i) => routes[i.w.id]), full, cards };
+  }
+  chainD(wp) {
+    let d = `M ${wp[0].x} ${wp[0].y}`;
+    for (let s = 0; s < wp.length - 1; s++) { const a = wp[s], b = wp[s + 1], dx = Math.max(40, Math.abs(b.x - a.x) / 2); d += ` C ${a.x + dx} ${a.y}, ${b.x - dx} ${b.y}, ${b.x} ${b.y}`; }
+    return d;
+  }
+  counts(t = this.t) { const r = this.computeRoutes(t, false); return countCrossings(r.list, r.cards); }
+  snapshot(t) {
+    const save = { t: { ...this.t }, pos: Object.fromEntries(this.nodes.map((n) => [n.id, { x: n.x, y: n.y }])), knots: this.knots, chip: this.chipSel };
+    this.chipSel = null; this.knots = {};
+    this.host.classList.toggle('edge-pins', !!t.pins); this.measure();
+    this.applyPos(t.arrange ? this.arrangeTarget(t) : this.orig);
+    const r = this.computeRoutes(t, false), c = countCrossings(r.list, r.cards);
+    const bounds = this.bounds();
+    this.host.classList.toggle('edge-pins', !!save.t.pins); this.measure();
+    this.applyPos(save.pos); this.knots = save.knots; this.chipSel = save.chip;
+    return { ...c, bounds };
+  }
+  bounds() {
+    const cs = this.cards(); const x0 = Math.min(...cs.map((c) => c.x)), y0 = Math.min(...cs.map((c) => c.y)), x1 = Math.max(...cs.map((c) => c.x + c.w)), y1 = Math.max(...cs.map((c) => c.y + c.h));
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+  /* ----- automatic layout (item 5) ----- */
+  arrangeTarget(t = this.t) {
+    const ns = this.nodes, stage = (n) => (STAGE[n.kind] ?? 2), fwd = this.wires.filter((w) => stage(this.byId[w.from.node]) < stage(this.byId[w.to.node]));
+    const layer = Object.fromEntries(ns.map((n) => [n.id, 0]));
+    for (let pass = 0; pass < ns.length; pass++) { let ch = false; for (const w of fwd) if (layer[w.to.node] < layer[w.from.node] + 1) { layer[w.to.node] = layer[w.from.node] + 1; ch = true; } if (!ch) break; }
+    const nc = Math.max(...Object.values(layer)) + 1, cols = Array.from({ length: nc }, () => []);
+    for (const n of [...ns].sort((a, b) => this.orig[a.id].y - this.orig[b.id].y)) cols[layer[n.id]].push(n.id);
+    const M = 24, GAPY = 20, W0 = 1000;
+    const place = (order) => {
+      const widths = order.map((col) => Math.max(0, ...col.map((id) => this.metrics[id].w))), sumW = widths.reduce((a, b) => a + b, 0);
+      const gapX = nc > 1 ? Math.min(150, Math.max(t.labels ? 116 : 78, (W0 - 2 * M - sumW) / (nc - 1))) : 0, pos = {}, cy = {};
+      let x = M;
+      order.forEach((col, ci) => {
+        let bottom = M - GAPY;
+        for (const id of col) {
+          const h = this.metrics[id].h, srcs = fwd.filter((w) => w.to.node === id && cy[w.from.node] != null).map((w) => cy[w.from.node]);
+          const ideal = srcs.length ? srcs.reduce((a, b) => a + b, 0) / srcs.length - h / 2 : M;
+          const top = Math.max(ideal, bottom + GAPY, M);
+          pos[id] = { x, y: top }; cy[id] = top + h / 2; bottom = top + h;
+        }
+        x += widths[ci] + gapX;
+      });
+      return pos;
+    };
+    const cost = (order) => {
+      const pos = place(order), segs = fwd.map((w) => { const n1 = this.byId[w.from.node], n2 = this.byId[w.to.node], p1 = this.metrics[n1.id].pins['out|' + w.from.port], p2 = this.metrics[n2.id].pins['in|' + w.to.port]; return { a: { x: pos[n1.id].x + p1.x, y: pos[n1.id].y + p1.y }, b: { x: pos[n2.id].x + p2.x, y: pos[n2.id].y + p2.y }, f: w.from.node + w.from.port, t: w.to.node + w.to.port }; });
+      let x = 0, dy = 0;
+      for (let i = 0; i < segs.length; i++) { dy += Math.abs(segs[i].a.y - segs[i].b.y); for (let j = i + 1; j < segs.length; j++) if (segs[i].f !== segs[j].f && segs[i].t !== segs[j].t && segX(segs[i].a, segs[i].b, segs[j].a, segs[j].b) && segX(segs[j].a, segs[j].b, segs[i].a, segs[i].b)) x++; }
+      return x * 1000 + dy * 0.2;
+    };
+    // barycentre sweep (left to right) for a good starting order, then try every order of each small column
+    const idx = (id) => cols[layer[id]].indexOf(id);
+    for (let sweep = 0; sweep < 2; sweep++) for (let c = 1; c < nc; c++) {
+      cols[c] = cols[c].map((id, i) => { const ins = fwd.filter((w) => w.to.node === id).map((w) => idx(w.from.node)); return { id, k: ins.length ? ins.reduce((a, b) => a + b, 0) / ins.length : i, i }; }).sort((a, b) => a.k - b.k || a.i - b.i).map((x) => x.id);
+    }
+    for (let round = 0; round < 3; round++) for (let c = 0; c < nc; c++) {
+      if (cols[c].length < 2 || cols[c].length > 6) continue;
+      let bestOrder = cols[c], bestCost = cost(cols);
+      for (const perm of permutations(cols[c])) { const old = cols[c]; cols[c] = perm; const k = cost(cols); if (k < bestCost - 1e-6) { bestCost = k; bestOrder = perm; } cols[c] = old; }
+      cols[c] = bestOrder;
+    }
+    return place(cols);
+  }
+  /* ----- drawing ----- */
+  render() {
+    for (const n of this.nodes) { n.box.style.left = n.x + 'px'; n.box.style.top = n.y + 'px'; }
+    const R = this.computeRoutes(this.t, this.animating || !!this.drag);
+    this.routes = R.list; this.routeById = Object.fromEntries(R.list.map((r) => [r.id, r]));
+    const c = countCrossings(R.list, R.cards);
+    this.cur = c;
+    const focusId = this.t.focus ? (this.focusNode || this.hoverNode) : null, selW = this.t.focus ? this.focusWire : null, chipSel = this.t.labels ? this.chipSel : null;
+    const related = (w) => (focusId && (w.from.node === focusId || w.to.node === focusId)) || (selW && w.id === selW) || (chipSel && w.id === chipSel);
+    const anyFocus = !!(focusId || selW || chipSel);
+    for (const w of this.wires) {
+      const r = this.routeById[w.id], e = this.wireEls[w.id];
+      e.g.classList.toggle('stubbed', false);
+      const d = r.stub ? '' : r.d;
+      for (const k of ['glow', 'path', 'flow', 'hit']) e[k].setAttribute('d', d);
+      e.g.style.display = r.stub ? 'none' : '';
+      e.g.classList.toggle('hl', anyFocus && !!related(w)); e.g.classList.toggle('dim', anyFocus && !related(w));
+    }
+    // stub wires (item 6) and the full wire of a tapped label
+    this.drawOverlay(R, anyFocus, related, focusId);
+    for (const n of this.nodes) { n.box.classList.toggle('picked', !!focusId && n.id === focusId); n.box.classList.toggle('faded', !!focusId && n.id !== focusId && !this.wires.some((w) => (w.from.node === focusId && w.to.node === n.id) || (w.to.node === focusId && w.from.node === n.id))); }
+    this.updateScore();
+  }
+  drawOverlay(R, anyFocus, related, focusId) {
+    const os = this.overSvg; os.replaceChildren(); this.chipLayer.replaceChildren();
+    const mkPath = (d, type, cls) => { const g = sv('g', {}, 'type-' + type + (cls ? ' ' + cls : '')); g.append(sv('path', { d }, 'wc-wire-glow'), sv('path', { d }, 'wc-wire'), sv('path', { d }, 'wc-wire-flow')); g.firstChild.style.opacity = '.3'; return g; };
+    if (R.full) { const g = mkPath(R.full.d, R.full.type, 'full-wire hl'); os.append(g); }
+    const bySrc = {};
+    for (const r of R.list) if (r.stub) (bySrc[r.fromKey] = bySrc[r.fromKey] || []).push(r);
+    for (const key in bySrc) {
+      const list = bySrc[key], a = list[0].a, n = list[0].ends[0].card, nodeDef = this.byId[n];
+      const dim = anyFocus && !list.some((r) => related(this.wires.find((q) => q.id === r.id)));
+      const stubG = sv('g', {}, 'type-object wire-g' + (dim ? ' dim' : ''));
+      stubG.append(sv('path', { d: `M ${a.x} ${a.y} L ${a.x + 22} ${a.y}` }, 'wc-wire'));
+      os.append(stubG);
+      const src = el('span', 'chip src type-object', '×' + list.length); src.style.left = a.x + 22 + 'px'; src.style.top = a.y + 'px'; src.title = 'Một nguồn, nối tới ' + list.length + ' nơi';
+      if (dim) src.classList.add('dim');
+      this.chipLayer.append(src);
+      for (const r of list) {
+        const w = this.wires.find((q) => q.id === r.id), tn = this.byId[w.to.node], b = r.b;
+        const g = sv('g', {}, 'type-object wire-g' + (anyFocus && !related(w) ? ' dim' : ''));
+        g.append(sv('path', { d: `M ${b.x - 16} ${b.y} L ${b.x} ${b.y}` }, 'wc-wire'));
+        os.append(g);
+        const chip = el('button', 'chip type-object'); chip.type = 'button';
+        chip.append(el('span', '', nodeDef.chip ? nodeDef.chip[0] : '●'), el('span', '', nodeDef.chip ? nodeDef.chip[1] : nodeDef.name || DEFS[nodeDef.kind].vi));
+        chip.style.left = b.x - 14 + 'px'; chip.style.top = b.y + 'px'; chip.title = 'Chạm để xem cả sợi dây';
+        if (this.chipSel === r.id) chip.classList.add('on');
+        if (anyFocus && !related(w)) chip.classList.add('dim');
+        chip.addEventListener('pointerdown', (e) => e.stopPropagation());
+        chip.addEventListener('click', (e) => { e.stopPropagation(); this.chipSel = this.chipSel === r.id ? null : r.id; this.render(); });
+        this.chipLayer.append(chip);
+      }
+    }
+    if (this.t.knots) {
+      for (const w of this.wires) {
+        const ks = this.knots[w.id]; if (!ks) continue;
+        ks.forEach((k, idx) => {
+          const g = sv('g', {}, 'knot-g type-' + w.type); g.setAttribute('transform', `translate(${k.x} ${k.y})`);
+          g.append(sv('circle', { r: 15 }, 'knot-hit'), sv('circle', { r: 7.5 }, 'knot-ring'), sv('circle', { r: 3 }, 'knot-core'));
+          g.addEventListener('pointerdown', (e) => this.onKnotDown(e, w, idx));
+          os.append(g);
+        });
+      }
+    }
+  }
+  updateScore() {
+    if (!this.scoreEl) return;
+    const c = this.cur, b = this.baseline;
+    this.scoreEl.innerHTML = '';
+    const bold = el('b'); bold.append('Số chỗ dây cắt nhau:'); const em = el('em', '', String(c.total)); bold.append(em); this.scoreEl.append(bold);
+    this.scoreEl.append(el('small', '', `dây × dây ${c.ww} · dây × chữ trên thẻ ${c.wc}` + (b ? ` · Trước: ${b.total}` : '')));
+    this.scoreEl.classList.toggle('good', !!b && c.total <= b.total * 0.34);
+  }
+  /* ----- view ----- */
+  setView(v) { this.view = v; this.world.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.k})`; this.host.classList.toggle('lowzoom', v.k < .6); }
+  fit(smooth) {
+    const r = this.host.getBoundingClientRect(); if (!r.width) return;
+    const b = this.bounds(), pad = 22, k = Math.min(1.25, Math.max(0.33, Math.min((r.width - pad * 2) / b.w, (r.height - pad * 2 - 34) / b.h)));
+    if (smooth) { this.world.classList.add('smooth'); setTimeout(() => this.world.classList.remove('smooth'), 450); }
+    this.setView({ k, x: (r.width - b.w * k) / 2 - b.x * k, y: Math.max(pad + 24, (r.height - b.h * k) / 2) - b.y * k });
+  }
+  zoomAt(factor, mx, my) {
+    const v = this.view, k = Math.min(2, Math.max(0.3, v.k * factor)), wx = (mx - v.x) / v.k, wy = (my - v.y) / v.k;
+    this.setView({ k, x: mx - wx * k, y: my - wy * k });
+  }
+  toWorld(e) { const r = this.host.getBoundingClientRect(); return { x: (e.clientX - r.left - this.view.x) / this.view.k, y: (e.clientY - r.top - this.view.y) / this.view.k }; }
+  /* ----- input ----- */
+  bindInput() {
+    const host = this.host, ptrs = new Map();
+    let mode = null, start = null, moved = 0;
+    host.addEventListener('wheel', (e) => { e.preventDefault(); const r = host.getBoundingClientRect(); this.zoomAt(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top); }, { passive: false });
+    host.addEventListener('pointerdown', (e) => {
+      if (e.button > 0) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (e.target.closest('.knot-g, .chip, .wc-wire-hit, .zoom, .score')) return;
+      host.setPointerCapture(e.pointerId);
+      if (ptrs.size === 2) { const [p, q] = [...ptrs.values()]; mode = 'pinch'; start = { d: Math.hypot(p.x - q.x, p.y - q.y), v: { ...this.view } }; return; }
+      moved = 0;
+      const head = e.target.closest('.wc-node-head'), card = e.target.closest('.wc-node');
+      if (head && card) {
+        const n = this.byId[card.dataset.id], w = this.toWorld(e);
+        mode = 'card'; start = { id: n.id, dx: w.x - n.x, dy: w.y - n.y, sx: e.clientX, sy: e.clientY }; card.classList.add('dragging'); this.drag = true;
+      } else { mode = 'pan'; start = { sx: e.clientX, sy: e.clientY, v: { ...this.view }, card: card ? card.dataset.id : null }; host.classList.add('panning'); }
+    });
+    host.addEventListener('pointermove', (e) => {
+      if (ptrs.has(e.pointerId)) ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (this.dragKnot && this.dragKnot.pid === e.pointerId) { this.onKnotMove(e); return; }
+      if (!mode) return;
+      if (mode === 'pinch' && ptrs.size >= 2) {
+        const [p, q] = [...ptrs.values()], d = Math.hypot(p.x - q.x, p.y - q.y), r = host.getBoundingClientRect(), k = Math.min(2, Math.max(0.3, start.v.k * (d / start.d)));
+        const cx = (p.x + q.x) / 2 - r.left, cy = (p.y + q.y) / 2 - r.top, wx = (cx - start.v.x) / start.v.k, wy = (cy - start.v.y) / start.v.k;
+        this.setView({ k, x: cx - wx * k, y: cy - wy * k }); return;
+      }
+      moved = Math.max(moved, Math.hypot(e.clientX - start.sx, e.clientY - start.sy));
+      if (mode === 'pan') this.setView({ ...this.view, x: start.v.x + e.clientX - start.sx, y: start.v.y + e.clientY - start.sy });
+      else if (mode === 'card' && moved > 4) { const w = this.toWorld(e), n = this.byId[start.id]; n.x = Math.round(w.x - start.dx); n.y = Math.round(w.y - start.dy); this.render(); }
+    });
+    const up = (e) => {
+      ptrs.delete(e.pointerId);
+      if (this.dragKnot && this.dragKnot.pid === e.pointerId) { this.onKnotUp(e); return; }
+      if (!mode) return;
+      if (mode === 'pinch') { if (ptrs.size < 2) mode = null; return; }
+      host.classList.remove('panning');
+      const tap = moved < 5;
+      if (mode === 'card') { this.nodes.forEach((n) => n.box.classList.remove('dragging')); this.drag = false; if (tap) this.tapCard(start.id); else this.render(); }
+      else if (mode === 'pan' && tap) { if (start.card) this.tapCard(start.card); else this.tapEmpty(); }
+      mode = null;
+    };
+    host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
+    host.addEventListener('pointerover', (e) => { if (e.pointerType !== 'mouse') return; const c = e.target.closest('.wc-node'); const id = c ? c.dataset.id : null; if (id !== this.hoverNode) { this.hoverNode = id; if (this.t.focus) this.render(); } });
+    host.addEventListener('pointerleave', () => { if (this.hoverNode) { this.hoverNode = null; if (this.t.focus) this.render(); } });
+  }
+  tapCard(id) { if (this.t.focus) { this.focusNode = this.focusNode === id ? null : id; this.focusWire = null; } this.chipSel = null; this.render(); }
+  tapEmpty() { this.focusNode = null; this.focusWire = null; this.chipSel = null; this.render(); }
+  isDouble(key, e) {
+    const now = performance.now(), prev = this.taps[key]; this.taps[key] = { t: now, x: e.clientX, y: e.clientY };
+    return !!prev && now - prev.t < 380 && Math.hypot(prev.x - e.clientX, prev.y - e.clientY) < 26;
+  }
+  onWireDown(e, w) {
+    e.stopPropagation();
+    const dbl = this.isDouble('w' + w.id, e);
+    if (dbl && this.t.knots) { this.addKnot(w, this.toWorld(e)); this.taps['w' + w.id] = null; return; }
+    if (this.t.focus) { this.focusWire = this.focusWire === w.id ? null : w.id; this.focusNode = null; this.render(); }
+  }
+  addKnot(w, p) {
+    const r = this.routeById[w.id]; if (!r || r.stub) return;
+    let bj = 1, bd = Infinity;
+    for (let j = 1; j < r.pts.length; j++) {
+      const a = r.pts[j - 1], b = r.pts[j], dx = b.x - a.x, dy = b.y - a.y, l2 = dx * dx + dy * dy || 1, t = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.y - a.y) * dy) / l2));
+      const d = Math.hypot(a.x + dx * t - p.x, a.y + dy * t - p.y);
+      if (d < bd) { bd = d; bj = j; }
+    }
+    const seg = r.tag ? r.tag[bj] : 0, list = (this.knots[w.id] = this.knots[w.id] || []);
+    list.splice(seg, 0, this.snapKnot(p));
+    this.render();
+  }
+  onKnotDown(e, w, idx) {
+    e.stopPropagation(); e.preventDefault();
+    if (this.isDouble('k' + w.id + ':' + idx, e)) { this.knots[w.id].splice(idx, 1); if (!this.knots[w.id].length) delete this.knots[w.id]; this.taps = {}; this.render(); return; }
+    this.dragKnot = { pid: e.pointerId, w, idx, moved: 0, sx: e.clientX, sy: e.clientY };
+    this.host.setPointerCapture(e.pointerId);
+  }
+  onKnotMove(e) { const d = this.dragKnot; d.moved = Math.max(d.moved, Math.hypot(e.clientX - d.sx, e.clientY - d.sy)); const p = this.toWorld(e), k = this.knots[d.w.id]; if (!k || !k[d.idx]) return; k[d.idx] = this.snapKnot(p); this.render(); }
+  snapKnot(p) { return this.t.avoid ? { x: Math.round(p.x / G) * G, y: Math.round(p.y / G) * G } : { x: Math.round(p.x), y: Math.round(p.y) }; }
+  onKnotUp() { this.dragKnot = null; }
+}
+
+/* =====================================================================================================
+   Page
+   ===================================================================================================== */
+const S = { lv: '5', t: { ...NONE }, cmp: false };
+let boards = [];
+const $ = (s) => document.querySelector(s);
+const togsEl = $('#togs'), helpEl = $('#help'), boardsEl = $('#boards');
+
+function buildToggles() {
+  for (const x of TOGGLES) {
+    const b = el('button', 'tog'); b.type = 'button'; b.dataset.k = x.k; b.title = x.d;
+    b.append(el('span', 'n', x.n), el('span', '', x.t));
+    b.addEventListener('click', () => { S.t[x.k] = !S.t[x.k]; showHelp(x, S.t[x.k]); sync(); });
+    b.addEventListener('pointerenter', () => showHelp(x)); togsEl.append(b);
+  }
+}
+function showHelp(x, state) {
+  helpEl.textContent = '';
+  const b = el('b', '', x.n + ' ' + x.t + (state === undefined ? '' : state ? ' (đang bật)' : ' (đang tắt)') + ': '); helpEl.append(b, x.d);
+}
+function syncControls() {
+  const all = KEYS.every((k) => S.t[k]), none = KEYS.every((k) => !S.t[k]);
+  $('#mode').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.m === 'after' ? all : b.dataset.m === 'before' ? none : false)));
+  $('#tabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lv === S.lv)));
+  togsEl.querySelectorAll('.tog').forEach((b) => b.setAttribute('aria-pressed', String(!!S.t[b.dataset.k])));
+  $('#cmp').checked = S.cmp;
+}
+function pane(label, cls) {
+  const p = el('section', 'pane');
+  const host = el('div', 'wc'), lab = el('div', 'pane-label' + (cls ? ' ' + cls : ''), label), score = el('div', 'score');
+  const zoom = el('div', 'zoom');
+  const legend = el('div', 'legend'); legend.innerHTML = '<span class="type-bool"><i></i>Đúng/sai</span><span class="type-number"><i></i>Số</span><span class="type-object"><i></i>Vật</span>';
+  const hint = el('div', 'hintbar', 'Kéo nền để di chuyển · lăn chuột hoặc chụm 2 ngón để thu phóng');
+  p.append(host, lab, score, zoom, legend, hint);
+  return { p, host, score, zoom };
+}
+function mount() {
+  boards.forEach((b) => { b.dead = true; cancelAnimationFrame(b.raf); });
+  boards = []; boardsEl.replaceChildren(); boardsEl.classList.toggle('two', S.cmp);
+  const specs = S.cmp ? [{ label: 'Trước', t: NONE, cls: '' }, { label: 'Sau', t: S.t, cls: 'after', live: true }] : [{ label: 'Màn ' + S.lv, t: S.t, cls: 'after', live: true }];
+  for (const sp of specs) {
+    const pn = pane(sp.label, sp.cls); boardsEl.append(pn.p);
+    if (!S.cmp) pn.p.querySelector('.pane-label').style.display = 'none';
+    const b = new Board(pn.host, S.lv, sp.t, {}); b.scoreEl = pn.score; b.live = !!sp.live;
+    for (const [txt, fn] of [['+', () => b.zoomAt(1.2, b.host.clientWidth / 2, b.host.clientHeight / 2)], ['−', () => b.zoomAt(1 / 1.2, b.host.clientWidth / 2, b.host.clientHeight / 2)], ['⤢', () => b.fit(true)]]) {
+      const z = el('button', '', txt); z.type = 'button'; z.title = txt === '⤢' ? 'Vừa khung' : txt === '+' ? 'Phóng to' : 'Thu nhỏ'; z.addEventListener('click', fn); pn.zoom.append(z);
+    }
+    b.updateScore(); boards.push(b);
+  }
+  requestAnimationFrame(() => boards.forEach((b) => { b.fit(false); b.render(); }));
+}
+function sync() { syncControls(); const b = boards.find((x) => x.live); if (b) b.applyToggles(S.t, true); }
+
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.lv = b.dataset.lv; syncControls(); mount(); });
+$('#mode').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.t = { ...(b.dataset.m === 'after' ? ALL : NONE) }; sync(); });
+$('#cmp').addEventListener('change', (e) => { S.cmp = e.target.checked; mount(); });
+$('#arrangeBtn').addEventListener('click', () => { S.t.arrange = true; syncControls(); const b = boards.find((x) => x.live); if (b) { b.t = { ...S.t }; b.replay(); } });
+window.addEventListener('resize', () => boards.forEach((b) => b.fit(false)));
+buildToggles(); syncControls(); showHelp(TOGGLES[0]); mount();
+
+/* hooks used by the screenshot script */
+window.WT = {
+  get boards() { return boards; }, S,
+  setLevel(lv) { S.lv = lv; syncControls(); mount(); },
+  setToggles(t) { S.t = { ...NONE, ...t }; sync(); },
+  setCompare(on) { S.cmp = on; mount(); },
+  live() { return boards.find((b) => b.live); },
+  counts() { const b = boards.find((x) => x.live); return { before: b.baseline, after: b.after, current: b.cur }; },
+};
+</script>
+</body>
+</html>

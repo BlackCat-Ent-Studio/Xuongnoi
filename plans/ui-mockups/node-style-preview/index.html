@@ -1,0 +1,383 @@
+<title>Khung mảnh ghép và dòng điện</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+/* Layout: control strip, then one board stage that scales to the width; the editor is dark, so this preview commits to the editor's dark look. */
+:root {
+  color-scheme: dark;
+  --bg: #0f1216;
+  --surface: #171b21;
+  --surface-2: #1e232b;
+  --line: #2a313b;
+  --fg: #e7ebf0;
+  --muted: #98a2ae;
+  --bool: #f5c542;
+  --num: #4aa3ff;
+  --obj: #ff5fa8;
+  --accent: #35d08a;
+  --cat-input: #3aa3c9;
+  --cat-logic: #8f7cf5;
+  --cat-math: #4fbf7a;
+  --cat-object: #e8894a;
+  --cat-output: #e5c04a;
+  --font-ui: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+html, body { background: var(--bg); color: var(--fg); }
+body { font-family: var(--font-ui); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 28px; }
+.wrap { max-width: 1120px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+h1 { font-size: 22px; font-weight: 800; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+.lead { margin: 0; color: var(--muted); max-width: 70ch; line-height: 1.55; }
+.controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; }
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 9px; padding: 3px; gap: 2px; }
+.seg button, .btn { font: 600 13px var(--font-ui); color: var(--muted); background: transparent; border: 0; border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface-2); color: var(--fg); box-shadow: inset 0 0 0 1px var(--line); }
+.seg button:focus-visible, .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.label { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.ctl { display: flex; align-items: center; gap: 8px; }
+.btn { background: var(--surface); border: 1px solid var(--line); color: var(--fg); }
+.btn.go { background: var(--accent); color: #062716; border-color: transparent; }
+.note { font-size: 13px; color: var(--muted); line-height: 1.5; margin: 0; }
+.note b { color: var(--fg); }
+
+.stage-box { position: relative; width: 100%; overflow: hidden; border-radius: 12px; border: 1px solid var(--line);
+  background-color: #11151a; background-image: radial-gradient(#252c35 1px, transparent 1px); background-size: 22px 22px; }
+.stage { position: absolute; left: 0; top: 0; width: 1080px; height: 460px; transform-origin: 0 0; }
+svg.wires { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.status { position: absolute; right: 12px; top: 10px; font: 600 12px var(--font-ui); padding: 5px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--line); color: var(--muted); z-index: 3; }
+.status.live { color: #062716; background: var(--accent); border-color: transparent; }
+
+/* ---------- node shared ---------- */
+.node { position: absolute; width: 214px; --cat: var(--cat-input); transition: box-shadow .25s, border-color .25s; }
+.node .head { display: flex; align-items: center; gap: 9px; }
+.node .ico { width: 22px; height: 22px; border-radius: 6px; flex: none; display: grid; place-items: center; }
+.node .ico i { width: 9px; height: 9px; border-radius: 2px; background: currentColor; }
+.node .names { min-width: 0; }
+.node .title { font-weight: 700; font-size: 13.5px; line-height: 1.2; }
+.node .cat { font-size: 10.5px; color: var(--muted); margin-top: 1px; }
+.node .ports { display: grid; grid-template-columns: 1fr 1fr; gap: 0 8px; }
+.node .col { display: flex; flex-direction: column; }
+.node .col.out { align-items: flex-end; }
+.port { position: relative; display: flex; align-items: center; gap: 7px; font-size: 12px; height: 26px; white-space: nowrap; }
+.col.out .port { flex-direction: row-reverse; }
+.pin { width: 11px; height: 11px; flex: none; background: var(--pc); transition: box-shadow .2s, transform .2s; }
+.port.t-bool { --pc: var(--bool); } .port.t-num { --pc: var(--num); } .port.t-obj { --pc: var(--obj); }
+.t-bool .pin { border-radius: 50%; } .t-num .pin { transform: rotate(45deg) scale(.86); border-radius: 2px; } .t-obj .pin { border-radius: 2px; }
+.port.on .pin { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 30%, transparent), 0 0 12px var(--pc); }
+.val { font: 700 10.5px var(--font-mono); color: var(--pc); opacity: 0; transition: opacity .2s; }
+.live .val { opacity: 1; }
+.node.hot { }
+
+/* ---------- A: professional card ---------- */
+.style-a .node { background: linear-gradient(180deg, #1c2129, #181c23); border: 1px solid #2c343f; border-radius: 10px; box-shadow: 0 10px 24px -12px rgba(0,0,0,.7), 0 1px 0 rgba(255,255,255,.04) inset; overflow: visible; }
+.style-a .node::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 3px; border-radius: 10px 10px 0 0; background: var(--cat); }
+.style-a .node .head { padding: 11px 12px 9px; border-bottom: 1px solid #262d37; }
+.style-a .node .ico { background: color-mix(in srgb, var(--cat) 22%, transparent); color: var(--cat); }
+.style-a .node .ports { padding: 6px 0 8px; }
+.style-a .port { padding: 0 12px; }
+.style-a .col.in .port .pin { margin-left: -18px; } .style-a .col.out .port .pin { margin-right: -18px; }
+.style-a .pin { outline: 2px solid #181c23; }
+.style-a .node.hot { border-color: color-mix(in srgb, var(--cat) 55%, #2c343f); box-shadow: 0 0 0 1px color-mix(in srgb, var(--cat) 40%, transparent), 0 0 26px -6px var(--cat), 0 10px 24px -12px rgba(0,0,0,.7); }
+
+/* ---------- B: circuit board ---------- */
+.style-b .node { background-color: #0f2a20; background-image: repeating-linear-gradient(90deg, rgba(255,255,255,.025) 0 1px, transparent 1px 12px), repeating-linear-gradient(0deg, rgba(255,255,255,.025) 0 1px, transparent 1px 12px);
+  border: 1px solid #1f5a43; border-radius: 4px; box-shadow: 0 8px 20px -10px rgba(0,0,0,.8); }
+.style-b .node .head { padding: 9px 11px; background: rgba(0,0,0,.25); border-bottom: 1px dashed #2b6e53; }
+.style-b .node .ico { border-radius: 50%; background: #0a1a14; box-shadow: inset 0 0 0 2px #c9a24a; color: var(--cat); }
+.style-b .node .title { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: .01em; color: #d9f2e6; }
+.style-b .node .cat { color: #7fb79e; font-family: var(--font-mono); }
+.style-b .node .ports { padding: 6px 0 8px; }
+.style-b .port { padding: 0 11px; font-family: var(--font-mono); font-size: 11px; color: #cfe8dc; }
+.style-b .pin { width: 14px; height: 8px; border-radius: 1px !important; transform: none !important; background: linear-gradient(180deg, #e8c46a, #a77f2a); }
+.style-b .col.in .port .pin { margin-left: -24px; } .style-b .col.out .port .pin { margin-right: -24px; }
+.style-b .port::after { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #2b3a33; flex: none; transition: background .2s, box-shadow .2s; }
+.style-b .port.on::after { background: var(--pc); box-shadow: 0 0 8px var(--pc); }
+.style-b .port.on .pin { box-shadow: 0 0 10px var(--pc); }
+.style-b .node.hot { border-color: #3fb58a; box-shadow: 0 0 22px -6px #3fb58a, 0 8px 20px -10px rgba(0,0,0,.8); }
+
+/* ---------- C: toy block ---------- */
+.style-c .node { background: #222832; border-radius: 18px; border: 2px solid color-mix(in srgb, var(--cat) 45%, #222832); box-shadow: 0 6px 0 color-mix(in srgb, var(--cat) 35%, #0b0d10), 0 14px 22px -12px rgba(0,0,0,.8); }
+.style-c .node .head { padding: 10px 12px; background: var(--cat); border-radius: 15px 15px 0 0; color: #10151b; }
+.style-c .node .ico { background: rgba(255,255,255,.35); color: #10151b; border-radius: 50%; width: 26px; height: 26px; }
+.style-c .node .title { font-size: 15px; font-weight: 800; }
+.style-c .node .cat { color: rgba(16,21,27,.7); font-weight: 600; }
+.style-c .node .ports { padding: 8px 0 10px; }
+/* Pins sit inside the block's edge; nothing pokes out of the frame. */
+.style-c .node { width: max-content; min-width: 200px; }
+.style-c .node .ports { grid-template-columns: auto auto; justify-content: space-between; gap: 0 22px; }
+.style-c .t-obj .val { display: none; }
+.style-c .port { padding: 0 12px; font-weight: 600; height: 28px; min-width: 0; }
+.style-c .port > span:nth-child(2) { overflow: hidden; text-overflow: ellipsis; }
+.style-c .pin { width: 12px; height: 12px; }
+.style-c .val { font-size: 10px; padding: 1px 6px; border-radius: 999px; background: color-mix(in srgb, var(--pc) 16%, transparent); }
+.style-c .node.hot { transform: translateY(-2px); box-shadow: 0 8px 0 color-mix(in srgb, var(--cat) 35%, #0b0d10), 0 0 28px -4px var(--cat); }
+
+/* ---------- wires ---------- */
+.w-base { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: .5; transition: opacity .25s; }
+.w-flow { fill: none; stroke-width: 2.6; stroke-linecap: round; stroke-dasharray: 2 14; opacity: .55; }
+.w-glow { fill: none; stroke-width: 7; stroke-linecap: round; opacity: 0; filter: blur(3px); transition: opacity .25s; }
+.w-core { fill: none; stroke-width: 2.6; stroke-linecap: round; opacity: 0; transition: opacity .25s; }
+.spark { filter: drop-shadow(0 0 4px currentColor) drop-shadow(0 0 8px currentColor); }
+.style-b .w-base { stroke-width: 3; }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 7px; }
+.legend i { width: 10px; height: 10px; display: inline-block; }
+.cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.card h3 { margin: 0; font-size: 14px; }
+.card p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+@media (max-width: 760px) { .cards { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { .node, .pin, .w-glow, .w-core { transition: none; } }
+</style>
+
+<div class="wrap">
+  <div>
+    <h1>Khung mảnh ghép và dòng điện</h1>
+    <p class="lead">Bấm qua 3 kiểu khung để so sánh. Chuyển sang <b>Đang chơi</b> để xem tín hiệu chạy trên dây: dây vàng sáng khi Đúng, tia sáng chạy một lần khi có tín hiệu "Vừa…", dây xanh có hạt chạy khi số thay đổi.</p>
+  </div>
+
+  <div class="controls">
+    <div class="ctl"><span class="label">Kiểu khung</span>
+      <div class="seg" id="styleSeg" role="group" aria-label="Kiểu khung">
+        <button type="button" data-style="a" aria-pressed="true">A · Thẻ chuyên nghiệp</button>
+        <button type="button" data-style="b" aria-pressed="false">B · Bảng mạch</button>
+        <button type="button" data-style="c" aria-pressed="false">C · Khối đồ chơi</button>
+      </div>
+    </div>
+    <div class="ctl"><span class="label">Chế độ</span>
+      <div class="seg" id="modeSeg" role="group" aria-label="Chế độ">
+        <button type="button" data-mode="edit" aria-pressed="false">Đang sửa</button>
+        <button type="button" data-mode="play" aria-pressed="true">Đang chơi</button>
+      </div>
+    </div>
+    <button type="button" class="btn go" id="pressBtn">Bấm Space (nhảy)</button>
+  </div>
+
+  <div class="stage-box" id="box">
+    <div class="status live" id="status">Đang chơi</div>
+    <div class="stage style-a live" id="stage">
+      <svg class="wires" id="wires" viewBox="0 0 1080 460" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><i style="background:var(--bool);border-radius:50%"></i>Đúng/Sai</span>
+    <span><i style="background:var(--num);transform:rotate(45deg) scale(.85)"></i>Số</span>
+    <span><i style="background:var(--obj);border-radius:2px"></i>Vật thể</span>
+  </div>
+
+  <div class="cards">
+    <div class="card"><h3>A · Thẻ chuyên nghiệp</h3><p>Gọn, rõ, giống các phần mềm làm game lớn. Viền màu theo nhóm, chấm cổng nằm đúng mép thẻ, khi có tín hiệu thì thẻ sáng viền.</p></div>
+    <div class="card"><h3>B · Bảng mạch</h3><p>Hợp chủ đề dòng điện: chân cổng như chân đồng, mỗi cổng có đèn LED. Nhìn kỹ thuật hơn, chữ dạng máy tính.</p></div>
+    <div class="card"><h3>C · Khối đồ chơi</h3><p>Bo tròn, màu tươi, chữ to, thân thiện với trẻ nhỏ. Chiếm nhiều chỗ hơn nên bảng lớn sẽ chật.</p></div>
+  </div>
+  <p class="note">Đây là bản xem thử, chạy giả lập. Trong Xưởng Nối thật, dây sẽ sáng theo đúng tín hiệu của game bạn. Lúc <b>Đang sửa</b>, dây có chấm mờ chạy chậm để cho biết tín hiệu đi chiều nào.</p>
+</div>
+
+<script>
+(() => {
+  const NODES = [
+    { id: 'key', x: 40, y: 40, cat: 'input', title: 'Phím bấm', sub: 'Đầu vào · Space', ins: [], outs: [['held', 'Đang giữ', 'bool'], ['pressed', 'Vừa bấm', 'bool']] },
+    { id: 'stick', x: 40, y: 200, cat: 'input', title: 'Cần điều khiển', sub: 'Đầu vào · Mũi tên', ins: [], outs: [['x', 'Ngang', 'num'], ['y', 'Dọc', 'num']] },
+    { id: 'hero', x: 330, y: 90, cat: 'object', title: 'Nhân vật', sub: 'Vật thể', ins: [['moveX', 'Đi ngang', 'num'], ['jump', 'Nhảy', 'bool']], outs: [['self', 'Nhân vật', 'obj'], ['ground', 'Chạm đất', 'bool']] },
+    { id: 'star', x: 330, y: 330, cat: 'object', title: 'Đồ vật', sub: 'Vật thể · Ngôi sao', ins: [], outs: [['self', 'Đồ vật', 'obj']] },
+    { id: 'touch', x: 620, y: 250, cat: 'logic', title: 'Cảm biến chạm', sub: 'Logic', ins: [['a', 'Vật A', 'obj'], ['b', 'Vật B', 'obj']], outs: [['touching', 'Đang chạm', 'bool'], ['began', 'Vừa chạm', 'bool']] },
+    { id: 'count', x: 650, y: 30, cat: 'math', title: 'Bộ đếm', sub: 'Tính toán · Đủ 3', ins: [['up', 'Cộng 1', 'bool']], outs: [['value', 'Số đếm', 'num'], ['done', 'Đã đủ', 'bool']] },
+    { id: 'win', x: 872, y: 250, cat: 'output', title: 'Thắng / Thua', sub: 'Kết quả', ins: [['win', 'Thắng', 'bool'], ['lose', 'Thua', 'bool']], outs: [] },
+  ];
+  const WIRES = [
+    ['key', 'pressed', 'hero', 'jump', 'bool'],
+    ['stick', 'x', 'hero', 'moveX', 'num'],
+    ['hero', 'self', 'touch', 'a', 'obj'],
+    ['star', 'self', 'touch', 'b', 'obj'],
+    ['touch', 'began', 'count', 'up', 'bool'],
+    ['count', 'done', 'win', 'win', 'bool'],
+  ];
+  const COLORS = { bool: 'var(--bool)', num: 'var(--num)', obj: 'var(--obj)' };
+  const stage = document.getElementById('stage');
+  const box = document.getElementById('box');
+  const svg = document.getElementById('wires');
+  const NS = 'http://www.w3.org/2000/svg';
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const portEl = {};
+  for (const n of NODES) {
+    const el = document.createElement('div');
+    el.className = 'node'; el.dataset.id = n.id;
+    el.style.left = n.x + 'px'; el.style.top = n.y + 'px';
+    el.style.setProperty('--cat', `var(--cat-${n.cat})`);
+    el.innerHTML = `<div class="head"><span class="ico"><i></i></span><div class="names"><div class="title">${n.title}</div><div class="cat">${n.sub}</div></div></div>`;
+    const ports = document.createElement('div'); ports.className = 'ports';
+    const cin = document.createElement('div'); cin.className = 'col in';
+    const cout = document.createElement('div'); cout.className = 'col out';
+    const mk = (col, [pid, label, t], dir) => {
+      const p = document.createElement('div');
+      p.className = `port t-${t}`;
+      p.innerHTML = `<span class="pin"></span><span>${label}</span><span class="val"></span>`;
+      col.append(p); portEl[`${n.id}.${pid}.${dir}`] = p;
+    };
+    n.ins.forEach((p) => mk(cin, p, 'in'));
+    n.outs.forEach((p) => mk(cout, p, 'out'));
+    ports.append(cin, cout); el.append(ports); stage.append(el);
+  }
+
+  // Wires: base line, slow direction dots (edit), glow + core (true), sparks (pulses / changes).
+  const wires = WIRES.map(([fn, fp, tn, tp, t]) => {
+    const g = document.createElementNS(NS, 'g');
+    const mkp = (cls) => { const p = document.createElementNS(NS, 'path'); p.setAttribute('class', cls); p.style.stroke = COLORS[t]; g.append(p); return p; };
+    const w = { from: portEl[`${fn}.${fp}.out`], to: portEl[`${tn}.${tp}.in`], t, g, base: mkp('w-base'), flow: mkp('w-flow'), glow: mkp('w-glow'), core: mkp('w-core'), sparks: [], len: 0, key: `${fn}.${fp}` };
+    svg.append(g); return w;
+  });
+
+  function center(el) {
+    const pin = el.querySelector('.pin');
+    const s = stage.getBoundingClientRect(); const r = pin.getBoundingClientRect(); const k = s.width / 1080;
+    return { x: (r.left + r.width / 2 - s.left) / k, y: (r.top + r.height / 2 - s.top) / k };
+  }
+  function layout() {
+    const k = Math.min(1, box.clientWidth / 1080);
+    stage.style.transform = `scale(${k})`;
+    box.style.height = `${460 * k}px`;
+    for (const w of wires) {
+      const a = center(w.from), b = center(w.to);
+      const dx = Math.max(60, Math.abs(b.x - a.x) * 0.5);
+      const d = `M${a.x},${a.y} C${a.x + dx},${a.y} ${b.x - dx},${b.y} ${b.x},${b.y}`;
+      for (const p of [w.base, w.flow, w.glow, w.core]) p.setAttribute('d', d);
+      w.len = w.base.getTotalLength();
+    }
+  }
+
+  function spark(w, opts = {}) {
+    if (reduce) return;
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('r', opts.r ?? 4); c.setAttribute('class', 'spark');
+    c.style.fill = COLORS[w.t]; c.style.color = COLORS[w.t];
+    w.g.append(c); w.sparks.push({ el: c, t: 0, dur: opts.dur ?? 650 });
+  }
+
+  // ---------- simulation ----------
+  let mode = 'play';
+  const state = { held: false, pressed: false, x: 0, ground: true, touching: false, began: false, count: 0, done: false };
+  const last = {};
+  let tPrev = performance.now(), simT = 0, nextTouch = 2.2, flowPhase = 0, jumpT = -1;
+
+  function setPort(key, dir, on, text) {
+    const el = portEl[`${key}.${dir}`]; if (!el) return;
+    el.classList.toggle('on', on);
+    const v = el.querySelector('.val'); if (v && v.textContent !== text) v.textContent = text;
+  }
+  function wireValue(w) {
+    switch (w.key) {
+      case 'key.pressed': return state.pressed;
+      case 'stick.x': return state.x;
+      case 'hero.self': return 'hero';
+      case 'star.self': return 'star';
+      case 'touch.began': return state.began;
+      case 'count.done': return state.done;
+    }
+  }
+  function press() { state.pressed = true; state.held = true; jumpT = 0; setTimeout(() => (state.held = false), 260); }
+  document.getElementById('pressBtn').addEventListener('click', () => { if (mode === 'play') press(); });
+  addEventListener('keydown', (e) => { if (e.code === 'Space' && mode === 'play' && e.target === document.body) { e.preventDefault(); press(); } });
+
+  function step(now) {
+    const dt = Math.min(0.05, (now - tPrev) / 1000); tPrev = now;
+    flowPhase -= dt * (mode === 'edit' ? 14 : 0);
+    if (mode === 'play') {
+      simT += dt;
+      state.x = Math.round(Math.sin(simT * 1.3) * 100) / 100;
+      if (jumpT >= 0) { jumpT += dt; state.ground = jumpT > 0.55; if (jumpT > 0.55) jumpT = -1; } else state.ground = true;
+      if (simT > nextTouch) {
+        state.began = true; state.touching = true; nextTouch = simT + 2.4;
+        state.count += 1; if (state.count >= 3) state.done = true;
+        setTimeout(() => (state.touching = false), 400);
+      }
+      if (state.done && simT > nextTouch - 0.6) { state.count = 0; state.done = false; }
+    }
+
+    // Port lamps and readouts.
+    const live = mode === 'play';
+    const b = (v) => (v ? 'Đúng' : 'Sai');
+    setPort('key.held', 'out', live && state.held, b(state.held));
+    setPort('key.pressed', 'out', live && state.pressed, b(state.pressed));
+    setPort('stick.x', 'out', live && state.x !== 0, state.x.toFixed(2));
+    setPort('stick.y', 'out', false, '0.00');
+    setPort('hero.moveX', 'in', live && state.x !== 0, state.x.toFixed(2));
+    setPort('hero.jump', 'in', live && state.pressed, b(state.pressed));
+    setPort('hero.self', 'out', live, 'có');
+    setPort('hero.ground', 'out', live && state.ground, b(state.ground));
+    setPort('star.self', 'out', live, 'có');
+    setPort('touch.a', 'in', live, 'có'); setPort('touch.b', 'in', live, 'có');
+    setPort('touch.touching', 'out', live && state.touching, b(state.touching));
+    setPort('touch.began', 'out', live && state.began, b(state.began));
+    setPort('count.up', 'in', live && state.began, b(state.began));
+    setPort('count.value', 'out', live && state.count > 0, String(state.count));
+    setPort('count.done', 'out', live && state.done, b(state.done));
+    setPort('win.win', 'in', live && state.done, b(state.done));
+    setPort('win.lose', 'in', false, 'Sai');
+    const hot = { key: state.held, stick: state.x !== 0, hero: true, star: true, touch: state.touching, count: state.count > 0, win: state.done };
+    for (const el of stage.querySelectorAll('.node')) el.classList.toggle('hot', live && !!hot[el.dataset.id]);
+
+    // Wires.
+    for (const w of wires) {
+      const v = wireValue(w);
+      const prev = last[w.key]; last[w.key] = v;
+      w.flow.style.display = mode === 'edit' ? '' : 'none';
+      w.flow.style.strokeDashoffset = String(flowPhase);
+      let steady = false;
+      if (live) {
+        if (w.t === 'bool') {
+          steady = v === true && (w.key === 'count.done');
+          if (v === true && prev !== true) spark(w, { r: 5, dur: 560 });
+        } else if (w.t === 'num') {
+          steady = v !== 0;
+          if (prev !== undefined && Math.abs(v - prev) > 0.02 && Math.random() < 0.18) spark(w, { r: 3, dur: 900 });
+        } else steady = true;
+      }
+      w.base.style.opacity = live ? (steady ? '.9' : '.32') : '.5';
+      w.glow.style.opacity = steady ? (w.t === 'obj' ? '.28' : '.55') : '0';
+      w.core.style.opacity = steady ? '1' : '0';
+      w.sparks = w.sparks.filter((s) => {
+        s.t += dt * 1000;
+        const f = Math.min(1, s.t / s.dur);
+        const p = w.base.getPointAtLength(f * w.len);
+        s.el.setAttribute('cx', p.x); s.el.setAttribute('cy', p.y);
+        s.el.style.opacity = String(f > 0.85 ? (1 - f) / 0.15 : 1);
+        if (f >= 1) { s.el.remove(); return false; }
+        return true;
+      });
+    }
+    // One-tick pulses last a single frame, as in the engine.
+    state.pressed = false; state.began = false;
+    requestAnimationFrame(step);
+  }
+
+  function setSeg(seg, attr, value) {
+    for (const b of seg.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset[attr] === value));
+  }
+  document.getElementById('styleSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    stage.className = `stage style-${b.dataset.style}${mode === 'play' ? ' live' : ''}`;
+    setSeg(e.currentTarget, 'style', b.dataset.style);
+    requestAnimationFrame(layout);
+  });
+  document.getElementById('modeSeg').addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    mode = b.dataset.mode;
+    stage.classList.toggle('live', mode === 'play');
+    setSeg(e.currentTarget, 'mode', mode);
+    const st = document.getElementById('status');
+    st.textContent = mode === 'play' ? 'Đang chơi' : 'Đang sửa';
+    st.classList.toggle('live', mode === 'play');
+    document.getElementById('pressBtn').disabled = mode !== 'play';
+    for (const w of wires) { w.sparks.forEach((s) => s.el.remove()); w.sparks = []; }
+  });
+
+  addEventListener('resize', layout);
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+  layout();
+  requestAnimationFrame(step);
+})();
+</script>

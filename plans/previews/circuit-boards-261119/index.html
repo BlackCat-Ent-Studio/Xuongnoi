@@ -1,0 +1,686 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bảng mạch – bản xem trước</title>
+<style>
+/* Preview of nested circuit boards ("bảng mạch"). A mock: nothing here is product code. Colour tokens are set on #app by the script. */
+:root { --font: 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif; --mono: ui-monospace, Consolas, 'Cascadia Mono', monospace; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+button, input { font: inherit; color: inherit; }
+button { border: 0; background: none; padding: 0; cursor: pointer; }
+button:disabled { cursor: default; opacity: .4; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 1px; }
+.ed { --fs: 15px; --fs-s: 13px; --row: 34px; --hh: 50px; --ctl: 36px; --r: 8px; --sideW: 288px;
+  height: 100%; display: grid; grid-template-rows: 52px auto minmax(0, 1fr) 28px; font: var(--fs)/1.45 var(--font); color: var(--text); background: var(--bg); font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+.ed.m-gv { --fs: 13px; --fs-s: 12px; --row: 24px; --hh: 34px; --ctl: 28px; }
+@media (max-width: 1400px) { .ed { --sideW: 264px; } }
+.ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ic.f { fill: currentColor; stroke: none; }
+
+/* top bar */
+.tb { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 12px; background: var(--chrome); color: var(--chromeText); border-bottom: 1px solid var(--chromeLine); white-space: nowrap; font-size: 14px; --ctl: 36px; }
+.tb-g { display: flex; align-items: center; gap: 8px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+.brand svg { width: 26px; height: 26px; }
+.bname { height: 32px; padding: 0 10px; border-radius: 6px; border: 1px solid var(--chromeLine); font-weight: 600; display: inline-flex; align-items: center; }
+.tb .lab { font-size: 13px; color: var(--chromeText2); font-weight: 600; margin-left: 6px; }
+.seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--chromeInset); border: 1px solid var(--chromeLine); }
+.seg button { height: calc(var(--ctl) - 2px); min-width: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--chromeText2); }
+.seg button[aria-pressed="true"] { background: var(--chromeSegOn); color: var(--chromeSegInk); }
+.seg.p { background: var(--panel2); border-color: var(--line2); }
+.seg.p button { color: var(--text2); }
+.seg.p button[aria-pressed="true"] { background: var(--accent); color: var(--accentInk); }
+.run { display: flex; align-items: center; gap: 10px; padding: 3px 12px 3px 3px; border-radius: 10px; background: var(--chromeInset); border: 1px solid var(--chromeLine); }
+.rb { height: 36px; padding: 0 16px; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; }
+.rb.go { background: var(--run); color: var(--runInk); }
+.rb.stop { background: var(--chromeSegOn); color: var(--chromeSegInk); }
+.rstate { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--chromeText2); }
+.rstate i { width: 9px; height: 9px; border-radius: 50%; background: var(--chromeText2); }
+.rstate.on { color: var(--chromeRun); } .rstate.on i { background: var(--chromeRun); animation: blink 1s ease-in-out infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+
+/* crumb bar */
+.bar { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 12px; background: var(--panel); border-bottom: 1px solid var(--line); white-space: nowrap; min-width: 0; }
+.crumb { display: flex; align-items: center; gap: 2px; font-size: var(--fs); min-width: 0; }
+.cr { height: var(--ctl); padding: 0 8px; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--text2); }
+button.cr:hover { background: var(--raise); color: var(--text); }
+.cr.cur { color: var(--text); font-weight: 700; background: var(--panel2); border: 1px solid var(--line2); }
+.crumb .sep { color: var(--text2); font-weight: 700; font-size: 18px; line-height: 1; }
+.back { height: var(--ctl); padding: 0 12px 0 8px; border-radius: 7px; display: inline-flex; align-items: center; gap: 4px; font-weight: 700; font-size: calc(var(--fs) - 1px); background: var(--accentSoft); color: var(--learnInk); }
+.lvl { display: inline-flex; align-items: center; gap: 8px; font-size: var(--fs-s); font-weight: 700; color: var(--text2); padding: 0 4px; }
+.lvl .st { display: inline-flex; flex-direction: column; gap: 2px; }
+.lvl .st i { width: 18px; height: 4px; border-radius: 2px; background: var(--line2); opacity: .5; }
+.lvl .st i.on { background: var(--accent); opacity: 1; width: 24px; }
+.sp { margin-left: auto; }
+.bar .lab { font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
+.bbtn { height: var(--ctl); padding: 0 12px; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: calc(var(--fs) - 1px); background: var(--accent); color: var(--accentInk); }
+.bbtn.ghost { background: var(--panel2); color: var(--text); border: 1px solid var(--line2); }
+
+/* work area */
+.work { display: grid; grid-template-columns: minmax(0, 1fr) var(--sideW); min-height: 0; min-width: 0; gap: 1px; background: var(--line); }
+.work.bench { grid-template-columns: 300px minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 236px; grid-template-areas: "bbar bbar" "pins board" "sim board"; }
+.work.bench.lay-bottom { grid-template-columns: minmax(0, 1fr) 348px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "bbar bbar" "board sim" "pins sim"; }
+.work.bench .board { grid-area: board; }
+.board { position: relative; overflow: hidden; background-color: var(--bg); background-image: radial-gradient(circle, var(--grid) 1.2px, transparent 1.5px); background-size: 24px 24px; min-width: 0; min-height: 0; }
+.world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.world > [data-id] { position: absolute; }
+.wires { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.t-bool { --pc: var(--tBool); --pe: var(--tBoolE); } .t-num { --pc: var(--tNum); --pe: var(--tNumE); } .t-obj { --pc: var(--tObj); --pe: var(--tObjE); }
+.w-case { fill: none; stroke: var(--pe); stroke-width: 4.6; stroke-linecap: round; }
+.w-core { fill: none; stroke: var(--pc); stroke-width: 2.8; stroke-linecap: round; }
+.w-glow { fill: none; stroke: var(--pc); stroke-width: 10; stroke-linecap: round; opacity: .2; }
+.w-flow { fill: none; stroke: var(--flow); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 14; animation: flow .9s linear infinite; }
+.w-spark { fill: var(--flow); stroke: var(--pc); stroke-width: 3; }
+.wg:not(.live) .w-glow, .wg:not(.live) .w-flow, .wg:not(.live) .w-spark { display: none; }
+@keyframes flow { to { stroke-dashoffset: -16; } }
+.chip { position: absolute; transform: translate(-50%, -50%); padding: 0 8px; height: 22px; display: none; align-items: center; border-radius: 11px; background: var(--card); color: var(--text); border: 1.5px solid var(--pe); font: 700 var(--fs-s)/1 var(--mono); white-space: nowrap; box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+.chip.live { display: inline-flex; }
+.ov { position: absolute; z-index: 5; background: var(--panel); border: 1px solid var(--line2); border-radius: 10px; box-shadow: var(--shCard); }
+.scope { left: 12px; top: 10px; max-width: calc(100% - 24px); padding: 6px 12px; font-size: var(--fs-s); font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px 14px; flex-wrap: wrap; }
+.scope.low { top: auto; bottom: 10px; }
+.scope .ic { width: 16px; height: 16px; color: var(--text2); }
+.scope .livet { display: inline-flex; align-items: center; gap: 6px; color: var(--runText); font-weight: 700; }
+.scope .livet i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: blink 1s ease-in-out infinite; }
+.piece-note { left: 50%; bottom: 20px; transform: translateX(-50%); padding: 10px 14px; max-width: 520px; font-size: var(--fs-s); color: var(--text); text-align: center; }
+
+/* node cards (same anatomy as the approved board: solid category header, three port shapes, value pills) */
+.tile { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--ci) 20%, transparent); color: var(--ci); }
+.tile svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.nd { width: 184px; background: var(--card); color: var(--text); border: 1.5px solid var(--cardLine); border-radius: 12px; box-shadow: var(--shCard); white-space: nowrap; cursor: pointer; }
+.nd-h { display: flex; align-items: center; gap: 8px; height: var(--hh); padding: 0 8px; border-radius: 10px 10px 0 0; background: var(--cc); color: var(--ci); }
+.nm { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; margin-right: auto; }
+.nm b { font-weight: 700; font-size: var(--fs); overflow: hidden; text-overflow: ellipsis; }
+.nm i { font-style: normal; font-size: var(--fs-s); font-weight: 500; overflow: hidden; text-overflow: ellipsis; }
+.nd-b { padding: 4px 0; }
+.pt { position: relative; display: flex; align-items: center; gap: 8px; height: var(--row); padding: 0 10px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.pt.out { flex-direction: row-reverse; }
+.dot { width: 14px; height: 14px; flex: none; background: var(--pc); border: 2px solid var(--pe); position: relative; z-index: 1; }
+.t-bool > .dot { border-radius: 50%; } .t-num > .dot { transform: rotate(45deg) scale(.84); border-radius: 2px; } .t-obj > .dot { border-radius: 3px; }
+.val { font: 700 var(--fs-s)/1 var(--mono); font-style: normal; padding: 3px 6px; border-radius: 10px; background: color-mix(in srgb, var(--pc) 16%, var(--card)); color: var(--text); border: 1px solid var(--pe); }
+.sel { outline: 3px solid var(--accent); outline-offset: 2px; box-shadow: 0 0 0 8px var(--accentSoft), var(--shCard) !important; }
+
+/* machine block: shared skeleton, three looks */
+.mb { min-width: 190px; white-space: nowrap; cursor: pointer; position: relative; }
+.mb.static { position: relative; margin: 0 auto; cursor: default; }
+.mb-h { display: flex; align-items: center; gap: 8px; height: calc(var(--hh) - 6px); padding: 0 6px 0 8px; }
+.mb-ic { width: 28px; height: 28px; flex: none; display: grid; place-items: center; border-radius: 7px; position: relative; }
+.mb-ic .ic { width: 18px; height: 18px; }
+.mb-col { position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px; border-radius: 4px; border: 2px solid var(--card); }
+.ed.m-gv .mb-ic { width: 22px; height: 22px; } .ed.m-gv .mb-ic .ic { width: 15px; height: 15px; }
+.mb .nm { flex: none; }
+.mb .nm b, .mb .nm i { overflow: visible; }
+.mb .nm i { display: flex; align-items: center; gap: 5px; }
+.led { width: 9px; height: 9px; border-radius: 50%; flex: none; background: var(--ledOff); box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 55%, transparent); }
+.led.on { background: var(--ledOn); box-shadow: 0 0 0 3px color-mix(in srgb, var(--ledOn) 30%, transparent); animation: blink 1s ease-in-out infinite; }
+.mb-open { position: relative; height: 28px; padding: 0 4px 0 9px; border-radius: 7px; display: inline-flex; align-items: center; gap: 1px; font-size: var(--fs-s); font-weight: 700; flex: none; }
+.mb-open::after { content: ''; position: absolute; inset: calc((28px - var(--ctl)) / 2) -2px; }
+.mb-open .ic { width: 15px; height: 15px; }
+.ed.m-gv .mb-open { height: 24px; }
+.mb-p { display: grid; grid-template-columns: auto auto; justify-content: space-between; gap: 0 12px; padding: 3px 0 5px; }
+.mb-p .pt { padding: 0 9px; }
+
+/* look B: clean device card with icon and status light */
+.look-b .mb { background: var(--card); color: var(--text); border: 1.5px solid var(--cardLine); border-radius: 12px; box-shadow: var(--shCard); --ledOff: var(--line2); --ledOn: var(--run); }
+.look-b .mb-h { background: color-mix(in srgb, var(--accent) 13%, var(--card)); border-bottom: 1px solid color-mix(in srgb, var(--accent) 36%, var(--card)); border-radius: 10px 10px 0 0; }
+.look-b .mb-ic { background: var(--accent); color: var(--accentInk); }
+.look-b .mb .nm i { color: var(--text2); }
+.look-b .mb-open { border: 1px solid var(--line2); background: var(--card); color: var(--text); }
+
+/* look A: circuit board with header pins */
+.look-a .mb { background-color: var(--pcb); color: var(--pcbInk); border: 2px solid var(--pcbLine); border-radius: 5px; box-shadow: var(--shCard); --ledOff: #0a2623; --ledOn: #7dffb0; --card: var(--pcb);
+  background-image: radial-gradient(circle at 7px 7px, var(--pad) 2.2px, transparent 2.8px), radial-gradient(circle at calc(100% - 7px) 7px, var(--pad) 2.2px, transparent 2.8px), linear-gradient(var(--pcbTrace), var(--pcbTrace)), linear-gradient(var(--pcbTrace), var(--pcbTrace)); background-repeat: no-repeat; background-size: auto, auto, 46% 2px, 2px 30%; background-position: 0 0, 0 0, 50% calc(100% - 7px), 73% 100%; }
+.look-a .mb-h { padding-left: 18px; border-bottom: 1px dashed var(--pcbTrace); }
+.look-a .mb-ic { background: #10151b; color: var(--pad); border: 1px solid var(--pad); border-radius: 3px; }
+.look-a .mb .nm b { font-family: var(--mono); text-transform: uppercase; letter-spacing: .04em; font-size: calc(var(--fs) - 1px); }
+.look-a .mb .nm i { color: var(--pcbInk); font-family: var(--mono); }
+.look-a .mb-open { border: 1px solid var(--pcbInk); color: var(--pcbInk); border-radius: 3px; }
+.look-a .mb-in .pt { padding-left: 0; } .look-a .mb-out .pt { padding-right: 0; }
+.look-a .mb-in .dot { margin-left: -9px; } .look-a .mb-out .dot { margin-right: -9px; }
+.look-a .mb-p .pt::before { content: ''; position: absolute; top: 50%; width: 24px; height: 22px; transform: translateY(-50%); background: #10151b; border: 1.5px solid var(--pad); border-radius: 3px; }
+.look-a .mb-in .pt::before { left: -14px; } .look-a .mb-out .pt::before { right: -14px; }
+.look-a .mb-in .pt span { margin-left: 6px; } .look-a .mb-out .pt span { margin-right: 6px; }
+.look-a .mb .dot { border-color: #10151b; }
+.look-a .mb-col { border-color: #10151b; }
+
+/* look C: compact chip */
+.look-c .mb { background: var(--chip); color: var(--chipInk); border: 1.5px solid var(--chipLine); border-radius: 7px; box-shadow: var(--shCard); --ledOff: #10151b; --ledOn: #7dffb0; --card: var(--chip); }
+.look-c .mb::before { content: ''; position: absolute; left: 50%; top: -1.5px; width: 16px; height: 8px; margin-left: -8px; border-radius: 0 0 8px 8px; background: var(--bg); border: 1.5px solid var(--chipLine); border-top: 0; }
+.look-c .mb-h { height: calc(var(--hh) - 18px); min-height: 28px; padding: 6px 4px 0 8px; gap: 6px; }
+.look-c .mb-ic { width: 20px; height: 20px; color: var(--chipInk); } .look-c .mb-ic .ic { width: 16px; height: 16px; }
+.look-c .mb .nm { flex-direction: row; align-items: center; gap: 7px; }
+.look-c .mb .nm i .stt { display: none; }
+.look-c .mb-open { height: 24px; padding: 0 2px 0 6px; color: var(--chipInk); border: 1px solid var(--chipLeg); border-radius: 5px; }
+.look-c .mb-open::after { inset: calc((24px - var(--ctl)) / 2) -3px; }
+.look-c .mb-p { padding: 0 0 2px; }
+.look-c .mb-p .pt { padding: 0 7px; font-size: var(--fs-s); }
+.look-c .mb-p .pt::before { content: ''; position: absolute; top: 50%; width: 9px; height: 7px; margin-top: -3.5px; background: var(--chipLeg); border-radius: 1px; }
+.look-c .mb-in .pt::before { left: -10px; } .look-c .mb-out .pt::before { right: -10px; }
+.look-c .mb .dot { border-color: #10151b; }
+.look-c .mb-col { border-color: var(--chip); right: -5px; bottom: -3px; width: 10px; height: 10px; }
+
+/* pin cards at the edges of a circuit, and "Thông số mở" */
+.pin { width: 236px; background: var(--card); border: 1.5px solid var(--cardLine); border-radius: 10px; box-shadow: var(--shCard); white-space: nowrap; }
+.ed.m-gv .pin { width: 208px; }
+.pin.in { border-left: 6px solid var(--accent); border-radius: 4px 10px 10px 4px; }
+.pin.out { border-right: 6px solid var(--accent); border-radius: 10px 4px 4px 10px; }
+.pin-h { display: flex; align-items: center; gap: 6px; height: var(--row); padding: 0 2px 0 10px; background: var(--accentSoft); color: var(--learnInk); font-size: var(--fs-s); font-weight: 700; border-radius: 0 8px 0 0; }
+.pin.out .pin-h { border-radius: 8px 0 0 0; }
+.pin-tools { margin-left: auto; display: inline-flex; }
+.pin-tools button { width: var(--ctl); height: var(--row); display: grid; place-items: center; border-radius: 6px; color: var(--learnInk); }
+.pin-tools button:hover:not(:disabled) { background: color-mix(in srgb, var(--learnInk) 14%, transparent); }
+.pin-tools .ic { width: 15px; height: 15px; }
+.pin-b { height: calc(var(--ctl) + 10px); padding: 0 10px; }
+.pin-name { flex: 1; min-width: 0; width: 60px; height: var(--ctl); padding: 0 8px; border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); font-weight: 700; font-size: calc(var(--fs) - 1px); }
+.pin-ty { height: var(--ctl); min-width: var(--ctl); padding: 0 8px; border: 1px solid var(--pe); border-radius: 7px; background: color-mix(in srgb, var(--pc) 14%, var(--card)); font-size: var(--fs-s); font-weight: 700; color: var(--text); flex: none; }
+.pin-nm { font-weight: 700; margin-right: auto; }
+.pin.out .pin-nm { margin: 0 0 0 auto; }
+.pin.param { border-left: 6px solid var(--warnLine); border-radius: 4px 10px 10px 4px; }
+.pin.param .pin-h { background: var(--warnBg); color: var(--warn); }
+.addpin { height: var(--ctl); padding: 0 12px; border: 1.5px dashed var(--line2); border-radius: 8px; background: var(--panel); color: var(--text); font-weight: 700; font-size: var(--fs-s); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.addpin:hover { background: var(--raise); }
+.addpin .ic { width: 15px; height: 15px; }
+
+/* side panel */
+.side { background: var(--panel); min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.tabs { display: flex; flex: none; border-bottom: 1px solid var(--line); padding: 0 6px; }
+.tab { flex: 1; height: calc(var(--ctl) + 6px); font-weight: 700; font-size: var(--fs-s); color: var(--text2); position: relative; white-space: nowrap; }
+.tab[aria-selected="true"] { color: var(--text); }
+.tab[aria-selected="true"]::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+.side-b { flex: 1; min-height: 0; overflow-y: auto; }
+.i-head { display: flex; align-items: center; gap: 10px; padding: 12px 12px 8px; }
+.i-head .mb-ic, .lib-it .mb-ic { background: var(--accent); color: var(--accentInk); width: 34px; height: 34px; border-radius: 9px; }
+.i-head .tile { width: 34px; height: 34px; background: var(--cc); }
+.i-head b { display: block; font-size: calc(var(--fs) + 2px); font-weight: 700; line-height: 1.25; }
+.i-head small, .lib-it small { font-size: var(--fs-s); color: var(--text2); }
+.i-desc { margin: 0 12px 10px; font-size: calc(var(--fs) - 1px); color: var(--text2); line-height: 1.45; }
+.sec { border-top: 1px solid var(--line); padding: 8px 12px; }
+.sec-h { font-size: var(--fs-s); font-weight: 700; color: var(--text2); min-height: 24px; display: flex; align-items: center; gap: 6px; }
+.fld { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: calc(var(--ctl) + 8px); padding: 2px 0; }
+.fld.col { flex-direction: column; align-items: flex-start; gap: 4px; padding-bottom: 6px; }
+.fld .lb { min-width: 0; font-size: calc(var(--fs) - .5px); font-weight: 600; line-height: 1.3; display: inline-flex; align-items: center; gap: 8px; }
+.fld .lb small { font-size: var(--fs-s); font-weight: 500; color: var(--text2); }
+.stp { display: inline-flex; align-items: center; flex: none; height: var(--ctl); border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); }
+.stp button { width: var(--ctl); height: 100%; display: grid; place-items: center; color: var(--text); }
+.stp button .ic { width: 14px; height: 14px; }
+.stp b { min-width: 42px; text-align: center; font-weight: 700; }
+.sel-f { flex: none; height: var(--ctl); padding: 0 8px; border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); display: inline-flex; align-items: center; gap: 6px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.sws { display: flex; gap: 4px; }
+.swc { width: var(--ctl); height: var(--ctl); border-radius: 8px; display: grid; place-items: center; border: 1.5px solid transparent; }
+.swc i { width: 22px; height: 22px; border-radius: 6px; border: 1px solid rgba(0, 0, 0, .35); }
+.swc[aria-pressed="true"] { border-color: var(--text); background: var(--panel2); }
+.sw-t { position: relative; flex: none; width: 46px; height: 26px; border-radius: 13px; background: var(--panel2); border: 1.5px solid var(--line2); display: block; }
+.sw-t::after { content: ''; position: absolute; left: 3px; top: 3px; width: 17px; height: 17px; border-radius: 50%; background: var(--line2); }
+.sw-b { display: inline-flex; align-items: center; gap: 8px; min-height: var(--ctl); font-size: var(--fs-s); font-weight: 700; color: var(--text2); flex: none; }
+.sw-b[aria-checked="true"] .sw-t { background: var(--run); border-color: var(--run); }
+.sw-b[aria-checked="true"] .sw-t::after { left: 23px; background: var(--runInk); }
+.note { margin: 4px 12px 10px; padding: 8px 10px; border-radius: 8px; background: var(--learnBg); color: var(--learnInk); border: 1px solid var(--learnLine); font-size: var(--fs-s); font-weight: 600; line-height: 1.45; display: flex; gap: 8px; }
+.note .ic { width: 16px; height: 16px; margin-top: 1px; }
+.acts { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px 12px 12px; }
+.abtn { height: var(--ctl); padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: calc(var(--fs) - 1px); white-space: nowrap; background: var(--panel2); color: var(--text); }
+.abtn.pri { background: var(--accent); color: var(--accentInk); border-color: var(--accent); }
+.pv-box { margin: 4px 0 2px; padding: 18px 22px; border-radius: 8px; border: 1px solid var(--line); background-color: var(--bg); background-image: radial-gradient(circle, var(--grid) 1.2px, transparent 1.5px); background-size: 24px 24px; }
+.plist { margin: 0; padding: 0; list-style: none; }
+.plist li { display: flex; align-items: center; gap: 8px; min-height: var(--row); font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.plist li em { margin-left: auto; font-style: normal; font-size: var(--fs-s); font-weight: 600; color: var(--text2); }
+.lib-it { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 4px 10px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--line); cursor: grab; }
+.lib-it:hover { background: var(--raise); }
+.lib-it b { font-weight: 700; display: block; line-height: 1.25; }
+.lib-it .cnt { font: 700 var(--fs)/1 var(--mono); padding: 4px 8px; border-radius: 10px; background: var(--accentSoft); color: var(--learnInk); }
+.lib-it .row2 { grid-column: 2 / -1; display: flex; gap: 6px; }
+.lib-it .abtn { font-size: var(--fs-s); padding: 0 9px; }
+
+/* bench */
+.bbar { grid-area: bbar; display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 5px 12px; background: var(--learnBg); color: var(--learnInk); font-size: calc(var(--fs) - 1px); white-space: nowrap; }
+.bbar b { font-size: var(--fs); }
+.bbar .lab { font-weight: 700; font-size: var(--fs-s); }
+.bpins { grid-area: pins; background: var(--panel); overflow-y: auto; min-height: 0; }
+.bgrp { padding: 6px 12px 8px; border-bottom: 1px solid var(--line); }
+.bgrp h4 { margin: 0; font-size: var(--fs-s); font-weight: 700; color: var(--text2); min-height: 24px; display: flex; align-items: center; gap: 6px; }
+.bgrp h4 small { font-weight: 500; font-size: var(--fs-s); }
+.lay-bottom .bpins { display: flex; overflow: hidden; }
+.lay-bottom .bgrp { flex: 1 1 0; border-bottom: 0; border-right: 1px solid var(--line); min-width: 0; }
+.lay-bottom .bgrp .fld { justify-content: flex-start; gap: 14px; }
+.bval { font: 700 var(--fs)/1 var(--mono); padding: 6px 10px; border-radius: 12px; border: 1.5px solid var(--pe); background: var(--panel2); color: var(--text); min-width: 58px; text-align: center; }
+.bval.on { background: color-mix(in srgb, var(--pc) 30%, var(--card)); }
+.bsim { grid-area: sim; background: var(--panel); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.simh { display: flex; align-items: center; gap: 8px; height: calc(var(--ctl) + 2px); padding: 0 12px; font-weight: 700; font-size: var(--fs-s); border-bottom: 1px solid var(--line); flex: none; }
+.tagm { margin-left: auto; padding: 1px 8px; border-radius: 4px; background: var(--warnBg); color: var(--warn); border: 1px solid var(--warnLine); font-size: 12px; font-weight: 700; }
+.simv { flex: 1; min-height: 0; background: var(--panel2); }
+.simv svg { width: 100%; height: 100%; display: block; }
+.s-floor { fill: var(--card); stroke: var(--line2); } .s-ln { stroke: var(--line2); fill: none; } .s-tx { fill: var(--text); font: 600 12px var(--font); } .s-tx2 { fill: var(--text2); font: 600 11px var(--font); }
+.s-dk { fill: var(--text2); } .s-ac { fill: var(--accent); } .s-st { stroke: var(--text2); fill: none; stroke-linecap: round; }
+
+/* footer */
+.foot { display: flex; align-items: center; gap: 16px; padding: 0 12px; background: var(--chrome); color: var(--chromeText); font-size: 13px; white-space: nowrap; overflow: hidden; }
+.foot b { font-weight: 700; }
+.foot .lg { display: inline-flex; align-items: center; gap: 6px; }
+.foot .dot { width: 11px; height: 11px; border-width: 1.5px; }
+.toast { position: fixed; left: 50%; bottom: 44px; transform: translateX(-50%); z-index: 50; padding: 10px 16px; border-radius: 10px; background: var(--chrome); color: var(--chromeText); font-weight: 600; font-size: 14px; box-shadow: 0 8px 24px rgba(0, 0, 0, .35); border: 1px solid var(--chromeLine); }
+@media (prefers-reduced-motion: reduce) { .w-flow, .led.on, .rstate.on i, .scope .livet i { animation: none; } }
+</style>
+</head>
+<body>
+<div class="ed m-hs look-b" id="app"></div>
+<script>
+/* ============ colour tokens: the approved direction "c" (soft-grey light surfaces) and its dark theme ============ */
+const CATS_MID = { input: '#1f7fa8', logic: '#8a4fd6', math: '#15a04c', object: '#b8700f', action: '#a5140f', brain: '#84593c', output: '#7f889c' };
+const CATS_BRIGHT = { input: '#6debf7', logic: '#be89ef', math: '#d3f89c', object: '#f2721f', action: '#f05e58', brain: '#e2c4ad', output: '#8099b1' };
+const THEME = {
+  light: { bg: '#dfe3e8', grid: '#b9c1cc', chrome: '#16233a', chromeText: '#f1f4f9', chromeText2: '#b9c4d6', chromeLine: '#33435f', chromeInset: '#0f1a2d', chromeSegOn: '#f1f4f9', chromeSegInk: '#16233a', chromeRun: '#5fd4a0',
+    panel: '#eceff3', panel2: '#e3e7ec', raise: '#d8dde4', line: '#cbd2da', line2: '#8a8577', text: '#1b2330', text2: '#4a5361', accent: '#0b6f6b', accentInk: '#ffffff', accentSoft: '#c5e4e1',
+    run: '#157f3d', runInk: '#ffffff', runText: '#0f6a31', warn: '#7a4b00', warnBg: '#fff1cc', warnLine: '#b07a00', card: '#f1f3f6', cardLine: '#b3ad9f',
+    shCard: '0 1px 2px rgba(21,32,43,.10), 0 4px 10px -4px rgba(21,32,43,.18)', tBool: '#f2b800', tBoolE: '#8a6400', tNum: '#1d74e0', tNumE: '#0f4fa8', tObj: '#d9369b', tObjE: '#9c1d6b', flow: '#ffffff',
+    learnBg: '#d6e7e6', learnInk: '#0a4f4c', learnLine: '#8fc4bf', pcb: '#0e5f58', pcbInk: '#f2fbfa', pcbLine: '#083f3a', pcbTrace: '#2a8a80', pad: '#e8c15a', chip: '#2b3444', chipInk: '#f1f4f9', chipLine: '#111827', chipLeg: '#8d98a5' },
+  dark: { bg: '#15181e', grid: '#2b303a', chrome: '#0c1524', chromeText: '#e6eaf2', chromeText2: '#a9b4c6', chromeLine: '#27364f', chromeInset: '#070e1a', chromeSegOn: '#e6eaf2', chromeSegInk: '#0d1220', chromeRun: '#2fbf71',
+    panel: '#1c2028', panel2: '#15181e', raise: '#292e39', line: '#2e333e', line2: '#757e90', text: '#eceef2', text2: '#b3bac6', accent: '#5fd4c8', accentInk: '#062623', accentSoft: '#173f3c',
+    run: '#2fbf71', runInk: '#06150c', runText: '#4fd08a', warn: '#f2b33d', warnBg: '#3a2e12', warnLine: '#f2b33d', card: '#22262f', cardLine: '#464d5c',
+    shCard: '0 2px 4px rgba(0,0,0,.35), 0 10px 18px -10px rgba(0,0,0,.7)', tBool: '#f7d046', tBoolE: '#f7d046', tNum: '#5aa9ff', tNumE: '#5aa9ff', tObj: '#f27ad0', tObjE: '#f27ad0', flow: '#ffffff',
+    learnBg: '#12302e', learnInk: '#bdeee8', learnLine: '#2f6f69', pcb: '#0f4a44', pcbInk: '#e9fbf8', pcbLine: '#3aa598', pcbTrace: '#1d7068', pad: '#e8c15a', chip: '#343b4a', chipInk: '#f1f4f9', chipLine: '#8a93a5', chipLeg: '#a4adbd' },
+};
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+const lum = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+const ratio = (a, b) => { const x = lum(hex(a)), y = lum(hex(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const inkOn = (c) => (ratio('#ffffff', c) >= 4.5 ? '#ffffff' : '#10151b');
+
+/* ============ icons ============ */
+const P = {
+  play: '<path d="M7 4.5v15l12-7.5z"/>', stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>', chevD: '<path d="M6 9l6 6 6-6"/>', chevU: '<path d="M6 15l6-6 6 6"/>', chevR: '<path d="M9 6l6 6-6 6"/>', chevL: '<path d="M15 6l-6 6 6 6"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.3"/>', reset: '<path d="M5 12a7 7 0 107-7H8M11 2L8 5l3 3"/>',
+  bench: '<path d="M4 9h16M6 9v10M18 9v10M9 5h6v4H9z"/>', lib: '<path d="M5 4h4v16H5zM10.5 4h4v16h-4zM16 6l3.5-1 3 14-3.5 1z"/>',
+  agv: '<rect x="3" y="9" width="18" height="7" rx="2"/><circle cx="8" cy="18" r="2"/><circle cx="16" cy="18" r="2"/><path d="M6 9l1-4h10l1 4"/>',
+  arm: '<path d="M4 20h9M8.5 20v-6l6-6 4 3"/><circle cx="8.5" cy="14" r="1.6"/><circle cx="14.5" cy="8" r="1.6"/><path d="M18.5 11l2.5-1M18.5 11l1 2.5"/>',
+  station: '<path d="M3 20V9l9-5 9 5v11"/><path d="M8 20v-6h8v6"/>', chute: '<path d="M5 5h14l-4 8v6H9v-6z"/>',
+  belt: '<rect x="3" y="11" width="18" height="6" rx="3"/><circle cx="6.5" cy="14" r="1"/><circle cx="17.5" cy="14" r="1"/><rect x="9" y="5" width="6" height="6"/>',
+  scale: '<path d="M4 19h16M6 19l1-8h10l1 8M12 11V7M8.5 7h7"/>', factory: '<path d="M3 20V10l6 3v-3l6 3V6h6v14z"/>',
+};
+const ic = (n, f) => `<svg class="ic${f ? ' f' : ''}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+const CG = { input: 'M2 8h7M6.5 4.5L10 8l-3.5 3.5M13 3v10', logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10', object: 'M8 2l5 3v6l-5 3-5-3V5zM3 5l5 3 5-3M8 8v6', action: 'M9.5 2L4 9h4l-1 5 5.5-7H8.5z', brain: 'M8 2.5a4 4 0 00-4 4c0 1.6 1 2.4 1 3.9v1.1h6v-1.1c0-1.5 1-2.3 1-3.9a4 4 0 00-4-4zM6.5 13.5h3', output: 'M4 2v12M4 3h8l-2 3 2 3H4' };
+const tile = (cat) => `<span class="tile"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="${CG[cat]}"/></svg></span>`;
+const LOGO = (t) => `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="${t.chromeInset}" stroke="${t.chromeLine}"/><circle cx="7" cy="8" r="2.4" fill="${t.tBool}"/><rect x="14.6" y="13.6" width="4.8" height="4.8" rx="1" fill="${t.tNum}"/><path d="M9.2 8c4 0 2.4 8 5.6 8" stroke="${t.chromeText}" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`;
+
+/* ============ the file: circuit types, their pins, what is inside (content is illustrative) ============ */
+const pin = (id, dir, name, ty) => ({ id, dir, name, ty });
+const card = (id, cat, vi, sub, col, ins, outs, x = {}) => ({ id, k: 'card', cat, vi, sub, col, ins, outs, ...x });
+const inst = (id, type, name, col, set = {}, x = {}) => ({ id, k: 'inst', type, name, col, set, ...x });
+const param = (id, pid, col) => ({ id, k: 'param', pid, col });
+const W = (f, fp, t, tp, ty, chip) => ({ f: [f, fp], t: [t, tp], ty, chip });
+const COLORS = ['#e08a1e', '#1d74e0', '#157f3d', '#d9369b', '#8a4fd6', '#b42318'];
+const MOC = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => 'Mốc sàn ' + i);
+const CH = [1, 1, 2, 3, 4, 5, 6, 6]; // which chute each AGV serves in this example
+const T = {
+  xuong: { name: 'Xưởng', lvl: 4, icon: 'factory', pins: [], gapx: 50, gy: 10, nodes: [
+    card('gio', 'logic', 'Hẹn giờ', 'Nhịp nạp 3 giây', 0, [], [['tick', 'bool', 'Tới giờ']], { w: 160 }),
+    inst('tn', 'tramnap', 'Trạm nạp', 1),
+    card('dp', 'brain', 'Bộ điều phối', 'Chia việc cho xe', 2, [['san', 'bool', 'Kiện sẵn'], ['ma', 'num', 'Mã cửa']], [1, 2, 3, 4, 5, 6, 7, 8].map((i) => ['x' + i, 'num', 'Lệnh xe ' + i]), { w: 168 }),
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map((i) => inst('agv' + i, 'agv', 'Xe AGV ' + i, 3, { start: MOC[i - 1], color: COLORS[(i - 1) % 6], speed: i === 3 ? 1.2 : 0.8 })),
+    ...[1, 2, 3, 4, 5, 6].map((i) => inst('cua' + i, 'cuatha', 'Cửa thả ' + i, 4, { so: i })),
+    card('dem', 'math', 'Bộ đếm', 'Kiện đã giao', 5, [['len', 'bool', 'Đếm lên']], [['so', 'num', 'Số đếm', 'count']], { w: 172 }),
+  ], wires: [
+    W('gio', 'tick', 'tn', 'nap', 'bool'), W('tn', 'san', 'dp', 'san', 'bool'), W('tn', 'ma', 'dp', 'ma', 'num', '3'),
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map((i) => W('dp', 'x' + i, 'agv' + i, 'cua', 'num', String(CH[i - 1]))),
+    ...[1, 2, 3, 4, 5, 6, 7, 8].map((i) => W('agv' + i, 'tha', 'cua' + CH[i - 1], 'xe', 'bool')),
+    ...[1, 2, 3, 4, 5, 6].map((i) => W('cua' + i, 'nhan', 'dem', 'len', 'bool')),
+  ] },
+  tramnap: { name: 'Trạm nạp', lvl: 3, icon: 'station', unit: 'trạm', pins: [pin('nap', 'in', 'Nạp kiện', 'bool'), pin('san', 'out', 'Kiện sẵn', 'bool'), pin('ma', 'out', 'Mã cửa', 'num')],
+    params: [{ id: 'nhip', name: 'Tốc độ băng', unit: 'm/s', kind: 'num', step: 0.1, def: 0.5 }],
+    nodes: [param('p-nhip', 'nhip', 0), inst('bc', 'bangchuyen', 'Băng chuyền', 1), inst('cq', 'canquet', 'Cân / quét', 2), inst('tm', 'taymay', 'Tay máy', 3, {}, { pb: 150 })],
+    wires: [W('pin:nap', 'o', 'bc', 'chay', 'bool'), W('p-nhip', 'o', 'bc', 'toc', 'num', '0.5'), W('bc', 'toi', 'cq', 'toi', 'bool'), W('cq', 'quet', 'tm', 'gap', 'bool'), W('tm', 'dat', 'pin:san', 'i', 'bool'), W('cq', 'ma', 'pin:ma', 'i', 'num', '3')] },
+  taymay: { name: 'Tay máy', lvl: 2, icon: 'arm', unit: 'tay máy', pins: [pin('gap', 'in', 'Gắp', 'bool'), pin('dat', 'out', 'Đã đặt', 'bool')],
+    params: [{ id: 'tg', name: 'Tốc độ gắp', unit: 'lần', kind: 'num', step: 0.25, def: 1 }],
+    nodes: [param('p-tg', 'tg', 0),
+      card('cb', 'brain', 'Chuỗi bước', 'Hạ · kẹp · xoay · nhả', 1, [['go', 'bool', 'Bắt đầu'], ['tg', 'num', 'Nhịp bước']], [['kep', 'bool', 'Kẹp'], ['vai', 'num', 'Góc vai'], ['khuyu', 'num', 'Góc khuỷu']]),
+      card('tn1', 'object', 'Thanh nối', 'Cánh tay trên', 1, [], [['vat', 'obj', 'Thanh']]),
+      card('tn2', 'object', 'Thanh nối', 'Cẳng tay', 1, [], [['vat', 'obj', 'Thanh']]),
+      card('kep', 'action', 'Tay kẹp', 'Gripper', 2, [['kep', 'bool', 'Kẹp']], [['nha', 'bool', 'Đã nhả']]),
+      card('k1', 'action', 'Khớp', 'Khớp vai', 2, [['goc', 'num', 'Góc'], ['tn', 'obj', 'Thanh']], []),
+      card('k2', 'action', 'Khớp', 'Khớp khuỷu', 2, [['goc', 'num', 'Góc'], ['tn', 'obj', 'Thanh']], [])],
+    wires: [W('pin:gap', 'o', 'cb', 'go', 'bool'), W('p-tg', 'o', 'cb', 'tg', 'num', '1.0'), W('cb', 'vai', 'k1', 'goc', 'num', '35°'), W('cb', 'khuyu', 'k2', 'goc', 'num', '-60°'), W('cb', 'kep', 'kep', 'kep', 'bool'), W('tn1', 'vat', 'k1', 'tn', 'obj'), W('tn2', 'vat', 'k2', 'tn', 'obj'), W('kep', 'nha', 'pin:dat', 'i', 'bool')] },
+  agv: { name: 'Xe AGV', lvl: 2, icon: 'agv', unit: 'xe', pins: [pin('cua', 'in', 'Cửa đích', 'num'), pin('tha', 'out', 'Đã thả', 'bool')],
+    params: [{ id: 'start', name: 'Vị trí xuất phát', kind: 'sel', opts: MOC, def: MOC[0] }, { id: 'color', name: 'Màu', kind: 'color', def: COLORS[0] }, { id: 'speed', name: 'Tốc độ', unit: 'm/s', kind: 'num', step: 0.1, def: 0.8 }],
+    nodes: [param('p-start', 'start', 0), param('p-color', 'color', 0),
+      card('nho', 'math', 'Nhớ số', 'Cửa đang giao', 1, [['gia', 'num', 'Giá trị']], [['so', 'num', 'Số nhớ']]),
+      card('than', 'object', 'Thân robot', 'Robot Chassis', 1, [['vt', 'obj', 'Vị trí đầu'], ['mau', 'obj', 'Màu']], [['self', 'obj', 'Đối tượng']]),
+      param('p-speed', 'speed', 1),
+      card('di', 'brain', 'Đi tới điểm', 'Theo Mốc sàn', 2, [['diem', 'num', 'Mốc số'], ['than', 'obj', 'Thân'], ['toc', 'num', 'Tốc độ']], [['trai', 'num', 'Bánh trái'], ['phai', 'num', 'Bánh phải'], ['toi', 'bool', 'Đã tới']]),
+      card('m1', 'action', 'Động cơ', 'Bánh trái', 3, [['cs', 'num', 'Công suất']], []),
+      card('m2', 'action', 'Động cơ', 'Bánh phải', 3, [['cs', 'num', 'Công suất']], []),
+      card('khay', 'action', 'Khớp', 'Khay nghiêng', 3, [['ng', 'bool', 'Nghiêng']], [['da', 'bool', 'Đã nghiêng']])],
+    wires: [W('pin:cua', 'o', 'nho', 'gia', 'num', '2'), W('p-start', 'o', 'than', 'vt', 'obj'), W('p-color', 'o', 'than', 'mau', 'obj'), W('nho', 'so', 'di', 'diem', 'num', '2'), W('than', 'self', 'di', 'than', 'obj'), W('p-speed', 'o', 'di', 'toc', 'num'),
+      W('di', 'trai', 'm1', 'cs', 'num', '0.80'), W('di', 'phai', 'm2', 'cs', 'num', '0.74'), W('di', 'toi', 'khay', 'ng', 'bool'), W('khay', 'da', 'pin:tha', 'i', 'bool')] },
+  cuatha: { name: 'Cửa thả', lvl: 2, icon: 'chute', unit: 'cửa', pins: [pin('xe', 'in', 'Xe tới', 'bool'), pin('nhan', 'out', 'Đã nhận', 'bool')],
+    params: [{ id: 'so', name: 'Số cửa', kind: 'num', step: 1, def: 1 }],
+    nodes: [card('vung', 'logic', 'Vùng', 'Miệng cửa', 1, [['bat', 'bool', 'Bật']], [['co', 'bool', 'Có kiện']]), card('pis', 'action', 'Piston', 'Gạt kiện', 2, [['day', 'bool', 'Đẩy']], [['da', 'bool', 'Đã đẩy']]), card('dem', 'math', 'Bộ đếm', 'Kiện của cửa', 2, [['len', 'bool', 'Đếm lên']], [['so', 'num', 'Số đếm']])],
+    wires: [W('pin:xe', 'o', 'vung', 'bat', 'bool'), W('vung', 'co', 'pis', 'day', 'bool'), W('vung', 'co', 'dem', 'len', 'bool'), W('pis', 'da', 'pin:nhan', 'i', 'bool')] },
+  bangchuyen: { name: 'Băng chuyền', lvl: 2, icon: 'belt', unit: 'băng', pins: [pin('chay', 'in', 'Chạy', 'bool'), pin('toc', 'in', 'Tốc độ', 'num'), pin('toi', 'out', 'Kiện tới', 'bool')],
+    nodes: [card('m', 'action', 'Động cơ', 'Kéo băng', 1, [['bat', 'bool', 'Bật'], ['cs', 'num', 'Công suất']], [['quay', 'bool', 'Đang quay']]), card('v', 'logic', 'Vùng', 'Cuối băng', 2, [['bat', 'bool', 'Bật']], [['co', 'bool', 'Có kiện']])],
+    wires: [W('pin:chay', 'o', 'm', 'bat', 'bool'), W('pin:toc', 'o', 'm', 'cs', 'num', '0.5'), W('m', 'quay', 'v', 'bat', 'bool'), W('v', 'co', 'pin:toi', 'i', 'bool')] },
+  canquet: { name: 'Cân / quét', lvl: 2, icon: 'scale', unit: 'máy', pins: [pin('toi', 'in', 'Kiện tới', 'bool'), pin('quet', 'out', 'Đã quét', 'bool'), pin('ma', 'out', 'Mã cửa', 'num')],
+    nodes: [card('can', 'input', 'Cân lực', 'Bàn cân', 1, [['do', 'bool', 'Đo']], [['luc', 'num', 'Lực (N)']]), card('ss', 'logic', 'So sánh', 'Lớn hơn 0', 2, [['a', 'num', 'Số A']], [['kq', 'bool', 'Kết quả']]), card('bg', 'math', 'Bảng giá trị', 'Cân nặng → cửa', 2, [['d', 'num', 'Tra số']], [['gt', 'num', 'Giá trị']])],
+    wires: [W('pin:toi', 'o', 'can', 'do', 'bool'), W('can', 'luc', 'ss', 'a', 'num', '11.8'), W('can', 'luc', 'bg', 'd', 'num'), W('ss', 'kq', 'pin:quet', 'i', 'bool'), W('bg', 'gt', 'pin:ma', 'i', 'num', '3')] },
+};
+const LV = { 4: 'Xưởng', 3: 'Trạm', 2: 'Mạch máy', 1: 'Linh kiện' };
+const TYV = { bool: 'Đúng/Sai', num: 'Số', obj: 'Vật thể' };
+const PROPS = { 'Khớp': [['Góc nhỏ nhất', '-90'], ['Góc lớn nhất', '90'], ['Tốc độ quay', '60']], 'Động cơ': [['Tốc độ tối đa', '120'], ['Lực kéo', '30']], 'Tay kẹp': [['Lực kẹp', '12'], ['Độ mở', '0.08']], 'Chuỗi bước': [['Số bước', '4'], ['Lặp lại', 'Không']],
+  'Đi tới điểm': [['Sai số cho phép', '0.05'], ['Giảm tốc khi gần', 'Có']], 'Nhớ số': [['Giá trị đầu', '0']], 'Thân robot': [['Khối lượng', '2.0'], ['Rộng', '0.4']], 'Bộ điều phối': [['Cách chọn xe', 'Xe rảnh gần nhất']], 'Hẹn giờ': [['Chu kỳ (giây)', '3']], 'Bộ đếm': [['Bắt đầu từ', '0']] };
+
+/* ============ state ============ */
+const S = { th: 'light', mode: 'hs', look: 'b', run: false, path: [{ t: 'xuong', name: 'Xưởng' }], sel: null, tab: 'set', bench: false, lay: 'left', tick: 0, count: 12, bv: {}, bp: {}, zoom: 1 };
+let B = { x: 30, tilt: 0, p: 0, load: 1, drops: {} }, lastOut = '';
+const $ = (s, r = document) => r.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const tip = () => S.path[S.path.length - 1];
+const scopeEntry = () => [...S.path].reverse().find((p) => p.t);
+const curId = () => scopeEntry().t, cur = () => T[curId()];
+const pieceView = () => !!tip().piece;
+const level = () => (pieceView() ? 1 : cur().lvl);
+const node = (id) => cur().nodes.find((n) => n.id === id);
+const instances = (tid) => Object.values(T).flatMap((t) => t.nodes.filter((n) => n.k === 'inst' && n.type === tid));
+const setting = (n, p) => (n.set && n.set[p.id] !== undefined ? n.set[p.id] : p.def);
+const unitText = (tid) => { const c = instances(tid).length, t = T[tid]; return c > 1 ? `Sửa mạch ${t.name} sẽ đổi cả ${c} ${t.unit}` : `Mạch ${t.name} đang dùng ở ${c} nơi`; };
+const act = () => { const k = S.tick % 8; return [k + 1, ((k + 3) % 8) + 1]; };
+function status(n) {
+  if (!S.run) return { on: 0, txt: 'Đang dừng' };
+  if (curId() === 'xuong') {
+    const a = /^agv(\d+)/.exec(n.id), c = /^cua(\d+)/.exec(n.id);
+    if (a) return act().includes(+a[1]) ? { on: 1, txt: 'Đang chở' } : { on: 0, txt: 'Chờ lệnh' };
+    if (c) return act().some((i) => CH[i - 1] === +c[1]) ? { on: 1, txt: 'Đang nhận' } : { on: 0, txt: 'Chờ xe' };
+  }
+  return { on: 1, txt: 'Đang chạy' };
+}
+const benchActive = () => Object.values(S.bv).some((v) => v);
+function isLive(w) {
+  if (S.bench) { const m = /^pin:(.+)/.exec(w.t[0]); const o = benchOut(); return m && m[1] in o ? !!o[m[1]] : benchActive(); }
+  if (!S.run) return false;
+  if (curId() !== 'xuong') return !!scopeEntry().inst;
+  const A = act(), fa = /^agv(\d+)/.exec(w.f[0]), ta = /^agv(\d+)/.exec(w.t[0]), fc = /^cua(\d+)/.exec(w.f[0]);
+  if (ta) return A.includes(+ta[1]);
+  if (fa) return A.includes(+fa[1]);
+  if (fc) return A.some((i) => CH[i - 1] === +fc[1]);
+  return true;
+}
+
+/* ============ pieces of HTML ============ */
+const ptRow = (dir, id, ty, label, val) => `<div class="pt ${dir} t-${ty}" data-p="${id}"><i class="dot"></i><span>${esc(label)}</span>${val ? `<em class="val" data-val="${val}">${S[val] ?? ''}</em>` : ''}</div>`;
+function cardHTML(n) {
+  return `<div class="nd${S.sel === n.id ? ' sel' : ''}" data-id="${n.id}" data-col="${n.col}" data-k="card" style="--cc:var(--c-${n.cat});--ci:var(--ci-${n.cat});${n.w ? `width:${n.w}px` : ''}" title="Bấm đúp để xem linh kiện này">
+    <div class="nd-h">${tile(n.cat)}<span class="nm"><b>${n.vi}</b><i>${n.sub}</i></span></div>
+    <div class="nd-b">${n.ins.map((p) => ptRow('in', ...p)).join('')}${n.outs.map((p) => ptRow('out', ...p)).join('')}</div></div>`;
+}
+function blockHTML(n, stat) {
+  const t = T[n.type], ins = t.pins.filter((p) => p.dir === 'in'), outs = t.pins.filter((p) => p.dir === 'out'), st = stat ? { on: 0, txt: 'Nhìn từ ngoài' } : status(n);
+  const col = (t.params || []).find((p) => p.kind === 'color');
+  return `<div class="mb${stat ? ' static' : ''}${S.sel === n.id ? ' sel' : ''}" ${stat ? '' : `data-id="${n.id}" data-col="${n.col}" data-k="inst"`} ${n.pb ? `data-pb="${n.pb}"` : ''} title="${stat ? '' : 'Bấm để chọn · bấm đúp để mở bên trong'}">
+    <div class="mb-h"><span class="mb-ic">${ic(t.icon)}${col && !stat ? `<u class="mb-col" style="background:${setting(n, col)}"></u>` : ''}</span><span class="nm"><b>${esc(n.name)}</b><i><u class="led${st.on ? ' on' : ''}"></u><span class="stt">${st.txt}</span></i></span>${stat ? '' : `<button class="mb-open" data-act="open" data-id="${n.id}" aria-label="Mở ${esc(n.name)}">Mở${ic('chevR')}</button>`}</div>
+    <div class="mb-p"><div class="mb-in">${ins.map((p) => ptRow('in', p.id, p.ty, p.name)).join('')}</div><div class="mb-out">${outs.map((p) => ptRow('out', p.id, p.ty, p.name)).join('')}</div></div></div>`;
+}
+function pinHTML(p, i, n) {
+  const isIn = p.dir === 'in', side = isIn ? 'out' : 'in';
+  const tools = S.bench ? '' : `<span class="pin-tools"><button data-act="pinmv" data-p="${p.id}" data-d="-1" title="Đưa lên trên" aria-label="Đưa chân lên trên" ${i === 0 ? 'disabled' : ''}>${ic('chevU')}</button><button data-act="pinmv" data-p="${p.id}" data-d="1" title="Đưa xuống dưới" aria-label="Đưa chân xuống dưới" ${i === n - 1 ? 'disabled' : ''}>${ic('chevD')}</button><button data-act="pindel" data-p="${p.id}" title="Xoá chân này" aria-label="Xoá chân">${ic('x')}</button></span>`;
+  const body = S.bench ? `<span class="pin-nm">${esc(p.name)}</span><em class="val" data-pv="${p.id}">–</em>`
+    : `<input class="pin-name" data-p="${p.id}" value="${esc(p.name)}" maxlength="16" aria-label="Tên chân" title="Bấm để đổi tên chân"><button class="pin-ty" data-act="pinty" data-p="${p.id}" title="Bấm để đổi kiểu: Đúng/Sai, Số, Vật thể">${TYV[p.ty]}</button>`;
+  return `<div class="pin ${p.dir}" data-id="pin:${p.id}" data-col="${isIn ? 0 : 99}"><div class="pin-h"><b>${isIn ? 'Chân vào' : 'Chân ra'} ${i + 1}</b>${tools}</div><div class="pin-b pt ${side} t-${p.ty}" data-p="${isIn ? 'o' : 'i'}"><i class="dot"></i>${body}</div></div>`;
+}
+function paramHTML(n) {
+  const p = cur().params.find((q) => q.id === n.pid), ty = p.kind === 'num' ? 'num' : 'obj';
+  const v = p.kind === 'num' ? `<em class="val">${p.def}${p.unit ? ' ' + p.unit : ''}</em>` : '';
+  return `<div class="pin param" data-id="${n.id}" data-col="${n.col}" title="Thông số mở: hiện ra ở bên ngoài, mỗi bản sao chỉnh riêng"><div class="pin-h"><b>Thông số mở</b></div><div class="pin-b pt out t-${ty}" data-p="o"><i class="dot"></i>${v}<span class="pin-nm">${p.name}</span></div></div>`;
+}
+function worldHTML() {
+  const t = cur();
+  if (pieceView()) return cardHTML({ ...node(tip().piece), col: 0 });
+  const ins = t.pins.filter((p) => p.dir === 'in'), outs = t.pins.filter((p) => p.dir === 'out');
+  const edge = t.lvl < 4;
+  return (edge ? ins.map((p, i) => pinHTML(p, i, ins.length)).join('') + (S.bench ? '' : `<button class="addpin" data-id="add:in" data-col="0" data-act="pinadd" data-d="in">${ic('plus')}Thêm chân vào</button>`) : '')
+    + t.nodes.map((n) => (n.k === 'inst' ? blockHTML(n) : n.k === 'param' ? paramHTML(n) : cardHTML(n))).join('')
+    + (edge ? outs.map((p, i) => pinHTML(p, i, outs.length)).join('') + (S.bench ? '' : `<button class="addpin" data-id="add:out" data-col="99" data-act="pinadd" data-d="out">${ic('plus')}Thêm chân ra</button>`) : '');
+}
+function scopeHTML() {
+  const e = scopeEntry(), t = cur();
+  if (pieceView() || S.bench) return '';
+  if (t.lvl === 4) return `<div class="ov scope low">${ic('info')}<span>Bấm một khối để xem cài đặt. Bấm đúp hoặc nút “Mở” để vào bên trong.</span></div>`;
+  const live = S.run && !S.bench ? (e.inst ? `<span class="livet"><i></i>Đang chạy: dòng điện của ${esc(e.name)}</span>` : `<span>Vào từ một bản sao để xem dòng điện của nó.</span>`) : '';
+  return `<div class="ov scope">${ic('info')}<span>Bạn đang ở trong <b>${esc(e.name)}</b>. ${unitText(e.t)}.</span>${live}</div>`;
+}
+const seg = (k, opts, cls = '') => `<span class="seg ${cls}" role="group">${opts.map(([v, l]) => `<button data-act="set" data-k="${k}" data-v="${v}" aria-pressed="${S[k] === v}">${l}</button>`).join('')}</span>`;
+function topHTML() {
+  const t = THEME[S.th];
+  return `<header class="tb"><div class="tb-g"><span class="brand">${LOGO(t)}Xưởng Nối</span><span class="bname">Xưởng phân loại bưu kiện</span></div>
+    <div class="tb-g"><div class="run"><button class="rb ${S.run ? 'stop' : 'go'}" data-act="run">${S.run ? ic('stop', 1) + 'Dừng' : ic('play', 1) + 'Chạy'}</button><span class="rstate${S.run ? ' on' : ''}"><i></i>${S.run ? 'Xưởng đang chạy' : 'Xưởng đang dừng'}</span></div></div>
+    <div class="tb-g"><span class="lab">Chế độ</span>${seg('mode', [['hs', 'Học sinh'], ['gv', 'Giáo viên']])}<span class="lab">Giao diện</span>${seg('th', [['light', 'Xám dịu'], ['dark', 'Tối']])}</div></header>`;
+}
+function barHTML() {
+  const cr = S.path.map((p, i) => (i === S.path.length - 1 ? `<b class="cr cur" aria-current="page">${esc(p.name)}</b>` : `<button class="cr" data-act="goto" data-i="${i}">${esc(p.name)}</button>`)).join('<span class="sep">›</span>');
+  const lv = level(), can = !pieceView() && cur().lvl < 4;
+  return `<div class="bar"><nav class="crumb" aria-label="Đường dẫn bảng mạch">${cr}</nav>${S.path.length > 1 ? `<button class="back" data-act="up" title="Quay ra một tầng (phím Esc)">${ic('chevL')}Quay ra</button>` : ''}
+    <span class="lvl" title="Bạn đang ở tầng nào trong 4 tầng"><span class="st">${[4, 3, 2, 1].map((n) => `<i class="${n === lv ? 'on' : ''}"></i>`).join('')}</span>Tầng ${lv} · ${LV[lv]}</span><span class="sp"></span>
+    <span class="lab">Kiểu khối</span>${seg('look', [['a', 'A · Bo mạch'], ['b', 'B · Thẻ thiết bị'], ['c', 'C · Chip gọn']], 'p')}
+    ${can && !S.bench ? `<button class="bbtn" data-act="bench">${ic('bench')}Chạy thử máy này</button>` : ''}</div>`;
+}
+
+/* side panel */
+function fieldHTML(n, p) {
+  const v = setting(n, p), a = `data-n="${n.id}" data-p="${p.id}"`;
+  if (p.kind === 'num') return `<div class="fld"><span class="lb">${p.name}${p.unit ? ` <small>(${p.unit})</small>` : ''}</span><span class="stp"><button data-act="step" ${a} data-d="-1" aria-label="Giảm ${p.name}">${ic('minus')}</button><b>${p.step < 1 ? (+v).toFixed(p.step < 0.1 ? 2 : 1) : v}</b><button data-act="step" ${a} data-d="1" aria-label="Tăng ${p.name}">${ic('plus')}</button></span></div>`;
+  if (p.kind === 'sel') return `<div class="fld"><span class="lb">${p.name}</span><button class="sel-f" data-act="cyc" ${a} title="Bấm để đổi">${v}${ic('chevD')}</button></div>`;
+  return `<div class="fld col"><span class="lb">${p.name}</span><span class="sws">${COLORS.map((c) => `<button class="swc" data-act="col" ${a} data-v="${c}" aria-pressed="${c === v}" aria-label="Màu ${c}"><i style="background:${c}"></i></button>`).join('')}</span></div>`;
+}
+function sideBody() {
+  if (S.tab === 'lib') return libHTML();
+  const t = cur(), n = pieceView() ? node(tip().piece) : S.sel && node(S.sel);
+  if (n && n.k === 'inst') {
+    const ty = T[n.type], all = instances(n.type), idx = all.indexOf(n) + 1;
+    return `<div class="i-head"><span class="mb-ic">${ic(ty.icon)}</span><span><b>${esc(n.name)}</b><small>Bản sao ${idx}/${all.length} của mạch ${ty.name}</small></span></div>
+      <div class="sec"><div class="sec-h">Thông số mở · chỉ đổi riêng ${esc(n.name)}</div>${(ty.params || []).map((p) => fieldHTML(n, p)).join('') || '<p class="i-desc" style="margin:4px 0">Mạch này chưa mở thông số nào ra ngoài.</p>'}</div>
+      <div class="note">${ic('info')}<span>${unitText(n.type)}.</span></div>
+      <div class="acts"><button class="abtn pri" data-act="open" data-id="${n.id}">Mở bảng mạch${ic('chevR')}</button><button class="abtn" data-act="openbench" data-id="${n.id}">${ic('bench')}Chạy thử máy này</button></div>`;
+  }
+  if (n && n.k === 'card') {
+    const pr = PROPS[n.vi] || [['Tên', n.sub]];
+    return `<div class="i-head" style="--cc:var(--c-${n.cat});--ci:var(--ci-${n.cat})">${tile(n.cat)}<span><b>${n.vi}</b><small>${n.sub} · Tầng 1 · Linh kiện</small></span></div>
+      <p class="i-desc">Linh kiện là mảnh ghép có sẵn, tầng thấp nhất. Không mở sâu hơn được.</p>
+      <div class="sec"><div class="sec-h">Thuộc tính</div>${pr.map(([k, v], i) => `<div class="fld"><span class="lb">${k}</span><span class="sel-f">${v}</span></div>${t.lvl < 4 ? `<div class="fld" style="min-height:0;padding-bottom:6px"><span class="lb"><small>Thông số mở (cho chỉnh từ bên ngoài)</small></span><button class="sw-b" role="switch" data-act="sw" aria-checked="${i === 0 && /Khay|Bánh|Theo/.test(n.sub) ? 'true' : 'false'}" aria-label="Mở ${k} ra ngoài"><span class="sw-t"></span></button></div>` : ''}`).join('')}</div>
+      ${pieceView() ? '' : `<div class="acts"><button class="abtn" data-act="open" data-id="${n.id}">Xem linh kiện này${ic('chevR')}</button></div>`}`;
+  }
+  if (t.lvl === 4) {
+    const c = t.nodes.filter((x) => x.k === 'inst').length;
+    return `<div class="i-head"><span class="mb-ic">${ic('factory')}</span><span><b>Xưởng phân loại</b><small>Tầng 4 · bảng cao nhất</small></span></div>
+      <p class="i-desc">Bảng xưởng chỉ có khối máy và vài mảnh luật. Mỗi khối máy là một bảng mạch nhỏ hơn ở bên trong.</p>
+      <div class="sec"><div class="sec-h">Trên bảng này</div><ul class="plist"><li>Khối máy<em>${c}</em></li><li>Mảnh luật (Hẹn giờ, Bộ điều phối, Bộ đếm)<em>${t.nodes.length - c}</em></li><li>Dây nối<em>${t.wires.length}</em></li></ul></div>
+      <div class="note">${ic('info')}<span>Chọn “Xe AGV 3” để xem thông số riêng của xe đó.</span></div>`;
+  }
+  const ins = t.pins.filter((p) => p.dir === 'in'), outs = t.pins.filter((p) => p.dir === 'out');
+  return `<div class="i-head"><span class="mb-ic">${ic(t.icon)}</span><span><b>Mạch ${t.name}</b><small>Tầng ${t.lvl} · ${LV[t.lvl]} · dùng ở ${instances(curId()).length} nơi</small></span></div>
+    <div class="sec"><div class="sec-h">Nhìn từ bên ngoài</div><div class="pv-box" id="pv">${blockHTML({ id: '__pv', type: curId(), name: t.name }, true)}</div><p class="i-desc" style="margin:6px 0 2px">Đổi tên hoặc thêm chân ở mép bảng, khối bên ngoài đổi theo ngay.</p></div>
+    <div class="sec"><div class="sec-h">Chân của mạch</div><ul class="plist" id="plist">${[...ins, ...outs].map((p) => `<li class="t-${p.ty}"><i class="dot"></i>${esc(p.name)}<em>${p.dir === 'in' ? 'vào' : 'ra'} · ${TYV[p.ty]}</em></li>`).join('') || '<li>Chưa có chân nào</li>'}</ul></div>
+    <div class="sec"><div class="sec-h">Thông số mở</div><ul class="plist">${(t.params || []).map((p) => `<li>${p.name}<em>${p.unit || (p.kind === 'color' ? 'màu' : 'chọn')}</em></li>`).join('') || '<li>Chưa mở thông số nào</li>'}</ul></div>
+    <div class="note">${ic('info')}<span>${unitText(curId())}.</span></div>`;
+}
+function libHTML() {
+  const ids = ['agv', 'taymay', 'tramnap', 'cuatha', 'bangchuyen', 'canquet'];
+  return `<div class="i-head"><span class="mb-ic">${ic('lib')}</span><span><b>Thư viện bảng mạch</b><small>${ids.length} kiểu mạch trong tệp này</small></span></div>
+    <p class="i-desc">Mỗi kiểu thiết kế một lần, đặt được nhiều bản. Kéo một kiểu ra bảng, hoặc bấm “Đặt thêm”.</p>
+    ${ids.map((id) => { const t = T[id], i = t.pins.filter((p) => p.dir === 'in').length; return `<div class="lib-it" draggable="true" data-t="${id}"><span class="mb-ic">${ic(t.icon)}</span><span><b>${t.name}</b><small>Tầng ${t.lvl} · ${i} vào, ${t.pins.length - i} ra</small></span><span class="cnt" title="Số bản sao đang dùng">×${instances(id).length}</span><span class="row2"><button class="abtn" data-act="place" data-t="${id}">${ic('plus')}Đặt thêm</button><button class="abtn" data-act="libopen" data-t="${id}">Mở${ic('chevR')}</button></span></div>`; }).join('')}
+    <div class="acts"><button class="abtn" data-act="mock" data-m="Xuất kiểu mạch ra tệp">Xuất…</button><button class="abtn" data-act="mock" data-m="Nhập kiểu mạch từ tệp">Nhập…</button><button class="abtn" data-act="mock" data-m="Tạo kiểu mạch mới">${ic('plus')}Mạch mới</button></div>`;
+}
+const sideHTML = () => `<aside class="side"><div class="tabs" role="tablist"><button class="tab" role="tab" data-act="set" data-k="tab" data-v="set" aria-selected="${S.tab === 'set'}">Cài đặt</button><button class="tab" role="tab" data-act="set" data-k="tab" data-v="lib" aria-selected="${S.tab === 'lib'}">Thư viện bảng mạch</button></div><div class="side-b" id="sideb">${sideBody()}</div></aside>`;
+
+/* bench */
+function benchPinsHTML() {
+  const t = cur(), ins = t.pins.filter((p) => p.dir === 'in'), outs = t.pins.filter((p) => p.dir === 'out'), nums = (t.params || []).filter((p) => p.kind === 'num');
+  const inRow = (p) => { const v = S.bv[p.id] || 0, lb = `<span class="lb t-${p.ty}"><i class="dot"></i>${esc(p.name)}</span>`;
+    if (p.ty === 'bool') return `<div class="fld">${lb}<button class="sw-b" role="switch" data-act="bsw" data-p="${p.id}" aria-checked="${!!v}" aria-label="${esc(p.name)}">${v ? 'Bật' : 'Tắt'}<span class="sw-t"></span></button></div>`;
+    if (p.ty === 'num') return `<div class="fld">${lb}<span class="stp"><button data-act="bnum" data-p="${p.id}" data-d="-1" aria-label="Giảm">${ic('minus')}</button><b>${v}</b><button data-act="bnum" data-p="${p.id}" data-d="1" aria-label="Tăng">${ic('plus')}</button></span></div>`;
+    return `<div class="fld">${lb}<span class="sel-f">Kiện mẫu</span></div>`; };
+  return `<div class="bpins"><div class="bgrp"><h4>Chân vào <small>· bạn điều khiển bằng tay</small></h4>${ins.map(inRow).join('') || '<div class="fld"><span class="lb">Mạch này chưa có chân vào</span></div>'}</div>
+    ${nums.length ? `<div class="bgrp"><h4>Thông số mở <small>· của bản thử</small></h4>${nums.map((p) => `<div class="fld"><span class="lb">${p.name}${p.unit ? ` <small>(${p.unit})</small>` : ''}</span><span class="stp"><button data-act="bpar" data-p="${p.id}" data-d="-1" aria-label="Giảm">${ic('minus')}</button><b>${(+(S.bp[p.id] ?? p.def)).toFixed(p.step < 1 ? 1 : 0)}</b><button data-act="bpar" data-p="${p.id}" data-d="1" aria-label="Tăng">${ic('plus')}</button></span></div>`).join('')}</div>` : ''}
+    <div class="bgrp"><h4>Chân ra <small>· đọc trực tiếp</small></h4>${outs.map((p) => `<div class="fld"><span class="lb t-${p.ty}"><i class="dot"></i>${esc(p.name)}</span><span class="bval t-${p.ty}" data-bo="${p.id}">–</span></div>`).join('')}</div></div>`;
+}
+const benchHTML = () => `<div class="bbar">${ic('bench')}<b>Bàn thử: ${esc(scopeEntry().name)}</b><span>Chỉ chạy riêng mạch này, không cần cả xưởng.</span><span class="sp"></span><span class="lab">Bố cục bàn thử</span>${seg('lay', [['left', 'Cột bên trái'], ['bottom', 'Dải bên dưới']], 'p')}<button class="bbtn ghost" data-act="breset">${ic('reset')}Đặt lại</button><button class="bbtn" data-act="bench">${ic('x')}Thoát bàn thử</button></div>
+  ${benchPinsHTML()}<div class="bsim"><div class="simh">Mô phỏng thử<span class="tagm">minh hoạ</span></div><div class="simv" id="simv"></div></div>`;
+
+/* ============ render, layout, wires ============ */
+function render() {
+  const app = $('#app'), t = THEME[S.th], cats = S.th === 'dark' ? CATS_BRIGHT : CATS_MID;
+  app.className = `ed m-${S.mode} look-${S.look}`;
+  Object.entries(t).forEach(([k, v]) => app.style.setProperty('--' + k, v));
+  Object.entries(cats).forEach(([k, v]) => { app.style.setProperty('--c-' + k, v); app.style.setProperty('--ci-' + k, inkOn(v)); });
+  app.innerHTML = `${topHTML()}${barHTML()}<div class="work${S.bench ? ' bench lay-' + S.lay : ''}">${S.bench ? benchHTML() : ''}<div class="board" id="board"><div class="world"><svg class="wires"></svg>${worldHTML()}<div class="chips"></div></div>${scopeHTML()}${pieceView() ? `<div class="ov piece-note"><b>Tầng 1 · Linh kiện.</b> Đây là mảnh ghép có sẵn, tầng thấp nhất. Thuộc tính của nó ở khung bên phải.</div>` : ''}</div>${S.bench ? '' : sideHTML()}</div>
+    <footer class="foot"><b>Bản xem trước – chưa phải sản phẩm</b><span class="lg t-bool"><i class="dot"></i>Đúng/Sai</span><span class="lg t-num"><i class="dot"></i>Số</span><span class="lg t-obj"><i class="dot"></i>Vật thể</span><span class="sp"></span><span id="zoomt"></span><span>Bấm đúp vào khối để mở · Esc để quay ra</span></footer>`;
+  layout(); lastOut = ''; if (S.bench) drawSim();
+}
+function layout() {
+  const b = $('#board'), w = $('.world', b), cols = {};
+  $$(':scope > [data-id]', w).forEach((e) => (cols[e.dataset.col] ??= []).push(e));
+  const keys = Object.keys(cols).map(Number).sort((x, y) => x - y), gy = cur().gy || (S.mode === 'hs' ? 14 : 10), gx = cur().gapx || 76;
+  const ch = keys.map((k) => cols[k].reduce((s, e) => s + e.offsetHeight + (+e.dataset.pb || 0) + gy, -gy)), H = Math.max(...ch);
+  let x = 0;
+  keys.forEach((k, i) => { const cw = Math.max(...cols[k].map((e) => e.offsetWidth)); let y = (H - ch[i]) / 2; cols[k].forEach((e) => { e.style.left = (k === 99 ? x + cw - e.offsetWidth : x) + 'px'; e.style.top = y + 'px'; y += e.offsetHeight + (+e.dataset.pb || 0) + gy; }); x += cw + gx; });
+  const Wd = x - gx, padT = pieceView() || S.bench || cur().lvl === 4 ? 20 : 58, pad = 26, bw = b.clientWidth, bh = b.clientHeight;
+  const s = Math.max(0.4, Math.min(pieceView() ? 1.5 : 1, (bw - pad * 2) / Wd, (bh - padT - pad) / H));
+  S.zoom = s;
+  w.style.transform = `translate(${Math.round((bw - Wd * s) / 2)}px,${Math.round(padT + (bh - padT - pad - H * s) / 2)}px) scale(${s})`;
+  $('#zoomt').textContent = `Thu phóng ${Math.round(s * 100)}%`;
+  drawWires();
+}
+function drawWires() {
+  const w = $('.world'), svg = $('.wires', w), chips = $('.chips', w);
+  if (pieceView()) { svg.innerHTML = ''; chips.innerHTML = ''; return; }
+  const at = (id, p) => { const d = w.querySelector(`[data-id="${id}"] [data-p="${p}"] .dot`); if (!d) return null; let x = d.offsetWidth / 2, y = d.offsetHeight / 2, e = d; while (e && e !== w) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return [x, y]; };
+  let s = '', c = '';
+  cur().wires.forEach((wr, i) => {
+    const a = at(...wr.f), z = at(...wr.t); if (!a || !z) return;
+    const dx = Math.max(36, Math.abs(z[0] - a[0]) * 0.45), d = `M${a[0]} ${a[1]}C${a[0] + dx} ${a[1]} ${z[0] - dx} ${z[1]} ${z[0]} ${z[1]}`;
+    s += `<g class="wg t-${wr.ty}" data-w="${i}"><path class="w-glow" d="${d}"/><path class="w-case" d="${d}"/><path class="w-core" d="${d}" id="w${i}"/><path class="w-flow" d="${d}"/><circle class="w-spark" r="4.5"><animateMotion dur="${1.5 + (i % 3) * 0.35}s" repeatCount="indefinite" path="${d}"/></circle></g>`;
+  });
+  svg.innerHTML = s;
+  cur().wires.forEach((wr, i) => { if (!wr.chip) return; const p = svg.querySelector('#w' + i); if (!p) return; const m = p.getPointAtLength(p.getTotalLength() * 0.5); c += `<span class="chip t-${wr.ty}" data-w="${i}" style="left:${m.x}px;top:${m.y}px">${wr.chip}</span>`; });
+  chips.innerHTML = c;
+  applyLive();
+}
+function applyLive() {
+  const ws = cur().wires;
+  $$('.world [data-w]').forEach((g) => g.classList.toggle('live', isLive(ws[+g.dataset.w]) && !(S.bench && g.classList.contains('chip'))));
+  $$('.world .mb[data-id]').forEach((el) => { const st = status(node(el.dataset.id)); $('.led', el).classList.toggle('on', !!st.on); $('.stt', el).textContent = st.txt; });
+  $$('[data-val="count"]').forEach((e) => (e.textContent = S.count));
+}
+function refreshSide() { const s = $('#sideb'); if (s) s.innerHTML = sideBody(); }
+function toast(m) { $$('.toast').forEach((e) => e.remove()); const d = document.createElement('div'); d.className = 'toast'; d.setAttribute('role', 'status'); d.textContent = m; $('#app').append(d); setTimeout(() => d.remove(), 2600); }
+
+/* ============ bench simulation (schematic) ============ */
+const cx = (i) => 62 + (i - 1) * 50;
+function resetBench() { B = { x: 24, tilt: 0, p: 0, load: 1, drops: {} }; S.bv = {}; lastOut = ''; }
+function benchOut() {
+  const id = curId(), o = {};
+  cur().pins.filter((p) => p.dir === 'out').forEach((p) => { o[p.id] = p.added ? (p.ty === 'bool' ? false : 0) : id === 'agv' ? B.tilt >= 1 : id === 'taymay' ? B.p >= 0.7 : p.ty === 'bool' ? B.p >= 1 : B.p >= 0.6 ? 3 : 0; });
+  return o;
+}
+function stepSim(dt) {
+  const id = curId(), t = cur(), first = t.pins.find((p) => p.dir === 'in' && p.ty === 'bool');
+  if (id === 'agv') {
+    const v = S.bv.cua || 0, tx = v ? cx(v) : 24, sp = (S.bp.speed ?? 0.8) * 110, d = tx - B.x;
+    B.x += Math.sign(d) * Math.min(Math.abs(d), sp * dt);
+    if (v !== B.tv) { B.tv = v; if (v) { B.load = 1; B.tilt = 0; } }
+    const arr = v && Math.abs(tx - B.x) < 0.5;
+    if (arr && B.load) { B.tilt = Math.min(1, B.tilt + dt * 1.6); if (B.tilt >= 1) { B.load = 0; B.drops[v] = (B.drops[v] || 0) + 1; } }
+    if (!v) B.tilt = Math.max(0, B.tilt - dt * 3);
+    
+  } else { const on = first ? S.bv[first.id] : 0, k = id === 'taymay' ? 0.35 * (S.bp.tg ?? 1) : 0.4; B.p = on ? Math.min(1, B.p + dt * k) : 0; }
+}
+function drawSim() {
+  const el = $('#simv'); if (!el) return; const id = curId(); let s = '';
+  if (id === 'agv') {
+    const v = S.bv.cua || 0, py = 132 - B.tilt * 86;
+    s = [1, 2, 3, 4, 5, 6].map((i) => `<rect class="s-floor" x="${cx(i) - 17}" y="22" width="34" height="34" rx="4" ${i === v ? 'stroke-width="3"' : ''}/><text class="s-tx" x="${cx(i)}" y="16" text-anchor="middle">Cửa ${i}</text>${B.drops[i] ? `<rect x="${cx(i) - 7}" y="32" width="14" height="14" rx="2" fill="#b07a45" stroke="#6e4a26"/><text class="s-tx2" x="${cx(i)}" y="70" text-anchor="middle">${B.drops[i]} kiện</text>` : ''}<circle class="s-dk" cx="${cx(i)}" cy="170" r="3"/>`).join('')
+      + `<path class="s-ln" stroke-width="2" stroke-dasharray="5 5" d="M14 170H346"/><text class="s-tx2" x="8" y="192">Xuất phát</text><text class="s-tx2" x="350" y="192" text-anchor="end">Mốc sàn 1–6</text>
+        <g transform="translate(${B.x.toFixed(1)} 140)"><rect x="-20" y="-14" width="40" height="28" rx="5" fill="#e08a1e" stroke="#8a4f08" stroke-width="2"/><rect x="-24" y="-9" width="5" height="18" rx="2" fill="#2a2f38"/><rect x="19" y="-9" width="5" height="18" rx="2" fill="#2a2f38"/><rect x="-13" y="-10" width="26" height="${(20 - B.tilt * 10).toFixed(1)}" rx="2" fill="#fff3d6" stroke="#8a4f08"/></g>
+        ${B.load ? `<rect x="${(B.x - 7).toFixed(1)}" y="${(py + 1).toFixed(1)}" width="14" height="14" rx="2" fill="#b07a45" stroke="#6e4a26"/>` : ''}`;
+  } else if (id === 'taymay') {
+    const L = (a, b, t) => a + (b - a) * Math.min(1, Math.max(0, t)), p = B.p;
+    const pose = p < 0.3 ? [L(100, 130, p / 0.3), L(30, 220, p / 0.3)] : [L(130, 50, (p - 0.3) / 0.4), L(220, -40, (p - 0.3) / 0.4)];
+    const r = (d) => (d * Math.PI) / 180, bx = 180, by = 168, ex = bx + 70 * Math.cos(r(pose[0])), ey = by - 70 * Math.sin(r(pose[0])), tx = ex + 60 * Math.cos(r(pose[1])), ty = ey - 60 * Math.sin(r(pose[1]));
+    const box = p < 0.3 ? [89, 153] : p < 0.7 ? [tx, ty + 10] : [271, 153];
+    s = `<path class="s-ln" stroke-width="2" d="M20 178H340"/><rect class="s-floor" x="58" y="162" width="62" height="16" rx="3"/><text class="s-tx2" x="89" y="196" text-anchor="middle">Băng chuyền</text><rect class="s-floor" x="240" y="162" width="62" height="16" rx="3"/><text class="s-tx2" x="271" y="196" text-anchor="middle">Khay xe</text>
+      <rect x="${(box[0] - 9).toFixed(1)}" y="${(box[1] - 9).toFixed(1)}" width="18" height="18" rx="2" fill="#b07a45" stroke="#6e4a26"/>
+      <path class="s-st" stroke-width="9" d="M${bx} ${by}L${ex.toFixed(1)} ${ey.toFixed(1)}L${tx.toFixed(1)} ${ty.toFixed(1)}"/><rect class="s-dk" x="${bx - 16}" y="${by}" width="32" height="10" rx="2"/><circle class="s-ac" cx="${bx}" cy="${by}" r="7"/><circle class="s-ac" cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="6"/><circle class="s-ac" cx="${tx.toFixed(1)}" cy="${ty.toFixed(1)}" r="5"/>
+      <text class="s-tx" x="180" y="22" text-anchor="middle">${p === 0 ? 'Đang chờ lệnh Gắp' : p < 0.3 ? 'Hạ tay' : p < 0.7 ? 'Kẹp và xoay' : 'Đã đặt kiện'}</text>`;
+  } else {
+    const x = 50 + B.p * 230;
+    s = `<rect class="s-floor" x="36" y="120" width="260" height="18" rx="9"/><circle class="s-dk" cx="48" cy="129" r="5"/><circle class="s-dk" cx="284" cy="129" r="5"/><rect class="s-floor" x="296" y="112" width="44" height="52" rx="4"/><text class="s-tx2" x="318" y="180" text-anchor="middle">Đầu ra</text>
+      <rect x="${(x - 10).toFixed(1)}" y="${B.p >= 1 ? 128 : 100}" width="20" height="20" rx="2" fill="#b07a45" stroke="#6e4a26"/><text class="s-tx" x="180" y="40" text-anchor="middle">${B.p === 0 ? 'Đang chờ: bật chân vào để chạy' : B.p < 1 ? 'Kiện đang đi qua máy' : 'Xong: chân ra đã bật'}</text>`;
+  }
+  el.innerHTML = `<svg viewBox="0 0 360 204" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Hình minh hoạ máy đang chạy thử">${s}</svg>`;
+  const o = benchOut(), key = JSON.stringify([o, S.bv]);
+  if (key !== lastOut) {
+    lastOut = key;
+    Object.entries(o).forEach(([k, v]) => { const txt = typeof v === 'boolean' ? (v ? 'Bật' : 'Tắt') : String(v); $$(`[data-bo="${k}"]`).forEach((e) => { e.textContent = txt; e.classList.toggle('on', !!v); }); $$(`[data-pv="${k}"]`).forEach((e) => (e.textContent = txt)); });
+    cur().pins.filter((p) => p.dir === 'in').forEach((p) => $$(`[data-pv="${p.id}"]`).forEach((e) => (e.textContent = p.ty === 'bool' ? (S.bv[p.id] ? 'Bật' : 'Tắt') : S.bv[p.id] || 0)));
+    applyLive();
+  }
+}
+let lastTs = 0;
+function frame(ts) { requestAnimationFrame(frame); const dt = Math.min(0.05, (ts - lastTs) / 1000); lastTs = ts; if (S.bench) { stepSim(dt); drawSim(); } }
+requestAnimationFrame(frame);
+setInterval(() => { if (!S.run) return; S.tick++; if (S.tick % 2 === 0) S.count++; applyLive(); }, 1300);
+
+/* ============ actions ============ */
+function enter(id) { const n = node(id); if (!n) return; S.path.push(n.k === 'inst' ? { t: n.type, name: n.name, inst: n.id } : { piece: n.id, name: `${n.vi} · ${n.sub}` }); S.sel = null; S.bench = false; S.tab = 'set'; render(); }
+function up() { if (S.bench) { S.bench = false; render(); return; } if (S.path.length > 1) { const p = S.path.pop(); S.sel = p.inst || p.piece || null; render(); } }
+function select(id) { S.sel = id; $$('.world .sel').forEach((e) => e.classList.remove('sel')); if (id) { const e = $(`.world [data-id="${id}"]`); if (e) e.classList.add('sel'); } if (S.tab !== 'set') { S.tab = 'set'; $$('.tab').forEach((t) => t.setAttribute('aria-selected', t.dataset.v === 'set')); } refreshSide(); }
+const A = {
+  set: (d) => { S[d.k] = d.v; render(); },
+  run: () => { S.run = !S.run; render(); },
+  goto: (d) => { S.path.length = +d.i + 1; S.sel = null; S.bench = false; render(); },
+  up, open: (d) => enter(d.id),
+  openbench: (d) => { enter(d.id); resetBench(); S.bench = true; render(); },
+  bench: () => { S.bench = !S.bench; S.sel = null; resetBench(); render(); },
+  breset: () => { resetBench(); render(); },
+  bsw: (d) => { S.bv[d.p] = S.bv[d.p] ? 0 : 1; render(); },
+  bnum: (d) => { S.bv[d.p] = Math.max(0, Math.min(6, (S.bv[d.p] || 0) + +d.d)); render(); },
+  bpar: (d) => { const p = cur().params.find((q) => q.id === d.p); S.bp[d.p] = Math.max(p.step, +((S.bp[d.p] ?? p.def) + p.step * +d.d).toFixed(2)); render(); },
+  step: (d) => { const n = node(d.n), p = T[n.type].params.find((q) => q.id === d.p); n.set[d.p] = Math.max(p.step, +(+setting(n, p) + p.step * +d.d).toFixed(2)); refreshSide(); },
+  cyc: (d) => { const n = node(d.n), p = T[n.type].params.find((q) => q.id === d.p); n.set[d.p] = p.opts[(p.opts.indexOf(setting(n, p)) + 1) % p.opts.length]; refreshSide(); },
+  col: (d) => { const n = node(d.n); n.set[d.p] = d.v; render(); },
+  sw: (d, el) => el.setAttribute('aria-checked', el.getAttribute('aria-checked') !== 'true'),
+  pinadd: (d) => { const t = cur(), id = 'n' + Date.now().toString(36); t.pins.push({ ...pin(id, d.d, 'Chân mới', 'bool'), added: 1 }); render(); const i = $(`.pin-name[data-p="${id}"]`); if (i) { i.focus(); i.select(); } },
+  pindel: (d) => { const t = cur(); t.pins = t.pins.filter((p) => p.id !== d.p); t.wires = t.wires.filter((w) => w.f[0] !== 'pin:' + d.p && w.t[0] !== 'pin:' + d.p); render(); },
+  pinmv: (d) => { const t = cur(), p = t.pins.find((q) => q.id === d.p), same = t.pins.filter((q) => q.dir === p.dir), j = same.indexOf(p) + +d.d; if (j < 0 || j >= same.length) return; const a = t.pins.indexOf(p), b = t.pins.indexOf(same[j]); [t.pins[a], t.pins[b]] = [t.pins[b], t.pins[a]]; render(); },
+  pinty: (d) => { const t = cur(), p = t.pins.find((q) => q.id === d.p); p.ty = { bool: 'num', num: 'obj', obj: 'bool' }[p.ty]; t.wires.forEach((w) => { if (w.f[0] === 'pin:' + d.p || w.t[0] === 'pin:' + d.p) w.ty = p.ty; }); render(); },
+  libopen: (d) => { S.path = [S.path[0], { t: d.t, name: T[d.t].name + ' (kiểu mạch)' }]; S.sel = null; S.bench = false; S.tab = 'set'; render(); },
+  place: (d) => place(d.t),
+  mock: (d) => toast(`${d.m}: bản xem trước chưa làm phần này.`),
+};
+function place(tid) {
+  const t = cur(), ty = T[tid];
+  if (pieceView() || ty.lvl >= t.lvl) { toast(`Không đặt được ${ty.name} vào đây. Hãy ra bảng ở tầng cao hơn.`); return; }
+  const same = t.nodes.filter((n) => n.type === tid), c = instances(tid).length + 1, id = tid + '_' + Date.now().toString(36);
+  const n = inst(id, tid, `${ty.name} ${c}`, same.length ? same[0].col : Math.max(1, ...t.nodes.map((x) => x.col)), {});
+  t.nodes.splice(same.length ? t.nodes.indexOf(same[same.length - 1]) + 1 : t.nodes.length, 0, n);
+  S.sel = id; render(); toast(`Đã đặt thêm ${n.name}. Mạch ${ty.name} giờ có ${c} bản sao.`);
+}
+const app = $('#app');
+app.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]');
+  if (b && !b.disabled) { A[b.dataset.act](b.dataset, b); return; }
+  if (e.target.closest('input')) return;
+  const n = e.target.closest('.world .mb[data-id], .world .nd[data-id]');
+  if (n) select(n.dataset.id); else if (e.target.closest('.board') && S.sel) select(null);
+});
+app.addEventListener('dblclick', (e) => { if (e.target.closest('[data-act], input')) return; const n = e.target.closest('.world .mb[data-id], .world .nd[data-id]'); if (n && !pieceView()) enter(n.dataset.id); });
+app.addEventListener('input', (e) => {
+  const i = e.target.closest('.pin-name'); if (!i) return;
+  const p = cur().pins.find((q) => q.id === i.dataset.p); p.name = i.value; refreshSide();
+});
+app.addEventListener('keydown', (e) => { if (e.target.matches('.pin-name')) { e.stopPropagation(); if (e.key === 'Enter' || e.key === 'Escape') e.target.blur(); } });
+app.addEventListener('dragstart', (e) => { const it = e.target.closest('.lib-it'); if (it) e.dataTransfer.setData('text/plain', it.dataset.t); });
+app.addEventListener('dragover', (e) => { if (e.target.closest('.board')) e.preventDefault(); });
+app.addEventListener('drop', (e) => { if (!e.target.closest('.board')) return; e.preventDefault(); const t = e.dataTransfer.getData('text/plain'); if (T[t]) place(t); });
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') up(); });
+let rz; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(layout, 60); });
+render();
+</script>
+</body>
+</html>

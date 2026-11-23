@@ -1,0 +1,836 @@
+{
+  "format_version": 1,
+  "kind": "xuongnoi-circuit",
+  "root": "c1",
+  "circuits": [
+    {
+      "id": "c1",
+      "name": "Xe AGV",
+      "graph": {
+        "nodes": [
+          {
+            "id": "than",
+            "kind": "robot-body",
+            "params": {
+              "position": {
+                "x": -1,
+                "y": 0.8,
+                "z": -1
+              },
+              "heading": 0,
+              "length": 0.9,
+              "width": 0.7,
+              "height": 0.3,
+              "mass": 2,
+              "friction": 0.8,
+              "color": "#3b82f6",
+              "look": "classic",
+              "solid": "yes",
+              "maxPayload": 0,
+              "showDistance": "yes",
+              "showPayload": "no",
+              "pushObjects": "yes",
+              "showPush": "no",
+              "colliderSize": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "colliderOffset": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "gravityScale": 1
+            },
+            "pos": {
+              "x": 40,
+              "y": 40
+            }
+          },
+          {
+            "id": "dc-trai",
+            "kind": "motor",
+            "params": {
+              "side": -0.4,
+              "forward": 0,
+              "wheelRadius": 0.15,
+              "maxRpm": 120,
+              "accel": 400,
+              "maxForce": 30,
+              "brakeForce": 0,
+              "reverse": "normal",
+              "showTurns": "yes",
+              "showSlip": "yes"
+            },
+            "pos": {
+              "x": 1840,
+              "y": 40
+            }
+          },
+          {
+            "id": "dc-phai",
+            "kind": "motor",
+            "params": {
+              "side": 0.4,
+              "forward": 0,
+              "wheelRadius": 0.15,
+              "maxRpm": 120,
+              "accel": 400,
+              "maxForce": 30,
+              "brakeForce": 0,
+              "reverse": "normal",
+              "showTurns": "no",
+              "showSlip": "no"
+            },
+            "pos": {
+              "x": 1840,
+              "y": 380
+            }
+          },
+          {
+            "id": "buoc",
+            "kind": "sequence",
+            "params": {
+              "stepCount": 2,
+              "loop": "yes",
+              "showDone": "no"
+            },
+            "pos": {
+              "x": 400,
+              "y": 40
+            }
+          },
+          {
+            "id": "c-canh",
+            "kind": "const",
+            "params": {
+              "value": 2
+            },
+            "pos": {
+              "x": 40,
+              "y": 380
+            }
+          },
+          {
+            "id": "so-dai",
+            "kind": "compare",
+            "params": {
+              "op": "ge"
+            },
+            "pos": {
+              "x": 760,
+              "y": 40
+            }
+          },
+          {
+            "id": "di-xong",
+            "kind": "and",
+            "params": {},
+            "pos": {
+              "x": 1120,
+              "y": 40
+            }
+          },
+          {
+            "id": "giu-huong",
+            "kind": "counter",
+            "params": {
+              "start": 0,
+              "target": 1
+            },
+            "pos": {
+              "x": 400,
+              "y": 720
+            }
+          },
+          {
+            "id": "lech-goc",
+            "kind": "angle-diff",
+            "params": {},
+            "pos": {
+              "x": 760,
+              "y": 380
+            }
+          },
+          {
+            "id": "c-goc",
+            "kind": "const",
+            "params": {
+              "value": 89
+            },
+            "pos": {
+              "x": 40,
+              "y": 720
+            }
+          },
+          {
+            "id": "du-goc",
+            "kind": "compare",
+            "params": {
+              "op": "ge"
+            },
+            "pos": {
+              "x": 1120,
+              "y": 380
+            }
+          },
+          {
+            "id": "quay-xong",
+            "kind": "and",
+            "params": {},
+            "pos": {
+              "x": 1120,
+              "y": 1400
+            }
+          },
+          {
+            "id": "tiep",
+            "kind": "or",
+            "params": {},
+            "pos": {
+              "x": 1480,
+              "y": 40
+            }
+          },
+          {
+            "id": "tien",
+            "kind": "map-range",
+            "params": {
+              "inMin": 1,
+              "inMax": 2,
+              "outMin": 0.6,
+              "outMax": 0,
+              "clamp": "yes"
+            },
+            "pos": {
+              "x": 1480,
+              "y": 380
+            }
+          },
+          {
+            "id": "xoay",
+            "kind": "map-range",
+            "params": {
+              "inMin": 1,
+              "inMax": 2,
+              "outMin": 0,
+              "outMax": 0.1,
+              "clamp": "yes"
+            },
+            "pos": {
+              "x": 1480,
+              "y": 720
+            }
+          },
+          {
+            "id": "cong-trai",
+            "kind": "math",
+            "params": {
+              "op": "add"
+            },
+            "pos": {
+              "x": 1480,
+              "y": 1060
+            }
+          },
+          {
+            "id": "tru-phai",
+            "kind": "math",
+            "params": {
+              "op": "sub"
+            },
+            "pos": {
+              "x": 1480,
+              "y": 1400
+            }
+          },
+          {
+            "id": "dem-canh",
+            "kind": "counter",
+            "params": {
+              "start": 0,
+              "target": 4
+            },
+            "pos": {
+              "x": 400,
+              "y": 1400
+            }
+          },
+          {
+            "id": "chia-bon",
+            "kind": "math",
+            "params": {
+              "op": "div"
+            },
+            "pos": {
+              "x": 1840,
+              "y": 1060
+            }
+          },
+          {
+            "id": "c-bon",
+            "kind": "const",
+            "params": {
+              "value": 4
+            },
+            "pos": {
+              "x": 1840,
+              "y": 720
+            }
+          },
+          {
+            "id": "hien-vuong",
+            "kind": "show-number",
+            "params": {
+              "label": "Số hình vuông (4 cạnh = 1)",
+              "corner": "top-left"
+            },
+            "pos": {
+              "x": 400,
+              "y": 1740
+            }
+          },
+          {
+            "id": "hien-huong",
+            "kind": "show-number",
+            "params": {
+              "label": "Hướng (độ)",
+              "corner": "top-left"
+            },
+            "pos": {
+              "x": 1120,
+              "y": 1740
+            }
+          },
+          {
+            "id": "hien-vong",
+            "kind": "show-number",
+            "params": {
+              "label": "Vòng bánh trái",
+              "corner": "top-left"
+            },
+            "pos": {
+              "x": 1480,
+              "y": 1740
+            }
+          },
+          {
+            "id": "do-thi",
+            "kind": "signal-plot",
+            "params": {
+              "title": "Hướng robot (độ)",
+              "windowSeconds": 30,
+              "autoScale": "yes",
+              "min": -10,
+              "max": 10,
+              "labelA": "Hướng",
+              "labelB": "Tín hiệu 2",
+              "labelC": "Tín hiệu 3",
+              "colorA": "#5aa9ff",
+              "colorB": "#f7d046",
+              "colorC": "#f27ad0",
+              "legend": "yes",
+              "corner": "top-right",
+              "width": 260,
+              "height": 150
+            },
+            "pos": {
+              "x": 1840,
+              "y": 1740
+            }
+          },
+          {
+            "id": "chu-nay",
+            "kind": "show-text",
+            "params": {
+              "text": "Đang làm",
+              "color": "#15803d",
+              "corner": "bottom-left",
+              "lines": "Đang đi thẳng: đến khi quãng đường đủ 2 m\nĐang quay tại chỗ: đến khi hướng đổi 90 độ"
+            },
+            "pos": {
+              "x": 40,
+              "y": 2080
+            }
+          },
+          {
+            "id": "may-quay",
+            "kind": "camera",
+            "params": {
+              "mode": "follow",
+              "point": {
+                "x": 0,
+                "y": 0,
+                "z": 0
+              },
+              "zoom": 0.9,
+              "smoothness": 5,
+              "view": "tilted",
+              "shakeTime": 0.5,
+              "shakeStrength": 1
+            },
+            "pos": {
+              "x": 1120,
+              "y": 2080
+            }
+          },
+          {
+            "id": "hien-truot",
+            "kind": "show-number",
+            "params": {
+              "label": "Bánh trái trượt (m/s)",
+              "corner": "top-left"
+            },
+            "pos": {
+              "x": 40,
+              "y": 1060
+            }
+          }
+        ],
+        "wires": [
+          {
+            "id": "w1",
+            "from": {
+              "node": "than",
+              "port": "self"
+            },
+            "to": {
+              "node": "dc-trai",
+              "port": "body"
+            }
+          },
+          {
+            "id": "w2",
+            "from": {
+              "node": "than",
+              "port": "self"
+            },
+            "to": {
+              "node": "dc-phai",
+              "port": "body"
+            }
+          },
+          {
+            "id": "w3",
+            "from": {
+              "node": "than",
+              "port": "self"
+            },
+            "to": {
+              "node": "may-quay",
+              "port": "target"
+            }
+          },
+          {
+            "id": "w5",
+            "from": {
+              "node": "than",
+              "port": "distance"
+            },
+            "to": {
+              "node": "so-dai",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w6",
+            "from": {
+              "node": "c-canh",
+              "port": "value"
+            },
+            "to": {
+              "node": "so-dai",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w7",
+            "from": {
+              "node": "buoc",
+              "port": "step1"
+            },
+            "to": {
+              "node": "di-xong",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w8",
+            "from": {
+              "node": "so-dai",
+              "port": "out"
+            },
+            "to": {
+              "node": "di-xong",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w9",
+            "from": {
+              "node": "buoc",
+              "port": "step1"
+            },
+            "to": {
+              "node": "giu-huong",
+              "port": "set"
+            }
+          },
+          {
+            "id": "w10",
+            "from": {
+              "node": "than",
+              "port": "heading"
+            },
+            "to": {
+              "node": "giu-huong",
+              "port": "setAmount"
+            }
+          },
+          {
+            "id": "w11",
+            "from": {
+              "node": "than",
+              "port": "heading"
+            },
+            "to": {
+              "node": "lech-goc",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w12",
+            "from": {
+              "node": "giu-huong",
+              "port": "value"
+            },
+            "to": {
+              "node": "lech-goc",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w13",
+            "from": {
+              "node": "lech-goc",
+              "port": "diff"
+            },
+            "to": {
+              "node": "du-goc",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w14",
+            "from": {
+              "node": "c-goc",
+              "port": "value"
+            },
+            "to": {
+              "node": "du-goc",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w25",
+            "from": {
+              "node": "buoc",
+              "port": "step2"
+            },
+            "to": {
+              "node": "quay-xong",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w27",
+            "from": {
+              "node": "di-xong",
+              "port": "out"
+            },
+            "to": {
+              "node": "tiep",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w28",
+            "from": {
+              "node": "quay-xong",
+              "port": "out"
+            },
+            "to": {
+              "node": "tiep",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w29",
+            "from": {
+              "node": "tiep",
+              "port": "out"
+            },
+            "to": {
+              "node": "buoc",
+              "port": "next"
+            }
+          },
+          {
+            "id": "w30",
+            "from": {
+              "node": "buoc",
+              "port": "step2"
+            },
+            "to": {
+              "node": "than",
+              "port": "resetDistance"
+            }
+          },
+          {
+            "id": "w31",
+            "from": {
+              "node": "buoc",
+              "port": "index"
+            },
+            "to": {
+              "node": "tien",
+              "port": "value"
+            }
+          },
+          {
+            "id": "w32",
+            "from": {
+              "node": "buoc",
+              "port": "index"
+            },
+            "to": {
+              "node": "xoay",
+              "port": "value"
+            }
+          },
+          {
+            "id": "w33",
+            "from": {
+              "node": "tien",
+              "port": "value"
+            },
+            "to": {
+              "node": "cong-trai",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w34",
+            "from": {
+              "node": "xoay",
+              "port": "value"
+            },
+            "to": {
+              "node": "cong-trai",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w35",
+            "from": {
+              "node": "tien",
+              "port": "value"
+            },
+            "to": {
+              "node": "tru-phai",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w36",
+            "from": {
+              "node": "xoay",
+              "port": "value"
+            },
+            "to": {
+              "node": "tru-phai",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w37",
+            "from": {
+              "node": "cong-trai",
+              "port": "out"
+            },
+            "to": {
+              "node": "dc-trai",
+              "port": "power"
+            }
+          },
+          {
+            "id": "w38",
+            "from": {
+              "node": "tru-phai",
+              "port": "out"
+            },
+            "to": {
+              "node": "dc-phai",
+              "port": "power"
+            }
+          },
+          {
+            "id": "w39",
+            "from": {
+              "node": "di-xong",
+              "port": "out"
+            },
+            "to": {
+              "node": "dem-canh",
+              "port": "up"
+            }
+          },
+          {
+            "id": "w40",
+            "from": {
+              "node": "dem-canh",
+              "port": "value"
+            },
+            "to": {
+              "node": "chia-bon",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w41",
+            "from": {
+              "node": "c-bon",
+              "port": "value"
+            },
+            "to": {
+              "node": "chia-bon",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w43",
+            "from": {
+              "node": "chia-bon",
+              "port": "out"
+            },
+            "to": {
+              "node": "hien-vuong",
+              "port": "value"
+            }
+          },
+          {
+            "id": "w45",
+            "from": {
+              "node": "than",
+              "port": "heading"
+            },
+            "to": {
+              "node": "hien-huong",
+              "port": "value"
+            }
+          },
+          {
+            "id": "w46",
+            "from": {
+              "node": "dc-trai",
+              "port": "turns"
+            },
+            "to": {
+              "node": "hien-vong",
+              "port": "value"
+            }
+          },
+          {
+            "id": "w47",
+            "from": {
+              "node": "than",
+              "port": "heading"
+            },
+            "to": {
+              "node": "do-thi",
+              "port": "a"
+            }
+          },
+          {
+            "id": "w50",
+            "from": {
+              "node": "du-goc",
+              "port": "out"
+            },
+            "to": {
+              "node": "quay-xong",
+              "port": "b"
+            }
+          },
+          {
+            "id": "w51",
+            "from": {
+              "node": "buoc",
+              "port": "index"
+            },
+            "to": {
+              "node": "chu-nay",
+              "port": "line"
+            }
+          },
+          {
+            "id": "w53",
+            "from": {
+              "node": "dc-trai",
+              "port": "slipSpeed"
+            },
+            "to": {
+              "node": "hien-truot",
+              "port": "value"
+            }
+          }
+        ]
+      },
+      "pins": [
+        {
+          "id": "p1",
+          "label": "Bật",
+          "dir": "in",
+          "type": "bool",
+          "inner": {
+            "node": "may-quay",
+            "port": "on"
+          }
+        },
+        {
+          "id": "p2",
+          "label": "Số đếm",
+          "dir": "out",
+          "type": "number",
+          "inner": {
+            "node": "dem-canh",
+            "port": "value"
+          }
+        },
+        {
+          "id": "p3",
+          "label": "Quãng đường",
+          "dir": "out",
+          "type": "number",
+          "inner": {
+            "node": "than",
+            "port": "distance"
+          }
+        },
+        {
+          "id": "p4",
+          "label": "Hiện",
+          "dir": "in",
+          "type": "bool",
+          "inner": {
+            "node": "chu-nay",
+            "port": "show"
+          }
+        }
+      ],
+      "exposed": [],
+      "benchIds": []
+    }
+  ]
+}

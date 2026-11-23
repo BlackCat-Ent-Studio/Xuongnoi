@@ -1,0 +1,758 @@
+{
+ "a-light-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 16.49,
+   "text2": 8.22,
+   "text3": 5.68,
+   "text / card": 16.49,
+   "text2 / advBg": 7.72,
+   "text / bg": 14.56,
+   "chromeText": 16.49,
+   "chromeText2": 8.22,
+   "runInk / run": 5.08,
+   "accentInk / accent": 11.27,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 9.91,
+   "railInk / railBg": 16.49,
+   "accent (viền chọn)": 9.94,
+   "line2 (viền ô nhập)": 3.13,
+   "cardLine": 1.84,
+   "Đúng/Sai (viền dây)": 4.75,
+   "Số (viền dây)": 6.85,
+   "Vật thể (viền dây)": 6.62,
+   "Nhóm Đầu vào (đầu thẻ)": 13.95,
+   "Nhóm Logic (đầu thẻ)": 13.84,
+   "Nhóm Tính toán (đầu thẻ)": 14.28,
+   "Nhóm Vật thể (đầu thẻ)": 14.13,
+   "Nhóm Hành động (đầu thẻ)": 13,
+   "Nhóm Bộ não (đầu thẻ)": 13.72,
+   "Nhóm Kết quả (đầu thẻ)": 14.44
+  },
+  "minText": 5.08,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "a-light-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 16.49,
+   "text2": 8.22,
+   "text3": 5.68,
+   "text / card": 16.49,
+   "text2 / advBg": 7.72,
+   "text / bg": 14.56,
+   "chromeText": 16.49,
+   "chromeText2": 8.22,
+   "runInk / run": 5.08,
+   "accentInk / accent": 11.27,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 9.91,
+   "railInk / railBg": 16.49,
+   "accent (viền chọn)": 9.94,
+   "line2 (viền ô nhập)": 3.13,
+   "cardLine": 1.84,
+   "Đúng/Sai (viền dây)": 4.75,
+   "Số (viền dây)": 6.85,
+   "Vật thể (viền dây)": 6.62,
+   "Nhóm Đầu vào (đầu thẻ)": 13.95,
+   "Nhóm Logic (đầu thẻ)": 13.84,
+   "Nhóm Tính toán (đầu thẻ)": 14.28,
+   "Nhóm Vật thể (đầu thẻ)": 14.13,
+   "Nhóm Hành động (đầu thẻ)": 13,
+   "Nhóm Bộ não (đầu thẻ)": 13.72,
+   "Nhóm Kết quả (đầu thẻ)": 14.44
+  },
+  "minText": 5.08,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "a-dark-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.25,
+   "text2": 8.35,
+   "text3": 6.01,
+   "text / card": 13.15,
+   "text2 / advBg": 8.26,
+   "text / bg": 15.43,
+   "chromeText": 14.02,
+   "chromeText2": 8.07,
+   "runInk / run": 7.87,
+   "accentInk / accent": 16.96,
+   "danger": 7.4,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.88,
+   "railInk / railBg": 14.02,
+   "accent (viền chọn)": 16.61,
+   "line2 (viền ô nhập)": 3.89,
+   "cardLine": 2.05,
+   "Đúng/Sai (viền dây)": 12.25,
+   "Số (viền dây)": 7.45,
+   "Vật thể (viền dây)": 7.38,
+   "Nhóm Đầu vào (đầu thẻ)": 9.46,
+   "Nhóm Logic (đầu thẻ)": 10.6,
+   "Nhóm Tính toán (đầu thẻ)": 9.06,
+   "Nhóm Vật thể (đầu thẻ)": 11.02,
+   "Nhóm Hành động (đầu thẻ)": 11.2,
+   "Nhóm Bộ não (đầu thẻ)": 9.73,
+   "Nhóm Kết quả (đầu thẻ)": 10.75
+  },
+  "minText": 6.01,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ },
+ "a-dark-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.25,
+   "text2": 8.35,
+   "text3": 6.01,
+   "text / card": 13.15,
+   "text2 / advBg": 8.26,
+   "text / bg": 15.43,
+   "chromeText": 14.02,
+   "chromeText2": 8.07,
+   "runInk / run": 7.87,
+   "accentInk / accent": 16.96,
+   "danger": 7.4,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.88,
+   "railInk / railBg": 14.02,
+   "accent (viền chọn)": 16.61,
+   "line2 (viền ô nhập)": 3.89,
+   "cardLine": 2.05,
+   "Đúng/Sai (viền dây)": 12.25,
+   "Số (viền dây)": 7.45,
+   "Vật thể (viền dây)": 7.38,
+   "Nhóm Đầu vào (đầu thẻ)": 9.46,
+   "Nhóm Logic (đầu thẻ)": 10.6,
+   "Nhóm Tính toán (đầu thẻ)": 9.06,
+   "Nhóm Vật thể (đầu thẻ)": 11.02,
+   "Nhóm Hành động (đầu thẻ)": 11.2,
+   "Nhóm Bộ não (đầu thẻ)": 9.73,
+   "Nhóm Kết quả (đầu thẻ)": 10.75
+  },
+  "minText": 6.01,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ },
+ "b-light-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 16.49,
+   "text2": 8.22,
+   "text3": 5.68,
+   "text / card": 16.49,
+   "text2 / advBg": 7.72,
+   "text / bg": 13.66,
+   "chromeText": 16.49,
+   "chromeText2": 8.22,
+   "runInk / run": 5.08,
+   "accentInk / accent": 17.74,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 15.38,
+   "railInk / railBg": 16.49,
+   "accent (viền chọn)": 14.69,
+   "line2 (viền ô nhập)": 3.13,
+   "cardLine": 2.05,
+   "Đúng/Sai (viền dây)": 4.46,
+   "Số (viền dây)": 6.43,
+   "Vật thể (viền dây)": 6.21,
+   "Nhóm Đầu vào (đầu thẻ)": 15.1,
+   "Nhóm Logic (đầu thẻ)": 15.1,
+   "Nhóm Tính toán (đầu thẻ)": 15.1,
+   "Nhóm Vật thể (đầu thẻ)": 15.1,
+   "Nhóm Hành động (đầu thẻ)": 15.1,
+   "Nhóm Bộ não (đầu thẻ)": 15.1,
+   "Nhóm Kết quả (đầu thẻ)": 15.1
+  },
+  "minText": 5.08,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "b-light-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 16.49,
+   "text2": 8.22,
+   "text3": 5.68,
+   "text / card": 16.49,
+   "text2 / advBg": 7.72,
+   "text / bg": 13.66,
+   "chromeText": 16.49,
+   "chromeText2": 8.22,
+   "runInk / run": 5.08,
+   "accentInk / accent": 17.74,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 15.38,
+   "railInk / railBg": 16.49,
+   "accent (viền chọn)": 14.69,
+   "line2 (viền ô nhập)": 3.13,
+   "cardLine": 2.05,
+   "Đúng/Sai (viền dây)": 4.46,
+   "Số (viền dây)": 6.43,
+   "Vật thể (viền dây)": 6.21,
+   "Nhóm Đầu vào (đầu thẻ)": 15.1,
+   "Nhóm Logic (đầu thẻ)": 15.1,
+   "Nhóm Tính toán (đầu thẻ)": 15.1,
+   "Nhóm Vật thể (đầu thẻ)": 15.1,
+   "Nhóm Hành động (đầu thẻ)": 15.1,
+   "Nhóm Bộ não (đầu thẻ)": 15.1,
+   "Nhóm Kết quả (đầu thẻ)": 15.1
+  },
+  "minText": 5.08,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "b-dark-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.22,
+   "text2": 8.19,
+   "text3": 6.12,
+   "text / card": 13.52,
+   "text2 / advBg": 8.22,
+   "text / bg": 15.49,
+   "chromeText": 14.68,
+   "chromeText2": 8.45,
+   "runInk / run": 7.87,
+   "accentInk / accent": 16.96,
+   "danger": 7.51,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.99,
+   "railInk / railBg": 14.68,
+   "accent (viền chọn)": 16.96,
+   "line2 (viền ô nhập)": 3.78,
+   "cardLine": 2.11,
+   "Đúng/Sai (viền dây)": 12.51,
+   "Số (viền dây)": 7.61,
+   "Vật thể (viền dây)": 7.53,
+   "Nhóm Đầu vào (đầu thẻ)": 12.23,
+   "Nhóm Logic (đầu thẻ)": 12.23,
+   "Nhóm Tính toán (đầu thẻ)": 12.23,
+   "Nhóm Vật thể (đầu thẻ)": 12.23,
+   "Nhóm Hành động (đầu thẻ)": 12.23,
+   "Nhóm Bộ não (đầu thẻ)": 12.23,
+   "Nhóm Kết quả (đầu thẻ)": 12.23
+  },
+  "minText": 6.12,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ },
+ "b-dark-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.22,
+   "text2": 8.19,
+   "text3": 6.12,
+   "text / card": 13.52,
+   "text2 / advBg": 8.22,
+   "text / bg": 15.49,
+   "chromeText": 14.68,
+   "chromeText2": 8.45,
+   "runInk / run": 7.87,
+   "accentInk / accent": 16.96,
+   "danger": 7.51,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.99,
+   "railInk / railBg": 14.68,
+   "accent (viền chọn)": 16.96,
+   "line2 (viền ô nhập)": 3.78,
+   "cardLine": 2.11,
+   "Đúng/Sai (viền dây)": 12.51,
+   "Số (viền dây)": 7.61,
+   "Vật thể (viền dây)": 7.53,
+   "Nhóm Đầu vào (đầu thẻ)": 12.23,
+   "Nhóm Logic (đầu thẻ)": 12.23,
+   "Nhóm Tính toán (đầu thẻ)": 12.23,
+   "Nhóm Vật thể (đầu thẻ)": 12.23,
+   "Nhóm Hành động (đầu thẻ)": 12.23,
+   "Nhóm Bộ não (đầu thẻ)": 12.23,
+   "Nhóm Kết quả (đầu thẻ)": 12.23
+  },
+  "minText": 6.12,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ },
+ "c-light-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 15.79,
+   "text2": 7.77,
+   "text3": 5.63,
+   "text / card": 15.79,
+   "text2 / advBg": 7.25,
+   "text / bg": 13.97,
+   "chromeText": 14.26,
+   "chromeText2": 8.93,
+   "runInk / run": 5.08,
+   "accentInk / accent": 6,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 8.08,
+   "railInk / railBg": 14.26,
+   "accent (viền chọn)": 5.31,
+   "line2 (viền ô nhập)": 3.68,
+   "cardLine": 1.98,
+   "Đúng/Sai (viền dây)": 4.76,
+   "Số (viền dây)": 6.87,
+   "Vật thể (viền dây)": 6.63,
+   "Nhóm Đầu vào (đầu thẻ)": 4.51,
+   "Nhóm Logic (đầu thẻ)": 5.04,
+   "Nhóm Tính toán (đầu thẻ)": 5.38,
+   "Nhóm Vật thể (đầu thẻ)": 4.68,
+   "Nhóm Hành động (đầu thẻ)": 7.76,
+   "Nhóm Bộ não (đầu thẻ)": 6.04,
+   "Nhóm Kết quả (đầu thẻ)": 5.16
+  },
+  "minText": 4.51,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "c-light-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 15.79,
+   "text2": 7.77,
+   "text3": 5.63,
+   "text / card": 15.79,
+   "text2 / advBg": 7.25,
+   "text / bg": 13.97,
+   "chromeText": 14.26,
+   "chromeText2": 8.93,
+   "runInk / run": 5.08,
+   "accentInk / accent": 6,
+   "danger": 6.57,
+   "warn / warnBg": 6.6,
+   "learnInk / learnBg": 8.08,
+   "railInk / railBg": 14.26,
+   "accent (viền chọn)": 5.31,
+   "line2 (viền ô nhập)": 3.68,
+   "cardLine": 1.98,
+   "Đúng/Sai (viền dây)": 4.76,
+   "Số (viền dây)": 6.87,
+   "Vật thể (viền dây)": 6.63,
+   "Nhóm Đầu vào (đầu thẻ)": 4.51,
+   "Nhóm Logic (đầu thẻ)": 5.04,
+   "Nhóm Tính toán (đầu thẻ)": 5.38,
+   "Nhóm Vật thể (đầu thẻ)": 4.68,
+   "Nhóm Hành động (đầu thẻ)": 7.76,
+   "Nhóm Bộ não (đầu thẻ)": 6.04,
+   "Nhóm Kết quả (đầu thẻ)": 5.16
+  },
+  "minText": 4.51,
+  "cvdCatsPorts": {
+   "normal": [
+    23.2,
+    70.2
+   ],
+   "deut": [
+    14,
+    56.6
+   ],
+   "prot": [
+    15,
+    28.3
+   ]
+  },
+  "faults": []
+ },
+ "c-dark-hs": {
+  "desktop": {
+   "minF": 13,
+   "minH": 28
+  },
+  "tablet": {
+   "minF": 13,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 13,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 13,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.05,
+   "text2": 8.36,
+   "text3": 5.91,
+   "text / card": 13.04,
+   "text2 / advBg": 8.36,
+   "text / bg": 15.3,
+   "chromeText": 15.17,
+   "chromeText2": 8.73,
+   "runInk / run": 7.87,
+   "accentInk / accent": 8.97,
+   "danger": 7.15,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.13,
+   "railInk / railBg": 15.17,
+   "accent (viền chọn)": 9.94,
+   "line2 (viền ô nhập)": 4,
+   "cardLine": 2.1,
+   "Đúng/Sai (viền dây)": 11.91,
+   "Số (viền dây)": 7.24,
+   "Vật thể (viền dây)": 7.17,
+   "Nhóm Đầu vào (đầu thẻ)": 12.99,
+   "Nhóm Logic (đầu thẻ)": 7,
+   "Nhóm Tính toán (đầu thẻ)": 15.44,
+   "Nhóm Vật thể (đầu thẻ)": 6.29,
+   "Nhóm Hành động (đầu thẻ)": 5.63,
+   "Nhóm Bộ não (đầu thẻ)": 11.12,
+   "Nhóm Kết quả (đầu thẻ)": 6.21
+  },
+  "minText": 5.63,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ },
+ "c-dark-gv": {
+  "desktop": {
+   "minF": 12,
+   "minH": 24
+  },
+  "tablet": {
+   "minF": 12,
+   "minH": 44
+  },
+  "phone": {
+   "minF": 12,
+   "minH": 44
+  },
+  "puzzle": {
+   "minF": 12,
+   "minH": 44
+  },
+  "contrast": {
+   "text": 14.05,
+   "text2": 8.36,
+   "text3": 5.91,
+   "text / card": 13.04,
+   "text2 / advBg": 8.36,
+   "text / bg": 15.3,
+   "chromeText": 15.17,
+   "chromeText2": 8.73,
+   "runInk / run": 7.87,
+   "accentInk / accent": 8.97,
+   "danger": 7.15,
+   "warn / warnBg": 7.15,
+   "learnInk / learnBg": 11.13,
+   "railInk / railBg": 15.17,
+   "accent (viền chọn)": 9.94,
+   "line2 (viền ô nhập)": 4,
+   "cardLine": 2.1,
+   "Đúng/Sai (viền dây)": 11.91,
+   "Số (viền dây)": 7.24,
+   "Vật thể (viền dây)": 7.17,
+   "Nhóm Đầu vào (đầu thẻ)": 12.99,
+   "Nhóm Logic (đầu thẻ)": 7,
+   "Nhóm Tính toán (đầu thẻ)": 15.44,
+   "Nhóm Vật thể (đầu thẻ)": 6.29,
+   "Nhóm Hành động (đầu thẻ)": 5.63,
+   "Nhóm Bộ não (đầu thẻ)": 11.12,
+   "Nhóm Kết quả (đầu thẻ)": 6.21
+  },
+  "minText": 5.63,
+  "cvdCatsPorts": {
+   "normal": [
+    32.7,
+    60.6
+   ],
+   "deut": [
+    23.2,
+    34.9
+   ],
+   "prot": [
+    26.8,
+    14.4
+   ]
+  },
+  "faults": []
+ }
+}

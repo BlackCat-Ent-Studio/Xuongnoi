@@ -1,0 +1,37 @@
+// Screenshots of the puzzle mockup: start state, then the solved level (wires done + run).
+const { chromium } = await import('file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs');
+const dir = 'D:/workspace/GameBuilder/plans/ui-mockups/puzzle-phone/';
+const b = await chromium.launch();
+const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
+const logs = [];
+p.on('console', (m) => { if (['error', 'warning'].includes(m.type())) logs.push(m.text()); });
+p.on('pageerror', (e) => logs.push('pageerror: ' + e.message));
+await p.goto('file:///' + dir + 'bot-workshop-puzzle.html');
+await p.waitForTimeout(1200);
+const phone = p.locator('.phone');
+await phone.screenshot({ path: dir + 'shot-cards-start.png' });
+
+const port = (card, id) => p.locator(`.port[data-card="${card}"][data-p="${id}"]`);
+const join = async (a, b) => { await port(...a).click({ force: true }); await port(...b).click({ force: true }); };
+await p.click('.chip:has-text("Công tắc nhớ")');
+await join(['btn', 'self'], ['touch', 'b']);
+await port("touch", "on").click({ force: true });
+await phone.screenshot({ path: dir + 'shot-cards-picking.png' });
+await port("latch", "set").click({ force: true });
+await join(['latch', 'on'], ['door', 'open']);
+await p.waitForTimeout(300);
+await phone.screenshot({ path: dir + 'shot-cards-wired.png' });
+console.log('flow paths (edit):', await p.locator('.wire-flow').count());
+await p.click('#run');
+await p.waitForTimeout(1000);
+await phone.screenshot({ path: dir + 'shot-energy-1-before.png' });
+await p.waitForFunction(() => document.querySelector('.spark'), null, { timeout: 5000, polling: 'raf' });
+await phone.screenshot({ path: dir + 'shot-energy-2-spark.png' });
+await p.waitForTimeout(900);
+await phone.screenshot({ path: dir + 'shot-energy-3-latched.png' });
+console.log('live wires:', await p.locator('.wire.is-live').count(), 'dim:', await p.locator('.wire.is-dim').count(), 'hot cards:', await p.locator('.card.is-hot').count());
+await p.waitForTimeout(6000);
+await phone.screenshot({ path: dir + 'shot-cards-run.png' });
+console.log('win shown:', await p.locator('.win').count());
+console.log(logs.join('\n') || 'no console errors');
+await b.close();

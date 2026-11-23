@@ -1,0 +1,1504 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Nối · Mockup F: Chia đôi trực tiếp</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap&subset=vietnamese" rel="stylesheet">
+<!--
+  MOCKUP F "Chia đôi trực tiếp" (split live)
+  Ý tưởng: game bên trái, bảng nối bên phải, cùng lúc. Khi bấm Chơi, dây sáng lên và hiện giá trị,
+  để người mới thấy "nguyên nhân -> kết quả". Mọi chữ giao diện bằng tiếng Việt.
+  Ghi chú cho dev: xem các khối chú thích "DEV:" trong CSS/JS.
+-->
+<style>
+/* ---------- DEV: design tokens ---------- */
+:root{
+  --bg:#111214; --panel:#17181A; --panel-2:#1C1D20; --raised:#232427; --node:#1E1F22;
+  --line:#2A2C30; --line-2:#3A3D43;
+  --text:#ECEDEF; --text-2:#B9BDC4; --text-3:#9095A0;
+  --accent:#FFB020; --accent-hi:#FFC453; --accent-ink:#1F1600; --accent-soft:rgba(255,176,32,.14);
+  --danger:#FF7A6B; --danger-soft:rgba(255,122,107,.13); --ok:#4ADE80;
+  /* port TYPES: colour + shape (bool round, number diamond, object square) */
+  --t-bool:#4ADE80; --t-num:#60A5FA; --t-obj:#F472B6;
+  /* node CATEGORIES: muted, only on icon tile + header tint */
+  --c-input:#B4A5F5; --c-object:#5FD3C6; --c-rule:#D8C08A; --c-math:#A9B4C2; --c-output:#EFA48B;
+  --r-s:6px; --r-m:10px;
+  --font:"Be Vietnam Pro",system-ui,"Segoe UI",sans-serif; --mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+  --split:50%;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 var(--font);display:grid;grid-template-rows:48px minmax(0,1fr) 132px 26px;min-width:1024px;overflow:hidden;
+  -webkit-font-smoothing:antialiased; user-select:none}
+input,textarea,[contenteditable]{user-select:text}
+::selection{background:rgba(255,176,32,.35);color:#fff}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+*{scrollbar-width:thin;scrollbar-color:#3A3D43 transparent}
+svg.i{width:16px;height:16px;flex:none;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+kbd{font:500 11px/1 var(--mono);padding:3px 5px;border-radius:4px;background:var(--raised);border:1px solid var(--line-2);color:var(--text-2);white-space:nowrap}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- Top bar: one row, never wraps ---------- */
+.top{display:grid;grid-template-columns:auto minmax(12px,1fr) auto minmax(12px,1fr) auto;align-items:center;gap:12px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);white-space:nowrap;position:relative;z-index:20}
+.top-l,.top-r{display:flex;align-items:center;gap:4px;min-width:0}
+.top-l{grid-column:1}.top-c{grid-column:3}.top-r{grid-column:5}
+.top-r{justify-content:flex-end;gap:8px}
+.brand{display:flex;align-items:center;gap:8px;padding-right:8px;margin-right:2px;border-right:1px solid var(--line);height:28px}
+.brand b{font-weight:700;letter-spacing:-.01em}
+.gname{border:1px solid transparent;background:transparent;border-radius:var(--r-s);padding:4px 8px;width:118px;font-weight:500;color:var(--text)}
+.gname:hover{border-color:var(--line-2)} .gname:focus{border-color:var(--accent);outline:none;background:var(--bg)}
+.mbtn,.ibtn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border:1px solid transparent;border-radius:var(--r-s);background:transparent;color:var(--text-2)}
+.mbtn:hover,.ibtn:hover{background:var(--raised);color:var(--text)}
+.mbtn[aria-expanded=true]{background:var(--raised);color:var(--text)}
+.ibtn{width:30px;justify-content:center;padding:0}
+.ibtn:disabled{opacity:.4;cursor:default;background:none}
+.sep{width:1px;height:20px;background:var(--line);margin:0 4px}
+.seg{display:inline-flex;padding:2px;border-radius:8px;background:var(--bg);border:1px solid var(--line)}
+.seg-lbl{font-size:12px;color:var(--text-3);margin-right:6px}
+.seg button{height:26px;border:0;background:none;padding:0 10px;border-radius:6px;color:var(--text-2);font-size:13px;font-weight:500}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--raised);color:var(--text);box-shadow:0 1px 2px rgba(0,0,0,.4)}
+.transport{display:flex;align-items:center;gap:4px;margin-left:12px}
+.tbtn{height:32px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:var(--r-s);border:1px solid var(--line-2);background:var(--panel-2);color:var(--text);font-weight:500;font-size:13px;transition:background .15s,transform .1s}
+.tbtn:hover:not(:disabled){background:var(--raised)}
+.tbtn:active:not(:disabled){transform:translateY(1px)}
+.tbtn:disabled{color:var(--text-3);opacity:.55;cursor:default}
+.tbtn.play{min-width:118px;justify-content:center;background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:700;padding:0 14px 0 12px}
+.tbtn.play:hover:not(:disabled){background:var(--accent-hi)}
+.tbtn.play svg{fill:currentColor;stroke:none}
+.tbtn.play[aria-pressed=true]{background:transparent;color:var(--accent);border-color:rgba(255,176,32,.45)}
+.save{display:flex;align-items:center;gap:6px;color:var(--text-3);font-size:12.5px}
+.save svg{color:var(--ok)} .save.busy svg{color:var(--accent)}
+.kbtn{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 6px 0 10px;border-radius:var(--r-s);border:1px solid var(--line-2);background:var(--bg);color:var(--text-3);font-size:13px}
+.kbtn:hover{color:var(--text);border-color:#4a4e56}
+@media (max-width:1359px){ .tbtn.sec .lbl{display:none} .tbtn.sec{width:32px;justify-content:center;padding:0} .seg-lbl{display:none} }
+@media (max-width:1499px){ .kbtn .lbl{display:none} }
+@media (max-width:1180px){ .save .lbl{display:none} }
+
+/* menus (escape containers: positioned against top bar) */
+.menu{position:absolute;top:44px;min-width:230px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r-m);padding:5px;box-shadow:0 16px 40px -12px rgba(0,0,0,.7);display:none;z-index:40}
+.menu.open{display:block}
+.menu button{display:flex;width:100%;align-items:center;gap:10px;height:32px;padding:0 10px;border:0;background:none;border-radius:6px;color:var(--text);text-align:left;font-size:13.5px}
+.menu button:hover,.menu button:focus-visible{background:var(--raised);outline:none}
+.menu button kbd{margin-left:auto}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+.menu .danger{color:var(--danger)}
+
+/* ---------- Work area ---------- */
+.work{display:grid;grid-template-columns:216px minmax(0,1fr);min-height:0}
+/* palette */
+.pal{background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.pal-h{padding:10px 10px 8px}
+.search{position:relative}
+.search svg{position:absolute;left:9px;top:9px;color:var(--text-3)}
+.search input{width:100%;height:34px;border-radius:8px;border:1px solid var(--line-2);background:var(--bg);padding:0 46px 0 30px;color:var(--text);font-size:13.5px}
+.search input::placeholder{color:var(--text-3)}
+.search input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.search kbd{position:absolute;right:7px;top:8px}
+.pal-list{overflow:auto;flex:1;padding:0 6px 10px}
+.pcat{position:sticky;top:0;z-index:1;background:var(--panel);display:flex;align-items:center;gap:6px;width:100%;height:30px;border:0;padding:0 6px;color:var(--text-2);font-size:12px;font-weight:600;letter-spacing:.02em}
+.pcat:hover{color:var(--text)}
+.pcat svg{width:14px;height:14px;transition:transform .15s}
+.pcat[aria-expanded=false] svg{transform:rotate(-90deg)}
+.pcat .n{margin-left:auto;font-weight:500;color:var(--text-3);font-family:var(--mono);font-size:11px}
+.pcat i{width:8px;height:8px;border-radius:2px;background:var(--cat)}
+.pitem{display:grid;grid-template-columns:28px 1fr;column-gap:8px;align-items:center;width:100%;padding:6px;border:1px solid transparent;border-radius:8px;background:none;text-align:left;cursor:grab}
+.pitem:hover{background:var(--panel-2);border-color:var(--line)}
+.pitem:active{cursor:grabbing}
+.pitem .tile{grid-row:span 2;align-self:start;margin-top:2px}
+.pitem b{font-weight:500;font-size:13.5px;color:var(--text);line-height:1.25}
+.pitem span{font-size:11.5px;color:var(--text-3);line-height:1.35}
+.pal-empty{padding:16px 10px;color:var(--text-3);font-size:13px}
+.pal-f{border-top:1px solid var(--line);padding:8px 12px;font-size:12px;color:var(--text-3);line-height:1.45}
+.tile{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;color:var(--cat);background:color-mix(in oklab,var(--cat) 16%,transparent)}
+.tile svg{width:16px;height:16px}
+
+/* main split */
+.main{display:flex;min-width:0;min-height:0}
+.pane{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--bg)}
+.pane-game{flex:0 0 var(--split)}
+.pane-graph{flex:1 1 0;container-type:inline-size}
+@container (max-width:700px){
+  .gdock{flex-wrap:wrap;width:238px;row-gap:2px}
+  .legend{border-left:0;border-top:1px solid var(--line);padding:5px 6px 3px;width:100%;justify-content:space-between}
+  .mini{width:140px;height:90px}
+}
+@container (max-width:560px){ #gCount{display:none} }
+.ph{height:38px;flex:none;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;border-bottom:1px solid var(--line);background:var(--panel);white-space:nowrap}
+.ph h2{margin:0;font-size:13px;font-weight:600}
+.ph .meta{color:var(--text-3);font-size:12px}
+.ph .grow{flex:1}
+.state{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;font-size:11.5px;font-weight:600;letter-spacing:.03em;background:var(--raised);color:var(--text-2)}
+.state svg{width:12px;height:12px}
+.state.live{background:var(--accent-soft);color:var(--accent)}
+.state.live .rec{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:rec 1.2s steps(2,end) infinite}
+@keyframes rec{50%{opacity:.25}}
+.splitter{flex:none;width:7px;cursor:col-resize;background:var(--panel);border-left:1px solid var(--line);border-right:1px solid var(--line);position:relative;outline:none}
+.splitter::after{content:"";position:absolute;left:2px;top:50%;width:1px;height:32px;margin-top:-16px;box-shadow:0 0 0 0 transparent;background:var(--line-2)}
+.splitter:hover,.splitter:focus-visible,.splitter.drag{background:var(--raised)}
+.splitter:focus-visible::after,.splitter.drag::after{background:var(--accent)}
+
+/* game */
+.stage-wrap{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;padding:10px;gap:8px}
+.stage{flex:0 0 auto;width:100%;aspect-ratio:16/9;max-height:calc(100% - 150px);min-height:140px;display:grid;place-items:center;position:relative}
+.stage canvas{display:block;border-radius:8px;box-shadow:0 0 0 1px var(--line-2);outline:none;transition:box-shadow .2s}
+.playing .stage canvas{box-shadow:0 0 0 2px var(--accent)}
+.stage canvas:focus-visible{box-shadow:0 0 0 2px var(--accent),0 0 0 5px var(--accent-soft)}
+.hint{flex:none;display:flex;align-items:center;gap:10px;height:32px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12.5px;color:var(--text-2);white-space:nowrap;overflow:hidden}
+.hint .keys{display:flex;gap:4px;align-items:center}
+.hint .grow{flex:1}
+.hint button{border:0;background:none;color:var(--text-3);font-size:12px;height:24px;padding:0 6px;border-radius:4px}
+.hint button:hover{color:var(--text);background:var(--raised)}
+.log{flex:1 1 auto;min-height:96px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.log-h{display:flex;align-items:center;gap:8px;height:30px;padding:0 10px;border-bottom:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--text-2)}
+.log-h span{font-weight:400;color:var(--text-3)}
+.log ol{list-style:none;margin:0;padding:4px;overflow:auto;flex:1}
+.log li button{display:grid;grid-template-columns:44px 82px 1fr;gap:8px;align-items:baseline;width:100%;text-align:left;border:0;background:none;padding:3px 6px;border-radius:5px;font-size:12.5px;color:var(--text-2)}
+.log li button:hover{background:var(--raised);color:var(--text)}
+.log time{font:500 11.5px var(--mono);color:var(--text-3)}
+.log .who{font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log li.new button{animation:logIn .5s var(--ease)}
+@keyframes logIn{from{background:var(--accent-soft)}}
+.log-empty{padding:10px;font-size:12.5px;color:var(--text-3)}
+
+/* graph */
+.gtool{display:flex;align-items:center;gap:6px}
+.gbtn{height:28px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border:1px solid var(--line-2);border-radius:var(--r-s);background:var(--panel-2);color:var(--text-2);font-size:12.5px;font-weight:500}
+.gbtn:hover{color:var(--text);background:var(--raised)}
+.gbtn.warn{border-color:rgba(255,122,107,.5);color:#FFB3A8;background:var(--danger-soft)}
+.gbtn.good{color:var(--ok)}
+.coach{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text-3);overflow:hidden;min-width:0}
+.coach button{border:0;background:none;color:var(--text-3);width:24px;height:24px;border-radius:4px;display:grid;place-items:center}
+.coach button:hover{background:var(--raised);color:var(--text)}
+.graph{position:relative;flex:1;min-height:0;overflow:hidden;cursor:default;
+  background-color:#141517;background-image:radial-gradient(circle,#26282C 1px,transparent 1.2px);background-size:24px 24px}
+.graph.panning{cursor:grabbing}
+.world{position:absolute;left:0;top:0;transform-origin:0 0}
+.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+.wires .hit{stroke:transparent;stroke-width:14;fill:none;pointer-events:stroke;cursor:pointer}
+.wires .w{fill:none;stroke:var(--tc);stroke-width:2.25;opacity:.8;transition:opacity .2s,stroke-width .15s}
+.wires .flow{fill:none;stroke:#fff;stroke-width:2;stroke-dasharray:3 13;opacity:0;stroke-linecap:round}
+.wires g.sel .w{stroke-width:3.5;opacity:1}
+.live .wires g[data-t=bool] .w{opacity:.35}
+.live .wires g.on .w{opacity:1;stroke-width:3.5;filter:drop-shadow(0 0 4px var(--tc))}
+.live .wires g.on .flow{opacity:.75;animation:flow .6s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-16}}
+.wires .badge{display:none}
+.live .wires .badge{display:block}
+.live .wires g[data-t=obj] .badge{display:none}
+.badge rect{fill:#0E0F10;stroke:var(--tc);stroke-width:1.25}
+.badge text{font:600 11px var(--mono);fill:#F2F3F5;dominant-baseline:central;text-anchor:middle}
+.badge.bump rect{animation:bump .5s var(--ease)}
+@keyframes bump{from{fill:#3a2a06}}
+.wires .temp{fill:none;stroke:var(--tc);stroke-width:2.5;stroke-dasharray:6 5}
+.wires .temp.bad{stroke:var(--danger)}
+
+.node{position:absolute;min-width:178px;background:var(--node);border:1px solid var(--line-2);border-radius:var(--r-m);box-shadow:0 8px 18px -8px rgba(0,0,0,.65);font-size:13px;color:var(--text-2)}
+.node.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),0 10px 24px -8px rgba(0,0,0,.7)}
+.node.flash{animation:flash 1s var(--ease)}
+@keyframes flash{0%{box-shadow:0 0 0 6px rgba(255,176,32,.55)}100%{box-shadow:0 0 0 1px var(--accent)}}
+.nh{display:flex;align-items:center;gap:8px;padding:7px 10px 7px 8px;border-bottom:1px solid var(--line);border-radius:var(--r-m) var(--r-m) 0 0;background:color-mix(in oklab,var(--cat) 9%,var(--node));cursor:grab}
+.nh:active{cursor:grabbing}
+.nh .tile{width:24px;height:24px;border-radius:6px}
+.nh .tile svg{width:14px;height:14px}
+.nt{font-weight:600;color:var(--text);white-space:nowrap;line-height:1.2}
+.ns{font-size:11.5px;color:var(--text-3);white-space:nowrap;line-height:1.25}
+.node.fire .nh{background:color-mix(in oklab,var(--cat) 30%,var(--node))}
+.miss{position:absolute;top:-11px;right:10px;height:20px;display:inline-flex;align-items:center;gap:4px;padding:0 7px;border-radius:999px;background:#3A1E1A;border:1px solid #8A4036;color:#FFC0B6;font-size:11px;font-weight:600;white-space:nowrap}
+.miss svg{width:12px;height:12px}
+.nb{padding:5px 0 6px}
+.nb hr{border:0;border-top:1px dashed var(--line);margin:4px 10px}
+.prow{position:relative;height:23px;display:flex;align-items:center;padding:0 14px;white-space:nowrap;cursor:crosshair}
+.prow:hover{color:var(--text);background:rgba(255,255,255,.03)}
+.prow.out{justify-content:flex-end}
+.dot{position:absolute;top:6.5px;width:10px;height:10px;background:var(--tc);border:2px solid var(--node);box-sizing:content-box;margin:-2px}
+.prow.in .dot{left:-6px} .prow.out .dot{right:-6px}
+.dot.bool{border-radius:50%}
+.dot.num{transform:rotate(45deg) scale(.82)}
+.dot.obj{border-radius:2px}
+.dot.hollow{background:var(--node);box-shadow:inset 0 0 0 2px var(--tc)}
+.prow.req-miss span{color:#FFC0B6}
+.pchip{margin:2px 10px 2px;display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--text-3)}
+.pchip b{font:600 12px var(--mono);color:var(--text)}
+.bigval{margin:4px 10px 4px;padding:6px 8px;border-radius:6px;background:var(--bg);display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--text-3)}
+.bigval b{font:600 16px var(--mono);color:var(--text)}
+/* wiring feedback */
+.wiring .prow{opacity:.35}
+.wiring .prow.ok{opacity:1}
+.wiring .prow.ok .dot{box-shadow:0 0 0 4px color-mix(in oklab,var(--tc) 35%,transparent)}
+.wiring .prow.snap{background:rgba(255,255,255,.06);color:var(--text)}
+.prow.reject{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-3px)}75%{transform:translateX(3px)}}
+.prow.guide .dot{animation:guide 1s var(--ease) 3}
+@keyframes guide{0%{box-shadow:0 0 0 0 rgba(255,176,32,.9)}100%{box-shadow:0 0 0 12px rgba(255,176,32,0)}}
+.prow.guide{background:var(--accent-soft);color:var(--text)}
+/* semantic zoom: far away = big titles, no port labels */
+.world.far .prow span,.world.far .ns,.world.far .pchip,.world.far .bigval{visibility:hidden}
+.world.far .nt{font-size:20px}
+/* graph overlays */
+.gdock{position:absolute;left:10px;bottom:10px;display:flex;align-items:center;gap:8px;padding:4px;border-radius:9px;background:rgba(23,24,26,.94);border:1px solid var(--line-2);box-shadow:0 8px 20px -10px rgba(0,0,0,.7)}
+.gdock .ibtn{width:28px;height:28px}
+.zval{font:500 12px var(--mono);color:var(--text-2);width:44px;text-align:center;border:0;background:none;height:28px;border-radius:5px}
+.zval:hover{background:var(--raised)}
+.legend{display:flex;gap:10px;padding:0 8px 0 10px;border-left:1px solid var(--line);font-size:12px;color:var(--text-2);white-space:nowrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .dot{position:static;margin:0;border-color:var(--panel)}
+.mini{position:absolute;right:10px;bottom:10px;width:168px;height:108px;border-radius:9px;background:rgba(23,24,26,.94);border:1px solid var(--line-2);cursor:pointer;overflow:hidden}
+.mini canvas{display:block;width:100%;height:100%}
+.issues{position:absolute;right:10px;top:46px;width:300px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r-m);box-shadow:0 16px 40px -12px rgba(0,0,0,.75);padding:6px;display:none;z-index:15}
+.issues.open{display:block}
+.issues h3{margin:4px 8px 6px;font-size:12.5px;font-weight:600;color:var(--text-2)}
+.issues button{display:flex;gap:10px;width:100%;text-align:left;border:0;background:none;padding:8px;border-radius:7px;color:var(--text);font-size:13px;line-height:1.4}
+.issues button:hover{background:var(--raised)}
+.issues button svg{color:var(--danger);margin-top:2px}
+.issues small{display:block;color:var(--text-3);font-size:12px}
+.issues .none{padding:8px;color:var(--text-3);font-size:13px}
+/* empty launchpad */
+.launch{position:absolute;inset:0;display:none;align-items:center;justify-content:center;padding:24px}
+.launch.show{display:flex}
+.launch-in{width:min(420px,100%)}
+.launch h3{margin:0 0 4px;font-size:18px;font-weight:600;color:var(--text)}
+.launch p{margin:0 0 16px;color:var(--text-2);font-size:13.5px}
+.lrow{display:flex;gap:12px;align-items:center;width:100%;text-align:left;padding:12px;border-radius:var(--r-m);border:1px solid var(--line-2);background:var(--panel);margin-bottom:8px}
+.lrow:hover{background:var(--panel-2);border-color:#4a4e56}
+.lrow.primary{border-color:rgba(255,176,32,.55);background:color-mix(in oklab,var(--accent) 8%,var(--panel))}
+.lrow b{display:block;font-weight:600;color:var(--text)} .lrow span{font-size:12.5px;color:var(--text-3)}
+.lrow .tile{width:36px;height:36px;border-radius:9px} .lrow .tile svg{width:18px;height:18px}
+
+/* ---------- Bottom strip: inspector + tutorial ---------- */
+.bottom{display:grid;grid-template-columns:minmax(0,1fr) 340px;border-top:1px solid var(--line);background:var(--panel);min-height:0}
+.insp{display:flex;min-width:0;overflow-x:auto;overflow-y:hidden}
+.isec{flex:none;padding:10px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:6px;min-width:0}
+.isec h4{margin:0;font-size:11.5px;font-weight:600;letter-spacing:.04em;color:var(--text-3)}
+.iname{display:flex;gap:10px;align-items:flex-start;width:290px}
+.iname input{width:100%;height:28px;border-radius:6px;border:1px solid var(--line-2);background:var(--bg);padding:0 8px;font-weight:600;color:var(--text)}
+.iname input:focus{outline:none;border-color:var(--accent)}
+.iname .kindl{font-size:12px;color:var(--text-3);margin:3px 0 2px}
+.iname p{margin:0;font-size:13px;line-height:1.45;color:var(--text-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fields{display:flex;gap:10px}
+.fld{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--text-2)}
+.fld .box{display:flex;align-items:center;height:30px;border:1px solid var(--line-2);border-radius:6px;background:var(--bg)}
+.fld .box:focus-within{border-color:var(--accent)}
+.fld input{width:64px;border:0;background:none;padding:0 8px;font:500 13px var(--mono);color:var(--text);outline:none}
+.fld input[type=text]{width:96px;font-family:var(--font)}
+.fld .u{padding-right:6px;font-size:11.5px;color:var(--text-3)}
+.fld .st{width:26px;height:28px;border:0;border-left:1px solid var(--line);background:none;color:var(--text-2);display:grid;place-items:center}
+.fld .st:hover{background:var(--raised);color:var(--text)}
+.livetag{font-size:11.5px;color:var(--text-3);display:flex;align-items:center;gap:5px}
+.livetag svg{width:12px;height:12px;color:var(--accent)}
+.ports{display:grid;grid-template-columns:auto auto;column-gap:18px;row-gap:1px;font-size:12.5px}
+.ports .pr{display:flex;align-items:center;gap:7px;height:21px;white-space:nowrap;color:var(--text-2)}
+.ports .dot{position:static;margin:0;width:8px;height:8px;border-color:var(--panel)}
+.ports button{border:0;background:none;padding:0 4px;height:20px;border-radius:4px;color:var(--text);font-size:12.5px;text-decoration:underline;text-decoration-color:var(--line-2);text-underline-offset:3px}
+.ports button:hover{background:var(--raised);text-decoration-color:var(--accent)}
+.ports .none{color:var(--text-3)} .ports .need{color:#FFC0B6}
+.acts{display:flex;flex-direction:column;gap:6px}
+.abtn{height:28px;display:inline-flex;align-items:center;gap:7px;padding:0 10px;border-radius:6px;border:1px solid var(--line-2);background:var(--panel-2);color:var(--text-2);font-size:12.5px;white-space:nowrap}
+.abtn:hover{color:var(--text);background:var(--raised)}
+.abtn.danger{color:var(--danger);border-color:rgba(255,122,107,.35);background:none;margin-top:4px}
+.abtn.danger:hover{background:var(--danger-soft)}
+.tips{display:flex;gap:18px;align-items:flex-start;padding:12px 16px;font-size:13px;color:var(--text-2)}
+.tips h4{margin:0 0 6px;font-size:13px;color:var(--text);font-weight:600}
+.tips ul{margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(2,auto);gap:6px 22px}
+.tips li{display:flex;gap:6px;align-items:center;white-space:nowrap}
+.tut{border-left:1px solid var(--line);padding:10px 14px;display:flex;flex-direction:column;gap:6px;background:color-mix(in oklab,var(--accent) 4%,var(--panel))}
+.tut-h{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3)}
+.tut-h b{color:var(--accent);font-weight:600}
+.steps{display:flex;gap:4px;margin-left:auto}
+.steps i{width:18px;height:4px;border-radius:2px;background:var(--line-2)}
+.steps i.done{background:var(--ok)} .steps i.cur{background:var(--accent)}
+.tut p{margin:0;font-size:13.5px;line-height:1.45;color:var(--text)}
+.tut p em{font-style:normal;font-weight:600;color:var(--accent-hi)}
+.tut-a{display:flex;gap:6px;margin-top:auto}
+.tut-a .abtn.pri{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.tut-a .abtn.pri:hover{background:var(--accent-hi)}
+.tut.done p{color:var(--ok)}
+
+/* ---------- Status bar with toast slot (fixed height, never shifts layout) ---------- */
+.status{display:flex;align-items:center;gap:14px;padding:0 10px;border-top:1px solid var(--line);background:var(--panel);font-size:12px;color:var(--text-3);white-space:nowrap}
+.toast{flex:1;display:flex;align-items:center;gap:7px;min-width:0;overflow:hidden;text-overflow:ellipsis;color:var(--text-2)}
+.toast svg{width:14px;height:14px}
+.toast.ok svg{color:var(--ok)} .toast.bad{color:#FFC0B6} .toast.bad svg{color:var(--danger)} .toast.info svg{color:var(--t-num)}
+.toast.in{animation:tin .25s var(--ease)}
+@keyframes tin{from{opacity:0;transform:translateY(6px)}}
+.toast button{border:0;background:none;color:var(--accent);font-size:12px;font-weight:600;padding:0 4px;height:20px;border-radius:4px}
+.toast button:hover{background:var(--raised)}
+.status .s{display:flex;align-items:center;gap:6px}
+.status a{color:var(--text-3)}
+.status button.lnk{border:0;background:none;color:var(--text-3);font-size:12px;display:flex;gap:6px;align-items:center;height:22px;border-radius:4px;padding:0 4px}
+.status button.lnk:hover{color:var(--text);background:var(--raised)}
+
+/* ---------- Dialogs ---------- */
+dialog{border:1px solid var(--line-2);border-radius:12px;background:var(--panel-2);color:var(--text);padding:0;box-shadow:0 30px 80px -20px rgba(0,0,0,.8)}
+dialog::backdrop{background:rgba(8,8,9,.55)}
+dialog[open]{animation:dlg .2s var(--ease)}
+@keyframes dlg{from{opacity:0;transform:translateY(-6px) scale(.99)}}
+#cmdk{width:600px;margin-top:12vh}
+.ck-in{display:flex;align-items:center;gap:10px;padding:0 14px;height:52px;border-bottom:1px solid var(--line)}
+.ck-in svg{color:var(--text-3);width:18px;height:18px}
+.ck-in input{flex:1;border:0;background:none;outline:none;font-size:15px;color:var(--text)}
+.ck-in input::placeholder{color:var(--text-3)}
+.ck-ctx{font-size:12px;padding:3px 8px;border-radius:999px;background:var(--raised);color:var(--text-2);white-space:nowrap;display:flex;align-items:center;gap:6px}
+.ck-ctx[hidden]{display:none}
+.ck-ctx .dot{position:static;margin:0;width:8px;height:8px;border-color:var(--raised)}
+#ckList{list-style:none;margin:0;padding:6px;max-height:380px;overflow:auto}
+#ckList .grp{font-size:11.5px;font-weight:600;color:var(--text-3);padding:8px 10px 4px;letter-spacing:.03em}
+#ckList .it{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;cursor:pointer}
+#ckList .it[aria-selected=true]{background:var(--raised);box-shadow:inset 0 0 0 1px var(--line-2)}
+#ckList .it .ic{width:28px;height:28px;border-radius:7px;display:grid;place-items:center;background:var(--bg);color:var(--text-2)}
+#ckList .it b{font-weight:500;font-size:14px}
+#ckList .it small{display:block;font-size:12px;color:var(--text-3)}
+#ckList .it .r{margin-left:auto;font-size:12px;color:var(--text-3);display:flex;gap:6px;align-items:center}
+#ckList mark{background:none;color:var(--accent-hi);font-weight:600}
+.ck-empty{padding:18px;color:var(--text-3);font-size:13.5px}
+.ck-f{display:flex;gap:14px;padding:8px 14px;border-top:1px solid var(--line);font-size:12px;color:var(--text-3)}
+.ck-f span{display:flex;gap:5px;align-items:center}
+#keys{width:640px}
+.dh{display:flex;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.dh h3{margin:0;font-size:15px;font-weight:600}
+.dh .ibtn{margin-left:auto}
+.kgrid{display:grid;grid-template-columns:1fr 1fr;gap:4px 28px;padding:14px 16px}
+.kgrid div{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:13px;color:var(--text-2);height:28px}
+.gloss{padding:4px 16px 16px;font-size:13px;color:var(--text-2);display:grid;grid-template-columns:110px 1fr;gap:6px 14px}
+.gloss b{color:var(--text);font-weight:600}
+.gloss h4{grid-column:1/-1;margin:6px 0 2px;font-size:12px;color:var(--text-3);font-weight:600;letter-spacing:.03em}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+  .live .wires g.on .flow{opacity:0}
+  .state.live .rec{opacity:1}
+  /* meaning kept: bool wires still turn bright + thick when true, badges still update */
+}
+</style>
+</head>
+<body>
+
+<!-- ================= TOP BAR ================= -->
+<header class="top" role="banner">
+  <div class="top-l">
+    <div class="brand" aria-label="Xưởng Nối">
+      <svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="1.5" y="1.5" width="21" height="21" rx="6" fill="#232427" stroke="#3A3D43"/><path d="M7 8.5c5 0 5 7 10 7" stroke="#FFB020" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="7" cy="8.5" r="2.2" fill="#4ADE80"/><rect x="15" y="13.5" width="4" height="4" rx="1" fill="#60A5FA" transform="rotate(45 17 15.5)"/></svg>
+      <b>Xưởng Nối</b>
+    </div>
+    <label class="sr" for="gname">Tên game</label>
+    <input class="gname" id="gname" value="Nhặt sao" spellcheck="false">
+    <button class="mbtn" data-menu="mFile" aria-haspopup="menu" aria-expanded="false">Tệp</button>
+    <button class="mbtn" data-menu="mEdit" aria-haspopup="menu" aria-expanded="false">Sửa</button>
+    <button class="mbtn" data-menu="mHelp" aria-haspopup="menu" aria-expanded="false">Trợ giúp</button>
+    <span class="sep"></span>
+    <button class="ibtn" id="bUndo" aria-label="Hoàn tác (Ctrl+Z)" title="Hoàn tác (Ctrl+Z)" data-ic="undo"></button>
+    <button class="ibtn" id="bRedo" aria-label="Làm lại (Ctrl+Y)" title="Làm lại (Ctrl+Y)" data-ic="redo"></button>
+  </div>
+
+  <div class="top-c" style="display:flex;align-items:center">
+    <span class="sr" id="vmLbl">Góc nhìn của game</span>
+    <div class="seg" role="group" aria-labelledby="vmLbl" id="viewSeg">
+      <button aria-pressed="true" data-view="side" title="Góc nhìn: từ bên cạnh">2D ngang</button>
+      <button aria-pressed="false" data-view="top">2D trên</button>
+      <button aria-pressed="false" data-view="3d">3D</button>
+    </div>
+    <div class="transport" role="group" aria-label="Điều khiển chơi">
+      <button class="tbtn play" id="bPlay" aria-pressed="false" title="Chơi (Ctrl+Enter)"><svg class="i" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg><span class="lbl">Chơi</span></button>
+      <button class="tbtn sec" id="bPause" disabled title="Tạm dừng (Ctrl+Enter)" aria-label="Tạm dừng"><span data-ic="pause"></span><span class="lbl">Tạm dừng</span></button>
+      <button class="tbtn sec" id="bStop" disabled title="Dừng, về lúc đầu (Ctrl+Shift+Enter)" aria-label="Dừng"><span data-ic="stop"></span><span class="lbl">Dừng</span></button>
+      <button class="tbtn sec" id="bRestart" disabled title="Chơi lại từ đầu" aria-label="Chơi lại"><span data-ic="restart"></span><span class="lbl">Chơi lại</span></button>
+    </div>
+  </div>
+
+  <div class="top-r">
+    <span class="save" id="save" role="status"><span data-ic="cloud"></span><span class="lbl">Đã lưu</span></span>
+    <button class="kbtn" id="bCmd" title="Tìm mảnh ghép hoặc lệnh"><span data-ic="search"></span><span class="lbl">Tìm lệnh</span><kbd>Ctrl K</kbd></button>
+    <button class="ibtn" id="bKeys" aria-label="Phím tắt và thuật ngữ" title="Phím tắt và thuật ngữ (?)" data-ic="help"></button>
+  </div>
+
+  <div class="menu" id="mFile" role="menu" aria-label="Tệp">
+    <button role="menuitem" data-act="new"><span data-ic="plus"></span>Tạo game mới</button>
+    <button role="menuitem" data-act="sample"><span data-ic="star"></span>Mở game mẫu "Nhặt sao"</button>
+    <hr>
+    <button role="menuitem" data-act="save"><span data-ic="cloud"></span>Lưu<kbd>Ctrl S</kbd></button>
+    <button role="menuitem" data-act="export"><span data-ic="download"></span>Xuất ra file</button>
+  </div>
+  <div class="menu" id="mEdit" role="menu" aria-label="Sửa">
+    <button role="menuitem" data-act="undo"><span data-ic="undo"></span>Hoàn tác<kbd>Ctrl Z</kbd></button>
+    <button role="menuitem" data-act="redo"><span data-ic="redo"></span>Làm lại<kbd>Ctrl Y</kbd></button>
+    <hr>
+    <button role="menuitem" data-act="dup"><span data-ic="copy"></span>Nhân đôi mảnh ghép<kbd>Ctrl D</kbd></button>
+    <button role="menuitem" data-act="layout"><span data-ic="layout"></span>Sắp xếp gọn<kbd>L</kbd></button>
+    <hr>
+    <button role="menuitem" data-act="del" class="danger"><span data-ic="trash"></span>Xóa mảnh ghép<kbd>Delete</kbd></button>
+  </div>
+  <div class="menu" id="mHelp" role="menu" aria-label="Trợ giúp">
+    <button role="menuitem" data-act="keys"><span data-ic="keyboard"></span>Phím tắt và thuật ngữ<kbd>?</kbd></button>
+    <button role="menuitem" data-act="guide"><span data-ic="target"></span>Chỉ cho tôi bước tiếp theo</button>
+    <button role="menuitem" data-act="lessons"><span data-ic="book"></span>Các bài học</button>
+  </div>
+</header>
+
+<!-- ================= WORK AREA ================= -->
+<div class="work">
+  <aside class="pal" aria-label="Mảnh ghép">
+    <div class="pal-h">
+      <div class="search">
+        <span data-ic="search"></span>
+        <label class="sr" for="palQ">Tìm mảnh ghép</label>
+        <input id="palQ" type="search" placeholder="Tìm mảnh ghép" autocomplete="off" spellcheck="false">
+        <kbd>Ctrl K</kbd>
+      </div>
+    </div>
+    <div class="pal-list" id="palList"></div>
+    <div class="pal-f">Kéo vào bảng nối, hoặc bấm để đặt vào chỗ trống.</div>
+  </aside>
+
+  <main class="main" id="main">
+    <!-- LEFT: game viewport -->
+    <section class="pane pane-game" id="paneGame" aria-label="Màn hình game">
+      <div class="ph">
+        <h2>Màn hình game</h2>
+        <span class="state" id="gState"><span data-ic="stop"></span>ĐANG DỪNG</span>
+        <span class="grow"></span>
+        <span class="meta" id="gView">2D ngang, 640 x 360</span>
+        <button class="ibtn" id="bFull" aria-label="Toàn màn hình" title="Toàn màn hình" data-ic="expand"></button>
+      </div>
+      <div class="stage-wrap">
+        <div class="stage" id="stage"><canvas id="game" tabindex="0" aria-label="Khung game. Bấm vào đây rồi dùng phím mũi tên để chơi."></canvas></div>
+        <div class="hint" id="hint">
+          <span class="keys"><kbd>←</kbd><kbd>→</kbd></span> đi
+          <span class="keys"><kbd>Space</kbd></span> nhảy
+          <span class="grow"></span>
+          <span id="hintMsg">Bấm Chơi để bắt đầu</span>
+        </div>
+        <div class="log" aria-label="Chuyện vừa xảy ra">
+          <div class="log-h">Chuyện vừa xảy ra <span>bấm một dòng để xem mảnh ghép gây ra nó</span></div>
+          <ol id="log" aria-live="polite"></ol>
+        </div>
+      </div>
+    </section>
+
+    <div class="splitter" id="splitter" role="separator" aria-orientation="vertical" aria-label="Kéo để chia khung game và bảng nối" aria-valuemin="30" aria-valuemax="70" aria-valuenow="50" tabindex="0" title="Kéo để đổi cỡ. Bấm đúp để về 50/50"></div>
+
+    <!-- RIGHT: node graph -->
+    <section class="pane pane-graph" id="paneGraph" aria-label="Bảng nối">
+      <div class="ph">
+        <h2>Bảng nối</h2>
+        <span class="meta" id="gCount"></span>
+                <span class="grow"></span>
+        <div class="gtool">
+          <button class="gbtn" id="bAdd" title="Thêm mảnh ghép (Ctrl K)"><span data-ic="plus"></span>Thêm</button>
+          <button class="gbtn" id="bCheck" aria-haspopup="true" aria-expanded="false"></button>
+        </div>
+      </div>
+      <div class="graph" id="graph" tabindex="0" aria-label="Bảng nối. Kéo nền để di chuyển.">
+        <div class="world" id="world"><svg class="wires" id="wires"></svg></div>
+        <div class="launch" id="launch">
+          <div class="launch-in">
+            <h3>Bảng nối đang trống</h3>
+            <p>Chọn một cách để bắt đầu. Bạn có thể đổi ý bất cứ lúc nào.</p>
+            <button class="lrow primary" data-act="lessons"><span class="tile" style="--cat:var(--accent)" data-ic="book"></span><span><b>Học từ đầu</b><span>Bài 1: làm nhân vật biết đi, khoảng 3 phút</span></span></button>
+            <button class="lrow" data-act="sample"><span class="tile" style="--cat:var(--c-object)" data-ic="star"></span><span><b>Mở game mẫu "Nhặt sao"</b><span>9 mảnh ghép đã nối sẵn, chỉ cần bấm Chơi</span></span></button>
+            <button class="lrow" data-act="blank"><span class="tile" style="--cat:var(--c-math)" data-ic="plus"></span><span><b>Tự làm</b><span>Kéo mảnh ghép từ cột bên trái sang đây</span></span></button>
+          </div>
+        </div>
+        <div class="issues" id="issues" role="dialog" aria-label="Kiểm tra"></div>
+        <div class="gdock" role="toolbar" aria-label="Phóng to thu nhỏ">
+          <button class="ibtn" id="zOut" aria-label="Thu nhỏ" title="Thu nhỏ (-)" data-ic="minus"></button>
+          <button class="zval" id="zVal" title="Về 100%">100%</button>
+          <button class="ibtn" id="zIn" aria-label="Phóng to" title="Phóng to (+)" data-ic="plus"></button>
+          <button class="ibtn" id="zFit" aria-label="Vừa khung" title="Vừa khung (F)" data-ic="fit"></button>
+          <button class="ibtn" id="zLay" aria-label="Sắp xếp gọn" title="Sắp xếp gọn (L)" data-ic="layout"></button>
+          <div class="legend" aria-label="Chú giải loại dây">
+            <span><i class="dot bool" style="--tc:var(--t-bool)"></i>Đúng/Sai</span>
+            <span><i class="dot num" style="--tc:var(--t-num)"></i>Số</span>
+            <span><i class="dot obj" style="--tc:var(--t-obj)"></i>Vật thể</span>
+          </div>
+        </div>
+        <div class="mini" id="mini" title="Bản đồ nhỏ: bấm để tới chỗ đó"><canvas id="miniC" width="168" height="108"></canvas></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- ================= BOTTOM STRIP ================= -->
+<section class="bottom">
+  <div class="insp" id="insp" aria-label="Thuộc tính"></div>
+  <aside class="tut" id="tut" aria-label="Hướng dẫn"></aside>
+</section>
+
+<footer class="status">
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <span class="s" id="sCount"></span>
+  <span class="s" id="sZoom"></span>
+  <button class="lnk" id="sKeys"><kbd>?</kbd>Phím tắt</button>
+</footer>
+
+<!-- Command palette -->
+<dialog id="cmdk" aria-label="Tìm lệnh">
+  <div class="ck-in"><span data-ic="search"></span>
+    <input id="ckQ" placeholder="Gõ để tìm, ví dụ: nhan vat, vua khung, choi" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="ckList" aria-autocomplete="list">
+    <span class="ck-ctx" id="ckCtx" hidden></span>
+  </div>
+  <ul id="ckList" role="listbox" aria-label="Kết quả"></ul>
+  <div class="ck-f"><span><kbd>↑</kbd><kbd>↓</kbd> chọn</span><span><kbd>Enter</kbd> làm</span><span><kbd>Esc</kbd> đóng</span><span style="margin-left:auto">Gõ không dấu cũng được</span></div>
+</dialog>
+
+<!-- Shortcuts + glossary -->
+<dialog id="keys" aria-labelledby="keysT">
+  <div class="dh"><h3 id="keysT">Phím tắt và thuật ngữ</h3><button class="ibtn" data-close aria-label="Đóng" data-ic="x"></button></div>
+  <div class="kgrid">
+    <div>Tìm mảnh ghép hoặc lệnh <kbd>Ctrl K</kbd></div>
+    <div>Chơi hoặc tạm dừng <kbd>Ctrl Enter</kbd></div>
+    <div>Dừng, về lúc đầu <kbd>Ctrl Shift Enter</kbd></div>
+    <div>Vừa khung <kbd>F</kbd></div>
+    <div>Sắp xếp gọn <kbd>L</kbd></div>
+    <div>Phóng to, thu nhỏ <kbd>+</kbd> <kbd>-</kbd></div>
+    <div>Hoàn tác, làm lại <kbd>Ctrl Z</kbd> <kbd>Ctrl Y</kbd></div>
+    <div>Nhân đôi <kbd>Ctrl D</kbd></div>
+    <div>Xóa mảnh ghép hoặc dây <kbd>Delete</kbd></div>
+    <div>Di chuyển bảng <kbd>Kéo nền</kbd></div>
+    <div>Bấm đúp nền trống <kbd>Thêm mảnh ghép</kbd></div>
+    <div>Thả dây ra chỗ trống <kbd>Gợi ý mảnh hợp</kbd></div>
+  </div>
+  <div class="gloss">
+    <h4>THUẬT NGỮ</h4>
+    <b>Mảnh ghép</b><span>Một ô trên bảng nối, làm một việc (ví dụ: Bộ đếm).</span>
+    <b>Cổng</b><span>Chấm nhỏ ở cạnh mảnh ghép. Bên trái là cổng vào, bên phải là cổng ra.</span>
+    <b>Dây</b><span>Nối cổng ra với cổng vào cùng loại. Chấm tròn: Đúng/Sai. Chấm thoi: Số. Chấm vuông: Vật thể.</span>
+    <b>Bục</b><span>Mảnh ghép tạo mặt đứng cứng trong game (trước đây gọi là "Khối").</span>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+/* =====================================================================
+   DEV NOTES
+   - Plain DOM, no framework. Mirrors the app's model: nodes {id,kind,x,y,name,props}, wires {from,to}.
+   - The graph is EVALUATED every frame while playing (tiny dataflow interpreter) and drives the game,
+     so "cause -> effect" in the mockup is real, not scripted.
+   ===================================================================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const RM = matchMedia('(prefers-reduced-motion: reduce)');
+const hasTok = (hay, t) => (' ' + hay).includes(' ' + t);
+const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
+
+/* ---------- Icons: one authored set, 24 grid, 1.75 stroke ---------- */
+const IC = {
+  undo:'<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/>',
+  redo:'<path d="m15 14 5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 0 0 0 11H13"/>',
+  pause:'<path d="M8 5v14M16 5v14"/>',
+  stop:'<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  restart:'<path d="M4 12a8 8 0 1 0 2.4-5.7"/><path d="M4 4v4.5h4.5"/>',
+  cloud:'<path d="M7 18a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.6A3.8 3.8 0 0 1 17.5 18z"/><path d="m9.5 13 2 2 3.5-3.5"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/>',
+  help:'<circle cx="12" cy="12" r="9"/><path d="M9.6 9.3a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6"/><path d="M12 17h.01"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>',
+  x:'<path d="M6 6l12 12M18 6 6 18"/>',
+  fit:'<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/>',
+  layout:'<rect x="3" y="4" width="6" height="5" rx="1.5"/><rect x="15" y="4" width="6" height="5" rx="1.5"/><rect x="9" y="15" width="6" height="5" rx="1.5"/><path d="M9 6.5h6M18 9v3H12v3"/>',
+  expand:'<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>',
+  copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+  trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/>',
+  eye:'<path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/>',
+  download:'<path d="M12 4v11M7 10.5l5 5 5-5M5 20h14"/>',
+  keyboard:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="M6.5 10h.01M10 10h.01M13.5 10h.01M17 10h.01M8 14h8"/>',
+  target:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r=".8"/>',
+  book:'<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/>',
+  chev:'<path d="m6 9 6 6 6-6"/>',
+  warn:'<path d="M12 4 2.8 19.5h18.4z"/><path d="M12 10v4M12 17h.01"/>',
+  check:'<circle cx="12" cy="12" r="9"/><path d="m8.5 12.3 2.4 2.4 4.8-5"/>',
+  bolt:'<path d="M13 3 5 13.5h6L10 21l8-10.5h-6z"/>',
+  info:'<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/>',
+  arrows:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><path d="m9 12-2 0M8 10.5 6.5 12 8 13.5M15 12h2M16 10.5l1.5 1.5-1.5 1.5"/>',
+  key:'<rect x="5" y="5" width="14" height="14" rx="3"/><path d="M10 15V9l4 6V9"/>',
+  mouse:'<rect x="6.5" y="3" width="11" height="18" rx="5.5"/><path d="M12 7v3"/>',
+  timer:'<circle cx="12" cy="13.5" r="7.5"/><path d="M12 9.5v4l2.5 2M9.5 2.5h5"/>',
+  touch:'<circle cx="9" cy="12" r="5.5"/><circle cx="15" cy="12" r="5.5"/>',
+  cat:'<path d="M5 9.5 6.5 4l3.5 3h4l3.5-3L19 9.5V14a7 7 0 0 1-14 0z"/><path d="M9.5 13h.01M14.5 13h.01M11 16.5h2"/>',
+  star:'<path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.9l-5.2 2.7 1-5.8L3.5 9.7l5.9-.8z"/>',
+  plat:'<rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M7 13v6M12 13v6M17 13v6M6 9h12"/>',
+  ghost:'<path d="M5 20V11a7 7 0 0 1 14 0v9l-2.5-1.8L14 20l-2-1.8L10 20l-2.5-1.8z"/><path d="M9.5 11h.01M14.5 11h.01"/>',
+  counter:'<path d="M5 9h14M5 15h14M10 4 8 20M16 4l-2 16"/>',
+  compare:'<path d="m6 6 11 4.5L6 15M6 19.5h12"/>',
+  sum:'<path d="M17 5H7l6 7-6 7h10"/>',
+  dice:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 15h.01M12 12h.01"/>',
+  screen:'<rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20.5h7M12 16.5v4"/>',
+  trophy:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M17 6h3v1.5A3.5 3.5 0 0 1 16.5 11M7 6H4v1.5A3.5 3.5 0 0 0 7.5 11"/>',
+  flag:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
+  sound:'<path d="M4 10v4h3.5L12 18V6L7.5 10z"/><path d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/>',
+};
+const icon = (n, cls = 'i') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${IC[n] || ''}</svg>`;
+$$('[data-ic]').forEach(el => el.insertAdjacentHTML('afterbegin', icon(el.dataset.ic)));
+
+/* ---------- Catalog ---------- */
+const TYPE = { bool: { name: 'Đúng/Sai', v: '--t-bool' }, num: { name: 'Số', v: '--t-num' }, obj: { name: 'Vật thể', v: '--t-obj' } };
+const CATS = {
+  input: { name: 'Đầu vào', v: '--c-input' }, object: { name: 'Vật thể', v: '--c-object' },
+  rule: { name: 'Luật chơi', v: '--c-rule' }, math: { name: 'Tính toán', v: '--c-math' }, output: { name: 'Kết quả', v: '--c-output' },
+};
+const P = (id, label, type, req) => ({ id, label, type, req: !!req });
+const KINDS = {
+  keys:   { name: 'Phím mũi tên', cat: 'input', icon: 'arrows', desc: 'Báo phím mũi tên hoặc Space nào đang được giữ.', syn: 'ban phim dieu khien keyboard', ins: [], outs: [P('left', 'Giữ ←', 'bool'), P('right', 'Giữ →', 'bool'), P('jump', 'Bấm Space', 'bool')], def: 'Bàn phím' },
+  key1:   { name: 'Phím bấm', cat: 'input', icon: 'key', desc: 'Đúng khi phím bạn chọn đang được giữ.', syn: 'nut phim', ins: [], outs: [P('down', 'Đang giữ', 'bool')], props: [{ id: 'key', label: 'Phím', kind: 'text', value: 'Z' }], def: 'Phím Z' },
+  mouse:  { name: 'Chuột bấm', cat: 'input', icon: 'mouse', desc: 'Đúng khi bấm chuột vào khung game.', syn: 'click', ins: [], outs: [P('click', 'Vừa bấm', 'bool'), P('x', 'Vị trí X', 'num')], def: 'Chuột' },
+  timer:  { name: 'Hẹn giờ', cat: 'input', icon: 'timer', desc: 'Đếm ngược từ số giây bạn đặt, rồi báo hết giờ.', syn: 'dong ho thoi gian dem nguoc', ins: [], outs: [P('left', 'Còn lại (giây)', 'num'), P('done', 'Hết giờ', 'bool')], props: [{ id: 'sec', label: 'Số giây', kind: 'number', value: 40, min: 5, max: 300, step: 5, unit: 'giây' }], def: 'Đồng hồ' },
+  touch:  { name: 'Chạm', cat: 'rule', icon: 'touch', desc: 'Đúng ngay lúc hai vật vừa chạm vào nhau.', syn: 'va cham dung nhat', ins: [P('a', 'Vật này', 'obj', 1), P('b', 'Chạm vào', 'obj', 1)], outs: [P('hit', 'Vừa chạm', 'bool')], def: 'Mèo nhặt sao' },
+  char:   { name: 'Nhân vật', cat: 'object', icon: 'cat', desc: 'Người chơi điều khiển. Biết đi, nhảy và đứng trên bục.', syn: 'nguoi choi player meo', ins: [P('left', 'Đi trái', 'bool'), P('right', 'Đi phải', 'bool'), P('jump', 'Nhảy', 'bool')], outs: [P('obj', 'Vật thể', 'obj'), P('ground', 'Đang chạm đất', 'bool')], props: [{ id: 'speed', label: 'Tốc độ', kind: 'number', value: 170, min: 40, max: 400, step: 10, unit: 'px/giây' }, { id: 'jumpp', label: 'Lực nhảy', kind: 'number', value: 430, min: 200, max: 700, step: 10, unit: '' }], def: 'Mèo Mướp' },
+  star:   { name: 'Ngôi sao', cat: 'object', icon: 'star', desc: 'Vật để nhặt. Bị chạm thì bay sang chỗ khác.', syn: 'sao vat pham item', ins: [], outs: [P('obj', 'Vật thể', 'obj')], def: 'Sao vàng' },
+  plat:   { name: 'Bục', cat: 'object', icon: 'plat', desc: 'Mặt đứng cứng trong game. Trước đây gọi là "Khối".', syn: 'khoi hop vat can san', ins: [], outs: [P('obj', 'Vật thể', 'obj')], def: 'Bục 1' },
+  enemy:  { name: 'Kẻ địch', cat: 'object', icon: 'ghost', desc: 'Đi qua đi lại trên bục.', syn: 'quai vat ke thu', ins: [P('go', 'Bắt đầu đi', 'bool')], outs: [P('obj', 'Vật thể', 'obj')], def: 'Ma xanh' },
+  counter:{ name: 'Bộ đếm', cat: 'math', icon: 'counter', desc: 'Cộng thêm 1 mỗi lần cổng "Cộng 1" nhận Đúng.', syn: 'dem diem score', ins: [P('add', 'Cộng 1', 'bool', 1), P('reset', 'Về 0', 'bool')], outs: [P('value', 'Giá trị', 'num'), P('goal', 'Đủ mục tiêu', 'bool')], props: [{ id: 'goal', label: 'Mục tiêu', kind: 'number', value: 3, min: 1, max: 99, step: 1, unit: '' }], def: 'Số sao' },
+  compare:{ name: 'So sánh', cat: 'math', icon: 'compare', desc: 'Đúng khi số A lớn hơn hoặc bằng số B.', syn: 'lon hon bang', ins: [P('a', 'Số A', 'num', 1), P('b', 'Số B', 'num')], outs: [P('ok', 'A ≥ B', 'bool')], def: 'So sánh' },
+  add:    { name: 'Cộng', cat: 'math', icon: 'sum', desc: 'Cộng hai số với nhau.', syn: 'tong phep cong', ins: [P('a', 'Số A', 'num', 1), P('b', 'Số B', 'num')], outs: [P('sum', 'Tổng', 'num')], def: 'Cộng' },
+  rand:   { name: 'Ngẫu nhiên', cat: 'math', icon: 'dice', desc: 'Cho một số bất kỳ từ 1 đến 6.', syn: 'random xuc xac', ins: [], outs: [P('n', 'Số', 'num')], def: 'Xúc xắc' },
+  show:   { name: 'Hiện số', cat: 'output', icon: 'screen', desc: 'Hiện một con số ở góc màn hình game.', syn: 'hien diem hud so man hinh', ins: [P('num', 'Số cần hiện', 'num', 1)], outs: [], props: [{ id: 'label', label: 'Nhãn', kind: 'text', value: 'Điểm' }], def: 'Điểm' },
+  win:    { name: 'Thắng', cat: 'output', icon: 'trophy', desc: 'Kết thúc game và báo người chơi đã thắng.', syn: 'chien thang ket thuc', ins: [P('when', 'Khi', 'bool', 1)], outs: [], def: 'Thắng' },
+  lose:   { name: 'Thua', cat: 'output', icon: 'flag', desc: 'Kết thúc game và báo người chơi đã thua.', syn: 'thua cuoc game over', ins: [P('when', 'Khi', 'bool', 1)], outs: [], def: 'Thua' },
+  sound:  { name: 'Phát âm thanh', cat: 'output', icon: 'sound', desc: 'Phát một tiếng "ting" khi nhận Đúng.', syn: 'am thanh nhac tieng', ins: [P('play', 'Phát', 'bool', 1)], outs: [], def: 'Tiếng ting' },
+};
+const FREQ = ['char', 'keys', 'touch', 'counter'];
+
+/* ---------- State ---------- */
+const S = { nodes: [], wires: [], sel: null, selWire: null, z: 1, px: 0, py: 0, mode: 'stopped', view: 'side', uid: 1 };
+const hist = [], fut = [];
+const byId = id => S.nodes.find(n => n.id === id);
+const els = {};       // node id -> element
+const wEls = {};      // wire id -> {g,path,flow,hit,badge,rect,text}
+function snapshot() { return JSON.stringify({ n: S.nodes, w: S.wires, u: S.uid }); }
+function pushHist() { hist.push(snapshot()); if (hist.length > 60) hist.shift(); fut.length = 0; markDirty(); syncUndo(); }
+function restore(js) { const o = JSON.parse(js); S.nodes = o.n; S.wires = o.w; S.uid = o.u; S.sel = null; S.selWire = null; rebuild(); }
+function undo() { if (!hist.length) return toast('Không còn gì để hoàn tác', 'info'); fut.push(snapshot()); restore(hist.pop()); syncUndo(); toast('Đã hoàn tác', 'ok'); markDirty(); }
+function redo() { if (!fut.length) return; hist.push(snapshot()); restore(fut.pop()); syncUndo(); toast('Đã làm lại', 'ok'); markDirty(); }
+function syncUndo() { $('#bUndo').disabled = !hist.length; $('#bRedo').disabled = !fut.length; }
+
+function mkNode(kind, x, y, name) {
+  const K = KINDS[kind], props = {};
+  (K.props || []).forEach(p => props[p.id] = p.value);
+  const same = S.nodes.filter(n => n.kind === kind).length;
+  return { id: 'n' + (S.uid++), kind, x, y, name: name || (same ? `${K.def} ${same + 1}` : K.def), props };
+}
+function mkWire(fn, fp, tn, tp) { return { id: 'w' + (S.uid++), from: { n: fn, p: fp }, to: { n: tn, p: tp } }; }
+
+function loadSample() {
+  S.nodes = []; S.wires = []; S.uid = 1;
+  const k = mkNode('keys', 0, 0), c = mkNode('char', 0, 0), st = mkNode('star', 0, 0), t = mkNode('touch', 0, 0),
+        cnt = mkNode('counter', 0, 0), tm = mkNode('timer', 0, 0), sh = mkNode('show', 0, 0), w = mkNode('win', 0, 0), l = mkNode('lose', 0, 0);
+  w.name = 'Thắng khi đủ sao'; l.name = 'Thua khi hết giờ';
+  S.nodes.push(k, c, st, t, cnt, tm, sh, w, l);
+  S.wires.push(mkWire(k.id, 'left', c.id, 'left'), mkWire(k.id, 'right', c.id, 'right'), mkWire(k.id, 'jump', c.id, 'jump'),
+    mkWire(c.id, 'obj', t.id, 'a'), mkWire(st.id, 'obj', t.id, 'b'), mkWire(t.id, 'hit', cnt.id, 'add'),
+    mkWire(cnt.id, 'value', sh.id, 'num'), mkWire(tm.id, 'done', l.id, 'when'));
+  // Thắng.Khi intentionally unwired: shows the "Thiếu 1 dây" state and is the tutorial task.
+}
+
+/* =====================================================================
+   PALETTE (search is diacritic-insensitive; categories collapsible + sticky)
+   ===================================================================== */
+const collapsed = {};
+function palItem(k) {
+  const K = KINDS[k];
+  return `<button class="pitem" draggable="true" data-kind="${k}" style="--cat:var(${CATS[K.cat].v})" title="${K.desc}">
+    <span class="tile">${icon(K.icon)}</span><b>${K.name}</b><span>${K.desc}</span></button>`;
+}
+function renderPalette() {
+  const q = norm($('#palQ').value);
+  const list = $('#palList'); let html = '';
+  const match = k => { const K = KINDS[k]; const hay = norm(K.name + ' ' + K.desc + ' ' + (K.syn || '') + ' ' + CATS[K.cat].name); return q.split(/\s+/).every(t => hasTok(hay, t)); };
+  if (!q) {
+    html += `<button class="pcat" data-cat="freq" aria-expanded="${!collapsed.freq}" style="--cat:var(--accent)">${icon('chev')}<i></i>Hay dùng<span class="n">${FREQ.length}</span></button>`;
+    if (!collapsed.freq) html += FREQ.map(palItem).join('');
+  }
+  let total = 0;
+  for (const c in CATS) {
+    const ks = Object.keys(KINDS).filter(k => KINDS[k].cat === c && (!q || match(k)));
+    if (!ks.length) continue; total += ks.length;
+    const open = q ? true : !collapsed[c];
+    html += `<button class="pcat" data-cat="${c}" aria-expanded="${open}" style="--cat:var(${CATS[c].v})">${icon('chev')}<i></i>${CATS[c].name}<span class="n">${ks.length}</span></button>`;
+    if (open) html += ks.map(palItem).join('');
+  }
+  if (q && !total) html = `<div class="pal-empty">Không thấy "${$('#palQ').value}". Thử từ khác, ví dụ "dem", "sao", "phim".</div>`;
+  list.innerHTML = html;
+}
+$('#palQ').addEventListener('input', renderPalette);
+$('#palList').addEventListener('click', e => {
+  const c = e.target.closest('.pcat'); if (c) { collapsed[c.dataset.cat] = c.getAttribute('aria-expanded') === 'true'; renderPalette(); return; }
+  const it = e.target.closest('.pitem'); if (it) addSmart(it.dataset.kind);
+});
+$('#palList').addEventListener('dragstart', e => { const it = e.target.closest('.pitem'); if (it) e.dataTransfer.setData('text/plain', it.dataset.kind); });
+
+/* =====================================================================
+   GRAPH RENDER
+   ===================================================================== */
+const graph = $('#graph'), world = $('#world'), svg = $('#wires');
+const NS = 'http://www.w3.org/2000/svg';
+function connectedIn(nid, pid) { return S.wires.find(w => w.to.n === nid && w.to.p === pid); }
+function missingCount(n) { return KINDS[n.kind].ins.filter(p => p.req && !connectedIn(n.id, p.id)).length; }
+
+function nodeHTML(n) {
+  const K = KINDS[n.kind]; let b = '';
+  K.ins.forEach(p => {
+    const miss = p.req && !connectedIn(n.id, p.id);
+    b += `<div class="prow in${miss ? ' req-miss' : ''}" data-p="${p.id}" data-d="in" data-t="${p.type}" style="--tc:var(${TYPE[p.type].v})" title="Cổng vào: ${TYPE[p.type].name}${p.req ? ', cần nối' : ''}">
+      <i class="dot ${p.type}${miss ? ' hollow' : ''}"></i><span>${p.label}</span></div>`;
+  });
+  if (K.ins.length && K.outs.length) b += '<hr>';
+  K.outs.forEach(p => b += `<div class="prow out" data-p="${p.id}" data-d="out" data-t="${p.type}" style="--tc:var(${TYPE[p.type].v})" title="Cổng ra: ${TYPE[p.type].name}"><span>${p.label}</span><i class="dot ${p.type}"></i></div>`);
+  (K.props || []).forEach(pp => { if (n.kind !== 'show' && n.kind !== 'char') b += `<div class="pchip"><span>${pp.label}</span><b data-prop="${pp.id}">${n.props[pp.id]}${pp.unit && pp.unit !== 'px/giây' ? ' ' + pp.unit : ''}</b></div>`; });
+  if (n.kind === 'show') b += `<div class="bigval"><span data-prop="label">${n.props.label}</span><b data-live="show">0</b></div>`;
+  const m = missingCount(n);
+  return `${m ? `<span class="miss">${icon('warn')}Thiếu ${m} dây</span>` : ''}
+    <div class="nh"><span class="tile">${icon(K.icon)}</span><span><div class="nt">${K.name}</div><div class="ns">${esc(n.name)}</div></span></div>
+    <div class="nb">${b}</div>`;
+}
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function renderNode(n) {
+  let el = els[n.id];
+  if (!el) { el = document.createElement('div'); el.className = 'node'; el.dataset.id = n.id; world.appendChild(el); els[n.id] = el; }
+  el.style.setProperty('--cat', `var(${CATS[KINDS[n.kind].cat].v})`);
+  el.innerHTML = nodeHTML(n);
+  el.classList.toggle('sel', S.sel === n.id);
+  el.setAttribute('aria-label', `${KINDS[n.kind].name}: ${n.name}`);
+  posNode(n);
+}
+function posNode(n) { const el = els[n.id]; el.style.left = n.x + 'px'; el.style.top = n.y + 'px'; }
+function rebuild() {
+  for (const id in els) if (!byId(id)) { els[id].remove(); delete els[id]; }
+  S.nodes.forEach(renderNode);
+  for (const id in wEls) { wEls[id].g.remove(); delete wEls[id]; }
+  S.wires.forEach(makeWireEl);
+  drawWires(); afterChange();
+}
+function afterChange() {
+  $('#launch').classList.toggle('show', !S.nodes.length);
+  const t = `${S.nodes.length} mảnh ghép, ${S.wires.length} dây`;
+  $('#gCount').textContent = t; $('#sCount').textContent = t;
+  renderIssues(false); renderInspector(); drawMini(); tutCheck();
+}
+
+function portXY(nid, pid, dir) {
+  const el = els[nid], n = byId(nid); if (!el || !n) return { x: 0, y: 0 };
+  const row = el.querySelector(`.prow[data-p="${pid}"][data-d="${dir}"]`);
+  if (!row) return { x: n.x, y: n.y };
+  return { x: n.x + (dir === 'in' ? 0 : el.offsetWidth), y: n.y + row.offsetTop + row.offsetHeight / 2 };
+}
+const rectOf = n => ({ x: n.x, y: n.y, w: els[n.id] ? els[n.id].offsetWidth : 190, h: els[n.id] ? els[n.id].offsetHeight : 120 });
+
+function routePath(a, b, sr, dr) {
+  const dx = b.x - a.x;
+  if (dx > 36 || !sr) { const c = Math.max(40, Math.abs(dx) * .5); return { d: `M${a.x},${a.y} C${a.x + c},${a.y} ${b.x - c},${b.y} ${b.x},${b.y}`, m: bez(a, { x: a.x + c, y: a.y }, { x: b.x - c, y: b.y }, b, .5) }; }
+  // wrap-around wire: route through the free corridor between lanes instead of under nodes
+  let my;
+  if (dr.y > sr.y + sr.h + 8) my = (sr.y + sr.h + dr.y) / 2;
+  else if (sr.y > dr.y + dr.h + 8) my = (dr.y + dr.h + sr.y) / 2;
+  else my = Math.max(sr.y + sr.h, dr.y + dr.h) + 26;
+  my = clearY(my, Math.min(a.x, b.x) - 50, Math.max(a.x, b.x) + 50);
+  const k = 46;
+  return { d: `M${a.x},${a.y} C${a.x + k},${a.y} ${a.x + k},${my} ${a.x},${my} L${b.x},${my} C${b.x - k},${my} ${b.x - k},${b.y} ${b.x},${b.y}`, m: { x: (a.x + b.x) / 2, y: my } };
+}
+function clearY(y, x0, x1) {
+  for (let i = 0; i < 12; i++) { const hit = S.nodes.map(rectOf).find(r => r.x < x1 && r.x + r.w > x0 && y > r.y - 14 && y < r.y + r.h + 14); if (!hit) return y; y = hit.y + hit.h + 18; }
+  return y;
+}
+function bez(p0, p1, p2, p3, t) { const u = 1 - t; return { x: u*u*u*p0.x + 3*u*u*t*p1.x + 3*u*t*t*p2.x + t*t*t*p3.x, y: u*u*u*p0.y + 3*u*u*t*p1.y + 3*u*t*t*p2.y + t*t*t*p3.y }; }
+const portType = (nid, pid, dir) => { const n = byId(nid); const K = KINDS[n.kind]; return (dir === 'in' ? K.ins : K.outs).find(p => p.id === pid).type; };
+
+function makeWireEl(w) {
+  const t = portType(w.from.n, w.from.p, 'out');
+  const g = document.createElementNS(NS, 'g'); g.dataset.t = t; g.dataset.id = w.id; g.style.setProperty('--tc', `var(${TYPE[t].v})`);
+  g.innerHTML = `<path class="w"/><path class="flow"/><path class="hit"/><g class="badge"><rect rx="6" height="18"/><text></text></g>`;
+  svg.appendChild(g);
+  wEls[w.id] = { g, path: g.children[0], flow: g.children[1], hit: g.children[2], badge: g.children[3], rect: g.children[3].children[0], text: g.children[3].children[1], last: null, on: 0 };
+}
+function drawWires() {
+  const mids = [];
+  S.wires.forEach(w => {
+    const e = wEls[w.id]; if (!e) return;
+    const a = portXY(w.from.n, w.from.p, 'out'), b = portXY(w.to.n, w.to.p, 'in');
+    const r = routePath(a, b, rectOf(byId(w.from.n)), rectOf(byId(w.to.n)));
+    e.path.setAttribute('d', r.d); e.flow.setAttribute('d', r.d); e.hit.setAttribute('d', r.d);
+    // badge collision avoidance: nudge down if another badge is close
+    let m = { ...r.m }; for (const o of mids) if (Math.abs(o.x - m.x) < 46 && Math.abs(o.y - m.y) < 20) m.y = o.y + 22;
+    mids.push(m); e.mid = m; placeBadge(e);
+    e.g.classList.toggle('sel', S.selWire === w.id);
+  });
+}
+function placeBadge(e) {
+  const txt = e.text.textContent || ''; const w = Math.max(24, txt.length * 7 + 12);
+  e.rect.setAttribute('width', w); e.rect.setAttribute('x', e.mid.x - w / 2); e.rect.setAttribute('y', e.mid.y - 9);
+  e.text.setAttribute('x', e.mid.x); e.text.setAttribute('y', e.mid.y + .5);
+}
+
+/* ---------- view (pan/zoom) ---------- */
+function applyView() {
+  world.style.transform = `translate(${S.px}px,${S.py}px) scale(${S.z})`;
+  world.classList.toggle('far', S.z < .6);
+  const pct = Math.round(S.z * 100) + '%'; $('#zVal').textContent = pct; $('#sZoom').textContent = 'Thu phóng ' + pct;
+  graph.style.backgroundSize = `${24 * S.z}px ${24 * S.z}px`; graph.style.backgroundPosition = `${S.px}px ${S.py}px`;
+  drawMini();
+}
+function bounds() {
+  if (!S.nodes.length) return { x: 0, y: 0, w: 400, h: 300 };
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  S.nodes.forEach(n => { const r = rectOf(n); x0 = Math.min(x0, r.x); y0 = Math.min(y0, r.y - 12); x1 = Math.max(x1, r.x + r.w); y1 = Math.max(y1, r.y + r.h); });
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+const dockH = () => $('.gdock').offsetHeight + 22;
+function fit(quiet) {
+  const b = bounds(), W = graph.clientWidth, H = graph.clientHeight;
+  // floor at 0.6: never shrink to unreadable; leave room for bottom dock
+  const D = dockH();
+  S.z = Math.max(.6, Math.min(1.1, (W - 48) / b.w, (H - 24 - D) / b.h));
+  S.px = (W - b.w * S.z) / 2 - b.x * S.z; S.py = Math.max(16, (H - D - b.h * S.z) / 2 + 8) - b.y * S.z;
+  if (b.w * S.z > W - 48) S.px = 24 - b.x * S.z; // too big: anchor at the inputs (left)
+  applyView(); if (!quiet) toast('Đã vừa khung', 'ok');
+}
+function zoomAt(f, cx = graph.clientWidth / 2, cy = graph.clientHeight / 2) {
+  const nz = Math.min(1.6, Math.max(.4, S.z * f));
+  S.px = cx - (cx - S.px) * (nz / S.z); S.py = cy - (cy - S.py) * (nz / S.z); S.z = nz; applyView();
+}
+const toWorld = (cx, cy) => { const r = graph.getBoundingClientRect(); return { x: (cx - r.left - S.px) / S.z, y: (cy - r.top - S.py) / S.z }; };
+graph.addEventListener('wheel', e => { e.preventDefault(); const r = graph.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.1 : 1 / 1.1, e.clientX - r.left, e.clientY - r.top); dismissCoach(); }, { passive: false });
+$('#zIn').onclick = () => zoomAt(1.15); $('#zOut').onclick = () => zoomAt(1 / 1.15);
+$('#zVal').onclick = () => zoomAt(1 / S.z); $('#zFit').onclick = () => fit(); $('#zLay').onclick = () => autoLayout(true);
+
+/* ---------- smart placement + auto layout ---------- */
+function overlaps(r, pad = 22) { return S.nodes.some(n => { const o = rectOf(n); return r.x < o.x + o.w + pad && r.x + r.w + pad > o.x && r.y < o.y + o.h + pad && r.y + r.h + pad > o.y; }); }
+function estSize(kind) { const K = KINDS[kind]; return { w: 196, h: 48 + (K.ins.length + K.outs.length) * 24 + (K.props || []).length * 22 + 14 }; }
+function freeSpot(kind, near) {
+  const s = estSize(kind), W = graph.clientWidth, H = graph.clientHeight - 60;
+  const v = { x: -S.px / S.z, y: -S.py / S.z, w: W / S.z, h: H / S.z };
+  const c = near || { x: v.x + v.w / 2 - s.w / 2, y: v.y + v.h / 2 - s.h / 2 };
+  for (let rad = 0; rad < 1400; rad += 24) {
+    for (let a = 0; a < 360; a += rad ? Math.max(8, 360 / (rad / 6)) : 360) {
+      const x = Math.round((c.x + Math.cos(a * Math.PI / 180) * rad) / 8) * 8, y = Math.round((c.y + Math.sin(a * Math.PI / 180) * rad) / 8) * 8;
+      const r = { x, y, ...s };
+      const inView = x >= v.x + 8 && y >= v.y + 8 && x + s.w <= v.x + v.w - 8 && y + s.h <= v.y + v.h - 8;
+      if ((inView || rad > 600) && !overlaps(r)) return { x, y };
+    }
+  }
+  const b = bounds(); return { x: b.x + b.w + 60, y: b.y };
+}
+function addNode(kind, pos, quiet) {
+  pushHist();
+  const n = mkNode(kind, pos.x, pos.y); S.nodes.push(n); renderNode(n);
+  select(n.id); ensureVisible(n);
+  const el = els[n.id]; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash');
+  afterChange();
+  if (!quiet) toast(`Đã thêm "${KINDS[kind].name}" vào chỗ trống trên bảng`, 'ok');
+  return n;
+}
+function addSmart(kind) { return addNode(kind, freeSpot(kind)); }
+function ensureVisible(n) {
+  const r = rectOf(n), W = graph.clientWidth, H = graph.clientHeight - 60;
+  const sx = r.x * S.z + S.px, sy = r.y * S.z + S.py;
+  if (sx < 10 || sy < 10 || sx + r.w * S.z > W - 10 || sy + r.h * S.z > H) { S.px = W / 2 - (r.x + r.w / 2) * S.z; S.py = H / 2 - (r.y + r.h / 2) * S.z; applyView(); }
+}
+function autoLayout(animate) {
+  if (!S.nodes.length) return;
+  if (animate) pushHist();
+  const L = {}; S.nodes.forEach(n => L[n.id] = 0);
+  for (let i = 0; i < S.nodes.length; i++) S.wires.forEach(w => { L[w.to.n] = Math.max(L[w.to.n], L[w.from.n] + 1); });
+  let max = Math.max(...Object.values(L));
+  const hasOut = id => S.wires.some(w => w.from.n === id), hasIn = id => S.wires.some(w => w.to.n === id);
+  S.nodes.forEach(n => { if (!KINDS[n.kind].outs.length) L[n.id] = max; });                      // results go last
+  S.nodes.forEach(n => { if (!hasIn(n.id) && hasOut(n.id)) { const t = S.wires.filter(w => w.from.n === n.id).map(w => L[w.to.n]); L[n.id] = Math.max(0, Math.min(...t) - 1); } }); // sources sit next to their first consumer
+  max = Math.max(...Object.values(L));
+  // Layers wrap into lanes. Try every column count and keep the one that fits the pane at the largest zoom.
+  const plan = cols => {
+    const cell = {}; S.nodes.forEach(n => { const l = L[n.id], k = Math.floor(l / cols) + ':' + (l % cols); (cell[k] = cell[k] || []).push(n); });
+    const rows = Math.floor(max / cols) + 1, colW = Array(cols).fill(0), rowH = Array(rows).fill(0);
+    for (const k in cell) { const [r, c] = k.split(':').map(Number); let h = 0; cell[k].forEach(n => { const s = rectOf(n); colW[c] = Math.max(colW[c], s.w); h += s.h + 26; }); rowH[r] = Math.max(rowH[r], h - 26); }
+    const colX = [], rowY = []; let acc = 0; colW.forEach((w, i) => { colX[i] = acc; acc += (w || 0) + (w ? 52 : 0); }); const bw = acc - 52; acc = 0; rowH.forEach((h, i) => { rowY[i] = acc; acc += h + 44; }); const bh = acc - 44;
+    const target = {};
+    for (const k in cell) { const [r, c] = k.split(':').map(Number); let y = rowY[r]; cell[k].forEach(n => { target[n.id] = { x: colX[c], y }; y += rectOf(n).h + 26; }); }
+    const z = Math.min((graph.clientWidth - 48) / bw, (graph.clientHeight - 24 - dockH()) / bh) - (cols < max + 1 ? .02 : 0);
+    return { target, z };
+  };
+  let best = null; for (let c = 2; c <= Math.max(2, max + 1); c++) { const p = plan(c); if (!best || p.z > best.z + .01) best = p; }
+  const target = best.target;
+  if (!animate || RM.matches) { S.nodes.forEach(n => { Object.assign(n, target[n.id]); posNode(n); }); drawWires(); afterChange(); if (animate) { fit(true); toast('Đã sắp xếp gọn theo hướng chạy của dây', 'ok'); } return; }
+  const from = {}; S.nodes.forEach(n => from[n.id] = { x: n.x, y: n.y }); const t0 = performance.now();
+  (function step(now) {
+    const p = Math.min(1, (now - t0) / 380), e = 1 - Math.pow(1 - p, 4);
+    S.nodes.forEach(n => { const a = from[n.id], b = target[n.id]; if (!b) return; n.x = a.x + (b.x - a.x) * e; n.y = a.y + (b.y - a.y) * e; posNode(n); });
+    drawWires();
+    if (p < 1) requestAnimationFrame(step); else { afterChange(); fit(true); toast('Đã sắp xếp gọn theo hướng chạy của dây', 'ok'); }
+  })(t0);
+}
+
+/* ---------- selection ---------- */
+function select(id) {
+  S.sel = id; S.selWire = null;
+  for (const k in els) els[k].classList.toggle('sel', k === id);
+  drawWires(); renderInspector();
+}
+function centerOn(id) { const n = byId(id); if (!n) return; const r = rectOf(n); S.px = graph.clientWidth / 2 - (r.x + r.w / 2) * S.z; S.py = (graph.clientHeight - 60) / 2 - (r.y + r.h / 2) * S.z; applyView(); select(id); const el = els[id]; el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+function delSel() {
+  if (S.selWire) { pushHist(); S.wires = S.wires.filter(w => w.id !== S.selWire); S.selWire = null; rebuild(); toast('Đã xóa dây', 'ok', 'Hoàn tác', undo); return; }
+  if (!S.sel) return toast('Chọn một mảnh ghép hoặc dây trước khi xóa', 'info');
+  const n = byId(S.sel); pushHist();
+  S.nodes = S.nodes.filter(x => x.id !== S.sel); S.wires = S.wires.filter(w => w.from.n !== S.sel && w.to.n !== S.sel); S.sel = null; rebuild();
+  toast(`Đã xóa "${n.name}"`, 'ok', 'Hoàn tác', undo);
+}
+function dupSel() {
+  const n = byId(S.sel); if (!n) return toast('Chọn một mảnh ghép để nhân đôi', 'info');
+  const m = addNode(n.kind, freeSpot(n.kind, { x: n.x + 30, y: n.y + rectOf(n).h + 30 }), true);
+  m.props = { ...n.props }; renderNode(m); toast(`Đã nhân đôi "${n.name}"`, 'ok');
+}
+
+/* =====================================================================
+   POINTER: node drag, pan, wire drag (type check + snap 24px + quick-add on empty drop)
+   ===================================================================== */
+let drag = null;
+graph.addEventListener('pointerdown', e => {
+  if (e.button !== 0 || e.target.closest('.gdock,.mini,.issues,.launch')) return;
+  const row = e.target.closest('.prow'), head = e.target.closest('.nh'), nodeEl = e.target.closest('.node'), hit = e.target.closest('.wires .hit');
+  graph.setPointerCapture(e.pointerId); dismissCoach();
+  if (row) {
+    const nid = row.closest('.node').dataset.id; let src = { n: nid, p: row.dataset.p, d: row.dataset.d, t: row.dataset.t };
+    if (src.d === 'in') { const ex = connectedIn(nid, src.p); if (ex) { pushHist(); S.wires = S.wires.filter(w => w !== ex); rebuild(); src = { n: ex.from.n, p: ex.from.p, d: 'out', t: src.t }; drag = { type: 'wire', src, pre: true }; } else drag = { type: 'wire', src }; }
+    else drag = { type: 'wire', src };
+    startWire(); moveWire(e); return;
+  }
+  if (head || nodeEl) {
+    const id = nodeEl.dataset.id; select(id);
+    if (head) { const n = byId(id); const w = toWorld(e.clientX, e.clientY); drag = { type: 'node', id, ox: w.x - n.x, oy: w.y - n.y, moved: false, sx: e.clientX, sy: e.clientY }; }
+    return;
+  }
+  if (hit) { S.sel = null; S.selWire = hit.parentNode.dataset.id; for (const k in els) els[k].classList.remove('sel'); drawWires(); renderInspector(); toast('Đã chọn dây. Bấm Delete để xóa.', 'info'); return; }
+  drag = { type: 'pan', sx: e.clientX, sy: e.clientY, px: S.px, py: S.py, moved: false }; graph.classList.add('panning');
+});
+graph.addEventListener('pointermove', e => {
+  if (!drag) return;
+  if (drag.type === 'pan') { const dx = e.clientX - drag.sx, dy = e.clientY - drag.sy; if (Math.abs(dx) + Math.abs(dy) > 3) drag.moved = true; S.px = drag.px + dx; S.py = drag.py + dy; applyView(); }
+  else if (drag.type === 'node') {
+    if (!drag.moved && Math.abs(e.clientX - drag.sx) + Math.abs(e.clientY - drag.sy) < 3) return;
+    if (!drag.moved) { pushHist(); drag.moved = true; }
+    const n = byId(drag.id), w = toWorld(e.clientX, e.clientY); n.x = Math.round((w.x - drag.ox) / 8) * 8; n.y = Math.round((w.y - drag.oy) / 8) * 8; posNode(n); drawWires(); drawMini();
+  } else if (drag.type === 'wire') moveWire(e);
+});
+graph.addEventListener('pointerup', e => {
+  if (!drag) return; const d = drag; drag = null; graph.classList.remove('panning');
+  if (d.type === 'pan' && !d.moved) { S.sel = null; S.selWire = null; for (const k in els) els[k].classList.remove('sel'); drawWires(); renderInspector(); }
+  if (d.type === 'node' && d.moved) afterChange();
+  if (d.type === 'wire') endWire(e, d);
+});
+graph.addEventListener('dblclick', e => { if (e.target.closest('.node,.gdock,.mini,.launch,.issues')) return; const w = toWorld(e.clientX, e.clientY); openCmd({ mode: 'add', at: { x: w.x - 90, y: w.y - 20 } }); });
+graph.addEventListener('dragover', e => e.preventDefault());
+graph.addEventListener('drop', e => { e.preventDefault(); const k = e.dataTransfer.getData('text/plain'); if (!KINDS[k]) return; const w = toWorld(e.clientX, e.clientY); let p = { x: Math.round((w.x - 90) / 8) * 8, y: Math.round((w.y - 20) / 8) * 8 }; if (overlaps({ ...p, ...estSize(k) }, 10)) p = freeSpot(k, p); addNode(k, p); });
+
+let temp = null, snap = null;
+function compatible(row, src) { return row.dataset.d !== src.d && row.dataset.t === src.t && row.closest('.node').dataset.id !== src.n; }
+function startWire() {
+  graph.classList.add('wiring');
+  $$('.prow', world).forEach(r => r.classList.toggle('ok', compatible(r, drag.src)));
+  temp = document.createElementNS(NS, 'path'); temp.setAttribute('class', 'temp'); temp.style.setProperty('--tc', `var(${TYPE[drag.src.t].v})`); svg.appendChild(temp);
+}
+function moveWire(e) {
+  const p = toWorld(e.clientX, e.clientY), a = portXY(drag.src.n, drag.src.p, drag.src.d);
+  snap = null; let best = 24 / S.z;
+  $$('.prow.ok', world).forEach(r => { const q = portXY(r.closest('.node').dataset.id, r.dataset.p, r.dataset.d); const dd = Math.hypot(q.x - p.x, q.y - p.y); if (dd < best) { best = dd; snap = r; } });
+  $$('.prow.snap', world).forEach(r => r.classList.remove('snap'));
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.prow');
+  if (!snap && over && over.classList.contains('ok')) snap = over;
+  let b = p; if (snap) { snap.classList.add('snap'); b = portXY(snap.closest('.node').dataset.id, snap.dataset.p, snap.dataset.d); }
+  temp.classList.toggle('bad', !!(over && !over.classList.contains('ok') && over.closest('.node').dataset.id !== drag.src.n && !snap));
+  const [s, t] = drag.src.d === 'out' ? [a, b] : [b, a];
+  temp.setAttribute('d', routePath(s, t).d);
+}
+function endWire(e, d) {
+  graph.classList.remove('wiring'); temp?.remove(); temp = null;
+  $$('.prow', world).forEach(r => r.classList.remove('ok', 'snap'));
+  const over = document.elementFromPoint(e.clientX, e.clientY)?.closest?.('.prow');
+  const target = snap || (over && compatible(over, d.src) ? over : null); snap = null;
+  if (target) {
+    const tn = target.closest('.node').dataset.id;
+    const [from, to] = d.src.d === 'out' ? [{ n: d.src.n, p: d.src.p }, { n: tn, p: target.dataset.p }] : [{ n: tn, p: target.dataset.p }, { n: d.src.n, p: d.src.p }];
+    if (!d.pre) pushHist();
+    S.wires = S.wires.filter(w => !(w.to.n === to.n && w.to.p === to.p)); // one wire per input
+    S.wires.push(mkWire(from.n, from.p, to.n, to.p)); rebuild();
+    toast(`Đã nối "${portLabel(from.n, from.p, 'out')}" vào "${portLabel(to.n, to.p, 'in')}"`, 'ok');
+    return;
+  }
+  if (over && over.closest('.node')) {
+    if (over.closest('.node').dataset.id === d.src.n) return;
+    over.classList.add('reject'); setTimeout(() => over.classList.remove('reject'), 400);
+    const ot = over.dataset.t;
+    if (over.dataset.d === d.src.d) toast(`Không nối được: phải nối cổng ra (bên phải) với cổng vào (bên trái)`, 'bad');
+    else toast(`Không nối được: dây ${TYPE[d.src.t].name} không cắm vào cổng ${TYPE[ot].name}. Hãy tìm chấm cùng màu, cùng hình.`, 'bad');
+    if (d.pre) toast('Đã tháo dây ra', 'info', 'Hoàn tác', undo);
+    return;
+  }
+  if (d.pre) { toast('Đã tháo dây ra', 'info', 'Hoàn tác', undo); return; }
+  // dropped on empty space -> suggest only pieces that can accept/give this type
+  const w = toWorld(e.clientX, e.clientY);
+  openCmd({ mode: 'add', at: { x: w.x + (d.src.d === 'out' ? 20 : -210), y: w.y - 40 }, wire: d.src });
+}
+const portLabel = (nid, pid, dir) => { const K = KINDS[byId(nid).kind]; return `${K.name}: ${(dir === 'in' ? K.ins : K.outs).find(p => p.id === pid).label}`; };
+
+/* =====================================================================
+   MINIMAP
+   ===================================================================== */
+const mini = $('#miniC'), mctx = mini.getContext('2d');
+let miniT = null;
+function miniMap() { const b = bounds(); const pad = 30; const s = Math.min((168 - 12) / (b.w + pad * 2), (108 - 12) / (b.h + pad * 2)); return { b, s, ox: (168 - (b.w + pad * 2) * s) / 2 - (b.x - pad) * s, oy: (108 - (b.h + pad * 2) * s) / 2 - (b.y - pad) * s }; }
+function drawMini() {
+  if (miniT) return; miniT = requestAnimationFrame(() => {
+    miniT = null; const m = miniMap(); mctx.clearRect(0, 0, 168, 108);
+    const css = getComputedStyle(document.documentElement);
+    mctx.strokeStyle = 'rgba(185,189,196,.35)'; mctx.lineWidth = 1;
+    S.wires.forEach(w => { const a = byId(w.from.n), b = byId(w.to.n); if (!a || !b) return; const ra = rectOf(a), rb = rectOf(b); mctx.beginPath(); mctx.moveTo((ra.x + ra.w) * m.s + m.ox, (ra.y + ra.h / 2) * m.s + m.oy); mctx.lineTo(rb.x * m.s + m.ox, (rb.y + rb.h / 2) * m.s + m.oy); mctx.stroke(); });
+    S.nodes.forEach(n => { const r = rectOf(n); mctx.fillStyle = css.getPropertyValue(CATS[KINDS[n.kind].cat].v).trim(); mctx.globalAlpha = n.id === S.sel ? 1 : .7; mctx.fillRect(r.x * m.s + m.ox, r.y * m.s + m.oy, Math.max(3, r.w * m.s), Math.max(3, r.h * m.s)); });
+    mctx.globalAlpha = 1;
+    const vx = -S.px / S.z, vy = -S.py / S.z, vw = graph.clientWidth / S.z, vh = graph.clientHeight / S.z;
+    mctx.strokeStyle = '#FFB020'; mctx.lineWidth = 1.5; mctx.strokeRect(vx * m.s + m.ox, vy * m.s + m.oy, vw * m.s, vh * m.s);
+  });
+}
+function miniGo(e) { const r = mini.getBoundingClientRect(), m = miniMap(); const wx = ((e.clientX - r.left) * 168 / r.width - m.ox) / m.s, wy = ((e.clientY - r.top) * 108 / r.height - m.oy) / m.s; S.px = graph.clientWidth / 2 - wx * S.z; S.py = graph.clientHeight / 2 - wy * S.z; applyView(); }
+$('#mini').addEventListener('pointerdown', e => { miniGo(e); const mv = ev => miniGo(ev), up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); }; addEventListener('pointermove', mv); addEventListener('pointerup', up); });
+
+/* =====================================================================
+   ISSUES ("Kiểm tra")
+   ===================================================================== */
+function issues() {
+  const out = [];
+  S.nodes.forEach(n => KINDS[n.kind].ins.forEach(p => { if (p.req && !connectedIn(n.id, p.id)) out.push({ id: n.id, t: `${KINDS[n.kind].name} "${n.name}": cổng "${p.label}" chưa có dây`, s: `Cần một dây ${TYPE[p.type].name} nối vào. Kéo từ chấm cùng hình ở mảnh khác.` }); }));
+  S.nodes.forEach(n => { if (!S.wires.some(w => w.from.n === n.id || w.to.n === n.id) && !KINDS[n.kind].ins.some(p => p.req)) out.push({ id: n.id, t: `"${n.name}" chưa nối với gì`, s: 'Mảnh ghép không có dây sẽ không làm gì trong game.' }); });
+  if (!S.nodes.some(n => n.kind === 'char')) out.push({ t: 'Game chưa có nhân vật', s: 'Thêm mảnh "Nhân vật" để người chơi điều khiển.' });
+  return out;
+}
+function renderIssues(open) {
+  const list = issues(), b = $('#bCheck');
+  b.className = 'gbtn ' + (list.length ? 'warn' : 'good');
+  b.innerHTML = list.length ? `${icon('warn')}${list.length} việc cần làm` : `${icon('check')}Ổn rồi`;
+  const box = $('#issues');
+  box.innerHTML = `<h3>Kiểm tra bảng nối</h3>` + (list.length ? list.map((x, i) => `<button data-i="${i}" data-id="${x.id || ''}">${icon('warn')}<span>${x.t}<small>${x.s}</small></span></button>`).join('') : `<div class="none">Không thấy vấn đề nào. Bấm Chơi để thử.</div>`);
+  if (open !== undefined && open !== false) box.classList.add('open');
+  b.setAttribute('aria-expanded', box.classList.contains('open'));
+}
+$('#bCheck').onclick = () => { const box = $('#issues'); box.classList.toggle('open'); renderIssues(); };
+$('#issues').addEventListener('click', e => { const b = e.target.closest('button[data-id]'); if (b && b.dataset.id) { centerOn(b.dataset.id); $('#issues').classList.remove('open'); renderIssues(); } });
+
+/* =====================================================================
+   INSPECTOR "Thuộc tính" (horizontal bar)
+   ===================================================================== */
+function renderInspector() {
+  const box = $('#insp'), n = byId(S.sel);
+  if (!n) {
+    box.innerHTML = `<div class="tips"><div><h4>Thuộc tính</h4><div style="font-size:13px;color:var(--text-3);max-width:240px">Bấm vào tên một mảnh ghép để xem và chỉnh nó ở đây. Số đổi được cả khi đang chơi.</div></div>
+      <ul><li><kbd>Ctrl K</kbd> tìm mảnh ghép, lệnh</li><li><kbd>F</kbd> vừa khung</li><li><kbd>Ctrl Enter</kbd> chơi hoặc tạm dừng</li><li><kbd>L</kbd> sắp xếp gọn</li><li><kbd>Ctrl Z</kbd> hoàn tác</li><li><kbd>Delete</kbd> xóa thứ đang chọn</li></ul></div>`;
+    return;
+  }
+  const K = KINDS[n.kind];
+  const props = (K.props || []).map(p => p.kind === 'number'
+    ? `<label class="fld">${p.label}<span class="box"><input type="number" data-prop="${p.id}" value="${n.props[p.id]}" min="${p.min}" max="${p.max}" step="${p.step}" aria-label="${p.label}"><span class="u">${p.unit}</span><button class="st" data-step="-1" data-for="${p.id}" aria-label="Giảm ${p.label}">${icon('minus')}</button><button class="st" data-step="1" data-for="${p.id}" aria-label="Tăng ${p.label}">${icon('plus')}</button></span></label>`
+    : `<label class="fld">${p.label}<span class="box"><input type="text" data-prop="${p.id}" value="${esc(n.props[p.id])}"></span></label>`).join('');
+  const portRows = (arr, dir) => arr.map(p => {
+    const ws = dir === 'in' ? S.wires.filter(w => w.to.n === n.id && w.to.p === p.id) : S.wires.filter(w => w.from.n === n.id && w.from.p === p.id);
+    const links = ws.map(w => { const o = byId(dir === 'in' ? w.from.n : w.to.n); return `<button data-jump="${o.id}">${esc(o.name)}</button>`; }).join('');
+    return `<div class="pr"><i class="dot ${p.type}" style="--tc:var(${TYPE[p.type].v})"></i>${p.label} ${dir === 'in' ? '←' : '→'} ${links || (p.req ? '<span class="need">cần nối</span>' : '<span class="none">chưa nối</span>')}</div>`;
+  }).join('');
+  box.innerHTML = `
+    <div class="isec"><div class="iname"><span class="tile" style="--cat:var(${CATS[K.cat].v});width:36px;height:36px;border-radius:9px">${icon(K.icon)}</span>
+      <div style="flex:1;min-width:0"><label class="sr" for="iName">Tên</label><input id="iName" value="${esc(n.name)}" spellcheck="false"><div class="kindl">${K.name}, nhóm ${CATS[K.cat].name}</div><p>${K.desc}</p></div></div></div>
+    ${props ? `<div class="isec"><h4>CHỈNH SỐ</h4><div class="fields">${props}</div><span class="livetag">${icon('bolt')}Đổi được cả khi đang chơi</span></div>` : ''}
+    <div class="isec"><h4>CỔNG</h4><div class="ports"><div>${portRows(K.ins, 'in') || '<div class="pr none">Không có cổng vào</div>'}</div><div>${portRows(K.outs, 'out') || '<div class="pr none">Không có cổng ra</div>'}</div></div></div>
+    <div class="isec acts"><button class="abtn" data-a="dup">${icon('copy')}Nhân đôi</button>${K.cat === 'object' ? `<button class="abtn" data-a="see">${icon('eye')}Xem trong game</button>` : ''}<button class="abtn danger" data-a="del">${icon('trash')}Xóa</button></div>`;
+}
+$('#insp').addEventListener('input', e => {
+  const n = byId(S.sel); if (!n) return;
+  if (e.target.id === 'iName') { n.name = e.target.value || KINDS[n.kind].def; const s = els[n.id].querySelector('.ns'); s.textContent = n.name; markDirty(); return; }
+  const pid = e.target.dataset.prop; if (!pid) return;
+  const p = KINDS[n.kind].props.find(x => x.id === pid);
+  n.props[pid] = p.kind === 'number' ? Math.max(p.min, Math.min(p.max, Number(e.target.value) || p.min)) : e.target.value;
+  const chip = els[n.id].querySelector(`[data-prop="${pid}"]`); if (chip) chip.textContent = n.props[pid] + (p.unit && p.unit !== 'px/giây' ? ' ' + p.unit : '');
+  markDirty();
+});
+$('#insp').addEventListener('click', e => {
+  const st = e.target.closest('[data-step]'); if (st) { e.preventDefault(); const inp = $(`input[data-prop="${st.dataset.for}"]`, $('#insp')); inp.stepUp ? (st.dataset.step > 0 ? inp.stepUp() : inp.stepDown()) : 0; inp.dispatchEvent(new Event('input', { bubbles: true })); return; }
+  const j = e.target.closest('[data-jump]'); if (j) return centerOn(j.dataset.jump);
+  const a = e.target.closest('[data-a]'); if (!a) return;
+  if (a.dataset.a === 'del') delSel(); if (a.dataset.a === 'dup') dupSel();
+  if (a.dataset.a === 'see') { G.ping = { id: S.sel, t: performance.now() }; toast('Đang chỉ vị trí trong khung game', 'info'); }
+});
+
+/* =====================================================================
+   TUTORIAL (docked card, never floats over the graph)
+   ===================================================================== */
+const TUT = [
+  { t: 'Bấm <em>Chơi</em>, rồi dùng phím mũi tên đưa mèo tới ngôi sao. Xem dây sáng lên bên phải.', done: () => G.everScore > 0, guide: () => [] },
+  { t: 'Game chưa biết khi nào thắng. Kéo dây từ <em>Đủ mục tiêu</em> của Bộ đếm vào cổng <em>Khi</em> của Thắng.', done: () => S.wires.some(w => byId(w.from.n)?.kind === 'counter' && w.from.p === 'goal' && byId(w.to.n)?.kind === 'win'), guide: () => [['counter', 'goal', 'out'], ['win', 'when', 'in']] },
+  { t: 'Bấm <em>Chơi lại</em> và nhặt đủ 3 sao trước khi hết giờ để thắng.', done: () => G.result === 'win', guide: () => [] },
+];
+let tutI = 0;
+function tutCheck() { while (tutI < TUT.length && TUT[tutI].done()) { tutI++; if (tutI <= TUT.length) toast(tutI === TUT.length ? 'Xong bài 2. Bạn vừa làm một game có thắng thua!' : 'Đúng rồi, sang bước tiếp theo', 'ok'); } renderTut(); }
+function renderTut() {
+  const d = tutI >= TUT.length; const box = $('#tut'); box.classList.toggle('done', d);
+  const dots = TUT.map((_, i) => `<i class="${i < tutI ? 'done' : i === tutI ? 'cur' : ''}"></i>`).join('');
+  const html = `<div class="tut-h">${icon('book')}<b>Bài 2: Nhặt đủ sao thì thắng</b><span class="steps" aria-label="Bước ${Math.min(tutI + 1, 3)} trên 3">${dots}</span></div>
+    <p>${d ? 'Hoàn thành! Thử đổi "Mục tiêu" của Bộ đếm thành 5 rồi chơi lại.' : TUT[tutI].t}</p>
+    <div class="tut-a">${d ? '' : `<button class="abtn pri" data-t="guide">${icon('target')}Chỉ cho tôi</button>`}<button class="abtn" data-t="lessons">Các bài học</button></div>`;
+  if (box.innerHTML !== html) box.innerHTML = html;
+}
+function guide() {
+  if (tutI >= TUT.length) return;
+  const g = TUT[tutI].guide();
+  if (!g.length) { if (S.mode !== 'playing') $('#bPlay').focus(); toast(tutI === 0 ? 'Nút Chơi ở giữa thanh trên cùng' : 'Nút Chơi lại ở cạnh nút Chơi', 'info'); return; }
+  g.forEach(([kind, pid, dir]) => { const n = S.nodes.find(x => x.kind === kind); if (!n) return; const r = els[n.id].querySelector(`.prow[data-p="${pid}"][data-d="${dir}"]`); r.classList.remove('guide'); void r.offsetWidth; r.classList.add('guide'); setTimeout(() => r.classList.remove('guide'), 3200); });
+  fit(true); toast('Hai cổng cần nối đang được tô sáng', 'info');
+}
+$('#tut').addEventListener('click', e => { const b = e.target.closest('[data-t]'); if (!b) return; if (b.dataset.t === 'guide') guide(); else toast('Thư viện bài học: có 6 bài, bạn đang ở bài 2 (bản mẫu chưa mở trang này)', 'info'); });
+
+/* =====================================================================
+   COMMAND PALETTE (Ctrl+K) diacritic-insensitive, keyboard navigable
+   ===================================================================== */
+const CMDS = [
+  { l: 'Thêm mảnh ghép', d: 'Chọn một mảnh để đặt lên bảng', syn: 'them khoi them node add', ic: 'plus', k: '', run: () => setTimeout(() => openCmd({ mode: 'add' }), 0) },
+  { l: 'Vừa khung', d: 'Thấy hết bảng nối', syn: 'fit zoom vua man hinh', ic: 'fit', k: 'F', run: () => fit() },
+  { l: 'Sắp xếp gọn', d: 'Xếp các mảnh theo hướng dây chạy', syn: 'auto layout gon gang', ic: 'layout', k: 'L', run: () => autoLayout(true) },
+  { l: 'Chơi', d: 'Chạy game ở khung bên trái', syn: 'play bat dau chay', ic: 'bolt', k: 'Ctrl Enter', run: () => play() },
+  { l: 'Tạm dừng', d: 'Dừng hình, giữ nguyên mọi giá trị', syn: 'pause', ic: 'pause', k: 'Ctrl Enter', run: () => pause() },
+  { l: 'Dừng', d: 'Dừng game và đưa mọi thứ về lúc đầu', syn: 'stop', ic: 'stop', k: 'Ctrl Shift Enter', run: () => stop() },
+  { l: 'Chơi lại', d: 'Bắt đầu lại từ đầu ngay', syn: 'restart reset', ic: 'restart', k: '', run: () => restart() },
+  { l: 'Phóng to', d: 'Nhìn bảng nối gần hơn', syn: 'zoom in', ic: 'plus', k: '+', run: () => zoomAt(1.15) },
+  { l: 'Thu nhỏ', d: 'Nhìn bảng nối xa hơn', syn: 'zoom out', ic: 'minus', k: '-', run: () => zoomAt(1 / 1.15) },
+  { l: 'Kiểm tra bảng nối', d: 'Xem dây nào còn thiếu', syn: 'loi sai check van de', ic: 'check', k: '', run: () => renderIssues(true) },
+  { l: 'Góc nhìn: 2D ngang', d: 'Nhìn từ bên cạnh, có trọng lực', syn: 'view side', ic: 'screen', k: '', run: () => setView('side') },
+  { l: 'Góc nhìn: 2D trên', d: 'Nhìn từ trên xuống', syn: 'view top', ic: 'screen', k: '', run: () => setView('top') },
+  { l: 'Góc nhìn: 3D', d: 'Cảnh có chiều sâu', syn: 'view 3d', ic: 'screen', k: '', run: () => setView('3d') },
+  { l: 'Hoàn tác', d: 'Bỏ thao tác vừa làm', syn: 'undo', ic: 'undo', k: 'Ctrl Z', run: () => undo() },
+  { l: 'Nhân đôi mảnh ghép', d: 'Tạo bản sao của mảnh đang chọn', syn: 'duplicate copy', ic: 'copy', k: 'Ctrl D', run: () => dupSel() },
+  { l: 'Chỉ cho tôi bước tiếp theo', d: 'Tô sáng chỗ cần làm trong bài học', syn: 'huong dan tutorial', ic: 'target', k: '', run: () => guide() },
+  { l: 'Xem phím tắt và thuật ngữ', d: 'Danh sách phím và từ ngữ', syn: 'shortcut help tro giup', ic: 'keyboard', k: '?', run: () => $('#keys').showModal() },
+  { l: 'Tạo game mới', d: 'Bảng trống, có thể hoàn tác', syn: 'new moi', ic: 'plus', k: '', run: () => newGame() },
+];
+let ck = { mode: 'all', items: [], i: 0, at: null, wire: null };
+function openCmd(opt = {}) {
+  ck = { mode: opt.mode || 'all', items: [], i: 0, at: opt.at || null, wire: opt.wire || null };
+  const ctx = $('#ckCtx');
+  if (ck.wire) { ctx.hidden = false; ctx.innerHTML = `<i class="dot ${ck.wire.t}" style="--tc:var(${TYPE[ck.wire.t].v})"></i>Hợp với dây ${TYPE[ck.wire.t].name}`; }
+  else if (ck.mode === 'add') { ctx.hidden = false; ctx.innerHTML = 'Thêm mảnh ghép'; } else ctx.hidden = true;
+  $('#ckQ').value = ''; const d = $('#cmdk'); if (!d.open) d.showModal(); ckRender(); $('#ckQ').focus();
+}
+function hl(label, q) {
+  if (!q) return esc(label);
+  const nl = norm(label); const tok = q.split(/\s+/).filter(Boolean)[0]; const i = nl.indexOf(tok);
+  // NFD-normalised string keeps the same length for Vietnamese letters after stripping marks, so indexes map back
+  if (i < 0 || nl.length !== label.length) return esc(label);
+  return esc(label.slice(0, i)) + '<mark>' + esc(label.slice(i, i + tok.length)) + '</mark>' + esc(label.slice(i + tok.length));
+}
+function ckScore(label, hay, q) {
+  if (!q) return 1; const toks = q.split(/\s+/).filter(Boolean); const nl = norm(label);
+  if (!toks.every(t => hasTok(hay, t))) return 0;
+  return (nl.startsWith(q) ? 100 : 0) + (nl.includes(q) ? 50 : 0) + (toks.every(t => nl.includes(t)) ? 20 : 0) + 1;
+}
+function ckRender() {
+  const q = norm($('#ckQ').value); const items = [];
+  if (ck.mode === 'all') CMDS.forEach(c => { const s = ckScore(c.l, norm(c.l + ' ' + c.d + ' ' + c.syn), q); if (s) items.push({ g: 'Lệnh', s, label: c.l, desc: c.d, ic: c.ic, r: c.k ? `<kbd>${c.k}</kbd>` : '', run: c.run }); });
+  Object.keys(KINDS).forEach(k => {
+    const K = KINDS[k];
+    if (ck.wire) { const list = ck.wire.d === 'out' ? K.ins : K.outs; if (!list.some(p => p.type === ck.wire.t)) return; }
+    const s = ckScore(K.name, norm(K.name + ' ' + K.desc + ' ' + (K.syn || '') + ' ' + CATS[K.cat].name), q);
+    if (s) items.push({ g: 'Mảnh ghép', s: s + (q ? 0 : -1), label: K.name, desc: K.desc, ic: K.icon, cat: K.cat, r: CATS[K.cat].name, kind: k });
+  });
+  if (q) items.sort((a, b) => b.s - a.s);
+  ck.items = items; ck.i = Math.min(ck.i, Math.max(0, items.length - 1));
+  const ul = $('#ckList');
+  if (!items.length) { ul.innerHTML = `<li class="ck-empty">Không có kết quả cho "${esc($('#ckQ').value)}". Thử gõ ít chữ hơn.</li>`; $('#ckQ').removeAttribute('aria-activedescendant'); return; }
+  let html = '', last = '';
+  items.forEach((it, i) => {
+    if (it.g !== last && !q) { html += `<li class="grp" role="presentation">${it.g.toUpperCase()}</li>`; last = it.g; }
+    html += `<li class="it" role="option" id="ck${i}" data-i="${i}" aria-selected="${i === ck.i}"><span class="ic" ${it.cat ? `style="color:var(${CATS[it.cat].v})"` : ''}>${icon(it.ic)}</span><span><b>${hl(it.label, q)}</b><small>${it.desc}</small></span><span class="r">${it.r}</span></li>`;
+  });
+  ul.innerHTML = html; $('#ckQ').setAttribute('aria-activedescendant', 'ck' + ck.i);
+  $('#ck' + ck.i)?.scrollIntoView({ block: 'nearest' });
+}
+function ckRun(i) {
+  const it = ck.items[i]; if (!it) return; const ctx = { ...ck }; $('#cmdk').close();
+  if (it.run) return it.run();
+  const pos = ctx.at && !overlaps({ ...ctx.at, ...estSize(it.kind) }, 6) ? { x: Math.round(ctx.at.x / 8) * 8, y: Math.round(ctx.at.y / 8) * 8 } : freeSpot(it.kind, ctx.at);
+  const n = addNode(it.kind, pos, !!ctx.wire);
+  if (ctx.wire) { // auto-connect the dropped wire to the first matching port
+    const K = KINDS[it.kind]; const list = ctx.wire.d === 'out' ? K.ins : K.outs; const p = list.find(x => x.type === ctx.wire.t);
+    if (ctx.wire.d === 'out') S.wires.push(mkWire(ctx.wire.n, ctx.wire.p, n.id, p.id)); else S.wires.push(mkWire(n.id, p.id, ctx.wire.n, ctx.wire.p));
+    rebuild(); select(n.id); toast(`Đã thêm "${K.name}" và nối dây sẵn`, 'ok');
+  }
+}
+$('#ckQ').addEventListener('input', () => { ck.i = 0; ckRender(); });
+$('#ckQ').addEventListener('keydown', e => {
+  if (e.key === 'ArrowDown') { e.preventDefault(); ck.i = (ck.i + 1) % Math.max(1, ck.items.length); ckRender(); }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); ck.i = (ck.i - 1 + ck.items.length) % Math.max(1, ck.items.length); ckRender(); }
+  else if (e.key === 'Enter') { e.preventDefault(); ckRun(ck.i); }
+});
+$('#ckList').addEventListener('click', e => { const li = e.target.closest('.it'); if (li) ckRun(+li.dataset.i); });
+$('#ckList').addEventListener('mousemove', e => { const li = e.target.closest('.it'); if (li && +li.dataset.i !== ck.i) { ck.i = +li.dataset.i; $$('#ckList .it').forEach(x => x.setAttribute('aria-selected', x === li)); $('#ckQ').setAttribute('aria-activedescendant', li.id); } });
+$('#cmdk').addEventListener('click', e => { if (e.target === $('#cmdk')) $('#cmdk').close(); });
+$('#bCmd').onclick = () => openCmd(); $('#bAdd').onclick = () => openCmd({ mode: 'add' });
+$('#keys').addEventListener('click', e => { if (e.target === $('#keys') || e.target.closest('[data-close]')) $('#keys').close(); });
+$('#bKeys').onclick = $('#sKeys').onclick = () => $('#keys').showModal();
+
+/* =====================================================================
+   MENUS
+   ===================================================================== */
+function closeMenus() { $$('.menu.open').forEach(m => m.classList.remove('open')); $$('[data-menu]').forEach(b => b.setAttribute('aria-expanded', 'false')); }
+$$('[data-menu]').forEach(b => b.addEventListener('click', e => {
+  e.stopPropagation(); const m = $('#' + b.dataset.menu); const was = m.classList.contains('open'); closeMenus(); if (was) return;
+  m.style.left = (b.offsetLeft) + 'px'; m.classList.add('open'); b.setAttribute('aria-expanded', 'true'); m.querySelector('button').focus();
+}));
+$$('.menu').forEach(m => m.addEventListener('keydown', e => {
+  const bs = $$('button', m), i = bs.indexOf(document.activeElement);
+  if (e.key === 'ArrowDown') { e.preventDefault(); bs[(i + 1) % bs.length].focus(); }
+  if (e.key === 'ArrowUp') { e.preventDefault(); bs[(i - 1 + bs.length) % bs.length].focus(); }
+  if (e.key === 'Escape') { closeMenus(); $(`[data-menu="${m.id}"]`).focus(); }
+}));
+document.addEventListener('click', e => { if (!e.target.closest('.menu')) closeMenus(); if (!e.target.closest('#issues,#bCheck')) { $('#issues').classList.remove('open'); $('#bCheck').setAttribute('aria-expanded', 'false'); } });
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return; closeMenus();
+  ({ new: newGame, sample: () => { pushHist(); stop(true); loadSample(); rebuild(); autoLayout(false); fit(true); toast('Đã mở game mẫu "Nhặt sao"', 'ok'); },
+     save: () => { markDirty(); toast('Đã lưu vào máy này', 'ok'); }, export: () => toast('Xuất file: bản mẫu chưa làm chức năng này', 'info'),
+     undo, redo, dup: dupSel, del: delSel, layout: () => autoLayout(true), keys: () => $('#keys').showModal(), guide,
+     lessons: () => toast('Thư viện bài học: có 6 bài, bạn đang ở bài 2 (bản mẫu chưa mở trang này)', 'info'),
+     blank: () => { $('#launch').classList.remove('show'); $('#palQ').focus(); toast('Kéo một mảnh ghép từ cột trái sang bảng', 'info'); } })[b.dataset.act]?.();
+});
+function newGame() { pushHist(); stop(true); S.nodes = []; S.wires = []; S.sel = null; rebuild(); applyView(); toast('Đã tạo game mới', 'ok', 'Hoàn tác', undo); }
+
+/* =====================================================================
+   SAVE STATUS + TOAST (status bar slot: fixed height, never covers the game)
+   ===================================================================== */
+let saveT;
+function markDirty() { const s = $('#save'); s.classList.add('busy'); s.querySelector('.lbl').textContent = 'Đang lưu'; clearTimeout(saveT); saveT = setTimeout(() => { s.classList.remove('busy'); s.querySelector('.lbl').textContent = 'Đã lưu'; s.title = 'Lưu lúc ' + new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }); }, 700); }
+let toastT;
+function toast(msg, kind = 'info', actLabel, act) {
+  const t = $('#toast'); const ic = kind === 'ok' ? 'check' : kind === 'bad' ? 'warn' : 'info';
+  t.className = 'toast ' + kind; t.innerHTML = icon(ic) + `<span>${esc(msg)}</span>` + (actLabel ? `<button>${actLabel}</button>` : '');
+  if (act) t.querySelector('button').onclick = act;
+  void t.offsetWidth; t.classList.add('in');
+  clearTimeout(toastT); toastT = setTimeout(() => { t.className = 'toast'; t.innerHTML = icon('info') + '<span>Mẹo: kéo nền bảng nối để di chuyển, lăn chuột để phóng to</span>'; }, actLabel ? 7000 : 4500);
+}
+
+/* =====================================================================
+   GAME + LIVE EVALUATION
+   ===================================================================== */
+const cv = $('#game'), g2 = cv.getContext('2d'), WW = 640, WH = 360;
+const PLATS = [{ x: 0, y: 330, w: 640, h: 30 }, { x: 70, y: 252, w: 130, h: 14 }, { x: 260, y: 196, w: 120, h: 14 }, { x: 440, y: 248, w: 150, h: 14 }, { x: 150, y: 128, w: 100, h: 14 }, { x: 470, y: 140, w: 90, h: 14 }];
+const STARSPOTS = [{ x: 250, y: 306 }, { x: 130, y: 226 }, { x: 318, y: 170 }, { x: 512, y: 222 }, { x: 196, y: 102 }, { x: 514, y: 114 }, { x: 580, y: 306 }];
+const keys = { left: false, right: false, jump: false };
+const G = { t: 0, char: null, stars: {}, vals: {}, mem: {}, result: null, everScore: 0, ping: null, log: [], hud: [] };
+function resetGame() {
+  G.t = 0; G.result = null; G.vals = {}; G.mem = {}; G.log = []; G.hud = [];
+  G.char = { x: 40, y: 300, w: 24, h: 28, vx: 0, vy: 0, ground: true, face: 1 };
+  G.stars = {}; let k = 0; S.nodes.filter(n => n.kind === 'star').forEach(n => G.stars[n.id] = { i: k, ...STARSPOTS[k++ % STARSPOTS.length] });
+  renderLog();
+}
+function topo() {
+  const indeg = {}, out = {}; S.nodes.forEach(n => { indeg[n.id] = 0; out[n.id] = []; });
+  S.wires.forEach(w => { if (indeg[w.to.n] !== undefined) { indeg[w.to.n]++; out[w.from.n].push(w.to.n); } });
+  const q = S.nodes.filter(n => !indeg[n.id]).map(n => n.id), order = [];
+  while (q.length) { const id = q.shift(); order.push(id); out[id].forEach(t => { if (--indeg[t] === 0) q.push(t); }); }
+  S.nodes.forEach(n => { if (!order.includes(n.id)) order.push(n.id); }); return order;
+}
+const overlap = (a, b) => a && b && a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+function entity(o) { if (!o) return null; if (o.k === 'char') return G.char; if (o.k === 'star') { const s = G.stars[o.id]; return s && { x: s.x - 11, y: s.y - 11, w: 22, h: 22 }; } return null; }
+function inp(n, pid, def) { const w = connectedIn(n.id, pid); if (!w) return def; const v = G.vals[w.from.n]; return v && v[w.from.p] !== undefined ? v[w.from.p] : def; }
+function logEv(nid, who, what) { G.log.unshift({ t: G.t, nid, who, what, fresh: true }); G.log.length = Math.min(G.log.length, 30); renderLog(); }
+function evaluate(dt) {
+  G.hud = [];
+  for (const id of topo()) {
+    const n = byId(id), m = (G.mem[id] = G.mem[id] || {}), o = {};
+    switch (n.kind) {
+      case 'keys': o.left = keys.left; o.right = keys.right; o.jump = keys.jump; break;
+      case 'key1': o.down = false; break;
+      case 'mouse': o.click = false; o.x = 0; break;
+      case 'timer': o.left = Math.max(0, n.props.sec - G.t); o.done = o.left <= 0; if (o.done && !m.d) { m.d = 1; logEv(id, n.name, 'hết giờ'); } break;
+      case 'char': o.obj = { k: 'char', id }; o.ground = G.char.ground; m.l = inp(n, 'left', false); m.r = inp(n, 'right', false); m.j = inp(n, 'jump', false); break;
+      case 'star': o.obj = { k: 'star', id }; break;
+      case 'plat': case 'enemy': o.obj = { k: n.kind, id }; break;
+      case 'touch': {
+        const A = inp(n, 'a', null), B = inp(n, 'b', null); const now = overlap(entity(A), entity(B));
+        o.hit = !!(now && !m.prev); m.prev = now;
+        if (o.hit) { const st = [A, B].find(x => x && x.k === 'star'); if (st) { const s = G.stars[st.id]; s.i = (s.i + 1) % STARSPOTS.length; Object.assign(s, STARSPOTS[s.i]); G.sparkle = { x: entity(A === st ? B : A)?.x || 0, y: entity(A === st ? B : A)?.y || 0, t: performance.now() }; } m.fired = performance.now(); }
+        break;
+      }
+      case 'counter': {
+        m.v = m.v || 0; const a = inp(n, 'add', false), r = inp(n, 'reset', false);
+        if (a && !m.pa) { m.v++; const c = S.nodes.find(x => x.id === connectedIn(n.id, 'add')?.from.n); logEv(id, n.name, `${c ? c.name + ' vừa xảy ra, ' : ''}Bộ đếm thành ${m.v}`); if (m.v > G.everScore) { G.everScore = m.v; tutCheck(); } m.fired = performance.now(); }
+        if (r && !m.pr) m.v = 0; m.pa = a; m.pr = r;
+        o.value = m.v; o.goal = m.v >= n.props.goal; break;
+      }
+      case 'compare': o.ok = inp(n, 'a', 0) >= inp(n, 'b', 0); break;
+      case 'add': o.sum = inp(n, 'a', 0) + inp(n, 'b', 0); break;
+      case 'rand': m.r = m.r || 1 + Math.floor(Math.random() * 6); o.n = m.r; break;
+      case 'show': m.v = inp(n, 'num', 0); G.hud.push({ label: n.props.label, v: m.v }); break;
+      case 'win': if (inp(n, 'when', false) && !G.result) { G.result = 'win'; logEv(id, n.name, 'người chơi thắng'); tutCheck(); } break;
+      case 'lose': if (inp(n, 'when', false) && !G.result) { G.result = 'lose'; logEv(id, n.name, 'người chơi thua'); } break;
+    }
+    G.vals[id] = o;
+  }
+  // physics driven by the Nhân vật node inputs (so unplugging a wire stops the cat)
+  const cn = S.nodes.find(n => n.kind === 'char'); const c = G.char;
+  if (cn) {
+    const m = G.mem[cn.id] || {}; const sp = cn.props.speed;
+    c.vx = ((m.r ? 1 : 0) - (m.l ? 1 : 0)) * sp; if (c.vx) c.face = Math.sign(c.vx);
+    if (m.j && c.ground) { c.vy = -cn.props.jumpp; c.ground = false; }
+    c.vy = Math.min(900, c.vy + 1100 * dt); const py = c.y;
+    c.x = Math.max(0, Math.min(WW - c.w, c.x + c.vx * dt)); c.y += c.vy * dt; c.ground = false;
+    for (const p of PLATS) if (c.vy >= 0 && py + c.h <= p.y + 2 && c.y + c.h >= p.y && c.x + c.w > p.x + 2 && c.x < p.x + p.w - 2) { c.y = p.y - c.h; c.vy = 0; c.ground = true; }
+  }
+}
+function renderLog() {
+  const ol = $('#log');
+  if (!G.log.length) { ol.innerHTML = `<li class="log-empty">${S.mode === 'stopped' ? 'Bấm Chơi. Mỗi việc xảy ra trong game sẽ hiện ở đây, kèm mảnh ghép gây ra nó.' : 'Chưa có gì xảy ra. Thử đưa mèo chạm vào ngôi sao.'}</li>`; return; }
+  ol.innerHTML = G.log.map(e => { const s = Math.floor(e.t); const h = `<li${e.fresh ? ' class="new"' : ''}><button data-nid="${e.nid}"><time>${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}</time><span class="who">${esc(e.who)}</span><span>${esc(e.what)}</span></button></li>`; e.fresh = false; return h; }).join('');
+}
+$('#log').addEventListener('click', e => { const b = e.target.closest('[data-nid]'); if (b && byId(b.dataset.nid)) centerOn(b.dataset.nid); });
+
+/* live wire state */
+const fmt = v => typeof v === 'number' ? (Number.isInteger(v) ? String(v) : String(Math.ceil(v))) : '';
+function liveWires() {
+  const now = performance.now();
+  S.wires.forEach(w => {
+    const e = wEls[w.id]; if (!e) return; const v = G.vals[w.from.n]?.[w.from.p]; const t = e.g.dataset.t;
+    if (t === 'bool') { if (v) e.on = now; const on = now - e.on < 280; e.g.classList.toggle('on', on); const txt = on ? 'Đúng' : 'Sai'; if (e.text.textContent !== txt) { e.text.textContent = txt; placeBadge(e); } }
+    else if (t === 'num') { const txt = fmt(v ?? 0); if (e.text.textContent !== txt) { const bump = e.text.textContent !== '' && w.from.p === 'value'; e.text.textContent = txt; placeBadge(e); if (bump) { e.badge.classList.remove('bump'); void e.badge.getBBox(); e.badge.classList.add('bump'); } } }
+    else { const o = v && byId(v.id); const txt = o ? o.name : ''; if (e.text.textContent !== txt) { e.text.textContent = txt; placeBadge(e); } }
+  });
+  S.nodes.forEach(n => {
+    const el = els[n.id]; const m = G.mem[n.id] || {}; const vals = G.vals[n.id] || {};
+    const fire = (m.fired && now - m.fired < 350) || Object.entries(vals).some(([k, v]) => v === true && k !== 'ground');
+    el.classList.toggle('fire', !!fire);
+    if (n.kind === 'show') { const b = el.querySelector('[data-live="show"]'); const t = fmt(m.v ?? 0); if (b.textContent !== t) b.textContent = t; }
+  });
+}
+function clearLive() { for (const id in wEls) { wEls[id].g.classList.remove('on'); wEls[id].text.textContent = ''; } for (const id in els) { els[id].classList.remove('fire'); const b = els[id].querySelector('[data-live="show"]'); if (b) b.textContent = '0'; } }
+
+/* ---- drawing ---- */
+let scale = 1;
+function sizeCanvas() {
+  const r = $('#stage').getBoundingClientRect(); const s = Math.min(r.width / WW, r.height / WH); scale = s;
+  const dpr = devicePixelRatio || 1; cv.style.width = Math.floor(WW * s) + 'px'; cv.style.height = Math.floor(WH * s) + 'px';
+  cv.width = Math.floor(WW * s * dpr); cv.height = Math.floor(WH * s * dpr); g2.setTransform(s * dpr, 0, 0, s * dpr, 0, 0);
+}
+function starPath(ctx, x, y, r, rot) { ctx.beginPath(); for (let i = 0; i < 10; i++) { const a = rot + i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? r * .45 : r; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } ctx.closePath(); }
+function rrect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+function drawGame(now) {
+  const c = g2, v = S.view, ch = G.char;
+  // background
+  if (v === 'top') { c.fillStyle = '#23382B'; c.fillRect(0, 0, WW, WH); c.strokeStyle = 'rgba(255,255,255,.04)'; for (let x = 0; x < WW; x += 32) { c.beginPath(); c.moveTo(x, 0); c.lineTo(x, WH); c.stroke(); } for (let y = 0; y < WH; y += 32) { c.beginPath(); c.moveTo(0, y); c.lineTo(WW, y); c.stroke(); } }
+  else {
+    const gr = c.createLinearGradient(0, 0, 0, WH); gr.addColorStop(0, '#1C2440'); gr.addColorStop(1, '#3A3150'); c.fillStyle = gr; c.fillRect(0, 0, WW, WH);
+    c.fillStyle = 'rgba(255,255,255,.5)'; [[60, 40], [180, 70], [300, 30], [420, 60], [560, 44], [610, 90], [90, 100]].forEach(([x, y]) => c.fillRect(x, y, 1.5, 1.5));
+    c.fillStyle = '#262C48'; c.beginPath(); c.moveTo(0, 300); c.quadraticCurveTo(120, 200, 260, 280); c.quadraticCurveTo(400, 210, 520, 270); c.quadraticCurveTo(600, 240, 640, 260); c.lineTo(640, 360); c.lineTo(0, 360); c.fill();
+  }
+  // platforms
+  PLATS.forEach(p => {
+    if (v === '3d') { const d = 10; c.fillStyle = '#8FE09A'; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x + d, p.y - d); c.lineTo(p.x + p.w + d, p.y - d); c.lineTo(p.x + p.w, p.y); c.fill(); c.fillStyle = '#4D3A2E'; c.beginPath(); c.moveTo(p.x + p.w, p.y); c.lineTo(p.x + p.w + d, p.y - d); c.lineTo(p.x + p.w + d, p.y + p.h - d); c.lineTo(p.x + p.w, p.y + p.h); c.fill(); }
+    if (v === 'top') { c.fillStyle = '#6E6A64'; rrect(c, p.x, p.y - 6, p.w, p.h + 6, 4); c.fill(); c.fillStyle = 'rgba(0,0,0,.25)'; c.fillRect(p.x + 4, p.y + p.h, p.w, 4); return; }
+    c.fillStyle = '#6B4F3A'; c.fillRect(p.x, p.y, p.w, p.h); c.fillStyle = '#7BD389'; c.fillRect(p.x, p.y, p.w, 5);
+  });
+  // stars
+  const rot = RM.matches ? 0 : now / 900;
+  Object.values(G.stars).forEach(s => { c.save(); c.shadowColor = 'rgba(255,211,77,.5)'; c.shadowBlur = 10; c.fillStyle = '#FFD34D'; starPath(c, s.x, s.y + (RM.matches ? 0 : Math.sin(now / 300) * 2), 10, rot); c.fill(); c.restore(); c.strokeStyle = '#B8860B'; c.lineWidth = 1; starPath(c, s.x, s.y + (RM.matches ? 0 : Math.sin(now / 300) * 2), 10, rot); c.stroke(); });
+  // sparkle after pickup
+  if (G.sparkle && now - G.sparkle.t < 500) { const p = (now - G.sparkle.t) / 500; c.strokeStyle = `rgba(255,211,77,${1 - p})`; c.lineWidth = 2; c.beginPath(); c.arc(G.sparkle.x + 12, G.sparkle.y + 12, 10 + p * 24, 0, 7); c.stroke(); }
+  // character
+  if (ch) {
+    const bob = ch.vx && ch.ground && !RM.matches ? Math.abs(Math.sin(now / 70)) * 2 : 0, x = ch.x, y = ch.y - bob;
+    c.fillStyle = 'rgba(0,0,0,.25)'; c.beginPath(); c.ellipse(x + ch.w / 2, ch.y + ch.h + 1, 12, 3, 0, 0, 7); c.fill();
+    c.fillStyle = '#F2E2C4'; rrect(c, x, y + 6, ch.w, ch.h - 6, 7); c.fill();
+    c.beginPath(); c.moveTo(x + 2, y + 10); c.lineTo(x + 5, y); c.lineTo(x + 10, y + 7); c.fill(); c.beginPath(); c.moveTo(x + ch.w - 2, y + 10); c.lineTo(x + ch.w - 5, y); c.lineTo(x + ch.w - 10, y + 7); c.fill();
+    c.fillStyle = '#E8A25A'; c.fillRect(x + 6, y + 6, ch.w - 12, 3);
+    c.fillStyle = '#1B1B1F'; const ex = ch.face > 0 ? 3 : -3; c.fillRect(x + 7 + ex, y + 14, 3, 4); c.fillRect(x + 14 + ex, y + 14, 3, 4);
+  }
+  // "Xem trong game" ping
+  if (G.ping && now - G.ping.t < 1400) { const n = byId(G.ping.id); let e = n && n.kind === 'char' ? ch : n && G.stars[n.id] ? { x: G.stars[n.id].x - 11, y: G.stars[n.id].y - 11, w: 22, h: 22 } : null; if (e) { const p = ((now - G.ping.t) % 700) / 700; c.strokeStyle = '#FFB020'; c.lineWidth = 2; c.globalAlpha = 1 - p * .7; c.beginPath(); c.arc(e.x + e.w / 2, e.y + e.h / 2, 18 + p * 16, 0, 7); c.stroke(); c.globalAlpha = 1; } }
+  // HUD comes ONLY from "Hiện số" nodes (graph decides what the player sees)
+  G.hud.forEach((h, i) => { c.fillStyle = 'rgba(12,13,15,.72)'; rrect(c, 12, 12 + i * 40, 112, 32, 8); c.fill(); c.fillStyle = '#B9BDC4'; c.font = '500 12px "Be Vietnam Pro", sans-serif'; c.textBaseline = 'middle'; c.fillText(h.label, 22, 28 + i * 40); c.fillStyle = '#FFFFFF'; c.font = '600 17px "JetBrains Mono", monospace'; c.textAlign = 'right'; c.fillText(fmt(h.v), 114, 29 + i * 40); c.textAlign = 'left'; });
+  if (G.result) { c.fillStyle = 'rgba(10,10,12,.62)'; c.fillRect(0, 0, WW, WH); c.textAlign = 'center'; c.fillStyle = G.result === 'win' ? '#4ADE80' : '#FF9A8D'; c.font = '700 34px "Be Vietnam Pro", sans-serif'; c.fillText(G.result === 'win' ? 'Thắng rồi!' : 'Hết giờ, thua rồi', WW / 2, WH / 2 - 8); c.fillStyle = '#ECEDEF'; c.font = '500 14px "Be Vietnam Pro", sans-serif'; c.fillText('Bấm Chơi lại để thử lần nữa', WW / 2, WH / 2 + 26); c.textAlign = 'left'; }
+}
+let lastT = performance.now();
+function loop(now) {
+  const dt = Math.min(1 / 30, (now - lastT) / 1000); lastT = now;
+  if (S.mode === 'playing' && !G.result) { G.t += dt; evaluate(dt); }
+  if (S.mode !== 'stopped') liveWires();
+  drawGame(now); requestAnimationFrame(loop);
+}
+
+/* ---- transport: Chơi / Tạm dừng / Dừng / Chơi lại (never "Sửa"; editor never locks) ---- */
+function setMode(m) {
+  S.mode = m; const p = m === 'playing';
+  document.body.classList.toggle('playing', m !== 'stopped'); $('#paneGraph').classList.toggle('live', m !== 'stopped');
+  const bp = $('#bPlay'); bp.setAttribute('aria-pressed', p); bp.querySelector('.lbl').textContent = p ? 'Đang chơi' : m === 'paused' ? 'Chơi tiếp' : 'Chơi';
+  bp.title = p ? 'Game đang chạy' : 'Chơi (Ctrl+Enter)';
+  $('#bPause').disabled = !p; $('#bStop').disabled = m === 'stopped'; $('#bRestart').disabled = m === 'stopped';
+  const st = $('#gState'); st.className = 'state' + (p ? ' live' : '');
+  st.innerHTML = p ? '<span class="rec"></span>ĐANG CHƠI' : m === 'paused' ? icon('pause') + 'TẠM DỪNG' : icon('stop') + 'ĐANG DỪNG';
+  $('#hintMsg').textContent = p ? 'Bảng nối vẫn sửa được khi đang chơi' : m === 'paused' ? 'Đang tạm dừng: giá trị trên dây được giữ nguyên' : 'Bấm Chơi để bắt đầu';
+  if (m === 'stopped') clearLive();
+  renderLog();
+}
+function play() { if (S.mode === 'playing') return; if (S.mode === 'stopped') resetGame(); setMode('playing'); cv.focus({ preventScroll: true }); toast('Đang chơi. Dây sáng lên khi có tín hiệu, số hiện ngay trên dây.', 'ok'); }
+function pause() { if (S.mode !== 'playing') return; setMode('paused'); toast('Đã tạm dừng', 'info'); }
+function stop(quiet) { if (S.mode === 'stopped') return; setMode('stopped'); resetGame(); for (const k in keys) keys[k] = false; if (!quiet) toast('Đã dừng, mọi thứ về lúc đầu', 'info'); }
+function restart() { resetGame(); setMode('playing'); cv.focus({ preventScroll: true }); toast('Chơi lại từ đầu', 'ok'); }
+$('#bPlay').onclick = () => play(); $('#bPause').onclick = pause; $('#bStop').onclick = () => stop(); $('#bRestart').onclick = restart;
+function setView(v) {
+  S.view = v; $$('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === v));
+  $('#gView').textContent = { side: '2D ngang', top: '2D trên', '3d': '3D' }[v] + ', 640 x 360';
+  toast(`Góc nhìn: ${{ side: '2D ngang', top: '2D trên', '3d': '3D' }[v]}. Mọi mảnh ghép trên bảng vẫn dùng được.`, 'ok');
+}
+$('#viewSeg').addEventListener('click', e => { const b = e.target.closest('[data-view]'); if (b) setView(b.dataset.view); });
+$('#bFull').onclick = () => { const p = $('#paneGame'); document.fullscreenElement ? document.exitFullscreen() : p.requestFullscreen?.().catch(() => toast('Trình duyệt không cho mở toàn màn hình', 'bad')); };
+document.addEventListener('fullscreenchange', () => setTimeout(sizeCanvas, 50));
+
+/* ---- keyboard ---- */
+const typing = el => el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+const GK = { ArrowLeft: 'left', ArrowRight: 'right', ' ': 'jump', ArrowUp: 'jump' };
+document.addEventListener('keydown', e => {
+  const k = e.key, mod = e.ctrlKey || e.metaKey;
+  if (mod && k.toLowerCase() === 'k') { e.preventDefault(); $('#cmdk').open ? $('#cmdk').close() : openCmd(); return; }
+  if (document.querySelector('dialog[open]')) return;
+  if (mod && k === 'Enter') { e.preventDefault(); e.shiftKey ? stop() : (S.mode === 'playing' ? pause() : play()); return; }
+  if (S.mode === 'playing' && GK[k] && !typing(e.target) && e.target.id !== 'splitter') { e.preventDefault(); keys[GK[k]] = true; return; }
+  if (typing(e.target)) return;
+  if (mod && k.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? redo() : undo(); }
+  else if (mod && k.toLowerCase() === 'y') { e.preventDefault(); redo(); }
+  else if (mod && k.toLowerCase() === 'd') { e.preventDefault(); dupSel(); }
+  else if (mod && k.toLowerCase() === 's') { e.preventDefault(); markDirty(); toast('Đã lưu vào máy này', 'ok'); }
+  else if (mod) return;
+  else if (k === 'Delete' || k === 'Backspace') { delSel(); }
+  else if (k === 'f' || k === 'F') fit();
+  else if (k === 'l' || k === 'L') autoLayout(true);
+  else if (k === '+' || k === '=') zoomAt(1.15);
+  else if (k === '-') zoomAt(1 / 1.15);
+  else if (k === '?') $('#keys').showModal();
+  else if (k === 'Escape') { closeMenus(); select(null); }
+});
+document.addEventListener('keyup', e => { if (GK[e.key]) keys[GK[e.key]] = false; });
+addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
+
+/* ---- splitter (drag, arrows, double-click = 50/50) ---- */
+const sp = $('#splitter'), mainEl = $('#main');
+function setSplit(pct) { pct = Math.max(30, Math.min(70, pct)); document.documentElement.style.setProperty('--split', pct + '%'); sp.setAttribute('aria-valuenow', Math.round(pct)); sizeCanvas(); drawWires(); drawMini(); }
+sp.addEventListener('pointerdown', e => { sp.setPointerCapture(e.pointerId); sp.classList.add('drag'); const r = mainEl.getBoundingClientRect(); const mv = ev => setSplit((ev.clientX - r.left) / r.width * 100); const up = () => { sp.classList.remove('drag'); sp.removeEventListener('pointermove', mv); sp.removeEventListener('pointerup', up); }; sp.addEventListener('pointermove', mv); sp.addEventListener('pointerup', up); });
+sp.addEventListener('dblclick', () => setSplit(50));
+sp.addEventListener('keydown', e => { const v = +sp.getAttribute('aria-valuenow'); if (e.key === 'ArrowLeft') setSplit(v - 2); if (e.key === 'ArrowRight') setSplit(v + 2); if (e.key === 'Home') setSplit(30); if (e.key === 'End') setSplit(70); });
+
+/* ---- coach mark (one-time) ---- */
+function dismissCoach() {}
+$('#bUndo').onclick = undo; $('#bRedo').onclick = redo;
+
+/* ---- boot ---- */
+new ResizeObserver(() => { sizeCanvas(); drawMini(); }).observe($('#stage'));
+new ResizeObserver(() => drawMini()).observe(graph);
+renderPalette(); loadSample(); resetGame(); rebuild();
+document.fonts.ready.then(() => { S.nodes.forEach(renderNode); autoLayout(false); fit(true); drawWires(); });
+autoLayout(false); fit(true); syncUndo(); setMode('stopped'); toast('Mở game mẫu "Nhặt sao". Bấm Chơi để xem dây chạy.', 'info');
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

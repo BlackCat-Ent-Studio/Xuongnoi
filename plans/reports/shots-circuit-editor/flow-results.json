@@ -1,0 +1,282 @@
+{
+  "at": "2026-11-19T09:32:37.381Z",
+  "results": [
+    {
+      "name": "b: 8 copies drawn as device cards",
+      "ok": true,
+      "detail": "8"
+    },
+    {
+      "name": "b: a copy shows its pins as ports",
+      "ok": true,
+      "detail": "in:Bật, out:Số đếm, out:Quãng đường, in:Hiện"
+    },
+    {
+      "name": "b: dragging a wire onto a pin of a copy adds the wire",
+      "ok": true,
+      "detail": "16 -> 17"
+    },
+    {
+      "name": "b: a wire from a pin of a copy to a plain card is saved",
+      "ok": true,
+      "detail": "17"
+    },
+    {
+      "name": "b: a wire of the wrong type is refused",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "f: selecting a copy shows its inspector",
+      "ok": true,
+      "detail": "Bản sao 1/8 của bảng mạch \"Xe AGV\""
+    },
+    {
+      "name": "f: the name typed in the inspector shows on the block",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "f: position and heading of the copy are saved",
+      "ok": true,
+      "detail": "{\"circuit\":\"c1\",\"position\":{\"x\":12,\"y\":0,\"z\":0},\"heading\":90,\"name\":\"Xe đầu đàn\"}"
+    },
+    {
+      "name": "b: stacking draws one block \"×8\"",
+      "ok": true,
+      "detail": "1"
+    },
+    {
+      "name": "b: stacked block keeps the wires of its copies drawn",
+      "ok": true,
+      "detail": "17"
+    },
+    {
+      "name": "b: the stack is saved with the board",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "b: dragging the stacked block moves all 8 copies together",
+      "ok": true,
+      "detail": "dx 44"
+    },
+    {
+      "name": "b: the \"×8\" button spreads the stack again",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a: double-click enters the circuit (path bar shows)",
+      "ok": true,
+      "detail": "Bảng chính\n›\nQuay ra\nTầng 2"
+    },
+    {
+      "name": "a: the note says how many copies an edit changes",
+      "ok": true,
+      "detail": "Bạn đang ở trong \"Xe đầu đàn\". Sửa bảng mạch \"Xe AGV\" sẽ đổi cả 8 bản sao."
+    },
+    {
+      "name": "a: pin cards stand at the edges",
+      "ok": true,
+      "detail": "2 in, 2 out"
+    },
+    {
+      "name": "a: the pins are wired to inner cards",
+      "ok": true,
+      "detail": "40"
+    },
+    {
+      "name": "a: Esc goes back out",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a: the \"Mở\" button enters too",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "c: \"Thêm chân vào\" adds an unwired pin card",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "c: renaming a pin sticks",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "c: wiring the pin to an inner number port makes it a number pin",
+      "ok": true,
+      "detail": "dem-canh.addAmount"
+    },
+    {
+      "name": "c: the up arrow reorders the pin",
+      "ok": true,
+      "detail": "Bật | Tốc độ đặt | Hiện"
+    },
+    {
+      "name": "c: an inner card offers \"Mở ra ngoài\"",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "c: the opened setting appears as a \"Thông số mở\" card",
+      "ok": true,
+      "detail": "Thông số mở\nSố cố định · Giá trị"
+    },
+    {
+      "name": "a: an edit inside changed every copy (all 8 show the new pin)",
+      "ok": true,
+      "detail": "Bật|Tốc độ đặt|Hiện"
+    },
+    {
+      "name": "c: the exposed setting shows on a copy with its own value box",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "c: only that copy holds the value",
+      "ok": true,
+      "detail": "circuit value 2"
+    },
+    {
+      "name": "c: deleting a pin removes its card",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: undo brings the pin back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: redo removes it again",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: copy and paste of a card inside a circuit",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "a: the first crumb goes back to the main board",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: copy and paste of a copy on the board gives a ninth",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: undo takes the pasted copy away",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: the palette lists the circuit under \"Bảng mạch\" with its count",
+      "ok": true,
+      "detail": "Bảng mạch\n1"
+    },
+    {
+      "name": "d: dragging the circuit onto the board places a ninth copy",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: rename in the palette",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: duplicate makes a second circuit with no copies",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: a circuit without copies is deleted at once",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: deleting a circuit that has copies asks in the row itself",
+      "ok": true,
+      "detail": "Còn 9 bản sao đang dùng. Xóa cả 9 bản sao?"
+    },
+    {
+      "name": "d: \"Thôi\" keeps everything",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: \"Xóa hết\" removes the circuit and its copies",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "g: one undo brings the circuit and its 9 copies back",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "d: no browser dialog was ever opened",
+      "ok": true,
+      "detail": "0"
+    },
+    {
+      "name": "e: the two cards became one circuit with a copy in their place",
+      "ok": true,
+      "detail": "Bảng mạch 1"
+    },
+    {
+      "name": "e: the wires that crossed became pins",
+      "ok": true,
+      "detail": "Giá trị, Hiện số · Giá trị"
+    },
+    {
+      "name": "g: an unfinished pin is listed under \"Việc cần sửa\" in plain words",
+      "ok": true,
+      "detail": "Bảng mạch \"Bảng mạch 1\": chân \"Chân ra 1\" chưa nối vào mảnh ghép nào ở bên trong"
+    },
+    {
+      "name": "g: the board comes back the same after a reload",
+      "ok": true,
+      "detail": "2 circuits, 13 cards"
+    },
+    {
+      "name": "g: after the reload the list still names the unfinished pin",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "running: the copies show \"Đang chạy\" and wires on their pins carry live values",
+      "ok": true,
+      "detail": "10 lights, badges Đúng 0.00 Đúng Đúng Đúng Đúng"
+    },
+    {
+      "name": "Học sinh: a circuit opens view-only with a \"Sửa mạch\" button",
+      "ok": true,
+      "detail": "Bạn đang ở trong \"Xe AGV 1\". Đang chỉ xem. Sửa bảng mạch \"Xe AGV\" sẽ đổi cả 8 bản sao.\nSửa mạch"
+    },
+    {
+      "name": "Học sinh: a locked circuit does not let a card be dragged",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Học sinh: the inspector says it is view-only and greys its controls",
+      "ok": true,
+      "detail": ""
+    },
+    {
+      "name": "Học sinh: \"Sửa mạch\" unlocks editing",
+      "ok": true,
+      "detail": ""
+    }
+  ],
+  "problems": [],
+  "dialogs": 0
+}

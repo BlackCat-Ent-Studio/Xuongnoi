@@ -1,0 +1,8 @@
+[
+["chip: '1.00', at: 0.26 }", "chip: '1.00', at: 0.38 }"],
+["chip: 'Thân robot', txt: 1, at: 0.6 }", "chip: 'Thân robot', txt: 1, at: 0.4 }"],
+["{ f: ['bot', 'self'], t: ['hit', 'a'], ty: 'obj' }, { f: ['flag', 'self'], t: ['hit', 'b'], ty: 'obj' }, { f: ['hit', 'on'], t: ['win', 'win'], ty: 'bool' },", "{ f: ['hit', 'on'], t: ['win', 'win'], ty: 'bool' },"],
+["ins: [['a', 'obj', 'Vật chính', 1], ['b', 'obj', 'Vật kia', 1]], outs: [['on', 'bool', 'Đang chạm', 1]] },", "ins: [['a', 'obj', 'Vật chính', 0], ['b', 'obj', 'Vật kia', 0]], outs: [['on', 'bool', 'Đang chạm', 0]] },"],
+["{ id: 'win', cat: 'output', vi: 'Thắng / Thua', en: 'Game Over', col: 3, btn: 'lock', ins: [['win', 'bool', 'Thắng', 1]] },", "{ id: 'win', cat: 'output', vi: 'Thắng / Thua', en: 'Game Over', col: 3, btn: 'lock', w: 204, ins: [['win', 'bool', 'Thắng', 0]] },"],
+["const colX = t.layout === 'stage' ? [20, 250, 480, 710] : [28, 290, 560, 820];", "const colX = t.layout === 'stage' ? [20, 244, 468, 692] : [28, 290, 560, 820];"]
+]

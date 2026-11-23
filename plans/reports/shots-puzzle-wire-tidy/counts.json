@@ -1,0 +1,403 @@
+{
+ "l5-desktop": {
+  "before": {
+   "wires": 17,
+   "ww": 52,
+   "wc": 34,
+   "total": 86,
+   "through": [
+    "pw6->p1",
+    "pw7->p1",
+    "pw7->p2",
+    "pw8->p1",
+    "pw8->p2",
+    "pw9->p1",
+    "pw9->p2",
+    "pw10->p1",
+    "pw10->p2",
+    "pw10->p3",
+    "pw10->p4",
+    "pw11->p1",
+    "pw11->p2",
+    "pw11->p3",
+    "pw12->p1",
+    "pw12->p2",
+    "pw12->p3",
+    "pw12->p4",
+    "pw12->p5",
+    "pw13->p3",
+    "pw14->p3",
+    "pw15->p1",
+    "pw15->p2",
+    "pw15->p3",
+    "pw15->p4",
+    "pw15->p5",
+    "pw16->robot",
+    "pw16->p1",
+    "pw16->p2",
+    "pw16->p3",
+    "pw17->robot",
+    "pw17->p1",
+    "pw17->p2",
+    "pw17->p3"
+   ],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 0,
+   "shared": 0
+  },
+  "after": {
+   "wires": 17,
+   "ww": 8,
+   "wc": 0,
+   "total": 8,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 0,
+   "shared": 0
+  },
+  "focus": {
+   "lit": 9,
+   "faded": 3,
+   "focusing": true
+  },
+  "focusCleared": false,
+  "knotAfterDouble": 1,
+  "knotAfterDrag": {
+   "wires": 17,
+   "ww": 8,
+   "wc": 0,
+   "total": 8,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 0
+  },
+  "knotsAfterCtrlR": 2,
+  "knotsAfterRemove": [
+   2,
+   1
+  ],
+  "branch": {
+   "knots": 1,
+   "shared": 1
+  },
+  "gom": {
+   "wires": 17,
+   "ww": 8,
+   "wc": 0,
+   "total": 8,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 1
+  },
+  "pickOk": 13,
+  "afterFit": {
+   "wires": 17,
+   "ww": 8,
+   "wc": 0,
+   "total": 8,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 1
+  }
+ },
+ "l5-phone": {
+  "before": {
+   "wires": 17,
+   "ww": 29,
+   "wc": 33,
+   "total": 62,
+   "through": [
+    "pw1->robot",
+    "pw1->p1",
+    "pw1->p4",
+    "pw2->robot",
+    "pw2->slot-1",
+    "pw2->p1",
+    "pw2->p3",
+    "pw3->slot-2",
+    "pw3->p1",
+    "pw3->p4",
+    "pw5->slot-2",
+    "pw5->p1",
+    "pw5->p2",
+    "pw6->robot",
+    "pw6->p1",
+    "pw6->p2",
+    "pw6->p4",
+    "pw8->p4",
+    "pw9->slot-3",
+    "pw9->p3",
+    "pw9->p4",
+    "pw11->p4",
+    "pw12->slot-2",
+    "pw12->p1",
+    "pw12->p2",
+    "pw12->p4",
+    "pw12->p5",
+    "pw13->slot-2",
+    "pw13->p1",
+    "pw14->slot-2",
+    "pw14->p1",
+    "pw16->p1",
+    "pw17->p1"
+   ],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 0,
+   "shared": 0
+  },
+  "after": {
+   "wires": 17,
+   "ww": 16,
+   "wc": 0,
+   "total": 16,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 0,
+   "shared": 0
+  },
+  "focus": {
+   "lit": 9,
+   "faded": 3,
+   "focusing": true
+  },
+  "focusCleared": false,
+  "knotAfterDouble": 1,
+  "knotAfterDrag": {
+   "wires": 17,
+   "ww": 18,
+   "wc": 0,
+   "total": 18,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 0
+  },
+  "knotsAfterCtrlR": 2,
+  "knotsAfterRemove": [
+   2,
+   1
+  ],
+  "branch": {
+   "knots": 1,
+   "shared": 1
+  },
+  "gom": {
+   "wires": 17,
+   "ww": 16,
+   "wc": 0,
+   "total": 16,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 1
+  },
+  "pickOk": 13,
+  "afterFit": {
+   "wires": 17,
+   "ww": 16,
+   "wc": 0,
+   "total": 16,
+   "through": [],
+   "overlap": 0,
+   "cards": 9,
+   "knots": 1,
+   "shared": 1
+  }
+ },
+ "l7-desktop": {
+  "before": {
+   "wires": 23,
+   "ww": 95,
+   "wc": 23,
+   "total": 118,
+   "through": [
+    "pw6->p2",
+    "pw6->p5",
+    "pw13->p1",
+    "pw14->p1",
+    "pw14->p5",
+    "pw14->p6",
+    "pw15->p1",
+    "pw15->p4",
+    "pw15->p5",
+    "pw15->p6",
+    "pw15->p8",
+    "pw18->robot",
+    "pw18->p1",
+    "pw18->p2",
+    "pw18->p4",
+    "pw18->p6",
+    "pw18->p8",
+    "pw18->p10",
+    "pw19->p5",
+    "pw19->p6",
+    "pw20->p8",
+    "pw20->p9",
+    "pw21->p9"
+   ],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 0,
+   "shared": 0
+  },
+  "after": {
+   "wires": 23,
+   "ww": 27,
+   "wc": 0,
+   "total": 27,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 0,
+   "shared": 0
+  },
+  "focus": {
+   "lit": 3,
+   "faded": 11,
+   "focusing": true
+  },
+  "focusCleared": false,
+  "knotAfterDouble": 1,
+  "knotAfterDrag": {
+   "wires": 23,
+   "ww": 29,
+   "wc": 0,
+   "total": 29,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 0
+  },
+  "knotsAfterCtrlR": 2,
+  "knotsAfterRemove": [
+   2,
+   1
+  ],
+  "branch": {
+   "knots": 1,
+   "shared": 1
+  },
+  "gom": {
+   "wires": 23,
+   "ww": 27,
+   "wc": 0,
+   "total": 27,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 1
+  },
+  "pickOk": 10,
+  "afterFit": {
+   "wires": 23,
+   "ww": 27,
+   "wc": 0,
+   "total": 27,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 1
+  }
+ },
+ "l7-phone": {
+  "before": {
+   "wires": 23,
+   "ww": 119,
+   "wc": 15,
+   "total": 134,
+   "through": [
+    "pw13->p1",
+    "pw13->p2",
+    "pw13->p3",
+    "pw13->p4",
+    "pw14->p1",
+    "pw14->p3",
+    "pw14->p4",
+    "pw14->p7",
+    "pw23->slot-2",
+    "pw23->p1",
+    "pw23->p5",
+    "pw23->p7",
+    "pw23->p8",
+    "pw23->p9",
+    "pw23->p11"
+   ],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 0,
+   "shared": 0
+  },
+  "after": {
+   "wires": 23,
+   "ww": 46,
+   "wc": 0,
+   "total": 46,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 0,
+   "shared": 0
+  },
+  "focus": {
+   "lit": 3,
+   "faded": 11,
+   "focusing": true
+  },
+  "focusCleared": false,
+  "knotAfterDouble": 1,
+  "knotAfterDrag": {
+   "wires": 23,
+   "ww": 46,
+   "wc": 0,
+   "total": 46,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 0
+  },
+  "knotsAfterCtrlR": 2,
+  "knotsAfterRemove": [
+   2,
+   2
+  ],
+  "gom": {
+   "wires": 23,
+   "ww": 43,
+   "wc": 0,
+   "total": 43,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 1
+  },
+  "pickOk": 10,
+  "afterFit": {
+   "wires": 23,
+   "ww": 43,
+   "wc": 0,
+   "total": 43,
+   "through": [],
+   "overlap": 0,
+   "cards": 15,
+   "knots": 1,
+   "shared": 1
+  }
+ }
+}

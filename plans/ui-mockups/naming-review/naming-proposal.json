@@ -1,0 +1,4727 @@
+[
+  {
+    "kind": "ahead-sensor",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Dò phía trước",
+      "en": "Raycast"
+    },
+    "nodeNew": {
+      "vi": "Dò phía trước",
+      "en": "Raycast"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "who",
+        "old": [
+          "Vật nhìn",
+          "Origin"
+        ],
+        "new": [
+          "Đối tượng",
+          "Origin"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "blocked",
+        "old": [
+          "Bị chặn",
+          "Hit"
+        ],
+        "new": [
+          "Đang bị chặn",
+          "Blocked"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "distance",
+        "old": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "new": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "thing",
+        "old": [
+          "Vật bị chặn",
+          "Hit object"
+        ],
+        "new": [
+          "Đối tượng bị chặn",
+          "Hit object"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "hit",
+        "old": [
+          "Vừa gặp cản",
+          "Just hit"
+        ],
+        "new": [
+          "Khi gặp vật cản",
+          "On hit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "block",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Vật thể",
+      "en": "Object"
+    },
+    "nodeNew": {
+      "vi": "Vật thể",
+      "en": "Object"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "hide",
+        "old": [
+          "Ẩn đi (1 nhịp)",
+          "Hide"
+        ],
+        "new": [
+          "Ẩn",
+          "Hide"
+        ],
+        "note": "Bỏ \"(1 nhịp)\": cổng này là lệnh ngắn Ẩn / Hiện"
+      },
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện lại (1 nhịp)",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "Bỏ \"(1 nhịp)\": cổng này là lệnh ngắn Ẩn / Hiện"
+      },
+      {
+        "dir": "in",
+        "id": "pick",
+        "old": [
+          "Đổi màu 1-2-3",
+          "Set color"
+        ],
+        "new": [
+          "Đặt màu",
+          "Set color"
+        ],
+        "note": "Nhận số 1-2-3 để chọn màu; đã có trong ô tuỳ chỉnh Màu 1-3"
+      },
+      {
+        "dir": "in",
+        "id": "run",
+        "old": [
+          "Chạy băng chuyền",
+          "Conveyor on"
+        ],
+        "new": [
+          "Bật băng chuyền",
+          "Conveyor"
+        ],
+        "note": "Ngắn gọn; EN \"Conveyor\" là từ chuẩn"
+      },
+      {
+        "dir": "in",
+        "id": "reverse",
+        "old": [
+          "Đảo chiều",
+          "Reverse"
+        ],
+        "new": [
+          "Đảo chiều",
+          "Reverse"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "hiddenWhile",
+        "old": [
+          "Ẩn suốt lúc bật",
+          "Hide while ON"
+        ],
+        "new": [
+          "Ẩn khi bật",
+          "Hide while on"
+        ],
+        "note": "Ngắn hơn (cổng cũ)"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Vật thể",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "usedOn",
+        "old": [
+          "Bị dùng lên",
+          "Used on"
+        ],
+        "new": [
+          "Khi bị dùng lên",
+          "On tool hit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "hidden",
+        "old": [
+          "Đang ẩn",
+          "Hidden"
+        ],
+        "new": [
+          "Đang ẩn",
+          "Hidden"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "and",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Và",
+      "en": "AND"
+    },
+    "nodeNew": {
+      "vi": "Và",
+      "en": "AND"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "A",
+          "A"
+        ],
+        "new": [
+          "A",
+          "A"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "B",
+          "B"
+        ],
+        "new": [
+          "B",
+          "B"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "out",
+        "old": [
+          "Kết quả",
+          "Result"
+        ],
+        "new": [
+          "Kết quả",
+          "Result"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "or",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Hoặc",
+      "en": "OR"
+    },
+    "nodeNew": {
+      "vi": "Hoặc",
+      "en": "OR"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "A",
+          "A"
+        ],
+        "new": [
+          "A",
+          "A"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "B",
+          "B"
+        ],
+        "new": [
+          "B",
+          "B"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "out",
+        "old": [
+          "Kết quả",
+          "Result"
+        ],
+        "new": [
+          "Kết quả",
+          "Result"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "not",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Đảo ngược",
+      "en": "NOT"
+    },
+    "nodeNew": {
+      "vi": "Đảo ngược",
+      "en": "NOT"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "in",
+        "old": [
+          "Vào",
+          "Input"
+        ],
+        "new": [
+          "Đầu vào",
+          "Input"
+        ],
+        "note": "\"Vào\" nghe cụt; \"Đầu vào\" là từ chuẩn"
+      },
+      {
+        "dir": "out",
+        "id": "out",
+        "old": [
+          "Kết quả",
+          "Result"
+        ],
+        "new": [
+          "Kết quả",
+          "Result"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "camera",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Máy quay",
+      "en": "Camera"
+    },
+    "nodeNew": {
+      "vi": "Máy quay",
+      "en": "Camera"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "on",
+        "old": [
+          "Bật",
+          "Enable"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Bám theo vật",
+          "Follow"
+        ],
+        "new": [
+          "Bám theo đối tượng",
+          "Follow target"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "zoom",
+        "old": [
+          "Phóng to (0 = mặc định)",
+          "Zoom"
+        ],
+        "new": [
+          "Thu phóng",
+          "Zoom"
+        ],
+        "note": "Bỏ \"(0 = mặc định)\" (đã ghi trong tooltip). \"Thu phóng\" là từ chuẩn của Zoom"
+      },
+      {
+        "dir": "in",
+        "id": "shake",
+        "old": [
+          "Rung",
+          "Shake"
+        ],
+        "new": [
+          "Rung",
+          "Shake"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "active",
+        "old": [
+          "Đang dùng",
+          "Active"
+        ],
+        "new": [
+          "Đang dùng",
+          "Active"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "cargo",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Chở hàng",
+      "en": "Cargo"
+    },
+    "nodeNew": {
+      "vi": "Chở hàng",
+      "en": "Cargo"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "vehicle",
+        "old": [
+          "Xe",
+          "Vehicle"
+        ],
+        "new": [
+          "Xe",
+          "Vehicle"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "load",
+        "old": [
+          "Chất",
+          "Load"
+        ],
+        "new": [
+          "Chất",
+          "Load"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "unload",
+        "old": [
+          "Dỡ",
+          "Unload"
+        ],
+        "new": [
+          "Dỡ",
+          "Unload"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "unloadAll",
+        "old": [
+          "Dỡ hết",
+          "Unload all"
+        ],
+        "new": [
+          "Dỡ hết",
+          "Unload all"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "count",
+        "old": [
+          "Số hàng",
+          "Count"
+        ],
+        "new": [
+          "Số hàng",
+          "Count"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "loaded",
+        "old": [
+          "Vừa chất",
+          "Loaded"
+        ],
+        "new": [
+          "Khi chất hàng",
+          "On loaded"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "unloaded",
+        "old": [
+          "Vừa dỡ",
+          "Unloaded"
+        ],
+        "new": [
+          "Khi dỡ hàng",
+          "On unloaded"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "top",
+        "old": [
+          "Hàng trên cùng",
+          "Top item"
+        ],
+        "new": [
+          "Hàng trên cùng",
+          "Top item"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "typeCount",
+        "old": [
+          "Số hàng loại này",
+          "Count of type"
+        ],
+        "new": [
+          "Số hàng theo loại",
+          "Count by type"
+        ],
+        "note": "Rõ nghĩa hơn \"loại này\""
+      }
+    ]
+  },
+  {
+    "kind": "carry",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Khiêng đồ",
+      "en": "Carry"
+    },
+    "nodeNew": {
+      "vi": "Khiêng đồ",
+      "en": "Carry"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "character",
+        "old": [
+          "Nhân vật",
+          "Character"
+        ],
+        "new": [
+          "Nhân vật",
+          "Character"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "grab",
+        "old": [
+          "Nhấc lên",
+          "Pick up"
+        ],
+        "new": [
+          "Nhấc lên",
+          "Pick up"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "drop",
+        "old": [
+          "Thả",
+          "Drop"
+        ],
+        "new": [
+          "Thả",
+          "Drop"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "throw",
+        "old": [
+          "Ném",
+          "Throw"
+        ],
+        "new": [
+          "Ném",
+          "Throw"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "holding",
+        "old": [
+          "Đang khiêng",
+          "Is carrying"
+        ],
+        "new": [
+          "Đang khiêng",
+          "Is carrying"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "heldItem",
+        "old": [
+          "Món đang khiêng",
+          "Carried item"
+        ],
+        "new": [
+          "Đồ đang khiêng",
+          "Carried item"
+        ],
+        "note": "Dùng \"Đồ\" thống nhất với node Đồ vật"
+      }
+    ]
+  },
+  {
+    "kind": "character",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Nhân vật",
+      "en": "Character"
+    },
+    "nodeNew": {
+      "vi": "Nhân vật",
+      "en": "Character"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "jump",
+        "old": [
+          "Nhảy",
+          "Jump"
+        ],
+        "new": [
+          "Nhảy",
+          "Jump"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Nhân vật",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "onGround",
+        "old": [
+          "Đang đứng đất",
+          "On ground"
+        ],
+        "new": [
+          "Đang trên mặt đất",
+          "Grounded"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "x",
+        "old": [
+          "Vị trí X",
+          "Position X"
+        ],
+        "new": [
+          "Vị trí X",
+          "Position X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "y",
+        "old": [
+          "Vị trí Y",
+          "Position Y"
+        ],
+        "new": [
+          "Vị trí Y",
+          "Position Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "z",
+        "old": [
+          "Vị trí Z",
+          "Position Z"
+        ],
+        "new": [
+          "Vị trí Z",
+          "Position Z"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "chase",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Đuổi / Trốn",
+      "en": "Chase / Flee"
+    },
+    "nodeNew": {
+      "vi": "Đuổi / Trốn",
+      "en": "Chase / Flee"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Bot",
+          "Agent"
+        ],
+        "new": [
+          "Bot",
+          "Agent"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "new": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "go",
+        "old": [
+          "Cho đi",
+          "Go"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "jump",
+        "old": [
+          "Nhảy",
+          "Jump"
+        ],
+        "new": [
+          "Nhảy",
+          "Jump"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "seeing",
+        "old": [
+          "Đang thấy mục tiêu",
+          "Sees target"
+        ],
+        "new": [
+          "Đang thấy mục tiêu",
+          "Sees target"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "color-sensor",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Đọc màu",
+      "en": "Color Check"
+    },
+    "nodeNew": {
+      "vi": "Đọc màu",
+      "en": "Color Check"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "who",
+        "old": [
+          "Vật",
+          "Object"
+        ],
+        "new": [
+          "Đối tượng",
+          "Object"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "index",
+        "old": [
+          "Số màu",
+          "Color #"
+        ],
+        "new": [
+          "Chỉ số màu",
+          "Color index"
+        ],
+        "note": "\"Index\" là từ chuẩn"
+      },
+      {
+        "dir": "out",
+        "id": "match",
+        "old": [
+          "Đúng màu",
+          "Matches"
+        ],
+        "new": [
+          "Đúng màu",
+          "Matches"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "compare",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "So sánh",
+      "en": "Compare"
+    },
+    "nodeNew": {
+      "vi": "So sánh",
+      "en": "Compare"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "Số A",
+          "A"
+        ],
+        "new": [
+          "Số A",
+          "A"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "Số B",
+          "B"
+        ],
+        "new": [
+          "Số B",
+          "B"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "out",
+        "old": [
+          "Đúng",
+          "True"
+        ],
+        "new": [
+          "Kết quả",
+          "Result"
+        ],
+        "note": "Giống Và / Hoặc / Đảo ngược / Phép tính"
+      }
+    ]
+  },
+  {
+    "kind": "const",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Số cố định",
+      "en": "Constant"
+    },
+    "nodeNew": {
+      "vi": "Số cố định",
+      "en": "Constant"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "out",
+        "id": "value",
+        "old": [
+          "Số",
+          "Value"
+        ],
+        "new": [
+          "Giá trị",
+          "Value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      }
+    ]
+  },
+  {
+    "kind": "counter",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Bộ đếm",
+      "en": "Counter"
+    },
+    "nodeNew": {
+      "vi": "Bộ đếm",
+      "en": "Counter"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "up",
+        "old": [
+          "Cộng 1",
+          "Increment"
+        ],
+        "new": [
+          "Tăng 1",
+          "Increment"
+        ],
+        "note": "Increment = Tăng; hợp với Giảm 1"
+      },
+      {
+        "dir": "in",
+        "id": "down",
+        "old": [
+          "Trừ 1",
+          "Decrement"
+        ],
+        "new": [
+          "Giảm 1",
+          "Decrement"
+        ],
+        "note": "Decrement = Giảm"
+      },
+      {
+        "dir": "in",
+        "id": "reset",
+        "old": [
+          "Về đầu",
+          "Reset"
+        ],
+        "new": [
+          "Đặt lại",
+          "Reset"
+        ],
+        "note": "Mọi lệnh đưa về đầu đều tên Đặt lại / Reset"
+      },
+      {
+        "dir": "in",
+        "id": "addAmount",
+        "old": [
+          "Số cộng thêm",
+          "Amount"
+        ],
+        "new": [
+          "Lượng cộng thêm",
+          "Amount"
+        ],
+        "note": "\"Lượng\" tự nhiên hơn \"Số cộng thêm\""
+      },
+      {
+        "dir": "in",
+        "id": "add",
+        "old": [
+          "Cộng số",
+          "Add"
+        ],
+        "new": [
+          "Cộng thêm",
+          "Add"
+        ],
+        "note": "Lệnh ngắn"
+      },
+      {
+        "dir": "in",
+        "id": "setAmount",
+        "old": [
+          "Số đặt",
+          "New value"
+        ],
+        "new": [
+          "Giá trị mới",
+          "New value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "in",
+        "id": "set",
+        "old": [
+          "Đặt số",
+          "Set"
+        ],
+        "new": [
+          "Đặt giá trị",
+          "Set value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "out",
+        "id": "value",
+        "old": [
+          "Số đếm",
+          "Count"
+        ],
+        "new": [
+          "Số đếm",
+          "Count"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "reached",
+        "old": [
+          "Đã đủ",
+          "Reached"
+        ],
+        "new": [
+          "Đã đạt mục tiêu",
+          "Reached"
+        ],
+        "note": "Nói rõ đạt cái gì"
+      }
+    ]
+  },
+  {
+    "kind": "distance",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Đo khoảng cách",
+      "en": "Distance"
+    },
+    "nodeNew": {
+      "vi": "Đo khoảng cách",
+      "en": "Distance"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "Vật 1",
+          "Object A"
+        ],
+        "new": [
+          "Đối tượng A",
+          "Object A"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "Vật 2",
+          "Object B"
+        ],
+        "new": [
+          "Đối tượng B",
+          "Object B"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "distance",
+        "old": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "new": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "within",
+        "old": [
+          "Trong tầm",
+          "In range"
+        ],
+        "new": [
+          "Trong tầm",
+          "In range"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "enter-exit",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Lên / Xuống xe",
+      "en": "Enter / Exit Vehicle"
+    },
+    "nodeNew": {
+      "vi": "Lên / Xuống xe",
+      "en": "Enter / Exit Vehicle"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "character",
+        "old": [
+          "Ai",
+          "Who"
+        ],
+        "new": [
+          "Nhân vật",
+          "Character"
+        ],
+        "note": "Cùng tên với cổng của Khiêng đồ, Cầm dụng cụ, Tương tác"
+      },
+      {
+        "dir": "in",
+        "id": "enter",
+        "old": [
+          "Lên xe",
+          "Enter"
+        ],
+        "new": [
+          "Lên xe",
+          "Enter"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "exit",
+        "old": [
+          "Xuống xe",
+          "Exit"
+        ],
+        "new": [
+          "Xuống xe",
+          "Exit"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "press",
+        "old": [
+          "Bấm",
+          "Press"
+        ],
+        "new": [
+          "Bấm (cũ)",
+          "Press (legacy)"
+        ],
+        "note": "Cổng cũ, chỉ để game cũ vẫn chạy: ghi rõ \"(cũ)\""
+      },
+      {
+        "dir": "out",
+        "id": "inVehicle",
+        "old": [
+          "Đang ngồi trên xe",
+          "In vehicle"
+        ],
+        "new": [
+          "Đang trên xe",
+          "In vehicle"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "vehicle",
+        "old": [
+          "Xe đang ngồi",
+          "Vehicle"
+        ],
+        "new": [
+          "Xe đang dùng",
+          "Current vehicle"
+        ],
+        "note": "Ngắn gọn, rõ nghĩa"
+      }
+    ]
+  },
+  {
+    "kind": "fight",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Đánh địch",
+      "en": "Attack AI"
+    },
+    "nodeNew": {
+      "vi": "Đánh địch",
+      "en": "Attack AI"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Bot",
+          "Agent"
+        ],
+        "new": [
+          "Bot",
+          "Agent"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "new": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "go",
+        "old": [
+          "Cho đi",
+          "Go"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "jump",
+        "old": [
+          "Nhảy",
+          "Jump"
+        ],
+        "new": [
+          "Nhảy",
+          "Jump"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "attack",
+        "old": [
+          "Ra đòn",
+          "Attack"
+        ],
+        "new": [
+          "Ra đòn",
+          "Attack"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "nearest-item",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Tìm vật gần nhất",
+      "en": "Nearest Item"
+    },
+    "nodeNew": {
+      "vi": "Tìm đồ gần nhất",
+      "en": "Nearest Item"
+    },
+    "nodeNote": "Dùng \"Đồ\" thống nhất với node Đồ vật",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "who",
+        "old": [
+          "Ai",
+          "Who"
+        ],
+        "new": [
+          "Đối tượng",
+          "Origin"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "pause",
+        "old": [
+          "Tạm nghỉ",
+          "Pause"
+        ],
+        "new": [
+          "Tạm nghỉ",
+          "Pause"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "i1",
+        "old": [
+          "Bỏ qua đồ trên ô 1",
+          "Ignore slot 1"
+        ],
+        "new": [
+          "Bỏ qua ô 1",
+          "Ignore slot 1"
+        ],
+        "note": "Ngắn hơn"
+      },
+      {
+        "dir": "in",
+        "id": "i2",
+        "old": [
+          "Bỏ qua đồ trên ô 2",
+          "Ignore slot 2"
+        ],
+        "new": [
+          "Bỏ qua ô 2",
+          "Ignore slot 2"
+        ],
+        "note": "Ngắn hơn"
+      },
+      {
+        "dir": "in",
+        "id": "i3",
+        "old": [
+          "Bỏ qua đồ trên ô 3",
+          "Ignore slot 3"
+        ],
+        "new": [
+          "Bỏ qua ô 3",
+          "Ignore slot 3"
+        ],
+        "note": "Ngắn hơn"
+      },
+      {
+        "dir": "in",
+        "id": "i4",
+        "old": [
+          "Bỏ qua đồ trên ô 4",
+          "Ignore slot 4"
+        ],
+        "new": [
+          "Bỏ qua ô 4",
+          "Ignore slot 4"
+        ],
+        "note": "Ngắn hơn"
+      },
+      {
+        "dir": "out",
+        "id": "item",
+        "old": [
+          "Vật gần nhất",
+          "Nearest item"
+        ],
+        "new": [
+          "Đồ gần nhất",
+          "Nearest item"
+        ],
+        "note": "Dùng \"Đồ\""
+      },
+      {
+        "dir": "out",
+        "id": "found",
+        "old": [
+          "Có",
+          "Found"
+        ],
+        "new": [
+          "Đã tìm thấy",
+          "Found"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "distance",
+        "old": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "new": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "next-free-slot",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Ô trống kế tiếp",
+      "en": "Next Free Slot"
+    },
+    "nodeNew": {
+      "vi": "Ô trống kế tiếp",
+      "en": "Next Free Slot"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "s1",
+        "old": [
+          "Ô 1",
+          "Slot 1"
+        ],
+        "new": [
+          "Ô 1",
+          "Slot 1"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "s2",
+        "old": [
+          "Ô 2",
+          "Slot 2"
+        ],
+        "new": [
+          "Ô 2",
+          "Slot 2"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "s3",
+        "old": [
+          "Ô 3",
+          "Slot 3"
+        ],
+        "new": [
+          "Ô 3",
+          "Slot 3"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "s4",
+        "old": [
+          "Ô 4",
+          "Slot 4"
+        ],
+        "new": [
+          "Ô 4",
+          "Slot 4"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "slot",
+        "old": [
+          "Ô trống",
+          "Free slot"
+        ],
+        "new": [
+          "Ô trống",
+          "Free slot"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "full",
+        "old": [
+          "Đầy",
+          "All full"
+        ],
+        "new": [
+          "Đầy",
+          "All full"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "go-to",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Đi tới",
+      "en": "Move To"
+    },
+    "nodeNew": {
+      "vi": "Di chuyển",
+      "en": "Move To"
+    },
+    "nodeNote": "Quyết định của bạn (2b): chính xác \"Di chuyển\"",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Bot",
+          "Agent"
+        ],
+        "new": [
+          "Bot",
+          "Agent"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Đích (vật)",
+          "Destination"
+        ],
+        "new": [
+          "Điểm đến",
+          "Destination"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      },
+      {
+        "dir": "in",
+        "id": "go",
+        "old": [
+          "Cho đi",
+          "Go"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "in",
+        "id": "target2",
+        "old": [
+          "Đích 2 (vật)",
+          "Second destination"
+        ],
+        "new": [
+          "Điểm đến 2",
+          "Destination 2"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      },
+      {
+        "dir": "in",
+        "id": "useTarget2",
+        "old": [
+          "Dùng đích 2",
+          "Use second"
+        ],
+        "new": [
+          "Dùng điểm đến 2",
+          "Use destination 2"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      },
+      {
+        "dir": "out",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "jump",
+        "old": [
+          "Nhảy",
+          "Jump"
+        ],
+        "new": [
+          "Nhảy",
+          "Jump"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "arrived",
+        "old": [
+          "Đã tới",
+          "Arrived"
+        ],
+        "new": [
+          "Đã đến",
+          "Arrived"
+        ],
+        "note": "\"đến\" thống nhất với \"Điểm đến\""
+      },
+      {
+        "dir": "out",
+        "id": "arrivedPulse",
+        "old": [
+          "Vừa tới",
+          "Just arrived"
+        ],
+        "new": [
+          "Khi đến nơi",
+          "On arrive"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "arrivedAt1",
+        "old": [
+          "Tới Đích",
+          "At destination"
+        ],
+        "new": [
+          "Đã đến điểm đến",
+          "Arrived at destination"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      },
+      {
+        "dir": "out",
+        "id": "arrivedAt2",
+        "old": [
+          "Tới Đích 2",
+          "At second destination"
+        ],
+        "new": [
+          "Đã đến điểm đến 2",
+          "Arrived at destination 2"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      }
+    ]
+  },
+  {
+    "kind": "guide-arrow",
+    "category": "output",
+    "nodeOld": {
+      "vi": "Mũi tên chỉ đường",
+      "en": "Waypoint Arrow"
+    },
+    "nodeNew": {
+      "vi": "Mũi tên chỉ đường",
+      "en": "Waypoint Arrow"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "from",
+        "old": [
+          "Từ",
+          "From"
+        ],
+        "new": [
+          "Từ đối tượng",
+          "From"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "to",
+        "old": [
+          "Tới",
+          "To"
+        ],
+        "new": [
+          "Đến đối tượng",
+          "To"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "distance",
+        "old": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "new": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "hand-tool",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Cầm dụng cụ",
+      "en": "Equip Tool"
+    },
+    "nodeNew": {
+      "vi": "Cầm dụng cụ",
+      "en": "Equip Tool"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "character",
+        "old": [
+          "Nhân vật",
+          "Character"
+        ],
+        "new": [
+          "Nhân vật",
+          "Character"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "equip",
+        "old": [
+          "Cầm",
+          "Equip"
+        ],
+        "new": [
+          "Cầm",
+          "Equip"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "unequip",
+        "old": [
+          "Cất",
+          "Unequip"
+        ],
+        "new": [
+          "Cất",
+          "Unequip"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "toggle",
+        "old": [
+          "Cầm / Cất",
+          "Equip"
+        ],
+        "new": [
+          "Cầm / Cất (cũ)",
+          "Toggle (legacy)"
+        ],
+        "note": "Cổng cũ, chỉ để game cũ vẫn chạy: ghi rõ \"(cũ)\""
+      },
+      {
+        "dir": "in",
+        "id": "use",
+        "old": [
+          "Dùng",
+          "Use"
+        ],
+        "new": [
+          "Dùng",
+          "Use"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "holding",
+        "old": [
+          "Đang cầm tay",
+          "Equipped"
+        ],
+        "new": [
+          "Đang cầm",
+          "Equipped"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "tool",
+        "old": [
+          "Món trên tay",
+          "Tool"
+        ],
+        "new": [
+          "Dụng cụ đang cầm",
+          "Held tool"
+        ],
+        "note": "Nói rõ là dụng cụ"
+      },
+      {
+        "dir": "out",
+        "id": "used",
+        "old": [
+          "Vừa dùng",
+          "Used"
+        ],
+        "new": [
+          "Khi dùng",
+          "On use"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "hit",
+        "old": [
+          "Trúng",
+          "Hit"
+        ],
+        "new": [
+          "Khi trúng",
+          "On hit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "health",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Máu",
+      "en": "Health"
+    },
+    "nodeNew": {
+      "vi": "Máu",
+      "en": "Health"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Nhân vật",
+          "Character"
+        ],
+        "new": [
+          "Nhân vật",
+          "Character"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "heal",
+        "old": [
+          "Hồi máu",
+          "Heal"
+        ],
+        "new": [
+          "Hồi máu",
+          "Heal"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "hp",
+        "old": [
+          "Máu còn",
+          "HP"
+        ],
+        "new": [
+          "Máu hiện tại",
+          "Current HP"
+        ],
+        "note": "Rõ nghĩa hơn \"Máu còn\""
+      },
+      {
+        "dir": "out",
+        "id": "hurtPulse",
+        "old": [
+          "Vừa bị đánh",
+          "Damaged"
+        ],
+        "new": [
+          "Khi bị thương",
+          "On damaged"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "dead",
+        "old": [
+          "Hết máu",
+          "Dead"
+        ],
+        "new": [
+          "Hết máu",
+          "Dead"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "interact",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Tương tác",
+      "en": "Interact"
+    },
+    "nodeNew": {
+      "vi": "Tương tác",
+      "en": "Interact"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "character",
+        "old": [
+          "Nhân vật",
+          "Character"
+        ],
+        "new": [
+          "Nhân vật",
+          "Character"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "press",
+        "old": [
+          "Bấm",
+          "Press"
+        ],
+        "new": [
+          "Bấm",
+          "Press"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "fired",
+        "old": [
+          "Vừa tương tác",
+          "Interacted"
+        ],
+        "new": [
+          "Khi tương tác",
+          "On interact"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "target",
+        "old": [
+          "Món được dùng",
+          "Target"
+        ],
+        "new": [
+          "Đồ được dùng",
+          "Target"
+        ],
+        "note": "Dùng \"Đồ\""
+      }
+    ]
+  },
+  {
+    "kind": "item",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Đồ vật",
+      "en": "Item"
+    },
+    "nodeNew": {
+      "vi": "Đồ vật",
+      "en": "Item"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "hide",
+        "old": [
+          "Ẩn đi (1 nhịp)",
+          "Hide"
+        ],
+        "new": [
+          "Ẩn",
+          "Hide"
+        ],
+        "note": "Bỏ \"(1 nhịp)\": cổng này là lệnh ngắn Ẩn / Hiện"
+      },
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện lại (1 nhịp)",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "Bỏ \"(1 nhịp)\": cổng này là lệnh ngắn Ẩn / Hiện"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Đồ vật",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "held",
+        "old": [
+          "Đang bị khiêng",
+          "Is carried"
+        ],
+        "new": [
+          "Đang bị khiêng",
+          "Is carried"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "interacted",
+        "old": [
+          "Vừa được dùng",
+          "Interacted"
+        ],
+        "new": [
+          "Khi được tương tác",
+          "On interact"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "inHand",
+        "old": [
+          "Đang cầm tay",
+          "In hand"
+        ],
+        "new": [
+          "Đang cầm tay",
+          "In hand"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "usedOn",
+        "old": [
+          "Bị dùng lên",
+          "Used on"
+        ],
+        "new": [
+          "Khi bị dùng lên",
+          "On tool hit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "key",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Phím bấm",
+      "en": "Key Input"
+    },
+    "nodeNew": {
+      "vi": "Phím bấm",
+      "en": "Key Input"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "out",
+        "id": "held",
+        "old": [
+          "Đang giữ phím",
+          "Is held"
+        ],
+        "new": [
+          "Đang giữ phím",
+          "Is held"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "pressed",
+        "old": [
+          "Vừa nhấn",
+          "Just pressed"
+        ],
+        "new": [
+          "Khi nhấn phím",
+          "On press"
+        ],
+        "signal": "pulse",
+        "note": "pulse (Unity: GetKeyDown)"
+      }
+    ]
+  },
+  {
+    "kind": "latch",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Công tắc nhớ",
+      "en": "Latch / Toggle"
+    },
+    "nodeNew": {
+      "vi": "Công tắc nhớ",
+      "en": "Latch / Toggle"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "set",
+        "old": [
+          "Bật",
+          "Set"
+        ],
+        "new": [
+          "Bật",
+          "Set"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "reset",
+        "old": [
+          "Tắt",
+          "Reset"
+        ],
+        "new": [
+          "Tắt",
+          "Reset"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "toggle",
+        "old": [
+          "Đảo",
+          "Toggle"
+        ],
+        "new": [
+          "Đảo",
+          "Toggle"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "on",
+        "old": [
+          "Đang bật",
+          "Is on"
+        ],
+        "new": [
+          "Đang bật",
+          "Is on"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "map-range",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Đổi thang số",
+      "en": "Map Range"
+    },
+    "nodeNew": {
+      "vi": "Quy đổi khoảng",
+      "en": "Map Range"
+    },
+    "nodeNote": "\"Đổi thang số\" khó hiểu; Quy đổi = chuyển giá trị từ khoảng này sang khoảng khác",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "value",
+        "old": [
+          "Số vào",
+          "Input"
+        ],
+        "new": [
+          "Giá trị vào",
+          "Input"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "out",
+        "id": "value",
+        "old": [
+          "Số ra",
+          "Output"
+        ],
+        "new": [
+          "Giá trị ra",
+          "Output"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      }
+    ]
+  },
+  {
+    "kind": "math",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Phép tính",
+      "en": "Math"
+    },
+    "nodeNew": {
+      "vi": "Phép tính",
+      "en": "Math"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "Số A",
+          "A"
+        ],
+        "new": [
+          "Số A",
+          "A"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "Số B",
+          "B"
+        ],
+        "new": [
+          "Số B",
+          "B"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "out",
+        "old": [
+          "Kết quả",
+          "Result"
+        ],
+        "new": [
+          "Kết quả",
+          "Result"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "moving-platform",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Bệ di chuyển",
+      "en": "Moving Platform"
+    },
+    "nodeNew": {
+      "vi": "Bệ di chuyển",
+      "en": "Moving Platform"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "run",
+        "old": [
+          "Chạy",
+          "Run"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Bệ",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "moving",
+        "old": [
+          "Đang chạy",
+          "Is moving"
+        ],
+        "new": [
+          "Đang di chuyển",
+          "Is moving"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "arrived",
+        "old": [
+          "Vừa tới cuối đường",
+          "Reached end"
+        ],
+        "new": [
+          "Khi tới cuối đường",
+          "On reach end"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "on-start",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Khi bắt đầu",
+      "en": "On Start"
+    },
+    "nodeNew": {
+      "vi": "Khi bắt đầu",
+      "en": "On Start"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "out",
+        "id": "fired",
+        "old": [
+          "Vừa bắt đầu",
+          "Fired"
+        ],
+        "new": [
+          "Khi bắt đầu",
+          "On start"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "started",
+        "old": [
+          "Đã bắt đầu",
+          "Started"
+        ],
+        "new": [
+          "Đã bắt đầu",
+          "Started"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "patrol",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Đi tuần",
+      "en": "Patrol"
+    },
+    "nodeNew": {
+      "vi": "Đi tuần",
+      "en": "Patrol"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Bot",
+          "Agent"
+        ],
+        "new": [
+          "Bot",
+          "Agent"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "on",
+        "old": [
+          "Hoạt động",
+          "Active"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "atEnd",
+        "old": [
+          "Vừa tới đầu mút",
+          "At end"
+        ],
+        "new": [
+          "Khi tới điểm cuối",
+          "On reach end"
+        ],
+        "signal": "pulse",
+        "note": "pulse; bỏ \"đầu mút\""
+      },
+      {
+        "dir": "out",
+        "id": "route",
+        "old": [
+          "Tuyến đi tuần",
+          "Patrol route"
+        ],
+        "new": [
+          "Tuyến đi tuần",
+          "Patrol route"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "portal",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Cổng dịch chuyển",
+      "en": "Portal"
+    },
+    "nodeNew": {
+      "vi": "Cổng dịch chuyển",
+      "en": "Portal"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "partner",
+        "old": [
+          "Cổng đối diện",
+          "Partner"
+        ],
+        "new": [
+          "Cổng đối diện",
+          "Partner"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "on",
+        "old": [
+          "Bật",
+          "Enabled"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Cổng",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "used",
+        "old": [
+          "Vừa có người vào",
+          "Entered"
+        ],
+        "new": [
+          "Khi có người vào",
+          "On enter"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "who",
+        "old": [
+          "Người vừa vào",
+          "Who"
+        ],
+        "new": [
+          "Đối tượng vừa vào",
+          "Last entered"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      }
+    ]
+  },
+  {
+    "kind": "random",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Số ngẫu nhiên",
+      "en": "Random"
+    },
+    "nodeNew": {
+      "vi": "Số ngẫu nhiên",
+      "en": "Random"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "roll",
+        "old": [
+          "Tung",
+          "Roll"
+        ],
+        "new": [
+          "Tung",
+          "Roll"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "value",
+        "old": [
+          "Số",
+          "Value"
+        ],
+        "new": [
+          "Giá trị",
+          "Value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "out",
+        "id": "rolled",
+        "old": [
+          "Vừa tung",
+          "Rolled"
+        ],
+        "new": [
+          "Khi tung",
+          "On roll"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "rotating-platform",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Bệ xoay",
+      "en": "Rotating Platform"
+    },
+    "nodeNew": {
+      "vi": "Bệ xoay",
+      "en": "Rotating Platform"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "turn",
+        "old": [
+          "Xoay",
+          "Rotate"
+        ],
+        "new": [
+          "Xoay",
+          "Rotate"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "run",
+        "old": [
+          "Chạy",
+          "Run"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "Mọi công tắc \"cho phép hoạt động\" đều tên Bật / Enable"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Hộp xoay",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "angle",
+        "old": [
+          "Góc (độ)",
+          "Angle"
+        ],
+        "new": [
+          "Góc xoay",
+          "Angle"
+        ],
+        "note": "Bỏ \"(độ)\" (đơn vị)"
+      },
+      {
+        "dir": "out",
+        "id": "turned",
+        "old": [
+          "Vừa xoay xong",
+          "Rotated"
+        ],
+        "new": [
+          "Khi xoay xong",
+          "On rotated"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "route-follow",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Chạy theo tuyến",
+      "en": "Follow Path"
+    },
+    "nodeNew": {
+      "vi": "Chạy theo tuyến",
+      "en": "Follow Path"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "self",
+        "old": [
+          "Ai",
+          "Agent"
+        ],
+        "new": [
+          "Đối tượng",
+          "Agent"
+        ],
+        "note": "Nhận Xe hoặc Bot"
+      },
+      {
+        "dir": "in",
+        "id": "on",
+        "old": [
+          "Bật",
+          "Enable"
+        ],
+        "new": [
+          "Bật",
+          "Enable"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "stop",
+        "old": [
+          "Dừng",
+          "Stop"
+        ],
+        "new": [
+          "Dừng",
+          "Stop"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "go",
+        "old": [
+          "Chạy",
+          "Go"
+        ],
+        "new": [
+          "Chạy",
+          "Go"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "obj1",
+        "old": [
+          "Điểm 1 (vật)",
+          "Point 1 (object)"
+        ],
+        "new": [
+          "Điểm 1",
+          "Waypoint 1"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj2",
+        "old": [
+          "Điểm 2 (vật)",
+          "Point 2 (object)"
+        ],
+        "new": [
+          "Điểm 2",
+          "Waypoint 2"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj3",
+        "old": [
+          "Điểm 3 (vật)",
+          "Point 3 (object)"
+        ],
+        "new": [
+          "Điểm 3",
+          "Waypoint 3"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj4",
+        "old": [
+          "Điểm 4 (vật)",
+          "Point 4 (object)"
+        ],
+        "new": [
+          "Điểm 4",
+          "Waypoint 4"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj5",
+        "old": [
+          "Điểm 5 (vật)",
+          "Point 5 (object)"
+        ],
+        "new": [
+          "Điểm 5",
+          "Waypoint 5"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj6",
+        "old": [
+          "Điểm 6 (vật)",
+          "Point 6 (object)"
+        ],
+        "new": [
+          "Điểm 6",
+          "Waypoint 6"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj7",
+        "old": [
+          "Điểm 7 (vật)",
+          "Point 7 (object)"
+        ],
+        "new": [
+          "Điểm 7",
+          "Waypoint 7"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "in",
+        "id": "obj8",
+        "old": [
+          "Điểm 8 (vật)",
+          "Point 8 (object)"
+        ],
+        "new": [
+          "Điểm 8",
+          "Waypoint 8"
+        ],
+        "note": "Bỏ \"(vật)\"; Waypoint là từ chuẩn cho điểm trên tuyến"
+      },
+      {
+        "dir": "out",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "jump",
+        "old": [
+          "Nhảy",
+          "Jump"
+        ],
+        "new": [
+          "Nhảy",
+          "Jump"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "blocked",
+        "old": [
+          "Đang bị chặn",
+          "Blocked"
+        ],
+        "new": [
+          "Đang bị chặn",
+          "Blocked"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "reached",
+        "old": [
+          "Tới điểm",
+          "Reached point"
+        ],
+        "new": [
+          "Khi tới điểm",
+          "On reach point"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "index",
+        "old": [
+          "Điểm hiện tại",
+          "Current point"
+        ],
+        "new": [
+          "Điểm hiện tại",
+          "Current point"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "atPoint",
+        "old": [
+          "Đang ở điểm",
+          "At point"
+        ],
+        "new": [
+          "Đang ở điểm",
+          "At point"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "route",
+        "old": [
+          "Tuyến chạy",
+          "Route"
+        ],
+        "new": [
+          "Tuyến chạy",
+          "Route"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "halted",
+        "old": [
+          "Đã đứng yên",
+          "Stood still"
+        ],
+        "new": [
+          "Đang đứng yên",
+          "Halted"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      }
+    ]
+  },
+  {
+    "kind": "select-number",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Chọn theo số",
+      "en": "Switch / Select"
+    },
+    "nodeNew": {
+      "vi": "Chọn theo số",
+      "en": "Switch / Select"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "value",
+        "old": [
+          "Số",
+          "Value"
+        ],
+        "new": [
+          "Giá trị",
+          "Value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "out",
+        "id": "changed",
+        "old": [
+          "Vừa đổi",
+          "Changed"
+        ],
+        "new": [
+          "Khi đổi",
+          "On change"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "is1",
+        "old": [
+          "Bằng 1",
+          "Case 1"
+        ],
+        "new": [
+          "Bằng 1",
+          "Case 1"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "is2",
+        "old": [
+          "Bằng 2",
+          "Case 2"
+        ],
+        "new": [
+          "Bằng 2",
+          "Case 2"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "is3",
+        "old": [
+          "Bằng 3",
+          "Case 3"
+        ],
+        "new": [
+          "Bằng 3",
+          "Case 3"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "sequence",
+    "category": "brain",
+    "nodeOld": {
+      "vi": "Chuỗi việc",
+      "en": "Sequence"
+    },
+    "nodeNew": {
+      "vi": "Chuỗi bước",
+      "en": "Sequence"
+    },
+    "nodeNote": "Sequence dùng \"Bước\" (Step) thay cho \"Việc\"",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "next",
+        "old": [
+          "Xong việc",
+          "Step done"
+        ],
+        "new": [
+          "Sang bước kế",
+          "Next"
+        ],
+        "note": "Lệnh nhảy bước; \"Next\" là từ chuẩn"
+      },
+      {
+        "dir": "in",
+        "id": "reset",
+        "old": [
+          "Làm lại từ đầu",
+          "Restart"
+        ],
+        "new": [
+          "Đặt lại",
+          "Reset"
+        ],
+        "note": "Mọi lệnh đưa về đầu đều tên Đặt lại / Reset"
+      },
+      {
+        "dir": "out",
+        "id": "index",
+        "old": [
+          "Đang làm việc số",
+          "Current step"
+        ],
+        "new": [
+          "Bước hiện tại",
+          "Current step"
+        ],
+        "note": "Sequence dùng \"Bước\" (Step) thay cho \"Việc\""
+      },
+      {
+        "dir": "out",
+        "id": "finished",
+        "old": [
+          "Đã xong hết",
+          "All done"
+        ],
+        "new": [
+          "Đã hoàn thành",
+          "Finished"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "step1",
+        "old": [
+          "Việc 1",
+          "Step 1"
+        ],
+        "new": [
+          "Bước 1",
+          "Step 1"
+        ],
+        "note": "Sequence dùng \"Bước\" (Step) thay cho \"Việc\""
+      },
+      {
+        "dir": "out",
+        "id": "step2",
+        "old": [
+          "Việc 2",
+          "Step 2"
+        ],
+        "new": [
+          "Bước 2",
+          "Step 2"
+        ],
+        "note": "Sequence dùng \"Bước\" (Step) thay cho \"Việc\""
+      },
+      {
+        "dir": "out",
+        "id": "step3",
+        "old": [
+          "Việc 3",
+          "Step 3"
+        ],
+        "new": [
+          "Bước 3",
+          "Step 3"
+        ],
+        "note": "Sequence dùng \"Bước\" (Step) thay cho \"Việc\""
+      }
+    ]
+  },
+  {
+    "kind": "shooter",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Bắn đạn",
+      "en": "Shoot"
+    },
+    "nodeNew": {
+      "vi": "Bắn đạn",
+      "en": "Shoot"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "shooter",
+        "old": [
+          "Người bắn",
+          "Shooter"
+        ],
+        "new": [
+          "Người bắn",
+          "Shooter"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Ngắm vào (tuỳ chọn)",
+          "Aim at"
+        ],
+        "new": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "note": "Bỏ \"(tuỳ chọn)\": cổng không nối cũng chạy"
+      },
+      {
+        "dir": "in",
+        "id": "fire",
+        "old": [
+          "Bắn",
+          "Fire"
+        ],
+        "new": [
+          "Bắn",
+          "Fire"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "hit",
+        "old": [
+          "Trúng",
+          "Hit"
+        ],
+        "new": [
+          "Khi trúng",
+          "On hit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "lastHit",
+        "old": [
+          "Vật vừa trúng",
+          "Hit object"
+        ],
+        "new": [
+          "Đối tượng bị trúng",
+          "Hit object"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      }
+    ]
+  },
+  {
+    "kind": "show-number",
+    "category": "output",
+    "nodeOld": {
+      "vi": "Hiện số",
+      "en": "Show Number"
+    },
+    "nodeNew": {
+      "vi": "Hiện số",
+      "en": "Show Number"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "value",
+        "old": [
+          "Số cần hiện",
+          "Number"
+        ],
+        "new": [
+          "Giá trị",
+          "Value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      }
+    ]
+  },
+  {
+    "kind": "show-text",
+    "category": "output",
+    "nodeOld": {
+      "vi": "Hiện chữ",
+      "en": "Show Text"
+    },
+    "nodeNew": {
+      "vi": "Hiện chữ",
+      "en": "Show Text"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "anchor",
+        "old": [
+          "Gắn vào vật",
+          "Attach to"
+        ],
+        "new": [
+          "Gắn vào đối tượng",
+          "Anchor"
+        ],
+        "note": "Gắn UI vào vật: Gắn vào đối tượng / Anchor"
+      }
+    ]
+  },
+  {
+    "kind": "spawner",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Tạo vật mới",
+      "en": "Spawner"
+    },
+    "nodeNew": {
+      "vi": "Tạo đối tượng",
+      "en": "Spawner"
+    },
+    "nodeNote": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "spawn",
+        "old": [
+          "Tạo ra",
+          "Spawn"
+        ],
+        "new": [
+          "Tạo",
+          "Spawn"
+        ],
+        "note": "Lệnh ngắn"
+      },
+      {
+        "dir": "in",
+        "id": "at",
+        "old": [
+          "Tại vật",
+          "At"
+        ],
+        "new": [
+          "Tại đối tượng",
+          "Spawn at"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "toucher",
+        "old": [
+          "Vật thử chạm",
+          "Touch with"
+        ],
+        "new": [
+          "Chạm thử với",
+          "Touch test"
+        ],
+        "note": "Đối tượng dùng thử chạm"
+      },
+      {
+        "dir": "out",
+        "id": "lastSpawned",
+        "old": [
+          "Vật mới nhất",
+          "Latest"
+        ],
+        "new": [
+          "Đối tượng mới nhất",
+          "Latest"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "count",
+        "old": [
+          "Đang có",
+          "Count"
+        ],
+        "new": [
+          "Số đang có",
+          "Count"
+        ],
+        "note": "Rõ nghĩa hơn"
+      },
+      {
+        "dir": "out",
+        "id": "spawned",
+        "old": [
+          "Vừa tạo",
+          "Spawned"
+        ],
+        "new": [
+          "Khi tạo",
+          "On spawn"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "touched",
+        "old": [
+          "Đang chạm vật thử",
+          "Touching"
+        ],
+        "new": [
+          "Đang chạm thử",
+          "Touching"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      }
+    ]
+  },
+  {
+    "kind": "speed-sensor",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Đo tốc độ",
+      "en": "Speed"
+    },
+    "nodeNew": {
+      "vi": "Đo tốc độ",
+      "en": "Speed"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "who",
+        "old": [
+          "Vật",
+          "Object"
+        ],
+        "new": [
+          "Đối tượng",
+          "Object"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "speed",
+        "old": [
+          "Tốc độ",
+          "Speed"
+        ],
+        "new": [
+          "Tốc độ",
+          "Speed"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "still",
+        "old": [
+          "Đứng yên",
+          "Is still"
+        ],
+        "new": [
+          "Đang đứng yên",
+          "Is still"
+        ],
+        "note": "Trạng thái đang diễn ra: bắt đầu bằng \"Đang …\""
+      },
+      {
+        "dir": "out",
+        "id": "fast",
+        "old": [
+          "Nhanh quá mức",
+          "Above limit"
+        ],
+        "new": [
+          "Vượt ngưỡng",
+          "Above threshold"
+        ],
+        "note": "Rõ là so với ô \"Ngưỡng\""
+      }
+    ]
+  },
+  {
+    "kind": "stick",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Cần điều khiển",
+      "en": "Joystick / Axis"
+    },
+    "nodeNew": {
+      "vi": "Cần điều khiển",
+      "en": "Joystick / Axis"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "out",
+        "id": "x",
+        "old": [
+          "Ngang (trái-phải)",
+          "Horizontal"
+        ],
+        "new": [
+          "Trục ngang",
+          "Horizontal"
+        ],
+        "note": "Bỏ \"(trái-phải)\"; Axis là từ chuẩn"
+      },
+      {
+        "dir": "out",
+        "id": "y",
+        "old": [
+          "Dọc (xuống-lên)",
+          "Vertical"
+        ],
+        "new": [
+          "Trục dọc",
+          "Vertical"
+        ],
+        "note": "Bỏ \"(xuống-lên)\""
+      }
+    ]
+  },
+  {
+    "kind": "teleport",
+    "category": "action",
+    "nodeOld": {
+      "vi": "Dịch chuyển",
+      "en": "Teleport"
+    },
+    "nodeNew": {
+      "vi": "Dịch chuyển",
+      "en": "Teleport"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "who",
+        "old": [
+          "Ai (vật)",
+          "Who"
+        ],
+        "new": [
+          "Đối tượng",
+          "Target"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "in",
+        "id": "go",
+        "old": [
+          "Đi",
+          "Go"
+        ],
+        "new": [
+          "Dịch chuyển",
+          "Teleport"
+        ],
+        "note": "Lệnh = tên node (như \"Bắn\" trong Bắn đạn)"
+      },
+      {
+        "dir": "in",
+        "id": "dest",
+        "old": [
+          "Nơi đến (vật)",
+          "Destination"
+        ],
+        "new": [
+          "Điểm đến",
+          "Destination"
+        ],
+        "note": "Điểm đến / Destination: một từ cho mọi nơi để đi tới"
+      },
+      {
+        "dir": "out",
+        "id": "done",
+        "old": [
+          "Vừa dịch chuyển",
+          "Done"
+        ],
+        "new": [
+          "Khi dịch chuyển",
+          "On teleport"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "timer",
+    "category": "math",
+    "nodeOld": {
+      "vi": "Hẹn giờ",
+      "en": "Timer"
+    },
+    "nodeNew": {
+      "vi": "Hẹn giờ",
+      "en": "Timer"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "run",
+        "old": [
+          "Chạy",
+          "Start"
+        ],
+        "new": [
+          "Bắt đầu",
+          "Start"
+        ],
+        "note": "Lệnh ngắn; giữ bật thì đếm"
+      },
+      {
+        "dir": "in",
+        "id": "reset",
+        "old": [
+          "Đếm lại",
+          "Restart"
+        ],
+        "new": [
+          "Đặt lại",
+          "Reset"
+        ],
+        "note": "Mọi lệnh đưa về đầu đều tên Đặt lại / Reset"
+      },
+      {
+        "dir": "out",
+        "id": "left",
+        "old": [
+          "Giây còn lại",
+          "Time left"
+        ],
+        "new": [
+          "Giây còn lại",
+          "Time left"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "done",
+        "old": [
+          "Hết giờ",
+          "Finished"
+        ],
+        "new": [
+          "Hết giờ",
+          "Finished"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "touch",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Chạm nhau",
+      "en": "Collision / Touch"
+    },
+    "nodeNew": {
+      "vi": "Va chạm",
+      "en": "Collision"
+    },
+    "nodeNote": "Collision = tên chuẩn của Unity / Unreal / Godot",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "a",
+        "old": [
+          "Vật chính",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng A",
+          "Object A"
+        ],
+        "note": "Thay \"Vật chính\"; A là vật được nới/thu vùng chạm (xem tooltip)"
+      },
+      {
+        "dir": "in",
+        "id": "b",
+        "old": [
+          "Vật kia",
+          "Other"
+        ],
+        "new": [
+          "Đối tượng B",
+          "Object B"
+        ],
+        "note": "Thay \"Vật kia\""
+      },
+      {
+        "dir": "out",
+        "id": "touching",
+        "old": [
+          "Đang chạm",
+          "Stay"
+        ],
+        "new": [
+          "Đang chạm",
+          "Stay"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "began",
+        "old": [
+          "Mới chạm",
+          "Enter"
+        ],
+        "new": [
+          "Bắt đầu chạm",
+          "Enter"
+        ],
+        "signal": "pulse",
+        "note": "pulse (Enter)"
+      },
+      {
+        "dir": "out",
+        "id": "ended",
+        "old": [
+          "Vừa rời",
+          "Exit"
+        ],
+        "new": [
+          "Kết thúc chạm",
+          "Exit"
+        ],
+        "signal": "pulse",
+        "note": "pulse (Exit)"
+      }
+    ]
+  },
+  {
+    "kind": "ui-button",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Nút bấm",
+      "en": "UI Button"
+    },
+    "nodeNew": {
+      "vi": "Nút bấm",
+      "en": "UI Button"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "pressed",
+        "old": [
+          "Vừa bấm",
+          "Pressed"
+        ],
+        "new": [
+          "Khi bấm",
+          "On click"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "held",
+        "old": [
+          "Đang giữ chuột",
+          "Held"
+        ],
+        "new": [
+          "Đang giữ nút",
+          "Held"
+        ],
+        "note": "held; cảm ứng cũng dùng được"
+      }
+    ]
+  },
+  {
+    "kind": "ui-dialog",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Hộp hỏi",
+      "en": "Dialog / Choice"
+    },
+    "nodeNew": {
+      "vi": "Hộp thoại",
+      "en": "Dialog"
+    },
+    "nodeNote": "Dialog box = Hộp thoại (chuẩn IT)",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "ask",
+        "old": [
+          "Hỏi",
+          "Ask"
+        ],
+        "new": [
+          "Hỏi",
+          "Ask"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "a1",
+        "old": [
+          "Chọn 1",
+          "Option 1"
+        ],
+        "new": [
+          "Khi chọn 1",
+          "On option 1"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "a2",
+        "old": [
+          "Chọn 2",
+          "Option 2"
+        ],
+        "new": [
+          "Khi chọn 2",
+          "On option 2"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "a3",
+        "old": [
+          "Chọn 3",
+          "Option 3"
+        ],
+        "new": [
+          "Khi chọn 3",
+          "On option 3"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "asking",
+        "old": [
+          "Đang hỏi",
+          "Is asking"
+        ],
+        "new": [
+          "Đang hỏi",
+          "Is asking"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "ui-meter",
+    "category": "output",
+    "nodeOld": {
+      "vi": "Thanh đo",
+      "en": "Progress Bar"
+    },
+    "nodeNew": {
+      "vi": "Thanh đo",
+      "en": "Progress Bar"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "value",
+        "old": [
+          "Số cần đo",
+          "Value"
+        ],
+        "new": [
+          "Giá trị",
+          "Value"
+        ],
+        "note": "Số chung chung = Giá trị / Value (chuẩn IT)"
+      },
+      {
+        "dir": "in",
+        "id": "anchor",
+        "old": [
+          "Gắn vào vật",
+          "Attach to"
+        ],
+        "new": [
+          "Gắn vào đối tượng",
+          "Anchor"
+        ],
+        "note": "Gắn UI vào vật: Gắn vào đối tượng / Anchor"
+      },
+      {
+        "dir": "in",
+        "id": "show",
+        "old": [
+          "Hiện",
+          "Show"
+        ],
+        "new": [
+          "Hiện",
+          "Show"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "ui-pick",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Bấm vào vật",
+      "en": "Click Object"
+    },
+    "nodeNew": {
+      "vi": "Bấm vào đối tượng",
+      "en": "Click Object"
+    },
+    "nodeNote": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Vật cần bấm",
+          "Object"
+        ],
+        "new": [
+          "Đối tượng",
+          "Target"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "pressed",
+        "old": [
+          "Vừa bấm",
+          "Clicked"
+        ],
+        "new": [
+          "Khi bấm",
+          "On click"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      }
+    ]
+  },
+  {
+    "kind": "ui-start",
+    "category": "input",
+    "nodeOld": {
+      "vi": "Màn hình mở đầu",
+      "en": "Title Screen"
+    },
+    "nodeNew": {
+      "vi": "Màn hình mở đầu",
+      "en": "Title Screen"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "out",
+        "id": "started",
+        "old": [
+          "Đã bắt đầu",
+          "Started"
+        ],
+        "new": [
+          "Đã bắt đầu",
+          "Started"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "vehicle",
+    "category": "object",
+    "nodeOld": {
+      "vi": "Xe",
+      "en": "Vehicle"
+    },
+    "nodeNew": {
+      "vi": "Xe",
+      "en": "Vehicle"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "moveX",
+        "old": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "new": [
+          "Đi ngang",
+          "Move X"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "moveY",
+        "old": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "new": [
+          "Đi dọc",
+          "Move Y"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "stop",
+        "old": [
+          "Phanh",
+          "Brake"
+        ],
+        "new": [
+          "Phanh",
+          "Brake"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "leader",
+        "old": [
+          "Theo xe đầu",
+          "Follow leader"
+        ],
+        "new": [
+          "Theo xe đầu",
+          "Follow leader"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "self",
+        "old": [
+          "Xe",
+          "Self"
+        ],
+        "new": [
+          "Đối tượng",
+          "Self"
+        ],
+        "note": "Cổng \"tự thân\" của mọi mảnh vật thể đều tên giống nhau: Đối tượng / Self"
+      },
+      {
+        "dir": "out",
+        "id": "hasDriver",
+        "old": [
+          "Có người lái",
+          "Has driver"
+        ],
+        "new": [
+          "Có người lái",
+          "Has driver"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "speed",
+        "old": [
+          "Tốc độ",
+          "Speed"
+        ],
+        "new": [
+          "Tốc độ",
+          "Speed"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "driver",
+        "old": [
+          "Người lái",
+          "Driver"
+        ],
+        "new": [
+          "Người lái",
+          "Driver"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "crashed",
+        "old": [
+          "Vừa va chạm",
+          "Crashed"
+        ],
+        "new": [
+          "Khi va chạm",
+          "On crash"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "crashedWith",
+        "old": [
+          "Va với",
+          "Hit by"
+        ],
+        "new": [
+          "Đối tượng va phải",
+          "Crashed with"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      }
+    ]
+  },
+  {
+    "kind": "vision-sensor",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Tầm nhìn",
+      "en": "Line of Sight"
+    },
+    "nodeNew": {
+      "vi": "Tầm nhìn",
+      "en": "Line of Sight"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "viewer",
+        "old": [
+          "Người nhìn",
+          "Viewer"
+        ],
+        "new": [
+          "Người nhìn",
+          "Viewer"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "new": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "seen",
+        "old": [
+          "Đang thấy",
+          "Can see"
+        ],
+        "new": [
+          "Đang thấy",
+          "Can see"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "gained",
+        "old": [
+          "Vừa thấy",
+          "Spotted"
+        ],
+        "new": [
+          "Khi phát hiện",
+          "On spotted"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "lost",
+        "old": [
+          "Vừa mất dấu",
+          "Lost"
+        ],
+        "new": [
+          "Khi mất dấu",
+          "On lost"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "nearest",
+        "old": [
+          "Vật gần nhất",
+          "Nearest"
+        ],
+        "new": [
+          "Đối tượng gần nhất",
+          "Nearest"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "distance",
+        "old": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "new": [
+          "Khoảng cách",
+          "Distance"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "sight-forecast",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Dự đoán tầm nhìn",
+      "en": "Sight Forecast"
+    },
+    "nodeNew": {
+      "vi": "Dự đoán tầm nhìn",
+      "en": "Sight Forecast"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "viewer",
+        "old": [
+          "Người nhìn",
+          "Viewer"
+        ],
+        "new": [
+          "Người nhìn",
+          "Viewer"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "target",
+        "old": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "new": [
+          "Mục tiêu",
+          "Target"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "patrol",
+        "old": [
+          "Đường đi tuần",
+          "Patrol route"
+        ],
+        "new": [
+          "Tuyến đi tuần",
+          "Patrol route"
+        ],
+        "note": "Cùng tên với cổng ra của node Đi tuần"
+      },
+      {
+        "dir": "in",
+        "id": "route",
+        "old": [
+          "Tuyến của Mục tiêu",
+          "Target route"
+        ],
+        "new": [
+          "Tuyến của Mục tiêu",
+          "Target route"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "window",
+        "old": [
+          "Còn (giây)",
+          "Time left"
+        ],
+        "new": [
+          "Giây còn lại",
+          "Time left"
+        ],
+        "note": "Cùng tên với Hẹn giờ; bỏ \"(giây)\""
+      },
+      {
+        "dir": "out",
+        "id": "safe",
+        "old": [
+          "An toàn",
+          "Safe"
+        ],
+        "new": [
+          "An toàn",
+          "Safe"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "out",
+        "id": "need",
+        "old": [
+          "Cần (giây)",
+          "Time needed"
+        ],
+        "new": [
+          "Giây cần thiết",
+          "Time needed"
+        ],
+        "note": "Bỏ \"(giây)\""
+      }
+    ]
+  },
+  {
+    "kind": "win-lose",
+    "category": "output",
+    "nodeOld": {
+      "vi": "Thắng / Thua",
+      "en": "Game Over"
+    },
+    "nodeNew": {
+      "vi": "Thắng / Thua",
+      "en": "Game Over"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "win",
+        "old": [
+          "Thắng",
+          "Win"
+        ],
+        "new": [
+          "Thắng",
+          "Win"
+        ],
+        "note": "giữ"
+      },
+      {
+        "dir": "in",
+        "id": "lose",
+        "old": [
+          "Thua",
+          "Lose"
+        ],
+        "new": [
+          "Thua",
+          "Lose"
+        ],
+        "note": "giữ"
+      }
+    ]
+  },
+  {
+    "kind": "zone",
+    "category": "logic",
+    "nodeOld": {
+      "vi": "Vùng kích hoạt",
+      "en": "Trigger Zone"
+    },
+    "nodeNew": {
+      "vi": "Vùng kích hoạt",
+      "en": "Trigger Zone"
+    },
+    "nodeNote": "giữ",
+    "ports": [
+      {
+        "dir": "in",
+        "id": "follow",
+        "old": [
+          "Gắn vào vật",
+          "Follow"
+        ],
+        "new": [
+          "Bám theo đối tượng",
+          "Follow"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "inside",
+        "old": [
+          "Có ai trong vùng",
+          "Is inside"
+        ],
+        "new": [
+          "Đang có đối tượng",
+          "Occupied"
+        ],
+        "note": "held; \"Có ai\" đổi thành \"đối tượng\" cho đủ vật & xe"
+      },
+      {
+        "dir": "out",
+        "id": "entered",
+        "old": [
+          "Vừa vào",
+          "On enter"
+        ],
+        "new": [
+          "Khi đối tượng vào",
+          "Enter"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "exited",
+        "old": [
+          "Vừa ra",
+          "On exit"
+        ],
+        "new": [
+          "Khi đối tượng ra",
+          "Exit"
+        ],
+        "signal": "pulse",
+        "note": "Sự kiện 1 nhịp: bắt đầu bằng \"Khi …\" / On …"
+      },
+      {
+        "dir": "out",
+        "id": "count",
+        "old": [
+          "Số lượng",
+          "Count"
+        ],
+        "new": [
+          "Số đối tượng",
+          "Count"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      },
+      {
+        "dir": "out",
+        "id": "first",
+        "old": [
+          "Vật đầu tiên",
+          "First object"
+        ],
+        "new": [
+          "Đối tượng đầu tiên",
+          "First"
+        ],
+        "note": "Đối tượng = từ chung cho mọi vật / nhân vật / xe (bỏ \"Vật\", \"(vật)\")"
+      }
+    ]
+  }
+]

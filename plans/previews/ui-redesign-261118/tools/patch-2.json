@@ -1,0 +1,22 @@
+[
+["`<div class=\"pt ${dir} t-${ty}${live ? ' live' : ''} ${extra}\"", "`<div class=\"pt ${dir} t-${ty}${live ? ' plive' : ''} ${extra}\""],
+[".pt.live > .dot {", ".pt.plive > .dot {"],
+[".replace('live \" data-p=\"power\"', 'live hov\" data-p=\"power\"')", ".replace('plive \" data-p=\"power\"', 'plive hov\" data-p=\"power\"')"],
+[".q { width: 28px; height: 28px;", ".ed .q { width: 28px; height: 28px;"],
+[".ed.touch .q { width: 44px; height: 44px; margin-right: -6px; background: none; border: 0; z-index: 0; }", ".ed.touch .q { width: 44px; height: 44px; margin-right: -6px; background: none; border-color: transparent; z-index: 0; }"],
+[".hd-bar .nd-h { background: var(--cardHead); box-shadow: inset 0 4px 0 var(--cc);", ".hd-bar .nd-h { padding-top: 4px; background: var(--cardHead); box-shadow: inset 0 4px 0 var(--cc);"],
+["const layout = gv && t.layout !== 'stage' && !o.compact ? `<span class=\"tbtn\" title=\"Bố cục: Mặc định\">${ic('layout')}Bố cục${ic('chevD')}</span>` : '';", "const layout = gv && t.layout !== 'stage' && !o.compact ? `<span class=\"tbtn\" title=\"Bố cục: Mặc định\" style=\"padding:0 6px\">${ic('layout')}${ic('chevD')}</span>` : '';"],
+["<i></i>${o.compact ? '' : 'Đã lưu'}</span></div></header>`;\n}", "<i></i>${o.compact || gv ? '' : 'Đã lưu'}</span></div></header>`;\n}"],
+[".tb-g { display: flex; align-items: center; gap: 6px; min-width: 0; }", ".tb-g { display: flex; align-items: center; gap: 6px; flex: none; }"],
+["<div class=\"calc\">30 × 1,00 = 30 N &nbsp;·&nbsp; 0,8 × 2 × 9,81 ÷ 2 = 7,85 N<br><var style=\"font-size:14px\">F</var> = <span class=\"res\">7,85 N</span> &nbsp; <var style=\"font-size:14px\">a</var> = 15,7 ÷ 2 = <span class=\"res\">7,85 m/s²</span></div></div>`;", "<div class=\"calc\"><span>Động cơ: 30 × 1,00 = 30 N</span><span>Độ bám: 0,8 × 2 × 9,81 ÷ 2 = 7,85 N</span><span><var>F</var> = <b class=\"res\">7,85 N</b> &nbsp; <var>a</var> = 15,7 ÷ 2 = <b class=\"res\">7,85 m/s²</b></span></div></div>`;"],
+[".fx .calc { font-family: var(--mono); font-size: var(--fs-s); color: var(--text2); line-height: 1.9; }", ".fx .calc { font-size: var(--fs-s); color: var(--text2); line-height: 1.75; display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 2px; }\n.fx .calc span { white-space: nowrap; }\n.fx .calc var { font-size: calc(var(--fs) + .5px); }"],
+[".fx .res { font-family: var(--mono); font-weight: 700;", ".fx .res { font-weight: 700;"],
+[".dk.withsim { height: 196px; grid-template-columns: 348px 280px minmax(0, 1fr); }", ".dk.withsim { height: 196px; grid-template-columns: 320px 220px minmax(0, 1fr); }"],
+[".dk.withsim.two { grid-template-columns: 348px minmax(0, 1fr); }", ".dk.withsim.two { grid-template-columns: 348px minmax(0, 1fr); }\n.fch, .dk h4 { white-space: nowrap; }"],
+[".mini { width: 168px; padding: 6px; }", ".mini { width: 204px; padding: 6px; }"],
+[".sec-h em { font-style: normal; font-weight: 500; margin-left: auto; }", ".sec-h { white-space: nowrap; }\n.sec-h em { font-style: normal; font-weight: 500; margin-left: auto; padding-left: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }"],
+["{ f: ['body', 'self'], t: ['m1', 'body'], ty: 'obj', live: 1, chip: 'Thân robot', txt: 1, at: 0.74 },\n  { f: ['body', 'self'], t: ['m2', 'body'], ty: 'obj', live: 1 },", "{ f: ['body', 'self'], t: ['m1', 'body'], ty: 'obj', live: 1 },\n  { f: ['body', 'self'], t: ['m2', 'body'], ty: 'obj', live: 1, chip: 'Thân robot', txt: 1, at: 0.6 },"],
+["begin=\"${i * 0.25}s\" repeatCount", "begin=\"0s\" repeatCount"],
+["${simHead('Mô phỏng', `<span class=\"live\" style=\"padding:0 4px\"><i></i>Đang chạy</span>`)}", "${simHead('Mô phỏng', tab ? '' : `<span class=\"live\" style=\"padding:0 4px\"><i></i>Đang chạy</span>`)}"],
+["'left:' + (dockSim ? 712 : 190) + 'px;'", "'left:' + (dockSim ? 664 : 190) + 'px;'"]
+]

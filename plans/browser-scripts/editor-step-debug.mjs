@@ -1,0 +1,23 @@
+const { chromium } = await import('file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs');
+const b = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const p = await b.newPage({ viewport: { width: 1440, height: 860 } });
+await p.goto('http://localhost:5241/');
+await p.waitForTimeout(1200);
+await p.getByText('Tệp', { exact: true }).first().click();
+await p.getByText('Mở game mẫu').first().click();
+await p.getByText('Nhặt sao').first().click();
+await p.waitForTimeout(1200);
+const info = () => p.evaluate(() => {
+  const wc = document.querySelector('.wc');
+  const c = wc.getBoundingClientRect();
+  return { canvas: [c.left, c.top, c.width, c.height].map(Math.round), world: document.querySelector('.wc-world').style.transform, lit: [...document.querySelectorAll('.wc-node.step-lit')].map((n) => { const r = n.getBoundingClientRect(); return [n.dataset.kind, Math.round(r.left - c.left), Math.round(r.top - c.top), Math.round(r.width), Math.round(r.height)]; }) };
+});
+console.log('before', JSON.stringify(await info()));
+await p.locator('#btn-play').click();
+await p.waitForTimeout(1500);
+await p.keyboard.down('ArrowRight');
+await p.locator('[data-tut="step"]').click();
+await p.waitForTimeout(3000);
+await p.keyboard.up('ArrowRight');
+console.log('after', JSON.stringify(await info()));
+await b.close();

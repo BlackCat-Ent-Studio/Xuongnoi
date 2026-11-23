@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Bot · Sân khấu gỗ ấm áp (bản xem thử thiết kế)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;800&family=Be+Vietnam+Pro:wght@400;600&display=swap">
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<style>
+:root { --wood-0:#241510; --wood-1:#3a2417; --wood-2:#5a3a22; --wood-3:#7a4f2e; --wood-4:#a06b3c; --wood-5:#c8955a;
+  --cream:#fff1d0; --cream-2:#f3dcaa; --cream-3:#d9bd84; --honey:#ffb938; --amber-deep:#a85c0c; --sage:#93b58c; --ink:#3b2314;
+  --display:"Baloo 2","Trebuchet MS",system-ui,sans-serif; --body:"Be Vietnam Pro",system-ui,-apple-system,"Segoe UI",sans-serif; }
+* { box-sizing:border-box; }
+html, body { margin:0; background:var(--wood-0); color:var(--cream); }
+body { font-family:var(--body); background:radial-gradient(120% 60% at 50% 0,#4a2e1b,var(--wood-0) 70%); min-height:100vh; overflow-x:hidden; }
+h1,h2 { font-family:var(--display); margin:0; }
+header { max-width:1320px; margin:0 auto; padding:14px 16px 2px; }
+header h1 { font-size:clamp(22px,3vw,30px); color:var(--cream); line-height:1.1; }
+header p { margin:4px 0 0; color:var(--cream-3); font-size:13px; max-width:90ch; line-height:1.45; }
+main { display:grid; grid-template-columns:minmax(0,1fr) 326px; gap:16px; max-width:1320px; margin:0 auto; padding:10px 16px 28px; align-items:start; }
+.left { min-width:0; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.bezel { background:#1a0f09; border-radius:20px; padding:8px; box-shadow:0 20px 36px -18px rgba(0,0,0,.85), inset 0 0 0 2px #4a2e1b; max-width:100%; }
+.stage { position:relative; overflow:hidden; border-radius:13px; background:
+  repeating-linear-gradient(90deg,transparent 0 4.4%,rgba(120,70,30,.16) 4.4% 4.7%), linear-gradient(#f3dcaa,#e2c283 72%,#b98550); }
+.stage[data-frame=stage] { width:370px; height:390px; }
+.stage[data-frame=phone] { width:844px; height:390px; }
+.stage[data-frame=desktop] { width:min(880px,calc(100vw - 400px)); aspect-ratio:16/9; }
+.stage canvas { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.mask { position:absolute; inset:0; pointer-events:none; display:none; }
+.mask.on { display:block; }
+.mask i { position:absolute; border:2px dashed rgba(224,85,63,.85); background:rgba(224,85,63,.16); color:#fff; font:600 11px var(--body); font-style:normal; padding:3px 6px; }
+.mask .mb { left:0; right:0; bottom:0; height:29%; } .mask .mt { left:0; top:0; width:58%; height:12%; }
+#labels { position:absolute; inset:0; pointer-events:none; }
+#labels span { position:absolute; transform:translate(-50%,0); font:600 11px/1.1 var(--body); color:var(--cream); background:rgba(36,21,16,.78); padding:3px 7px; border-radius:99px; white-space:nowrap; }
+#hud { position:absolute; right:8px; top:6px; font:600 11px var(--body); color:#fff8; background:rgba(36,21,16,.55); padding:2px 8px; border-radius:99px; pointer-events:none; }
+.caption { margin:0; font-size:12.5px; color:var(--cream-3); text-align:center; max-width:78ch; line-height:1.5; min-height:3em; }
+aside { background:linear-gradient(#4b2f1c,#3a2417); border-radius:20px; padding:14px; box-shadow:0 14px 24px -14px rgba(0,0,0,.8), inset 0 0 0 2px var(--wood-3); min-width:0; display:flex; flex-direction:column; gap:12px; }
+aside h2 { font-size:16px; color:var(--honey); margin-bottom:6px; }
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.grid3 { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+button { font:600 13px/1.2 var(--body); color:var(--cream); background:var(--wood-3); border:0; border-radius:12px; padding:9px 8px; min-height:42px; cursor:pointer; box-shadow:0 3px 0 var(--wood-0); transition:transform .1s; }
+button:active { transform:translateY(2px); box-shadow:0 1px 0 var(--wood-0); }
+button[aria-pressed="true"] { background:var(--honey); color:var(--ink); box-shadow:0 3px 0 var(--amber-deep); }
+button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid var(--cream); outline-offset:2px; }
+.row { display:flex; align-items:center; gap:8px; margin:7px 0; font-size:13px; }
+.row label { flex:0 0 96px; }
+.row input[type=range] { flex:1; min-width:0; accent-color:var(--honey); height:30px; }
+.row output { flex:0 0 38px; text-align:right; color:var(--cream-3); font-variant-numeric:tabular-nums; }
+.chk { display:flex; align-items:center; gap:8px; font-size:13px; margin:8px 0; min-height:30px; }
+.chk input { width:18px; height:18px; accent-color:var(--honey); }
+select { font:600 13px var(--body); background:var(--wood-2); color:var(--cream); border:0; border-radius:10px; padding:8px; min-height:38px; }
+textarea { display:none; width:100%; min-height:130px; margin-top:8px; background:#1a0f09; color:var(--cream); border:2px solid var(--wood-3); border-radius:10px; padding:8px; font:12px/1.4 ui-monospace,Consolas,monospace; }
+#status { min-height:1.3em; margin:6px 0 0; font-size:12.5px; color:#a8f0c6; }
+#triList { margin:0; padding:0; list-style:none; font-size:12px; color:var(--cream-3); }
+#triList li { display:flex; justify-content:space-between; padding:2px 0; border-bottom:1px dotted rgba(217,189,132,.25); }
+[hidden] { display:none !important; }
+@media (max-width:1000px) { main { grid-template-columns:minmax(0,1fr); } .stage[data-frame=desktop] { width:min(880px,calc(100vw - 50px)); } .stage[data-frame=phone] { width:min(844px,100%); height:auto; aspect-ratio:844/390; } }
+body.bare { background:#000; overflow:hidden; }
+body.bare header, body.bare aside, body.bare .caption { display:none; }
+body.bare main { display:block; padding:0; max-width:none; }
+body.bare .left { display:block; }
+body.bare .bezel { padding:0; border-radius:0; background:none; box-shadow:none; }
+body.bare .stage { width:100vw !important; height:100vh !important; border-radius:0; aspect-ratio:auto !important; }
+body.bare #hud { display:none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Sân khấu gỗ ấm áp · bản xem thử thiết kế</h1>
+  <p>Chỉ là bản xem thử (chưa phải mã game). Chọn cảnh, đổi khung điện thoại / máy tính, kéo thanh “Cỡ nhân vật” và “Thu phóng” cho tới khi nhìn rõ nhất, rồi bấm “Sao chép thông số” và dán gửi lại.</p>
+</header>
+<main>
+  <section class="left">
+    <div class="bezel"><div class="stage" id="stage" data-frame="stage">
+      <div class="mask" id="mask"><i class="mt">góc trái: tên màn + sao</i><i class="mb">hộp đề bài / bong bóng thoại che vùng này</i></div>
+      <div id="labels"></div>
+      <div id="hud"></div>
+    </div></div>
+    <p class="caption" id="caption"></p>
+  </section>
+  <aside>
+    <section><h2>Chọn cảnh</h2><div class="grid2" id="scenes"></div></section>
+    <section><h2>Khung xem</h2>
+      <div class="grid3" id="frames">
+        <button type="button" data-frame="stage" aria-pressed="true">Sân khấu 370×390</button>
+        <button type="button" data-frame="phone" aria-pressed="false">Cả màn 844×390</button>
+        <button type="button" data-frame="desktop" aria-pressed="false">Máy tính</button>
+      </div>
+    </section>
+    <section><h2>Chỉnh cỡ</h2>
+      <div class="row"><label for="sScale">Cỡ nhân vật</label><input type="range" id="sScale" min="1" max="2" step="0.05"><output id="oScale"></output></div>
+      <div class="row"><label for="sZoom">Thu phóng</label><input type="range" id="sZoom" min="0.6" max="2" step="0.05"><output id="oZoom"></output></div>
+      <label class="chk"><input type="checkbox" id="cFollow"> Camera đi theo nhân vật</label>
+      <label class="chk"><input type="checkbox" id="cMask"> Hiện vùng bị hộp thoại che</label>
+      <div class="row" id="floorRow"><label for="selFloor">Kiểu sàn (3D)</label><select id="selFloor"><option value="plank">Ván gỗ</option><option value="tile">Gạch ấm</option></select></div>
+    </section>
+    <section><h2>Chạy thử</h2>
+      <div class="grid2"><button type="button" id="bPlay" aria-pressed="true">Đang chạy</button><button type="button" id="bRestart">Chạy lại từ đầu</button></div>
+      <div id="bridgeBox" hidden style="margin-top:8px"><div class="grid3" id="bridgeBtns">
+        <button type="button" data-bridge="auto" aria-pressed="true">Cầu tự nháy</button>
+        <button type="button" data-bridge="show" aria-pressed="false">Luôn hiện</button>
+        <button type="button" data-bridge="hide" aria-pressed="false">Luôn ẩn</button></div></div>
+    </section>
+    <section id="kitBox" hidden><h2>Đạo cụ</h2><div class="grid2" id="kitBtns"></div></section>
+    <section><button type="button" id="bCopy" style="width:100%">Sao chép thông số</button><p id="status" role="status" aria-live="polite"></p>
+      <textarea id="copyOut" readonly aria-label="Thông số JSON"></textarea></section>
+    <section><h2>Số tam giác mỗi cảnh</h2><ul id="triList"></ul></section>
+  </aside>
+</main>
+<script type="module">

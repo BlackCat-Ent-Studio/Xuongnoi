@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bốn mức nền sáng</title>
+<style>
+  body { margin: 0; background: #3a3f47; color: #f2f4f7; font: 15px/1.5 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif; }
+  header { padding: 14px 20px; background: #23272e; position: sticky; top: 0; z-index: 2; }
+  header b { font-size: 18px; }
+  header small { display: block; color: #c3c9d2; }
+  main { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 18px; }
+  figure { margin: 0; background: #23272e; border-radius: 10px; overflow: hidden; }
+  figcaption { padding: 10px 14px; font-weight: 700; font-size: 17px; }
+  figcaption span { font-weight: 500; font-size: 14px; color: #c3c9d2; margin-left: 8px; }
+  img { display: block; width: 100%; height: auto; cursor: zoom-in; }
+  img.big { position: fixed; inset: 0; width: 100vw; height: 100vh; object-fit: contain; background: #111; z-index: 5; cursor: zoom-out; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<header><b>Bốn mức nền sáng của hướng C</b><small>Ảnh dựng, chưa phải ứng dụng thật. Bấm vào một ảnh để phóng to hết màn hình, bấm lần nữa để thu lại.</small></header>
+<main>
+  <figure><figcaption>1a · Gốc <span>trắng tinh, chói</span></figcaption><img src="shots/soft-s0-c-light-hs-editor.png" alt="Mức Gốc"></figure>
+  <figure><figcaption>1b · Giấy ấm <span>đề xuất: ngả kem, hết trắng gắt</span></figcaption><img src="shots/soft-s1-c-light-hs-editor.png" alt="Mức Giấy ấm"></figure>
+  <figure><figcaption>1c · Xám dịu <span>trung tính, mát hơn</span></figcaption><img src="shots/soft-s2-c-light-hs-editor.png" alt="Mức Xám dịu"></figure>
+  <figure><figcaption>1d · Xám trầm <span>tối một bậc, giữa sáng và tối</span></figcaption><img src="shots/soft-s3-c-light-hs-editor.png" alt="Mức Xám trầm"></figure>
+</main>
+<script>
+  document.querySelectorAll('img').forEach((i) => i.addEventListener('click', () => i.classList.toggle('big')));
+</script>
+</body>
+</html>

@@ -1,0 +1,834 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Nối: bản xem trước giao diện mới (ảnh dựng)</title>
+<style>
+/* ===== Preview page chrome (not part of the proposed app UI) ===== */
+:root { --font: 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif; --mono: ui-monospace, Consolas, 'Cascadia Mono', monospace; }
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #e9ebee; color: #1a2028; font: 14px/1.5 var(--font); -webkit-font-smoothing: antialiased; }
+button { font: inherit; color: inherit; cursor: pointer; }
+.pv-top { position: sticky; top: 0; z-index: 100; background: #fff; border-bottom: 1px solid #cfd5dc; }
+.pv-banner { background: #7a4b00; color: #fff; font-weight: 700; padding: 6px 16px; font-size: 14px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center; }
+.pv-banner small { font-weight: 500; font-size: 13px; opacity: .95; }
+.pv-ctl { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; padding: 8px 16px; }
+.pv-grp { display: flex; align-items: center; gap: 8px; }
+.pv-grp > span { font-size: 13px; color: #47525f; font-weight: 600; }
+.pv-seg { display: inline-flex; border: 1px solid #8d98a5; border-radius: 8px; overflow: hidden; background: #fff; }
+.pv-seg button { border: 0; background: none; padding: 6px 12px; min-height: 36px; font-weight: 600; font-size: 13.5px; color: #26303b; border-right: 1px solid #cfd5dc; }
+.pv-seg button:last-child { border-right: 0; }
+.pv-seg button[aria-pressed="true"] { background: #1a2433; color: #fff; }
+.pv-seg button:focus-visible { outline: 3px solid #e08a00; outline-offset: -3px; }
+.pv-main { max-width: 1520px; margin: 0 auto; padding: 16px 16px 64px; }
+.pv-sec { margin-top: 32px; }
+.pv-sec > h2 { font-size: 20px; line-height: 1.3; margin: 0 0 4px; }
+.pv-sec > p.lead { margin: 0 0 12px; color: #47525f; max-width: 120ch; }
+.pv-dirhead { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1fr); gap: 16px; background: #fff; border: 1px solid #cfd5dc; border-radius: 12px; padding: 16px; }
+.pv-dirhead h1 { margin: 0 0 4px; font-size: 22px; line-height: 1.25; }
+.pv-dirhead h3 { margin: 0 0 4px; font-size: 14px; }
+.pv-dirhead ul { margin: 0; padding-left: 18px; }
+.pv-dirhead li { margin-bottom: 2px; }
+.pv-tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: #dff3e6; color: #0f5a2c; margin-left: 8px; vertical-align: middle; }
+.pv-frame { border: 1px solid #aeb7c2; border-radius: 10px; overflow: hidden; background: #fff; box-shadow: 0 8px 24px rgba(20, 30, 45, .12); position: relative; }
+.pv-fit { position: relative; overflow: hidden; }
+.pv-fit > .ed, .pv-fit > img { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.pv-cap { font-size: 13px; color: #47525f; margin: 8px 2px 0; }
+.pv-row { display: flex; gap: 24px; flex-wrap: wrap; align-items: flex-start; }
+.pv-mock { font-size: 12px; font-weight: 700; color: #7a4b00; background: #fff1cc; border: 1px solid #e0b040; border-radius: 4px; padding: 0 6px; white-space: nowrap; }
+.pv-card { background: #fff; border: 1px solid #cfd5dc; border-radius: 12px; padding: 16px; }
+table.pv-t { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+table.pv-t th, table.pv-t td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #e1e5ea; vertical-align: middle; }
+table.pv-t th { font-size: 12.5px; color: #47525f; background: #f4f6f8; }
+.sw { display: inline-block; width: 28px; height: 20px; border-radius: 4px; border: 1px solid rgba(0, 0, 0, .25); vertical-align: middle; margin-right: 6px; }
+.ok { color: #0f5a2c; font-weight: 700; } .mid2 { color: #7a4b00; font-weight: 700; } .bad { color: #a11a12; font-weight: 700; }
+code { font-family: var(--mono); font-size: 12.5px; }
+.pv-modes { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+.pv-wf { width: 220px; }
+.pv-wf .wf { height: 124px; border: 1.5px solid #5b6672; border-radius: 6px; display: grid; gap: 2px; padding: 2px; background: #5b6672; font-size: 12px; font-weight: 600; }
+.pv-wf .wf div { background: #fff; display: grid; place-items: center; text-align: center; }
+.pv-wf .wf .hi { background: #dff3e6; }
+
+/* ===== Proposed app UI (everything inside .ed). Colour tokens are set as custom properties on .ed by the script. ===== */
+.ed { --fs: 14px; --fs-s: 12px; --row: 30px; --hh: 44px; --ctl: 32px; --r: 8px; --topH: 52px; --tabH: 40px;
+  font: var(--fs)/1.45 var(--font); color: var(--text); background: var(--bg); display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--topH) minmax(0, 1fr); overflow: hidden; font-variant-numeric: tabular-nums; }
+.ed.m-hs { --fs: 15px; --fs-s: 13px; --row: 34px; --hh: 50px; --ctl: 36px; --tabH: 44px; }
+.ed.m-gv { --fs: 13px; --fs-s: 12px; --row: 24px; --hh: 34px; --ctl: 28px; --tabH: 36px; }
+.ed.touch { --row: 44px; --hh: 52px; --ctl: 44px; --topH: 56px; --tabH: 48px; }
+.ed * { box-sizing: border-box; }
+.ed .ic { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ed .ic.f { fill: currentColor; stroke: none; }
+.ed button { border: 0; background: none; padding: 0; }
+
+/* top bar: text stays 14px in both modes so the bar never wraps */
+.tb { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 10px; background: var(--chrome); color: var(--chromeText); border-bottom: 1px solid var(--chromeLine); white-space: nowrap; min-width: 0; font-size: 14px; --ctl: 32px; }
+.ed.m-hs .tb { --ctl: 36px; } .ed.touch .tb { --ctl: 44px; }
+.tb-g { display: flex; align-items: center; gap: 6px; flex: none; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; margin-right: 4px; }
+.brand svg { width: 26px; height: 26px; }
+.mn { height: var(--ctl); padding: 0 9px; border-radius: 6px; font-weight: 500; display: inline-flex; align-items: center; color: var(--chromeText); }
+.bname { height: var(--ctl); padding: 0 10px; border-radius: 6px; border: 1px solid var(--chromeLine); font-weight: 600; display: inline-flex; align-items: center; margin-left: 4px; }
+.seg { display: inline-flex; padding: 2px; border-radius: 8px; background: var(--chromeInset); border: 1px solid var(--chromeLine); }
+.seg b { height: calc(var(--ctl) - 6px); min-width: 36px; padding: 0 10px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 6px; font-weight: 600; font-size: 13px; color: var(--chromeText2); }
+.seg b.on { background: var(--chromeSegOn); color: var(--chromeSegInk); }
+.seg.p { background: var(--panel2); border-color: var(--line); }
+.seg.p b { color: var(--text2); }
+.seg.p b.on { background: var(--accent); color: var(--accentInk); }
+.run { display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 10px; background: var(--chromeInset); border: 1px solid var(--chromeLine); }
+.rb { height: var(--ctl); padding: 0 11px; border-radius: 7px; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--chromeText); }
+.rb.go { background: var(--run); color: var(--runInk); padding: 0 16px; }
+.rb.stop { color: var(--chromeDanger); }
+.tbtn { height: var(--ctl); padding: 0 10px; border-radius: 7px; border: 1px solid var(--chromeLine); display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: 13.5px; color: var(--chromeText); background: var(--chromeInset); }
+.ibtn { width: var(--ctl); height: var(--ctl); border-radius: 7px; display: inline-grid; place-items: center; color: var(--chromeText2); flex: none; position: relative; }
+.saved { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--chromeText2); }
+.saved i { width: 8px; height: 8px; border-radius: 50%; background: var(--chromeRun); }
+
+/* work area layouts */
+.work { display: grid; min-height: 0; min-width: 0; background: var(--line); gap: 1px; }
+.work.classic { grid-template-columns: 256px minmax(0, 1fr) 304px; }
+.work.classic.tablet { grid-template-columns: 76px minmax(0, 1fr) 312px; }
+.work.stage { grid-template-columns: 76px 224px minmax(0, 1fr) 424px; grid-template-rows: minmax(0, 1fr) 32px; }
+.work.stage.nodrawer { grid-template-columns: 76px minmax(0, 1fr) 424px; }
+.work.stage.tablet { grid-template-columns: 76px minmax(0, 1fr) 344px; grid-template-rows: minmax(0, 1fr) 44px; }
+.work.stage > .strip { grid-column: 1 / -1; }
+.col { background: var(--panel); min-width: 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.mid { display: grid; grid-template-rows: var(--tabH) minmax(0, 1fr) auto; min-width: 0; min-height: 0; gap: 1px; background: var(--line); }
+.mid.stagemid { grid-template-rows: var(--tabH) minmax(0, 1fr); }
+
+/* tabs + learning row */
+.tabs { display: flex; align-items: stretch; gap: 2px; padding: 0 8px; background: var(--panel); min-width: 0; white-space: nowrap; }
+.tabs.h { height: var(--tabH); flex: none; border-bottom: 1px solid var(--line); }
+.tab { display: inline-flex; align-items: center; gap: 6px; padding: 0 10px; font-weight: 600; font-size: calc(var(--fs) - .5px); color: var(--text2); position: relative; flex: none; }
+.tab.on { color: var(--text); }
+.tab.on::after { content: ''; position: absolute; left: 8px; right: 8px; bottom: 0; height: 3px; border-radius: 3px 3px 0 0; background: var(--accent); }
+.learn { margin: 5px 0 5px auto; display: flex; align-items: center; gap: 8px; padding: 0 5px 0 10px; border-radius: 8px; background: var(--learnBg); color: var(--learnInk); border: 1px solid var(--learnLine); min-width: 0; font-size: calc(var(--fs) - 1px); }
+.learn b { font-weight: 700; flex: none; }
+.learn span.t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.dots { display: inline-flex; gap: 4px; flex: none; }
+.dots i { width: 14px; height: 6px; border-radius: 3px; background: var(--learnLine); }
+.dots i.d { background: var(--learnInk); }
+.dots i.c { background: var(--learnInk); outline: 2px solid var(--learnLine); outline-offset: 1px; }
+.nx { flex: none; height: calc(var(--tabH) - 12px); padding: 0 10px; border-radius: 6px; background: var(--learnInk); color: var(--learnBg); font-weight: 700; font-size: var(--fs-s); display: inline-flex; align-items: center; }
+.ed.touch .nx { height: 44px; margin: -6px -5px -6px 0; }
+.live { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; font-size: calc(var(--fs) - 1px); color: var(--runText); padding: 0 6px 0 10px; flex: none; }
+.live i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.fixc { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: calc(var(--fs) - 1px); color: var(--text2); padding: 0 8px; flex: none; }
+.fixc .ic { color: var(--runText); }
+
+/* palette */
+.p-head { padding: 10px 12px 8px; border-bottom: 1px solid var(--line); }
+.p-title { font-weight: 700; font-size: calc(var(--fs) + 1px); margin-bottom: 8px; }
+.search { display: flex; align-items: center; gap: 8px; height: calc(var(--ctl) + 4px); padding: 0 10px; border-radius: var(--r); border: 1px solid var(--line2); background: var(--panel2); color: var(--text3); }
+.p-meta { margin-top: 6px; font-size: var(--fs-s); color: var(--text3); }
+.p-list { flex: 1; min-height: 0; overflow: hidden; }
+.cat-h { display: flex; align-items: center; gap: 8px; height: calc(var(--ctl) + 4px); padding: 0 12px; font-weight: 700; font-size: calc(var(--fs) - .5px); border-bottom: 1px solid var(--line); background: var(--panel); }
+.cat-h .n { margin-left: auto; font-weight: 500; font-size: var(--fs-s); color: var(--text3); }
+.cat-h .chev { color: var(--text3); width: 14px; height: 14px; }
+.tile { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; flex: none; background: var(--tileBg); color: var(--tileInk); }
+.tile svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.p-it { display: flex; align-items: center; gap: 10px; padding: 5px 12px; min-height: 48px; }
+.p-it .tx { min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+.p-it .tx b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.p-it .tx b em { font-style: normal; font-weight: 500; font-size: var(--fs-s); color: var(--text3); margin-left: 6px; }
+.p-it .tx small { font-size: var(--fs-s); color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ed.m-gv .p-it { min-height: 30px; padding: 2px 12px; }
+.ed.m-gv .p-it .tx small { display: none; }
+.p-it.hov { background: var(--raise); }
+.p-note { margin: 8px 12px; border: 1px dashed var(--line2); border-radius: var(--r); padding: 0 10px; min-height: var(--ctl); display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--text2); }
+.rail { background: var(--railBg); color: var(--railInk); align-items: stretch; padding: 6px 4px; gap: 2px; }
+.rl { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 58px; border-radius: 8px; font-size: var(--fs-s); font-weight: 600; line-height: 1.2; text-align: center; color: var(--railInk); }
+.rl.on { background: var(--railOn); }
+.rl .tile { width: 28px; height: 28px; }
+.rl.plain .ic { width: 22px; height: 22px; }
+.rail hr { width: 40px; border: 0; border-top: 1px solid var(--railLine); margin: 4px auto; }
+
+/* board */
+.board { position: relative; overflow: hidden; background-color: var(--bg); background-image: radial-gradient(circle, var(--grid) 1.2px, transparent 1.5px); background-size: 24px 24px; min-width: 0; min-height: 0; }
+.world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.wires { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.t-bool { --pc: var(--tBool); --pe: var(--tBoolE); }
+.t-num { --pc: var(--tNum); --pe: var(--tNumE); }
+.t-obj { --pc: var(--tObj); --pe: var(--tObjE); }
+.w-case { fill: none; stroke: var(--pe); stroke-width: 4.6; stroke-linecap: round; }
+.w-core { fill: none; stroke: var(--pc); stroke-width: 2.8; stroke-linecap: round; }
+.w-glow { fill: none; stroke: var(--pc); stroke-width: 10; stroke-linecap: round; opacity: .2; }
+.w-flow { fill: none; stroke: var(--flow); stroke-width: 2; stroke-linecap: round; stroke-dasharray: 2 14; animation: flow .9s linear infinite; }
+.w-spark { fill: var(--flow); stroke: var(--pc); stroke-width: 3; }
+.w-hint { fill: none; stroke: var(--pe); stroke-width: 3; stroke-linecap: round; stroke-dasharray: 2 9; }
+.wg.dim { opacity: .45; }
+@keyframes flow { to { stroke-dashoffset: -16; } }
+.nocur .w-flow, .nocur .w-spark, .nocur .w-glow { display: none; }
+.chip { position: absolute; transform: translate(-50%, -50%); padding: 0 8px; height: 22px; display: inline-flex; align-items: center; border-radius: 11px; background: var(--card); color: var(--text); border: 1.5px solid var(--pe); font: 700 var(--fs-s)/1 var(--mono); white-space: nowrap; box-shadow: 0 1px 3px rgba(0, 0, 0, .18); }
+.chip.txt { font-family: var(--font); font-weight: 600; }
+
+/* node cards */
+.cat-input { --cc: var(--c-input); --ci: var(--ci-input); } .cat-logic { --cc: var(--c-logic); --ci: var(--ci-logic); } .cat-math { --cc: var(--c-math); --ci: var(--ci-math); }
+.cat-object { --cc: var(--c-object); --ci: var(--ci-object); } .cat-action { --cc: var(--c-action); --ci: var(--ci-action); } .cat-brain { --cc: var(--c-brain); --ci: var(--ci-brain); } .cat-output { --cc: var(--c-output); --ci: var(--ci-output); }
+.nd { position: absolute; width: 184px; background: var(--card); color: var(--text); border: 1.5px solid var(--cardLine); border-radius: var(--rCard); box-shadow: var(--shCard); white-space: nowrap; }
+.nd.static { position: relative; }
+.nd-h { position: relative; display: flex; align-items: center; gap: 8px; height: var(--hh); padding: 0 6px 0 8px; border-radius: calc(var(--rCard) - 2px) calc(var(--rCard) - 2px) 0 0; }
+.nd-h .nm { display: flex; flex-direction: column; line-height: 1.12; min-width: 0; margin-right: auto; }
+.nd-h .nm b { font-weight: 700; font-size: var(--fs); overflow: hidden; text-overflow: ellipsis; }
+.nd-h .nm i { font-style: normal; font-size: var(--fs-s); font-weight: 500; opacity: .88; overflow: hidden; text-overflow: ellipsis; }
+.ed .q { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; flex: none; font-weight: 700; font-size: 14px; position: relative; background: var(--qBg); border: 1px solid var(--qLine); color: var(--qInk); }
+.q .ic { width: 14px; height: 14px; }
+.ed.m-gv .q { width: 24px; height: 24px; font-size: 13px; }
+.ed.touch .q { width: 44px; height: 44px; margin-right: -6px; background: none; border-color: transparent; z-index: 0; }
+.ed.touch .q::before { content: ''; position: absolute; inset: 7px; border-radius: 50%; background: var(--qBg); border: 1px solid var(--qLine); z-index: -1; }
+.hd-tint .nd-h { background: color-mix(in srgb, var(--cc) 13%, var(--card)); border-bottom: 1px solid color-mix(in srgb, var(--cc) 34%, var(--card)); }
+.hd-tint .tile { --tileBg: var(--cc); --tileInk: var(--ci); }
+.hd-tint .q { --qBg: var(--card); --qLine: var(--line2); --qInk: var(--text2); }
+.hd-bar .nd-h { padding-top: 4px; background: var(--cardHead); box-shadow: inset 0 4px 0 var(--cc); border-bottom: 1px solid var(--line); border-radius: 2px 2px 0 0; }
+.hd-bar .nd { --rCard: 6px; }
+.hd-bar .tile { --tileBg: color-mix(in srgb, var(--cc) 20%, var(--card)); --tileInk: var(--ci); border-radius: 4px; }
+.hd-bar .q { --qBg: var(--card); --qLine: var(--line2); --qInk: var(--text2); border-radius: 6px; }
+.hd-bar .q::before { border-radius: 6px !important; }
+.hd-solid .nd-h { background: var(--cc); color: var(--ci); }
+.hd-solid .nd-h .tile { --tileBg: color-mix(in srgb, var(--ci) 20%, transparent); --tileInk: var(--ci); border-radius: 50%; }
+.hd-solid .tile { --tileBg: var(--cc); --tileInk: var(--ci); }
+.hd-solid .q { --qBg: color-mix(in srgb, var(--ci) 16%, transparent); --qLine: color-mix(in srgb, var(--ci) 60%, transparent); --qInk: var(--ci); }
+.nd-b { padding: 4px 0; }
+.pt { position: relative; display: flex; align-items: center; gap: 8px; height: var(--row); padding: 0 10px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.pt.out { flex-direction: row-reverse; }
+.pt.hov { background: var(--raise); }
+.dot { width: 14px; height: 14px; flex: none; background: var(--pc); border: 2px solid var(--pe); }
+.t-bool > .dot, .dot.t-bool { border-radius: 50%; }
+.t-num > .dot, .dot.t-num { transform: rotate(45deg) scale(.84); border-radius: 2px; }
+.t-obj > .dot, .dot.t-obj { border-radius: 3px; }
+.pt.plive > .dot { box-shadow: 0 0 0 3px color-mix(in srgb, var(--pc) 32%, transparent); }
+.pt.miss > .dot { background: var(--card); border-color: var(--warnLine); border-style: dashed; }
+.pt .need { font-size: var(--fs-s); font-weight: 700; color: var(--warn); background: var(--warnBg); padding: 0 6px; border-radius: 4px; }
+.pt .val { font: 700 var(--fs-s)/1 var(--mono); padding: 3px 6px; border-radius: 10px; background: color-mix(in srgb, var(--pc) 16%, var(--card)); color: var(--text); border: 1px solid var(--pe); }
+.pt.opt { color: var(--text2); }
+.nd-adv { border-top: 1px dashed var(--line2); height: var(--row); display: flex; align-items: center; gap: 6px; padding: 0 10px; font-size: var(--fs-s); font-weight: 600; color: var(--text2); background: var(--advBg); }
+.nd-adv:last-child { border-radius: 0 0 calc(var(--rCard) - 2px) calc(var(--rCard) - 2px); }
+.nd-adv .ic { width: 14px; height: 14px; }
+.nd-adv em { font-style: normal; margin-left: auto; padding: 0 6px; border-radius: 8px; background: var(--raise); }
+.nd-advb { padding-bottom: 4px; background: var(--advBg); border-radius: 0 0 calc(var(--rCard) - 2px) calc(var(--rCard) - 2px); }
+.nd.sel { outline: 3px solid var(--accent); outline-offset: 2px; box-shadow: 0 0 0 8px var(--accentSoft), var(--shCard); }
+.nd.hot { border-color: var(--cc); }
+.nd.hovc { box-shadow: var(--shHover); border-color: var(--line2); }
+.nd.err { border-color: var(--danger); border-style: dashed; }
+.errb { display: inline-flex; align-items: center; gap: 4px; margin: 6px 8px 2px; padding: 2px 6px; border-radius: 6px; background: var(--warnBg); color: var(--warn); font-size: var(--fs-s); font-weight: 700; }
+.errb .ic { width: 14px; height: 14px; }
+.mk { position: absolute; z-index: 5; width: 16px; height: 16px; border-radius: 50%; background: #111; color: #fff; font: 700 10px/16px var(--font); text-align: center; box-shadow: 0 0 0 1.5px #fff; }
+
+/* board overlays */
+.ov { position: absolute; background: var(--panel); border: 1px solid var(--cardLine); border-radius: 10px; box-shadow: var(--shCard); }
+.zoom { display: flex; align-items: center; padding: 2px; gap: 2px; }
+.zoom b { min-width: 44px; text-align: center; font-size: 13px; font-weight: 700; }
+.zb { width: var(--ctl); height: var(--ctl); border-radius: 7px; display: grid; place-items: center; color: var(--text2); }
+.mini { width: 204px; padding: 6px; }
+.mini .mm { height: 84px; border-radius: 6px; background: var(--bg); position: relative; overflow: hidden; border: 1px solid var(--line); }
+.mini .mm i { position: absolute; border-radius: 2px; background: var(--cc); }
+.mini .mm u { position: absolute; border: 2px solid var(--accent); border-radius: 3px; inset: 4px 30px 8px 4px; }
+.legend { display: flex; gap: 10px; margin-top: 6px; font-size: var(--fs-s); font-weight: 600; color: var(--text2); white-space: nowrap; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; }
+.legend .dot { width: 11px; height: 11px; border-width: 1.5px; }
+
+/* simulation */
+.sim { position: relative; overflow: hidden; background: var(--simSky); min-height: 0; }
+.sim svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; top: 8px; padding: 3px 10px; border-radius: 6px; background: rgba(16, 22, 32, .84); color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; }
+.hud.l { left: 8px; } .hud.r { left: 8px; top: 40px; }
+.hud small { font-weight: 500; font-size: var(--fs-s); opacity: .92; margin-right: 6px; }
+.ph { position: absolute; right: 8px; bottom: 8px; padding: 2px 8px; border-radius: 4px; background: #fff1cc; color: #5c3900; border: 1px solid #e0b040; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.simh { display: flex; align-items: center; gap: 8px; height: var(--tabH); padding: 0 6px 0 12px; font-weight: 700; font-size: calc(var(--fs) - .5px); background: var(--panel); border-bottom: 1px solid var(--line); flex: none; white-space: nowrap; }
+.simh .sp { margin-left: auto; }
+.simh .seg { --ctl: 30px; }
+.ed.touch .simh .seg { --ctl: 44px; }
+.simh .ibtn { color: var(--text2); }
+.pip { right: 12px; bottom: 12px; width: 300px; overflow: hidden; display: flex; flex-direction: column; }
+.pip .sim { height: 168px; }
+
+/* formula read-out */
+.fx { margin: 0 12px 10px; padding: 8px 10px; border-radius: var(--r); background: var(--fxBg); border: 1px solid var(--fxLine); color: var(--text); line-height: 1.5; }
+.fx .h { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: var(--fs-s); color: var(--text2); margin-bottom: 2px; }
+.fx .h .ic { width: 14px; height: 14px; }
+.fx .eq { font-size: calc(var(--fs) - .5px); font-weight: 600; }
+.fx var { font-style: italic; font-weight: 700; font-family: Cambria, 'Times New Roman', serif; font-size: calc(var(--fs) + 1.5px); }
+.fx .calc { font-size: var(--fs-s); color: var(--text2); line-height: 1.75; display: flex; flex-wrap: wrap; gap: 0 14px; margin-top: 2px; }
+.fx .calc span { white-space: nowrap; }
+.fx .calc var { font-size: calc(var(--fs) + .5px); }
+.fx .res { font-weight: 700; color: var(--text); background: var(--panel); border: 1px solid var(--fxLine); border-radius: 5px; padding: 1px 6px; white-space: nowrap; }
+.fxbar { margin: 0; border-radius: 0; border-width: 0 0 1px; flex: none; }
+
+/* inspector */
+.i-head { display: flex; align-items: center; gap: 10px; padding: 10px 12px 8px; }
+.i-head .tile { width: 36px; height: 36px; border-radius: 9px; }
+.i-head .tile svg { width: 21px; height: 21px; }
+.i-head b { display: block; font-size: calc(var(--fs) + 2px); font-weight: 700; line-height: 1.25; }
+.i-head small { font-size: var(--fs-s); color: var(--text2); white-space: nowrap; }
+.hb { margin-left: auto; height: var(--ctl); padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: calc(var(--fs) - 1px); color: var(--text); flex: none; }
+.i-desc { margin: 0 12px 8px; font-size: calc(var(--fs) - 1px); color: var(--text2); line-height: 1.45; }
+.sec { border-top: 1px solid var(--line); padding: 6px 12px; }
+.sec-h { display: flex; align-items: center; gap: 6px; font-size: var(--fs-s); font-weight: 700; color: var(--text2); min-height: 24px; }
+.sec-h .ic { width: 14px; height: 14px; }
+.sec-h { white-space: nowrap; }
+.sec-h em { font-style: normal; font-weight: 500; margin-left: auto; padding-left: 8px; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.fld { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: calc(var(--ctl) + 12px); padding: 2px 0; }
+.ed.m-gv .fld { min-height: calc(var(--ctl) + 6px); }
+.fld .lb { min-width: 0; font-size: calc(var(--fs) - .5px); font-weight: 600; line-height: 1.3; }
+.fld .lb small { display: block; font-size: var(--fs-s); font-weight: 500; color: var(--text2); }
+.stp { display: inline-flex; align-items: center; flex: none; height: calc(var(--ctl) + 2px); border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); }
+.stp button { width: calc(var(--ctl) - 2px); height: 100%; display: grid; place-items: center; color: var(--text2); }
+.stp button .ic { width: 14px; height: 14px; }
+.stp b { min-width: 44px; text-align: center; font-weight: 700; }
+.sel-f { flex: none; max-width: 150px; height: var(--ctl); padding: 0 8px; border: 1px solid var(--line2); border-radius: 7px; background: var(--panel2); display: inline-flex; align-items: center; gap: 6px; font-size: calc(var(--fs) - 1px); font-weight: 600; }
+.sel-f span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sw-w { display: inline-flex; align-items: center; gap: 6px; flex: none; min-height: var(--ctl); }
+.sw-t { position: relative; flex: none; width: 44px; height: 26px; border-radius: 13px; background: var(--panel2); border: 1.5px solid var(--line2); }
+.sw-t::after { content: ''; position: absolute; left: 3px; top: 3px; width: 17px; height: 17px; border-radius: 50%; background: var(--line2); }
+.sw-t.on { background: var(--run); border-color: var(--run); }
+.sw-t.on::after { left: 21px; background: var(--runInk); }
+.sw-l { font-size: var(--fs-s); font-weight: 700; color: var(--text2); }
+.acts { display: flex; gap: 8px; padding: 8px 12px; border-top: 1px solid var(--line); }
+.abtn { height: var(--ctl); padding: 0 10px; border-radius: 7px; border: 1px solid var(--line2); display: inline-flex; align-items: center; gap: 6px; font-weight: 600; font-size: calc(var(--fs) - 1px); white-space: nowrap; }
+.abtn.dg { color: var(--danger); }
+.grow { flex: 1; min-height: 0; }
+
+/* bottom dock + status strip */
+.dock { background: var(--panel); display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.dk { height: 124px; display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
+.dk.withsim { height: 196px; grid-template-columns: 320px 220px minmax(0, 1fr); }
+.dk.withsim.two { grid-template-columns: 348px minmax(0, 1fr); }
+.fch, .dk h4 { white-space: nowrap; }
+.dk > div { background: var(--panel); padding: 8px 12px; min-width: 0; overflow: hidden; }
+.dk > div.simc { padding: 0; display: flex; flex-direction: column; }
+.dk h4 { margin: 0 0 4px; font-size: calc(var(--fs) - 1px); font-weight: 700; display: flex; align-items: center; gap: 8px; }
+.dk h4 .fl { margin-left: auto; display: inline-flex; gap: 4px; }
+.fch { height: 24px; padding: 0 8px; border-radius: 6px; border: 1px solid var(--line2); font-size: var(--fs-s); font-weight: 600; display: inline-flex; align-items: center; color: var(--text2); }
+.fch.on { border-color: var(--accent); color: var(--text); background: var(--accentSoft); }
+.okl { display: flex; align-items: center; gap: 6px; color: var(--text2); font-size: calc(var(--fs) - 1px); }
+.okl .ic { color: var(--runText); }
+.logl { font: var(--fs-s)/1.7 var(--mono); color: var(--text); white-space: nowrap; }
+.logl span { color: var(--text3); margin-right: 8px; }
+.strip { display: flex; align-items: center; gap: 4px; padding: 0 8px; background: var(--stripBg); color: var(--stripInk); font-size: 13px; white-space: nowrap; min-width: 0; }
+.si { display: inline-flex; align-items: center; gap: 6px; height: 100%; padding: 0 10px; font-weight: 600; min-width: 0; }
+.si .ic { width: 16px; height: 16px; }
+.si.mono { font: var(--fs-s) var(--mono); overflow: hidden; text-overflow: ellipsis; opacity: .92; }
+.strip .sp { margin-left: auto; }
+.strip .vr { width: 1px; height: 16px; background: var(--stripLine); flex: none; }
+.strip .okc { color: var(--stripOk); }
+
+/* phone */
+.ph-wrap { display: flex; flex-direction: column; min-height: 0; min-width: 0; background: var(--line); gap: 1px; }
+.ph-learn { background: var(--learnBg); color: var(--learnInk); display: flex; align-items: center; gap: 8px; padding: 0 12px; height: 44px; font-size: 13px; flex: none; white-space: nowrap; }
+.ph-learn span.t { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.ph-sheet { background: var(--panel); padding: 4px 12px 8px; flex: none; }
+.ph-sheet .hd { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; }
+.ph-sheet .hd small { font-weight: 500; font-size: 13px; color: var(--text2); }
+.ph-sheet .hd .more { margin-left: auto; font-size: 13px; font-weight: 700; color: var(--text); height: 44px; display: inline-flex; align-items: center; gap: 4px; }
+.tabbar { display: grid; grid-template-columns: repeat(5, 1fr); background: var(--panel); height: 60px; flex: none; }
+.tabbar div { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: var(--fs-s); font-weight: 600; color: var(--text2); }
+.tabbar div.on { color: var(--text); box-shadow: inset 0 3px 0 var(--accent); }
+.tabbar .ic { width: 22px; height: 22px; }
+
+/* puzzle ("Xưởng Bot") */
+.pz-title { height: var(--ctl); padding: 0 12px; border-radius: 8px; border: 1px solid var(--chromeLine); background: var(--chromeInset); font-weight: 700; font-size: 15px; display: inline-flex; align-items: center; }
+.stars { display: inline-flex; gap: 2px; padding: 0 6px; color: var(--chromeText2); }
+.stars .ic { width: 22px; height: 22px; }
+.stars .ic.f { color: var(--tBool); stroke: var(--tBoolE); stroke-width: 1.2; }
+.bdg { position: absolute; right: -4px; top: -4px; min-width: 18px; height: 18px; padding: 0 4px; border-radius: 9px; background: var(--tBool); color: #10151b; font: 700 13px/18px var(--font); text-align: center; }
+.lv { display: inline-flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: var(--chromeText2); }
+.lv i { width: 18px; height: 8px; border-radius: 4px; background: var(--chromeLine); }
+.lv i.d { background: var(--chromeRun); } .lv i.c { background: var(--chromeText); }
+.pz-body { display: grid; min-height: 0; gap: 1px; background: var(--line); }
+.pz-tray { display: flex; align-items: center; gap: 8px; padding: 0 12px; background: var(--panel); white-space: nowrap; overflow: hidden; }
+.pz-tray > b { font-size: 13px; color: var(--text2); margin-right: 4px; }
+.pc { display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 12px 0 8px; border-radius: 10px; border: 1.5px solid var(--cardLine); background: var(--card); box-shadow: var(--shCard); font-weight: 700; line-height: 1.2; }
+.pc small { display: block; font-size: var(--fs-s); font-weight: 600; color: var(--text2); }
+.pc.used { opacity: .62; box-shadow: none; border-style: dashed; }
+.guide { display: flex; align-items: center; gap: 12px; }
+.masc { width: 72px; height: 72px; border-radius: 50%; flex: none; border: 2px dashed var(--line2); background: var(--panel2); display: grid; place-items: center; text-align: center; font-size: var(--fs-s); font-weight: 700; line-height: 1.15; color: var(--text2); }
+.bub { position: relative; padding: 10px 14px; border-radius: 14px; background: var(--learnBg); color: var(--learnInk); border: 1.5px solid var(--learnLine); font-weight: 700; font-size: 16px; line-height: 1.35; max-width: 300px; box-shadow: var(--shCard); }
+.bub .dots { margin-top: 6px; display: flex; }
+.brief { padding: 12px; font-size: 15px; line-height: 1.5; }
+.brief h4 { margin: 0 0 4px; font-size: 13px; color: var(--text2); }
+.lvl-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 16px 24px; align-content: start; background: var(--bg); }
+.lvl { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; background: var(--card); border: 1.5px solid var(--cardLine); box-shadow: var(--shCard); min-height: 68px; }
+.lvl .n { width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: var(--accentInk); display: grid; place-items: center; font-weight: 700; font-size: 17px; flex: none; }
+.lvl b { display: block; font-size: 16px; } .lvl small { color: var(--text2); font-size: 13px; }
+.lvl .stars { margin-left: auto; color: var(--line2); padding: 0; }
+.lvl.cur { outline: 3px solid var(--accent); outline-offset: 2px; }
+.lvl.lock { opacity: .6; } .lvl.lock .n { background: var(--raise); color: var(--text2); }
+
+@media (prefers-reduced-motion: reduce) { .w-flow { animation: none; } }
+</style>
+</head>
+<body>
+<div class="pv-top">
+  <div class="pv-banner">Bản xem trước: ảnh dựng, chưa phải ứng dụng thật <small>Nút trong khung giao diện không bấm được. Chữ và số lấy từ ứng dụng thật; chỗ nào là minh hoạ có ghi rõ.</small></div>
+  <div class="pv-ctl" id="ctl">
+    <div class="pv-grp"><span>Hướng</span><div class="pv-seg" data-k="dir"><button data-v="a">A · Gọn gàng</button><button data-v="b">B · Bàn kỹ thuật</button><button data-v="c">C · Sân khấu mô phỏng</button></div></div>
+    <div class="pv-grp"><span>Giao diện</span><div class="pv-seg" data-k="th"><button data-v="light">Sáng</button><button data-v="dark">Tối</button></div></div>
+    <div class="pv-grp"><span>Độ sáng (nền Sáng)</span><div class="pv-seg" data-k="soft"><button data-v="s0">Gốc</button><button data-v="s1">Giấy ấm</button><button data-v="s2">Xám dịu</button><button data-v="s3">Xám trầm</button></div></div>
+    <div class="pv-grp"><span>Chế độ</span><div class="pv-seg" data-k="mode"><button data-v="hs">Học sinh</button><button data-v="gv">Giáo viên</button></div></div>
+    <div class="pv-grp"><span>Dòng điện</span><div class="pv-seg" data-k="cur"><button data-v="on">Bật</button><button data-v="off">Tắt</button></div></div>
+    <div class="pv-grp"><span>So sánh</span><div class="pv-seg" data-k="cmp"><button data-v="new">Bản mới</button><button data-v="before">Hiện tại (ảnh thật)</button></div></div>
+  </div>
+</div>
+<main class="pv-main" id="main"></main>
+
+<script>
+/* ============ tokens: every direction has a light and a dark palette; the tables below read the same values ============ */
+const CATS = ['input', 'logic', 'math', 'object', 'action', 'brain', 'output'];
+const CAT_VI = { input: 'Đầu vào', logic: 'Logic', math: 'Tính toán', object: 'Vật thể', action: 'Hành động', brain: 'Bộ não', output: 'Kết quả' };
+const CATS_MID = { input: '#1f7fa8', logic: '#8a4fd6', math: '#15a04c', object: '#b8700f', action: '#a5140f', brain: '#84593c', output: '#7f889c' };
+const CATS_BRIGHT = { input: '#6debf7', logic: '#be89ef', math: '#d3f89c', object: '#f2721f', action: '#f05e58', brain: '#e2c4ad', output: '#8099b1' };
+const SIM = { simSky: '#dfe9f5', simGround: '#7fae5a', simGrid: '#6b9a49' };
+const LIGHT = {
+  ...SIM, bg: '#eef1f5', grid: '#c3ccd7', chrome: '#ffffff', chromeText: '#15202b', chromeText2: '#44505e', chromeLine: '#d5dbe3', chromeInset: '#f3f5f8', chromeSegOn: '#1b3a6b', chromeSegInk: '#ffffff', chromeDanger: '#b42318', chromeRun: '#157f3d',
+  panel: '#ffffff', panel2: '#f3f5f8', raise: '#e8ecf1', line: '#dce1e8', line2: '#8793a1', text: '#15202b', text2: '#44505e', text3: '#5c6876',
+  accent: '#1b3a6b', accentInk: '#ffffff', accentSoft: '#d3def0', run: '#157f3d', runInk: '#ffffff', runText: '#157f3d', danger: '#b42318', warn: '#7a4b00', warnBg: '#fff1cc', warnLine: '#b07a00',
+  card: '#ffffff', cardHead: '#f3f5f8', cardLine: '#aab5c2', advBg: '#f6f8fa', rCard: '10px', shCard: '0 1px 2px rgba(21,32,43,.10), 0 4px 10px -4px rgba(21,32,43,.18)', shHover: '0 2px 4px rgba(21,32,43,.14), 0 10px 20px -6px rgba(21,32,43,.28)',
+  tBool: '#f2b800', tBoolE: '#8a6400', tNum: '#1d74e0', tNumE: '#0f4fa8', tObj: '#d9369b', tObjE: '#9c1d6b', flow: '#ffffff',
+  learnBg: '#eaf1fb', learnInk: '#1b3a6b', learnLine: '#a9bfe0', fxBg: '#f3f5f8', fxLine: '#c5cdd8',
+  railBg: '#ffffff', railInk: '#15202b', railOn: '#e8ecf1', railLine: '#dce1e8', stripBg: '#ffffff', stripInk: '#15202b', stripLine: '#c5cdd8', stripOk: '#157f3d',
+};
+const DARK = {
+  ...SIM, simSky: '#c9d7ea', simGround: '#6c9a4f', simGrid: '#5b8742', bg: '#0d1220', grid: '#232d47', chrome: '#111829', chromeText: '#e6eaf2', chromeText2: '#a9b4c6', chromeLine: '#2a3550', chromeInset: '#0d1220', chromeSegOn: '#e6eaf2', chromeSegInk: '#0d1220', chromeDanger: '#ff8a80', chromeRun: '#2fbf71',
+  panel: '#141b2d', panel2: '#0f1524', raise: '#1f2941', line: '#26314a', line2: '#66769a', text: '#e6eaf2', text2: '#a9b4c6', text3: '#8e9bb3',
+  accent: '#f2f4f8', accentInk: '#0d1220', accentSoft: '#2a3654', run: '#2fbf71', runInk: '#06150c', runText: '#4fd08a', danger: '#ff8a80', warn: '#f2b33d', warnBg: '#3a2e12', warnLine: '#f2b33d',
+  card: '#182030', cardHead: '#1e283c', cardLine: '#3b4a6b', advBg: '#141b2a', rCard: '10px', shCard: '0 2px 4px rgba(0,0,0,.35), 0 10px 18px -10px rgba(0,0,0,.7)', shHover: '0 0 0 1px #66769a, 0 12px 22px -8px rgba(0,0,0,.8)',
+  tBool: '#f7d046', tBoolE: '#f7d046', tNum: '#5aa9ff', tNumE: '#5aa9ff', tObj: '#f27ad0', tObjE: '#f27ad0', flow: '#ffffff',
+  learnBg: '#1a2440', learnInk: '#dbe4f5', learnLine: '#4a5c86', fxBg: '#0f1524', fxLine: '#3b4a6b',
+  railBg: '#111829', railInk: '#e6eaf2', railOn: '#1f2941', railLine: '#2a3550', stripBg: '#111829', stripInk: '#e6eaf2', stripLine: '#3b4a6b', stripOk: '#4fd08a',
+};
+const T = {
+  a: { name: 'A · Gọn gàng', head: 'tint', layout: 'classic', light: LIGHT,
+    dark: { ...DARK, bg: '#11151c', grid: '#272e3a', chrome: '#181d26', chromeLine: '#2e3644', chromeInset: '#11151c', panel: '#181d26', panel2: '#11151c', raise: '#262d39', line: '#2b323e', line2: '#6d7a90', text: '#e8ecf2', text2: '#aeb7c5', text3: '#909bac',
+      card: '#1e242e', cardLine: '#404a5b', advBg: '#191e27', accentSoft: '#2c3646', learnBg: '#1d2636', learnLine: '#4a5a78', fxBg: '#11151c', fxLine: '#404a5b', railBg: '#181d26', railOn: '#262d39', railLine: '#2e3644', stripBg: '#181d26', stripLine: '#404a5b' } },
+  b: { name: 'B · Bàn kỹ thuật', head: 'bar', layout: 'dock', dark: DARK,
+    light: { ...LIGHT, bg: '#e6eaf0', grid: '#b7c1ce', chromeSegOn: '#111827', accent: '#111827', accentSoft: '#cdd3dc', cardLine: '#9aa6b5', learnBg: '#eceff3', learnInk: '#111827', learnLine: '#9aa5b5', rCard: '6px' } },
+  c: { name: 'C · Sân khấu mô phỏng', head: 'solid', layout: 'stage',
+    light: { ...LIGHT, bg: '#f3f1ea', grid: '#cfc9bb', chrome: '#16233a', chromeText: '#f1f4f9', chromeText2: '#b9c4d6', chromeLine: '#33435f', chromeInset: '#0f1a2d', chromeSegOn: '#f1f4f9', chromeSegInk: '#16233a', chromeDanger: '#ff9d94', chromeRun: '#5fd4a0',
+      panel2: '#f6f4ef', raise: '#ece9e1', line: '#dedad0', line2: '#8a8577', text: '#1b2330', text2: '#4a5361', text3: '#5f6876', accent: '#0b6f6b', accentSoft: '#c5e4e1', cardLine: '#b3ad9f', advBg: '#f8f7f3', rCard: '12px',
+      learnBg: '#e2f1ef', learnInk: '#0a4f4c', learnLine: '#8fc4bf', fxBg: '#f6f4ef', fxLine: '#cdc7b9', railBg: '#16233a', railInk: '#f1f4f9', railOn: '#2a3b5a', railLine: '#33435f', stripBg: '#16233a', stripInk: '#f1f4f9', stripLine: '#4a5b78', stripOk: '#5fd4a0' },
+    dark: { ...DARK, bg: '#15181e', grid: '#2b303a', chrome: '#0c1524', chromeLine: '#27364f', chromeInset: '#070e1a', panel: '#1c2028', panel2: '#15181e', raise: '#292e39', line: '#2e333e', line2: '#757e90', text: '#eceef2', text2: '#b3bac6', text3: '#949cac',
+      accent: '#5fd4c8', accentInk: '#062623', accentSoft: '#173f3c', card: '#22262f', cardLine: '#464d5c', advBg: '#1c2028', rCard: '12px', learnBg: '#12302e', learnInk: '#bdeee8', learnLine: '#2f6f69', fxBg: '#15181e', fxLine: '#464d5c',
+      railBg: '#0c1524', railOn: '#1e2c45', railLine: '#27364f', stripBg: '#0c1524', stripLine: '#3a4963' } },
+};
+/* Softer versions of the light theme (less glare): only surfaces change, text and wire colours stay. */
+const SOFT = {
+  s0: {},
+  s1: { bg: '#e9e5da', grid: '#c4bdac', panel: '#f4f1e8', panel2: '#ebe7dc', raise: '#e0dbcd', line: '#d3cdbd', card: '#f7f4ec', cardHead: '#ebe7dc', advBg: '#efebe1', fxBg: '#ebe7dc', fxLine: '#c4bdac', learnBg: '#d9eae7', chromeInset: undefined },
+  s2: { bg: '#dfe3e8', grid: '#b9c1cc', panel: '#eceff3', panel2: '#e3e7ec', raise: '#d8dde4', line: '#cbd2da', card: '#f1f3f6', cardHead: '#e3e7ec', advBg: '#e8ebef', fxBg: '#e3e7ec', fxLine: '#b9c1cc', learnBg: '#d6e7e6' },
+  s3: { bg: '#cfd6dd', grid: '#aab4c0', panel: '#dde3e9', panel2: '#d3dae1', raise: '#c7cfd8', line: '#b9c2cc', line2: '#6f7a88', card: '#e6eaee', cardHead: '#d3dae1', cardLine: '#8f9aa8', advBg: '#dbe1e7', fxBg: '#d3dae1', fxLine: '#aab4c0', learnBg: '#c8dddb', text2: '#3d4754', text3: '#4d5764', simSky: '#cfdbea' },
+};
+const soft = () => (state.th === 'light' ? Object.fromEntries(Object.entries(SOFT[state.soft] || {}).filter(([, v]) => v !== undefined)) : {});
+const theme = () => ({ ...T[state.dir][state.th], ...soft(), head: T[state.dir].head, layout: T[state.dir].layout, cats: state.th === 'dark' ? CATS_BRIGHT : CATS_MID });
+
+/* ============ colour maths (WCAG contrast, colour-blind simulation, Lab distance) ============ */
+const hex = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16));
+const toHex = (c) => '#' + c.map((v) => Math.round(Math.min(255, Math.max(0, v))).toString(16).padStart(2, '0')).join('');
+const lin = (v) => { v /= 255; return v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4; };
+const unlin = (v) => 255 * (v <= 0.0031308 ? v * 12.92 : 1.055 * Math.max(0, v) ** (1 / 2.4) - 0.055);
+const lum = (c) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+const ratio = (a, b) => { const x = lum(hex(a)), y = lum(hex(b)); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const mix = (a, b, p) => { const x = hex(a), y = hex(b); return toHex(x.map((v, i) => v * p + y[i] * (1 - p))); };
+const CVD = {
+  deut: [[0.367322, 0.860646, -0.227968], [0.280085, 0.672501, 0.047413], [-0.01182, 0.04294, 0.968881]],
+  prot: [[0.152286, 1.052583, -0.204868], [0.114503, 0.786281, 0.099216], [-0.003882, -0.048116, 1.051998]],
+};
+const simc = (h, m) => { const l = hex(h).map(lin); return toHex(m.map((r) => unlin(Math.min(1, Math.max(0, r[0] * l[0] + r[1] * l[1] + r[2] * l[2]))))); };
+const lab = (h) => { const [r, g, b] = hex(h).map(lin); const x = (0.4124 * r + 0.3576 * g + 0.1805 * b) / 0.95047, y = 0.2126 * r + 0.7152 * g + 0.0722 * b, z = (0.0193 * r + 0.1192 * g + 0.9505 * b) / 1.08883; const f = (t) => (t > 0.008856 ? Math.cbrt(t) : 7.787 * t + 16 / 116); return [116 * f(y) - 16, 500 * (f(x) - f(y)), 200 * (f(y) - f(z))]; };
+const dE = (a, b) => { const p = lab(a), q = lab(b); return Math.hypot(p[0] - q[0], p[1] - q[1], p[2] - q[2]); };
+const minPair = (obj, f) => { const k = Object.keys(obj); let m = 1e9, w = ''; for (let i = 0; i < k.length; i++) for (let j = i + 1; j < k.length; j++) { const d = dE(f(obj[k[i]]), f(obj[k[j]])); if (d < m) { m = d; w = k[i] + ' / ' + k[j]; } } return { d: m, w }; };
+/** Ink (white or near-black) that reads best on a colour. */
+const inkOn = (c) => (ratio('#ffffff', c) >= 4.5 ? '#ffffff' : '#10151b');
+const tileInk = (t, c) => (t.head === 'bar' ? t.cats[c] : inkOn(t.cats[c]));
+
+/* ============ icons (simple inline SVG, no emoji) ============ */
+const P = {
+  play: '<path d="M7 4.5v15l12-7.5z"/>', pause: '<path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/>', stop: '<rect x="6" y="6" width="12" height="12" rx="2"/>',
+  step: '<path d="M5 5v14M9 6l9 6-9 6z"/>', search: '<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>', book: '<path d="M5 4h11a3 3 0 013 3v13H8a3 3 0 01-3-3zM5 17a3 3 0 013-3h11"/>',
+  undo: '<path d="M9 6L4 11l5 5M4 11h10a5 5 0 010 10h-3"/>', redo: '<path d="M15 6l5 5-5 5M20 11H10a5 5 0 000 10h3"/>', help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17.2v.3"/>',
+  chevD: '<path d="M6 9l6 6 6-6"/>', chevR: '<path d="M9 6l6 6-6 6"/>', chevL: '<path d="M15 6l-6 6 6 6"/>', plus: '<path d="M12 5v14M5 12h14"/>', minus: '<path d="M5 12h14"/>', fit: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+  layout: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M9 14h12"/>', x: '<path d="M6 6l12 12M18 6L6 18"/>', console: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12.5 15H17"/>',
+  check: '<circle cx="12" cy="12" r="9"/><path d="M8 12.2l2.8 2.8L16 9.5"/>', warn: '<path d="M12 4l9 16H3zM12 10v5M12 17.5v.3"/>', sliders: '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+  pieces: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/><path d="M11 7.5h3a3 3 0 013 3V13"/>', scene: '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM4 7.5l8 4.5 8-4.5M12 12v9"/>',
+  menu: '<path d="M4 7h16M4 12h16M4 17h16"/>', expand: '<path d="M14 4h6v6M10 20H4v-6M20 4l-7 7M4 20l7-7"/>', note: '<path d="M5 4h14v11l-5 5H5zM14 20v-5h5"/>', copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 00-2-2H6a2 2 0 00-2 2v8a2 2 0 002 2h2"/>',
+  trash: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', fx: '<path d="M10 4c-2.5 0-3 1.5-3.4 4L5 20M4 11h7M13 13l6 7M19 13l-6 7"/>',
+  sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6L7 7M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>', moon: '<path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/>', star: '<path d="M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.9L12 16.9 6.8 19.7l1-5.9L3.5 9.7l5.9-.8z"/>', reset: '<path d="M5 12a7 7 0 107-7H8M11 2L8 5l3 3"/>',
+};
+const ic = (n, f) => `<svg class="ic${f ? ' f' : ''}" viewBox="0 0 24 24" aria-hidden="true">${P[n]}</svg>`;
+/* Category glyphs: input/logic/math/action/brain/output are the app's own paths (node-view.ts); "object" drawn to match. */
+const CG = {
+  input: 'M2 8h7M6.5 4.5L10 8l-3.5 3.5M13 3v10', logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10', object: 'M8 2l5 3v6l-5 3-5-3V5zM3 5l5 3 5-3M8 8v6',
+  action: 'M9.5 2L4 9h4l-1 5 5.5-7H8.5z', brain: 'M8 2.5a4 4 0 00-4 4c0 1.6 1 2.4 1 3.9v1.1h6v-1.1c0-1.5 1-2.3 1-3.9a4 4 0 00-4-4zM6.5 13.5h3', output: 'M4 2v12M4 3h8l-2 3 2 3H4',
+};
+const tile = (cat) => `<span class="tile cat-${cat}"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="${CG[cat]}"/></svg></span>`;
+const LOGO = (t) => `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="1" y="1" width="22" height="22" rx="6" fill="${t.chromeInset}" stroke="${t.chromeLine}"/><circle cx="7" cy="8" r="2.4" fill="${t.tBool}"/><rect x="14.6" y="13.6" width="4.8" height="4.8" rx="1" fill="${t.tNum}"/><path d="M9.2 8c4 0 2.4 8 5.6 8" stroke="${t.chromeText}" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`;
+
+/* ============ board content: real pieces, port names and types from app/src/nodes ============ */
+/* port = [id, type, label, live, wired] */
+const NODES = [
+  { id: 'const', cat: 'math', vi: 'Số cố định', en: 'Constant', col: 0, outs: [['value', 'num', 'Giá trị', 1]] },
+  { id: 'body', cat: 'object', vi: 'Thân robot', en: 'Robot Chassis', col: 0, outs: [['self', 'obj', 'Đối tượng', 1], ['speed', 'num', 'Tốc độ', 0], ['heading', 'num', 'Hướng', 0], ['turnRate', 'num', 'Tốc độ quay', 0]] },
+  { id: 'key', cat: 'input', vi: 'Phím bấm', en: 'Key Input', col: 0, outs: [['held', 'bool', 'Đang giữ phím', 1], ['pressed', 'bool', 'Khi nhấn phím', 0]] },
+  { id: 'm1', cat: 'action', vi: 'Động cơ', en: 'Motor', col: 1, sel: 1, hot: 1, ins: [['body', 'obj', 'Thân', 1], ['power', 'num', 'Công suất', 1]], outs: [['rpm', 'num', 'Vòng quay', 1], ['turning', 'bool', 'Đang quay', 1]], adv: { n: 4 } },
+  { id: 'm2', cat: 'action', vi: 'Động cơ', en: 'Motor', col: 1, hot: 1, ins: [['body', 'obj', 'Thân', 1], ['power', 'num', 'Công suất', 1]], outs: [['rpm', 'num', 'Vòng quay', 0], ['turning', 'bool', 'Đang quay', 0]],
+    adv: { n: 4, ins: [['resetTurns', 'bool', 'Đặt lại vòng', 1, 1]], outs: [['turns', 'num', 'Số vòng đã quay', 0], ['slipping', 'bool', 'Đang trượt', 0], ['slipSpeed', 'num', 'Tốc độ trượt', 0]] } },
+  { id: 'show', cat: 'output', vi: 'Hiện số', en: 'Show Number', col: 2, ins: [['value', 'num', 'Giá trị', 1]] },
+];
+const WIRES = [
+  { f: ['const', 'value'], t: ['m1', 'power'], ty: 'num', live: 1, chip: '1.00', at: 0.38 },
+  { f: ['const', 'value'], t: ['m2', 'power'], ty: 'num', live: 1 },
+  { f: ['body', 'self'], t: ['m1', 'body'], ty: 'obj', live: 1 },
+  { f: ['body', 'self'], t: ['m2', 'body'], ty: 'obj', live: 1, chip: 'Thân robot', txt: 1, at: 0.4 },
+  { f: ['m1', 'rpm'], t: ['show', 'value'], ty: 'num', live: 1, chip: '120.0' },
+  { f: ['key', 'held'], t: ['m2', 'resetTurns'], ty: 'bool', live: 1 },
+];
+/* Puzzle level 1: pieces and ports copied from the real level screen. */
+const PZ_NODES = [
+  { id: 'bot', cat: 'object', vi: 'Nhân vật', en: 'Bot', col: 0, btn: 'lock', ins: [['x', 'num', 'Đi ngang', 1]], outs: [['self', 'obj', 'Nhân vật', 1]] },
+  { id: 'flag', cat: 'object', vi: 'Vật thể', en: 'Cờ', col: 0, btn: 'lock', outs: [['self', 'obj', 'Vật thể', 1]] },
+  { id: 'move', cat: 'brain', vi: 'Đi tới', en: 'Move To', col: 1, btn: 'x', sel: 1, ins: [['bot', 'obj', 'Bot', 0], ['target', 'obj', 'Đích (vật)', 1], ['go', 'bool', 'Cho đi', 0]], outs: [['x', 'num', 'Đi ngang', 1], ['y', 'num', 'Đi dọc', 0], ['jump', 'bool', 'Nhảy', 0], ['arrived', 'bool', 'Đã tới', 0], ['just', 'bool', 'Vừa tới', 0]] },
+  { id: 'hit', cat: 'logic', vi: 'Chạm nhau', en: 'Collision / Touch', col: 2, btn: 'lock', ins: [['a', 'obj', 'Vật chính', 0], ['b', 'obj', 'Vật kia', 0]], outs: [['on', 'bool', 'Đang chạm', 0]] },
+  { id: 'win', cat: 'output', vi: 'Thắng / Thua', en: 'Game Over', col: 3, btn: 'lock', w: 204, ins: [['win', 'bool', 'Thắng', 0]] },
+];
+const PZ_WIRES = [
+  { f: ['flag', 'self'], t: ['move', 'target'], ty: 'obj' }, { f: ['bot', 'self'], t: ['move', 'bot'], ty: 'obj', hint: 1 },
+  { f: ['hit', 'on'], t: ['win', 'win'], ty: 'bool' },
+];
+const WREG = { main: WIRES, pz: PZ_WIRES };
+const port = (dir, [id, ty, label, live], extra = '') => `<div class="pt ${dir} t-${ty}${live ? ' plive' : ''} ${extra}" data-p="${id}"><i class="dot"></i><span>${label}</span></div>`;
+/** Advanced ports a card shows: "Học sinh" only the wired ones, "Giáo viên" all of them. */
+const advPorts = (n, mode) => { if (!n.adv || !n.adv.ins) return { ins: [], outs: [] }; const keep = (p) => mode === 'gv' || p[4]; return { ins: n.adv.ins.filter(keep), outs: n.adv.outs.filter(keep) }; };
+function card(n, opt = {}) {
+  const mode = opt.mode || state.mode;
+  const cls = ['nd', 'cat-' + n.cat, n.sel && !opt.plain ? 'sel' : '', n.hot && !opt.plain ? 'hot' : '', opt.cls || '', opt.static ? 'static' : ''].join(' ');
+  const pos = opt.static ? '' : `left:${n.x}px;top:${n.y}px;`;
+  const ap = advPorts(n, mode), open = ap.ins.length + ap.outs.length;
+  const adv = n.adv ? `<div class="nd-adv">${ic(open === n.adv.n ? 'chevD' : 'chevR')}Cổng nâng cao<em>${open === n.adv.n ? n.adv.n : open ? `còn ${n.adv.n - open}` : n.adv.n}</em></div>${open ? `<div class="nd-advb">${ap.ins.map((p) => port('in', p, 'opt')).join('')}${ap.outs.map((p) => port('out', p, 'opt')).join('')}</div>` : ''}` : '';
+  const btn = n.btn === 'lock' ? `<span class="q" title="Mảnh có sẵn của màn, không gỡ được">${ic('lock')}</span>` : n.btn === 'x' ? `<button class="q" aria-label="Gỡ mảnh ${n.vi}">${ic('x')}</button>` : `<button class="q" title="Mở Sổ tay mảnh ghép" aria-label="Trợ giúp về ${n.vi}">?</button>`;
+  return `<div class="${cls}" data-id="${n.id}" style="${pos}${n.w ? 'width:' + n.w + 'px' : ''}">
+    <div class="nd-h">${tile(n.cat)}<span class="nm"><b>${n.vi}</b><i>${n.en}</i></span>${btn}${opt.mk || ''}</div>
+    ${opt.badge || ''}<div class="nd-b">${(n.ins || []).map((p) => port('in', p, opt.inX || '')).join('')}${(n.outs || []).map((p) => port('out', p)).join('')}</div>${adv}${opt.tail || ''}</div>`;
+}
+const SIZES = { hs: [34, 50], gv: [24, 34], touch: [44, 52] };
+/** Stacks the cards of each column; heights follow the mode so nothing overlaps. */
+function placeNodes(list, colX, key, mode, gap = 28) {
+  const [rowH, headH] = SIZES[key], y = colX.map(() => 20);
+  return list.map((n) => {
+    const ap = advPorts(n, mode), open = ap.ins.length + ap.outs.length;
+    const rows = (n.ins || []).length + (n.outs || []).length + (n.adv ? 1 : 0) + open;
+    const h = headH + rows * rowH + 8 + (open ? 4 : 0) + 3;
+    const out = { ...n, x: colX[n.col], y: y[n.col], h };
+    y[n.col] += h + gap;
+    return out;
+  });
+}
+function board(o) {
+  const key = o.touch ? 'touch' : state.mode;
+  const nodes = placeNodes(o.nodes || NODES, o.colX || [20, 268, 516], key, state.mode, o.gap);
+  const z = o.zoom || 1;
+  const mm = nodes.map((n) => `<i class="cat-${n.cat}" style="left:${6 + n.x * 0.17}px;top:${6 + n.y * 0.1}px;width:${184 * 0.17}px;height:${Math.max(6, n.h * 0.1)}px"></i>`).join('');
+  const mini = !o.mini ? '' : `<div class="ov mini" style="${o.mini}"><div class="mm">${mm}<u></u></div><div class="legend"><span class="t-bool"><i class="dot"></i>Đúng/Sai</span><span class="t-num"><i class="dot"></i>Số</span><span class="t-obj"><i class="dot"></i>Vật thể</span></div></div>`;
+  const zoom = !o.zoomCtl ? '' : `<div class="ov zoom" style="${o.zoomCtl}"><span class="zb" title="Thu nhỏ">${ic('minus')}</span><b>${Math.round(z * 100)}%</b><span class="zb" title="Phóng to">${ic('plus')}</span><span class="zb" title="Vừa màn hình">${ic('fit')}</span></div>`;
+  return `<div class="board" data-w="${o.wires || 'main'}" style="${o.style || ''}"><div class="world" style="transform:translate(${o.tx || 0}px,${o.ty || 0}px) scale(${z})"><svg class="wires"></svg>${nodes.map((n) => card(n)).join('')}<div class="chips"></div></div>${mini}${zoom}${o.extra || ''}</div>`;
+}
+/** Draws every wire of a board from the real positions of its port dots (offsets are not affected by the frame scaling). */
+function layoutWires(root) {
+  root.querySelectorAll('.board').forEach((b) => {
+    const world = b.querySelector('.world'), svg = b.querySelector('.wires'), chips = b.querySelector('.chips');
+    const at = (id, p) => { const d = world.querySelector(`[data-id="${id}"] [data-p="${p}"] .dot`); if (!d) return null; let x = d.offsetWidth / 2, y = d.offsetHeight / 2, e = d; while (e && e !== world) { x += e.offsetLeft; y += e.offsetTop; e = e.offsetParent; } return [x, y]; };
+    let s = '', c = '';
+    const list = WREG[b.dataset.w];
+    list.forEach((w, i) => {
+      const a = at(...w.f), z = at(...w.t); if (!a || !z) return;
+      const dx = Math.max(36, Math.abs(z[0] - a[0]) * 0.45);
+      const d = `M${a[0]} ${a[1]}C${a[0] + dx} ${a[1]} ${z[0] - dx} ${z[1]} ${z[0]} ${z[1]}`;
+      if (w.hint) { s += `<g class="wg t-${w.ty}"><path class="w-hint" d="${d}" id="w${i}"/></g>`; return; }
+      s += `<g class="wg t-${w.ty}">${w.live ? `<path class="w-glow" d="${d}"/>` : ''}<path class="w-case" d="${d}"/><path class="w-core" d="${d}" id="w${i}"/>${w.live ? `<path class="w-flow" d="${d}"/><circle class="w-spark" r="4.5"><animateMotion dur="${1.5 + (i % 3) * 0.35}s" begin="0s" repeatCount="indefinite" path="${d}"/></circle>` : ''}</g>`;
+    });
+    svg.innerHTML = s;
+    list.forEach((w, i) => { if (!w.chip) return; const p = svg.querySelector('#w' + i); if (!p) return; const m = p.getPointAtLength(p.getTotalLength() * (w.at || 0.5)); c += `<span class="chip t-${w.ty}${w.txt ? ' txt' : ''}" style="left:${m.x}px;top:${m.y}px">${w.chip}</span>`; });
+    chips.innerHTML = c;
+  });
+}
+
+/* ============ editor parts ============ */
+const PAL = [
+  ['input', 7, [['Phím bấm', 'Key Input', 'Báo khi bạn giữ một phím.'], ['Cần điều khiển', 'Joystick / Axis', 'Biến 4 phím mũi tên hoặc…'], ['Khi bắt đầu', 'On Start', 'Báo ngay khi trò chơi bắt…'], ['Nút bấm', 'UI Button', 'Hiện một nút bấm trên…'], ['Bấm vào đối tượng', 'Click Object', 'Báo một nhịp "Khi bấm" k…'], ['Hộp thoại', 'Dialog', 'Mỗi khi "Hỏi" bật lên, hiện…'], ['Màn hình mở đầu', 'Title Screen', 'Hiện màn hình mở đầu có…']]],
+  ['logic', 18, [['Và', 'AND', 'Chỉ bật khi CẢ HAI đầu…'], ['Hoặc', 'OR', 'Bật khi ÍT NHẤT MỘT đầu…'], ['Đảo ngược', 'NOT', 'Đảo ngược: đang bật thì…'], ['So sánh', 'Compare', 'So sánh hai số và bật khi…'], ['Va chạm', 'Collision', 'Kiểm tra hai vật có đang…'], ['Chọn theo số', 'Switch / Select', 'Nhận một số và bật đúng…']]],
+];
+const palList = (max) => PAL.map(([cat, n, items]) => `<div class="cat-h">${ic('chevD').replace('class="ic"', 'class="ic chev"')}${tile(cat)}${CAT_VI[cat]}<span class="n">${n}</span></div>` + items.slice(0, max).map(([vi, en, d], i) => `<div class="p-it${cat === 'input' && i === 1 ? ' hov' : ''}">${tile(cat)}<span class="tx"><b>${vi}<em>${en}</em></b><small>${d}</small></span></div>`).join('')).join('')
+  + ['math', 'object', 'action', 'brain', 'output'].map((cat) => `<div class="cat-h">${ic('chevR').replace('class="ic"', 'class="ic chev"')}${tile(cat)}${CAT_VI[cat]}</div>`).join('');
+const palHead = () => `<div class="p-head"><div class="p-title">Mảnh ghép</div><div class="search">${ic('search')}Tìm mảnh ghép…</div><div class="p-meta">71 mảnh ghép, 7 nhóm</div></div>`;
+const paletteFull = () => `<div class="col"><div class="tabs h"><span class="tab">${ic('scene')}Cảnh</span><span class="tab on">${ic('pieces')}Mảnh ghép</span></div>${palHead()}<div class="p-list"><div class="p-note">${ic('note')}Ghi chú</div>${palList(state.mode === 'gv' ? 7 : 4)}</div></div>`;
+const rail = (on) => `<div class="col rail"><span class="rl plain">${ic('search')}Tìm</span><hr>${CATS.map((c) => `<span class="rl${c === on ? ' on' : ''}">${tile(c)}${CAT_VI[c]}</span>`).join('')}<hr><span class="rl plain">${ic('note')}Ghi chú</span></div>`;
+const drawer = () => `<div class="col">${palHead()}<div class="p-list">${palList(7)}</div></div>`;
+
+function topbar(t, o = {}) {
+  const gv = state.mode === 'gv';
+  const menus = o.compact ? `<span class="ibtn" title="Menu: Tệp, Sửa, Xem, Trợ giúp">${ic('menu')}</span>` : ['Tệp', 'Sửa', 'Xem', 'Trợ giúp'].map((m) => `<span class="mn">${m}</span>`).join('');
+  const lbl = (s) => (o.compact ? '' : `<span>${s}</span>`);
+  const run = `<div class="run" title="Điều khiển chạy thử"><span class="rb go">${ic('play', 1)}<span>Chạy lại</span></span><span class="rb">${ic('pause', 1)}${lbl('Tạm dừng')}</span><span class="rb">${ic('step')}${lbl('Từng bước')}</span><span class="rb stop">${ic('stop', 1)}${lbl('Dừng')}</span></div>`;
+  const mode = `<span class="seg" title="Chế độ hiển thị (cũng có trong menu Xem)"><b class="${gv ? '' : 'on'}">Học sinh</b><b class="${gv ? 'on' : ''}">Giáo viên</b></span>`;
+  const layout = gv && t.layout !== 'stage' && !o.compact ? `<span class="tbtn" title="Bố cục: Mặc định" style="padding:0 6px">${ic('layout')}${ic('chevD')}</span>` : '';
+  return `<header class="tb"><div class="tb-g"><span class="brand">${LOGO(t)}${o.compact ? '' : 'Xưởng Nối'}</span>${menus}<span class="bname" title="Tên mô phỏng">Mô phỏng của tôi</span></div>
+    <div class="tb-g">${run}</div>
+    <div class="tb-g"><span class="tbtn">${ic('book')}${lbl('Hướng dẫn')}</span><span class="ibtn" title="Hoàn tác (Ctrl+Z)">${ic('undo')}</span><span class="ibtn" title="Làm lại (Ctrl+Y)">${ic('redo')}</span>${layout}${o.compact ? '' : mode}<span class="ibtn" title="Giao diện: ${state.th === 'dark' ? 'Tối' : 'Sáng'} (bấm để đổi; cũng có trong menu Xem)">${ic(state.th === 'dark' ? 'moon' : 'sun')}</span><span class="saved" title="Đã lưu tự động 23:41"><i></i>${o.compact || gv ? '' : 'Đã lưu'}</span></div></header>`;
+}
+const LESSON = 'Nối “Giá trị” của Số cố định vào “Công suất” của Động cơ';
+const learn = (short) => `<div class="learn" title="Bài học đang làm (nội dung minh hoạ)">${ic('book')}<b>Bài học · Bước 3/5</b>${short ? '' : `<span class="t">${LESSON}</span>`}<span class="dots"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i></span><span class="nx">Bước kế</span></div>`;
+const midTabs = (t, short) => `<div class="tabs">${t.layout === 'stage' ? `<span style="display:inline-flex;align-items:center;gap:8px;flex:none"><span class="seg p" title="Bố cục" style="--ctl:${short ? 44 : 30}px"><b class="on">${ic('pieces')}Lắp ráp</b><b>${ic('play')}Chạy thử</b></span></span>` : `<span class="tab on">${ic('pieces')}Bảng nối</span><span class="tab">${ic('scene')}Mô phỏng</span>`}${learn(short)}${t.layout === 'stage' || short ? '' : `<span class="live"><i></i>Đang chạy</span>`}</div>`;
+
+function scene(t) {
+  return `<svg class="scene" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+    <rect width="320" height="180" fill="${t.simSky}"/><path d="M0 84h320v96H0z" fill="${t.simGround}"/>
+    <g stroke="${t.simGrid}" stroke-width="1" fill="none"><path d="M0 102h320M0 126h320M0 158h320M160 84v96M96 84L40 180M224 84l56 96M32 84L-70 180M288 84l102 96"/></g>
+    <ellipse cx="150" cy="140" rx="46" ry="8" fill="rgba(0,0,0,.22)"/>
+    <rect x="112" y="108" width="76" height="24" rx="5" fill="#e08a1e" stroke="#8a4f08" stroke-width="2"/><rect x="176" y="113" width="8" height="14" rx="2" fill="#fff3d6"/>
+    <circle cx="126" cy="134" r="10" fill="#2a2f38" stroke="#0f1318" stroke-width="2"/><circle cx="126" cy="134" r="3" fill="#aab2bd"/><circle cx="174" cy="134" r="10" fill="#2a2f38" stroke="#0f1318" stroke-width="2"/><circle cx="174" cy="134" r="3" fill="#aab2bd"/>
+    <path d="M198 120h34M224 113l9 7-9 7" stroke="#0f4fa8" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <rect x="252" y="104" width="30" height="30" rx="3" fill="#b07a45" stroke="#6e4a26" stroke-width="2"/></svg>`;
+}
+const simBody = (t, style = '') => `<div class="sim" style="${style}">${scene(t)}<span class="hud l"><small>Vòng quay (vòng/phút)</small>120.0</span><span class="hud r"><small>Tốc độ (m/s)</small>1.9</span><span class="ph">Cảnh giữ chỗ (hình vẽ)</span></div>`;
+const formula = (bar) => `<div class="fx${bar ? ' fxbar' : ''}" title="Công thức trong Sổ tay, trang Vật lý thật; các số là minh hoạ"><div class="h">${ic('fx')}Công thức · lực kéo mỗi bánh (Sổ tay)</div>
+  <div class="eq"><var>F</var> = số nhỏ hơn của (lực động cơ × công suất) và (<var>μ</var> × <var>m</var> × <var>g</var> ÷ số bánh)</div>
+  <div class="calc"><span>Động cơ: 30 × 1,00 = 30 N</span><span>Độ bám: 0,8 × 2 × 9,81 ÷ 2 = 7,85 N</span><span><var>F</var> = <b class="res">7,85 N</b> &nbsp; <var>a</var> = 15,7 ÷ 2 = <b class="res">7,85 m/s²</b></span></div></div>`;
+const numf = (v) => `<span class="stp"><button aria-label="Giảm">${ic('minus')}</button><b>${v}</b><button aria-label="Tăng">${ic('plus')}</button></span>`;
+const fld = (label, hint, ctl) => `<div class="fld"><span class="lb">${label}${hint ? `<small>${hint}</small>` : ''}</span>${ctl}</div>`;
+const swf = (on) => `<span class="sw-w"><span class="sw-l">${on ? 'Bật' : 'Tắt'}</span><span class="sw-t${on ? ' on' : ''}" role="switch" aria-checked="${!!on}"></span></span>`;
+const selNo = `<span class="sel-f"><span>Không</span>${ic('chevD')}</span>`;
+function inspector(o = {}) {
+  const gv = state.mode === 'gv' && !o.simple;
+  const world = gv || o.worldOpen ? `<div class="sec"><div class="sec-h">${ic('sliders')}Cài đặt mô phỏng</div>
+    ${fld('Va chạm thật', gv && !o.short ? 'Nhân vật và đồ vật đặc, không đi xuyên nhau' : '', swf(0))}${fld('Vật lý thật', gv && !o.short ? 'Robot chạy bằng lực bám thật' : '', swf(1))}${fld('Trọng lực (m/s²)', gv && !o.short ? 'Trái Đất 9,81; Mặt Trăng 1,62' : '', numf('9.81'))}</div>`
+    : `<div class="sec"><div class="sec-h">${ic('chevR')}${ic('sliders')}Cài đặt mô phỏng<em>Va chạm thật: Tắt · Vật lý thật: Bật · Trọng lực 9,81</em></div></div>`;
+  const adv = gv ? `<div class="sec"><div class="sec-h">${ic('chevD')}Nâng cao</div>
+      ${fld('Lực phanh', o.short ? '(N mỗi động cơ)' : '(N mỗi động cơ, khi bật "Vật lý thật"; 0 = chỉ phanh bằng ma sát)', numf('0'))}
+      ${o.short ? '' : fld('Hiện bộ đếm vòng', '("Số vòng đã quay" và "Đặt lại vòng")', selNo)}</div>`
+    : `<div class="sec"><div class="sec-h">${ic('chevR')}Nâng cao<em>3 mục: Lực phanh…</em></div></div>`;
+  return `<div class="i-head cat-action">${tile('action')}<span><b>Động cơ</b><small>Motor · Nhóm Hành động</small></span><span class="hb">${ic('book')}Sổ tay</span></div>
+    ${o.noDesc || gv ? '' : `<p class="i-desc">Một động cơ gắn bánh xe lên Thân robot. Nối "Công suất" (-1 tới 1) để bánh quay.</p>`}
+    ${o.noFx ? '' : formula()}
+    <div class="sec"><div class="sec-h">Thuộc tính</div>
+      ${fld('Tốc độ tối đa', '(vòng/phút)', numf('120'))}
+      ${fld('Lực kéo động cơ', '(N, nhân với công suất)', numf('30'))}
+      ${o.few || o.noRadius ? '' : fld('Bán kính bánh', '(m)', numf('0.15'))}
+      ${o.few ? '' : fld('Chiều quay', '', `<span class="sel-f"><span>Bình thường (công suất dương = tiến)</span>${ic('chevD')}</span>`)}
+    </div>${adv}
+    ${o.noActs ? '' : `<div class="acts"><span class="abtn">${ic('copy')}Nhân đôi</span><span class="abtn dg">${ic('trash')}Xóa mảnh ghép</span></div>`}
+    <div class="grow"></div>${world}`;
+}
+const fixCol = `<div><h4>Việc cần sửa</h4><div class="okl">CHECKKhông có gì cần sửa.</div></div>`;
+const logCol = `<div><h4>Nhật ký<span class="fl"><span class="fch on">Tất cả</span><span class="fch">Cảnh báo</span><span class="fch">Lỗi</span><span class="fch">Xóa</span></span></h4><div class="logl"><span>23:41:20</span>Đã mở mô phỏng</div><div class="logl"><span>23:41:53</span>Bắt đầu chạy</div></div>`;
+const dockTabs = () => `<div class="tabs h" style="border-bottom:0"><span class="tab on">${ic('console')}Bảng tin</span><span class="tab">${ic('book')}Bài học</span><span class="fixc" style="margin-left:auto">${ic('check')}Việc cần sửa: 0</span></div>`;
+const simHead = (title, extra = '', noSeg) => `<div class="simh">${ic('scene')}${title}${extra}<span class="sp"></span>${noSeg ? '' : `<span class="seg p" title="Góc nhìn của mô phỏng"><b>2D</b><b class="on">3D</b></span>`}<span class="ibtn" title="Phóng to mô phỏng (phím F)">${ic('expand')}</span></div>`;
+/** Bottom dock. A: log only (open in "Giáo viên"). B: the simulation lives here in both modes. */
+function dock(t, tab) {
+  const fix = fixCol.replace('CHECK', ic('check'));
+  if (tab) return `<div class="dock">${dockTabs()}</div>`;
+  if (t.layout === 'dock') return `<div class="dock">${dockTabs()}<div class="dk withsim${state.mode === 'gv' ? '' : ' two'}"><div class="simc">${simHead('Mô phỏng')}${simBody(t, 'flex:1')}</div>${state.mode === 'gv' ? fix + logCol : `<div><h4>Việc cần sửa</h4><div class="okl">${ic('check')}Không có gì cần sửa.</div><h4 style="margin-top:12px">Số đo đang chạy</h4><div class="okl" style="color:var(--text)">Vòng quay 120.0 vòng/phút · Tốc độ 1.9 m/s · Lực kéo mỗi bánh 7,85 N</div></div>`}</div></div>`;
+  return `<div class="dock">${dockTabs()}${state.mode === 'gv' ? `<div class="dk">${fix}${logCol}</div>` : ''}</div>`;
+}
+const strip = (short) => `<div class="strip"><span class="si okc">${ic('check')}Việc cần sửa: 0</span><span class="vr"></span><span class="si">${ic('console')}Bảng tin</span>${short || state.mode !== 'gv' ? '' : `<span class="si mono">23:41:53 Bắt đầu chạy</span>`}<span class="sp"></span><span class="si">${ic('book')}Bài học 2: bước 3/5</span><span class="vr"></span><span class="si">${ic('minus')}<b>100%</b>${ic('plus')}${ic('fit')}</span>${short ? '' : `<span class="vr"></span><span class="si">Đã lưu tự động 23:41</span>`}</div>`;
+const pip = (t, w, h) => `<div class="ov pip" style="width:${w}px">${simHead('Xem mô phỏng', '', w < 280)}${simBody(t, `height:${h}px`)}</div>`;
+
+function vars(t) {
+  const skip = ['name', 'head', 'layout', 'cats'];
+  let s = Object.entries(t).filter(([k]) => !skip.includes(k)).map(([k, v]) => `--${k}:${v}`).join(';');
+  for (const c of CATS) s += `;--c-${c}:${t.cats[c]};--ci-${c}:${tileInk(t, c)}`;
+  return s;
+}
+const open = (t, w, h, extra = '') => `<div class="ed hd-${t.head} m-${state.mode}${state.cur === 'off' ? ' nocur' : ''}${extra}" style="width:${w}px;height:${h}px;${vars(t)}">`;
+function editor(t, size) {
+  const gv = state.mode === 'gv';
+  if (size === 'phone') {
+    return open(t, 390, 844, ' touch') + `<header class="tb"><div class="tb-g"><span class="ibtn">${ic('menu')}</span><b style="font-size:14px">Mô phỏng của tôi</b></div><div class="tb-g"><span class="rb go" style="padding:0 14px">${ic('play', 1)}Chạy lại</span><span class="ibtn" title="Từng bước">${ic('step')}</span><span class="ibtn" title="Dừng" style="color:var(--chromeDanger)">${ic('stop', 1)}</span></div></header>
+      <div class="ph-wrap"><div class="ph-learn">${ic('book')}<b>Bước 3/5</b><span class="t">${LESSON}</span></div>
+      ${simBody(t, 'height:170px;flex:none')}
+      ${board({ touch: 1, zoom: 0.7, tx: -150, ty: 2, style: 'flex:1' })}
+      <div class="ph-sheet cat-action"><div class="hd">${tile('action')}Động cơ <small>Motor</small><span class="more">Tất cả thuộc tính${ic('chevR')}</span></div>${fld('Lực kéo động cơ', '(N, nhân với công suất)', numf('30'))}</div>
+      <div class="tabbar"><div>${ic('pieces')}Mảnh ghép</div><div class="on">${ic('layout')}Bảng nối</div><div>${ic('scene')}Mô phỏng</div><div>${ic('book')}Bài học</div><div>${ic('console')}Bảng tin</div></div></div></div>`;
+  }
+  const tab = size === 'tablet';
+  const [w, h] = tab ? [1024, 768] : [1440, 900];
+  if (t.layout === 'stage') {
+    const simH = tab ? 184 : gv ? 176 : 204, drawerOpen = gv && !tab;
+    return open(t, w, h, tab ? ' touch' : '') + topbar(t, { compact: tab }) + `<div class="work stage${tab ? ' tablet' : drawerOpen ? '' : ' nodrawer'}">${rail('input')}${drawerOpen ? drawer() : ''}
+      <div class="mid stagemid">${midTabs(t, tab)}${board(tab ? { touch: 1, zoom: 0.76 } : { mini: gv ? 'left:12px;bottom:12px' : '', colX: drawerOpen ? undefined : [48, 348, 648] })}</div>
+      <div class="col">${simHead('Mô phỏng', tab ? '' : `<span class="live" style="padding:0 4px"><i></i>Đang chạy</span>`)}${simBody(t, `height:${simH}px;flex:none`)}${tab ? '' : formula(1)}${inspector(tab ? { noFx: 1, noDesc: 1, few: 1, short: 1, noActs: 1, simple: 1 } : { noFx: 1, noDesc: 1, short: 1, noRadius: gv })}</div>
+      ${strip(tab)}</div></div>`;
+  }
+  const dockSim = t.layout === 'dock';
+  const bd = tab ? { touch: 1, zoom: 0.76, zoomCtl: 'left:12px;bottom:12px', extra: pip(t, 232, 130) }
+    : { zoomCtl: 'left:12px;bottom:12px', mini: gv ? (dockSim ? 'right:12px;top:128px' : 'left:190px;bottom:12px') : '', extra: dockSim ? '' : pip(t, 300, 168) };
+  return open(t, w, h, tab ? ' touch' : '') + topbar(t, { compact: tab }) + `<div class="work classic${tab ? ' tablet' : ''}">${tab ? rail('action') : paletteFull()}
+    <div class="mid">${midTabs(t, tab)}${board(bd)}${dock(t, tab)}</div>
+    <div class="col"><div class="tabs h"><span class="tab on">${ic('sliders')}Thuộc tính</span></div>${inspector(tab ? { noFx: 1, short: 1, few: 1, noDesc: 1, simple: 1 } : {})}</div></div></div>`;
+}
+
+/* ============ puzzle screens (Xưởng Bot), 1280×720 like the real level frame ============ */
+const starRow = (n) => `<span class="stars" title="${n}/3 sao">${[0, 1, 2].map((i) => ic('star', i < n)).join('')}</span>`;
+const LEVELS = [['Bot đầu tiên', '2D ngang'], ['Cửa kho', '2D ngang'], ['Nhặt sao', '2D từ trên'], ['Hai nút một cửa', '2D ngang'], ['Đủ ba thùng', '3D'], ['Né lính gác', '3D'], ['Cầu nhấp nháy', '3D'], ['Xưởng tổng hợp', '3D']];
+function puzzle(t) {
+  const tb = `<header class="tb" style="--ctl:44px"><div class="tb-g"><span class="tbtn" title="Về danh sách màn">${ic('chevL')}Các màn</span><span class="pz-title">Màn 1 · Bot đầu tiên</span><span class="tbtn">Đề bài${ic('chevD')}</span></div>
+    <div class="tb-g"><span class="lv" title="Tiến độ: màn 1 trên 8">Màn 1/8 ${LEVELS.map((_, i) => `<i class="${i === 0 ? 'c' : ''}"></i>`).join('')}</span>${starRow(0)}</div>
+    <div class="tb-g"><span class="tbtn" title="Cài đặt">${ic('sliders')}Cài đặt</span><span class="tbtn" style="position:relative" title="Gợi ý">${ic('help')}Gợi ý<span class="bdg">1</span></span><span class="tbtn" title="Làm lại từ đầu">${ic('reset')}Làm lại</span><span class="rb go" style="padding:0 22px;font-size:16px">${ic('play', 1)}Chạy</span></div></header>`;
+  const guide = `<div class="guide"><span class="masc" title="Giữ nguyên hình linh vật thật của ứng dụng">Linh vật<br>(hình thật)</span><div class="bub">Nối “Nhân vật” của Bot vào ô “Bot” của mảnh Đi tới<div class="dots"><i class="d"></i><i class="d"></i><i class="c"></i><i></i><i></i><i></i></div></div></div>`;
+  const tray = `<div class="pz-tray"><b>Mảnh của màn này</b><span class="pc used cat-brain">${tile('brain')}<span>Đi tới<small>đã dùng</small></span></span><span class="pc used cat-logic">${tile('logic')}<span>Chạm nhau<small>đã dùng</small></span></span><span class="pc cat-logic">${tile('logic')}<span>Đảo ngược<small>còn ×1</small></span></span></div>`;
+  const stageBox = (style) => `<div class="sim" style="${style}">${scene(t)}<span class="ph">Cảnh giữ chỗ (hình vẽ)</span></div>`;
+  const brief = `<div class="brief"><h4>Đề bài <span class="pv-mock">câu minh hoạ</span></h4>Nối dây để Bot tự đi tới lá cờ. Khi Bot chạm cờ thì thắng.</div>`;
+  const colX = t.layout === 'stage' ? [20, 244, 468, 692] : [28, 290, 560, 820];
+  const bd = (extra, style) => board({ nodes: PZ_NODES, wires: 'pz', colX, touch: 1, gap: 36, extra, style });
+  let body;
+  if (t.layout === 'stage') body = `<div class="pz-body" style="grid-template-columns:minmax(0,1fr) 360px;grid-template-rows:minmax(0,1fr) 72px">${bd(`<div style="position:absolute;left:16px;bottom:16px">${guide}</div>`)}
+      <div class="col" style="grid-row:1/3;grid-column:2">${simHead('Sân chơi')}${stageBox('height:203px;flex:none')}${brief}<div class="grow"></div><div class="sec"><div class="sec-h">${ic('check')}Việc cần làm</div>${fld('Nối Bot vào Đi tới', '', '<span class="sw-l">chưa xong</span>')}${fld('Bấm Chạy để thử', '', '<span class="sw-l">chưa xong</span>')}</div></div>${tray}</div>`;
+  else if (t.layout === 'dock') body = `<div class="pz-body" style="grid-template-rows:minmax(0,1fr) 190px">${bd('')}
+      <div style="display:grid;grid-template-columns:338px 420px minmax(0,1fr);gap:1px;background:var(--line)"><div class="col">${stageBox('flex:1')}</div><div class="col" style="padding:12px;gap:8px">${guide}<div style="font-size:14px;color:var(--text2)"><b>Đề bài</b> <span class="pv-mock">câu minh hoạ</span>: nối dây để Bot tự đi tới lá cờ.</div></div><div class="col" style="justify-content:center">${tray.replace('class="pz-tray"', 'class="pz-tray" style="flex-wrap:wrap;gap:10px;padding:12px;white-space:normal"')}</div></div></div>`;
+  else body = `<div class="pz-body" style="grid-template-rows:minmax(0,1fr) 72px">${bd(`<div style="position:absolute;left:16px;bottom:16px">${guide}</div><div class="ov pip" style="width:300px">${stageBox('height:169px')}</div>`)}${tray}</div>`;
+  return open(t, 1280, 720, ' touch') + tb + body + `</div>`;
+}
+function puzzleList(t) {
+  return open(t, 1280, 720, ' touch') + `<header class="tb" style="--ctl:44px"><div class="tb-g"><span class="tbtn">${ic('chevL')}Xưởng Nối</span><span class="pz-title">Xưởng Bot giải đố</span></div><div class="tb-g"><span class="lv">Đã xong 3/8 ${LEVELS.map((_, i) => `<i class="${i < 3 ? 'd' : i === 3 ? 'c' : ''}"></i>`).join('')}</span></div><div class="tb-g"><span class="tbtn">${ic('sliders')}Cài đặt</span></div></header>
+    <div class="lvl-grid"><div style="grid-column:1/-1;font-size:15px;color:var(--text2)">Nối dây cho bot làm đúng đề bài. Giải xong một màn thì mở màn tiếp theo.</div>${LEVELS.map(([n, v], i) => `<div class="lvl${i === 3 ? ' cur' : i > 3 ? ' lock' : ''}"><span class="n">${i > 3 ? ic('lock') : i + 1}</span><span><b>${n}</b><small>${v}${i === 3 ? ' · đang làm' : i > 3 ? ' · chưa mở' : ''}</small></span>${starRow(i < 3 ? [3, 2, 1][i] : 0)}</div>`).join('')}</div></div>`;
+}
+
+/* ============ page sections ============ */
+const DIR_TEXT = {
+  a: { h: 'Hướng A · “Gọn gàng”', sub: 'Giữ bố cục ba cột quen thuộc, dọn lại cho thoáng. Thẻ có đầu nhuộm nhạt màu nhóm, góc bo vừa. Mô phỏng là khung nhỏ ghim ở góc bảng nối.',
+    pro: ['Ít thay đổi nhất: học sinh và thầy cô đang dùng không bỡ ngỡ', 'Thẻ sáng sủa, chỉ dây điện có màu đậm nên dòng điện nổi bật', 'Ít việc nhất: phần lớn là đổi bảng màu và cỡ chữ'],
+    con: ['Khung mô phỏng nhỏ vẫn nằm đè lên bảng nối (đã ghim vào góc, không che thẻ trong ảnh dựng)', 'Ít khác biệt nhất so với hôm nay'] },
+  b: { h: 'Hướng B · “Bàn kỹ thuật”', sub: 'Dáng công cụ kỹ thuật: thẻ vuông vức, một vạch màu nhóm trên đầu thẻ. Mô phỏng nằm cố định ở khay dưới cạnh “Việc cần sửa”, không còn khung nổi.',
+    pro: ['Bảng nối không bị gì che: mô phỏng và số đo nằm ở khay dưới', 'Ít màu nhất, yên mắt nhất khi lắp ráp', 'Hợp lớp lớn (cấp 2), trông nghiêm túc'],
+    con: ['Khay dưới chiếm chiều cao: bảng nối thấp hơn A', 'Với lớp nhỏ (8–10 tuổi) có thể hơi “khô”'] },
+  c: { h: 'Hướng C · “Sân khấu mô phỏng”', sub: 'Đổi bố cục: mô phỏng luôn nằm cố định bên phải, công thức ngay dưới. Cột mảnh ghép thu thành thanh biểu tượng. Bảng tin gom thành một dải mỏng dưới đáy. Thẻ có đầu tô kín màu nhóm.',
+    pro: ['Vừa lắp vừa thấy máy chạy và thấy số: hợp nhất cho giờ học', 'Bảng nối rộng nhất ở chế độ Học sinh', 'Luôn thấy “Việc cần sửa” và bước bài học', 'Trên máy tính bảng: thanh biểu tượng to, dễ chạm'],
+    con: ['Nhiều việc nhất: phải sửa cấu trúc khung, không chỉ màu', 'Cột phải dày thông tin; ở chế độ Giáo viên bảng nối hẹp hơn A/B'] },
+};
+function measure(frame) {
+  let minF = 99, minH = 999;
+  frame.querySelectorAll('*').forEach((e) => {
+    if (e.closest('svg') || e.classList.contains('mk') || e.classList.contains('ph') || e.classList.contains('pv-mock')) return;
+    const own = [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent.trim());
+    if (own) minF = Math.min(minF, parseFloat(getComputedStyle(e).fontSize));
+  });
+  frame.querySelectorAll('.rb,.tbtn,.ibtn,.mn,.pt,.q,.stp button,.sw-w,.abtn,.rl,.p-it,.zb,.nx,.hb,.sel-f,.search,.tabbar div,.pc').forEach((e) => { const h = e.offsetHeight; if (h && h < minH) minH = h; });
+  return { minF, minH };
+}
+function tokenRows(t) {
+  const hdBg = (c) => (t.head === 'tint' ? mix(t.cats[c], t.card, 0.13) : t.head === 'bar' ? t.cardHead : t.cats[c]);
+  const hdInk = (c) => (t.head === 'solid' ? inkOn(t.cats[c]) : t.text);
+  const rows = [
+    ['text', t.text, 'Chữ chính trên bảng điều khiển', t.panel], ['text2', t.text2, 'Chữ phụ, mô tả', t.panel], ['text3', t.text3, 'Chữ mờ nhất (tên tiếng Anh, số đếm)', t.panel],
+    ['text / card', t.text, 'Tên cổng trên thẻ', t.card], ['text2 / advBg', t.text2, 'Cổng nâng cao trên thẻ', t.advBg], ['text / bg', t.text, 'Chữ trên nền bảng nối', t.bg], ['chromeText', t.chromeText, 'Chữ trên thanh trên cùng', t.chrome], ['chromeText2', t.chromeText2, 'Chữ phụ trên thanh trên cùng', t.chrome],
+    ['runInk / run', t.runInk, 'Chữ nút Chạy', t.run], ['accentInk / accent', t.accentInk, 'Chữ trên màu nhấn', t.accent], ['danger', t.danger, 'Chữ nút Xóa, lỗi', t.panel], ['warn / warnBg', t.warn, 'Nhãn “Chưa nối dây”', t.warnBg],
+    ['learnInk / learnBg', t.learnInk, 'Dải bài học, lời hướng dẫn', t.learnBg], ['railInk / railBg', t.railInk, 'Thanh biểu tượng nhóm', t.railBg],
+  ].map(([n, fg, use, bg]) => ({ n, fg, bg, use, r: ratio(fg, bg), need: 4.5 }));
+  const non = [
+    ['accent (viền chọn)', t.accent, 'Viền thẻ đang chọn trên nền bảng', t.bg], ['line2 (viền ô nhập)', t.line2, 'Viền ô nhập, công tắc', t.panel], ['cardLine', t.cardLine, 'Viền thẻ trên nền bảng (thẻ còn tách nền nhờ màu và bóng)', t.bg],
+    ['Đúng/Sai (viền dây)', t.tBoolE, 'Dây + chấm cổng Đúng/Sai', t.bg], ['Số (viền dây)', t.tNumE, 'Dây + chấm cổng Số', t.bg], ['Vật thể (viền dây)', t.tObjE, 'Dây + chấm cổng Vật thể', t.bg],
+  ].map(([n, fg, use, bg]) => ({ n, fg, bg, use, r: ratio(fg, bg), need: 3 }));
+  const cats = CATS.map((c) => ({ n: 'Nhóm ' + CAT_VI[c] + ' (đầu thẻ)', fg: hdInk(c), bg: hdBg(c), use: 'Tên mảnh ghép trên đầu thẻ; màu nhóm ' + t.cats[c], r: ratio(hdInk(c), hdBg(c)), need: 4.5 }));
+  return [...rows, ...non, ...cats];
+}
+const MODE_DIFF = [
+  ['Chữ thường / chữ nhỏ nhất', '15 px / 13 px', '13 px / 12 px'], ['Tên mảnh ghép trên thẻ', '15 px đậm', '13 px đậm'], ['Tên tiếng Anh nhỏ', 'Có, 13 px, dưới tên Việt', 'Có, 12 px, dưới tên Việt'],
+  ['Hàng cổng / đầu thẻ / nút', '34 px / 50 px / 36 px', '24 px / 34 px / 28 px'], ['Danh sách mảnh ghép', 'Mỗi mảnh 2 dòng (tên + mô tả), hàng 48 px. Hướng C: chỉ thanh biểu tượng, bấm mới mở danh sách', 'Mỗi mảnh 1 dòng, hàng 30 px, thấy nhiều mảnh hơn. Hướng C: danh sách luôn mở'],
+  ['“Cổng nâng cao” trên thẻ', 'Gập; chỉ hiện cổng đã nối dây', 'Mở hết'], ['Thuộc tính “Nâng cao”', 'Gập thành một dòng', 'Mở (ảnh dựng hiện 1–2 trong 3 mục)'], ['“Cài đặt mô phỏng”', 'Gập thành một dòng tóm tắt', 'Mở cả 3 mục kèm giải thích'],
+  ['Bảng tin', 'Thu thành dải: chỉ “Việc cần sửa” (hướng B: thêm số đo đang chạy)', 'Mở nhật ký, có bộ lọc'], ['Nút “Bố cục”, bản đồ nhỏ', 'Ẩn (vẫn có trong menu Xem)', 'Hiện'],
+  ['Công tắc nằm ở đâu', 'Thanh trên cùng, bên phải: “Học sinh | Giáo viên”. Cũng có trong menu Xem. Ứng dụng nhớ lựa chọn trên từng máy.', ''],
+];
+function render() {
+  const t = theme(), d = DIR_TEXT[state.dir], gv = state.mode === 'gv';
+  document.getElementById('main').innerHTML = `
+    <div class="pv-dirhead"><div><h1>${d.h}${state.dir === 'c' ? '<span class="pv-tag">Đề xuất</span>' : ''}</h1><div>${d.sub}</div><div style="margin-top:6px;color:#47525f">Đang xem: giao diện <b>${state.th === 'dark' ? 'Tối' : 'Sáng'}</b>, chế độ <b>${gv ? 'Giáo viên' : 'Học sinh'}</b>.</div></div>
+      <div><h3>Được gì</h3><ul>${d.pro.map((x) => `<li>${x}</li>`).join('')}</ul></div><div><h3>Mất gì</h3><ul>${d.con.map((x) => `<li>${x}</li>`).join('')}</ul></div></div>
+    <section class="pv-sec" id="sec-full"><h2>1. Màn hình soạn thảo, 1440×900</h2>
+      <p class="lead">${state.cmp === 'before' ? 'Đây là ảnh chụp thật của ứng dụng hôm nay (1440×900), để so sánh.' : 'Mảnh ghép, tên cổng, nhãn thuộc tính và menu lấy đúng từ ứng dụng. <span class="pv-mock">minh hoạ</span> gồm: cảnh mô phỏng (hình vẽ giữ chỗ), câu trong dải “Bài học”, các con số đang chạy, mục “Cổng nâng cao” gập ngay trên thẻ (ý tưởng mới), nút đổi Sáng/Tối và Học sinh/Giáo viên (mới).'}</p>
+      <div class="pv-frame"><div class="pv-fit" id="fit-full"></div></div></section>
+    <section class="pv-sec" id="sec-mode"><h2>2. Hai chế độ: Học sinh và Giáo viên</h2><p class="lead">Bấm nút “Chế độ” ở thanh điều khiển phía trên để xem từng chế độ. Bảng dưới ghi chính xác chỗ khác nhau.</p>
+      <div class="pv-card"><table class="pv-t"><tr><th></th><th>Học sinh (to, thoáng, ít thứ)</th><th>Giáo viên (gọn, nhiều thông tin)</th></tr>${MODE_DIFF.map(([a, b, c]) => `<tr><td><b>${a}</b></td>${c ? `<td>${b}</td><td>${c}</td>` : `<td colspan="2">${b}</td>`}</tr>`).join('')}
+      <tr><td><b>Đổi Sáng / Tối ở đâu</b></td><td colspan="2">Nút mặt trời / mặt trăng ở thanh trên cùng, bên phải. Cũng có trong menu Xem. Lần đầu mở, ứng dụng theo cài đặt của máy.</td></tr></table></div></section>
+    <section class="pv-sec" id="sec-class"><h2>3. Hợp với lớp học thế nào</h2><div class="pv-card" id="classbox"></div>
+      ${state.dir === 'c' ? `<div class="pv-card" style="margin-top:12px"><b>Hai bố cục của hướng C (sơ đồ)</b><div class="pv-modes">
+        <div class="pv-wf"><div class="wf" style="grid-template-columns:14px 1fr 70px;grid-template-rows:1fr 1fr 10px"><div style="grid-row:1/3"></div><div style="grid-row:1/3" class="hi">Bảng nối</div><div>Mô phỏng</div><div>Thuộc tính</div><div style="grid-column:1/-1"></div></div><div class="pv-cap">“Lắp ráp”: bảng nối là chính, mô phỏng nhỏ luôn hiện.</div></div>
+        <div class="pv-wf"><div class="wf" style="grid-template-columns:14px 1fr 80px;grid-template-rows:1fr 1fr 10px"><div style="grid-row:1/3"></div><div style="grid-row:1/3" class="hi">Mô phỏng (to)</div><div>Bảng nối (xem)</div><div>Số đo, công thức</div><div style="grid-column:1/-1"></div></div><div class="pv-cap">“Chạy thử”: mô phỏng lên sân khấu, hợp lúc thầy cô trình chiếu.</div></div></div></div>` : ''}</section>
+    <section class="pv-sec" id="sec-anat"><h2>4. Thẻ mảnh ghép phóng to 2×, cả hai chế độ</h2>
+      <p class="lead">① biểu tượng + màu nhóm ② tên tiếng Việt, tên tiếng Anh nhỏ bên dưới ③ nút “?” mở Sổ tay ④ cổng vào bên trái ⑤ cổng ra bên phải ⑥ “Cổng nâng cao” gập lại <span class="pv-mock">ý tưởng mới</span>. Hình chấm cho biết kiểu: tròn = Đúng/Sai, thoi = Số, vuông = Vật thể (giữ như hôm nay).</p>
+      <div class="pv-frame" style="padding:0"><div id="anat"></div></div></section>
+    <section class="pv-sec" id="sec-pz"><h2>5. Phần giải đố “Xưởng Bot”</h2>
+      <p class="lead">Dựng theo cấu trúc thật của màn chơi: thanh trên (về danh sách, tên màn, Đề bài, sao, Cài đặt, Gợi ý, Làm lại, Chạy), bảng nối với mảnh khoá sẵn và mảnh gỡ được, khay mảnh của màn, bong bóng hướng dẫn, khung sân chơi. Tên màn, tên mảnh, tên cổng là thật (màn 1). <span class="pv-mock">minh hoạ</span>: câu đề bài, câu trong bong bóng, cảnh sân chơi; linh vật để ô trống vì sẽ giữ nguyên hình thật.</p>
+      <div class="pv-frame"><div class="pv-fit" id="fit-pz"></div></div><div class="pv-cap">Màn chơi 1280×720</div>
+      <div class="pv-frame" style="margin-top:16px;display:inline-block"><div class="pv-fit" id="fit-pzl"></div></div><div class="pv-cap">Danh sách màn (hiển thị 60%); tiến độ và sao là số minh hoạ</div></section>
+    <section class="pv-sec" id="sec-tok"><h2>6. Bảng màu và độ tương phản (giao diện ${state.th === 'dark' ? 'Tối' : 'Sáng'})</h2><p class="lead">Số tương phản tính theo WCAG 2.1 ngay trên trang này từ đúng các mã màu đang dùng. Chữ thường cần từ 4,5; viền, biểu tượng, dây cần từ 3.</p><div class="pv-card" id="tok"></div>
+      <div class="pv-card" id="cvd" style="margin-top:12px"></div></section>
+    <section class="pv-sec" id="sec-resp"><h2>7. Máy tính bảng 1024×768 và điện thoại 390×844</h2><p class="lead">Ở hai cỡ này mọi nút cao ít nhất 44 px, hàng cổng trên thẻ cao 44 px. Khung dưới đây thu nhỏ để vừa trang.</p>
+      <div class="pv-row"><div><div class="pv-frame"><div class="pv-fit" id="fit-tab"></div></div><div class="pv-cap">Máy tính bảng 1024×768 (hiển thị 70%)</div></div><div><div class="pv-frame"><div class="pv-fit" id="fit-ph"></div></div><div class="pv-cap">Điện thoại 390×844 (hiển thị 80%)</div></div></div></section>`;
+  const full = document.getElementById('fit-full');
+  full.innerHTML = state.cmp === 'before' ? `<img alt="Ảnh chụp thật của ứng dụng hôm nay" width="1440" height="900" src="${BEFORE}">` : editor(t, 'desktop');
+  document.getElementById('fit-tab').innerHTML = editor(t, 'tablet');
+  document.getElementById('fit-ph').innerHTML = editor(t, 'phone');
+  document.getElementById('fit-pz').innerHTML = puzzle(t);
+  document.getElementById('fit-pzl').innerHTML = puzzleList(t);
+  // anatomy: one row per mode
+  const A = (label, html) => `<div style="display:flex;flex-direction:column;gap:6px;align-items:flex-start">${html}<div style="font-size:12px;font-weight:700;color:var(--text2)">${label}</div></div>`;
+  const m1 = { ...NODES[3], sel: 0, hot: 0 }, m2 = { ...NODES[4], hot: 0 }, mk = (n, s) => `<span class="mk" style="${s}">${n}</span>`;
+  const anatRow = (mode) => { const o = { static: 1, mode }; return `<div class="ed hd-${t.head} m-${mode}" style="display:block;width:auto;height:auto;padding:14px 20px 10px;zoom:2;${vars(t)}">
+    <div style="font-size:12px;font-weight:700;margin-bottom:10px;color:var(--text)">Chế độ ${mode === 'gv' ? 'Giáo viên' : 'Học sinh'}</div><div style="display:flex;gap:18px 20px;flex-wrap:wrap;align-items:flex-start">
+    ${A('Bình thường', card(m1, { ...o, plain: 1, mk: mk(1, 'left:-6px;top:-6px') + mk(2, 'left:74px;top:-8px') + mk(3, 'right:-6px;top:-6px'), tail: mk(4, 'left:-8px;top:calc(var(--hh) + 10px)') + mk(5, 'right:-8px;top:calc(var(--hh) + var(--row) * 2 + 10px)') + mk(6, 'left:-8px;bottom:6px') }))}
+    ${A('Rê chuột / chạm vào cổng', card(m1, { ...o, plain: 1, cls: 'hovc' }).replace('plive " data-p="power"', 'plive hov" data-p="power"'))}
+    ${A('Đang chọn', card({ ...m1, sel: 1 }, o))}
+    ${A('Đang chạy: cổng sáng, hiện số', card({ ...m1, hot: 1 }, o).replace('<span>Vòng quay</span>', '<span>Vòng quay</span><span class="val">120.0</span>').replace('<span>Công suất</span>', '<span>Công suất</span><span class="val">1.00</span>'))}
+    ${A('Cổng nâng cao' + (mode === 'gv' ? ': mở hết' : ': chỉ cổng đã nối'), card(m2, { ...o, plain: 1 }))}
+    ${A('Lỗi: thiếu dây', card({ ...NODES[5], ins: [['value', 'num', 'Giá trị', 0]] }, { ...o, cls: 'err', inX: 'miss', badge: `<div class="errb">${ic('warn')}Chưa nối dây vào "Giá trị"</div>` }).replace('<span>Giá trị</span>', '<span>Giá trị</span><span class="need">cần nối</span>'))}
+    ${A('Khối nhóm (tên minh hoạ)', card({ id: 'g', cat: 'brain', vi: 'Lái robot', en: 'Nhóm · 3 mảnh ghép', w: 200, ins: [['a', 'num', 'Công suất', 0]], outs: [['b', 'bool', 'Đang quay', 0]] }, o))}
+    </div></div>`; };
+  document.getElementById('anat').innerHTML = anatRow('hs') + anatRow('gv') + `<div class="ed hd-${t.head}" style="display:block;width:auto;height:auto;padding:4px 20px 12px;zoom:2;${vars(t)}"><div style="display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;font-size:12px;font-weight:600">${CATS.map((c) => `<span class="cat-${c}" style="display:inline-flex;align-items:center;gap:5px">${tile(c)}${CAT_VI[c]}</span>`).join('')}
+      <span style="margin-left:10px;display:inline-flex;gap:10px" class="legend"><span class="t-bool"><i class="dot"></i>Đúng/Sai</span><span class="t-num"><i class="dot"></i>Số</span><span class="t-obj"><i class="dot"></i>Vật thể</span></span></div></div>`;
+  // tokens
+  const cls = (r, need) => (r >= need ? 'ok' : r >= 3 ? 'mid2' : 'bad');
+  const tr = tokenRows(t);
+  document.getElementById('tok').innerHTML = `<table class="pv-t"><tr><th>Cặp màu</th><th>Chữ / nét</th><th>Nền</th><th>Dùng cho</th><th>Tương phản</th><th>Cần</th></tr>${tr.map((r) => `<tr><td>${r.n}</td><td><span class="sw" style="background:${r.fg}"></span><code>${r.fg}</code></td><td><span class="sw" style="background:${r.bg}"></span><code>${r.bg}</code></td><td>${r.use}</td><td class="${cls(r.r, r.need)}">${r.r.toFixed(2)} : 1</td><td>${r.need}</td></tr>`).join('')}</table>`;
+  const ports = { 'Đúng/Sai': t.tBool, 'Số': t.tNum, 'Vật thể': t.tObj };
+  const catsVi = Object.fromEntries(CATS.map((c) => [CAT_VI[c], t.cats[c]]));
+  const rowS = (label, f, obj) => { const m = minPair(obj, f); return `<tr><td>${label}</td><td>${Object.values(obj).map((c) => `<span class="sw" style="background:${f(c)}" title="${f(c)}"></span>`).join('')}</td><td><b>${m.d.toFixed(1)}</b> (${m.w})</td></tr>`; };
+  document.getElementById('cvd').innerHTML = `<b>Kiểm tra cho người mù màu</b>: mô phỏng bằng ma trận Machado 2009 (mức nặng nhất), rồi đo khoảng cách màu ΔE (CIE76) giữa mọi cặp. Trên 10 là phân biệt được dễ. Hôm nay cặp gần nhất chỉ 4,7 (Hành động / Bộ não). Ngoài màu, mỗi nhóm còn có biểu tượng riêng và mỗi kiểu cổng có hình chấm riêng.
+    <table class="pv-t" style="margin-top:8px"><tr><th>Cách nhìn</th><th>7 màu nhóm: ${CATS.map((c) => CAT_VI[c]).join(', ')}</th><th>Cặp gần nhau nhất (ΔE)</th></tr>
+    ${rowS('Mắt thường', (c) => c, catsVi)}${rowS('Mù màu lục (deuteranopia)', (c) => simc(c, CVD.deut), catsVi)}${rowS('Mù màu đỏ (protanopia)', (c) => simc(c, CVD.prot), catsVi)}
+    <tr><th>Cách nhìn</th><th>3 màu cổng: Đúng/Sai, Số, Vật thể</th><th>Cặp gần nhau nhất (ΔE)</th></tr>
+    ${rowS('Mắt thường', (c) => c, ports)}${rowS('Mù màu lục', (c) => simc(c, CVD.deut), ports)}${rowS('Mù màu đỏ', (c) => simc(c, CVD.prot), ports)}</table>`;
+  fit(); layoutWires(document);
+  // classroom box: measured from the frames above
+  const md = state.cmp === 'before' ? null : measure(full), mt = measure(document.getElementById('fit-tab')), mp = measure(document.getElementById('fit-ph')), mz = measure(document.getElementById('fit-pz'));
+  const g = (n) => tr.find((r) => r.n === n).r.toFixed(1), mins = (f) => [minPair(catsVi, f).d, minPair(ports, f).d].map((v) => +v.toFixed(1));
+  window.__metrics = { desktop: md, tablet: mt, phone: mp, puzzle: mz, contrast: Object.fromEntries(tr.map((r) => [r.n, +r.r.toFixed(2)])), minText: +Math.min(...tr.filter((r) => r.need === 4.5).map((r) => r.r)).toFixed(2), cvdCatsPorts: { normal: mins((c) => c), deut: mins((c) => simc(c, CVD.deut)), prot: mins((c) => simc(c, CVD.prot)) } };
+  const CLASSROOM = {
+    a: 'Khung mô phỏng nhỏ có nút phóng to (phím F). Phòng sáng, máy chiếu yếu: dùng giao diện Sáng.', b: 'Mô phỏng và số đo nằm ở khay dưới, cả lớp thấy cùng lúc với bảng nối. Phòng sáng: dùng giao diện Sáng.',
+    c: 'Bấm “Chạy thử” để mô phỏng to lên, số đo và công thức nằm ngay cạnh. Phòng sáng: dùng giao diện Sáng.',
+  };
+  document.getElementById('classbox').innerHTML = `<table class="pv-t"><tr><th>Tiêu chí</th><th>Trong bản dựng này (đo trực tiếp trên khung đang hiện)</th></tr>
+    <tr><td>Cỡ chữ nhỏ nhất</td><td>${md ? `Máy tính 1440, chế độ ${gv ? 'Giáo viên' : 'Học sinh'}: <b>${md.minF} px</b> (hôm nay có chữ 11 px); ` : ''}máy tính bảng: <b>${mt.minF} px</b>; điện thoại: <b>${mp.minF} px</b>; giải đố: <b>${mz.minF} px</b>.</td></tr>
+    <tr><td>Vùng bấm nhỏ nhất</td><td>${md ? `Máy tính (chuột): <b>${md.minH} px</b>; ` : ''}máy tính bảng: <b>${mt.minH} px</b>; điện thoại: <b>${mp.minH} px</b>; giải đố: <b>${mz.minH} px</b> (ở mức phóng 100%; khi thu nhỏ bảng nối thì hàng cổng nhỏ theo).</td></tr>
+    <tr><td>Tương phản chữ</td><td>Chữ chính ${g('text')} : 1, chữ phụ ${g('text2')} : 1, chữ mờ nhất ${g('text3')} : 1 (cần 4,5).</td></tr>
+    <tr><td>Học sinh biết làm gì tiếp</td><td>Dải “Bài học · Bước 3/5” luôn nằm trên bảng nối; “Việc cần sửa” luôn hiện số đếm; “Từng bước” nằm cạnh nút Chạy; “?” trên mỗi thẻ và nút “Sổ tay” trong Thuộc tính.</td></tr>
+    <tr><td>Số đo và công thức</td><td>Số đo hiện trên mô phỏng (vòng/phút, m/s) và trên dây; ô “Công thức” cho thấy F ra bao nhiêu N từ đúng các số đang đặt.</td></tr>
+    <tr><td>Khi thầy cô trình chiếu</td><td>${CLASSROOM[state.dir]}</td></tr>
+    <tr><td>Không chỉ dựa vào màu</td><td>Nhóm: biểu tượng + tên. Kiểu cổng: hình chấm. Công tắc: có chữ Bật/Tắt. Lỗi: viền đứt + nhãn chữ.</td></tr></table>`;
+  document.querySelectorAll('#ctl .pv-seg').forEach((s) => s.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(state[s.dataset.k] === b.dataset.v))));
+}
+function fit() {
+  const set = (id, w, h, k) => { const el = document.getElementById(id); if (!el) return; el.style.width = w * k + 'px'; el.style.height = h * k + 'px'; el.firstElementChild.style.transform = `scale(${k})`; };
+  const avail = document.getElementById('main').clientWidth - 34;
+  set('fit-full', 1440, 900, Math.min(1, avail / 1440));
+  set('fit-pz', 1280, 720, Math.min(1, avail / 1280));
+  set('fit-pzl', 1280, 720, 0.6);
+  set('fit-tab', 1024, 768, Math.min(0.7, (avail - 360) / 1024));
+  set('fit-ph', 390, 844, 0.8);
+}
+const BEFORE = '__BEFORE_PNG__';
+const q = new URLSearchParams(location.search);
+const state = { dir: q.get('dir') || 'a', th: q.get('th') || 'light', mode: q.get('mode') || 'hs', cur: q.get('cur') || 'on', cmp: q.get('cmp') || 'new', soft: q.get('soft') || 's0' };
+document.getElementById('ctl').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; state[b.parentElement.dataset.k] = b.dataset.v; render(); });
+window.addEventListener('resize', fit);
+render();
+</script>
+</body>
+</html>

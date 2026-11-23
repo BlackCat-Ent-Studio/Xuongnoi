@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Chọn kiểu dáng: Lồng chứa · Đèn báo · Nắp lỗ</title>
+    <style>
+      :root { color-scheme: light; }
+      * { box-sizing: border-box; }
+      body { margin: 0; padding: 20px 24px 48px; background: #f1ece2; color: #2b2622; font: 16px/1.5 "Segoe UI", Arial, sans-serif; }
+      main { max-width: 1280px; margin: 0 auto; }
+      h1 { font-size: 26px; margin: 0 0 6px; }
+      h2 { font-size: 21px; margin: 34px 0 4px; padding-top: 14px; border-top: 2px solid #cdbfa8; }
+      p { margin: 6px 0; }
+      .how { background: #fff8e6; border: 2px solid #e2b23c; border-radius: 10px; padding: 10px 14px; margin: 12px 0 0; }
+      .how code { font: 700 18px Consolas, monospace; background: #fff; border: 1px solid #d8c9a6; border-radius: 6px; padding: 1px 8px; }
+      .note { color: #5d544a; font-size: 15px; }
+      .opt { display: grid; grid-template-columns: 190px 1fr; gap: 14px; margin: 16px 0; padding: 12px; background: #fbf8f2; border: 1px solid #d9cdb9; border-radius: 12px; }
+      .name { display: flex; flex-direction: column; gap: 6px; }
+      .tag { display: inline-block; align-self: flex-start; font: 700 22px "Segoe UI", Arial, sans-serif; background: #6b4a2b; color: #fff; border-radius: 8px; padding: 2px 12px; }
+      .name b { font-size: 16px; }
+      .name span { font-size: 14px; color: #5d544a; }
+      .name span.tag { font-size: 22px; color: #fff; }
+      .shots { display: grid; gap: 10px; }
+      .shots.three { grid-template-columns: repeat(3, 1fr); }
+      .shots.two { grid-template-columns: repeat(2, 1fr); max-width: 760px; }
+      figure { margin: 0; }
+      figure img { display: block; width: 100%; height: auto; border-radius: 8px; border: 1px solid #cfc6b6; background: #e6e8ec; }
+      figcaption { text-align: center; font-size: 14px; color: #4a423a; padding-top: 3px; }
+      @media (max-width: 760px) { .opt { grid-template-columns: 1fr; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Chọn kiểu dáng: Lồng chứa · Đèn báo · Nắp lỗ</h1>
+      <p>Đây là <b>hình đề xuất</b>, game chưa có 3 món này. Hình được vẽ bằng đúng bộ vẽ và ánh sáng của game; thùng carton là hình thật đang có trong game. Xe, tay máy, băng chuyền, sàn nâng hiện có <b>không đổi gì</b>.</p>
+      <div class="how">
+        Cách trả lời: mỗi nhóm chọn 1 chữ, ví dụ <code>L-b D-a N-a</code> (Lồng B, Đèn A, Nắp A). Muốn sửa chi tiết (màu, cao thấp, bánh xe...) cứ ghi thêm bằng lời.
+      </div>
+
+      <h2>1. Lồng chứa (L)</h2>
+      <p class="note">Lồng đứng dưới lỗ thả, hứng thùng thật rơi xuống; gầm cao 0,35 m để xe kéo chui vào. Kích thước trong hình: lòng 0,8 m, thành cao 1 m (có thể đổi sau khi đo). Chỗ thùng nằm trong hình là xếp tay để minh hoạ; trong game thùng rơi tự do nên sẽ lộn xộn hơn.</p>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Lồng A</span><b>Thùng kín kiểu cũ</b><span>Thành tôn xanh, viền vàng, 4 chân đế. Chắc chắn, dễ nhìn từ xa. Nhìn ngang KHÔNG thấy thùng bên trong, chỉ thấy khi nhìn từ trên xuống.</span></div>
+        <div class="shots three">
+          <figure><img src="img/cage-a-0.png" alt="Lồng A rỗng" /><figcaption>Rỗng</figcaption></figure>
+          <figure><img src="img/cage-a-3.png" alt="Lồng A có 3 thùng" /><figcaption>3 thùng (bị thành che, không thấy)</figcaption></figure>
+          <figure><img src="img/cage-a-6.png" alt="Lồng A đầy 6 thùng" /><figcaption>Đầy 6 thùng (chỉ thấy mép thùng trên cùng)</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Lồng B</span><b>Lồng lưới có bánh</b><span>4 thành lưới thép, 4 bánh nhỏ. Nhìn từ mọi phía đều thấy thùng và đếm được.</span></div>
+        <div class="shots three">
+          <figure><img src="img/cage-b-0.png" alt="Lồng B rỗng" /><figcaption>Rỗng</figcaption></figure>
+          <figure><img src="img/cage-b-3.png" alt="Lồng B có 3 thùng" /><figcaption>3 thùng</figcaption></figure>
+          <figure><img src="img/cage-b-6.png" alt="Lồng B đầy 6 thùng" /><figcaption>Đầy 6 thùng</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Lồng C</span><b>Lồng lưới mặt trước thấp, bánh to</b><span>Khung vàng, mặt trước chỉ cao 0,35 m, bánh to dễ thấy là "đẩy đi được". Lưu ý: mặt trước thấp thì thùng CÓ THỂ rơi ra phía trước; kiểu này chưa được đo thử.</span></div>
+        <div class="shots three">
+          <figure><img src="img/cage-c-0.png" alt="Lồng C rỗng" /><figcaption>Rỗng</figcaption></figure>
+          <figure><img src="img/cage-c-3.png" alt="Lồng C có 3 thùng" /><figcaption>3 thùng</figcaption></figure>
+          <figure><img src="img/cage-c-6.png" alt="Lồng C đầy 6 thùng" /><figcaption>Đầy 6 thùng</figcaption></figure>
+        </div>
+      </div>
+
+      <h2>2. Đèn báo của lỗ (D)</h2>
+      <p class="note">Đèn đứng trên sàn nâng, cạnh lỗ. Xanh = lồng còn chỗ · Vàng = sắp đầy (5 thùng) · Đỏ = đầy (6 thùng), lỗ bị khoá.</p>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Đèn A</span><b>Đèn tháp 3 tầng</b><span>3 bóng xếp chồng: đỏ trên, vàng giữa, xanh dưới. Mỗi lúc sáng 1 bóng, giống đèn máy trong nhà xưởng thật.</span></div>
+        <div class="shots three">
+          <figure><img src="img/lamp-a-green.png" alt="Đèn A xanh" /><figcaption>Xanh</figcaption></figure>
+          <figure><img src="img/lamp-a-amber.png" alt="Đèn A vàng" /><figcaption>Vàng</figcaption></figure>
+          <figure><img src="img/lamp-a-red.png" alt="Đèn A đỏ" /><figcaption>Đỏ</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Đèn B</span><b>Đèn 1 bóng đổi màu</b><span>Một chụp đèn tròn, cả bóng đổi màu. To và rõ hơn khi nhìn từ xa, nhưng không thấy 2 màu còn lại.</span></div>
+        <div class="shots three">
+          <figure><img src="img/lamp-b-green.png" alt="Đèn B xanh" /><figcaption>Xanh</figcaption></figure>
+          <figure><img src="img/lamp-b-amber.png" alt="Đèn B vàng" /><figcaption>Vàng</figcaption></figure>
+          <figure><img src="img/lamp-b-red.png" alt="Đèn B đỏ" /><figcaption>Đỏ</figcaption></figure>
+        </div>
+      </div>
+
+      <h2>3. Nắp lỗ (N)</h2>
+      <p class="note">Khi lồng đầy, lỗ được đậy lại để xe không thả thêm thùng. Lỗ rộng 0,94 m, viền vàng là viền lỗ đang có trong game.</p>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Nắp A</span><b>Tấm trượt sọc đỏ trắng</b><span>Một tấm phẳng trượt ngang trên 2 ray để đậy kín lỗ. Khi mở, tấm nằm trên sàn bên cạnh lỗ (chiếm 1 ô sàn bên đó).</span></div>
+        <div class="shots two">
+          <figure><img src="img/cover-a-open.png" alt="Nắp A mở" /><figcaption>Mở</figcaption></figure>
+          <figure><img src="img/cover-a-closed.png" alt="Nắp A đóng" /><figcaption>Đóng</figcaption></figure>
+        </div>
+      </div>
+
+      <div class="opt">
+        <div class="name"><span class="tag">Nắp B</span><b>Khung chắn sọc vàng đen</b><span>Một khung song chắn có bản lề: mở thì dựng đứng ở mép lỗ, đóng thì gập xuống nằm ngang trên lỗ. Không chiếm ô sàn bên cạnh, nhưng khi mở nó dựng cao gần 1 m.</span></div>
+        <div class="shots two">
+          <figure><img src="img/cover-b-open.png" alt="Nắp B mở" /><figcaption>Mở</figcaption></figure>
+          <figure><img src="img/cover-b-closed.png" alt="Nắp B đóng" /><figcaption>Đóng</figcaption></figure>
+        </div>
+      </div>
+
+      <p class="note" style="margin-top: 28px">Ghi chú thật: đây là ảnh tĩnh chụp từ bản vẽ 3D, chưa phải vật trong game và chưa có chuyển động. Sau khi anh/chị chọn, kiểu được chọn mới được làm thành mảnh ghép thật.</p>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bảng mạch tự do - xem trước</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap&subset=vietnamese">
+<style>
+/* ===== tokens (same values as app/src/style.css + puzzle.css) ===== */
+:root {
+  --bg: #121418; --chrome: #17191e; --panel: #1c1f25; --raise: #2b3038; --line: #2c3139; --line2: #3a404a;
+  --text: #e7e9ec; --text2: #aab2bd; --text3: #8f98a4; --accent: #3ecf8e; --accent-ink: #05140d;
+  --t-bool: #f7d046; --t-num: #5aa9ff; --t-obj: #f27ad0;
+  --c-input: #4cc9d9; --c-logic: #a894ff; --c-math: #a9d861; --c-object: #f0965a; --c-action: #ff7f7f; --c-brain: #d3b48a; --c-output: #b9c4d0;
+  --board: #1f2a5c; --board-dot: #33428a; --sun: #ffd23f;
+  --font: 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif; --display: 'Baloo 2', 'Be Vietnam Pro', system-ui, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text); font: 13px/1.45 var(--font); -webkit-font-smoothing: antialiased; overflow: hidden; }
+button { font: inherit; color: inherit; cursor: pointer; }
+
+/* ===== preview-only chrome ===== */
+.app { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+.top { flex: none; padding: 8px 12px; background: var(--chrome); border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 6px; }
+.top h1 { margin: 0; font: 800 18px/1.1 var(--display); }
+.row { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.seg { display: inline-flex; padding: 3px; gap: 2px; background: var(--panel); border: 1px solid var(--line2); border-radius: 10px; }
+.seg button { border: 0; background: none; border-radius: 7px; padding: 5px 12px; font-weight: 700; color: var(--text2); }
+.seg button[aria-pressed="true"] { background: var(--raise); color: var(--text); box-shadow: inset 0 0 0 1px var(--line2); }
+.seg button.new[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); box-shadow: none; }
+.zoomnote { color: var(--text3); font-weight: 600; }
+main#stage { flex: 1; min-height: 0; padding: 6px; display: flex; }
+.pane { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; border-radius: 14px; overflow: hidden; border: 1px solid var(--line2); }
+.hintbar { position: absolute; z-index: 5; left: 50%; top: 8px; transform: translateX(-50%); padding: 3px 14px; border-radius: 999px; background: rgba(10, 13, 32, .82); border: 1px solid var(--board-dot); color: var(--text2); font-size: 11.5px; pointer-events: none; white-space: nowrap; max-width: calc(100% - 16px); overflow: hidden; text-overflow: ellipsis; }
+
+/* ===== board (copied patterns: graph.css / node-cards.css / wire-energy.css / puzzle.css) ===== */
+.wc { flex: 1; position: relative; overflow: hidden; min-width: 0; min-height: 0; outline: none; cursor: grab; touch-action: none; user-select: none; -webkit-user-select: none;
+  background-color: var(--board); background-image: radial-gradient(var(--board-dot) 1.4px, transparent 1.6px); background-size: 24px 24px;
+  color: var(--text); font-size: 13px; line-height: 1.45; }
+.wc.panning { cursor: grabbing; }
+.wc.fixed { cursor: default; }
+.wc-world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.wc-wires, .wc-over { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.wc-nodes { position: absolute; left: 0; top: 0; }
+.type-bool { --pc: var(--t-bool); } .type-number { --pc: var(--t-num); } .type-object { --pc: var(--t-obj); }
+
+.wc .wc-wire { fill: none; stroke: var(--pc); stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+.wc .wc-wire-glow { fill: none; stroke: var(--pc); stroke-width: 7; stroke-linecap: round; stroke-linejoin: round; opacity: 0; pointer-events: none; }
+.wc .wc-wire-flow { fill: none; stroke: color-mix(in srgb, var(--pc) 35%, #fff); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 2 14; opacity: .5; pointer-events: none; animation: wc-flow 2.4s steps(12) infinite; }
+@keyframes wc-flow { to { stroke-dashoffset: -16; } }
+.wc.lowzoom .wc-wire-flow { display: none; }
+.wc .wc-wire-temp { fill: none; stroke: var(--pc); stroke-width: 2.4; stroke-linecap: round; stroke-dasharray: 7 6; opacity: .9; }
+
+.wc .wc-node { --card: #222832; --cc: var(--text2); position: absolute; width: max-content; min-width: 168px; white-space: nowrap; user-select: none; cursor: default;
+  background: var(--card); color: var(--text); border: 2px solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 18px;
+  box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 14px 22px -12px rgba(0, 0, 0, .8); }
+.wc .wc-node.dragging { z-index: 4; opacity: .94; box-shadow: 0 6px 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 18px 30px -8px rgba(0, 0, 0, .9); }
+.wc .cat-input { --cc: var(--c-input); } .wc .cat-logic { --cc: var(--c-logic); } .wc .cat-math { --cc: var(--c-math); } .wc .cat-object { --cc: var(--c-object); }
+.wc .cat-action { --cc: var(--c-action); } .wc .cat-brain { --cc: var(--c-brain); } .wc .cat-output { --cc: var(--c-output); }
+.wc .wc-node-head { display: flex; align-items: center; gap: 8px; padding: 5px 10px; background: var(--cc); color: #10151b; border-radius: 15px 15px 0 0; cursor: grab; touch-action: none; }
+.wc.fixed .wc-node-head { cursor: default; }
+.wc .wc-tile { flex: none; width: 22px; height: 22px; border-radius: 50%; background: rgba(255, 255, 255, .35); color: #10151b; display: grid; place-items: center; }
+.wc .wc-tile svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; flex: 1 1 0; min-width: min-content; }
+.wc .wc-name { font-weight: 800; font-size: 13.5px; }
+.wc .wc-sub { font-size: 11px; font-weight: 600; color: rgba(16, 21, 27, .72); display: block; contain: inline-size; overflow: hidden; text-overflow: ellipsis; }
+.wc .wc-ports-body { display: flex; flex-direction: column; padding: 3px 0 5px; }
+.wc .wc-ports { display: flex; flex-direction: column; }
+.wc .wc-ports.outs { align-items: flex-end; }
+.wc .wc-port { position: relative; display: flex; align-items: center; gap: 7px; height: 26px; padding: 0 10px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.wc .wc-port.out { flex-direction: row-reverse; }
+.wc .wc-dot { flex: none; width: 15px; height: 15px; background: var(--pc); }
+.wc .wc-dot.type-bool { border-radius: 50%; }
+.wc .wc-dot.type-number { transform: rotate(45deg) scale(.86); border-radius: 2px; }
+.wc .wc-dot.type-object { border-radius: 3px; }
+.wc.fixed .wc-port { cursor: default; }
+.wc .wc-port.from .wc-dot, .wc .wc-port.snap .wc-dot { box-shadow: 0 0 0 4px rgba(255, 255, 255, .55); }
+.wc .wc-port.no { opacity: .4; }
+/* "?" and lock / x in the head (handbook/card-help.css + puzzle.css) */
+.wc .hb-card-help { position: relative; flex: none; width: 24px; height: 24px; border: 0; border-radius: 50%; padding: 0; background: rgba(16, 21, 27, .18); color: #10151b; font: 800 14px/1 var(--display); }
+.wc .hb-card-help::after, .wc .pz-x::after { content: ''; position: absolute; inset: -7px; }
+.wc .pz-x { position: relative; flex: none; border: 0; background: rgba(16, 21, 27, .18); color: #10151b; width: 24px; height: 24px; border-radius: 50%; font: 800 16px/1 var(--display); padding: 0 0 2px; }
+.wc .pz-lock { flex: none; width: 15px; height: 15px; fill: none; stroke: #10151b; stroke-width: 2; stroke-linejoin: round; opacity: .6; }
+
+/* ===== tray (puzzle.css, sizes in px) ===== */
+.pz-bottom { position: absolute; left: 10px; right: 10px; bottom: 8px; z-index: 5; display: flex; pointer-events: none; }
+.pz-tray { display: flex; flex-wrap: nowrap; gap: 10px; align-items: flex-end; min-width: 0; overflow-x: auto; padding: 4px 4px 7px; pointer-events: auto; scrollbar-width: none; }
+.pz-chip-wrap { position: relative; display: grid; flex: none; white-space: nowrap; }
+.pz-chip { --cc: var(--text2); border: 0; min-height: 40px; font: 800 13px/1.1 var(--display); color: #10151b; background: var(--cc); padding: 7px 28px 7px 11px; border-radius: 12px; box-shadow: 0 4px 0 rgba(0, 0, 0, .35); display: grid; text-align: left; }
+.pz-chip.cat-logic { --cc: var(--c-logic); } .pz-chip.cat-math { --cc: var(--c-math); } .pz-chip.cat-brain { --cc: var(--c-brain); } .pz-chip.cat-action { --cc: var(--c-action); } .pz-chip.cat-object { --cc: var(--c-object); }
+.pz-chip span { font: 600 10.5px var(--font); opacity: .8; }
+.pz-chip:disabled { opacity: .35; cursor: default; }
+.pz-chip:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0, 0, 0, .4); }
+.pz-chip-wrap > .hb-card-help { position: absolute; top: 5px; right: 5px; width: 18px; height: 18px; font: 800 11px/1 var(--display); border: 0; border-radius: 50%; padding: 0; background: rgba(16, 21, 27, .18); color: #10151b; }
+
+@media (max-height: 520px) {
+  .top { padding: 4px 8px; gap: 4px; } .top h1 { display: none; }
+  .seg button { padding: 3px 10px; } main#stage { padding: 3px; }
+  .hintbar { top: 5px; font-size: 10.5px; padding: 2px 10px; }   .pz-bottom { bottom: 3px; } .pz-tray { padding-bottom: 5px; } .pz-chip { min-height: 34px; padding-top: 4px; padding-bottom: 4px; }
+}
+@media (prefers-reduced-motion: reduce) { .wc .wc-wire-flow { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="row">
+      <h1>Bảng mạch tự do <span style="color:var(--text3);font-weight:600;font-size:13px">(xem trước)</span></h1>
+      <div class="seg" id="tabs" role="group" aria-label="Chọn màn"><button data-lv="5" aria-pressed="true">Màn 5</button><button data-lv="7" aria-pressed="false">Màn 7</button></div>
+      <div class="seg" id="age" role="group" aria-label="Cũ hoặc mới"><button data-a="old" aria-pressed="false">Cũ (bị ép)</button><button data-a="new" class="new" aria-pressed="true">Mới (tự do)</button></div>
+      <span class="zoomnote" id="zoomnote"></span>
+    </div>
+  </header>
+  <main id="stage">
+    <section class="pane">
+      <div class="wc" id="board"></div>
+      <div class="hintbar">Kéo nền để di chuyển · Lăn chuột / chụm 2 ngón để phóng to thu nhỏ · Nhấp đúp nền trống để xem hết</div>
+      <div class="pz-bottom"><div class="pz-tray" id="tray"></div></div>
+    </section>
+  </main>
+</div>
+
+<script>
+'use strict';
+const SVGNS = 'http://www.w3.org/2000/svg';
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const sv = (tag, attrs = {}, cls) => { const e = document.createElementNS(SVGNS, tag); if (cls) e.setAttribute('class', cls); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; };
+const P = (id, type, label) => ({ id, type, label });
+const SLOT_IN = [1, 2, 3, 4].map((n) => P('s' + n, 'object', 'Ô ' + n));
+const DEFS = {
+  character: { vi: 'Nhân vật', en: 'Character', cat: 'object',
+    in: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy')],
+    out: [P('self', 'object', 'Nhân vật'), P('onGround', 'bool', 'Đang đứng đất'), P('x', 'number', 'Vị trí X'), P('y', 'number', 'Vị trí Y'), P('z', 'number', 'Vị trí Z')] },
+  block: { vi: 'Vật thể', en: 'Object', cat: 'object', in: [], out: [P('self', 'object', 'Vật thể'), P('usedOn', 'bool', 'Bị dùng lên')] },
+  'nearest-item': { vi: 'Tìm vật gần nhất', en: 'Nearest Item', cat: 'logic',
+    in: [P('who', 'object', 'Ai'), P('pause', 'bool', 'Tạm nghỉ'), ...[1, 2, 3, 4].map((n) => P('i' + n, 'object', 'Bỏ qua đồ trên ô ' + n))],
+    out: [P('item', 'object', 'Vật gần nhất'), P('found', 'bool', 'Có'), P('distance', 'number', 'Khoảng cách')] },
+  'next-free-slot': { vi: 'Ô trống kế tiếp', en: 'Next Free Slot', cat: 'logic', in: SLOT_IN, out: [P('slot', 'object', 'Ô trống'), P('full', 'bool', 'Đầy')] },
+  'go-to': { vi: 'Đi tới', en: 'Move To', cat: 'brain',
+    in: [P('self', 'object', 'Bot'), P('target', 'object', 'Đích (vật)'), P('go', 'bool', 'Cho đi'), P('target2', 'object', 'Đích 2 (vật)'), P('useTarget2', 'bool', 'Dùng đích 2')],
+    out: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy'), P('arrived', 'bool', 'Đã tới'), P('arrivedPulse', 'bool', 'Vừa tới')] },
+  carry: { vi: 'Khiêng đồ', en: 'Carry', cat: 'action',
+    in: [P('character', 'object', 'Nhân vật'), P('grab', 'bool', 'Nhấc lên'), P('drop', 'bool', 'Thả'), P('throw', 'bool', 'Ném')],
+    out: [P('holding', 'bool', 'Đang khiêng'), P('heldItem', 'object', 'Món đang khiêng')] },
+  'route-follow': { vi: 'Chạy theo tuyến', en: 'Follow Path', cat: 'brain',
+    in: [P('self', 'object', 'Ai'), P('on', 'bool', 'Bật'), P('stop', 'bool', 'Dừng'), P('go', 'bool', 'Chạy')],
+    out: [P('moveX', 'number', 'Đi ngang'), P('moveY', 'number', 'Đi dọc'), P('jump', 'bool', 'Nhảy'), P('blocked', 'bool', 'Đang bị chặn'), P('reached', 'bool', 'Tới điểm'), P('index', 'number', 'Điểm hiện tại'), P('atPoint', 'bool', 'Đang ở điểm')] },
+  'color-sensor': { vi: 'Đọc màu', en: 'Color Check', cat: 'logic', in: [P('who', 'object', 'Vật')], out: [P('index', 'number', 'Số màu'), P('match', 'bool', 'Đúng màu')] },
+  and: { vi: 'Và', en: 'AND', cat: 'logic', in: [P('a', 'bool', 'A'), P('b', 'bool', 'B')], out: [P('out', 'bool', 'Kết quả')] },
+  math: { vi: 'Phép tính', en: 'Math', cat: 'math', in: [P('a', 'number', 'Số A'), P('b', 'number', 'Số B')], out: [P('out', 'number', 'Kết quả')] },
+};
+const GLYPH = {
+  input: 'M2 8h7M6.5 4.5L10 8l-3.5 3.5M13 3v10', logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10',
+  object: 'M8 2l5.5 3v6L8 14l-5.5-3V5z', action: 'M9.5 2L4 9h4l-1 5 5.5-7H8.5z', brain: 'M8 2.5a4 4 0 00-4 4c0 1.6 1 2.4 1 3.9v1.1h6v-1.1c0-1.5 1-2.3 1-3.9a4 4 0 00-4-4zM6.5 13.5h3', output: 'M4 2v12M4 3h8l-2 3 2 3H4',
+};
+const ROBOT = { name: 'Rô-bốt chân', chip: ['🤖', 'Rô-bốt'] };
+const slots = (inShown) => [0, 1, 2].map((i) => ({ id: 'slot-' + (i + 1), kind: 'block', name: 'Ô kho ' + (i + 1), x: 10, y: 128 + i * 80, show: { in: [], out: ['self'] }, chip: ['📦', 'Ô kho ' + (i + 1)] }));
+const W = (id, f, fp, t, tp) => ({ id, from: { node: f, port: fp }, to: { node: t, port: tp } });
+const LEVELS = {
+  5: {
+    title: 'Màn 5 - Đủ ba thùng',
+    nodes: [
+      { id: 'robot', kind: 'character', ...ROBOT, x: 10, y: 10, show: { in: ['moveX', 'moveY'], out: ['self'] } },
+      ...slots(),
+      { id: 's-find', kind: 'nearest-item', x: 260, y: 20 },
+      { id: 's-go', kind: 'go-to', x: 480, y: 120 },
+      { id: 's-next', kind: 'next-free-slot', x: 260, y: 300 },
+      { id: 's-hands', kind: 'carry', x: 480, y: 400 },
+    ],
+    wires: [
+      W('sw1', 'robot', 'self', 's-find', 'who'), W('sw2', 'slot-1', 'self', 's-find', 'i1'), W('sw3', 'slot-2', 'self', 's-find', 'i2'), W('sw4', 'slot-3', 'self', 's-find', 'i3'),
+      W('sw5', 's-find', 'item', 's-go', 'target'), W('sw6', 'robot', 'self', 's-go', 'self'),
+      W('sw7', 'slot-1', 'self', 's-next', 's1'), W('sw8', 'slot-2', 'self', 's-next', 's2'), W('sw9', 'slot-3', 'self', 's-next', 's3'),
+      W('sw10', 's-next', 'slot', 's-go', 'target2'), W('sw11', 'robot', 'self', 's-hands', 'character'),
+      W('sw12', 's-hands', 'holding', 's-go', 'useTarget2'), W('sw13', 's-go', 'arrived', 's-hands', 'grab'),
+      W('sw14', 's-go', 'moveX', 'robot', 'moveX'), W('sw15', 's-go', 'moveY', 'robot', 'moveY'),
+    ],
+  },
+  7: {
+    title: 'Màn 7 - Phân loại thùng màu',
+    nodes: [
+      { id: 'robot', kind: 'character', ...ROBOT, x: 10, y: 10, show: { in: ['moveX'], out: ['self'] } },
+      ...slots(),
+      { id: 's-route', kind: 'route-follow', x: 620, y: 20 },
+      { id: 's-sum', kind: 'math', x: 820, y: 20 },
+      { id: 's-eye', kind: 'color-sensor', x: 620, y: 260 },
+      { id: 's-and', kind: 'and', x: 820, y: 200 },
+      { id: 's-hands', kind: 'carry', x: 820, y: 330 },
+      { id: 's-next', kind: 'next-free-slot', x: 620, y: 400 },
+      { id: 's-goto', kind: 'go-to', x: 820, y: 450 },
+    ],
+    wires: [
+      W('sw1', 'robot', 'self', 's-route', 'self'), W('sw2', 's-route', 'moveX', 's-sum', 'a'), W('sw3', 's-sum', 'out', 'robot', 'moveX'),
+      W('sw4', 'robot', 'self', 's-eye', 'who'), W('sw5', 's-eye', 'match', 's-and', 'a'), W('sw6', 's-route', 'atPoint', 's-and', 'b'),
+      W('sw7', 'robot', 'self', 's-hands', 'character'), W('sw8', 's-and', 'out', 's-hands', 'grab'), W('sw9', 's-hands', 'holding', 's-route', 'stop'),
+      W('sw10', 'slot-1', 'self', 's-next', 's1'), W('sw11', 'slot-2', 'self', 's-next', 's2'), W('sw12', 'slot-3', 'self', 's-next', 's3'),
+      W('sw13', 'robot', 'self', 's-goto', 'self'), W('sw14', 's-next', 'slot', 's-goto', 'target'), W('sw15', 's-hands', 'holding', 's-goto', 'go'),
+      W('sw16', 's-goto', 'moveX', 's-sum', 'b'), W('sw17', 's-goto', 'arrived', 's-hands', 'drop'),
+    ],
+  },
+};
+
+/* =====================================================================================================
+   Free board: infinite canvas (new) vs. stretched + squeezed board (old, mimics board-view.ts layout())
+   ===================================================================================================== */
+const CENTER_WHEN_TOO_BIG = false;
+const MIN_K = 0.25, MAX_K = 1.6, FIT_MIN = 0.70, SLOP = 6, SPREAD = 1.5, DBL_MS = 380;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const wirePath = (x1, y1, x2, y2) => { const dx = Math.max(40, Math.abs(x2 - x1) / 2); return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`; };
+const LOCK_PATH = 'M5 11h14v10H5zM8 11V8a4 4 0 0 1 8 0v3';
+const isLocked = (id) => id === 'robot' || id.startsWith('slot-');
+/** What the tray offers on each level (one of each). */
+const TRAY = { 5: ['and', 'math'], 7: ['nearest-item', 'and'] };
+
+const overlaps = (a, b, gap) => a.x < b.x + b.w + gap && a.x + a.w + gap > b.x && a.y < b.y + b.h + gap && a.y + a.h + gap > b.y;
+/** Same idea as puzzle/ui/board-state.ts separateBoxes: clamp into the area, slide below what it hits, else first free spot. */
+function separateBoxes(items, area, gap = 8) {
+  const pos = new Map(), placed = []; let fits = true;
+  for (const it of [...items].sort((a, b) => a.y - b.y || a.x - b.x)) {
+    let x = Math.max(0, Math.min(it.x, area.w - it.w)), y = Math.max(0, Math.min(it.y, area.h - it.h));
+    for (let g = 0; g < 40; g++) { const hit = placed.find((p) => overlaps({ x, y, w: it.w, h: it.h }, p, gap)); if (!hit) break; y = hit.y + hit.h + gap; }
+    if (y + it.h > area.h || placed.some((p) => overlaps({ x, y, w: it.w, h: it.h }, p, gap))) {
+      let spot = null;
+      for (let yy = gap; !spot && yy + it.h <= area.h - gap; yy += 8) for (let xx = gap; xx + it.w <= area.w - gap; xx += 8) if (!placed.some((p) => overlaps({ x: xx, y: yy, w: it.w, h: it.h }, p, gap))) { spot = { x: xx, y: yy }; break; }
+      if (spot) ({ x, y } = spot); else fits = false;
+    }
+    pos.set(it.id, { x, y }); placed.push({ x, y, w: it.w, h: it.h });
+  }
+  return { pos, fits };
+}
+
+class Board {
+  constructor(host, levelKey, age, hooks) {
+    this.host = host; this.age = age; this.hooks = hooks; this.dead = false; this.touched = false; this.seq = 0;
+    this.view = { x: 0, y: 0, k: 1 }; this.tween = 0; this.lastTap = null; this.wd = null;
+    const lv = LEVELS[levelKey];
+    this.nodes = lv.nodes.map((n) => ({ ...n, lx: n.x, ly: n.y, x: 0, y: 0, s: 1, locked: isLocked(n.id) }));
+    this.byId = Object.fromEntries(this.nodes.map((n) => [n.id, n]));
+    this.wires = lv.wires.map((w) => ({ ...w }));
+    this.build();
+    this.reflow(true);
+    if (age === 'new') this.bindInput(); else host.classList.add('fixed');
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { if (!this.dead) this.reflow(false); });
+  }
+  /* ----- DOM ----- */
+  build() {
+    const host = this.host;
+    host.classList.add('wc'); host.tabIndex = 0;
+    this.world = el('div', 'wc-world');
+    this.wireSvg = sv('svg', {}, 'wc-wires'); this.nodeLayer = el('div', 'wc-nodes'); this.overSvg = sv('svg', {}, 'wc-over');
+    this.world.append(this.wireSvg, this.nodeLayer, this.overSvg); host.append(this.world);
+    for (const n of this.nodes) this.mountCard(n);
+    this.rebuildWires();
+  }
+  mountCard(n) { n.box = this.buildCard(n); this.nodeLayer.append(n.box); }
+  buildCard(n) {
+    const def = DEFS[n.kind], box = el('div', 'wc-node cat-' + def.cat); box.dataset.id = n.id;
+    const head = el('div', 'wc-node-head'), tile = el('span', 'wc-tile'), svg = sv('svg', { viewBox: '0 0 16 16', 'aria-hidden': 'true' });
+    svg.append(sv('path', { d: GLYPH[def.cat] })); tile.append(svg);
+    const title = el('span', 'wc-title'); title.append(el('b', 'wc-name', def.vi), el('small', 'wc-sub', n.name || def.en));
+    head.append(tile, title);
+    const help = el('button', 'hb-card-help', '?'); help.type = 'button'; help.title = 'Xem thẻ này làm gì (trong game thật sẽ mở hướng dẫn)'; head.append(help);
+    if (n.locked) {
+      const lock = sv('svg', { viewBox: '0 0 24 24', role: 'img', 'aria-label': 'Thẻ khoá' }, 'pz-lock'); lock.append(sv('path', { d: LOCK_PATH })); head.append(lock);
+    } else {
+      const x = el('button', 'pz-x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Cất ' + def.vi + ' về khay');
+      x.addEventListener('click', (e) => { e.stopPropagation(); this.removeCard(n.id); });
+      head.append(x);
+    }
+    box.append(head);
+    const ins = n.show ? def.in.filter((p) => n.show.in.includes(p.id)) : def.in, outs = n.show ? def.out.filter((p) => n.show.out.includes(p.id)) : def.out;
+    n.dots = {};
+    if (ins.length + outs.length) {
+      const body = el('div', 'wc-ports-body');
+      for (const [dir, list] of [['in', ins], ['out', outs]]) {
+        const col = el('div', 'wc-ports ' + dir + 's');
+        for (const p of list) {
+          const row = el('div', 'wc-port ' + dir), dot = el('span', 'wc-dot type-' + p.type);
+          row.dataset.node = n.id; row.dataset.dir = dir; row.dataset.port = p.id; row.dataset.type = p.type;
+          row.append(dot, el('span', 'wc-pl', p.label)); col.append(row);
+          n.dots[dir + '|' + p.id] = { row, dot };
+        }
+        body.append(col);
+      }
+      box.append(body);
+    }
+    return box;
+  }
+  portType(nid, dir, pid) { const d = DEFS[this.byId[nid].kind]; return d[dir].find((p) => p.id === pid).type; }
+  rebuildWires() {
+    this.wireSvg.replaceChildren(); this.wireEls = {};
+    for (const w of this.wires) {
+      w.type = this.portType(w.from.node, 'out', w.from.port);
+      const g = sv('g', {}, 'wire-g type-' + w.type), glow = sv('path', {}, 'wc-wire-glow'), path = sv('path', {}, 'wc-wire'), flow = sv('path', {}, 'wc-wire-flow');
+      g.append(glow, path, flow); this.wireSvg.append(g); this.wireEls[w.id] = [glow, path, flow];
+    }
+  }
+  /* ----- geometry ----- */
+  measure() {
+    for (const n of this.nodes) {
+      const m = { w: n.box.offsetWidth, h: n.box.offsetHeight, pins: {} };
+      for (const key in n.dots) { const { row, dot } = n.dots[key]; m.pins[key] = { x: n.box.clientLeft + row.offsetLeft + dot.offsetLeft + dot.offsetWidth / 2, y: n.box.clientTop + row.offsetTop + dot.offsetTop + dot.offsetHeight / 2 }; }
+      n.m = m;
+    }
+  }
+  pin(nid, dir, pid) { const n = this.byId[nid], p = n.m.pins[dir + '|' + pid]; return { x: n.x + p.x * n.s, y: n.y + p.y * n.s }; }
+  rect(n) { return { x: n.x, y: n.y, w: n.m.w * n.s, h: n.m.h * n.s }; }
+  bounds() {
+    const rs = this.nodes.map((n) => this.rect(n)), x0 = Math.min(...rs.map((r) => r.x)), y0 = Math.min(...rs.map((r) => r.y));
+    return { x: x0, y: y0, w: Math.max(...rs.map((r) => r.x + r.w)) - x0, h: Math.max(...rs.map((r) => r.y + r.h)) - y0 };
+  }
+  bottomReserve() { const b = document.querySelector('.pz-bottom'); return (b ? b.offsetHeight : 0) + 10; }
+  topReserve() { const h = document.querySelector('.hintbar'); return (h ? h.offsetHeight : 0) + 18; }
+  /** Place cards. New board: the level's positions x1.5, nothing squeezed. Old board: stretch to the screen, shrink, push apart. */
+  reflow(first) {
+    this.measure();
+    if (this.age === 'old') this.layoutOld();
+    else if (first || !this.touched) {
+      const placed = [];
+      for (const n of [...this.nodes].sort((a, b) => a.ly - b.ly || a.lx - b.lx)) {
+        const box = { x: n.lx * SPREAD, y: n.ly * SPREAD, w: n.m.w, h: n.m.h };
+        for (let hit = placed.find((p) => overlaps(box, p, 12)); hit; hit = placed.find((p) => overlaps(box, p, 12))) box.y = hit.y + hit.h + 16;
+        n.x = box.x; n.y = box.y; n.s = 1; placed.push(box);
+      }
+      this.render(); this.fit(false); return;
+    }
+    this.render();
+  }
+  layoutOld() {
+    const r = this.host.getBoundingClientRect(), top = this.topReserve(), area = { w: r.width, h: Math.max(80, r.height - top - this.bottomReserve()) };
+    const c0 = Math.max(0.46, Math.min(1, area.w / 700));
+    let res = null, scale = c0;
+    for (const c of [c0, c0 * 0.93, c0 * 0.86, c0 * 0.8, c0 * 0.72, c0 * 0.65, c0 * 0.58, c0 * 0.52, c0 * 0.46]) {
+      scale = c;
+      res = separateBoxes(this.nodes.map((n) => ({ id: n.id, x: n.lx * area.w / 1000, y: n.ly * area.h / 560, w: n.m.w * c, h: n.m.h * c })), area, 8);
+      if (res.fits) break;
+    }
+    for (const n of this.nodes) { const p = res.pos.get(n.id); n.x = p.x; n.y = p.y + top; n.s = scale; }
+    this.setView({ x: 0, y: 0, k: 1 });
+  }
+  /* ----- drawing ----- */
+  render() {
+    for (const n of this.nodes) {
+      n.box.style.left = n.x + 'px'; n.box.style.top = n.y + 'px';
+      n.box.style.transformOrigin = '0 0'; n.box.style.transform = n.s === 1 ? '' : `scale(${n.s})`;
+    }
+    this.drawWires();
+  }
+  drawWires() {
+    for (const w of this.wires) {
+      const a = this.pin(w.from.node, 'out', w.from.port), b = this.pin(w.to.node, 'in', w.to.port), d = wirePath(a.x, a.y, b.x, b.y);
+      for (const p of this.wireEls[w.id]) p.setAttribute('d', d);
+    }
+  }
+  /* ----- cards from the tray / back to the tray ----- */
+  dropCard(kind) {
+    const n = { id: 'n' + (++this.seq), kind, lx: 500, ly: 280, x: 0, y: 0, s: 1, locked: false };
+    this.nodes.push(n); this.byId[n.id] = n; this.mountCard(n); this.measure(); this.touched = true;
+    if (this.age === 'new') {
+      const r = this.host.getBoundingClientRect(), v = this.view, cx = (r.width / 2 - v.x) / v.k, cy = ((r.height - this.bottomReserve() + this.topReserve()) / 2 - v.y) / v.k;
+      const box = { x: cx - n.m.w / 2, y: cy - n.m.h / 2, w: n.m.w, h: n.m.h }, free = (b) => !this.nodes.some((o) => o !== n && overlaps(b, this.rect(o), 10));
+      if (!free(box)) {
+        // nearest free spot to the centre of the view, searching outwards
+        const step = 30, c0 = { x: box.x, y: box.y }; let best = null; // prefers a spot that is fully on screen
+        for (let i = -24; i <= 24; i++) for (let j = -24; j <= 24; j++) {
+          const q = { ...box, x: c0.x + i * step, y: c0.y + j * step }, d = i * i + j * j;
+          if (free(q)) { const vis = this.inView(q); if (!best || vis > best.vis || (vis === best.vis && d < best.d)) best = { d, vis, x: q.x, y: q.y }; }
+        }
+        if (best) { box.x = best.x; box.y = best.y; }
+      }
+      n.x = Math.round(box.x); n.y = Math.round(box.y);
+      this.render();
+    } else this.reflow(false);
+    return n;
+  }
+  /** 1 when the box (world px) sits fully inside the visible board between the hint line and the tray. */
+  inView(b) {
+    const r = this.host.getBoundingClientRect(), v = this.view, top = this.topReserve(), bot = this.bottomReserve();
+    return b.x * v.k + v.x >= 4 && (b.x + b.w) * v.k + v.x <= r.width - 4 && b.y * v.k + v.y >= top && (b.y + b.h) * v.k + v.y <= r.height - bot ? 1 : 0;
+  }
+  removeCard(id) {
+    const n = this.byId[id]; if (!n || n.locked) return;
+    this.wires = this.wires.filter((w) => w.from.node !== id && w.to.node !== id);
+    this.nodes = this.nodes.filter((x) => x !== n); delete this.byId[id]; n.box.remove();
+    this.rebuildWires(); this.hooks.onReturn(n.kind);
+    if (this.age === 'old') this.reflow(false); else this.render();
+  }
+  /* ----- view ----- */
+  setView(v) {
+    this.view = v; this.world.style.transform = `translate(${v.x}px, ${v.y}px) scale(${v.k})`;
+    const s = 24 * v.k < 12 ? 48 * v.k : 24 * v.k;
+    this.host.style.backgroundSize = `${s}px ${s}px`; this.host.style.backgroundPosition = `${v.x}px ${v.y}px`;
+    this.host.classList.toggle('lowzoom', v.k < .6); this.hooks.onView(v);
+  }
+  animateView(to, ms = 380) {
+    cancelAnimationFrame(this.tween);
+    const from = { ...this.view }, t0 = performance.now(), reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const step = (now) => {
+      const k = reduce ? 1 : Math.min(1, (now - t0) / ms), e = 1 - Math.pow(1 - k, 3);
+      this.setView({ x: from.x + (to.x - from.x) * e, y: from.y + (to.y - from.y) * e, k: from.k + (to.k - from.k) * e });
+      if (k < 1 && !this.dead) this.tween = requestAnimationFrame(step);
+    };
+    this.tween = requestAnimationFrame(step);
+  }
+  /** Fit every card in view, but never zoom below FIT_MIN (then centre on the cards; the rest is reachable by panning). */
+  fitTarget() {
+    const r = this.host.getBoundingClientRect(), b = this.bounds(), pad = 28, top = this.topReserve(), bot = this.bottomReserve();
+    const availH = r.height - top - bot;
+    const kFit = Math.min((r.width - pad * 2) / b.w, (availH - pad) / b.h);
+    const k = clamp(kFit, FIT_MIN, 1);
+    // Too big even at the minimum zoom: keep the first cards (top / left, where the signal starts) fully in view and leave the
+    // rest to panning, instead of cutting cards at both ends. Set CENTER_WHEN_TOO_BIG to true to centre on the cards instead.
+    const x = b.w * k > r.width - pad * 2 && !CENTER_WHEN_TOO_BIG ? pad - b.x * k : r.width / 2 - (b.x + b.w / 2) * k;
+    const y = b.h * k > availH - pad && !CENTER_WHEN_TOO_BIG ? top + 6 - b.y * k : top + availH / 2 - (b.y + b.h / 2) * k;
+    return { k, x, y };
+  }
+  fit(animate) { const t = this.fitTarget(); if (animate) this.animateView(t); else this.setView(t); }
+  zoomAt(factor, mx, my) {
+    cancelAnimationFrame(this.tween);
+    const v = this.view, k = clamp(v.k * factor, MIN_K, MAX_K), wx = (mx - v.x) / v.k, wy = (my - v.y) / v.k;
+    this.setView({ k, x: mx - wx * k, y: my - wy * k });
+  }
+  toWorld(e) { const r = this.host.getBoundingClientRect(); return { x: (e.clientX - r.left - this.view.x) / this.view.k, y: (e.clientY - r.top - this.view.y) / this.view.k }; }
+  /* ----- wire drag ----- */
+  wireBegin(row, e) {
+    const n = this.byId[row.dataset.node], dir = row.dataset.dir, pid = row.dataset.port, type = row.dataset.type;
+    const cands = [];
+    for (const m of this.nodes) for (const key in m.dots) {
+      const { row: r } = m.dots[key], ok = m !== n && r.dataset.dir !== dir && r.dataset.type === type;
+      r.classList.add(r === row ? 'from' : ok ? 'ok' : 'no');
+      if (ok) cands.push({ node: m, dir: r.dataset.dir, pid: r.dataset.port, row: r });
+    }
+    const g = sv('g', {}, 'type-' + type), path = sv('path', {}, 'wc-wire-temp'); g.append(path); this.overSvg.append(g);
+    this.wd = { n, dir, pid, row, cands, path, g, target: null };
+    this.wireMove(e);
+  }
+  wireMove(e) {
+    const wd = this.wd; if (!wd) return;
+    const r = this.host.getBoundingClientRect(), v = this.view, p = this.toWorld(e);
+    let best = null, bd = 30;
+    for (const c of wd.cands) {
+      const q = this.pin(c.node.id, c.dir, c.pid), d = Math.hypot(r.left + v.x + q.x * v.k - e.clientX, r.top + v.y + q.y * v.k - e.clientY);
+      if (d < bd) { bd = d; best = c; }
+    }
+    if (wd.target && wd.target !== best) wd.target.row.classList.remove('snap');
+    wd.target = best; if (best) best.row.classList.add('snap');
+    const s = this.pin(wd.n.id, wd.dir, wd.pid), t = best ? this.pin(best.node.id, best.dir, best.pid) : p;
+    wd.path.setAttribute('d', wd.dir === 'out' ? wirePath(s.x, s.y, t.x, t.y) : wirePath(t.x, t.y, s.x, s.y));
+  }
+  wireEnd(commit) {
+    const wd = this.wd; if (!wd) return; this.wd = null;
+    for (const m of this.nodes) for (const key in m.dots) m.dots[key].row.classList.remove('from', 'ok', 'no', 'snap');
+    wd.g.remove();
+    if (!commit || !wd.target) return;
+    const a = { node: wd.n.id, port: wd.pid }, b = { node: wd.target.node.id, port: wd.target.pid };
+    const [from, to] = wd.dir === 'out' ? [a, b] : [b, a];
+    this.wires = this.wires.filter((w) => !(w.to.node === to.node && w.to.port === to.port));
+    this.wires.push({ id: 'u' + (++this.seq), from, to });
+    this.touched = true; this.rebuildWires(); this.drawWires();
+  }
+  /* ----- input: pointer events only, so mouse, pen and touch behave the same ----- */
+  bindInput() {
+    const host = this.host, ptrs = new Map();
+    let mode = null, st = null;
+    const idle = () => { host.classList.remove('panning'); this.nodes.forEach((n) => n.box.classList.remove('dragging')); };
+    const cancel = () => { this.wireEnd(false); idle(); mode = null; st = null; };
+    host.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const r = host.getBoundingClientRect(), dy = clamp(e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY, -150, 150);
+      this.zoomAt(Math.exp(-dy * (e.ctrlKey ? 0.01 : 0.0018)), e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+    host.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse' && e.button !== 0) return;
+      if (e.target.closest('button')) return;
+      cancelAnimationFrame(this.tween);
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      try { host.setPointerCapture(e.pointerId); } catch (_) { /* synthetic pointer: nothing to capture */ }
+      if (ptrs.size === 2) {
+        cancel();
+        const [p, q] = [...ptrs.values()];
+        mode = 'pinch'; st = { d: Math.max(1, Math.hypot(p.x - q.x, p.y - q.y)), v: { ...this.view }, mx: (p.x + q.x) / 2, my: (p.y + q.y) / 2 }; return;
+      }
+      if (ptrs.size > 2) return;
+      const t = e.target, row = t.closest('.wc-port'), head = t.closest('.wc-node-head'), card = t.closest('.wc-node');
+      this.lastDown = { t: performance.now(), x: e.clientX, y: e.clientY };
+      if (row) { mode = 'wire'; st = { sx: e.clientX, sy: e.clientY }; this.wireBegin(row, e); }
+      else if (head && card) {
+        const n = this.byId[card.dataset.id], w = this.toWorld(e);
+        mode = 'card'; st = { n, dx: w.x - n.x, dy: w.y - n.y, sx: e.clientX, sy: e.clientY, moved: false };
+      } else { mode = 'pan'; st = { sx: e.clientX, sy: e.clientY, v: { ...this.view }, moved: false, onCard: !!card }; }
+    });
+    host.addEventListener('pointermove', (e) => {
+      if (!ptrs.has(e.pointerId)) return;
+      ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (mode === 'pinch' && ptrs.size >= 2) {
+        const [p, q] = [...ptrs.values()], d = Math.hypot(p.x - q.x, p.y - q.y), r = host.getBoundingClientRect();
+        const k = clamp(st.v.k * d / st.d, MIN_K, MAX_K), cx = (p.x + q.x) / 2 - r.left, cy = (p.y + q.y) / 2 - r.top;
+        const wx = (st.mx - r.left - st.v.x) / st.v.k, wy = (st.my - r.top - st.v.y) / st.v.k;
+        this.setView({ k, x: cx - wx * k, y: cy - wy * k }); return;
+      }
+      if (ptrs.size > 1) return;
+      if (mode === 'wire') { this.wireMove(e); return; }
+      if (!st) return;
+      if (!st.moved && Math.hypot(e.clientX - st.sx, e.clientY - st.sy) > SLOP) {
+        st.moved = true;
+        if (mode === 'pan') host.classList.add('panning'); else if (mode === 'card') { st.n.box.classList.add('dragging'); this.touched = true; }
+      }
+      if (!st.moved) return;
+      if (mode === 'pan') this.setView({ ...this.view, x: st.v.x + e.clientX - st.sx, y: st.v.y + e.clientY - st.sy });
+      else if (mode === 'card') { const w = this.toWorld(e); st.n.x = Math.round(w.x - st.dx); st.n.y = Math.round(w.y - st.dy); this.render(); }
+    });
+    const up = (e) => {
+      if (!ptrs.delete(e.pointerId)) return;
+      if (mode === 'pinch') { if (ptrs.size < 2) { mode = 'ignore'; } if (!ptrs.size) mode = null; return; }
+      if (mode === 'ignore') { if (!ptrs.size) mode = null; return; }
+      const m = mode, s = st; mode = null; st = null;
+      if (m === 'wire') { this.wireEnd(e.type === 'pointerup'); return; }
+      idle();
+      // a quick second tap on empty board = fit everything again
+      if (m === 'pan' && s && !s.moved && !s.onCard && e.type === 'pointerup') {
+        const now = performance.now(), prev = this.lastTap;
+        if (prev && now - prev.t < DBL_MS && Math.hypot(prev.x - e.clientX, prev.y - e.clientY) < 30) { this.lastTap = null; this.fit(true); }
+        else this.lastTap = { t: now, x: e.clientX, y: e.clientY };
+      }
+    };
+    host.addEventListener('pointerup', up); host.addEventListener('pointercancel', up);
+    host.addEventListener('lostpointercapture', (e) => { if (ptrs.has(e.pointerId) && e.pointerType !== 'mouse') up({ pointerId: e.pointerId, type: 'pointercancel' }); });
+  }
+}
+
+/* =====================================================================================================
+   Page
+   ===================================================================================================== */
+const $ = (s) => document.querySelector(s);
+const S = { lv: '5', age: 'new', left: {} };
+let board = null;
+
+function renderTray() {
+  const tray = $('#tray'); tray.replaceChildren();
+  for (const kind of TRAY[S.lv]) {
+    const def = DEFS[kind], n = S.left[kind] || 0, wrap = el('div', 'pz-chip-wrap'), chip = el('button', 'pz-chip cat-' + def.cat);
+    chip.type = 'button'; chip.disabled = n <= 0; chip.dataset.kind = kind;
+    chip.append(el('b', '', def.vi), el('span', '', n > 0 ? 'còn ' + n : 'đã dùng'));
+    chip.addEventListener('click', () => { if (!board || (S.left[kind] || 0) <= 0) return; S.left[kind]--; board.dropCard(kind); renderTray(); });
+    const help = el('button', 'hb-card-help', '?'); help.type = 'button'; help.title = 'Xem thẻ này làm gì (trong game thật sẽ mở hướng dẫn)';
+    wrap.append(chip, help); tray.append(wrap);
+  }
+}
+function syncControls() {
+  $('#tabs').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.lv === S.lv)));
+  $('#age').querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.a === S.age)));
+}
+function mount() {
+  if (board) { board.dead = true; cancelAnimationFrame(board.tween); }
+  const oldHost = $('#board'), host = oldHost.cloneNode(false); host.className = ''; host.removeAttribute('style'); oldHost.replaceWith(host);
+  S.left = Object.fromEntries(TRAY[S.lv].map((k) => [k, 1]));
+  renderTray(); syncControls();
+  board = new Board(host, S.lv, S.age, {
+    onView: (v) => { $('#zoomnote').textContent = S.age === 'new' ? 'Phóng: ' + Math.round(v.k * 100) + '%' : 'Bảng CŨ (bị ép): không kéo, không phóng được'; },
+    onReturn: (kind) => { S.left[kind] = (S.left[kind] || 0) + 1; renderTray(); },
+  });
+  requestAnimationFrame(() => { if (!board.dead) board.reflow(true); });
+}
+$('#tabs').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.lv = b.dataset.lv; mount(); });
+$('#age').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; S.age = b.dataset.a; mount(); });
+window.addEventListener('resize', () => { if (board && board.age === 'old') board.reflow(false); });
+mount();
+
+/* hooks used by shot-free-board.mjs */
+window.FB = { S, get board() { return board; }, setLevel(l) { S.lv = l; mount(); }, setAge(a) { S.age = a; mount(); } };
+</script>
+</body>
+</html>

@@ -1,0 +1,374 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Duyệt tên mới cho các mảnh ghép - Xưởng Nối</title>
+<style>
+:root {
+  --bg: #121418; --chrome: #17191e; --panel: #1c1f25; --panel2: #23272e; --raise: #2b3038; --line: #2c3139; --line2: #3a404a;
+  --text: #e7e9ec; --text2: #aab2bd; --text3: #8f98a4; --accent: #3ecf8e; --accent-soft: rgba(62, 207, 142, .14);
+  --warn: #f2b33d; --danger: #ff7b7b;
+  --t-bool: #f7d046; --t-num: #5aa9ff; --t-obj: #f27ad0;
+  --c-input: #4cc9d9; --c-logic: #a894ff; --c-math: #a9d861; --c-object: #f0965a; --c-action: #ff7f7f; --c-brain: #d3b48a; --c-output: #b9c4d0;
+  --font: 'Be Vietnam Pro', system-ui, 'Segoe UI', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.5 var(--font); }
+main { max-width: 1180px; margin: 0 auto; padding: 24px 20px 80px; }
+h1 { font-size: 24px; margin: 0 0 4px; }
+h2 { font-size: 18px; margin: 36px 0 10px; }
+.sub { color: var(--text2); margin: 0 0 18px; }
+.rules { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px 14px 36px; margin: 0; }
+.rules li { margin: 6px 0; }
+.rules b { color: var(--accent); }
+code, .mono { font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; background: var(--raise); padding: 1px 6px; border-radius: 5px; }
+
+.stats { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0 12px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 14px; min-width: 150px; }
+.stat b { display: block; font-size: 20px; color: var(--accent); }
+.stat span { font-size: 12.5px; color: var(--text2); }
+.stat.flag b { color: var(--warn); }
+
+.bar { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; align-items: center; gap: 10px 14px; padding: 10px 0; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar input[type=search] { flex: 1 1 260px; min-width: 200px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line2); background: var(--panel); color: var(--text); font: inherit; }
+.bar label { color: var(--text2); font-size: 13px; display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+button { font: 700 13px var(--font); padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); cursor: pointer; }
+button:hover { background: rgba(62, 207, 142, .26); }
+#copied { color: var(--accent); font-size: 13px; }
+#paste { display: none; width: 100%; min-height: 120px; margin-top: 8px; padding: 10px; background: var(--panel); color: var(--text); border: 1px solid var(--line2); border-radius: 8px; font: 12.5px/1.5 ui-monospace, Consolas, monospace; }
+
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th { position: sticky; top: 52px; z-index: 4; background: var(--chrome); text-align: left; font-size: 12.5px; color: var(--text2); padding: 8px 10px; border-bottom: 1px solid var(--line2); }
+td { padding: 6px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.cat td { background: var(--chrome); font-weight: 800; font-size: 15px; padding: 12px 10px; border-top: 3px solid var(--cc); color: var(--cc); }
+tr.node td { background: var(--panel); font-weight: 700; padding-top: 10px; }
+tr.node td.n-old, tr.node td.n-vi, tr.node td.n-en { font-size: 14.5px; }
+tr.port td { font-size: 13px; }
+tr.port td.p-old { padding-left: 30px; color: var(--text2); }
+tr.port .dir { display: inline-block; width: 34px; font-size: 10.5px; font-weight: 700; color: var(--text3); letter-spacing: .04em; }
+tr.port .dir.pulse { color: var(--warn); width: auto; margin-left: 6px; }
+tr.hide { display: none; }
+.chg { background: rgba(62, 207, 142, .16); color: #b9f5d8; font-weight: 700; border-radius: 4px; }
+.keep { color: var(--text3); font-style: italic; }
+.old-strike { text-decoration: line-through; text-decoration-color: rgba(255, 123, 123, .7); }
+.note { color: var(--text2); font-size: 12.5px; }
+.col-chk { width: 86px; white-space: nowrap; font-size: 12.5px; color: var(--text2); }
+tr.flagged td { background: rgba(242, 179, 61, .10) !important; }
+.alt { display: none; width: 100%; margin-top: 4px; padding: 4px 8px; background: var(--bg); color: var(--text); border: 1px solid var(--warn); border-radius: 6px; font: 12.5px var(--font); }
+tr.flagged .alt { display: block; }
+.empty { padding: 20px; color: var(--text2); text-align: center; display: none; }
+
+/* ---------- Card preview: styles below are the real card CSS ---------- */
+.cards-intro { color: var(--text2); }
+.cmp { display: grid; grid-template-columns: 110px repeat(3, minmax(0, 1fr)); gap: 14px 16px; align-items: start; margin-top: 12px; }
+.cmp .hd { font-weight: 700; font-size: 13px; color: var(--text2); padding-bottom: 4px; border-bottom: 1px solid var(--line2); }
+.cmp .rowhd { font-weight: 800; color: var(--text); padding-top: 8px; }
+.cmp .cell { background: #15171b; background-image: radial-gradient(circle, #2a2f37 1px, transparent 1.3px); background-size: 16px 16px; border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 20px; overflow: hidden; }
+.cap { margin-top: 12px; font-size: 12.5px; color: var(--text2); line-height: 1.5; }
+.cap b { color: var(--text); font-size: 14px; }
+.cap .grow { color: var(--warn); font-weight: 700; }
+.cap .cut { color: var(--danger); font-weight: 700; }
+.cap .ok { color: var(--accent); font-weight: 700; }
+
+/* graph.css bits the cards need */
+.wc.demo { --g-bg: #15171b; position: static; flex: none; overflow: visible; background: none; cursor: default; color: var(--text); font-size: 13px; line-height: 1.45; display: block; }
+.wc .type-bool { --pc: var(--t-bool); }
+.wc .type-number { --pc: var(--t-num); }
+.wc .type-object { --pc: var(--t-obj); }
+.wc .cat-input { --cc: var(--c-input); }
+.wc .cat-logic { --cc: var(--c-logic); }
+.wc .cat-math { --cc: var(--c-math); }
+.wc .cat-object { --cc: var(--c-object); }
+.wc .cat-action { --cc: var(--c-action); }
+.wc .cat-brain { --cc: var(--c-brain); }
+.wc .cat-output { --cc: var(--c-output); }
+.wc .wc-dot.type-bool { border-radius: 50%; }
+.wc .wc-dot.type-number { transform: rotate(45deg) scale(.86); border-radius: 2px; }
+.wc .wc-dot.type-object { border-radius: 2px; }
+/* demo only: cards flow in the page instead of sitting at absolute board coordinates */
+.wc.demo .wc-node { position: relative; left: auto; top: auto; }
+.wc.demo button.hb-card-help { border: 0; padding: 0; position: absolute; top: 50%; right: 8px; transform: translateY(-50%); width: 22px; height: 22px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; background: rgba(16, 21, 27, .18); color: #10151b; font: 800 13px/1 system-ui, sans-serif; }
+
+/*__CARDCSS__*/
+</style>
+</head>
+<body>
+<main>
+  <h1>Duyệt tên mới cho các mảnh ghép</h1>
+  <p class="sub">Xưởng Nối / Xưởng Bot. Đây chỉ là bản <b>xem trước</b>, chưa đổi gì trong game. Bạn tick các dòng "chưa ổn", bấm sao chép rồi dán lại cho mình.</p>
+
+  <ol class="rules">
+    <li><b>Một khái niệm = một từ ở mọi nơi.</b> Vật, nhân vật, xe đều gọi chung là <b>Đối tượng</b>; hai vật so sánh là <b>Đối tượng A / B</b>; nơi cần tới là <b>Điểm đến</b>.</li>
+    <li><b>Tiếng Anh theo chuẩn game</b> (Unity / Unreal / Godot): Collision, Enter / Stay / Exit, Raycast, Latch, Map Range, Timer, Counter, Increment / Decrement / Reset, Self / Target.</li>
+    <li><b>Trạng thái đang diễn ra</b> bắt đầu bằng <b>"Đang …"</b> (Đang chạm, Đang bị chặn). <b>Sự kiện chỉ sáng 1 nhịp</b> bắt đầu bằng <b>"Khi …" / "Bắt đầu … / Kết thúc …"</b> (tiếng Anh: <code>On …</code>). Bỏ chữ "Vừa", "(1 nhịp)", "(vật)".</li>
+    <li><b>Lệnh vào là động từ ngắn:</b> Ẩn, Hiện, Bắt đầu, Đặt lại, Tăng 1, Giảm 1, Bật. Mọi công tắc cho phép chạy đều là <b>Bật</b> (Enable).</li>
+    <li><b>Ngắn gọn, nhưng tên nào đã rõ và chuẩn thì giữ nguyên</b> (đánh dấu <i class="keep">giữ</i>). Tên tiếng Việt cố gắng không quá ~18 chữ để thẻ hẹp / điện thoại không bị cắt.</li>
+  </ol>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="bar">
+    <input type="search" id="q" placeholder="Tìm tên cũ hoặc mới, tiếng Việt hoặc English… (vd: chạm, Enter, Đặt lại)" aria-label="Tìm">
+    <label><input type="checkbox" id="onlyChanged"> Chỉ hiện dòng đã đổi</label>
+    <label><input type="checkbox" id="onlyFlag"> Chỉ hiện dòng "chưa ổn"</label>
+    <button id="copy" type="button">Sao chép các dòng chưa ổn</button>
+    <span id="copied" role="status"></span>
+  </div>
+  <textarea id="paste" readonly aria-label="Nội dung đã sao chép"></textarea>
+
+  <table id="tbl">
+    <thead><tr><th class="col-chk">Chưa ổn</th><th>Cũ</th><th>Mới (Việt)</th><th>Mới (Anh)</th><th>Ghi chú</th></tr></thead>
+    <tbody id="body"></tbody>
+  </table>
+  <div class="empty" id="empty">Không có dòng nào khớp.</div>
+
+  <h2 id="cards">Xem trên thẻ thật</h2>
+  <p class="cards-intro">4 thẻ dùng đúng CSS và cấu trúc của thẻ trong game. Cột 1 là thẻ <b>hiện tại</b> (tên cũ). Cột 2: <b>① Tên (English)</b> trên 1 dòng. Cột 3: <b>② English nhỏ, xám, dòng thứ hai</b> (cách thẻ hiện tại đang làm). Con số là bề rộng thẻ đo thật trong trình duyệt (px).</p>
+  <div class="cmp" id="cmp"></div>
+</main>
+
+<script>
+const DATA = /*__DATA__*/[];
+const CAT = [
+  ['input', 'Đầu vào', 'var(--c-input)'], ['logic', 'Logic', 'var(--c-logic)'], ['math', 'Tính toán', 'var(--c-math)'],
+  ['object', 'Vật thể', 'var(--c-object)'], ['action', 'Hành động', 'var(--c-action)'], ['brain', 'Bộ não', 'var(--c-brain)'], ['output', 'Kết quả', 'var(--c-output)'],
+];
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const KEY = 'naming-review-flags-v1';
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || '{}'); } catch (e) { saved = {}; }
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) { /* private mode: flags just stay in memory */ } };
+
+const nodeChanged = (n) => n.nodeNew.vi !== n.nodeOld.vi || n.nodeNew.en !== n.nodeOld.en;
+const portChanged = (p) => p.new[0] !== p.old[0] || p.new[1] !== p.old[1];
+const viCell = (a, b) => (a === b ? `<span class="keep">giữ</span> ${esc(b)}` : `<span class="chg">&nbsp;${esc(b)}&nbsp;</span>`);
+
+let rows = []; // {tr, text, changed, key, label, old, nw, note}
+const body = $('#body');
+for (const [cat, catLabel, color] of CAT) {
+  const nodes = DATA.filter((n) => n.category === cat);
+  if (!nodes.length) continue;
+  const ctr = document.createElement('tr');
+  ctr.className = 'cat'; ctr.style.setProperty('--cc', color);
+  ctr.innerHTML = `<td colspan="5">${esc(catLabel)} <span style="font-weight:400;color:var(--text3);font-size:12.5px">(${nodes.length} mảnh)</span></td>`;
+  body.append(ctr);
+  rows.push({ tr: ctr, cat: true, group: cat });
+  for (const n of nodes) {
+    const nc = nodeChanged(n);
+    addRow({
+      cls: 'node', key: n.kind, group: cat, changed: nc,
+      oldHtml: `${esc(n.nodeOld.vi)} <span class="mono">${esc(n.nodeOld.en)}</span>`,
+      viHtml: viCell(n.nodeOld.vi, n.nodeNew.vi), enHtml: viCell(n.nodeOld.en, n.nodeNew.en),
+      note: n.nodeNote, label: `Mảnh "${n.nodeOld.vi}" (${n.kind})`,
+      oldText: `${n.nodeOld.vi} · ${n.nodeOld.en}`, newText: `${n.nodeNew.vi} · ${n.nodeNew.en}`,
+      search: [n.kind, n.nodeOld.vi, n.nodeOld.en, n.nodeNew.vi, n.nodeNew.en].join(' '),
+    });
+    for (const p of n.ports) {
+      const pc = portChanged(p);
+      addRow({
+        cls: 'port', key: `${n.kind}.${p.dir}.${p.id}`, group: cat, changed: pc, nodeKind: n.kind,
+        oldHtml: `<span class="dir">${p.dir === 'in' ? 'VÀO' : 'RA'}</span>${esc(p.old[0])} <span class="mono">${esc(p.old[1])}</span>`,
+        viHtml: viCell(p.old[0], p.new[0]) + (p.signal === 'pulse' ? '<span class="dir pulse">1 nhịp</span>' : ''),
+        enHtml: viCell(p.old[1], p.new[1]),
+        note: p.note, label: `Cổng ${p.dir === 'in' ? 'vào' : 'ra'} "${p.old[0]}" của mảnh "${n.nodeOld.vi}" (${n.kind}.${p.id})`,
+        oldText: `${p.old[0]} · ${p.old[1]}`, newText: `${p.new[0]} · ${p.new[1]}`,
+        search: [p.id, p.old[0], p.old[1], p.new[0], p.new[1], n.nodeOld.vi, n.nodeNew.vi, n.kind, p.note].join(' '),
+      });
+    }
+  }
+}
+function addRow(r) {
+  const tr = document.createElement('tr');
+  tr.className = r.cls;
+  const same = r.note === 'giữ';
+  tr.innerHTML = `<td class="col-chk"><label><input type="checkbox" data-k="${esc(r.key)}"> chưa ổn</label></td>` +
+    `<td class="${r.cls === 'node' ? 'n-old' : 'p-old'}">${r.oldHtml}</td>` +
+    `<td class="${r.cls === 'node' ? 'n-vi' : ''}">${r.viHtml}</td><td class="${r.cls === 'node' ? 'n-en' : ''}">${r.enHtml}</td>` +
+    `<td class="note">${same ? '' : esc(r.note)}<input class="alt" type="text" placeholder="Bạn muốn tên gì? (không bắt buộc)" data-alt="${esc(r.key)}"></td>`;
+  body.append(tr);
+  r.tr = tr; r.text = r.search.toLowerCase();
+  rows.push(r);
+  const cb = tr.querySelector('input[type=checkbox]');
+  const alt = tr.querySelector('.alt');
+  const st = saved[r.key];
+  if (st) { cb.checked = true; tr.classList.add('flagged'); alt.value = st.alt || ''; }
+  cb.addEventListener('change', () => {
+    tr.classList.toggle('flagged', cb.checked);
+    if (cb.checked) saved[r.key] = { alt: alt.value }; else delete saved[r.key];
+    persist(); refresh();
+  });
+  alt.addEventListener('input', () => { if (cb.checked) { saved[r.key] = { alt: alt.value }; persist(); } });
+}
+
+function stats() {
+  const nodes = DATA.length, nCh = DATA.filter(nodeChanged).length;
+  const ports = DATA.reduce((a, n) => a + n.ports.length, 0), pCh = DATA.reduce((a, n) => a + n.ports.filter(portChanged).length, 0);
+  const flags = Object.keys(saved).length;
+  $('#stats').innerHTML =
+    `<div class="stat"><b>${nCh} / ${nodes}</b><span>mảnh đổi tên</span></div>` +
+    `<div class="stat"><b>${pCh} / ${ports}</b><span>cổng đổi tên</span></div>` +
+    `<div class="stat"><b>${nCh + pCh} / ${nodes + ports}</b><span>tổng mục đổi (mảnh + cổng)</span></div>` +
+    `<div class="stat flag"><b id="flagCount">${flags}</b><span>dòng bạn đánh dấu chưa ổn</span></div>`;
+}
+
+function refresh() {
+  const q = $('#q').value.trim().toLowerCase(), oc = $('#onlyChanged').checked, of = $('#onlyFlag').checked;
+  const groupHas = {};
+  let shown = 0, curNode = null, nodeHit = false;
+  // A node row stays visible when any of its ports matches, so the context is never lost.
+  const items = rows.filter((r) => !r.cat);
+  const keep = new Map();
+  for (const r of items) {
+    const f = r.tr.classList.contains('flagged');
+    keep.set(r, (!q || r.text.includes(q)) && (!oc || r.changed) && (!of || f));
+  }
+  let idx = 0;
+  while (idx < items.length) {
+    const n = items[idx];
+    let end = idx + 1;
+    while (end < items.length && items[end].cls === 'port') end++;
+    const grp = items.slice(idx + 1, end);
+    const anyPort = grp.some((p) => keep.get(p));
+    const nodeOk = keep.get(n) || anyPort;
+    n.tr.classList.toggle('hide', !nodeOk);
+    for (const p of grp) {
+      // when searching/filtering by node row only, show all its ports; otherwise only matching ports
+      const show = keep.get(p) || (keep.get(n) && !oc && !of && !!q && !grp.some((x) => keep.get(x)));
+      p.tr.classList.toggle('hide', !show);
+      if (show) shown++;
+    }
+    if (nodeOk) { shown++; groupHas[n.group] = true; }
+    idx = end;
+  }
+  for (const r of rows) if (r.cat) r.tr.classList.toggle('hide', !groupHas[r.group]);
+  $('#empty').style.display = shown ? 'none' : 'block';
+  const fc = $('#flagCount'); if (fc) fc.textContent = Object.keys(saved).length;
+}
+['#q', '#onlyChanged', '#onlyFlag'].forEach((s) => $(s).addEventListener('input', refresh));
+
+function flaggedText() {
+  const lines = [];
+  for (const r of rows) {
+    if (r.cat || !r.tr.classList.contains('flagged')) continue;
+    const alt = r.tr.querySelector('.alt').value.trim();
+    lines.push(`- ${r.label}: ${r.oldText}  =>  đề xuất ${r.newText}${alt ? `  | TÔI MUỐN: ${alt}` : '  | chưa ổn'}`);
+  }
+  return lines.join('\n');
+}
+$('#copy').addEventListener('click', async () => {
+  const t = flaggedText();
+  const msg = $('#copied'), ta = $('#paste');
+  if (!t) { msg.textContent = 'Chưa có dòng nào được tick "chưa ổn".'; ta.style.display = 'none'; return; }
+  ta.value = t; ta.style.display = 'block';
+  try { await navigator.clipboard.writeText(t); msg.textContent = `Đã sao chép ${t.split('\n').length} dòng. Dán lại cho mình nhé.`; }
+  catch (e) { ta.select(); try { document.execCommand('copy'); msg.textContent = 'Đã sao chép (hoặc bấm vào ô bên dưới rồi Ctrl+C).'; } catch (e2) { msg.textContent = 'Không tự sao chép được: bôi đen ô bên dưới rồi Ctrl+C.'; } }
+});
+
+stats(); refresh();
+
+/* ---------- Card preview: DOM mirrors buildNodeView() in node-view.ts ---------- */
+const GLYPH = {
+  input: 'M2 8h7M6.5 4.5L10 8l-3.5 3.5M13 3v10', logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10', object: 'M8 2l5.5 3v6L8 14l-5.5-3V5z',
+  action: 'M9.5 2L4 9h4l-1 5 5.5-7H8.5z', brain: 'M8 2.5a4 4 0 00-4 4c0 1.6 1 2.4 1 3.9v1.1h6v-1.1c0-1.5 1-2.3 1-3.9a4 4 0 00-4-4zM6.5 13.5h3',
+  output: 'M4 2v12M4 3h8l-2 3 2 3H4',
+};
+const CARDS = [
+  { kind: 'go-to', ins: [['self', 'object'], ['target', 'object'], ['go', 'bool']], outs: [['moveX', 'number'], ['moveY', 'number'], ['jump', 'bool'], ['arrived', 'bool'], ['arrivedPulse', 'bool']] },
+  { kind: 'touch', ins: [['a', 'object'], ['b', 'object']], outs: [['touching', 'bool'], ['began', 'bool'], ['ended', 'bool']] },
+  { kind: 'timer', ins: [['run', 'bool'], ['reset', 'bool']], outs: [['left', 'number'], ['done', 'bool']] },
+  { kind: 'block', ins: [['hide', 'bool'], ['show', 'bool'], ['pick', 'number'], ['run', 'bool'], ['reverse', 'bool']], outs: [['self', 'object'], ['usedOn', 'bool']] },
+];
+const VARIANTS = [['old', 'Hiện tại'], ['one', '① Tên (English) một dòng'], ['two', '② English nhỏ, xám, dòng 2']];
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
+
+function buildCard(spec, node, variant) {
+  const useOld = variant === 'old';
+  const names = useOld ? node.nodeOld : node.nodeNew;
+  const box = el('div', 'wc-node cat-' + node.category);
+  const head = el('div', 'wc-node-head');
+  head.title = `${names.vi} · ${names.en}`;
+  const tile = el('span', 'wc-tile cat-' + node.category);
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('d', GLYPH[node.category]); svg.append(path); tile.append(svg);
+  const title = el('span', 'wc-title');
+  if (variant === 'one') {
+    title.append(el('b', 'wc-name', `${names.vi} (${names.en})`));
+  } else {
+    title.append(el('b', 'wc-name', names.vi), el('small', 'wc-sub', names.en));
+  }
+  head.append(tile, title, el('button', 'hb-card-help', '?'));
+  box.append(head);
+  const bodyEl = el('div', 'wc-ports-body');
+  for (const [dir, list] of [['in', spec.ins], ['out', spec.outs]]) {
+    const col = el('div', `wc-ports ${dir}s`);
+    for (const [id, type] of list) {
+      const p = node.ports.find((x) => x.dir === dir && x.id === id);
+      if (!p) throw new Error('missing port ' + node.kind + '.' + dir + '.' + id);
+      const row = el('div', `wc-port ${dir}`);
+      row.title = `${(useOld ? p.old : p.new).join(' · ')}`;
+      row.append(el('span', `wc-dot type-${type}`), el('span', 'wc-pl', (useOld ? p.old : p.new)[0]));
+      col.append(row);
+    }
+    bodyEl.append(col);
+  }
+  box.append(bodyEl);
+  return box;
+}
+
+function renderCards() {
+  const cmp = $('#cmp');
+  cmp.append(el('div', 'hd', ''));
+  for (const [, label] of VARIANTS) cmp.append(el('div', 'hd', label));
+  const widths = [];
+  for (const spec of CARDS) {
+    const node = DATA.find((n) => n.kind === spec.kind);
+    const rowHd = el('div', 'rowhd');
+    rowHd.innerHTML = `${esc(node.nodeNew.vi)}<br><span class="mono">${esc(node.kind)}</span>`;
+    cmp.append(rowHd);
+    const row = {};
+    for (const [v] of VARIANTS) {
+      const cell = el('div', 'cell');
+      const wc = el('div', 'wc demo');
+      const card = buildCard(spec, node, v);
+      wc.append(card); cell.append(wc);
+      const cap = el('div', 'cap'); cell.append(cap);
+      cmp.append(cell);
+      row[v] = { card, cap };
+    }
+    widths.push({ spec, node, row });
+  }
+  // Measure after layout (fonts included), then write captions.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    for (const { spec, node, row } of widths) {
+      const base = Math.round(row.old.card.getBoundingClientRect().width);
+      for (const [v] of VARIANTS) {
+        const { card, cap } = row[v];
+        const w = Math.round(card.getBoundingClientRect().width);
+        const sub = card.querySelector('.wc-sub');
+        const cut = sub ? Math.max(0, sub.scrollWidth - sub.clientWidth) : 0;
+        const d = w - base;
+        let html = `<b>${w}px</b>`;
+        if (v === 'old') html += ' (mốc so sánh)';
+        else html += d === 0 ? ` <span class="ok">bằng thẻ cũ</span>` : d > 0 ? ` <span class="grow">+${d}px so với cũ</span>` : ` <span class="ok">${d}px so với cũ</span>`;
+        const nameEl = card.querySelector('.wc-name'), helpEl = card.querySelector('.hb-card-help');
+        const rg = document.createRange(); rg.selectNodeContents(nameEl);
+        const over = Math.ceil(rg.getBoundingClientRect().right - helpEl.getBoundingClientRect().left);
+        if (over > -4) html += `<br><span class="cut">chữ chạm nút "?" (cần thêm ~${over + 8}px)</span>`;
+        card.dataset.overlap = over;
+        if (cut > 0) html += `<br><span class="cut">English bị cắt "…" (cần thêm ${cut}px, thẻ sẽ rộng ${w + cut}px nếu để đủ)</span>`;
+        if (v === 'two' && cut === 0) html += '<br><span class="ok">English hiện đủ</span>';
+        cap.innerHTML = html;
+        card.dataset.width = w; card.dataset.cut = cut;
+      }
+    }
+    document.body.dataset.cardsReady = '1';
+  }));
+}
+renderCards();
+</script>
+</body>
+</html>

@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thành băng chuyền – chọn kiểu vẽ</title>
+<style>
+  :root { --bg:#e6e8eb; --card:#f7f8f9; --panel:#ffffff; --ink:#22252b; --soft:#5d6570; --line:#c9cdd3; --accent:#2f7fe0; --btn:#ffffff; --btnh:#eef1f4; --noteb:#fff3cd; --notel:#e3c96a; }
+  html.dark { --bg:#17191d; --card:#22252b; --panel:#2a2e35; --ink:#eef0f3; --soft:#a9b0ba; --line:#444a54; --btn:#2f343c; --btnh:#3a4049; --noteb:#3c3520; --notel:#8a7630; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,Arial,sans-serif; }
+  #gl { position:fixed; left:0; top:0; z-index:5; pointer-events:none; }
+  main { max-width:1320px; margin:0 auto; padding:8px 18px 10px; }
+  h1 { font-size:1.5rem; margin:0 0 2px; }
+  .intro { color:var(--soft); margin:0 0 8px; font-size:1rem; }
+  .note { display:inline-block; font-size:1rem; font-weight:700; padding:6px 12px; border-radius:10px; background:var(--noteb); border:1px solid var(--notel); margin:0 0 8px; }
+  button { font:inherit; font-weight:700; color:var(--ink); background:var(--btn); border:2px solid #aeb4bd; border-radius:12px; padding:8px 16px; min-height:44px; cursor:pointer; }
+  button:hover { background:var(--btnh); }
+  button:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#ffffff; }
+  .cards { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+  .card { background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .card.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  .card.now { border-style:dashed; }
+  .card p { margin:0; font-size:.86rem; color:var(--soft); min-height:2.6em; }
+  .card button { font-size:1.1rem; padding:8px 6px; }
+  .card button b { font-size:1.35rem; margin-right:4px; }
+  .view { background:#cfd2d7; touch-action:none; cursor:grab; border-radius:8px; }
+  .view:active { cursor:grabbing; }
+  .view.thumb { height:112px; }
+  .stage { background:var(--card); border:2px solid var(--line); border-radius:18px; padding:8px 14px 10px; margin:10px 0; }
+  .stage h2 { margin:0 0 8px; font-size:1.45rem; }
+  .stage h2 small { font-size:1rem; font-weight:600; color:var(--soft); margin-left:8px; }
+  #v-main { height:340px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; margin:10px 0 0; }
+  .grp { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .grp > span { font-weight:700; font-size:.95rem; margin-right:2px; }
+  .hint { font-size:.85rem; color:var(--soft); margin:0; }
+  .answer { background:var(--panel); border:2px solid var(--accent); border-radius:14px; padding:8px 16px; font-size:1.25rem; font-weight:700; text-align:center; }
+  .answer code { font:800 1.35rem ui-monospace,Consolas,monospace; background:var(--btnh); border:1px solid var(--line); border-radius:8px; padding:2px 9px; margin:0 2px; }
+  .answer span { display:block; font-size:1rem; font-weight:600; color:var(--soft); margin-top:4px; }
+  #fail { display:none; margin:12px 0; padding:12px 14px; border-radius:12px; background:#ffe1de; color:#22252b; border:2px solid #e08a82; font-weight:700; }
+  footer { text-align:center; color:var(--soft); padding:6px 0 0; font-size:.85rem; font-weight:700; }
+  @media (max-width:900px) { .cards { grid-template-columns:repeat(2,minmax(0,1fr)); } #v-main { height:320px; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<main>
+  <h1>Thành chắn của “Băng chuyền khung xanh” – chọn kiểu vẽ</h1>
+  <p class="intro">Hai tấm xám hiện tại che mất thùng hàng khi nhìn từ bên cạnh. Dưới đây là 4 cách vẽ khác. Bấm vào kiểu muốn xem, rồi bấm <b>“Nhìn ngang”</b> để thử xem thùng có còn bị che không.</p>
+  <div class="note">Thành chắn thật vẫn cao 30 cm ở mọi kiểu; chỉ khác hình vẽ.</div>
+  <div id="fail">Không tải được thư viện 3D (three.js). Trang cần mạng Internet để tải thư viện; hãy kiểm tra mạng rồi mở lại.</div>
+
+  <div class="cards" id="cards"></div>
+
+  <section class="stage">
+    <h2 id="title"></h2>
+    <div class="view" id="v-main"></div>
+    <div class="bar">
+      <div class="grp"><span>Góc nhìn:</span>
+        <button type="button" data-cam="cheo">Nhìn chéo</button>
+        <button type="button" data-cam="ngang">Nhìn ngang</button>
+        <button type="button" data-cam="dau">Nhìn từ đầu băng</button>
+        <button type="button" data-key="spin" data-val="on">Tự xoay</button>
+      </div>
+      <div class="grp"><span>Nền:</span>
+        <button type="button" data-key="bg" data-val="light">Nền sáng</button>
+        <button type="button" data-key="bg" data-val="dark">Nền tối</button>
+      </div>
+      <p class="hint">Kéo chuột để xoay · lăn chuột để phóng to. Các khung xoay cùng nhau.</p>
+    </div>
+  </section>
+
+  <div class="answer">Trả lời bằng một trong các mã: <code>11A</code> <code>11B</code> <code>11C</code> <code>11D</code>
+    <span id="now"></span>
+  </div>
+  <footer>Bản xem trước – chưa phải sản phẩm</footer>
+</main>
+
+<script>
+  // If the 3D library never arrives (no network), say so instead of leaving empty grey boxes.
+  setTimeout(function () { if (!window.__ready) document.getElementById('fail').style.display = 'block'; }, 9000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// ================================================================ state
+const S = { guard: 'A', bg: 'light', spin: 'off' };
+const GUARDS = [
+  { id: 'A', name: 'Lan can ống', desc: 'Hai ống mảnh xám sáng trên vài cột ngắn; thùng lộ ra giữa hai ống.' },
+  { id: 'B', name: 'Thành thấp', desc: 'Gờ đặc thấp khoảng 7 cm, cùng màu xanh với khung.' },
+  { id: 'C', name: 'Kính trong', desc: 'Tấm trong suốt hơi xanh cao đủ 30 cm, viền xanh mảnh ở mép trên.' },
+  { id: 'D', name: 'Không vẽ thành', desc: 'Không vẽ gì cả. Thành chắn vẫn có nhưng vô hình.' },
+  { id: 'X', name: 'Hiện tại', desc: 'Để so sánh: hai tấm xám đặc cao 30 cm như trong ứng dụng.' },
+];
+const BG = { light: '#cfd2d7', dark: '#23262c' };
+const codeOf = (id) => (id === 'X' ? null : `11${id}`);
+
+// ================================================================ materials / geometry helpers (same family as index.html)
+const GRAD = (() => {
+  const t = new THREE.DataTexture(new Uint8Array([110, 110, 110, 255, 170, 170, 170, 255, 220, 220, 220, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  return t;
+})();
+const mats = new Map();
+/** One shared toon material per colour. */
+function M(hex) {
+  let m = mats.get(hex);
+  if (!m) { m = new THREE.MeshToonMaterial({ color: hex, gradientMap: GRAD }); mats.set(hex, m); }
+  return m;
+}
+const geos = new Map();
+const q = (v) => Math.round(v * 1000) / 1000;
+function G(key, make) {
+  let g = geos.get(key);
+  if (!g) { g = make(); geos.set(key, g); }
+  return g;
+}
+const box = (w, h, d) => G(`b|${q(w)}|${q(h)}|${q(d)}`, () => new THREE.BoxGeometry(w, h, d));
+const rbox = (w, h, d, r = 0.02, seg = 1) =>
+  G(`rb|${q(w)}|${q(h)}|${q(d)}|${q(r)}|${seg}`, () => new RoundedBoxGeometry(w, h, d, seg, Math.max(0.002, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3))));
+/** Cylinder along an axis. */
+const cyl = (axis, r, len, seg = 16) =>
+  G(`c|${axis}|${q(r)}|${q(len)}|${seg}`, () => {
+    const g = new THREE.CylinderGeometry(r, r, len, seg);
+    if (axis === 'z') g.rotateX(Math.PI / 2);
+    if (axis === 'x') g.rotateZ(-Math.PI / 2);
+    return g;
+  });
+function add(parent, geo, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = !mat.transparent;
+  m.receiveShadow = !mat.isMeshBasicMaterial && !mat.transparent;
+  parent.add(m);
+  return m;
+}
+const texs = new Map();
+function canvasTex(key, w, h, draw) {
+  let t = texs.get(key);
+  if (t) return t;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  texs.set(key, t);
+  return t;
+}
+/** Rounded label (text on a pill) as a flat plane. */
+function labelPlane(text, w, h, bg = '#ffd23f', ink = '#23252b') {
+  const tex = canvasTex(`lab|${text}|${bg}|${ink}|${q(w / h)}`, 256, Math.round(256 * h / w), (g, W, H) => {
+    g.fillStyle = ink;
+    g.beginPath(); g.roundRect(3, 3, W - 6, H - 6, H * 0.22); g.fill();
+    g.fillStyle = bg;
+    g.beginPath(); g.roundRect(11, 11, W - 22, H - 22, H * 0.16); g.fill();
+    g.fillStyle = ink;
+    g.font = `800 ${Math.round(H * 0.56)}px "Segoe UI",Arial,sans-serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, W / 2, H * 0.53, W - 30);
+  });
+  return new THREE.Mesh(G(`plane|${q(w)}|${q(h)}`, () => new THREE.PlaneGeometry(w, h)), new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+}
+/** Carton centred on its own centre, with a kg tag on both long sides and on top. */
+function carton(size, kg) {
+  const g = new THREE.Group();
+  add(g, rbox(size.x, size.y, size.z, 0.012, 1), M('#cf9f62'));
+  add(g, box(size.x + 0.004, size.y + 0.004, size.z * 0.16), M('#ecd2a2'));
+  const w = Math.max(0.05, Math.min(size.x * 0.72, size.y * 1.44, size.z * 1.44));
+  const label = `${kg} kg`;
+  const front = labelPlane(label, w, w / 2); front.position.z = size.z / 2 + 0.003;
+  const back = labelPlane(label, w, w / 2); back.position.z = -size.z / 2 - 0.003; back.rotation.y = Math.PI;
+  const top = labelPlane(label, w, w / 2); top.position.y = size.y / 2 + 0.005; top.rotation.x = -Math.PI / 2;
+  g.add(front, back, top);
+  return g;
+}
+
+// ================================================================ conveyor + scan gate + side guards
+const BLUE = '#2f7fe0', DARK = '#2a2d34', TYRE = '#23252b', STEEL = '#8f97a3', YELLOW = '#ffc21a';
+const BELT = { L: 2.4, W: 0.6, H: 0.5 };
+const RAIL = 0.05;          // width of the blue side rail
+const WALL_H = 0.3;         // height of the real (physics) barrier above the belt surface
+const BELT_SPEED = 0.35;
+const CHEVRON = 0.4;
+const CARTONS = [[{ x: 0.3, y: 0.22, z: 0.26 }, 2], [{ x: 0.24, y: 0.18, z: 0.22 }, 1], [{ x: 0.34, y: 0.26, z: 0.3 }, 3]];
+
+function chevronTex() {
+  const t = canvasTex('belt', 128, 128, (g, W) => {
+    g.fillStyle = '#2f333b'; g.fillRect(0, 0, W, W);
+    g.strokeStyle = '#59606b'; g.lineWidth = 9; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(44, 24); g.lineTo(84, 64); g.lineTo(44, 104); g.stroke();
+  }).clone();
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.needsUpdate = true;
+  return t;
+}
+
+/** What is drawn for the side barrier. y0 = top of the blue rail, zr = centre line of the rail. */
+function addGuards(g, kind, L, H, zr) {
+  const y0 = H + 0.01;
+  const top = H + WALL_H;
+  for (const s of [-1, 1]) {
+    const z = s * zr;
+    if (kind === 'A') {
+      const PIPE = '#dfe3e8', hi = top - 0.02, lo = H + 0.045;
+      for (const y of [lo, hi]) add(g, cyl('x', 0.013, L - 0.08, 10), M(PIPE), 0, y, z);
+      for (const x of [-(L / 2 - 0.06), 0, L / 2 - 0.06]) {
+        add(g, cyl('y', 0.012, hi - y0 + 0.02, 10), M(PIPE), x, (hi + 0.02 + y0) / 2, z);
+        add(g, cyl('y', 0.022, 0.016, 10), M(STEEL), x, y0 + 0.006, z);
+      }
+    } else if (kind === 'B') {
+      add(g, rbox(L - 0.02, 0.07, 0.03, 0.01, 1), M(BLUE), 0, y0 + 0.03, z);
+    } else if (kind === 'C') {
+      const glass = G('glassmat', () => new THREE.MeshLambertMaterial({ color: '#8fd3ff', transparent: true, opacity: 0.26, depthWrite: false }));
+      const pane = add(g, box(L - 0.04, top - y0, 0.012), glass, 0, (top + y0) / 2, z);
+      pane.renderOrder = 2; // after the kg tags, so a tag seen through the glass is tinted like the carton around it
+      add(g, rbox(L, 0.018, 0.026, 0.006, 1), M(BLUE), 0, top + 0.004, z);
+    } else if (kind === 'X') {
+      add(g, box(L, top - y0, RAIL - 0.002), M('#8c8c8c'), 0, (top + y0) / 2 + 0.001, z);
+    }
+  }
+}
+
+/** The belt-frame conveyor (same numbers as the app figure) with the yellow gate; returns { group, update(T) }. */
+function buildBelt(kind) {
+  const g = new THREE.Group();
+  const { L, W, H } = BELT;
+  const bw = W - 2 * RAIL, bl = L - 0.06, zr = W / 2 - RAIL / 2;
+  const gx = L * 0.2;
+  const lamp = new THREE.MeshBasicMaterial({ color: '#2b6f86' });
+  add(g, box(bl, 0.06, bw), M(DARK), 0, H - 0.032, 0);
+  for (const s of [-1, 1]) {
+    add(g, rbox(L, 0.1, RAIL, 0.015, 1), M(BLUE), 0, H - 0.04, s * zr);
+    add(g, cyl('z', 0.045, bw, 12), M(TYRE), s * (L / 2 - 0.05), H - 0.049, 0);
+    add(g, box(L - 0.5, 0.03, 0.03), M(STEEL), 0, 0.16, s * (W / 2 - 0.055));
+    for (const t of [-1, 1]) {
+      add(g, rbox(0.05, H - 0.09, 0.05, 0.01, 1), M(STEEL), t * (L / 2 - 0.25), (H - 0.09) / 2, s * (W / 2 - 0.055));
+      add(g, rbox(0.11, 0.02, 0.11, 0.008, 1), M(TYRE), t * (L / 2 - 0.25), 0.01, s * (W / 2 - 0.055));
+    }
+    add(g, rbox(0.06, 0.62, 0.06, 0.012, 1), M(YELLOW), gx, H + 0.26, s * (W / 2 + 0.035));
+  }
+  add(g, rbox(0.08, 0.06, W + 0.19, 0.012, 1), M(YELLOW), gx, H + 0.57, 0);
+  add(g, rbox(0.14, 0.06, 0.22, 0.012, 1), M(TYRE), gx, H + 0.515, 0);
+  add(g, box(0.024, 0.02, W * 0.7), lamp, gx, H + 0.478, 0);
+  add(g, cyl('y', 0.035, 0.05, 12), lamp, gx, H + 0.625, 0);
+
+  const tex = chevronTex();
+  tex.repeat.set(bl / CHEVRON, 1);
+  const surface = new THREE.Mesh(G(`plane|${q(bl)}|${q(bw)}`, () => new THREE.PlaneGeometry(bl, bw)), new THREE.MeshLambertMaterial({ map: tex }));
+  surface.rotation.x = -Math.PI / 2;
+  surface.position.y = H + 0.002;
+  surface.receiveShadow = true;
+  g.add(surface);
+
+  addGuards(g, kind, L, H, zr);
+
+  const span = bl - 0.5;
+  const parcels = CARTONS.map(([size, kg]) => { const c = carton(size, kg); g.add(c); return c; });
+  function update(T) {
+    tex.offset.x = -((T * BELT_SPEED / CHEVRON) % 1);
+    let near = false;
+    parcels.forEach((p, i) => {
+      const u = (((T * BELT_SPEED) / span + i / parcels.length) % 1 + 1) % 1;
+      const x = -span / 2 + u * span;
+      p.position.set(x, H + 0.006 + CARTONS[i][0].y / 2, 0);
+      if (Math.abs(x - gx) < 0.2) near = true;
+    });
+    const blink = Math.sin(T * 30) > 0;
+    lamp.color.set(near ? (blink ? '#45e07a' : '#d9ffe6') : '#2b6f86');
+  }
+  update(0);
+  return { group: g, update };
+}
+
+// ================================================================ views (one canvas over the page, each view in its own rectangle)
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setScissorTest(true);
+
+const CAMS = { cheo: [1.65, 1.5, 2.65], ngang: [0.1, 0.82, 2.35], dau: [2.75, 1.1, 0.8] };
+const tgt = new THREE.Vector3(0, 0.6, 0);
+const cam = new THREE.PerspectiveCamera(35, 1.5, 0.1, 80);
+function setCam(name) {
+  cam.position.set(...CAMS[name]);
+  cam.lookAt(tgt);
+}
+setCam('cheo');
+
+const views = [];
+function makeView(el, kindOf) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(BG[S.bg]);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#9aa0a8', 1.15));
+  const key = new THREE.DirectionalLight('#ffffff', 2.1);
+  key.position.set(tgt.x + 3, tgt.y + 7, tgt.z + 4.5);
+  key.target.position.copy(tgt);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  const sc = key.shadow.camera;
+  sc.left = sc.bottom = -3; sc.right = sc.top = 3; sc.near = 0.5; sc.far = 30;
+  key.shadow.bias = -0.0015;
+  key.shadow.normalBias = 0.045;
+  key.shadow.radius = 3;
+  const fill = new THREE.DirectionalLight('#dfe8ff', 0.55);
+  fill.position.set(-4, 3, -2);
+  scene.add(key, key.target, fill);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.22 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  const root = new THREE.Group();
+  scene.add(root);
+  const controls = new OrbitControls(cam, el);
+  controls.target = tgt;
+  controls.enablePan = false;
+  controls.minDistance = 1.3;
+  controls.maxDistance = 10;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.update();
+  const v = { el, scene, root, kindOf, kind: null, belt: null };
+  views.push(v);
+  return v;
+}
+function syncViews() {
+  for (const v of views) {
+    v.scene.background.set(BG[S.bg]);
+    const kind = v.kindOf();
+    if (kind === v.kind) continue;
+    v.kind = kind;
+    v.root.clear();
+    v.belt = buildBelt(kind);
+    v.root.add(v.belt.group);
+  }
+}
+
+// ================================================================ page wiring
+function fillCards() {
+  const wrap = document.getElementById('cards');
+  for (const gd of GUARDS) {
+    const card = document.createElement('div');
+    card.className = 'card' + (gd.id === 'X' ? ' now' : '');
+    card.dataset.card = gd.id;
+    const head = gd.id === 'X' ? gd.name : `<b>${gd.id}</b>${gd.name}`;
+    card.innerHTML = `<button type="button" data-key="guard" data-val="${gd.id}">${head}</button><div class="view thumb" id="v-${gd.id}"></div><p>${gd.desc}</p>`;
+    wrap.append(card);
+  }
+}
+function syncUi() {
+  for (const b of document.querySelectorAll('button[data-key]')) {
+    const k = b.dataset.key;
+    b.setAttribute('aria-pressed', k === 'spin' ? String(S.spin === 'on') : String(S[k] === b.dataset.val));
+  }
+  for (const c of document.querySelectorAll('[data-card]')) c.classList.toggle('on', S.guard === c.dataset.card);
+  document.documentElement.classList.toggle('dark', S.bg === 'dark');
+  const gd = GUARDS.find((x) => x.id === S.guard);
+  const code = codeOf(gd.id);
+  document.getElementById('title').innerHTML = code ? `Kiểu ${gd.id} – ${gd.name}<small>${gd.desc}</small>` : `${gd.name}<small>${gd.desc}</small>`;
+  document.getElementById('now').textContent = code ? `Bạn đang xem kiểu ${gd.id} – ${gd.name}. Nếu chọn kiểu này, trả lời: ${code}` : 'Bạn đang xem hình hiện tại (chỉ để so sánh, không có mã).';
+}
+function set(patch) {
+  Object.assign(S, patch);
+  syncUi();
+  syncViews();
+}
+
+fillCards();
+makeView(document.getElementById('v-main'), () => S.guard);
+for (const gd of GUARDS) makeView(document.getElementById(`v-${gd.id}`), () => gd.id);
+
+document.addEventListener('click', (e) => {
+  const c = e.target.closest('button[data-cam]');
+  if (c) { set({ spin: 'off' }); setCam(c.dataset.cam); return; }
+  const b = e.target.closest('button[data-key]');
+  if (!b) return;
+  const k = b.dataset.key;
+  if (k === 'spin') set({ spin: S.spin === 'on' ? 'off' : 'on' });
+  else set({ [k]: b.dataset.val });
+});
+
+syncUi();
+syncViews();
+
+let last = performance.now();
+const Y = new THREE.Vector3(0, 1, 0);
+const off = new THREE.Vector3();
+const size = new THREE.Vector2();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  const T = window.__freezeT ?? now / 1000;
+  const w = document.documentElement.clientWidth, h = window.innerHeight;
+  renderer.getSize(size);
+  if (size.x !== w || size.y !== h) renderer.setSize(w, h, true);
+  if (S.spin === 'on') {
+    off.copy(cam.position).sub(tgt).applyAxisAngle(Y, dt * 0.35);
+    cam.position.copy(tgt).add(off);
+    cam.lookAt(tgt);
+  }
+  renderer.setScissorTest(false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.setScissorTest(true);
+  for (const v of views) {
+    const r = v.el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > h || r.right < 0 || r.left > w || r.width < 2 || r.height < 2) continue;
+    v.belt.update(T);
+    const left = Math.round(r.left), bottom = Math.round(h - r.bottom), vw = Math.round(r.width), vh = Math.round(r.height);
+    renderer.setViewport(left, bottom, vw, vh);
+    renderer.setScissor(left, bottom, vw, vh);
+    cam.aspect = vw / vh;
+    cam.updateProjectionMatrix();
+    renderer.render(v.scene, cam);
+  }
+  window.__ready = true;
+}
+requestAnimationFrame(frame);
+
+/** For screenshot scripts: change state, pick a camera, freeze the animation clock. */
+window.preview = { set, state: S, cam: setCam, camera: cam, freeze: (t) => { window.__freezeT = t; } };
+</script>
+</body>
+</html>

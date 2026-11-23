@@ -1,0 +1,74 @@
+<title>Xưởng phân loại 3D: sàn chia chọn và khu xuất hàng</title>
+<style>
+/* One look by choice: the scene is the game's own daylight floor, so the page keeps a light frame. */
+:root { --ink: #1c2330; --muted: #5b6577; --line: #d5d9e0; --panel: rgba(255, 255, 255, 0.95); --soft: #eef0f3; --belt: #2a6fd0; --warn: #b26a00; color-scheme: light; }
+html, body { height: 100%; }
+body { margin: 0; background: #e6e8ec; color: var(--ink); font-family: "Segoe UI", system-ui, -apple-system, sans-serif; overflow: hidden; }
+canvas { position: fixed; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.panel { position: fixed; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08); box-sizing: border-box; }
+#top { top: calc(12px + env(safe-area-inset-top, 0px)); left: max(12px, env(safe-area-inset-left, 0px)); max-width: min(520px, calc(100vw - 24px)); }
+#top h1 { margin: 0 0 4px; font-size: 18px; text-wrap: balance; }
+#top p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.45; }
+#top b { color: var(--warn); }
+#layouts { margin: 8px 0 6px; }
+#note { color: var(--ink) !important; font-weight: 600; }
+#stats { top: calc(12px + env(safe-area-inset-top, 0px)); right: max(12px, env(safe-area-inset-right, 0px)); font-size: 13px; min-width: 230px; max-width: 290px; }
+#stats table { border-collapse: collapse; width: 100%; }
+#stats td { padding: 2px 0; }
+#stats td:last-child { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; padding-left: 12px; white-space: nowrap; }
+#bar { bottom: calc(12px + env(safe-area-inset-bottom, 0px)); left: 50%; transform: translateX(-50%); display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; justify-content: center; width: max-content; max-width: calc(100vw - 24px); }
+.g { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; font-size: 13px; color: var(--muted); }
+button { font: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px; border-radius: 8px; border: 1px solid #c9ced6; background: var(--soft); color: var(--ink); cursor: pointer; }
+button[aria-pressed="true"], button.primary { background: var(--belt); border-color: var(--belt); color: #fff; }
+button:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
+#top details { margin-top: 4px; font-size: 13px; color: var(--muted); }
+#top summary { cursor: pointer; font-weight: 600; color: var(--belt); }
+#top .hint { font-size: 12px; margin-top: 4px; }
+#stats tr.sep td { border-top: 1px solid var(--line); padding-top: 5px; }
+#stats tr.sep { height: 26px; vertical-align: bottom; }
+#routes .cap { margin: 7px 0 3px; color: var(--muted); font-size: 12px; }
+#routes .doors { display: flex; flex-wrap: wrap; gap: 3px 10px; font-variant-numeric: tabular-nums; }
+#routes .grid { display: grid; gap: 3px; }
+#routes .grid i { font-style: normal; font-weight: 700; font-size: 12px; text-align: center; padding: 2px 3px; border-radius: 5px; color: #10151d; font-variant-numeric: tabular-nums; white-space: nowrap; }
+#routes .grid small { font-weight: 600; opacity: 0.65; margin-right: 4px; }
+#routes i.green { background: #9fe8b5; } #routes i.amber { background: #ffd27a; } #routes i.red { background: #ff9c95; }
+#routes .legend { margin-top: 5px; font-size: 11px; color: var(--muted); }
+#routes .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin: 0 3px 0 6px; vertical-align: -1px; }
+#routes .legend i:first-child { margin-left: 0; }
+@media (max-width: 720px) { #stats { display: none; } #top details, #top .hint { display: none; } #top p:not(#note) { font-size: 11px; line-height: 1.3; } }
+</style>
+
+<div id="top" class="panel">
+      <h1>Xưởng phân loại kiện hàng · bản mẫu 3D</h1>
+      <p><b>Hình thật của game:</b> xe AGV, tay máy, băng chuyền, cổng quét, lỗ thả, thùng, mốc sàn. <b>Mới vẽ cùng kiểu, game chưa có:</b> nhà kho, lồng hàng, xe kéo lồng, xe tải, cửa bến, đèn và nắp khoá lỗ. <b>Mọi chuyển động chỉ là minh hoạ</b>, chưa chạy bằng mảnh ghép và vật lý thật.</p>
+      <details>
+        <summary>Luồng xuất hàng chạy thế nào?</summary>
+        <p>Mỗi lỗ là một tuyến, bên dưới có một lồng. Lồng gần đầy: đèn vàng, gọi xe kéo. Lồng đầy hoặc đang đổi: đèn đỏ, lỗ đóng nắp, xe chia chọn chờ hoặc chạy một vòng. Xe kéo mang lồng rỗng tới, đổi lấy lồng đầy, chở ra cửa bến của tuyến và đẩy lên xe tải. Xe tải đủ 4 lồng thì đóng cửa, rời bến; xe rỗng lùi vào. Lồng rỗng quay về qua cửa “LỒNG RỖNG” (xe chở lồng rỗng về không được vẽ).</p>
+      </details>
+      <div id="layouts" class="g"></div>
+      <p id="note"></p>
+      <p class="hint">Kéo để xoay, lăn chuột để phóng to.</p>
+    </div>
+    <div id="stats" class="panel">
+      <table>
+        <tr><td>Quy mô</td><td id="s-size">—</td></tr>
+        <tr><td>Kiện đã vào lồng</td><td id="s-done">0</td></tr>
+        <tr><td>Kiện mỗi phút</td><td id="s-rate">—</td></tr>
+        <tr><td>Chờ trên băng chuyền</td><td id="s-wait">0</td></tr>
+        <tr><td>Xe chia chọn đang rảnh</td><td id="s-idle">0</td></tr>
+        <tr><td>Kiện vừa quét</td><td id="s-scan">—</td></tr>
+        <tr class="sep"><td>Lồng đã xuất bến</td><td id="s-cages">0</td></tr>
+        <tr><td>Xe tải đã rời bến</td><td id="s-trucks">0</td></tr>
+        <tr><td>Lỗ đang khoá</td><td id="s-locked">0</td></tr>
+        <tr><td>Xe kéo đang chờ việc</td><td id="s-tugs">0</td></tr>
+      </table>
+      <div id="routes"></div>
+    </div>
+    <div id="bar" class="panel">
+      <div class="g"><button id="play" class="primary" type="button">Tạm dừng</button><button id="reset" type="button">Đặt lại</button></div>
+      <div class="g">Tốc độ <button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="4" aria-pressed="false">4×</button></div>
+      <div class="g">Góc nhìn <button type="button" data-cam="all" aria-pressed="true">Toàn cảnh</button><button type="button" data-cam="station" aria-pressed="false">Trạm nạp</button><button type="button" data-cam="hole" aria-pressed="false">Lỗ thả</button><button type="button" data-cam="ground" aria-pressed="false">Tầng dưới</button><button type="button" data-cam="dock" aria-pressed="false">Cửa bến</button><button type="button" data-cam="top" aria-pressed="false">Từ trên</button></div>
+      <div class="g"><button id="xray" type="button" aria-pressed="false">Sàn trong suốt</button></div>
+    </div>
+
+<script src="xuong-3d.js"></script>

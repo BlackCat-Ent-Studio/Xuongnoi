@@ -1,0 +1,674 @@
+[
+ {
+  "file": "3d-hop-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 126
+ },
+ {
+  "file": "3d-hop-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 97
+ },
+ {
+  "file": "3d-hop-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 100
+ },
+ {
+  "file": "3d-hop-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 100
+ },
+ {
+  "file": "agv-shuttle-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 1
+ },
+ {
+  "file": "agv-shuttle-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 478
+ },
+ {
+  "file": "agv-shuttle-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 504
+ },
+ {
+  "file": "agv-shuttle-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 505
+ },
+ {
+  "file": "arena-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 39
+ },
+ {
+  "file": "arena-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 30
+ },
+ {
+  "file": "arena-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 40
+ },
+ {
+  "file": "arena-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 29
+ },
+ {
+  "file": "auto-arm-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 1
+ },
+ {
+  "file": "auto-arm-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 457
+ },
+ {
+  "file": "auto-arm-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 464
+ },
+ {
+  "file": "auto-arm-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 467
+ },
+ {
+  "file": "auto-door-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 1
+ },
+ {
+  "file": "auto-door-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 207
+ },
+ {
+  "file": "auto-door-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 214
+ },
+ {
+  "file": "auto-door-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 193
+ },
+ {
+  "file": "city-delivery-3d-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 5419
+ },
+ {
+  "file": "city-delivery-3d-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 2773
+ },
+ {
+  "file": "city-delivery-3d-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 2843
+ },
+ {
+  "file": "city-delivery-3d-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 2730
+ },
+ {
+  "file": "city-delivery-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 172
+ },
+ {
+  "file": "city-delivery-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 33
+ },
+ {
+  "file": "city-delivery-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 33
+ },
+ {
+  "file": "city-delivery-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 33
+ },
+ {
+  "file": "cleaner-bot-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 85
+ },
+ {
+  "file": "cleaner-bot-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 16
+ },
+ {
+  "file": "cleaner-bot-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 75
+ },
+ {
+  "file": "cleaner-bot-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 75
+ },
+ {
+  "file": "dice-zones-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 25
+ },
+ {
+  "file": "dice-zones-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 12
+ },
+ {
+  "file": "dice-zones-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 12
+ },
+ {
+  "file": "dice-zones-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 12
+ },
+ {
+  "file": "dodge-shoot-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 17
+ },
+ {
+  "file": "dodge-shoot-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 15
+ },
+ {
+  "file": "dodge-shoot-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 148
+ },
+ {
+  "file": "dodge-shoot-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 15
+ },
+ {
+  "file": "guard-patrol-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 28
+ },
+ {
+  "file": "guard-patrol-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 14
+ },
+ {
+  "file": "guard-patrol-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 18
+ },
+ {
+  "file": "guard-patrol-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 17
+ },
+ {
+  "file": "key-door-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 57
+ },
+ {
+  "file": "key-door-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 42
+ },
+ {
+  "file": "key-door-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 41
+ },
+ {
+  "file": "key-door-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 41
+ },
+ {
+  "file": "maze-chase-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 47
+ },
+ {
+  "file": "maze-chase-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 8
+ },
+ {
+  "file": "maze-chase-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 14
+ },
+ {
+  "file": "maze-chase-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 8
+ },
+ {
+  "file": "pickaxe-rock-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 27
+ },
+ {
+  "file": "pickaxe-rock-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 21
+ },
+ {
+  "file": "pickaxe-rock-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 20
+ },
+ {
+  "file": "pickaxe-rock-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 20
+ },
+ {
+  "file": "platform-bot-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 18
+ },
+ {
+  "file": "platform-bot-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 13
+ },
+ {
+  "file": "platform-bot-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 13
+ },
+ {
+  "file": "platform-bot-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 13
+ },
+ {
+  "file": "portal-camera-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 175
+ },
+ {
+  "file": "portal-camera-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 11
+ },
+ {
+  "file": "portal-camera-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 11
+ },
+ {
+  "file": "portal-camera-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 11
+ },
+ {
+  "file": "race-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 9
+ },
+ {
+  "file": "race-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 284
+ },
+ {
+  "file": "race-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 121
+ },
+ {
+  "file": "race-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 347
+ },
+ {
+  "file": "robot-arm-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 1
+ },
+ {
+  "file": "robot-arm-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 107
+ },
+ {
+  "file": "robot-arm-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 107
+ },
+ {
+  "file": "robot-arm-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 107
+ },
+ {
+  "file": "robot-avoid-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 263
+ },
+ {
+  "file": "robot-avoid-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 286
+ },
+ {
+  "file": "robot-avoid-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 343
+ },
+ {
+  "file": "robot-avoid-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 309
+ },
+ {
+  "file": "robot-line-follow-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 70
+ },
+ {
+  "file": "robot-line-follow-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 88
+ },
+ {
+  "file": "robot-line-follow-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 84
+ },
+ {
+  "file": "robot-line-follow-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 87
+ },
+ {
+  "file": "robot-square-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 43
+ },
+ {
+  "file": "robot-square-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 87
+ },
+ {
+  "file": "robot-square-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 92
+ },
+ {
+  "file": "robot-square-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 84
+ },
+ {
+  "file": "side-stars-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 30
+ },
+ {
+  "file": "side-stars-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 16
+ },
+ {
+  "file": "side-stars-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 16
+ },
+ {
+  "file": "side-stars-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 16
+ },
+ {
+  "file": "top-collect-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 20
+ },
+ {
+  "file": "top-collect-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 5
+ },
+ {
+  "file": "top-collect-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 5
+ },
+ {
+  "file": "top-collect-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 5
+ },
+ {
+  "file": "weight-sorter-t0.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 1
+ },
+ {
+  "file": "weight-sorter-t1.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 270
+ },
+ {
+  "file": "weight-sorter-t300.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 275
+ },
+ {
+  "file": "weight-sorter-t60.png",
+  "pixels": 1024000,
+  "differing": 0,
+  "max": 0,
+  "colours": 268
+ }
+]

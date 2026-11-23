@@ -1,0 +1,35 @@
+// :5173 — handbook try board of Bảng giá trị: the panel lists only the rows in use; changing "Số hàng" adds / removes boxes live.
+const pw = 'file:///C:/Users/trong/AppData/Local/Temp/claude/a12094c0c35d488c/21dd1524-bf64-49b0-bdae-47a5b1b986a8/scratchpad/smoke/node_' + 'modules/playwright/index.mjs';
+const { chromium } = await import(pw);
+import fs from 'node:fs';
+const OUT = 'D:/workspace/GameBuilder/plans/reports/shots-value-table-rows/';
+fs.mkdirSync(OUT, { recursive: true });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const b = await chromium.launch({ executablePath: 'C:/Users/trong/AppData/Local/ms-playwright/chromium-1248/chrome-win64/chrome.exe', args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+const p = await b.newPage({ viewport: { width: 1440, height: 900 } });
+const logs = [];
+p.on('pageerror', (e) => logs.push(`pageerror: ${e.message}`));
+await p.goto('http://localhost:5173/');
+await sleep(2000);
+await p.evaluate(() => localStorage.clear());
+await p.reload();
+await sleep(2000);
+if (await p.locator('[data-tut="invite-no"]').isVisible().catch(() => false)) { await p.locator('[data-tut="invite-no"]').click(); await sleep(300); }
+await p.evaluate(() => document.dispatchEvent(new CustomEvent('handbook:open', { detail: 'value-table' })));
+await p.waitForSelector('.hb-modal', { state: 'visible' });
+await sleep(400);
+await p.locator('[data-hb-action="try"]').click();
+await sleep(1200);
+await p.locator('.wc-node', { hasText: 'Bảng giá trị' }).first().click({ position: { x: 20, y: 12 } });
+await sleep(500);
+const shown = () => p.locator('.prop-row').evaluateAll((els) => els.filter((e) => !e.hidden && e.offsetParent !== null).map((e) => e.getAttribute('data-param')));
+console.log('BEFORE', JSON.stringify(await shown()));
+await p.screenshot({ path: OUT + '1-default.png' });
+const rows = p.locator('[data-param="rows"] input').first();
+await rows.fill('6'); await rows.dispatchEvent('change'); await sleep(400);
+console.log('ROWS=6', JSON.stringify(await shown()), 'focus kept:', await p.evaluate(() => document.activeElement?.tagName));
+await p.screenshot({ path: OUT + '2-six-rows.png' });
+await rows.fill('2'); await rows.dispatchEvent('change'); await sleep(400);
+console.log('ROWS=2', JSON.stringify(await shown()));
+console.log('LOGS', JSON.stringify(logs));
+await b.close();

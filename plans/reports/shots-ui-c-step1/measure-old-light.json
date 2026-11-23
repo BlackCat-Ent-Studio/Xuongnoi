@@ -1,0 +1,110 @@
+{
+ "label": "old",
+ "theme": "light",
+ "samples": {
+  "old": {
+   "Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)": {
+    "cards": 19,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 152,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   },
+   "Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)": {
+    "cards": 50,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 114,
+    "worstEndErrorPx": 0,
+    "avgCardH": 147,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 282, 16)"
+   },
+   "Robot đi hình vuông (quãng đường, chênh lệch góc, chuỗi bước, 3D)": {
+    "cards": 32,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 80,
+    "worstEndErrorPx": 0,
+    "avgCardH": 140,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 282, 16)"
+   },
+   "Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn thật)": {
+    "cards": 26,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 172,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 288, 22)"
+   },
+   "Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)": {
+    "cards": 40,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 104,
+    "worstEndErrorPx": 0,
+    "avgCardH": 177,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)": {
+    "cards": 31,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 62,
+    "worstEndErrorPx": 0,
+    "avgCardH": 168,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 22, 22)"
+   },
+   "Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)": {
+    "cards": 15,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 76,
+    "worstEndErrorPx": 0,
+    "avgCardH": 249,
+    "zoom": "matrix(0.6, 0, 0, 0.6, 16, 16)"
+   }
+  }
+ },
+ "ui": {
+  "old": {
+   "minFont": 10.5,
+   "minEl": "span.pip-chip \"Đang sửa\"",
+   "textBelow12": {
+    "div.pn-meta": 11.5,
+    "span.pn-cat-count": 11.5,
+    "span.pn-en": 11,
+    "small.": 11.5,
+    "button.wc-pct": 11.5,
+    "span.wc-legend-item": 11.5,
+    "span.pip-chip": 10.5,
+    "div.pip-hint": 11.5,
+    "button.cs-btn on": 11.5,
+    "button.cs-btn": 11.5,
+    "time.": 11.5,
+    "span.": 11.5
+   },
+   "minHit": 13.1,
+   "minHitEl": "button.wc-note-del 13x19",
+   "hitBelow24": {
+    "button.seg-opt": 24,
+    "button.wc-note-dot dot-yellow": 14,
+    "button.wc-note-dot dot-green": 14,
+    "button.wc-note-dot dot-blue": 14,
+    "button.wc-note-dot dot-pink": 14,
+    "button.wc-note-del": 13,
+    "div.wc-port out": 26,
+    "div.wc-port in": 26,
+    "button.wc-coach-x": 24,
+    "button.wc-pct": 26,
+    "button.icobtn": 26,
+    "button.cs-btn on": 23,
+    "button.cs-btn": 23,
+    "button.pn-num-btn": 26,
+    "input.prop-input pn-num-input": 26
+   }
+  }
+ }
+}

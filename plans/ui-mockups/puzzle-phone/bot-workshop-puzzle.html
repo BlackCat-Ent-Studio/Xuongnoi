@@ -1,0 +1,462 @@
+<title>Xưởng Bot giải đố</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;600&display=swap">
+<style>
+/* Layout: one landscape phone (19.5:9) holding a game stage on the left and a circuit board on the right; level map and rules below. Single night-workshop look on purpose. */
+:root {
+  --night: #17123a;      /* page + phone bezel */
+  --board: #1f2a5c;      /* wiring board */
+  --board-dot: #33428a;
+  --stage: #bfeedd;      /* game floor */
+  --ink: #fdf7ff;        /* text on dark */
+  --ink-dark: #241a4a;   /* text on light */
+  --sun: #ffc93c;        /* wires, primary button */
+  --pink: #ff6fa6;       /* memory pieces */
+  --mint: #4fd6a8;       /* sensors */
+  --sky: #6cb6ff;        /* fixed objects */
+  --muted: #b7b0dd;
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+html, body { background: var(--night); color: var(--ink); }
+body { font-family: var(--body); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 40px; }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 22px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; text-wrap: balance; letter-spacing: .2px; }
+h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.05; }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 62ch; line-height: 1.5; }
+
+/* ---------- phone ---------- */
+.phone { container-type: inline-size; width: 100%; aspect-ratio: 844 / 390; background: #0b0820; border-radius: 4.2cqw; padding: 1.2cqw; box-shadow: 0 2cqw 5cqw -1cqw rgba(0,0,0,.6), inset 0 0 0 .3cqw #2c2466; max-width: 100%; }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 3.2cqw; overflow: hidden; display: grid; grid-template-columns: 44% 56%; background: var(--board); }
+.stage { position: relative; background: var(--stage); }
+.stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; left: 1.6cqw; right: 1.6cqw; top: 1.4cqw; display: flex; align-items: flex-start; gap: 1cqw; pointer-events: none; }
+.badge { pointer-events: auto; font-family: var(--display); font-weight: 800; font-size: 1.9cqw; background: var(--ink-dark); color: var(--ink); padding: .4cqw 1.3cqw; border-radius: 99px; box-shadow: 0 .4cqw 0 #0e0a26; white-space: nowrap; }
+.stars { margin-left: auto; display: flex; gap: .4cqw; }
+.stars i { width: 2.8cqw; height: 2.8cqw; display: block; clip-path: polygon(50% 0, 62% 35%, 100% 38%, 70% 60%, 80% 100%, 50% 77%, 20% 100%, 30% 60%, 0 38%, 38% 35%); background: rgba(36,26,74,.25); }
+.stars i.on { background: var(--sun); }
+.task { position: absolute; left: 1.6cqw; right: 1.6cqw; bottom: 1.6cqw; background: #fffdf4; color: var(--ink-dark); border-radius: 1.6cqw; padding: 1cqw 1.4cqw; font-size: 1.65cqw; line-height: 1.35; box-shadow: 0 .5cqw 0 #c8b98a; }
+.task b { font-family: var(--display); font-size: 1.8cqw; display: block; color: #8a5a00; }
+
+.board { position: relative; background-color: var(--board); background-image: radial-gradient(var(--board-dot) .18cqw, transparent .2cqw); background-size: 2.4cqw 2.4cqw; touch-action: none; overflow: hidden; }
+.board > svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+/* Wires and cards copy the main Xưởng Nối board ("Khối đồ chơi" cards): wire colour = port type. */
+.t-obj { --pc: #f27ad0; } .t-bool { --pc: #f7d046; }
+.wire { fill: none; stroke: var(--pc); stroke-width: .4cqw; stroke-linecap: round; pointer-events: stroke; cursor: pointer; transition: opacity .25s; }
+/* "Dòng điện" — same rules as the board's wire-energy: lit/dim + glow + sparks while running, drifting dots while editing.
+   No CSS filters (they cost FPS); halos are translucent strokes. */
+.wire.is-dim { opacity: .35; } .wire.is-live { opacity: 1; }
+.wire-glow { fill: none; stroke: var(--pc); stroke-width: .7cqw; stroke-linecap: round; opacity: 0; pointer-events: none; transition: opacity .25s; }
+.wire-glow.is-live { opacity: .28; } .wire-glow.t-obj.is-live { opacity: .14; }
+.spark { fill: var(--pc); stroke: var(--pc); stroke-opacity: .35; stroke-width: .6cqw; pointer-events: none; }
+.wire-flow { fill: none; stroke: color-mix(in srgb, var(--pc) 35%, #fff); stroke-width: .24cqw; stroke-linecap: round; stroke-dasharray: .2cqw 1.4cqw; opacity: .5; pointer-events: none; animation: wflow 2.4s steps(12) infinite; }
+@keyframes wflow { to { stroke-dashoffset: -1.6cqw; } }
+.row[data-live="on"] .port { box-shadow: 0 0 0 .3cqw color-mix(in srgb, var(--pc) 30%, transparent), 0 0 1.2cqw var(--pc); }
+@media (prefers-reduced-motion: reduce) { .wire-flow { display: none; } .wire, .wire-glow { transition: none; } }
+
+.card { --cc: #aab2bd; --card: #222832; position: absolute; min-width: 11.5cqw; box-sizing: border-box; white-space: nowrap; background: var(--card); color: #e7e9ec;
+  border: .2cqw solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 1.7cqw;
+  box-shadow: 0 .55cqw 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 1.2cqw 2cqw -1cqw rgba(0,0,0,.8);
+  font-size: 1.25cqw; font-weight: 600; user-select: none; touch-action: none; }
+.card header { display: flex; align-items: center; gap: .7cqw; padding: .45cqw .9cqw; border-radius: 1.45cqw 1.45cqw 0 0; background: var(--cc); color: #10151b; cursor: grab; }
+.card .tile { flex: none; width: 2.1cqw; height: 2.1cqw; border-radius: 50%; background: rgba(255,255,255,.35); display: grid; place-items: center; }
+.card .tile svg { width: 1.3cqw; height: 1.3cqw; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card .ttl { display: flex; flex-direction: column; line-height: 1.15; margin-right: auto; }
+.card .ttl b { font-weight: 800; font-size: 1.35cqw; }
+.card .ttl small { font-size: 1cqw; font-weight: 600; color: rgba(16,21,27,.72); }
+.card .lock { flex: none; width: 1.3cqw; height: 1.3cqw; fill: none; stroke: #10151b; stroke-width: 2; opacity: .6; }
+.card .x { flex: none; border: 0; background: rgba(16,21,27,.18); color: #10151b; width: 2.2cqw; height: 2.2cqw; border-radius: 50%; font: 800 1.4cqw/1 var(--display); cursor: pointer; }
+.rows { display: flex; flex-direction: column; padding: .3cqw 0 .5cqw; }
+.ports { display: flex; flex-direction: column; } .ports.outs { align-items: flex-end; }
+.row { display: flex; align-items: center; gap: .7cqw; height: 2.5cqw; padding: 0 .9cqw; }
+.row.out { flex-direction: row-reverse; }
+/* pin sits inside the card edge; ::before widens the finger target */
+.port { position: relative; flex: none; width: 1.15cqw; height: 1.15cqw; padding: 0; border: 0; background: var(--pc); cursor: pointer; transition: transform .15s; }
+.port.t-bool { border-radius: 50%; } .port.t-obj { border-radius: .2cqw; }
+.port::before { content: ""; position: absolute; inset: -1cqw; }
+.port.pick { transform: scale(1.5); box-shadow: 0 0 0 .3cqw #fff; }
+.port.ok { animation: glow .9s ease-in-out infinite; box-shadow: 0 0 0 .4cqw color-mix(in srgb, var(--pc) 45%, transparent), 0 0 1cqw var(--pc); }
+.port:focus-visible { outline: .3cqw solid #fff; outline-offset: .2cqw; }
+@keyframes glow { 50% { transform: scale(1.4); } }
+.cat-object { --cc: #f0965a; } .cat-logic { --cc: #a894ff; }
+.card { transition: box-shadow .25s; }
+.card.is-hot { box-shadow: 0 .55cqw 0 color-mix(in srgb, var(--cc) 35%, #0b0d10), 0 0 2.8cqw -.4cqw var(--cc); }
+
+.tray { position: absolute; left: 1.4cqw; bottom: 1.4cqw; display: flex; gap: .9cqw; align-items: flex-end; }
+.chip { border: 0; cursor: pointer; font: 800 1.35cqw/1.1 var(--display); color: #10151b; background: var(--cc); padding: .7cqw 1cqw; border-radius: 1.2cqw; box-shadow: 0 .5cqw 0 rgba(0,0,0,.35); display: grid; text-align: left; }
+.chip span { font: 600 1.05cqw var(--body); opacity: .8; }
+.chip:disabled { opacity: .35; cursor: default; }
+.chip:focus-visible, .btn:focus-visible { outline: .3cqw solid #fff; outline-offset: .2cqw; }
+.actions { position: absolute; right: 1.4cqw; bottom: 1.4cqw; display: flex; gap: .9cqw; align-items: center; }
+.btn { border: 0; cursor: pointer; font-family: var(--display); font-weight: 800; border-radius: 1.4cqw; box-shadow: 0 .55cqw 0 rgba(0,0,0,.4); }
+.btn.run { background: var(--sun); color: var(--ink-dark); font-size: 2.6cqw; padding: .8cqw 2.6cqw; }
+.btn.small { background: #3a4a92; color: var(--ink); font-size: 1.5cqw; width: 4.2cqw; height: 4.2cqw; padding: 0; border-radius: 50%; }
+.btn:active, .chip:active { transform: translateY(.3cqw); box-shadow: 0 .25cqw 0 rgba(0,0,0,.4); }
+.toast { position: absolute; left: 50%; top: 1.4cqw; transform: translateX(-50%); background: #0e1438; color: var(--ink); border: .2cqw solid var(--sun); padding: .6cqw 1.4cqw; border-radius: 99px; font-size: 1.45cqw; white-space: nowrap; pointer-events: none; }
+.win { position: absolute; inset: 0; background: rgba(15,10,40,.72); display: grid; place-items: center; }
+.win > div { background: #fffdf4; color: var(--ink-dark); border-radius: 2.4cqw; padding: 2cqw 3.4cqw; text-align: center; display: grid; gap: 1cqw; box-shadow: 0 .8cqw 0 #c8b98a; }
+.win h3 { font-size: 4cqw; color: #8a5a00; }
+.win .stars { margin: 0 auto; } .win .stars i { width: 5.4cqw; height: 5.4cqw; }
+.win p { margin: 0; font-size: 1.6cqw; max-width: 42ch; }
+
+/* ---------- below the phone ---------- */
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+.panel { background: #221b52; border-radius: 18px; padding: 16px 18px; display: grid; gap: 10px; align-content: start; }
+.panel h2 { font-size: 22px; }
+.levels { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.levels li { display: grid; grid-template-columns: 34px 1fr; gap: 10px; align-items: start; }
+.levels .n { font-family: var(--display); font-weight: 800; font-size: 18px; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; background: #3a2f80; }
+.levels li.now .n { background: var(--sun); color: var(--ink-dark); }
+.levels b { font-family: var(--display); font-size: 18px; }
+.levels p, .panel p, .panel li { margin: 0; color: var(--muted); line-height: 1.45; font-size: 14px; }
+.panel ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.panel strong { color: var(--ink); }
+.rotate { display: none; text-align: center; color: var(--muted); font-size: 14px; }
+@media (max-width: 520px) { .rotate { display: block; } }
+@media (prefers-reduced-motion: reduce) { .port.ok::after { animation: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Xưởng Bot: màn "Cửa kho"</h1>
+    <p class="lede">Bản xem trước chế độ giải đố trên điện thoại cầm ngang. Chạm thử: chạm một cổng tròn, các cổng nối được sẽ sáng lên, chạm tiếp cổng đó để nối dây. Chạm vào dây để gỡ. Xong thì bấm <strong>CHẠY</strong>.</p>
+  </header>
+
+  <p class="rotate">Trên điện thoại: xoay ngang để xem rõ hơn.</p>
+
+  <div class="phone" aria-label="Màn hình điện thoại cầm ngang">
+    <div class="screen" id="screen">
+      <section class="stage" aria-label="Màn chơi">
+        <canvas id="stage"></canvas>
+        <div class="hud">
+          <span class="badge">Màn 2 · Cửa kho</span>
+          <span class="stars" id="hudStars"><i></i><i></i><i></i></span>
+        </div>
+        <div class="task"><b>Đề bài</b>Bot đang tự đi tới cờ nhưng cửa kho đóng. Hãy nối sao cho bot dẫm nút đỏ thì cửa mở và mở mãi.</div>
+      </section>
+      <section class="board" id="board" aria-label="Bàn nối">
+        <svg id="wires"></svg>
+        <div class="tray" id="tray"></div>
+        <div class="actions">
+          <button class="btn small" id="hint" type="button" aria-label="Gợi ý" title="Gợi ý">?</button>
+          <button class="btn small" id="reset" type="button" aria-label="Làm lại" title="Làm lại">↺</button>
+          <button class="btn run" id="run" type="button">CHẠY ▶</button>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="cols">
+    <section class="panel">
+      <h2>5 màn của đợt đầu</h2>
+      <ol class="levels">
+        <li><span class="n">0</span><div><b>Hướng dẫn: Bot đầu tiên</b><p>Cho: Đi tới. Học cách chạm cổng để nối dây và bấm Chạy.</p></div></li>
+        <li><span class="n">1</span><div><b>Nhặt sao</b><p>Cho: Chuỗi việc, Đi tới ×2. Đi nhặt sao rồi mới về cờ.</p></div></li>
+        <li class="now"><span class="n">2</span><div><b>Cửa kho</b><p>Cho: Cảm biến chạm, Công tắc nhớ. Màn đang xem trước ở trên.</p></div></li>
+        <li><span class="n">3</span><div><b>Đủ ba thùng</b><p>Cho: Bộ đếm, So sánh. Cổng chỉ mở khi đã đẩy đủ 3 thùng vào ô.</p></div></li>
+        <li><span class="n">4</span><div><b>Né lính gác</b><p>Cho: Cảm biến vùng, Không. Bot chỉ đi khi lính gác không đứng trong vùng.</p></div></li>
+      </ol>
+    </section>
+    <section class="panel">
+      <h2>Tính sao</h2>
+      <ul>
+        <li><strong>1 sao:</strong> bot làm đúng đề bài.</li>
+        <li><strong>2 sao:</strong> không mở Gợi ý.</li>
+        <li><strong>3 sao:</strong> dùng ít mảnh nhất có thể (màn này: 2 mảnh).</li>
+      </ul>
+      <p>Đề chấm theo kết quả, nên có nhiều cách giải đúng.</p>
+    </section>
+    <section class="panel">
+      <h2>Nối dây bằng ngón tay</h2>
+      <ul>
+        <li>Chạm cổng ra, rồi chạm cổng vào. Không cần kéo.</li>
+        <li>Cổng tròn to, chạm trúng dễ; chỉ cổng hợp kiểu mới sáng.</li>
+        <li>Kéo đầu thẻ để dời mảnh. Chạm dây để gỡ.</li>
+        <li>Thẻ có ổ khoá là vật có sẵn, không xoá được.</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const board = document.getElementById('board');
+  const svg = document.getElementById('wires');
+  const tray = document.getElementById('tray');
+  const screen = document.getElementById('screen');
+
+  // Pieces. Ports: kind 'obj' (an object) or 'bool' (on/off).
+  // Pieces use the real Xưởng Nối node names, categories and port labels.
+  // `sub` = the small line under the title (the object's own name, else the category).
+  // Fixed objects only show the ports this level needs; tray pieces show all their real ports.
+  const DEFS = {
+    bot:   { name: 'Nhân vật', sub: 'Bot', cls: 'cat-object', fixed: true, ins: [], outs: [['self', 'Nhân vật', 'obj']] },
+    btn:   { name: 'Hộp', sub: 'Nút đỏ', cls: 'cat-object', fixed: true, ins: [], outs: [['self', 'Hộp', 'obj']] },
+    door:  { name: 'Hộp', sub: 'Cửa kho', cls: 'cat-object', fixed: true, ins: [['open', 'Ẩn đi', 'bool']], outs: [] },
+    touch: { name: 'Cảm biến chạm', sub: 'Logic', cls: 'cat-logic', ins: [['a', 'Vật A', 'obj'], ['b', 'Vật B', 'obj']],
+             outs: [['on', 'Đang chạm', 'bool'], ['began', 'Vừa chạm', 'bool'], ['ended', 'Vừa thôi chạm', 'bool']] },
+    latch: { name: 'Công tắc nhớ', sub: 'Logic', cls: 'cat-logic', ins: [['set', 'Bật', 'bool'], ['reset', 'Tắt', 'bool'], ['toggle', 'Đảo', 'bool']],
+             outs: [['on', 'Đang bật', 'bool']] },
+  };
+  const GLYPH = {
+    'cat-object': '<path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/>',
+    'cat-logic': '<circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8 6h3a3 3 0 0 1 3 3v1M8 18h3a3 3 0 0 0 3-3v-1M14 12h1.8"/>',
+  };
+  const LOCK = '<svg class="lock" viewBox="0 0 24 24" aria-label="Cố định"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
+  const TRAY = ['touch', 'latch'];
+  const PLACE = { touch: [24, 5], latch: [64, 5] };
+  const START = { bot: [2, 5], btn: [2, 34], door: [74, 54] }; // % of board
+
+  let cards = {}, wires = [], picked = null, hintUsed = false, running = false;
+
+  function el(tag, cls, html) { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+
+  function addCard(id, x, y) {
+    const d = DEFS[id];
+    const c = el('div', 'card ' + d.cls);
+    c.dataset.id = id;
+    const head = el('header', null, `<span class="tile"><svg viewBox="0 0 24 24">${GLYPH[d.cls]}</svg></span><span class="ttl"><b>${d.name}</b><small>${d.sub}</small></span>`);
+    if (d.fixed) head.insertAdjacentHTML('beforeend', LOCK);
+    else { const x = el('button', 'x', '×'); x.type = 'button'; x.setAttribute('aria-label', 'Trả ' + d.name + ' về khay'); x.onclick = (e) => { e.stopPropagation(); removeCard(id); }; head.append(x); }
+    c.append(head);
+    // inputs first (left), then outputs (right), like the main board
+    const rows = el('div', 'rows'), ins = el('div', 'ports ins'), outs = el('div', 'ports outs');
+    for (const [p, label, kind] of d.ins) ins.append(portRow(id, p, label, kind, 'in'));
+    for (const [p, label, kind] of d.outs) outs.append(portRow(id, p, label, kind, 'out'));
+    rows.append(ins, outs);
+    c.append(rows);
+    c.style.left = x + '%'; c.style.top = y + '%';
+    board.append(c);
+    cards[id] = c;
+    dragHead(head, c);
+    syncTray(); draw();
+  }
+  function portRow(card, p, label, kind, dir) {
+    const r = el('div', 'row ' + dir);
+    const b = el('button', 'port t-' + kind); b.type = 'button';
+    Object.assign(b.dataset, { card, p, kind, dir });
+    b.setAttribute('aria-label', (dir === 'in' ? 'Cổng vào ' : 'Cổng ra ') + label);
+    b.onclick = (e) => { e.stopPropagation(); tapPort(b); };
+    r.append(b, el('span', null, label)); return r;
+  }
+  function removeCard(id) {
+    wires = wires.filter((w) => w.from.card !== id && w.to.card !== id);
+    cards[id].remove(); delete cards[id];
+    picked = null; syncTray(); draw();
+  }
+  function syncTray() {
+    tray.innerHTML = '';
+    for (const id of TRAY) {
+      const b = el('button', 'chip ' + DEFS[id].cls, DEFS[id].name + '<span>' + (cards[id] ? 'đã dùng' : 'còn ×1') + '</span>');
+      b.type = 'button'; b.disabled = !!cards[id];
+      b.onclick = () => addCard(id, ...PLACE[id]);
+      tray.append(b);
+    }
+  }
+
+  // Tap-tap wiring: first tap picks a port and lights every port it can join; second tap joins them.
+  function tapPort(b) {
+    if (running) return;
+    const me = { card: b.dataset.card, p: b.dataset.p, kind: b.dataset.kind, dir: b.dataset.dir };
+    if (!picked) { picked = me; return draw(); }
+    if (picked.card === me.card && picked.p === me.p) { picked = null; return draw(); }
+    if (canJoin(picked, me)) {
+      const from = picked.dir === 'out' ? picked : me, to = picked.dir === 'out' ? me : picked;
+      wires = wires.filter((w) => !(w.to.card === to.card && w.to.p === to.p)); // one wire per input
+      wires.push({ from, to }); picked = null; toast('Đã nối!');
+    } else { picked = me; }
+    draw();
+  }
+  const canJoin = (a, b) => a.dir !== b.dir && a.kind === b.kind && a.card !== b.card;
+
+  function portEl(ref) { return board.querySelector(`.port[data-card="${ref.card}"][data-p="${ref.p}"]`); }
+  function center(e) { const r = e.getBoundingClientRect(), B = board.getBoundingClientRect(); return [r.left + r.width / 2 - B.left, r.top + r.height / 2 - B.top]; }
+  function draw() {
+    svg.innerHTML = '';
+    board.querySelectorAll('.port').forEach((p) => {
+      const ref = { card: p.dataset.card, p: p.dataset.p, kind: p.dataset.kind, dir: p.dataset.dir };
+      p.classList.toggle('wired', wires.some((w) => (w.from.card === ref.card && w.from.p === ref.p) || (w.to.card === ref.card && w.to.p === ref.p)));
+      p.classList.toggle('pick', !!picked && picked.card === ref.card && picked.p === ref.p);
+      p.classList.toggle('ok', !!picked && canJoin(picked, ref));
+    });
+    wires.forEach((w, i) => {
+      const a = portEl(w.from), b = portEl(w.to); if (!a || !b) return;
+      const [x1, y1] = center(a), [x2, y2] = center(b), dx = Math.max(40, Math.abs(x2 - x1) * .5);
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`);
+      path.setAttribute('class', 'wire t-' + w.from.kind);
+      path.addEventListener('click', () => { if (running) return; wires.splice(i, 1); toast('Đã gỡ dây'); draw(); });
+      svg.append(path);
+      w.path = path; w.glow = null; w.prev = undefined; w.litUntil = -Infinity; w.len = 0;
+      if (!running) {   // edit mode: faint dots drift output -> input (pure CSS)
+        const flow = document.createElementNS(SVG_NS, 'path');
+        flow.setAttribute('class', 'wire-flow t-' + w.from.kind);
+        flow.setAttribute('d', path.getAttribute('d'));
+        svg.append(flow);
+      }
+    });
+    sparks = [];
+    board.querySelectorAll('[data-live]').forEach((e) => e.removeAttribute('data-live'));
+    board.querySelectorAll('.card.is-hot').forEach((e) => e.classList.remove('is-hot'));
+  }
+
+  // ---------- "dòng điện" while running (same rules as the board's wire-energy) ----------
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const PULSE_HOLD_MS = 220, MAX_SPARKS = 60;
+  const motionOK = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let sparks = [];
+  /** Value each output carries this frame; filled by step(). Objects always exist, so their wires stay lit. */
+  const signal = { 'bot|self': true, 'btn|self': true, 'touch|on': false, 'touch|began': false, 'touch|ended': false, 'latch|on': false };
+  function energy(dtMs, now) {
+    const live = new Set(), hot = new Set();
+    for (const w of wires) {
+      if (!w.path?.isConnected) continue;
+      const v = !!signal[w.from.card + '|' + w.from.p];
+      if (w.from.kind === 'bool' && v && w.prev === false) {   // rising edge -> spark + short hold
+        w.litUntil = now + PULSE_HOLD_MS;
+        if (motionOK && sparks.length < MAX_SPARKS) {
+          const c = document.createElementNS(SVG_NS, 'circle');
+          c.setAttribute('class', 'spark t-bool'); c.setAttribute('r', '5'); c.style.opacity = '0';
+          svg.append(c); sparks.push({ el: c, w, age: 0, dur: 520 });
+        }
+      }
+      w.prev = v;
+      const lit = v || now < w.litUntil;
+      w.path.classList.toggle('is-live', lit); w.path.classList.toggle('is-dim', !lit);
+      if (lit && !w.glow) {
+        w.glow = document.createElementNS(SVG_NS, 'path');
+        w.glow.setAttribute('class', 'wire-glow t-' + w.from.kind);
+        w.glow.setAttribute('d', w.path.getAttribute('d'));
+        w.path.before(w.glow);
+      }
+      w.glow?.classList.toggle('is-live', lit);
+      if (lit) {
+        live.add(portEl(w.from)?.closest('.row')); live.add(portEl(w.to)?.closest('.row'));
+        hot.add(cards[w.from.card]);
+      }
+    }
+    board.querySelectorAll('.row').forEach((r) => (live.has(r) ? r.setAttribute('data-live', 'on') : r.removeAttribute('data-live')));
+    for (const c of Object.values(cards)) c.classList.toggle('is-hot', hot.has(c));
+    sparks = sparks.filter((s) => {
+      s.age += dtMs;
+      const t = Math.min(1, s.age / s.dur);
+      if (t >= 1 || !s.w.path.isConnected) { s.el.remove(); return false; }
+      if (!s.w.len) s.w.len = s.w.path.getTotalLength();
+      const p = s.w.path.getPointAtLength(t * s.w.len);
+      s.el.setAttribute('cx', p.x.toFixed(1)); s.el.setAttribute('cy', p.y.toFixed(1));
+      s.el.style.opacity = String(t > .85 ? (1 - t) / .15 : 1);
+      return true;
+    });
+  }
+  function dragHead(head, card) {
+    head.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button')) return;
+      const B = board.getBoundingClientRect(), r = card.getBoundingClientRect(), ox = e.clientX - r.left, oy = e.clientY - r.top;
+      head.setPointerCapture(e.pointerId);
+      const move = (ev) => {
+        const x = Math.min(Math.max(ev.clientX - B.left - ox, 0), B.width - r.width), y = Math.min(Math.max(ev.clientY - B.top - oy, 0), B.height - r.height);
+        card.style.left = (x / B.width * 100) + '%'; card.style.top = (y / B.height * 100) + '%'; draw();
+      };
+      const up = () => { head.removeEventListener('pointermove', move); head.removeEventListener('pointerup', up); };
+      head.addEventListener('pointermove', move); head.addEventListener('pointerup', up);
+    });
+  }
+  let toastTimer = 0;
+  function toast(t) {
+    screen.querySelector('.toast')?.remove();
+    const n = el('div', 'toast', t); board.append(n);
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => n.remove(), 1600);
+  }
+
+  // ---------- game stage ----------
+  const cv = document.getElementById('stage'), g = cv.getContext('2d');
+  const W = { botX: .12, button: .36, door: .64, flag: .86 };
+  let botX = W.botX, latched = false, doorOpen = 0, stuck = 0, last = 0, bob = 0;
+  const has = (fc, fp, tc, tp) => wires.some((w) => w.from.card === fc && w.from.p === fp && w.to.card === tc && w.to.p === tp);
+  function step(dt) {
+    const onButton = Math.abs(botX - W.button) < .045;
+    const touching = onButton && ((has('bot', 'self', 'touch', 'a') && has('btn', 'self', 'touch', 'b')) || (has('bot', 'self', 'touch', 'b') && has('btn', 'self', 'touch', 'a')));
+    if (touching && (has('touch', 'on', 'latch', 'set') || has('touch', 'began', 'latch', 'set'))) latched = true;
+    signal['touch|began'] = touching && !signal['touch|on'];
+    signal['touch|ended'] = !touching && signal['touch|on'];
+    signal['touch|on'] = touching;
+    signal['latch|on'] = latched;
+    const open = (has('latch', 'on', 'door', 'open') && latched) || (has('touch', 'on', 'door', 'open') && touching);
+    doorOpen += ((open ? 1 : 0) - doorOpen) * Math.min(1, dt * 8);
+    const wall = W.door - .05;
+    let nx = botX + dt * .13;
+    if (doorOpen < .6 && botX <= wall && nx > wall) { nx = wall; stuck += dt; } else stuck = 0;
+    botX = Math.min(nx, W.flag);
+    if (botX >= W.flag) finish(true);
+    else if (stuck > 1.3) finish(false);
+  }
+  function paint(t) {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(devicePixelRatio || 1, 2);
+    if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr); }
+    const w = cv.width, h = cv.height, u = w / 100, ground = h * .52;
+    g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, w, h);
+    for (let i = 0; i < 12; i++) { g.fillStyle = i % 2 ? '#b2e6d3' : '#c6f1e2'; g.fillRect(i * w / 12, h * .2, w / 12 + 1, h * .62); }
+    g.fillStyle = '#7fcfb3'; g.fillRect(0, ground + 7 * u, w, 1.6 * u);
+    // button
+    const bx = W.button * w; g.fillStyle = '#8d2443'; g.beginPath(); g.ellipse(bx, ground + 6 * u, 5 * u, 1.8 * u, 0, 0, 7); g.fill();
+    g.fillStyle = latched ? '#ffc93c' : '#ff4f7b'; g.beginPath(); g.ellipse(bx, ground + 5.2 * u, 4 * u, 1.4 * u, 0, 0, 7); g.fill();
+    // door
+    const dx = W.door * w, dh = 20 * u * (1 - doorOpen);
+    g.fillStyle = '#5b3a1e'; g.fillRect(dx - 3.2 * u, ground - 15 * u, 1.4 * u, 22 * u); g.fillRect(dx + 1.8 * u, ground - 15 * u, 1.4 * u, 22 * u);
+    g.fillStyle = '#a8662f'; g.fillRect(dx - 1.8 * u, ground + 7 * u - dh, 3.6 * u, dh);
+    g.fillStyle = '#5b3a1e'; for (let k = 1; k < 4; k++) g.fillRect(dx - 1.8 * u, ground + 7 * u - dh * k / 4, 3.6 * u, .5 * u);
+    // flag
+    const fx = W.flag * w; g.fillStyle = '#3c3a6e'; g.fillRect(fx, ground - 14 * u, .9 * u, 21 * u);
+    g.fillStyle = '#ffc93c'; g.beginPath(); g.moveTo(fx + .9 * u, ground - 14 * u); g.lineTo(fx + 8 * u, ground - 11 * u); g.lineTo(fx + .9 * u, ground - 8 * u); g.fill();
+    // bot
+    bob = running ? Math.sin(t / 90) * .6 * u : Math.sin(t / 500) * .3 * u;
+    const x = botX * w, y = ground + bob, shake = stuck > 0 ? Math.sin(t / 30) * .6 * u : 0;
+    g.save(); g.translate(x + shake, y);
+    g.fillStyle = 'rgba(36,26,74,.18)'; g.beginPath(); g.ellipse(0, 7 * u, 5 * u, 1.3 * u, 0, 0, 7); g.fill();
+    g.fillStyle = '#3d4fb0'; rr(-4.6 * u, -4 * u, 9.2 * u, 10 * u, 2.4 * u); g.fill();
+    g.fillStyle = '#e9ecff'; rr(-3.6 * u, -2.8 * u, 7.2 * u, 4.4 * u, 1.6 * u); g.fill();
+    g.fillStyle = '#241a4a'; g.beginPath(); g.arc(-1.4 * u, -.6 * u, .8 * u, 0, 7); g.arc(1.6 * u, -.6 * u, .8 * u, 0, 7); g.fill();
+    g.fillStyle = '#ffc93c'; g.fillRect(-.3 * u, -7 * u, .6 * u, 3 * u); g.beginPath(); g.arc(0, -7.4 * u, 1 * u, 0, 7); g.fill();
+    g.restore();
+    function rr(x, y, w2, h2, r2) { g.beginPath(); g.roundRect(x, y, w2, h2, r2); }
+  }
+  function loop(t) {
+    const dt = last ? Math.min((t - last) / 1000, .05) : 0; last = t;
+    if (running) { step(dt); energy(dt * 1000, t); }
+    paint(t); requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  function finish(ok) {
+    running = false; draw();
+    running = false;
+    document.getElementById('run').textContent = 'CHẠY ▶';
+    if (!ok) { toast('Bot đứng trước cửa đóng. Cửa có mở đủ lâu không?'); return; }
+    const pieces = TRAY.filter((id) => cards[id]).length;
+    const stars = 1 + (hintUsed ? 0 : 1) + (pieces <= 2 && !hintUsed ? 1 : 0);
+    document.querySelectorAll('#hudStars i').forEach((s, i) => s.classList.toggle('on', i < stars));
+    const box = el('div', 'win', `<div><h3>Qua màn!</h3><span class="stars">${[0, 1, 2].map((i) => `<i class="${i < stars ? 'on' : ''}"></i>`).join('')}</span><p>${stars === 3 ? 'Gọn nhất có thể. Tuyệt vời!' : hintUsed ? 'Thử lại không xem Gợi ý để lấy thêm sao.' : 'Còn cách dùng ít mảnh hơn đấy.'}</p><button class="btn run" type="button">Màn tiếp ▶</button></div>`);
+    box.querySelector('button').onclick = () => { box.remove(); resetRun(); };
+    screen.append(box);
+  }
+  function resetRun() { botX = W.botX; latched = false; doorOpen = 0; stuck = 0; Object.assign(signal, { 'touch|on': false, 'touch|began': false, 'touch|ended': false, 'latch|on': false }); }
+
+  document.getElementById('run').onclick = (e) => {
+    if (running) { running = false; resetRun(); draw(); e.target.textContent = 'CHẠY ▶'; return; }
+    resetRun(); picked = null; running = true; draw(); e.target.textContent = 'DỪNG ■';
+  };
+  document.getElementById('reset').onclick = () => { running = false; resetRun(); for (const id of TRAY) if (cards[id]) removeCard(id); wires = []; draw(); document.getElementById('run').textContent = 'CHẠY ▶'; };
+  document.getElementById('hint').onclick = () => { hintUsed = true; toast('Gợi ý: cảm biến chỉ bật lúc đang dẫm nút. Cần thứ gì đó nhớ lại.'); };
+  board.addEventListener('click', (e) => { if (e.target === board && picked) { picked = null; draw(); } });
+  window.addEventListener('resize', draw);
+
+  for (const [id, [x, y]] of Object.entries(START)) addCard(id, x, y);
+  // Open in a realistic half-built state: the sensor is placed and one wire is joined.
+  addCard('touch', ...PLACE.touch);
+  wires.push({ from: { card: 'bot', p: 'self', kind: 'obj', dir: 'out' }, to: { card: 'touch', p: 'a', kind: 'obj', dir: 'in' } });
+  requestAnimationFrame(draw);
+  document.fonts?.ready.then(draw);
+})();
+</script>

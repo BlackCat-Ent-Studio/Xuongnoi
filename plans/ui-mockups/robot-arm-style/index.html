@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chọn kiểu dáng cánh tay robot</title>
+<style>
+  :root { --bg:#17123a; --panel:#241d55; --ink:#f6f1e4; --accent:#ffcc3d; --blue:#7cc4f0; --line:#3a3277; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif; }
+  h1,h2 { margin:0; }
+  header { padding:14px 20px 4px; max-width:1360px; margin:0 auto; }
+  header h1 { font-size:clamp(1.4rem,4vw,2rem); color:var(--accent); }
+  header p { margin:2px 0 0; opacity:.8; font-size:.92rem; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; padding:10px 20px 28px; max-width:1360px; margin:0 auto; }
+  #stagewrap { min-width:0; }
+  #looks { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:10px; }
+  #stage { position:relative; height:min(66vh,620px); border-radius:24px; overflow:hidden; border:2px solid var(--line); }
+  #stage canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #hint { color:#fff; text-shadow:0 1px 3px #000; position:absolute; left:14px; bottom:10px; font-size:.8rem; opacity:.75; pointer-events:none; }
+  #tris { color:#fff; text-shadow:0 1px 3px #000; position:absolute; right:14px; bottom:10px; font-size:.75rem; opacity:.6; pointer-events:none; }
+  #lookname { position:absolute; left:14px; top:12px; font-weight:800; font-size:1.05rem; padding:4px 12px; border-radius:999px; background:rgba(36,29,85,.82); pointer-events:none; }
+  #lookdesc { margin:8px 2px 0; font-size:.88rem; opacity:.85; min-height:2.6em; }
+  aside { min-width:0; background:var(--panel); border:2px solid var(--line); border-radius:24px; padding:14px 16px; max-height:calc(100vh - 90px); overflow:auto; }
+  aside h2 { font-size:1.02rem; color:var(--blue); margin:0 0 6px; }
+  .group { margin-bottom:14px; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  button { font:inherit; font-weight:600; color:var(--ink); background:#33298a; border:2px solid var(--line); border-radius:14px; padding:8px 8px; min-height:42px; cursor:pointer; transition:transform .1s, background .15s; }
+  button:hover { background:#41359f; }
+  button:active { transform:scale(.97); }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); color:#2a2350; border-color:var(--accent); }
+  button.warn[aria-pressed="true"] { background:#ff5a5a; border-color:#ff5a5a; color:#fff; }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:8px; margin:6px 0; font-size:.88rem; }
+  .row label { flex:0 0 96px; }
+  .val { flex:0 0 52px; text-align:right; opacity:.75; font-size:.8rem; font-variant-numeric:tabular-nums; }
+  input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--accent); height:28px; }
+  input[type=color] { width:54px; height:34px; border:2px solid var(--line); border-radius:10px; background:none; padding:2px; cursor:pointer; }
+  select { font:inherit; background:#33298a; color:var(--ink); border:2px solid var(--line); border-radius:10px; padding:6px; }
+  #json { display:none; width:100%; margin-top:8px; min-height:120px; background:#150f36; color:var(--ink); border:2px solid var(--line); border-radius:12px; padding:8px; font:.76rem/1.4 ui-monospace,Consolas,monospace; }
+  #status { min-height:1.3em; margin:8px 0 0; font-size:.85rem; color:var(--accent); }
+  .note { font-size:.78rem; opacity:.7; margin:4px 0 0; }
+  @media (max-width:900px) { main { grid-template-columns:minmax(0,1fr); } aside { max-height:none; } #stage { height:min(56vh,440px); } #looks { grid-template-columns:1fr 1fr; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header>
+  <h1>Chọn kiểu dáng cánh tay robot</h1>
+  <p>Cùng một cánh tay, bốn cách vẽ. Bấm các nút kiểu ở trên khung để so sánh; kéo chuột để xoay, cuộn để phóng to. Đây chỉ là trang xem thử, chưa đưa vào game.</p>
+</header>
+<main>
+  <section id="stagewrap">
+    <div id="looks" role="group" aria-label="Chọn kiểu dáng">
+      <button type="button" data-look="0">0. Hiện tại</button>
+      <button type="button" data-look="1">A. Tròn trịa (cozy)</button>
+      <button type="button" data-look="2">B. Công nghiệp hoạt hình</button>
+      <button type="button" data-look="3">C. Giống bộ asset</button>
+    </div>
+    <div id="stage" aria-label="Khung xem cánh tay robot">
+      <div id="lookname"></div>
+      <div id="hint">Kéo để xoay quanh cánh tay</div>
+      <div id="tris"></div>
+    </div>
+    <p id="lookdesc"></p>
+  </section>
+  <aside>
+    <div class="group">
+      <h2>Cách nhìn</h2>
+      <div class="grid2" id="views">
+        <button type="button" data-view="3d" aria-pressed="true">3D xoay được</button>
+        <button type="button" data-view="2d" aria-pressed="false">2D nhìn ngang</button>
+      </div>
+      <p class="note">Nhìn ngang 2D ẩn xi lanh và thân robot để khỏi che cánh tay.</p>
+    </div>
+    <div class="group">
+      <h2>Tình huống của vật lý</h2>
+      <div class="grid2" id="states">
+        <button type="button" data-state="none" aria-pressed="true">Bình thường</button>
+        <button type="button" data-state="hold" aria-pressed="false">Giữ thùng</button>
+        <button type="button" data-state="slip" aria-pressed="false">Thùng tuột</button>
+        <button type="button" data-state="crush" aria-pressed="false">Thùng bẹp</button>
+        <button type="button" class="warn" data-state="overload" aria-pressed="false">Khớp quá tải</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Khớp xoay và thanh nối</h2>
+      <div class="row"><label for="s-a1">Góc vai</label><input type="range" id="s-a1" min="-30" max="110" step="1"><span class="val" id="v-a1"></span></div>
+      <div class="row"><label for="s-a2">Góc khuỷu</label><input type="range" id="s-a2" min="0" max="150" step="1"><span class="val" id="v-a2"></span></div>
+      <div class="row"><label for="s-L1">Dài thanh 1</label><input type="range" id="s-L1" min="0.2" max="3" step="0.05"><span class="val" id="v-L1"></span></div>
+      <div class="row"><label for="s-L2">Dài thanh 2</label><input type="range" id="s-L2" min="0.2" max="3" step="0.05"><span class="val" id="v-L2"></span></div>
+      <div class="row"><label for="s-T">Độ dày</label><input type="range" id="s-T" min="0.1" max="0.5" step="0.01"><span class="val" id="v-T"></span></div>
+      <div class="row"><label for="s-H">Cao đế</label><input type="range" id="s-H" min="0.4" max="1.4" step="0.05"><span class="val" id="v-H"></span></div>
+      <div class="row"><label for="axis">Trục khuỷu</label>
+        <select id="axis"><option value="pitch">pitch (gập lên xuống)</option><option value="yaw">yaw (xoay ngang)</option></select></div>
+      <p class="note">Chọn yaw chỉ đổi hình khớp để xem; cánh tay vẫn gập trong mặt phẳng.</p>
+    </div>
+    <div class="group">
+      <h2>Tay kẹp</h2>
+      <div class="row"><label for="s-grip">Độ mở</label><input type="range" id="s-grip" min="0.3" max="1.5" step="0.05"><span class="val" id="v-grip"></span></div>
+      <div class="grid2" id="openclose">
+        <button type="button" data-open="1" aria-pressed="true">Mở</button>
+        <button type="button" data-open="0" aria-pressed="false">Đóng</button>
+      </div>
+      <div class="row"><label for="level">Kẹp hướng xuống</label><input type="checkbox" id="level" checked></div>
+      <div class="row"><label for="s-wrist">Góc cổ tay</label><input type="range" id="s-wrist" min="-90" max="180" step="1"><span class="val" id="v-wrist"></span></div>
+    </div>
+    <div class="group">
+      <h2>Xi lanh đẩy</h2>
+      <div class="row"><label for="s-stroke">Hành trình</label><input type="range" id="s-stroke" min="0" max="1" step="0.05"><span class="val" id="v-stroke"></span></div>
+    </div>
+    <div class="group">
+      <h2>Màu (mỗi kiểu tự pha sắc đậm nhạt)</h2>
+      <div class="row"><label for="c-link">Thanh nối</label><input type="color" id="c-link"></div>
+      <div class="row"><label for="c-joint">Khớp xoay</label><input type="color" id="c-joint"></div>
+      <div class="row"><label for="c-grip">Tay kẹp</label><input type="color" id="c-grip"></div>
+      <button type="button" id="colreset" style="width:100%">Về màu gốc của kiểu</button>
+    </div>
+    <button type="button" id="copy" style="width:100%">Sao chép thông số</button>
+    <p id="status" role="status" aria-live="polite"></p>
+    <textarea id="json" readonly aria-label="Thông số hiện tại (JSON)"></textarea>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const $ = (id) => document.getElementById(id);
+const DEG = Math.PI / 180;
+const CRATE = 0.5;       // crate edge, metres
+const BX = -2.0;         // arm base x
+const FL = 0.6, FT = 0.14, PALM = 0.2, GZ = 0.34;   // finger length, finger thickness, palm height, gripper depth
+
+/* ---------- small helpers ---------- */
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+const adj = (hex, dl = 0, ds = 0) => {
+  const c = new THREE.Color(hex), h = {}; c.getHSL(h);
+  c.setHSL(h.h, clamp01(h.s + ds), clamp01(h.l + dl)); return '#' + c.getHexString();
+};
+const rb = (w, h, d, r = 0.05, s = 2) =>
+  new RoundedBoxGeometry(w, h, d, s, Math.max(0.002, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3)));
+const zcyl = (r, len, seg = 20, rt = r) => { const g = new THREE.CylinderGeometry(rt, r, len, seg); g.rotateX(Math.PI / 2); return g; };
+const xcyl = (r, len, seg = 20, rt = r) => { const g = new THREE.CylinderGeometry(rt, r, len, seg); g.rotateZ(Math.PI / 2); return g; };
+const sph = (r, ws = 16, hs = 10) => new THREE.SphereGeometry(r, ws, hs);
+const M = (geo, mat, x = 0, y = 0, z = 0) => { const m = new THREE.Mesh(geo, mat); m.position.set(x, y, z); return m; };
+const G = (...kids) => { const g = new THREE.Group(); kids.forEach((k) => g.add(k)); return g; };
+const jr = (T) => 0.7 * T + 0.1;      // joint radius follows link thickness
+
+const gradTex = (vals) => {
+  const t = new THREE.DataTexture(new Uint8Array(vals.flatMap((v) => [v, v, v, 255])), vals.length, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t;
+};
+const grad3 = gradTex([150, 205, 255]);
+const grad4 = gradTex([110, 170, 220, 255]);
+const toonA = (h, o = {}) => new THREE.MeshToonMaterial({ color: h, gradientMap: grad3, ...o });
+const toonB = (h, o = {}) => new THREE.MeshToonMaterial({ color: h, gradientMap: grad4, ...o });
+const lamb = (h, o = {}) => new THREE.MeshLambertMaterial({ color: h, ...o });
+const lowp = (h, o = {}) => new THREE.MeshLambertMaterial({ color: h, flatShading: true, ...o });
+
+/* tag labels on crates (cached; shared textures are never disposed) */
+const tagCache = new Map();
+function tagMaterial(label, bg, ink, edge) {
+  const key = [label, bg, ink, edge].join('|');
+  if (!tagCache.has(key)) {
+    const c = document.createElement('canvas'); c.width = 192; c.height = 96;
+    const g = c.getContext('2d');
+    g.fillStyle = edge; g.beginPath(); g.roundRect(4, 4, 184, 88, 22); g.fill();
+    g.fillStyle = bg; g.beginPath(); g.roundRect(12, 12, 168, 72, 16); g.fill();
+    g.fillStyle = ink; g.font = '800 54px "Segoe UI",Arial,sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(label, 96, 50);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+    const m = new THREE.MeshBasicMaterial({ map: t, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    m.userData.keep = true; tagCache.set(key, m);
+  }
+  return tagCache.get(key);
+}
+function addTags(group, label, bg, ink, edge, s = CRATE) {
+  const mat = tagMaterial(label, bg, ink, edge), geo = new THREE.PlaneGeometry(0.36, 0.18);
+  const f = M(geo, mat, 0, 0, s / 2 + 0.02), b = M(geo.clone(), mat, 0, 0, -s / 2 - 0.02);
+  b.rotation.y = Math.PI; group.add(f, b);
+}
+
+const hazardMat = (() => {
+  let m = null;
+  return () => {
+    if (m) return m;
+    const c = document.createElement('canvas'); c.width = 128; c.height = 32;
+    const g = c.getContext('2d'); g.fillStyle = '#ffd23f'; g.fillRect(0, 0, 128, 32);
+    g.fillStyle = '#23252b';
+    for (let i = -2; i < 6; i++) { g.beginPath(); g.moveTo(i * 32, 32); g.lineTo(i * 32 + 16, 32); g.lineTo(i * 32 + 48, 0); g.lineTo(i * 32 + 32, 0); g.closePath(); g.fill(); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(3, 1); t.colorSpace = THREE.SRGBColorSpace;
+    m = toonB('#ffffff', { map: t }); m.userData.keep = true; return m;
+  };
+})();
+
+/* ---------- the four looks ----------
+   Common contract (every part is drawn for ANY value):
+     base(H, c)                       pillar of height H, top at y = H
+     joint(axis, c, T)                ball/servo centred on its pivot, axis 'pitch' (z) or 'yaw' (y)
+     link(L, T, c)                    from pivot (0,0) up to (0,L)
+     gripper(gap, c)                  palm at y 0..PALM, two fingers, `gap` = clear opening between pads
+     crate(label, damaged, color)     cube of edge CRATE centred on origin
+     piston(stroke, c)                body + rod + head along +x, centred on the body
+     chassis(c)                       body + 2 wheels, sits on the ground                                      */
+const LOOKS = [];
+
+/* 0. Hien tai: plain boxes, Lambert, flat colours */
+LOOKS.push({
+  id: '0', name: 'Hiện tại', bg: '#e9e9f0', ground: '#5a8f1a', sky: 1.0,
+  desc: 'Vẽ lại đúng như game đang có: thanh xám vuông, khớp tím vuông, tay kẹp cam phẳng, thùng chỉ là khối màu.',
+  def: { link: '#8c8c93', joint: '#8b5cf6', grip: '#e8890c', base: '#8a8a90' },
+  mat: lamb,
+  base(H, c) { return G(M(new THREE.BoxGeometry(0.5, H, 0.5), lamb(c.base), 0, H / 2, 0)); },
+  joint(axis, c, T) {
+    const s = T * 1.5; const g = G(M(new THREE.BoxGeometry(s, s, s), lamb(c.joint)));
+    if (axis === 'yaw') g.rotation.x = Math.PI / 2; return g;
+  },
+  link(L, T, c) { return G(M(new THREE.BoxGeometry(T, L, T), lamb(c.link), 0, L / 2, 0)); },
+  gripper(gap, c) {
+    const pw = gap + 2 * FT, g = G(M(new THREE.BoxGeometry(pw, PALM, 0.3), lamb(c.grip), 0, PALM / 2, 0));
+    for (const s of [-1, 1]) g.add(M(new THREE.BoxGeometry(FT, FL, 0.3), lamb(c.grip), s * (gap / 2 + FT / 2), PALM + FL / 2, 0));
+    return g;
+  },
+  crate(label, damaged, color) {
+    return G(M(new THREE.BoxGeometry(CRATE, CRATE, CRATE), lamb(damaged ? adj(color, -0.22, -0.15) : color)));
+  },
+  crateColors: ['#8a5a14', '#cc3333', '#d8b320'],
+  piston(stroke, c) {
+    const body = M(new THREE.BoxGeometry(0.8, 0.34, 0.34), lamb('#8a8a90'), 0, 0.17, 0);
+    const rod = M(new THREE.BoxGeometry(stroke + 0.2, 0.12, 0.12), lamb('#b9b9c2'), 0.4 + (stroke - 0.2) / 2 + 0.1, 0.17, 0);
+    const head = M(new THREE.BoxGeometry(0.12, 0.3, 0.3), lamb(c.grip), 0.4 + stroke + 0.06, 0.17, 0);
+    return G(body, rod, head);
+  },
+  chassis() {
+    const body = M(new THREE.BoxGeometry(1.0, 0.3, 0.6), lamb('#3b82f6'), 0, 0.37, 0);
+    const g = G(body);
+    for (const z of [-0.4, 0.4]) g.add(M(zcyl(0.2, 0.14, 14), lamb('#26262c'), -0.15, 0.2, z));
+    return g;
+  },
+});
+
+/* A. Cozy: capsules, balls, rounded boxes, toon 3-step */
+LOOKS.push({
+  id: 'A', name: 'Tròn trịa (cozy)', bg: '#2a2468', ground: '#cdeee2', sky: 1.6,
+  desc: 'Giống các robot cozy: thanh nối là viên thuốc tròn, khớp là quả bóng kem có nắp màu, tay kẹp tròn với đệm mềm. Đổ bóng 3 nấc.',
+  def: { link: '#7cc4f0', joint: '#ffcc3d', grip: '#4a5280', base: '#4a8fd0' },
+  mat: toonA,
+  base(H, c) {
+    const m = toonA;
+    return G(M(rb(1.1, 0.16, 0.9, 0.07, 1), m(c.base), 0, 0.08, 0),
+      M(rb(0.52, H - 0.1, 0.52, 0.18, 2), m(c.base), 0, 0.1 + (H - 0.1) / 2, 0),
+      M(new THREE.CylinderGeometry(0.285, 0.285, 0.06, 16), m('#ffcc3d'), 0, 0.34, 0),
+      M(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 16), m('#f6f1e4'), 0, H - 0.03, 0));
+  },
+  joint(axis, c, T) {
+    const r = jr(T), g = new THREE.Group(), cap = toonA(c.joint), ring = toonA(adj(c.joint, -0.14));
+    g.add(M(sph(r, 14, 9), toonA('#f6f1e4')));
+    for (const s of [-1, 1]) {
+      const k = M(sph(r * 0.72, 10, 6), cap, 0, 0, s * r * 0.8); k.scale.z = 0.4; g.add(k);
+      g.add(M(new THREE.TorusGeometry(r * 0.72, r * 0.09, 4, 14), ring, 0, 0, s * r * 0.84));
+    }
+    if (axis === 'yaw') g.rotation.x = Math.PI / 2; return g;
+  },
+  link(L, T, c) {
+    const r = T / 2, g = new THREE.CapsuleGeometry(r, L, 2, 10); g.translate(0, L / 2, 0);
+    const band = new THREE.TorusGeometry(r * 1.02, r * 0.14, 4, 16); band.rotateX(Math.PI / 2);
+    const out = G(M(g, toonA(c.link)));
+    out.add(M(band, toonA('#f6f1e4'), 0, L * 0.5, 0));
+    return out;
+  },
+  gripper(gap, c) {
+    const pt = 0.07, fx = gap / 2 + pt + FT / 2 - 0.02, navy = toonA(c.grip), pad = toonA('#f6f1e4');
+    const g = G(M(rb(gap + 2 * (FT + pt) + 0.1, PALM, GZ, 0.08, 1), navy, 0, PALM / 2, 0));
+    for (const s of [-1, 1]) {
+      const f = M(new THREE.CapsuleGeometry(FT / 2, FL - FT, 2, 8), navy, s * fx, PALM + FL / 2 - 0.02, 0); f.scale.z = GZ / FT; g.add(f);
+      const p = M(new THREE.CapsuleGeometry(pt / 2, FL * 0.5 - pt, 1, 6), pad, s * (gap / 2 + pt / 2), PALM + FL * 0.55, 0); p.scale.z = (GZ * 0.7) / pt; g.add(p);
+    }
+    return g;
+  },
+  crate(label, damaged, color) {
+    const wood = damaged ? adj(color, -0.22, -0.15) : color, strap = adj(wood, -0.12);
+    const g = G(M(rb(CRATE, CRATE, CRATE, 0.07, 2), toonA(wood)));
+    for (const y of [-0.17, 0.17]) g.add(M(rb(CRATE + 0.02, 0.07, CRATE + 0.02, 0.02, 1), toonA(strap), 0, y, 0));
+    addTags(g, label, '#f6f1e4', '#2a2350', '#4a5280'); return g;
+  },
+  crateColors: ['#e8b36a', '#e8b36a', '#e8b36a'],
+  piston(stroke, c) {
+    const bodyG = new THREE.CapsuleGeometry(0.17, 0.5, 3, 10); bodyG.rotateZ(Math.PI / 2);
+    const body = M(bodyG, toonA('#7cc4f0'), 0, 0.2, 0);
+    const ring = M(new THREE.TorusGeometry(0.17, 0.035, 4, 16), toonA('#ffcc3d'), 0.1, 0.2, 0); ring.rotation.y = Math.PI / 2;
+    const rod = M(xcyl(0.065, stroke + 0.2, 12), toonA('#c9d2dc'), 0.4 + (stroke - 0.2) / 2 + 0.1 + 0.02, 0.2, 0);
+    const head = M(rb(0.16, 0.3, 0.3, 0.07, 1), toonA(c.joint), 0.4 + stroke + 0.12, 0.2, 0);
+    return G(body, ring, rod, head, M(rb(0.5, 0.06, 0.4, 0.03, 1), toonA('#4a8fd0'), 0, 0.03, 0));
+  },
+  chassis() {
+    const g = G(M(rb(1.0, 0.34, 0.66, 0.15, 2), toonA('#7cc4f0'), 0, 0.36, 0),
+      M(rb(0.8, 0.07, 0.5, 0.03, 1), toonA('#4a5280'), 0, 0.55, 0),
+      M(rb(0.06, 0.12, 0.3, 0.025, 1), toonA('#f6f1e4'), 0.5, 0.4, 0));
+    for (const z of [-0.43, 0.43]) {
+      g.add(M(zcyl(0.2, 0.14, 16), toonA('#3b3f5c'), -0.12, 0.2, z), M(zcyl(0.09, 0.16, 10), toonA('#ffcc3d'), -0.12, 0.2, z));
+    }
+    g.add(M(sph(0.08, 8, 6), toonA('#f6f1e4'), 0.38, 0.08, 0));
+    return g;
+  },
+});
+
+/* B. Cartoon factory: tapered extruded links, dark servo collars with bolts, hazard-striped base, black claw */
+LOOKS.push({
+  id: 'B', name: 'Công nghiệp hoạt hình', bg: '#ffe9b8', ground: "#c9ccd3", sky: 1.5,
+  desc: 'Robot nhà máy hoạt hình: thanh cam vuốt thon có sọc vàng, khớp xám đậm có nắp động cơ và bu-lông, đế xám có sọc cảnh báo, tay kẹp đen đệm vàng.',
+  def: { link: '#ff9f2e', joint: '#4a4f58', grip: '#2a2d34', base: '#8a9099' },
+  mat: toonB,
+  base(H, c) {
+    const m = toonB, sideM = hazardMat(), topM = m('#4a4f58');
+    const plate = M(new THREE.BoxGeometry(1.1, 0.16, 1.0), [sideM, sideM, topM, topM, sideM, sideM], 0, 0.08, 0);
+    const g = G(plate, M(rb(0.58, H - 0.16, 0.58, 0.07), m(c.base), 0, 0.16 + (H - 0.16) / 2, 0));
+    g.add(M(new THREE.CylinderGeometry(0.4, 0.4, 0.16, 20), m('#4a4f58'), 0, H - 0.08, 0));
+    g.add(M(new THREE.BoxGeometry(0.6, 0.07, 0.6), m('#23252b'), 0, 0.42, 0));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) g.add(M(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 6), m('#c9ced6'), sx * 0.44, 0.17, sz * 0.38));
+    return g;
+  },
+  joint(axis, c, T) {
+    const r = jr(T) * 1.1, len = T * 0.8 + 0.16, g = new THREE.Group(), dark = toonB(c.joint), cap = toonB(adj(c.joint, 0.12)), bolt = toonB('#c9ced6');
+    g.add(M(zcyl(r, len, 20), dark));
+    for (const s of [-1, 1]) {
+      g.add(M(zcyl(r * 0.52, 0.1, 16), cap, 0, 0, s * (len / 2 + 0.04)));
+      g.add(M(zcyl(r * 0.2, 0.14, 8), toonB('#ffd23f'), 0, 0, s * (len / 2 + 0.07)));
+      for (let i = 0; i < 6; i++) {
+        const a = i * Math.PI / 3, b = M(zcyl(0.028, 0.04, 6), bolt, Math.cos(a) * r * 0.8, Math.sin(a) * r * 0.8, s * (len / 2 + 0.01));
+        g.add(b);
+      }
+    }
+    if (axis === 'yaw') g.rotation.x = Math.PI / 2; return g;
+  },
+  link(L, T, c) {
+    const w0 = T * 1.25, w1 = T * 0.85, d = T * 0.8;
+    const sh = new THREE.Shape(); sh.moveTo(-w0 / 2, 0); sh.lineTo(w0 / 2, 0); sh.lineTo(w1 / 2, L); sh.lineTo(-w1 / 2, L); sh.closePath();
+    const g = new THREE.ExtrudeGeometry(sh, { depth: d, bevelEnabled: true, bevelSize: 0.03, bevelThickness: 0.03, bevelSegments: 2, curveSegments: 1 });
+    g.translate(0, 0, -d / 2);
+    const y0 = L * 0.22, y1 = L * 0.78, wAt = (y) => w0 + (w1 - w0) * y / L, sw = 0.14 * (w0 + w1) / 2 + 0.02;
+    const st = new THREE.Shape(); st.moveTo(-sw, y0); st.lineTo(sw, y0); st.lineTo(sw, y1); st.lineTo(-sw, y1); st.closePath();
+    const sg = new THREE.ExtrudeGeometry(st, { depth: d + 0.08, bevelEnabled: false }); sg.translate(0, 0, -(d + 0.08) / 2);
+    void wAt;
+    return G(M(g, toonB(c.link)), M(sg, toonB(adj(c.link, 0.22, 0.05))));
+  },
+  gripper(gap, c) {
+    const pt = 0.05, fx = gap / 2 + pt + FT / 2, blk = toonB(c.grip), yel = toonB('#ffd23f');
+    const g = G(M(rb(gap + 2 * (FT + pt) + 0.12, PALM, GZ + 0.06, 0.05, 1), blk, 0, PALM / 2, 0),
+      M(zcyl(0.1, GZ + 0.14, 14), toonB(adj(c.grip, 0.12)), 0, PALM * 0.5, 0));
+    for (const s of [-1, 1]) {
+      g.add(M(rb(FT, FL, GZ, 0.05, 1), blk, s * fx, PALM + FL / 2 - 0.02, 0));
+      g.add(M(new THREE.BoxGeometry(pt, FL * 0.55, GZ * 0.78), yel, s * (gap / 2 + pt / 2), PALM + FL * 0.6, 0));
+    }
+    return g;
+  },
+  crate(label, damaged, color) {
+    const wood = damaged ? adj(color, -0.22, -0.15) : color, steel = toonB(damaged ? '#3b3e46' : '#4a4f58');
+    const g = G(M(rb(CRATE, CRATE, CRATE, 0.04, 2), toonB(wood)));
+    const cg = new THREE.BoxGeometry(0.1, 0.1, 0.1);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) for (const sy of [-1, 1]) {
+      g.add(M(cg, steel, sx * (CRATE / 2 - 0.035), sy * (CRATE / 2 - 0.035), sz * (CRATE / 2 - 0.035)));
+    }
+    g.add(M(new THREE.BoxGeometry(CRATE + 0.02, 0.05, CRATE + 0.02), toonB(adj(wood, -0.1)), 0, 0, 0));
+    addTags(g, label, '#ffd23f', '#23252b', '#23252b'); return g;
+  },
+  crateColors: ['#d9a35f', '#d9a35f', '#d9a35f'],
+  piston(stroke, c) {
+    const body = M(xcyl(0.17, 0.62, 20), toonB('#ff9f2e'), 0, 0.2, 0);
+    const caps = [-0.31, 0.31].map((x) => M(xcyl(0.2, 0.08, 20), toonB('#4a4f58'), x, 0.2, 0));
+    const rod = M(xcyl(0.065, stroke + 0.2, 14), toonB('#c9ced6'), 0.31 + (stroke + 0.2) / 2 - 0.1, 0.2, 0);
+    const head = M(rb(0.16, 0.3, 0.3, 0.05, 1), toonB('#23252b'), 0.31 + stroke + 0.2 - 0.02, 0.2, 0);
+    const mount = M(new THREE.BoxGeometry(0.6, 0.06, 0.46), hazardMat(), 0, 0.03, 0);
+    return G(body, ...caps, rod, head, mount);
+  },
+  chassis() {
+    const g = G(M(rb(1.0, 0.32, 0.66, 0.1, 2), toonB('#ff9f2e'), 0, 0.36, 0),
+      M(new THREE.BoxGeometry(0.84, 0.08, 0.5), toonB('#4a4f58'), 0, 0.55, 0),
+      M(rb(0.08, 0.18, 0.7, 0.03, 1), toonB('#23252b'), 0.52, 0.28, 0),
+      M(new THREE.BoxGeometry(0.05, 0.1, 0.5), toonB('#ffd23f'), 0.55, 0.28, 0));
+    for (const z of [-0.43, 0.43]) g.add(M(zcyl(0.2, 0.14, 18), toonB('#23252b'), -0.12, 0.2, z), M(zcyl(0.09, 0.16, 12), toonB('#ffd23f'), -0.12, 0.2, z));
+    return g;
+  },
+});
+
+/* C. Asset-pack look: faceted low-poly, flat pastel colours, Lambert flat shading */
+LOOKS.push({
+  id: 'C', name: 'Giống bộ asset', bg: '#e4eef0', ground: '#bfd6c2', sky: 1.1,
+  desc: 'Giống bộ mô hình có sẵn: khối đặc ít mặt, màu phẳng dịu (kem, xanh mòng két, hồng), đế dày tối, càng kẹp đơn giản. Một loại vật liệu Lambert.',
+  def: { link: '#f2c9b8', joint: '#4f8091', grip: '#e85a8a', base: '#3f5560' },
+  mat: lowp,
+  base(H, c) {
+    const m = lowp;
+    return G(M(new THREE.CylinderGeometry(0.58, 0.68, 0.3, 8), m(adj(c.base, -0.05)), 0, 0.15, 0),
+      M(new THREE.CylinderGeometry(0.3, 0.36, H - 0.3, 8), m(c.base), 0, 0.3 + (H - 0.3) / 2, 0),
+      M(new THREE.CylinderGeometry(0.36, 0.3, 0.1, 8), m(adj(c.base, 0.1)), 0, H - 0.05, 0));
+  },
+  joint(axis, c, T) {
+    const r = jr(T), g = new THREE.Group();
+    g.add(M(zcyl(r, T * 0.9 + 0.1, 8), lowp(c.joint)));
+    for (const s of [-1, 1]) g.add(M(zcyl(r * 0.8, 0.08, 8, r * 0.5), lowp(adj(c.joint, 0.14)), 0, 0, s * (T * 0.45 + 0.1)));
+    if (axis === 'yaw') g.rotation.x = Math.PI / 2; return g;
+  },
+  link(L, T, c) {
+    const g = new THREE.CylinderGeometry(T * 0.42, T * 0.55, L, 6); g.translate(0, L / 2, 0);
+    return G(M(g, lowp(c.link)), M(new THREE.CylinderGeometry(T * 0.5, T * 0.5, 0.07, 6), lowp(adj(c.link, -0.1)), 0, L * 0.5, 0));
+  },
+  gripper(gap, c) {
+    const pw = gap + 2 * FT + 0.1, flat = lowp(c.grip);
+    const g = G(M(new THREE.BoxGeometry(pw, PALM, GZ), lowp(adj(c.grip, -0.1)), 0, PALM / 2, 0));
+    for (const s of [-1, 1]) {
+      const p = new THREE.Shape(); p.moveTo(0, 0); p.lineTo(FT, 0); p.lineTo(FT, FL - 0.14); p.lineTo(FT * 0.6, FL); p.lineTo(0, FL); p.closePath();
+      const fg = new THREE.ExtrudeGeometry(p, { depth: GZ, bevelEnabled: false }); fg.translate(-FT / 2, 0, -GZ / 2);
+      const f = M(fg, flat, s * (gap / 2 + FT / 2), PALM, 0); if (s < 0) f.scale.x = -1;
+      g.add(f);
+    }
+    return g;
+  },
+  crate(label, damaged, color) {
+    const wood = damaged ? adj(color, -0.22, -0.15) : color;
+    const g = G(M(new THREE.BoxGeometry(CRATE, CRATE, CRATE), lowp(wood)));
+    for (const y of [-0.17, 0.17]) g.add(M(new THREE.BoxGeometry(CRATE + 0.02, 0.06, CRATE + 0.02), lowp(adj(wood, -0.1)), 0, y, 0));
+    addTags(g, label, '#fdf6ee', '#2f5666', '#4f8091'); return g;
+  },
+  crateColors: ['#e7b982', '#e7b982', '#e7b982'],
+  piston(stroke, c) {
+    const body = M(xcyl(0.17, 0.62, 8), lowp('#5b8a9a'), 0, 0.2, 0);
+    const rod = M(xcyl(0.065, stroke + 0.2, 6), lowp('#e8e3dc'), 0.31 + (stroke + 0.2) / 2 - 0.1, 0.2, 0);
+    const head = M(new THREE.BoxGeometry(0.15, 0.3, 0.3), lowp(c.grip), 0.31 + stroke + 0.2 - 0.02, 0.2, 0);
+    return G(body, rod, head, M(new THREE.BoxGeometry(0.6, 0.06, 0.4), lowp('#3f5560'), 0, 0.03, 0));
+  },
+  chassis() {
+    const g = G(M(new THREE.BoxGeometry(1.0, 0.32, 0.66), lowp('#f2c9b8'), 0, 0.36, 0),
+      M(new THREE.BoxGeometry(0.8, 0.08, 0.5), lowp('#4f8091'), 0, 0.54, 0),
+      M(new THREE.BoxGeometry(0.06, 0.12, 0.3), lowp('#fdf6ee'), 0.5, 0.4, 0));
+    for (const z of [-0.43, 0.43]) g.add(M(zcyl(0.2, 0.14, 10), lowp('#3f5560'), -0.12, 0.2, z), M(zcyl(0.08, 0.16, 6), lowp('#e85a8a'), -0.12, 0.2, z));
+    return g;
+  },
+});
+
+/* ---------- state ---------- */
+const S = { look: 1, view: '3d', a1: 30, a2: 75, L1: 1.2, L2: 1.0, T: 0.2, H: 0.9, grip: 0.8, open: true, level: true, wrist: 75,
+            stroke: 0.5, axis: 'pitch', state: 'none', col: { link: null, joint: null, grip: null } };
+const effColors = (L) => ({ link: S.col.link || L.def.link, joint: S.col.joint || L.def.joint, grip: S.col.grip || L.def.grip, base: L.def.base });
+
+/* ---------- renderer / scene ---------- */
+const stage = $('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const persp = new THREE.PerspectiveCamera(38, 1, 0.1, 80);
+persp.position.set(1.4, 2.7, 7.0);
+const ortho = new THREE.OrthographicCamera(-4, 4, 3, -3, 0.1, 80);
+ortho.position.set(0.2, 1.35, 20);
+const controls = new OrbitControls(persp, renderer.domElement);
+controls.target.set(0, 1.0, 0.3);
+controls.enableDamping = true; controls.enablePan = false;
+controls.minDistance = 3; controls.maxDistance = 14; controls.maxPolarAngle = Math.PI * 0.52;
+controls.update();
+const hemi = new THREE.HemisphereLight(0xffffff, 0x9a9aa8, 1.5); scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff3dc, 1.5); sun.position.set(3, 6, 5); scene.add(sun);
+const world = new THREE.Group(); scene.add(world);
+
+const blink = [];        // { mat, base } warning glows that pulse
+let blinkFrozen = false;
+function disposeTree(o) {
+  o.traverse((n) => {
+    if (n.geometry) n.geometry.dispose();
+    const ms = n.material ? (Array.isArray(n.material) ? n.material : [n.material]) : [];
+    for (const m of ms) if (!m.userData.keep) m.dispose();
+  });
+}
+function triCount(o) {
+  let t = 0;
+  o.traverse((n) => { if (n.isMesh) { const g = n.geometry; t += (g.index ? g.index.count : g.attributes.position.count) / 3; } });
+  return Math.round(t);
+}
+
+const warnSprite = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fff'; g.beginPath(); g.moveTo(64, 8); g.lineTo(120, 112); g.lineTo(8, 112); g.closePath(); g.fill();
+  g.fillStyle = '#e5322d'; g.beginPath(); g.moveTo(64, 24); g.lineTo(106, 104); g.lineTo(22, 104); g.closePath(); g.fill();
+  g.fillStyle = '#fff'; g.font = '800 62px Arial'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('!', 64, 78);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  return new THREE.SpriteMaterial({ map: t, depthTest: false, transparent: true });
+})();
+
+function warnGlow(r) {
+  const ringM = new THREE.MeshBasicMaterial({ color: 0xff2d2d, transparent: true, opacity: 1, depthWrite: false });
+  const glowM = new THREE.MeshBasicMaterial({ color: 0xff4a4a, transparent: true, opacity: 0.2, depthWrite: false });
+  blink.push({ mat: ringM, base: 1 }, { mat: glowM, base: 0.2 });
+  const g = G(M(new THREE.TorusGeometry(r * 1.32, r * 0.1, 8, 28), ringM), M(sph(r * 1.15, 14, 10), glowM));
+  g.renderOrder = 5; return g;
+}
+
+/* ---------- arm pose from the state ---------- */
+function pose() {
+  let a1 = S.a1, a2 = S.a2, gap = S.open ? S.grip : 0.06;
+  const st = S.state;
+  if (st !== 'none') { a1 -= 10; a2 -= 10; }
+  if (st === 'overload') { a1 += 16; a2 += 22; }
+  const squash = st === 'crush' ? 0.6 : 1;
+  if (st === 'hold' || st === 'overload') gap = CRATE;
+  if (st === 'crush') gap = CRATE * squash;
+  if (st === 'slip') gap = CRATE + 0.1;
+  return { a1, a2, gap, squash };
+}
+
+/* ---------- build the whole scene for the current look ---------- */
+const sideGroup = new THREE.Group();
+let measured = {};
+function build() {
+  while (world.children.length) { const o = world.children[0]; world.remove(o); disposeTree(o); }
+  blink.length = 0; sideGroup.clear();
+  const L = LOOKS[S.look], c = effColors(L), P = pose();
+  scene.background = new THREE.Color(L.bg);
+  hemi.intensity = L.sky;
+  const lowLight = L.id === '0';
+  sun.intensity = lowLight ? 1.6 : 1.4;
+
+  // ground slab (a box, so the 2D side view still shows a floor)
+  world.add(M(new THREE.BoxGeometry(40, 0.3, 30), L.id === 'C' ? lowp(L.ground) : (L.id === '0' ? lamb(L.ground) : (L.id === 'A' ? toonA(L.ground) : toonB(L.ground))), 0, -0.16, 0.6));
+  if (L.id === '0') world.add(M(new THREE.BoxGeometry(2.4, 0.4, 1.2), lamb('#6a6560'), 1.55, 0.2, 0));   // grey table, as today
+
+  // arm chain
+  const arm = new THREE.Group(); arm.position.set(BX, 0, 0); world.add(arm);
+  arm.add(L.base(S.H, c));
+  const sh = new THREE.Group(); sh.position.y = S.H; sh.rotation.z = -P.a1 * DEG; arm.add(sh);
+  sh.add(L.joint('pitch', c, S.T), L.link(S.L1, S.T, c));
+  const el = new THREE.Group(); el.position.y = S.L1; el.rotation.z = -P.a2 * DEG; sh.add(el);
+  el.add(L.joint(S.axis, c, S.T), L.link(S.L2, S.T, c));
+  const wr = new THREE.Group(); wr.position.y = S.L2; el.add(wr);
+  wr.rotation.z = S.level ? Math.PI + (P.a1 + P.a2) * DEG : -S.wrist * DEG;
+  wr.add(L.gripper(P.gap, c));
+
+  // overload glow on both joints
+  const joints = S.state === 'overload' ? [sh, el] : [];
+  for (const j of joints) j.add(warnGlow(jr(S.T)));
+
+  world.updateMatrixWorld(true);
+  const tip = wr.localToWorld(new THREE.Vector3(0, PALM + FL, 0));
+  measured = { tipX: tip.x, tipY: tip.y };
+
+  // crates
+  const fy = (x) => (L.id === "0" && x + CRATE / 2 > 0.35 ? 0.4 : 0);   // look 0 crates stand on its grey table
+  const cc = L.crateColors, tags = ['2 kg', '6 kg', '2 kg'];
+  const mk = (i, label, dmg) => L.crate(label, dmg, cc[i]);
+  const ground1 = mk(1, '6 kg', false); ground1.position.set(1.15, fy(1.15) + CRATE / 2, 0); world.add(ground1);
+  const ground2 = mk(2, '2 kg', false); ground2.position.set(1.8, fy(1.8) + CRATE / 2, 0); world.add(ground2);
+  const mainLabel = S.state === 'overload' ? '6 kg' : tags[0];
+  const main = mk(0, mainLabel, S.state === 'crush');
+  if (S.state === 'hold' || S.state === 'crush' || S.state === 'overload') {
+    main.position.set(0, PALM + 0.3, 0);
+    // keep the label upright when the gripper hangs upside down
+    if (S.level) main.rotation.z = -(wr.rotation.z + el.rotation.z + sh.rotation.z);
+    main.scale.set(P.squash, S.state === 'crush' ? 1.12 : 1, S.state === 'crush' ? 1.12 : 1);
+    wr.add(main);
+  } else if (S.state === 'slip') {
+    main.position.set(Math.min(tip.x + 0.1, 0.45), fy(0.45) + 0.34, 0.05); main.rotation.z = -0.32; world.add(main);
+  } else {
+    main.position.set(Math.min(tip.x, 0.45), fy(Math.min(tip.x, 0.45)) + CRATE / 2, 0); world.add(main); }
+
+  // warning triangles above the overloaded joints (world-space, so they never roll with the arm)
+  for (const j of joints) {
+    const p = j.getWorldPosition(new THREE.Vector3());
+    const sp = new THREE.Sprite(warnSprite); sp.scale.set(0.42, 0.42, 1); sp.position.set(p.x, p.y + jr(S.T) + 0.38, p.z); sp.renderOrder = 9;
+    world.add(sp);
+  }
+
+  // family pieces: piston + chassis, in front of the arm
+  sideGroup.clear();
+  const pis = L.piston(S.stroke, c); pis.position.set(-1.7, 0, 1.9); sideGroup.add(pis);
+  const chas = L.chassis(); chas.position.set(0.5, 0, 2.2); sideGroup.add(chas);
+  world.add(sideGroup); sideGroup.visible = S.view === '3d';
+  $('lookname').textContent = L.id === '0' ? L.name : (L.id + '. ' + L.name);
+  $('lookdesc').textContent = L.desc;
+  $('tris').textContent = triCount(world) + ' tam giác';
+}
+
+/* ---------- cameras / resize ---------- */
+function cam() { return S.view === '2d' ? ortho : persp; }
+function resize() {
+  const w = Math.max(1, stage.clientWidth), h = Math.max(1, stage.clientHeight), a = w / h;
+  renderer.setSize(w, h, false);
+  persp.aspect = a; persp.fov = a < 1 ? 52 : 38; persp.updateProjectionMatrix();
+  const hh = 1.95; ortho.left = -hh * a; ortho.right = hh * a; ortho.top = hh; ortho.bottom = -hh;
+  ortho.position.set(0.2, 1.4, 20); ortho.lookAt(0.2, 1.4, 0); ortho.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+/* ---------- UI ---------- */
+const setStatus = (m) => { $('status').textContent = m; };
+const rangeIds = { a1: 'a1', a2: 'a2', L1: 'L1', L2: 'L2', T: 'T', H: 'H', grip: 'grip', wrist: 'wrist', stroke: 'stroke' };
+const fmt = { a1: (v) => v + '°', a2: (v) => v + '°', wrist: (v) => v + '°' };
+function syncUI() {
+  for (const k of Object.keys(rangeIds)) { $('s-' + k).value = S[k]; $('v-' + k).textContent = (fmt[k] || ((v) => (+v).toFixed(2) + ' m'))(S[k]); }
+  $('s-wrist').disabled = S.level; $('level').checked = S.level; $('axis').value = S.axis;
+  const L = LOOKS[S.look], c = effColors(L);
+  $('c-link').value = c.link; $('c-joint').value = c.joint; $('c-grip').value = c.grip;
+  document.querySelectorAll('#looks button').forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.look === S.look)));
+  document.querySelectorAll('#views button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === S.view)));
+  document.querySelectorAll('#states button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.state === S.state)));
+  document.querySelectorAll('#openclose button').forEach((b) => b.setAttribute('aria-pressed', String((b.dataset.open === '1') === S.open)));
+  $('hint').textContent = S.view === '2d' ? 'Nhìn ngang 2D (không xoay)' : 'Kéo để xoay quanh cánh tay';
+}
+function refresh() { syncUI(); build(); }
+function setView(v) { S.view = v; controls.enabled = v === '3d'; refresh(); }
+
+document.querySelectorAll('#looks button').forEach((b) => b.addEventListener('click', () => { S.look = +b.dataset.look; refresh(); }));
+document.querySelectorAll('#views button').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+document.querySelectorAll('#states button').forEach((b) => b.addEventListener('click', () => { S.state = b.dataset.state; refresh(); }));
+document.querySelectorAll('#openclose button').forEach((b) => b.addEventListener('click', () => { S.open = b.dataset.open === '1'; refresh(); }));
+for (const k of Object.keys(rangeIds)) $('s-' + k).addEventListener('input', (e) => { S[k] = parseFloat(e.target.value); refresh(); });
+$('level').addEventListener('change', (e) => { S.level = e.target.checked; refresh(); });
+$('axis').addEventListener('change', (e) => { S.axis = e.target.value; refresh(); });
+for (const k of ['link', 'joint', 'grip']) $('c-' + k).addEventListener('input', (e) => { S.col[k] = e.target.value; build(); });
+$('colreset').addEventListener('click', () => { S.col = { link: null, joint: null, grip: null }; refresh(); setStatus('Đã về màu gốc của kiểu này.'); });
+$('copy').addEventListener('click', async () => {
+  const L = LOOKS[S.look], c = effColors(L);
+  const text = JSON.stringify({
+    kieuDang: L.id, tenKieu: L.name, tinhHuong: S.state,
+    khop: { gocVai: S.a1, gocKhuyu: S.a2, trucKhuyu: S.axis, mau: c.joint },
+    thanhNoi: { dai1: S.L1, dai2: S.L2, doDay: S.T, mau: c.link },
+    tayKep: { doMo: S.grip, dangMo: S.open, huongXuong: S.level, gocCoTay: S.wrist, mau: c.grip },
+    de: { cao: S.H }, xiLanh: { hanhTrinh: S.stroke },
+  }, null, 2);
+  const ta = $('json');
+  try {
+    if (!navigator.clipboard) throw new Error('no clipboard');
+    await navigator.clipboard.writeText(text); ta.style.display = 'none';
+    setStatus('Đã sao chép thông số. Hãy dán gửi cho chúng tôi nhé!');
+  } catch (err) {
+    ta.value = text; ta.style.display = 'block'; ta.focus(); ta.select();
+    setStatus('Không sao chép tự động được. Hãy bôi đen và chép ô bên dưới.');
+  }
+});
+
+/* ---------- loop ---------- */
+resize(); refresh(); controls.enabled = true;
+const clock = new THREE.Clock();
+renderer.setAnimationLoop(() => {
+  const t = clock.getElapsedTime(), p = blinkFrozen ? 1 : 0.55 + 0.45 * Math.sin(t * 8);
+  for (const b of blink) b.mat.opacity = b.base * p;
+  controls.update();
+  renderer.render(scene, cam());
+});
+
+/* hooks for the screenshot script and for measuring parts */
+window.__api = {
+  ready: true,
+  set(patch) { Object.assign(S, patch); if (patch.view) controls.enabled = S.view === '3d'; refresh(); },
+  freezeBlink(v) { blinkFrozen = v; },
+  partTris() {
+    const out = {};
+    for (const L of LOOKS) {
+      const c = L.def;
+      out[L.id] = { base: triCount(L.base(S.H, c)), joint: triCount(L.joint('pitch', c, 0.2)), link: triCount(L.link(1, 0.2, c)),
+        gripper: triCount(L.gripper(0.8, c)), crate: triCount(L.crate('2 kg', false, L.crateColors[0])),
+        piston: triCount(L.piston(0.5, c)), chassis: triCount(L.chassis()) };
+    }
+    return out;
+  },
+  measured: () => measured,
+};
+</script>
+</body>
+</html>

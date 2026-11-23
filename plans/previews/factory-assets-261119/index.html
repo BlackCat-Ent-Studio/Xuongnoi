@@ -1,0 +1,1269 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asset xưởng – bản xem trước</title>
+<style>
+  :root { --bg:#e6e8eb; --card:#f7f8f9; --ink:#22252b; --soft:#5d6570; --line:#c9cdd3; --accent:#2f7fe0; --view:#cfd2d7; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,Arial,sans-serif; }
+  #gl { position:fixed; left:0; top:0; z-index:5; pointer-events:none; }
+  header { position:sticky; top:0; z-index:10; background:#ffffff; border-bottom:2px solid var(--line); padding:8px 18px; display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; }
+  header h1 { font-size:1.25rem; margin:0 8px 0 0; }
+  header nav { display:flex; flex-wrap:wrap; gap:6px; }
+  header nav a { text-decoration:none; color:var(--ink); background:#eceef1; border:1px solid var(--line); border-radius:999px; padding:4px 11px; font-size:.86rem; font-weight:600; }
+  header nav a:hover { background:#dfe3e8; }
+  .tools { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin-left:auto; font-size:.86rem; }
+  main { max-width:1280px; margin:0 auto; padding:10px 18px 30px; }
+  .intro { color:var(--soft); margin:6px 2px 4px; font-size:.95rem; }
+  section { background:var(--card); border:2px solid var(--line); border-radius:18px; padding:14px 16px 16px; margin:16px 0; scroll-margin-top:110px; }
+  section h2 { margin:0 0 2px; font-size:1.55rem; }
+  section > p.sub { margin:0 0 10px; color:var(--soft); font-size:.95rem; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; margin:8px 0 12px; }
+  .grp { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .grp > span { font-weight:700; font-size:.92rem; margin-right:2px; }
+  button { font:inherit; font-weight:700; color:var(--ink); background:#ffffff; border:2px solid #aeb4bd; border-radius:12px; padding:7px 14px; min-height:40px; cursor:pointer; }
+  button:hover { background:#eef1f4; }
+  button:focus-visible, input:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#ffffff; }
+  button.sw { display:flex; align-items:center; gap:7px; padding:5px 12px 5px 7px; }
+  button.sw i { width:22px; height:22px; border-radius:50%; border:2px solid rgba(0,0,0,.25); display:inline-block; }
+  .looks { display:grid; gap:12px; }
+  .looks.c3 { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .looks.c2 { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .look { background:#ffffff; border:2px solid var(--line); border-radius:14px; padding:10px; display:flex; flex-direction:column; gap:6px; }
+  .look.on { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent) inset; }
+  .look h3 { margin:0; font-size:1.3rem; }
+  .look h3 small { font-size:.95rem; font-weight:600; color:var(--soft); margin-left:6px; }
+  .look p { margin:0; font-size:.9rem; color:var(--soft); min-height:2.5em; }
+  .look .tri { font-size:.78rem; color:#7b838e; }
+  .look button.pick { font-size:1.05rem; }
+  .view { height:300px; background:var(--view); touch-action:none; cursor:grab; }
+  .view:active { cursor:grabbing; }
+  .view.tall { height:340px; }
+  .view.wide { height:360px; }
+  .view.scene { height:600px; }
+  .hint { font-size:.8rem; color:#7b838e; margin:6px 2px 0; }
+  .row { display:flex; align-items:center; gap:8px; font-size:.92rem; font-weight:700; }
+  .row input[type=range] { width:220px; accent-color:var(--accent); height:28px; }
+  .row output { min-width:44px; font-variant-numeric:tabular-nums; color:var(--soft); }
+  #glbnote { display:inline-block; font-size:.9rem; font-weight:700; padding:4px 10px; border-radius:8px; background:#fff3cd; border:1px solid #e3c96a; margin:0 0 8px; }
+  #glbnote.ok { background:#dcf5e4; border-color:#7fc99a; }
+  #glbnames { font-size:.82rem; color:var(--soft); margin:6px 2px 0; }
+  #thumbs { display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  #thumbs figure { margin:0; text-align:center; font-size:.75rem; color:var(--soft); }
+  #thumbs img { width:96px; height:96px; object-fit:contain; background:#ffffff; border:1px solid var(--line); border-radius:8px; display:block; }
+  .copy { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-top:10px; }
+  #line { flex:1 1 420px; font:600 1rem ui-monospace,Consolas,monospace; padding:9px 10px; border:2px solid var(--line); border-radius:10px; background:#ffffff; color:var(--ink); }
+  #copied { font-weight:700; color:#1b8a4b; min-width:8em; }
+  #fail { display:none; margin:14px 0; padding:12px 14px; border-radius:12px; background:#ffe1de; border:2px solid #e08a82; font-weight:700; }
+  footer { text-align:center; color:var(--soft); padding:6px 0 26px; font-weight:700; }
+  @media (max-width:900px) { .looks.c3, .looks.c2 { grid-template-columns:minmax(0,1fr); } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<header>
+  <h1>Asset xưởng – bản xem trước</h1>
+  <nav>
+    <a href="#s-agv">1. Xe AGV</a><a href="#s-arm">2. Tay máy</a><a href="#s-parcel">3. Kiện hàng</a><a href="#s-chute">4. Cửa thả</a><a href="#s-belt">5. Băng chuyền</a><a href="#s-floor">6. Mốc sàn</a><a href="#s-scene">7. Xem chung</a>
+  </nav>
+  <div class="tools">
+    <span><b>Chất liệu:</b></span>
+    <button type="button" data-key="mat" data-val="toon">Hoạt hình (như hiện tại)</button>
+    <button type="button" data-key="mat" data-val="smooth">Mịn</button>
+    <button type="button" data-key="spin" data-val="on">Tự xoay</button>
+  </div>
+</header>
+<main>
+  <p class="intro">Mỗi khung là một bàn xoay: <b>kéo chuột để xoay, lăn chuột để phóng to</b>. Bấm nút <b>“Chọn kiểu …”</b> dưới kiểu bạn thích; mục 7 ghép các kiểu đang chọn lại với nhau. Mọi hình đều vẽ từ kích thước (dài, rộng, độ mở…) nên đổi số đo thì hình vẫn đúng.</p>
+  <div id="fail">Không tải được thư viện 3D (three.js). Trang cần mạng Internet để tải thư viện; hãy kiểm tra mạng rồi mở lại.</div>
+
+  <section id="s-agv">
+    <h2>1. Xe AGV có khay</h2>
+    <p class="sub">Thân thấp, bánh xe, dải đèn trạng thái và khay lật ở trên. Đèn: xanh dương = xe trống, xanh lá = đang chở, vàng = đang lật khay.</p>
+    <div class="bar">
+      <div class="grp"><span>Khay:</span><button type="button" data-key="tray" data-val="flat">Khay phẳng</button><button type="button" data-key="tray" data-val="tilt">Khay nghiêng</button></div>
+      <div class="grp"><span>Hàng:</span><button type="button" data-key="load" data-val="yes">Có hàng</button><button type="button" data-key="load" data-val="no">Không hàng</button></div>
+      <div class="grp"><span>Màu xe:</span>
+        <button type="button" class="sw" data-key="color" data-val="do"><i style="background:#e5483a"></i>Đỏ</button>
+        <button type="button" class="sw" data-key="color" data-val="cam"><i style="background:#ff9f2e"></i>Cam</button>
+        <button type="button" class="sw" data-key="color" data-val="xanh"><i style="background:#2f7fe0"></i>Xanh dương</button>
+        <button type="button" class="sw" data-key="color" data-val="xam"><i style="background:#8d96a3"></i>Xám</button>
+      </div>
+    </div>
+    <div class="looks c3" data-looks="agv"></div>
+    <p class="hint">Kéo để xoay · lăn chuột để phóng to. Ba khung xoay cùng nhau để dễ so sánh.</p>
+  </section>
+
+  <section id="s-arm">
+    <h2>2. Tay máy</h2>
+    <p class="sub">Đế + 2 khớp + 2 thanh + tay kẹp (lòng kẹp và hai ngón song song mở/đóng).</p>
+    <div class="bar">
+      <div class="grp"><span>Tay kẹp:</span><button type="button" data-key="grip" data-val="open">Mở</button><button type="button" data-key="grip" data-val="hold">Kẹp kiện</button></div>
+      <label class="row">Khớp 1 <input type="range" id="j1" min="10" max="115" step="1"><output id="j1o"></output></label>
+      <label class="row">Khớp 2 <input type="range" id="j2" min="-150" max="-10" step="1"><output id="j2o"></output></label>
+    </div>
+    <div class="looks c3" data-looks="arm"></div>
+    <p class="hint">Kéo hai thanh trượt để thấy tay máy cử động.</p>
+  </section>
+
+  <section id="s-parcel">
+    <h2>3. Kiện hàng</h2>
+    <p class="sub">Hàng sau: model trong bộ asset đã mua (tải từ ứng dụng đang chạy). Hàng trước: thùng vẽ bằng code có nhãn kg, dùng khi không có model.</p>
+    <div id="glbnote">đang tải model…</div>
+    <div class="view wide" id="v-parcel"></div>
+    <p id="glbnames"></p>
+    <div id="thumbs"></div>
+  </section>
+
+  <section id="s-chute">
+    <h2>4. Cửa thả + túi</h2>
+    <p class="sub">Ô thả trên sàn, bên dưới là túi hoặc thùng hứng, có biển số.</p>
+    <div class="bar"><div class="grp"><span>Số trên biển:</span>
+      <button type="button" data-key="num" data-val="1">1</button><button type="button" data-key="num" data-val="2">2</button><button type="button" data-key="num" data-val="3">3</button><button type="button" data-key="num" data-val="4">4</button><button type="button" data-key="num" data-val="5">5</button><button type="button" data-key="num" data-val="6">6</button>
+    </div></div>
+    <div class="looks c2" data-looks="chute"></div>
+  </section>
+
+  <section id="s-belt">
+    <h2>5. Băng chuyền + cổng quét</h2>
+    <p class="sub">Mặt băng đang chạy; đèn cổng quét nháy xanh lá mỗi khi có kiện đi qua.</p>
+    <div class="looks c2" data-looks="belt"></div>
+  </section>
+
+  <section id="s-floor">
+    <h2>6. Mốc sàn</h2>
+    <p class="sub">Mốc lưới trên sàn tối, mỗi ô 1 m; có một xe AGV để so kích thước.</p>
+    <div class="looks c2" data-looks="floor"></div>
+  </section>
+
+  <section id="s-scene">
+    <h2>7. Xem chung</h2>
+    <p class="sub">Cảnh nhỏ ghép từ các kiểu đang chọn: sàn lưới, 3 xe AGV, tay máy, băng chuyền, 2 cửa thả. Đổi kiểu ở các mục trên hoặc ngay tại đây.</p>
+    <div class="bar" id="quick"></div>
+    <div class="view scene" id="v-scene"></div>
+    <div class="copy">
+      <button type="button" id="copy">Sao chép lựa chọn</button>
+      <input id="line" readonly aria-label="Dòng lựa chọn">
+      <span id="copied" role="status"></span>
+    </div>
+  </section>
+</main>
+<footer>Bản xem trước – chưa phải sản phẩm</footer>
+
+<script>
+  // If the 3D library never arrives (no network), say so instead of leaving empty grey boxes.
+  setTimeout(function () { if (!window.__ready) document.getElementById('fail').style.display = 'block'; }, 9000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+// ================================================================ state
+const S = { agv: 'A', arm: 'A', chute: '1', belt: '1', floor: '1', color: 'cam', mat: 'toon', spin: 'off', tray: 'flat', load: 'yes', grip: 'open', num: '1', j1: 62, j2: -95 };
+const PAL = { do: '#e5483a', cam: '#ff9f2e', xanh: '#2f7fe0', xam: '#8d96a3' };
+const PAL_NAME = { do: 'đỏ', cam: 'cam', xanh: 'xanh dương', xam: 'xám' };
+const REBUILD_KEYS = ['agv', 'arm', 'chute', 'belt', 'floor', 'color', 'mat', 'num'];
+
+const LOOKS = {
+  agv: [
+    { id: 'A', name: 'Bo tròn thân thiện', desc: 'Thân bo tròn như viên thuốc, vè bánh tròn, dải đèn chạy vòng quanh thân, mặt trước có “mắt” đèn. Khay sáng có gờ ba phía.' },
+    { id: 'B', name: 'Công nghiệp gọn', desc: 'Thân vát góc hai tầng màu, cản đen có vạch vàng, bánh lộ mâm vàng như xe hiện tại. Khay thép có ray và mép cảnh báo.' },
+    { id: 'C', name: 'Phẳng hiện đại', desc: 'Thân trắng phẳng, viền chân theo màu xe, ốp bánh trắng, cửa cảm biến phía trước, vạch đèn mảnh hai bên. Khay tối có đệm góc.' },
+  ],
+  arm: [
+    { id: 'A', name: 'Cam xưởng', desc: 'Cùng họ với tay máy hiện tại nhưng gọn hơn: thanh cam thuôn đầu tròn, khớp xám có nắp và ốc, kẹp đen đệm vàng.' },
+    { id: 'B', name: 'Trắng tròn', desc: 'Ống tròn màu trắng, khớp to có nắp xanh ngọc và vòng đèn, đế hình nón. Trông sạch, hợp phòng học.' },
+    { id: 'C', name: 'Khung kỹ thuật', desc: 'Thanh là hai tấm thép song song thấy dây bên trong, khớp vàng có hộp động cơ, đế vuông bắt ốc. Trông “máy móc” nhất.' },
+  ],
+  chute: [
+    { id: '1', name: 'Khung vàng + túi vải', desc: 'Viền vàng quanh ô, phễu xám, túi vải treo bên dưới, biển số đứng trên cột.' },
+    { id: '2', name: 'Viền đèn + thùng nhựa', desc: 'Viền thấp màu tối có vạch đèn xanh, thùng nhựa có bánh bên dưới, biển số nằm nghiêng sát sàn (dễ đọc từ trên cao).' },
+  ],
+  belt: [
+    { id: '1', name: 'Khung xanh, chân hở', desc: 'Ray xanh, mặt băng tối có vạch mũi tên, chân thép. Cổng quét khung vuông màu vàng, có đèn hiệu trên nóc.' },
+    { id: '2', name: 'Thân kín màu trắng', desc: 'Thân trắng bo tròn, mặt băng xám có vạch, mép xanh ngọc. Cổng quét hình vòm có vòng đèn.' },
+  ],
+  floor: [
+    { id: '1', name: 'Ô mã trắng', desc: 'Mỗi nút lưới có một ô nhãn trắng với hoa văn riêng (không phải mã thật), đường lưới mờ.' },
+    { id: '2', name: 'Vòng vàng + vạch đứt', desc: 'Mỗi nút là vòng tròn vàng, nối nhau bằng vạch đứt sáng, có mũi tên chỉ hướng.' },
+  ],
+};
+const KEY_LABEL = { agv: 'AGV', arm: 'Tay máy', chute: 'Cửa thả', belt: 'Băng chuyền', floor: 'Mốc sàn' };
+
+// ================================================================ materials / geometry helpers
+const GRAD = (() => {
+  const t = new THREE.DataTexture(new Uint8Array([110, 110, 110, 255, 170, 170, 170, 255, 220, 220, 220, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  return t;
+})();
+const mats = new Map();
+/** One shared material per colour (and per material mode). kind: '' | 'glow' | 'double'. */
+function M(hex, kind = '') {
+  const key = `${S.mat}|${hex}|${kind}`;
+  let m = mats.get(key);
+  if (m) return m;
+  if (kind === 'glow') m = new THREE.MeshBasicMaterial({ color: hex });
+  else if (S.mat === 'toon') m = new THREE.MeshToonMaterial({ color: hex, gradientMap: GRAD });
+  else m = new THREE.MeshStandardMaterial({ color: hex, roughness: 0.55, metalness: 0 });
+  if (kind === 'double') m.side = THREE.DoubleSide;
+  mats.set(key, m);
+  return m;
+}
+function adjust(hex, dl, ds = 0) {
+  const c = new THREE.Color(hex);
+  const h = { h: 0, s: 0, l: 0 };
+  c.getHSL(h);
+  c.setHSL(h.h, Math.min(1, Math.max(0, h.s + ds)), Math.min(1, Math.max(0, h.l + dl)));
+  return `#${c.getHexString()}`;
+}
+const geos = new Map();
+const q = (v) => Math.round(v * 1000) / 1000;
+function G(key, make) {
+  let g = geos.get(key);
+  if (!g) { g = make(); geos.set(key, g); }
+  return g;
+}
+const box = (w, h, d) => G(`b|${q(w)}|${q(h)}|${q(d)}`, () => new THREE.BoxGeometry(w, h, d));
+const rbox = (w, h, d, r = 0.02, seg = 1) =>
+  G(`rb|${q(w)}|${q(h)}|${q(d)}|${q(r)}|${seg}`, () => new RoundedBoxGeometry(w, h, d, seg, Math.max(0.002, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3))));
+/** Cylinder along an axis; r2 is the radius at the +axis end. */
+const cyl = (axis, r, len, seg = 16, r2 = r) =>
+  G(`c|${axis}|${q(r)}|${q(r2)}|${q(len)}|${seg}`, () => {
+    const g = new THREE.CylinderGeometry(r2, r, len, seg);
+    if (axis === 'z') g.rotateX(Math.PI / 2);
+    if (axis === 'x') g.rotateZ(-Math.PI / 2);
+    return g;
+  });
+/** Flat plate with rounded corners seen from above and a bevelled edge: L along x, W along z, y from 0 to T. */
+const plate = (L, W, T, r, b = 0.012, cs = 2, bs = 1) =>
+  G(`pl|${q(L)}|${q(W)}|${q(T)}|${q(r)}|${q(b)}|${cs}|${bs}`, () => {
+    const bb = Math.max(0.001, Math.min(b, T / 2 - 0.001, L / 2 - 0.002, W / 2 - 0.002));
+    const w = L - 2 * bb, h = W - 2 * bb;
+    const rr = Math.max(0.001, Math.min(r - bb, w / 2 - 0.001, h / 2 - 0.001));
+    const s = new THREE.Shape();
+    s.moveTo(-w / 2 + rr, -h / 2);
+    s.lineTo(w / 2 - rr, -h / 2);
+    s.absarc(w / 2 - rr, -h / 2 + rr, rr, -Math.PI / 2, 0, false);
+    s.lineTo(w / 2, h / 2 - rr);
+    s.absarc(w / 2 - rr, h / 2 - rr, rr, 0, Math.PI / 2, false);
+    s.lineTo(-w / 2 + rr, h / 2);
+    s.absarc(-w / 2 + rr, h / 2 - rr, rr, Math.PI / 2, Math.PI, false);
+    s.lineTo(-w / 2, -h / 2 + rr);
+    s.absarc(-w / 2 + rr, -h / 2 + rr, rr, Math.PI, Math.PI * 1.5, false);
+    const g = new THREE.ExtrudeGeometry(s, { depth: T - 2 * bb, bevelEnabled: true, bevelSize: bb, bevelThickness: bb, bevelSegments: bs, curveSegments: cs });
+    g.rotateX(-Math.PI / 2);
+    g.translate(0, bb, 0);
+    return g;
+  });
+function add(parent, geo, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = true;
+  m.receiveShadow = !mat.isMeshBasicMaterial;
+  parent.add(m);
+  return m;
+}
+function countTris(o) {
+  let n = 0;
+  o.traverse((m) => { if (m.isMesh) n += (m.geometry.index ? m.geometry.index.count : m.geometry.attributes.position.count) / 3; });
+  return Math.round(n);
+}
+const texs = new Map();
+function canvasTex(key, w, h, draw) {
+  let t = texs.get(key);
+  if (t) return t;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  texs.set(key, t);
+  return t;
+}
+/** Rounded label (text on a pill) as a flat plane. */
+function labelPlane(text, w, h, bg = '#ffd23f', ink = '#23252b') {
+  const tex = canvasTex(`lab|${text}|${bg}|${ink}|${q(w / h)}`, 256, Math.round(256 * h / w), (g, W, H) => {
+    g.fillStyle = ink;
+    g.beginPath(); g.roundRect(3, 3, W - 6, H - 6, H * 0.22); g.fill();
+    g.fillStyle = bg;
+    g.beginPath(); g.roundRect(11, 11, W - 22, H - 22, H * 0.16); g.fill();
+    g.fillStyle = ink;
+    g.font = `800 ${Math.round(H * 0.56)}px "Segoe UI",Arial,sans-serif`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, W / 2, H * 0.53, W - 30);
+  });
+  const m = new THREE.Mesh(G(`plane|${q(w)}|${q(h)}`, () => new THREE.PlaneGeometry(w, h)), new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+  return m;
+}
+/** Big number with no background (for signs). */
+function numberPlane(text, size, ink) {
+  const tex = canvasTex(`num|${text}|${ink}`, 128, 128, (g) => {
+    g.fillStyle = ink;
+    g.font = '800 104px "Segoe UI",Arial,sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, 64, 70);
+  });
+  return new THREE.Mesh(G(`plane|${q(size)}|${q(size)}`, () => new THREE.PlaneGeometry(size, size)), new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+}
+function nameSprite(text) {
+  const tex = canvasTex(`spr|${text}`, 384, 80, (g, W, H) => {
+    g.fillStyle = 'rgba(34,37,43,.88)';
+    g.beginPath(); g.roundRect(2, 2, W - 4, H - 4, 26); g.fill();
+    g.fillStyle = '#ffffff';
+    g.font = '700 46px "Segoe UI",Arial,sans-serif';
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(text, W / 2, H * 0.54, W - 24);
+  });
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  s.scale.set(0.7, 0.146, 1);
+  s.renderOrder = 5;
+  return s;
+}
+
+// ================================================================ parcel (code-drawn carton with kg tag)
+/** Carton centred on its own centre. size = {x,y,z} metres; kg = number or null. */
+function carton(size, kg) {
+  const g = new THREE.Group();
+  add(g, rbox(size.x, size.y, size.z, 0.012, 1), M('#cf9f62'));
+  add(g, box(size.x + 0.004, size.y + 0.004, size.z * 0.16), M('#ecd2a2'));
+  if (kg != null) {
+    const w = Math.max(0.05, Math.min(size.x * 0.72, size.y * 1.44, size.z * 1.44));
+    const label = `${kg} kg`;
+    const front = labelPlane(label, w, w / 2); front.position.z = size.z / 2 + 0.003;
+    const back = labelPlane(label, w, w / 2); back.position.z = -size.z / 2 - 0.003; back.rotation.y = Math.PI;
+    const top = labelPlane(label, w, w / 2); top.position.y = size.y / 2 + 0.005; top.rotation.x = -Math.PI / 2;
+    g.add(front, back, top);
+  }
+  return g;
+}
+const PARCEL = { x: 0.3, y: 0.22, z: 0.26 };
+
+// ================================================================ AGV
+/** Physical dimensions the looks are drawn from (all metres). Wheels = one entry per motor mount, as in the app. */
+const AGV_DEF = { L: 0.9, W: 0.7, H: 0.24, wheelR: 0.085, tray: { L: 0.74, W: 0.62, T: 0.03 } };
+function agvWheels(d) {
+  const f = d.L * 0.29, s = d.W / 2 + 0.035;
+  return [[f, s], [f, -s], [-f, s], [-f, -s]].map(([forward, side]) => ({ forward, side, radius: d.wheelR }));
+}
+const UP = new THREE.Vector3(0, 1, 0);
+const STRIP = { idle: '#39c6ff', load: '#45e07a', tilt: '#ffc21a' };
+
+/**
+ * One AGV drawn from d = {L, W, H, tray:{L,W,T}} and a wheel list. Origin on the floor under the chassis centre,
+ * nose toward +x, right-hand side toward +z. The tray hinges on its +z edge. Returns { group, setTilt, strip }.
+ */
+function buildAgv(look, d, wheels, color) {
+  const g = new THREE.Group();
+  const { L, W, H } = d;
+  const GAP = 0.04;
+  const strip = new THREE.MeshBasicMaterial({ color: STRIP.idle });
+  const DARK = '#2a2d34', TYRE = '#23252b', DECK = '#4a4f58', WHITE = '#eef0f3';
+  const nearest = Math.min(...wheels.map((w) => Math.abs(w.forward)));
+  const R0 = wheels[0] ? wheels[0].radius : 0.085;
+  const between = nearest > R0 + 0.1 ? 2 * (nearest - R0 - 0.05) : L * 0.3; // free side length between the wheels
+
+  if (look === 'A') {
+    const r = Math.min(0.17, W * 0.26, L * 0.26);
+    const y0 = GAP + 0.045, bh = H - y0;
+    add(g, plate(L * 0.95, W * 0.95, 0.07, r * 0.9, 0.01, 1), M(DARK), 0, GAP, 0);
+    add(g, plate(L, W, bh, r, 0.025, 3, 2), M(color), 0, y0, 0);
+    add(g, plate(L + 0.006, W + 0.006, 0.04, r + 0.003, 0.004, 3), M(DARK), 0, y0 + bh * 0.3 - 0.009, 0); // dark groove so the light reads on any body colour
+    add(g, plate(L + 0.012, W + 0.012, 0.022, r + 0.006, 0.004, 3), strip, 0, y0 + bh * 0.3, 0);
+    add(g, plate(L * 0.84, W * 0.82, 0.012, r * 0.75, 0.004, 1), M(DECK), 0, H - 0.003, 0);
+    const vy = y0 + bh * 0.68;
+    add(g, rbox(0.03, bh * 0.36, Math.min(W * 0.46, W - 2 * r), 0.014, 1), M(DARK), L / 2 - 0.007, vy, 0);
+    for (const s of [-1, 1]) {
+      add(g, cyl('x', 0.017, 0.012, 8), M('#ffffff', 'glow'), L / 2 + 0.008, vy, s * W * 0.11);
+      add(g, cyl('x', 0.015, 0.012, 6), M('#ff5a4a', 'glow'), -L / 2 - 0.001, vy, s * W * 0.16);
+    }
+    for (const w of wheels) {
+      const s = Math.sign(w.side) || 1, R = w.radius;
+      const wg = new THREE.Group();
+      wg.position.set(w.forward, R, w.side);
+      add(wg, cyl('z', R, 0.07, 14), M(TYRE));
+      add(wg, cyl('z', R * 0.58, 0.076, 10), M(WHITE));
+      add(wg, cyl('z', R * 0.22, 0.084, 6), M(color));
+      const fender = G(`fenderA|${q(R)}`, () => new THREE.TorusGeometry(R + 0.012, 0.04, 5, 7, Math.PI));
+      add(wg, fender, M(adjust(color, -0.07)), 0, 0.004, s * 0.002);
+      g.add(wg);
+    }
+  } else if (look === 'B') {
+    const b = 0.012, y0 = GAP + 0.085, y1 = H - b;
+    add(g, rbox(L, 0.1, W, 0.018, 1), M('#343841'), 0, GAP + 0.05, 0);
+    const depth = W * 0.94 - 2 * b;
+    const shell = G(`shellB|${q(L)}|${q(W)}|${q(H)}`, () => {
+      const s = new THREE.Shape();
+      s.moveTo(-L / 2 + 0.03, y0);
+      s.lineTo(L / 2 - 0.03, y0);
+      s.lineTo(L / 2 - 0.03, y0 + 0.03);
+      s.lineTo(L / 2 - 0.13, y1);
+      s.lineTo(-L / 2 + 0.13, y1);
+      s.lineTo(-L / 2 + 0.03, y0 + 0.03);
+      s.closePath();
+      const e = new THREE.ExtrudeGeometry(s, { depth, bevelEnabled: true, bevelSize: b, bevelThickness: b, bevelSegments: 2, curveSegments: 1 });
+      e.translate(0, 0, -depth / 2);
+      return e;
+    });
+    add(g, shell, M(color));
+    add(g, box(L - 0.3, 0.008, W * 0.8), M(DECK), 0, H + 0.002, 0);
+    // light bar lying on the sloped nose
+    const dx = -0.1, dy = y1 - y0 - 0.03, len = Math.hypot(dx, dy);
+    const bar = add(g, box(len * 0.5, 0.01, W * 0.5), strip, L / 2 - 0.08 + (dy / len) * (b + 0.002), y0 + 0.03 + dy / 2 + (-dx / len) * (b + 0.002), 0);
+    const bezel = add(g, box(len * 0.5 + 0.026, 0.008, W * 0.5 + 0.026), M(TYRE), L / 2 - 0.08 + (dy / len) * b, y0 + 0.03 + dy / 2 + (-dx / len) * b, 0);
+    bar.rotation.z = bezel.rotation.z = Math.atan2(dy, dx);
+    for (const s of [-1, 1]) {
+      add(g, rbox(0.045, 0.07, W + 0.02, 0.018, 1), M(TYRE), s * (L / 2 + 0.012), GAP + 0.045, 0);
+      add(g, box(between, 0.024, 0.012), strip, 0, GAP + 0.06, s * (W / 2 + 0.003));
+      add(g, box(0.012, 0.03, W * 0.16), M('#ff5a4a', 'glow'), -L / 2 - 0.032, GAP + 0.045, s * W * 0.3);
+    }
+    for (const z of [-0.3, 0, 0.3]) add(g, box(0.012, 0.03, W * 0.2), M('#ffd23f'), L / 2 + 0.032, GAP + 0.045, z * W);
+    for (const w of wheels) {
+      const R = w.radius;
+      const wg = new THREE.Group();
+      wg.position.set(w.forward, R, w.side);
+      add(wg, cyl('z', R, 0.08, 16), M(TYRE));
+      add(wg, cyl('z', R * 0.55, 0.09, 12), M('#ffd23f'));
+      add(wg, box(R * 0.95, R * 0.2, 0.096), M(TYRE));
+      g.add(wg);
+    }
+  } else {
+    const r = 0.07;
+    add(g, plate(L, W, H - GAP, r, 0.02, 2, 2), M(WHITE), 0, GAP, 0);
+    add(g, plate(L + 0.012, W + 0.012, 0.055, r + 0.006, 0.008), M(color), 0, GAP - 0.005, 0);
+    add(g, plate(L * 0.9, W * 0.86, 0.01, r * 0.7, 0.003), M('#3a3f47'), 0, H - 0.002, 0);
+    add(g, rbox(0.024, 0.05, W * 0.56, 0.012, 1), M('#1d2026'), L / 2 - 0.004, H - 0.075, 0);
+    add(g, box(0.008, 0.012, W * 0.22), strip, L / 2 + 0.006, H - 0.075, 0);
+    add(g, box(0.008, 0.02, W * 0.4), M('#ff5a4a', 'glow'), -L / 2 - 0.001, H - 0.075, 0);
+    for (const s of [-1, 1]) add(g, box(between, 0.014, 0.008), strip, 0, H - 0.06, s * (W / 2 + 0.001));
+    for (const w of wheels) {
+      const R = w.radius, s = Math.sign(w.side) || 1;
+      const wg = new THREE.Group();
+      wg.position.set(w.forward, R, w.side);
+      add(wg, cyl('z', R, 0.07, 14), M(TYRE));
+      add(wg, cyl('z', R * 0.78, 0.076, 10), M('#dfe3e8'));
+      add(wg, cyl('z', R * 0.25, 0.084, 6), M(color));
+      g.add(wg);
+      add(g, rbox(2 * R + 0.06, R + 0.035, 0.09, 0.03, 1), M(WHITE), w.forward, R + (R + 0.035) / 2 - 0.012, w.side + s * 0.002);
+    }
+  }
+
+  // ---- tray: flat plate hinged on its +z edge, standing a little above the chassis
+  const { L: tL, W: tW, T: tT } = d.tray;
+  const stand = 0.05;
+  const hinge = new THREE.Vector3(0, H + stand, tW / 2);
+  add(g, box(tL * 0.45, stand + 0.006, tW * 0.4), M(DARK), 0, H + stand / 2 - 0.003, 0);
+  add(g, cyl('x', 0.016, tL * 0.8, 8), M('#8f97a3'), 0, hinge.y - 0.004, hinge.z - 0.012);
+  for (const s of [-1, 1]) add(g, box(0.03, stand, 0.03), M(DARK), s * tL * 0.3, H + stand / 2 - 0.004, hinge.z - 0.012);
+  const pivot = new THREE.Group();
+  pivot.position.copy(hinge);
+  g.add(pivot);
+  const zc = -tW / 2;
+  if (look === 'A') {
+    add(pivot, plate(tL, tW, tT, 0.07, 0.008), M('#e9ecef'), 0, 0, zc);
+    add(pivot, box(tL - 0.1, 0.006, tW - 0.06), M('#3a3f47'), 0, tT + 0.001, zc + 0.02);
+    add(pivot, rbox(tL - 0.04, 0.035, 0.03, 0.012, 1), M(color), 0, tT + 0.012, -tW + 0.02);
+    for (const s of [-1, 1]) add(pivot, rbox(0.03, 0.035, tW - 0.08, 0.012, 1), M(color), s * (tL / 2 - 0.02), tT + 0.012, zc - 0.01);
+  } else if (look === 'B') {
+    add(pivot, rbox(tL, tT, tW, 0.006, 1), M('#b9c0c9'), 0, tT / 2, zc);
+    for (const s of [-1, 1]) add(pivot, box(0.02, 0.04, tW), M('#343841'), s * (tL / 2 - 0.01), tT + 0.018, zc);
+    add(pivot, box(tL, 0.04, 0.02), M('#343841'), 0, tT + 0.018, -tW + 0.01);
+    for (const x of [-0.33, -0.12, 0.12, 0.33]) add(pivot, box(0.02, 0.006, tW * 0.86), M('#6b7380'), x * tL, tT + 0.002, zc);
+    add(pivot, box(tL - 0.04, 0.008, 0.035), M('#ffd23f'), 0, tT + 0.002, -0.02);
+  } else {
+    add(pivot, plate(tL, tW, tT, 0.04, 0.008), M('#3a3f47'), 0, 0, zc);
+    add(pivot, plate(tL - 0.06, tW - 0.06, 0.006, 0.03, 0.002), M('#dfe3e8'), 0, tT - 0.002, zc);
+    for (const sx of [-1, 1]) for (const sz of [0.03, tW - 0.03]) add(pivot, cyl('y', 0.04, tT + 0.016, 8), M(color), sx * (tL / 2 - 0.03), tT / 2, -sz);
+  }
+  // lifting rod from the chassis top to the tray underside (draw only)
+  const rodGeo = G('rod', () => { const c = new THREE.CylinderGeometry(0.013, 0.013, 1, 8); c.translate(0, 0.5, 0); return c; });
+  const rod = add(g, rodGeo, M('#c9ced6'));
+  const rodFoot = new THREE.Vector3(0, H, hinge.z - tW * 0.75);
+  const tmp = new THREE.Vector3();
+  function setTilt(theta) {
+    pivot.rotation.x = theta;
+    const lz = -tW * 0.75;
+    tmp.set(0, hinge.y - lz * Math.sin(theta), hinge.z + lz * Math.cos(theta)).sub(rodFoot);
+    const len = Math.max(0.001, tmp.length());
+    rod.position.copy(rodFoot);
+    rod.scale.set(1, len, 1);
+    rod.quaternion.setFromUnitVectors(UP, tmp.normalize());
+  }
+  setTilt(0);
+  return { group: g, setTilt, strip, hinge, tray: d.tray };
+}
+
+const TILT_MAX = 0.6; // rad, about 34 degrees
+const ease = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+/** Tray tilt loop (6 s): lift, parcel slides and falls, lower, parcel back. */
+function trayCycle(T) {
+  const p = ((T % 6) + 6) % 6 / 6;
+  const theta = TILT_MAX * (p < 0.2 ? ease(p / 0.2) : p < 0.6 ? 1 : p < 0.75 ? 1 - ease((p - 0.6) / 0.15) : 0);
+  const slide = clamp01((p - 0.16) / 0.2) ** 2;
+  const fall = clamp01((p - 0.36) / 0.09);
+  return { p, theta, slide, fall };
+}
+/** An AGV with its parcel and the animation that goes with the tray/load states. opt: {phase, throwZ, floorY, vanish}. */
+function makeAgv(look, color, opt = {}) {
+  const d = AGV_DEF;
+  const a = buildAgv(look, d, agvWheels(d), color);
+  const tris = countTris(a.group);
+  const parcel = carton(PARCEL, 2);
+  a.group.add(parcel);
+  const { hinge } = a;
+  const tW = d.tray.W, tT = d.tray.T;
+  const py = tT + 0.006 + PARCEL.y / 2;
+  const onTray = (theta, slide, out) => {
+    const lz = -tW / 2 + slide * (tW / 2 + PARCEL.z / 2 + 0.02);
+    return out.set(0, hinge.y + py * Math.cos(theta) - lz * Math.sin(theta), hinge.z + py * Math.sin(theta) + lz * Math.cos(theta));
+  };
+  const p1 = new THREE.Vector3(), p2 = new THREE.Vector3();
+  function update(T, tray, load) {
+    const c = tray === 'tilt' ? trayCycle(T + (opt.phase ?? 0)) : { p: 0, theta: 0, slide: 0, fall: 0 };
+    a.setTilt(c.theta);
+    let carried = load;
+    parcel.visible = load;
+    if (load) {
+      if (c.fall <= 0) {
+        onTray(c.theta, c.slide, parcel.position);
+        parcel.rotation.x = c.theta;
+      } else {
+        carried = false;
+        onTray(c.theta, 1, p1);
+        p2.set(0, (opt.floorY ?? 0) + PARCEL.y / 2, hinge.z + PARCEL.z / 2 + (opt.throwZ ?? 0.2));
+        parcel.position.set(0, p1.y + (p2.y - p1.y) * c.fall * c.fall, p1.z + (p2.z - p1.z) * c.fall);
+        parcel.rotation.x = c.theta * (1 - c.fall);
+        if (c.p > 0.94) { carried = true; onTray(0, 0, parcel.position); parcel.rotation.x = 0; }
+        else if (c.p > 0.86 || (opt.vanish && c.fall >= 1)) parcel.visible = false;
+      }
+    }
+    a.strip.color.set(c.theta > 0.03 ? STRIP.tilt : carried ? STRIP.load : STRIP.idle);
+  }
+  return { group: a.group, update, tris };
+}
+
+// ================================================================ arm
+/**
+ * Dimensions the arm looks are drawn from: base cylinder, joint block (jd across, jw along its axis),
+ * two links (length, thickness t, depth d), palm block and finger block, and the finger opening.
+ */
+const ARM_DEF = { baseR: 0.24, baseH: 0.3, jd: 0.2, jw: 0.16, L1: 0.8, L2: 0.65, t: 0.13, d: 0.13, palm: { x: 0.07, y: 0.14, z: 0.36 }, finger: { x: 0.22, y: 0.1, z: 0.04 }, open: 0.27 };
+const GRIP_PARCEL = { x: 0.2, y: 0.2, z: 0.2 };
+
+function armJoint(look, p, parent, shoulder) {
+  const jr = p.jd * 0.56;
+  if (look === 'A') {
+    const len = p.jw + 0.04, col = '#4a4f58';
+    add(parent, cyl('z', jr, len, 20), M(col));
+    for (const s of [-1, 1]) {
+      add(parent, cyl('z', jr * 0.55, 0.03, 16), M(adjust(col, 0.12)), 0, 0, s * (len / 2 + 0.012));
+      add(parent, cyl('z', jr * 0.2, 0.02, 8), M('#ffd23f'), 0, 0, s * (len / 2 + 0.03));
+      for (let i = 0; i < 6; i++) {
+        const a = (i * Math.PI) / 3;
+        add(parent, cyl('z', 0.014, 0.012, 6), M('#c9ced6'), Math.cos(a) * jr * 0.8, Math.sin(a) * jr * 0.8, s * (len / 2 + 0.003));
+      }
+    }
+  } else if (look === 'B') {
+    const len = p.jw + 0.07;
+    add(parent, cyl('z', jr, len, 24), M('#f2f4f6'));
+    for (const s of [-1, 1]) {
+      add(parent, cyl('z', jr * 0.8, 0.016, 20), M('#18a8c9'), 0, 0, s * (len / 2 + 0.006));
+      add(parent, cyl('z', jr * 1.02, 0.014, 24), M('#5fe3ff', 'glow'), 0, 0, s * (len / 2 - 0.022));
+    }
+  } else {
+    const len = p.jw + 0.02;
+    add(parent, cyl('z', jr, len, 20), M('#ffc21a'));
+    add(parent, cyl('z', jr * 0.5, 0.02, 6), M('#23252b'), 0, 0, -(len / 2 + 0.008));
+    const off = shoulder ? 0.05 : 0;
+    add(parent, cyl('z', jr * 0.62, 0.075, 14), M('#23252b'), 0, 0, len / 2 + 0.034 + off);
+    add(parent, cyl('z', jr * 0.3, 0.012, 10), M('#c3c9d1'), 0, 0, len / 2 + 0.074 + off);
+  }
+}
+function armLink(look, p, parent, L) {
+  const { t, d } = p;
+  if (look === 'A') {
+    const col = '#ff9f2e', w0 = t * 1.25, w1 = t * 0.85, dep = d * 0.8, b = Math.min(0.02, t * 0.15);
+    const slab = G(`linkA|${q(L)}|${q(t)}|${q(d)}`, () => {
+      const s = new THREE.Shape();
+      s.moveTo(0, w0 / 2 - b);
+      s.lineTo(L, w1 / 2 - b);
+      s.absarc(L, 0, w1 / 2 - b, Math.PI / 2, -Math.PI / 2, true);
+      s.lineTo(0, -(w0 / 2 - b));
+      s.absarc(0, 0, w0 / 2 - b, -Math.PI / 2, Math.PI / 2, true);
+      const e = new THREE.ExtrudeGeometry(s, { depth: dep - 2 * b, bevelEnabled: true, bevelSize: b, bevelThickness: b, bevelSegments: 2, curveSegments: 6 });
+      e.translate(0, 0, -(dep - 2 * b) / 2);
+      return e;
+    });
+    add(parent, slab, M(col));
+    add(parent, rbox(L * 0.5, t * 0.3, dep + 0.012, 0.012, 1), M(adjust(col, 0.2, 0.05)), L * 0.5, 0, 0);
+  } else if (look === 'B') {
+    add(parent, cyl('x', t * 0.46, L, 16, t * 0.38), M('#f2f4f6'), L / 2, 0, 0);
+    add(parent, cyl('x', t * 0.52, 0.05, 16), M('#aab2bd'), p.jd * 0.56 + 0.035, 0, 0);
+    add(parent, cyl('x', t * 0.44, 0.03, 16), M('#18a8c9'), L - p.jd * 0.56 - 0.03, 0, 0);
+  } else {
+    for (const s of [-1, 1]) {
+      add(parent, rbox(L, t * 0.9, 0.024, 0.01, 1), M('#3b4048'), L / 2, 0, s * (d / 2));
+      add(parent, rbox(L * 0.22, t * 0.32, 0.008, 0.004, 1), M('#59606b'), L / 2, 0, s * (d / 2 + 0.012));
+    }
+    for (const f of [0.3, 0.7]) add(parent, cyl('z', 0.018, d, 8), M('#c3c9d1'), L * f, 0, 0);
+    add(parent, cyl('x', 0.013, L * 0.84, 8), M('#ff9f2e'), L / 2, 0, 0);
+  }
+}
+/** Arm in its own x-y plane (pitch joints turn about z). Origin on the floor under the base. Returns { group, pose(a1,a2,opening,holding) }. */
+function buildArm(look, p) {
+  const g = new THREE.Group();
+  const jr = p.jd * 0.56;
+  let shoulderY;
+  if (look === 'A') {
+    add(g, cyl('y', p.baseR, 0.05, 24), M('#2a2d34'), 0, 0.025, 0);
+    add(g, cyl('y', p.baseR * 0.86, 0.012, 24), M('#ffd23f'), 0, 0.054, 0);
+    add(g, cyl('y', p.baseR * 0.72, p.baseH - 0.08, 20, p.baseR * 0.52), M('#ff9f2e'), 0, 0.05 + (p.baseH - 0.08) / 2, 0);
+    add(g, cyl('y', p.baseR * 0.58, 0.04, 20), M('#2a2d34'), 0, p.baseH - 0.02, 0);
+    shoulderY = p.baseH + jr * 0.7;
+  } else if (look === 'B') {
+    add(g, cyl('y', p.baseR, 0.03, 28), M('#aab2bd'), 0, 0.015, 0);
+    add(g, cyl('y', p.baseR * 0.87, 0.014, 28), M('#5fe3ff', 'glow'), 0, 0.036, 0);
+    add(g, cyl('y', p.baseR * 0.85, p.baseH - 0.03, 24, jr * 1.05), M('#f2f4f6'), 0, 0.03 + (p.baseH - 0.03) / 2, 0);
+    shoulderY = p.baseH + jr * 0.6;
+  } else {
+    const s2 = p.baseR * 2, cw = p.baseR * 0.95;
+    add(g, rbox(s2, 0.04, s2, 0.015, 1), M('#23252b'), 0, 0.02, 0);
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(g, cyl('y', 0.02, 0.015, 6), M('#c3c9d1'), sx * p.baseR * 0.8, 0.046, sz * p.baseR * 0.8);
+    add(g, rbox(cw, p.baseH - 0.04, cw, 0.02, 1), M('#3b4048'), 0, 0.04 + (p.baseH - 0.04) / 2, 0);
+    add(g, box(cw + 0.008, 0.04, cw + 0.008), M('#ffc21a'), 0, p.baseH * 0.55, 0);
+    shoulderY = p.baseH + jr * 0.9;
+    for (const s of [-1, 1]) add(g, rbox(jr * 1.5, jr * 2.0, 0.022, 0.01, 1), M('#3b4048'), 0, p.baseH + jr * 0.45, s * (p.jw / 2 + 0.035));
+  }
+  const shoulder = new THREE.Group();
+  shoulder.position.set(0, shoulderY, 0);
+  g.add(shoulder);
+  armLink(look, p, shoulder, p.L1);
+  armJoint(look, p, shoulder, true);
+  const elbow = new THREE.Group();
+  elbow.position.x = p.L1;
+  shoulder.add(elbow);
+  armLink(look, p, elbow, p.L2);
+  armJoint(look, p, elbow, false);
+  const wrist = new THREE.Group();
+  wrist.position.x = p.L2;
+  elbow.add(wrist);
+
+  // ---- gripper: palm block + two parallel fingers that slide along z
+  const { palm, finger } = p;
+  const PADW = 0.008;
+  const x0 = look === 'C' ? 0.06 : 0.045;
+  const fingers = [];
+  if (look === 'A') {
+    add(wrist, cyl('x', p.t * 0.42, 0.06, 14), M('#4a4f58'), 0.02, 0, 0);
+    add(wrist, rbox(palm.x, palm.y, palm.z, 0.02, 1), M('#2a2d34'), x0 + palm.x / 2, 0, 0);
+    add(wrist, box(palm.x * 0.5, 0.008, palm.z * 0.9), M('#ffd23f'), x0 + palm.x / 2, palm.y / 2 + 0.002, 0);
+  } else if (look === 'B') {
+    add(wrist, cyl('x', p.t * 0.4, 0.06, 16), M('#18a8c9'), 0.02, 0, 0);
+    add(wrist, rbox(palm.x, palm.y, palm.z, 0.03, 2), M('#f2f4f6'), x0 + palm.x / 2, 0, 0);
+    add(wrist, box(palm.x * 0.4, 0.008, palm.z * 0.8), M('#18a8c9'), x0 + palm.x / 2, palm.y / 2 + 0.002, 0);
+  } else {
+    add(wrist, rbox(0.07, p.t * 0.8, p.d + 0.03, 0.01, 1), M('#3b4048'), 0.03, 0, 0);
+    add(wrist, rbox(palm.x * 0.8, palm.y * 0.6, palm.z, 0.008, 1), M('#c3c9d1'), x0 + palm.x * 0.5, 0, 0);
+  }
+  for (const side of [1, -1]) {
+    const f = new THREE.Group();
+    f.position.x = x0 + palm.x + finger.x / 2 - 0.006;
+    f.userData.side = side;
+    const inner = -side * (finger.z / 2 + PADW / 2 - 0.002);
+    if (look === 'A') {
+      add(f, rbox(finger.x, finger.y, finger.z, 0.014, 1), M('#2a2d34'));
+      add(f, box(finger.x * 0.62, finger.y * 0.78, PADW + 0.004), M('#ffd23f'), finger.x * 0.12, 0, inner);
+    } else if (look === 'B') {
+      add(f, rbox(finger.x, finger.y, finger.z, 0.018, 2), M('#aab2bd'));
+      add(f, rbox(finger.x * 0.7, finger.y * 0.8, PADW + 0.004, 0.004, 1), M('#343841'), finger.x * 0.1, 0, inner);
+    } else {
+      add(f, rbox(finger.x, finger.y * 0.8, finger.z, 0.006, 1), M('#3b4048'));
+      add(f, box(finger.x * 0.4, finger.y * 0.74, PADW + 0.004), M('#ffc21a'), finger.x * 0.28, 0, inner);
+      add(f, rbox(palm.x * 0.9, palm.y * 0.9, finger.z + 0.03, 0.008, 1), M('#23252b'), -finger.x / 2 - palm.x * 0.4, 0, 0);
+    }
+    wrist.add(f);
+    fingers.push(f);
+  }
+  const tris = countTris(g);
+  const held = carton(GRIP_PARCEL, 1);
+  held.position.set(x0 + palm.x + finger.x * 0.52, 0, 0);
+  wrist.add(held);
+  function pose(a1deg, a2deg, opening, holding) {
+    shoulder.rotation.z = THREE.MathUtils.degToRad(a1deg);
+    elbow.rotation.z = THREE.MathUtils.degToRad(a2deg);
+    for (const f of fingers) f.position.z = f.userData.side * (opening / 2 + PADW + finger.z / 2);
+    held.visible = holding;
+  }
+  pose(S.j1, S.j2, p.open, false);
+  return { group: g, pose, tris };
+}
+
+// ================================================================ floor (grid markers)
+function floorTile(look) {
+  return canvasTex(`floor|${look}`, 256, 256, (g, W) => {
+    g.fillStyle = '#2c3038';
+    g.fillRect(0, 0, W, W);
+    if (look === '1') {
+      g.strokeStyle = 'rgba(255,255,255,.13)';
+      g.lineWidth = 3;
+      g.strokeRect(0, 0, W, W);
+      const s = 62, o = (W - s) / 2;
+      g.fillStyle = '#f4f5f7';
+      g.beginPath(); g.roundRect(o, o, s, s, 8); g.fill();
+      g.fillStyle = '#23252b';
+      const c = 12, m = o + 7;
+      // abstract block pattern (not a real code)
+      for (const [i, j] of [[0, 0], [3, 0], [0, 3], [1, 1], [2, 2], [3, 2], [1, 3]]) g.fillRect(m + i * c, m + j * c, c - 1, c - 1);
+      g.fillStyle = '#ffd23f';
+      g.fillRect(m + 3 * c, m + 3 * c, c - 1, c - 1);
+    } else {
+      g.strokeStyle = 'rgba(235,240,246,.55)';
+      g.lineWidth = 5;
+      g.setLineDash([16, 14]);
+      g.beginPath(); g.moveTo(0, W / 2); g.lineTo(W / 2 - 34, W / 2); g.moveTo(W / 2 + 34, W / 2); g.lineTo(W, W / 2);
+      g.moveTo(W / 2, 0); g.lineTo(W / 2, W / 2 - 34); g.moveTo(W / 2, W / 2 + 34); g.lineTo(W / 2, W); g.stroke();
+      g.setLineDash([]);
+      g.strokeStyle = '#ffd23f';
+      g.lineWidth = 9;
+      g.beginPath(); g.arc(W / 2, W / 2, 24, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = '#ffd23f';
+      g.beginPath(); g.arc(W / 2, W / 2, 6, 0, Math.PI * 2); g.fill();
+      g.beginPath(); g.moveTo(W - 34, W / 2 - 14); g.lineTo(W - 16, W / 2); g.lineTo(W - 34, W / 2 + 14); g.closePath(); g.fill();
+    }
+  });
+}
+/** Floor slab w x d (top at y = 0, thickness t) with square holes [{x, z, size}]; the marker tile repeats every metre. */
+function buildFloor(look, w, d, t, holes = []) {
+  const s = new THREE.Shape();
+  s.moveTo(-w / 2, -d / 2); s.lineTo(w / 2, -d / 2); s.lineTo(w / 2, d / 2); s.lineTo(-w / 2, d / 2); s.closePath();
+  for (const h of holes) {
+    const a = h.size / 2, p = new THREE.Path();
+    p.moveTo(h.x - a, -h.z - a); p.lineTo(h.x - a, -h.z + a); p.lineTo(h.x + a, -h.z + a); p.lineTo(h.x + a, -h.z - a); p.closePath();
+    s.holes.push(p);
+  }
+  const geo = new THREE.ExtrudeGeometry(s, { depth: t, bevelEnabled: false });
+  geo.rotateX(-Math.PI / 2);
+  geo.translate(0, -t, 0);
+  // shape coordinates are metres, so one tile per metre; shift so that the slab edges fall on cell borders
+  const ox = (w / 2) % 1, oy = (d / 2) % 1;
+  const tkey = `floorT|${look}|${q(ox)}|${q(oy)}`;
+  let tex = texs.get(tkey);
+  if (!tex) {
+    tex = floorTile(look).clone();
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.offset.set(ox, oy);
+    tex.needsUpdate = true;
+    texs.set(tkey, tex);
+  }
+  const m = new THREE.Mesh(geo, [new THREE.MeshLambertMaterial({ map: tex }), new THREE.MeshLambertMaterial({ color: '#23262c' })]);
+  m.receiveShadow = true;
+  m.castShadow = true;
+  return m;
+}
+
+// ================================================================ chute + bag
+/** Drop chute around a square floor hole (origin = hole centre, floor top at y = 0, lower ground at y = -drop). */
+function buildChute(look, o) {
+  const g = new THREE.Group();
+  const { hole, drop, n } = o;
+  const a = hole / 2;
+  if (look === '1') {
+    for (const s of [-1, 1]) {
+      add(g, rbox(hole + 0.14, 0.05, 0.07, 0.018, 1), M('#ffc21a'), 0, 0.025, s * (a + 0.035));
+      add(g, rbox(0.07, 0.05, hole + 0.14, 0.018, 1), M('#ffc21a'), s * (a + 0.035), 0.025, 0);
+    }
+    const funnel = G(`funnel|${q(hole)}`, () => { const c = new THREE.CylinderGeometry(a * Math.SQRT2, hole * 0.3 * Math.SQRT2, 0.3, 4, 1, true); c.rotateY(Math.PI / 4); return c; });
+    add(g, funnel, M('#6b7380', 'double'), 0, -0.19, 0);
+    const bagH = Math.max(0.2, drop - 0.32);
+    const bag = G(`bag|${q(bagH)}`, () => new THREE.LatheGeometry([[0.02, 0], [0.2, 0.01], [0.28, 0.1], [0.3, 0.5], [0.27, 0.86], [0.25, 1]].map(([r, y]) => new THREE.Vector2(r, y * bagH)), 12));
+    add(g, bag, M('#7fa6d6', 'double'), 0, -drop, 0);
+    add(g, G('bagring', () => { const t = new THREE.TorusGeometry(0.255, 0.014, 6, 16); t.rotateX(Math.PI / 2); return t; }), M('#343841'), 0, -drop + bagH, 0);
+    const px = -(a + 0.16), pz = -(a + 0.16);
+    add(g, cyl('y', 0.022, 1.0, 8), M('#8f97a3'), px, 0.5, pz);
+    add(g, cyl('y', 0.07, 0.02, 12), M('#343841'), px, 0.01, pz);
+    add(g, rbox(0.38, 0.32, 0.035, 0.03, 1), M('#2f7fe0'), px, 1.1, pz);
+    const f = numberPlane(String(n), 0.3, '#ffffff'); f.position.set(px, 1.1, pz + 0.02);
+    const b = numberPlane(String(n), 0.3, '#ffffff'); b.position.set(px, 1.1, pz - 0.02); b.rotation.y = Math.PI;
+    g.add(f, b);
+  } else {
+    for (const s of [-1, 1]) {
+      add(g, rbox(hole + 0.2, 0.036, 0.1, 0.012, 1), M('#343841'), 0, 0.018, s * (a + 0.05));
+      add(g, rbox(0.1, 0.036, hole + 0.2, 0.012, 1), M('#343841'), s * (a + 0.05), 0.018, 0);
+      add(g, box(hole, 0.01, 0.016), M('#45e07a', 'glow'), 0, 0.037, s * (a + 0.016));
+      add(g, box(0.016, 0.01, hole), M('#45e07a', 'glow'), s * (a + 0.016), 0.037, 0);
+      add(g, box(hole, 0.22, 0.012), M('#aab2bd', 'double'), 0, -0.11, s * (a - 0.006));
+      add(g, box(0.012, 0.22, hole), M('#aab2bd', 'double'), s * (a - 0.006), -0.11, 0);
+    }
+    const bw = hole * 0.92, bh = Math.max(0.2, Math.min(0.45, drop - 0.3)), by = -drop + 0.07;
+    add(g, box(bw, 0.03, bw), M('#3fae6b'), 0, by + 0.015, 0);
+    for (const s of [-1, 1]) {
+      add(g, rbox(bw, bh, 0.03, 0.01, 1), M('#3fae6b'), 0, by + bh / 2, s * (bw / 2 - 0.015));
+      add(g, rbox(0.03, bh, bw, 0.01, 1), M('#3fae6b'), s * (bw / 2 - 0.015), by + bh / 2, 0);
+      add(g, rbox(bw + 0.04, 0.035, 0.05, 0.012, 1), M(adjust('#3fae6b', -0.1)), 0, by + bh, s * (bw / 2 - 0.015));
+      add(g, rbox(0.05, 0.035, bw + 0.04, 0.012, 1), M(adjust('#3fae6b', -0.1)), s * (bw / 2 - 0.015), by + bh, 0);
+      for (const t of [-1, 1]) add(g, cyl('z', 0.035, 0.03, 10), M('#23252b'), s * (bw / 2 - 0.08), -drop + 0.035, t * (bw / 2 - 0.08));
+    }
+    const sign = new THREE.Group();
+    sign.position.set(-(a + 0.36), 0.11, 0);
+    sign.rotation.x = -0.95;
+    add(sign, rbox(0.46, 0.34, 0.03, 0.03, 1), M('#23252b'));
+    add(sign, rbox(0.4, 0.28, 0.008, 0.02, 1), M('#3a3f47'), 0, 0, 0.014);
+    const f = numberPlane(String(n), 0.3, '#ffd23f'); f.position.z = 0.021;
+    sign.add(f);
+    g.add(sign);
+    for (const s of [-1, 1]) add(g, box(0.03, 0.2, 0.03), M('#23252b'), -(a + 0.36) + s * 0.17, 0.06, -0.06);
+  }
+  return g;
+}
+
+// ================================================================ conveyor + scan gate
+function beltTex(look) {
+  const t = canvasTex(`belt|${look}`, 128, 128, (g, W) => {
+    if (look === '1') {
+      g.fillStyle = '#2f333b'; g.fillRect(0, 0, W, W);
+      g.strokeStyle = '#59606b'; g.lineWidth = 9; g.lineJoin = 'round';
+      g.beginPath(); g.moveTo(44, 24); g.lineTo(84, 64); g.lineTo(44, 104); g.stroke();
+    } else {
+      g.fillStyle = '#8f97a3'; g.fillRect(0, 0, W, W);
+      g.fillStyle = '#737b87'; g.fillRect(52, 0, 14, W);
+      g.fillStyle = '#a9b0ba'; g.fillRect(0, 0, 6, W);
+    }
+  });
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  return t;
+}
+const BELT_SPEED = 0.35;
+/** Conveyor of size {L, W, H} along x, origin on the floor under its centre; gate at x = gateX. Returns { group, update(T) }. */
+function buildBelt(look, o) {
+  const g = new THREE.Group();
+  const { L, W, H } = o;
+  const gx = L * 0.2;
+  const lamp = new THREE.MeshBasicMaterial({ color: '#2b6f86' });
+  const tex = beltTex(look).clone();
+  tex.needsUpdate = true;
+  tex.repeat.set(L / 0.4, 1);
+  let bw, bl;
+  if (look === '1') {
+    bw = W - 0.1; bl = L - 0.06;
+    add(g, box(bl, 0.06, bw), M('#2a2d34'), 0, H - 0.035, 0);
+    for (const s of [-1, 1]) {
+      add(g, rbox(L, 0.1, 0.05, 0.015, 1), M('#2f7fe0'), 0, H - 0.04, s * (W / 2 - 0.025));
+      add(g, cyl('z', 0.045, bw, 12), M('#23252b'), s * (L / 2 - 0.04), H - 0.05, 0);
+      add(g, box(L - 0.5, 0.03, 0.03), M('#8f97a3'), 0, 0.16, s * (W / 2 - 0.03));
+      for (const t of [-1, 1]) {
+        add(g, rbox(0.05, H - 0.09, 0.05, 0.01, 1), M('#8f97a3'), t * (L / 2 - 0.25), (H - 0.09) / 2, s * (W / 2 - 0.03));
+        add(g, rbox(0.11, 0.02, 0.11, 0.008, 1), M('#23252b'), t * (L / 2 - 0.25), 0.01, s * (W / 2 - 0.03));
+      }
+      add(g, rbox(0.06, 0.62, 0.06, 0.012, 1), M('#ffc21a'), gx, H + 0.26, s * (W / 2 + 0.035));
+    }
+    add(g, rbox(0.08, 0.06, W + 0.19, 0.012, 1), M('#ffc21a'), gx, H + 0.57, 0);
+    add(g, rbox(0.14, 0.06, 0.22, 0.012, 1), M('#23252b'), gx, H + 0.515, 0);
+    add(g, box(0.024, 0.02, W * 0.7), lamp, gx, H + 0.478, 0);
+    add(g, cyl('y', 0.035, 0.05, 12), lamp, gx, H + 0.625, 0);
+  } else {
+    bw = W - 0.12; bl = L - 0.08;
+    add(g, box(L - 0.06, 0.06, W - 0.06), M('#23252b'), 0, 0.03, 0);
+    add(g, rbox(L, H - 0.06, W, 0.03, 2), M('#eef0f3'), 0, 0.06 + (H - 0.06) / 2, 0);
+    add(g, box(bl, 0.012, bw), M('#59606b'), 0, H - 0.003, 0);
+    for (const s of [-1, 1]) {
+      add(g, rbox(L - 0.04, 0.03, 0.05, 0.012, 1), M('#18a8c9'), 0, H + 0.008, s * (W / 2 - 0.03));
+      add(g, rbox(0.1, H + 0.02, 0.09, 0.02, 1), M('#343841'), gx, (H + 0.02) / 2, s * (W / 2 + 0.05));
+    }
+    const R = W / 2 + 0.05;
+    const arch = G(`arch|${q(R)}`, () => { const t = new THREE.TorusGeometry(R, 0.04, 8, 18, Math.PI); t.rotateY(Math.PI / 2); return t; });
+    const ring = G(`archring|${q(R)}`, () => { const t = new THREE.TorusGeometry(R - 0.034, 0.013, 6, 18, Math.PI); t.rotateY(Math.PI / 2); return t; });
+    add(g, arch, M('#343841'), gx, H, 0);
+    add(g, ring, lamp, gx, H, 0);
+  }
+  const top = new THREE.Mesh(G(`plane|${q(bl)}|${q(bw)}`, () => new THREE.PlaneGeometry(bl, bw)), new THREE.MeshLambertMaterial({ map: tex }));
+  top.rotation.x = -Math.PI / 2;
+  top.position.y = H + 0.004;
+  top.receiveShadow = true;
+  g.add(top);
+  const tris = countTris(g);
+  const span = bl - 0.5;
+  const parcels = [carton({ x: 0.3, y: 0.22, z: 0.26 }, 2), carton({ x: 0.24, y: 0.18, z: 0.22 }, 1)];
+  parcels.forEach((p) => g.add(p));
+  function update(T) {
+    tex.offset.x = -((T * BELT_SPEED / 0.4) % 1);
+    let near = false;
+    parcels.forEach((p, i) => {
+      const u = (((T * BELT_SPEED) / span + i * 0.5) % 1 + 1) % 1;
+      const x = -span / 2 + u * span;
+      const sy = i === 0 ? 0.22 : 0.18;
+      p.position.set(x, H + 0.006 + sy / 2, 0);
+      if (Math.abs(x - gx) < 0.2) near = true;
+    });
+    const blink = Math.sin(T * 30) > 0;
+    lamp.color.set(near ? (blink ? '#45e07a' : '#d9ffe6') : '#2b6f86');
+  }
+  update(0);
+  return { group: g, update, tris, endX: L / 2 };
+}
+
+// ================================================================ pack models (GLB from the running app)
+const PACK = 'http://localhost:5173/models/mega-pack-world/';
+const GLBS = [
+  ['Exteriors/City/City_14_Parcel_1.glb', 'Parcel 1'], ['Exteriors/City/City_14_Parcel_2.glb', 'Parcel 2'], ['Exteriors/City/City_14_Parcel_3.glb', 'Parcel 3'],
+  ['Exteriors/City/City_14_Parcel_4.glb', 'Parcel 4'], ['Exteriors/City/City_14_Parcel_5.glb', 'Parcel 5'],
+  ['Exteriors/Public/Public_10_Package_1.glb', 'Package 1'], ['Exteriors/Public/Public_10_Package_2.glb', 'Package 2'], ['Exteriors/City/City_4_Box_1.glb', 'Box 1'],
+];
+const glb = { done: false, loaded: [], failed: [], models: new Map() };
+window.__glb = glb;
+async function loadGlbs() {
+  const loader = new GLTFLoader();
+  await Promise.all(GLBS.map(async ([path]) => {
+    // the files sit directly under the pack folder; the pack manifest lists them with a "GLB/" prefix, so try both
+    for (const pre of ['', 'GLB/']) {
+      try {
+        const g = await loader.loadAsync(PACK + pre + path);
+        const size = new THREE.Vector3();
+        new THREE.Box3().setFromObject(g.scene).getSize(size);
+        g.scene.traverse((o) => {
+          if (!o.isMesh) return;
+          const map = o.material.map ?? null;
+          if (map) map.colorSpace = THREE.SRGBColorSpace;
+          o.material = new THREE.MeshLambertMaterial({ map, color: map ? '#ffffff' : o.material.color });
+          o.castShadow = true;
+          o.receiveShadow = true;
+        });
+        glb.models.set(path, { scene: g.scene, size });
+        glb.loaded.push(path);
+        return;
+      } catch (err) { /* try the next prefix, then fall back to the code-drawn carton */ }
+    }
+    glb.failed.push(path);
+  }));
+  glb.done = true;
+  const note = document.getElementById('glbnote');
+  if (glb.loaded.length) {
+    note.textContent = `đã tải ${glb.loaded.length}/${GLBS.length} model từ ứng dụng`;
+    note.className = 'ok';
+  } else {
+    note.textContent = 'chưa tải được model – cần mở ứng dụng ở localhost:5173 rồi tải lại trang. Đang hiển thị thùng vẽ bằng code.';
+  }
+  document.getElementById('glbnames').textContent = glb.loaded.length ? 'Tên tệp: ' + GLBS.filter(([p]) => glb.models.has(p)).map(([p, n]) => `${n} = ${p.split('/').pop()}`).join(' · ') : '';
+  rebuild(['parcel']);
+}
+function setupThumbs() {
+  const wrap = document.getElementById('thumbs');
+  for (const [path, name] of GLBS) {
+    const fig = document.createElement('figure');
+    const img = document.createElement('img');
+    img.alt = name;
+    img.onerror = () => fig.remove();
+    img.src = PACK + 'thumbs/' + path.replace('.glb', '.webp');
+    const cap = document.createElement('figcaption');
+    cap.textContent = name + ' (ảnh nhỏ)';
+    fig.append(img, cap);
+    wrap.append(fig);
+  }
+}
+
+// ================================================================ views
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.setScissorTest(true);
+
+const SEC = {
+  agv: { pos: [1.4, 1.05, 1.7], target: [0, 0.22, 0.05], min: 1.2, max: 7, shadow: 2 },
+  arm: { pos: [2.1, 1.55, 3.05], target: [0.5, 0.72, 0], min: 1.5, max: 9, shadow: 3 },
+  parcel: { pos: [0, 1.75, 3.5], target: [0, 0.3, 0.1], min: 1.2, max: 10, shadow: 4 },
+  chute: { pos: [2.3, 1.9, 3.1], target: [0, 0.7, 0], min: 1.5, max: 9, shadow: 3 },
+  belt: { pos: [1.9, 1.8, 3.1], target: [0, 0.5, 0], min: 1.5, max: 10, shadow: 3 },
+  floor: { pos: [2.9, 5.2, 5.2], target: [0, 0, 0.2], min: 2, max: 14, shadow: 4 },
+  scene: { pos: [4.0, 5.4, 6.6], target: [0, 0.05, 0], min: 3, max: 22, shadow: 5, floorY: -0.75 },
+};
+for (const s of Object.values(SEC)) {
+  s.cam = new THREE.PerspectiveCamera(35, 1.5, 0.1, 80);
+  s.cam.position.set(...s.pos);
+  s.tgt = new THREE.Vector3(...s.target);
+  s.cam.lookAt(s.tgt);
+}
+const views = [];
+function makeView(id, sec, build) {
+  const el = document.getElementById('v-' + id);
+  const cfg = SEC[sec];
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#cfd2d7');
+  scene.add(new THREE.HemisphereLight('#ffffff', '#9aa0a8', 1.15));
+  const key = new THREE.DirectionalLight('#ffffff', 2.1);
+  key.position.set(cfg.tgt.x + 3, cfg.tgt.y + 7, cfg.tgt.z + 4.5);
+  key.target.position.copy(cfg.tgt);
+  key.castShadow = true;
+  key.shadow.mapSize.set(1024, 1024);
+  const sc = key.shadow.camera;
+  sc.left = sc.bottom = -cfg.shadow; sc.right = sc.top = cfg.shadow; sc.near = 0.5; sc.far = 30;
+  key.shadow.bias = -0.0015;
+  key.shadow.normalBias = 0.045;
+  key.shadow.radius = 3;
+  const fill = new THREE.DirectionalLight('#dfe8ff', 0.55);
+  fill.position.set(-4, 3, -2);
+  scene.add(key, key.target, fill);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.22 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = cfg.floorY ?? 0;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  const root = new THREE.Group();
+  scene.add(root);
+  const controls = new OrbitControls(cfg.cam, el);
+  controls.target = cfg.tgt;
+  controls.enablePan = false;
+  controls.minDistance = cfg.min;
+  controls.maxDistance = cfg.max;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.update();
+  const v = { id, sec, el, scene, root, build, cam: cfg.cam, tick: null };
+  views.push(v);
+  return v;
+}
+function buildView(v) {
+  v.root.clear();
+  const out = v.build(v.root) || {};
+  v.tick = out.tick ?? null;
+  const tri = document.querySelector(`[data-tri="${v.id}"]`);
+  if (tri && out.tris != null) tri.textContent = `${out.tris.toLocaleString('vi-VN')} tam giác` + (out.note ? ` · ${out.note}` : '');
+  if (out.tris != null) (window.__tris ??= {})[v.id] = out.tris;
+}
+function rebuild(ids) {
+  for (const v of views) if (!ids || ids.includes(v.id) || ids.includes(v.sec)) buildView(v);
+}
+
+// ---- per-section content
+function agvView(root, look) {
+  const a = makeAgv(look, PAL[S.color]);
+  root.add(a.group);
+  return { tris: a.tris, tick: (T) => a.update(T, S.tray, S.load === 'yes') };
+}
+function armView(root, look) {
+  const a = buildArm(look, ARM_DEF);
+  root.add(a.group);
+  return { tris: a.tris, tick: () => a.pose(S.j1, S.j2, S.grip === 'hold' ? GRIP_PARCEL.z : ARM_DEF.open, S.grip === 'hold') };
+}
+function parcelView(root) {
+  const have = GLBS.filter(([p]) => glb.models.has(p));
+  const frontZ = have.length ? 1.0 : 0.1;
+  if (!have.length) { root.scale.setScalar(1.8); root.position.y = -0.15; } else { root.scale.setScalar(1); root.position.y = 0; } // only cartons to show: draw them larger
+  [[{ x: 0.24, y: 0.18, z: 0.22 }, 1], [{ x: 0.3, y: 0.22, z: 0.26 }, 2], [{ x: 0.42, y: 0.32, z: 0.36 }, 5]].forEach(([size, kg], i) => {
+    const c = carton(size, kg);
+    c.position.set((i - 1) * 0.95, size.y / 2, frontZ);
+    root.add(c);
+    const s = nameSprite(`Thùng vẽ ${kg} kg`);
+    s.position.set((i - 1) * 0.95, size.y + 0.17, frontZ);
+    root.add(s);
+  });
+  have.forEach(([path, name], i) => {
+    const m = glb.models.get(path);
+    const o = m.scene.clone();
+    const k = 0.5 / Math.max(m.size.x, m.size.y, m.size.z);
+    const holder = new THREE.Group();
+    o.scale.setScalar(k);
+    const bb = new THREE.Box3().setFromObject(o);
+    o.position.set(-(bb.min.x + bb.max.x) / 2, -bb.min.y, -(bb.min.z + bb.max.z) / 2);
+    holder.add(o);
+    const x = (i - (have.length - 1) / 2) * 0.78;
+    holder.position.set(x, 0, -0.6);
+    root.add(holder);
+    const s = nameSprite(name);
+    s.position.set(x, (bb.max.y - bb.min.y) + 0.17, -0.6);
+    root.add(s);
+  });
+  return {};
+}
+function chuteView(root, look) {
+  const drop = 0.75, size = 1.9, hole = 0.8;
+  const lift = new THREE.Group();
+  lift.position.y = drop;
+  root.add(lift);
+  const parts = new THREE.Group();
+  lift.add(parts);
+  parts.add(buildChute(look, { hole, drop, n: S.num }));
+  const tris = countTris(parts);
+  lift.add(buildFloor(S.floor, size, size, 0.08, [{ x: 0, z: 0, size: hole }]));
+  for (const sx of [-1, 1]) for (const sz of [-1, 1]) add(lift, rbox(0.08, drop - 0.08, 0.08, 0.01, 1), M('#59606b'), sx * (size / 2 - 0.08), -0.08 - (drop - 0.08) / 2, sz * (size / 2 - 0.08));
+  return { tris };
+}
+function beltView(root, look) {
+  const b = buildBelt(look, { L: 2.4, W: 0.6, H: 0.5 });
+  root.add(b.group);
+  return { tris: b.tris, tick: (T) => b.update(T) };
+}
+function floorView(root, look) {
+  const f = buildFloor(look, 6, 4, 0.04);
+  f.position.y = 0.04;
+  root.add(f);
+  const a = makeAgv(S.agv, PAL[S.color]);
+  a.group.position.set(0.5, 0.04, 0.5);
+  a.update(0, 'flat', true);
+  root.add(a.group);
+  return {};
+}
+function sceneView(root) {
+  const drop = 0.75, hole = 0.8;
+  const chutes = [{ x: -1.5, z: 2, n: 1 }, { x: 1.5, z: 2, n: 2 }];
+  root.add(buildFloor(S.floor, 6, 5, 0.1, chutes.map((c) => ({ x: c.x, z: c.z, size: hole }))));
+  for (const sx of [-2.8, 0, 2.8]) for (const sz of [-2.3, 2.3]) add(root, rbox(0.16, drop - 0.1, 0.16, 0.02, 1), M('#59606b'), sx, -0.1 - (drop - 0.1) / 2, sz);
+  for (const c of chutes) {
+    const ch = buildChute(S.chute, { hole, drop, n: c.n });
+    ch.position.set(c.x, 0, c.z);
+    root.add(ch);
+  }
+  const belt = buildBelt(S.belt, { L: 2.2, W: 0.6, H: 0.5 });
+  belt.group.position.set(-1.8, 0, -2);
+  root.add(belt.group);
+  const arm = buildArm(S.arm, ARM_DEF);
+  arm.group.position.set(-0.42, 0, -2);
+  arm.pose(71, -112, GRIP_PARCEL.z, true); // holding a parcel just above the tray of the AGV parked next to it
+  root.add(arm.group);
+  const col = PAL[S.color];
+  const a1 = makeAgv(S.agv, col); a1.group.position.set(0.5, 0, -2);
+  const a2 = makeAgv(S.agv, col); a2.group.position.set(1.5, 0, 0); a2.group.rotation.y = -Math.PI / 2;
+  const a3 = makeAgv(S.agv, col, { throwZ: 0.55, floorY: -0.5, vanish: true }); a3.group.position.set(-1.5, 0, 1);
+  root.add(a1.group, a2.group, a3.group);
+  a1.update(0, 'flat', false);
+  a2.update(0, 'flat', true);
+  return { tick: (T) => { belt.update(T); a3.update(T, 'tilt', true); } };
+}
+
+// ================================================================ page wiring
+function fillLooks() {
+  for (const wrap of document.querySelectorAll('[data-looks]')) {
+    const key = wrap.dataset.looks;
+    for (const lk of LOOKS[key]) {
+      const card = document.createElement('div');
+      card.className = 'look';
+      card.dataset.card = `${key}:${lk.id}`;
+      card.innerHTML = `<h3>Kiểu ${lk.id}<small>${lk.name}</small></h3><div class="view${key === 'agv' || key === 'arm' ? '' : ' tall'}" id="v-${key}-${lk.id}"></div><p>${lk.desc}</p><span class="tri" data-tri="${key}-${lk.id}"></span><button type="button" class="pick" data-key="${key}" data-val="${lk.id}">Chọn kiểu ${lk.id}</button>`;
+      wrap.append(card);
+    }
+  }
+  const quick = document.getElementById('quick');
+  for (const key of Object.keys(KEY_LABEL)) {
+    const grp = document.createElement('div');
+    grp.className = 'grp';
+    grp.innerHTML = `<span>${KEY_LABEL[key]}:</span>` + LOOKS[key].map((l) => `<button type="button" data-key="${key}" data-val="${l.id}">Kiểu ${l.id}</button>`).join('');
+    quick.append(grp);
+  }
+}
+function choiceLine() {
+  return `AGV=${S.agv}, Tay máy=${S.arm}, Cửa thả=${S.chute}, Băng chuyền=${S.belt}, Mốc sàn=${S.floor}, Màu xe=${PAL_NAME[S.color]}, Chất liệu=${S.mat === 'toon' ? 'hoạt hình' : 'mịn'}`;
+}
+function syncUi() {
+  for (const b of document.querySelectorAll('button[data-key]')) {
+    const k = b.dataset.key;
+    b.setAttribute('aria-pressed', k === 'spin' ? String(S.spin === 'on') : String(String(S[k]) === b.dataset.val));
+  }
+  for (const c of document.querySelectorAll('[data-card]')) {
+    const [k, id] = c.dataset.card.split(':');
+    c.classList.toggle('on', S[k] === id);
+  }
+  document.getElementById('j1').value = S.j1;
+  document.getElementById('j2').value = S.j2;
+  document.getElementById('j1o').textContent = `${S.j1}°`;
+  document.getElementById('j2o').textContent = `${S.j2}°`;
+  document.getElementById('line').value = choiceLine();
+}
+function set(patch) {
+  const changed = Object.keys(patch).filter((k) => S[k] !== patch[k]);
+  Object.assign(S, patch);
+  syncUi();
+  if (changed.some((k) => REBUILD_KEYS.includes(k))) rebuild();
+}
+async function copyLine() {
+  const text = choiceLine();
+  const out = document.getElementById('copied');
+  try {
+    await navigator.clipboard.writeText(text);
+    out.textContent = 'Đã sao chép';
+  } catch (err) {
+    const el = document.getElementById('line');
+    el.focus(); el.select();
+    out.textContent = document.execCommand('copy') ? 'Đã sao chép' : 'Hãy bấm Ctrl+C để sao chép';
+  }
+  setTimeout(() => { out.textContent = ''; }, 2500);
+}
+
+fillLooks();
+for (const lk of LOOKS.agv) makeView(`agv-${lk.id}`, 'agv', (r) => agvView(r, lk.id));
+for (const lk of LOOKS.arm) makeView(`arm-${lk.id}`, 'arm', (r) => armView(r, lk.id));
+makeView('parcel', 'parcel', parcelView);
+for (const lk of LOOKS.chute) makeView(`chute-${lk.id}`, 'chute', (r) => chuteView(r, lk.id));
+for (const lk of LOOKS.belt) makeView(`belt-${lk.id}`, 'belt', (r) => beltView(r, lk.id));
+for (const lk of LOOKS.floor) makeView(`floor-${lk.id}`, 'floor', (r) => floorView(r, lk.id));
+makeView('scene', 'scene', sceneView);
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-key]');
+  if (!b) return;
+  const k = b.dataset.key;
+  if (k === 'spin') set({ spin: S.spin === 'on' ? 'off' : 'on' });
+  else set({ [k]: b.dataset.val });
+});
+document.getElementById('j1').addEventListener('input', (e) => set({ j1: Number(e.target.value) }));
+document.getElementById('j2').addEventListener('input', (e) => set({ j2: Number(e.target.value) }));
+document.getElementById('copy').addEventListener('click', copyLine);
+
+syncUi();
+rebuild();
+setupThumbs();
+loadGlbs();
+
+// ---- render loop: one canvas over the page, each view drawn into its own rectangle
+let last = performance.now();
+const Y = new THREE.Vector3(0, 1, 0);
+const off = new THREE.Vector3();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  const T = window.__freezeT ?? now / 1000;
+  const w = document.documentElement.clientWidth, h = window.innerHeight;
+  const size = renderer.getSize(new THREE.Vector2());
+  if (size.x !== w || size.y !== h) renderer.setSize(w, h, true);
+  if (S.spin === 'on') {
+    for (const s of Object.values(SEC)) {
+      off.copy(s.cam.position).sub(s.tgt).applyAxisAngle(Y, dt * 0.35);
+      s.cam.position.copy(s.tgt).add(off);
+      s.cam.lookAt(s.tgt);
+    }
+  }
+  renderer.setScissorTest(false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.setScissorTest(true);
+  for (const v of views) {
+    const r = v.el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > h || r.right < 0 || r.left > w || r.width < 2 || r.height < 2) continue;
+    if (v.tick) v.tick(T);
+    const left = Math.round(r.left), bottom = Math.round(h - r.bottom), vw = Math.round(r.width), vh = Math.round(r.height);
+    renderer.setViewport(left, bottom, vw, vh);
+    renderer.setScissor(left, bottom, vw, vh);
+    v.cam.aspect = vw / vh;
+    v.cam.updateProjectionMatrix();
+    renderer.render(v.scene, v.cam);
+  }
+  window.__ready = true;
+}
+requestAnimationFrame(frame);
+
+/** For screenshot scripts: change state and freeze the animation clock. */
+window.preview = { set, state: S, sections: SEC, freeze: (t) => { window.__freezeT = t; } };
+</script>
+</body>
+</html>

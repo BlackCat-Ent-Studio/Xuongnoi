@@ -1,0 +1,2526 @@
+[
+ {
+  "id": "ahead-sensor",
+  "category": "logic",
+  "oldLabel": "Cảm biến phía trước",
+  "newVi": "Dò phía trước",
+  "newEn": "Raycast",
+  "reason": "Nó bắn một tia nhìn thẳng ra trước: đúng nghĩa Raycast.",
+  "ports": [
+   {
+    "id": "who",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật",
+    "newVi": "Vật nhìn",
+    "newEn": "Origin"
+   },
+   {
+    "id": "blocked",
+    "dir": "out",
+    "type": "bool",
+    "old": "Có vật cản",
+    "newVi": "Bị chặn",
+    "newEn": "Hit"
+   },
+   {
+    "id": "distance",
+    "dir": "out",
+    "type": "number",
+    "old": "Khoảng cách",
+    "newVi": "Khoảng cách",
+    "newEn": "Distance"
+   },
+   {
+    "id": "thing",
+    "dir": "out",
+    "type": "object",
+    "old": "Vật phía trước",
+    "newVi": "Vật bị chặn",
+    "newEn": "Hit object"
+   },
+   {
+    "id": "hit",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa gặp vật cản",
+    "newVi": "Vừa gặp cản",
+    "newEn": "Just hit"
+   }
+  ]
+ },
+ {
+  "id": "block",
+  "category": "object",
+  "oldLabel": "Hộp",
+  "newVi": "Hộp",
+  "newEn": "Block",
+  "reason": "Giữ tên; Block là từ chuẩn trong game khối.",
+  "ports": [
+   {
+    "id": "hide",
+    "dir": "in",
+    "type": "bool",
+    "old": "Ẩn đi",
+    "newVi": "Ẩn đi (1 nhịp)",
+    "newEn": "Hide"
+   },
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện lại",
+    "newVi": "Hiện lại (1 nhịp)",
+    "newEn": "Show"
+   },
+   {
+    "id": "pick",
+    "dir": "in",
+    "type": "number",
+    "old": "Đổi màu (1, 2 hoặc 3)",
+    "newVi": "Đổi màu 1-2-3",
+    "newEn": "Set color"
+   },
+   {
+    "id": "run",
+    "dir": "in",
+    "type": "bool",
+    "old": "Chạy băng",
+    "newVi": "Chạy băng chuyền",
+    "newEn": "Conveyor on"
+   },
+   {
+    "id": "reverse",
+    "dir": "in",
+    "type": "bool",
+    "old": "Đảo chiều",
+    "newVi": "Đảo chiều",
+    "newEn": "Reverse"
+   },
+   {
+    "id": "hiddenWhile",
+    "dir": "in",
+    "type": "bool",
+    "old": "Ẩn khi bật",
+    "newVi": "Ẩn suốt lúc bật",
+    "newEn": "Hide while ON"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Hộp",
+    "newVi": "Hộp",
+    "newEn": "Self"
+   },
+   {
+    "id": "usedOn",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bị dùng lên",
+    "newVi": "Bị dùng lên",
+    "newEn": "Used on"
+   }
+  ]
+ },
+ {
+  "id": "and",
+  "category": "logic",
+  "oldLabel": "Và",
+  "newVi": "Và",
+  "newEn": "AND",
+  "reason": "Giữ tên cũ, thêm ký hiệu AND chuẩn cổng logic.",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "bool",
+    "old": "A",
+    "newVi": "A",
+    "newEn": "A"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "bool",
+    "old": "B",
+    "newVi": "B",
+    "newEn": "B"
+   },
+   {
+    "id": "out",
+    "dir": "out",
+    "type": "bool",
+    "old": "Kết quả",
+    "newVi": "Kết quả",
+    "newEn": "Result"
+   }
+  ]
+ },
+ {
+  "id": "or",
+  "category": "logic",
+  "oldLabel": "Hoặc",
+  "newVi": "Hoặc",
+  "newEn": "OR",
+  "reason": "Giữ tên cũ, thêm ký hiệu OR chuẩn cổng logic.",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "bool",
+    "old": "A",
+    "newVi": "A",
+    "newEn": "A"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "bool",
+    "old": "B",
+    "newVi": "B",
+    "newEn": "B"
+   },
+   {
+    "id": "out",
+    "dir": "out",
+    "type": "bool",
+    "old": "Kết quả",
+    "newVi": "Kết quả",
+    "newEn": "Result"
+   }
+  ]
+ },
+ {
+  "id": "not",
+  "category": "logic",
+  "oldLabel": "Không",
+  "newVi": "Đảo ngược",
+  "newEn": "NOT",
+  "reason": "\"Không\" dễ nhầm với số 0 / \"không có\"; \"Đảo ngược\" nói rõ việc nó làm.",
+  "ports": [
+   {
+    "id": "in",
+    "dir": "in",
+    "type": "bool",
+    "old": "Vào",
+    "newVi": "Vào",
+    "newEn": "Input"
+   },
+   {
+    "id": "out",
+    "dir": "out",
+    "type": "bool",
+    "old": "Kết quả",
+    "newVi": "Kết quả",
+    "newEn": "Result"
+   }
+  ]
+ },
+ {
+  "id": "camera",
+  "category": "action",
+  "oldLabel": "Máy quay",
+  "newVi": "Máy quay",
+  "newEn": "Camera",
+  "reason": "Giữ tên; Camera chuẩn mọi engine.",
+  "ports": [
+   {
+    "id": "on",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bật",
+    "newVi": "Bật",
+    "newEn": "Enable"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Bám theo (vật)",
+    "newVi": "Bám theo vật",
+    "newEn": "Follow"
+   },
+   {
+    "id": "zoom",
+    "dir": "in",
+    "type": "number",
+    "old": "Phóng to (0 = theo cài đặt)",
+    "newVi": "Phóng to (0 = mặc định)",
+    "newEn": "Zoom"
+   },
+   {
+    "id": "shake",
+    "dir": "in",
+    "type": "bool",
+    "old": "Rung",
+    "newVi": "Rung",
+    "newEn": "Shake"
+   },
+   {
+    "id": "active",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang dùng",
+    "newVi": "Đang dùng",
+    "newEn": "Active"
+   }
+  ]
+ },
+ {
+  "id": "cargo",
+  "category": "action",
+  "oldLabel": "Chất / Dỡ hàng",
+  "newVi": "Chở hàng",
+  "newEn": "Cargo",
+  "reason": "\"Chất / Dỡ hàng\" dài, có dấu gạch; \"Chở hàng\" gọn hơn.",
+  "ports": [
+   {
+    "id": "vehicle",
+    "dir": "in",
+    "type": "object",
+    "old": "Xe",
+    "newVi": "Xe",
+    "newEn": "Vehicle"
+   },
+   {
+    "id": "load",
+    "dir": "in",
+    "type": "bool",
+    "old": "Chất",
+    "newVi": "Chất",
+    "newEn": "Load"
+   },
+   {
+    "id": "unload",
+    "dir": "in",
+    "type": "bool",
+    "old": "Dỡ",
+    "newVi": "Dỡ",
+    "newEn": "Unload"
+   },
+   {
+    "id": "unloadAll",
+    "dir": "in",
+    "type": "bool",
+    "old": "Dỡ hết",
+    "newVi": "Dỡ hết",
+    "newEn": "Unload all"
+   },
+   {
+    "id": "count",
+    "dir": "out",
+    "type": "number",
+    "old": "Số hàng",
+    "newVi": "Số hàng",
+    "newEn": "Count"
+   },
+   {
+    "id": "loaded",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa chất",
+    "newVi": "Vừa chất",
+    "newEn": "Loaded"
+   },
+   {
+    "id": "unloaded",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa dỡ",
+    "newVi": "Vừa dỡ",
+    "newEn": "Unloaded"
+   },
+   {
+    "id": "top",
+    "dir": "out",
+    "type": "object",
+    "old": "Hàng trên cùng",
+    "newVi": "Hàng trên cùng",
+    "newEn": "Top item"
+   },
+   {
+    "id": "typeCount",
+    "dir": "out",
+    "type": "number",
+    "old": "Số hàng loại này",
+    "newVi": "Số hàng loại này",
+    "newEn": "Count of type"
+   }
+  ]
+ },
+ {
+  "id": "carry",
+  "category": "action",
+  "oldLabel": "Cầm / Thả",
+  "newVi": "Khiêng đồ",
+  "newEn": "Carry",
+  "reason": "Tách khỏi \"Cầm tay\": Khiêng = trên đầu, Cầm tay = trong tay. Hết nhầm hai nút.",
+  "ports": [
+   {
+    "id": "character",
+    "dir": "in",
+    "type": "object",
+    "old": "Nhân vật",
+    "newVi": "Nhân vật",
+    "newEn": "Character"
+   },
+   {
+    "id": "grab",
+    "dir": "in",
+    "type": "bool",
+    "old": "Cầm",
+    "newVi": "Nhấc lên",
+    "newEn": "Pick up"
+   },
+   {
+    "id": "drop",
+    "dir": "in",
+    "type": "bool",
+    "old": "Thả",
+    "newVi": "Thả",
+    "newEn": "Drop"
+   },
+   {
+    "id": "throw",
+    "dir": "in",
+    "type": "bool",
+    "old": "Ném",
+    "newVi": "Ném",
+    "newEn": "Throw"
+   },
+   {
+    "id": "holding",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang cầm",
+    "newVi": "Đang khiêng",
+    "newEn": "Is carrying"
+   },
+   {
+    "id": "heldItem",
+    "dir": "out",
+    "type": "object",
+    "old": "Món đang cầm",
+    "newVi": "Món đang khiêng",
+    "newEn": "Carried item"
+   }
+  ]
+ },
+ {
+  "id": "character",
+  "category": "object",
+  "oldLabel": "Nhân vật",
+  "newVi": "Nhân vật",
+  "newEn": "Character",
+  "reason": "Giữ tên; Character là chuẩn Unity/Godot.",
+  "ports": [
+   {
+    "id": "moveX",
+    "dir": "in",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "in",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "jump",
+    "dir": "in",
+    "type": "bool",
+    "old": "Nhảy",
+    "newVi": "Nhảy",
+    "newEn": "Jump"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Nhân vật",
+    "newVi": "Nhân vật",
+    "newEn": "Self"
+   },
+   {
+    "id": "onGround",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang chạm đất",
+    "newVi": "Đang đứng đất",
+    "newEn": "On ground"
+   },
+   {
+    "id": "x",
+    "dir": "out",
+    "type": "number",
+    "old": "Vị trí X",
+    "newVi": "Vị trí X",
+    "newEn": "Position X"
+   },
+   {
+    "id": "y",
+    "dir": "out",
+    "type": "number",
+    "old": "Vị trí Y",
+    "newVi": "Vị trí Y",
+    "newEn": "Position Y"
+   },
+   {
+    "id": "z",
+    "dir": "out",
+    "type": "number",
+    "old": "Vị trí Z",
+    "newVi": "Vị trí Z",
+    "newEn": "Position Z"
+   }
+  ]
+ },
+ {
+  "id": "chase",
+  "category": "brain",
+  "oldLabel": "Đuổi theo / Tránh xa",
+  "newVi": "Đuổi / Trốn",
+  "newEn": "Chase / Flee",
+  "reason": "Ngắn hơn \"Đuổi theo / Tránh xa\"; Chase/Flee là chuẩn AI.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Bot",
+    "newVi": "Bot",
+    "newEn": "Agent"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Mục tiêu",
+    "newVi": "Mục tiêu",
+    "newEn": "Target"
+   },
+   {
+    "id": "moveX",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "jump",
+    "dir": "out",
+    "type": "bool",
+    "old": "Nhảy",
+    "newVi": "Nhảy",
+    "newEn": "Jump"
+   },
+   {
+    "id": "seeing",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang thấy mục tiêu",
+    "newVi": "Đang thấy mục tiêu",
+    "newEn": "Sees target"
+   }
+  ]
+ },
+ {
+  "id": "color-sensor",
+  "category": "logic",
+  "oldLabel": "Cảm biến màu",
+  "newVi": "Đọc màu",
+  "newEn": "Color Check",
+  "reason": "\"Đọc màu\" là việc nó làm, trẻ nhỏ hiểu ngay.",
+  "ports": [
+   {
+    "id": "who",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật",
+    "newVi": "Vật",
+    "newEn": "Object"
+   },
+   {
+    "id": "index",
+    "dir": "out",
+    "type": "number",
+    "old": "Số màu",
+    "newVi": "Số màu",
+    "newEn": "Color #"
+   },
+   {
+    "id": "match",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đúng màu",
+    "newVi": "Đúng màu",
+    "newEn": "Matches"
+   }
+  ]
+ },
+ {
+  "id": "compare",
+  "category": "logic",
+  "oldLabel": "So sánh",
+  "newVi": "So sánh",
+  "newEn": "Compare",
+  "reason": "Giữ tên; Compare là khối chuẩn của Blockly / Godot.",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "number",
+    "old": "Số A",
+    "newVi": "Số A",
+    "newEn": "A"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "number",
+    "old": "Số B",
+    "newVi": "Số B",
+    "newEn": "B"
+   },
+   {
+    "id": "out",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đúng",
+    "newVi": "Đúng",
+    "newEn": "True"
+   }
+  ]
+ },
+ {
+  "id": "const",
+  "category": "math",
+  "oldLabel": "Hằng số",
+  "newVi": "Số cố định",
+  "newEn": "Constant",
+  "reason": "\"Hằng số\" là từ toán cấp 2; \"Số cố định\" dễ hơn.",
+  "ports": [
+   {
+    "id": "value",
+    "dir": "out",
+    "type": "number",
+    "old": "Số",
+    "newVi": "Số",
+    "newEn": "Value"
+   }
+  ]
+ },
+ {
+  "id": "counter",
+  "category": "math",
+  "oldLabel": "Bộ đếm",
+  "newVi": "Bộ đếm",
+  "newEn": "Counter",
+  "reason": "Giữ tên; Counter là từ chuẩn.",
+  "ports": [
+   {
+    "id": "up",
+    "dir": "in",
+    "type": "bool",
+    "old": "Cộng 1",
+    "newVi": "Cộng 1",
+    "newEn": "Increment"
+   },
+   {
+    "id": "down",
+    "dir": "in",
+    "type": "bool",
+    "old": "Trừ 1",
+    "newVi": "Trừ 1",
+    "newEn": "Decrement"
+   },
+   {
+    "id": "reset",
+    "dir": "in",
+    "type": "bool",
+    "old": "Về đầu",
+    "newVi": "Về đầu",
+    "newEn": "Reset"
+   },
+   {
+    "id": "addAmount",
+    "dir": "in",
+    "type": "number",
+    "old": "Số cộng thêm",
+    "newVi": "Số cộng thêm",
+    "newEn": "Amount"
+   },
+   {
+    "id": "add",
+    "dir": "in",
+    "type": "bool",
+    "old": "Cộng số",
+    "newVi": "Cộng số",
+    "newEn": "Add"
+   },
+   {
+    "id": "setAmount",
+    "dir": "in",
+    "type": "number",
+    "old": "Số đặt",
+    "newVi": "Số đặt",
+    "newEn": "New value"
+   },
+   {
+    "id": "set",
+    "dir": "in",
+    "type": "bool",
+    "old": "Đặt số",
+    "newVi": "Đặt số",
+    "newEn": "Set"
+   },
+   {
+    "id": "value",
+    "dir": "out",
+    "type": "number",
+    "old": "Số đếm",
+    "newVi": "Số đếm",
+    "newEn": "Count"
+   },
+   {
+    "id": "reached",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đã đủ",
+    "newVi": "Đã đủ",
+    "newEn": "Reached"
+   }
+  ]
+ },
+ {
+  "id": "distance",
+  "category": "logic",
+  "oldLabel": "Khoảng cách",
+  "newVi": "Đo khoảng cách",
+  "newEn": "Distance",
+  "reason": "Có động từ \"Đo\" cho rõ là cảm biến; Distance giống Scratch \"distance to\".",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật A",
+    "newVi": "Vật 1",
+    "newEn": "Object A"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật B",
+    "newVi": "Vật 2",
+    "newEn": "Object B"
+   },
+   {
+    "id": "distance",
+    "dir": "out",
+    "type": "number",
+    "old": "Khoảng cách",
+    "newVi": "Khoảng cách",
+    "newEn": "Distance"
+   },
+   {
+    "id": "within",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đủ gần",
+    "newVi": "Trong tầm",
+    "newEn": "In range"
+   }
+  ]
+ },
+ {
+  "id": "enter-exit",
+  "category": "action",
+  "oldLabel": "Lên / Xuống xe",
+  "newVi": "Lên / Xuống xe",
+  "newEn": "Enter / Exit Vehicle",
+  "reason": "Giữ tên; thêm từ chuẩn Enter/Exit.",
+  "ports": [
+   {
+    "id": "character",
+    "dir": "in",
+    "type": "object",
+    "old": "Ai",
+    "newVi": "Ai",
+    "newEn": "Who"
+   },
+   {
+    "id": "press",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bấm",
+    "newVi": "Bấm",
+    "newEn": "Press"
+   },
+   {
+    "id": "inVehicle",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang ngồi trên xe",
+    "newVi": "Đang ngồi trên xe",
+    "newEn": "In vehicle"
+   },
+   {
+    "id": "vehicle",
+    "dir": "out",
+    "type": "object",
+    "old": "Xe đang ngồi",
+    "newVi": "Xe đang ngồi",
+    "newEn": "Vehicle"
+   }
+  ]
+ },
+ {
+  "id": "fight",
+  "category": "brain",
+  "oldLabel": "Đánh nhau",
+  "newVi": "Đánh địch",
+  "newEn": "Attack AI",
+  "reason": "\"Đánh nhau\" gợi hai bên; nút này là bot tấn công mục tiêu.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Bot",
+    "newVi": "Bot",
+    "newEn": "Agent"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Mục tiêu",
+    "newVi": "Mục tiêu",
+    "newEn": "Target"
+   },
+   {
+    "id": "moveX",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "jump",
+    "dir": "out",
+    "type": "bool",
+    "old": "Nhảy",
+    "newVi": "Nhảy",
+    "newEn": "Jump"
+   },
+   {
+    "id": "attack",
+    "dir": "out",
+    "type": "bool",
+    "old": "Ra đòn",
+    "newVi": "Ra đòn",
+    "newEn": "Attack"
+   }
+  ]
+ },
+ {
+  "id": "go-to",
+  "category": "brain",
+  "oldLabel": "Đi tới",
+  "newVi": "Đi tới",
+  "newEn": "Move To",
+  "reason": "Move To giống Scratch \"go to\" và Unity NavMesh.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Bot",
+    "newVi": "Bot",
+    "newEn": "Agent"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Đích (vật)",
+    "newVi": "Đích (vật)",
+    "newEn": "Destination"
+   },
+   {
+    "id": "go",
+    "dir": "in",
+    "type": "bool",
+    "old": "Cho đi",
+    "newVi": "Cho đi",
+    "newEn": "Go"
+   },
+   {
+    "id": "moveX",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "jump",
+    "dir": "out",
+    "type": "bool",
+    "old": "Nhảy",
+    "newVi": "Nhảy",
+    "newEn": "Jump"
+   },
+   {
+    "id": "arrived",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đã tới",
+    "newVi": "Đã tới",
+    "newEn": "Arrived"
+   },
+   {
+    "id": "arrivedPulse",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa tới",
+    "newVi": "Vừa tới",
+    "newEn": "Just arrived"
+   }
+  ]
+ },
+ {
+  "id": "guide-arrow",
+  "category": "output",
+  "oldLabel": "Mũi tên chỉ đường",
+  "newVi": "Mũi tên chỉ đường",
+  "newEn": "Waypoint Arrow",
+  "reason": "Waypoint là từ chuẩn chỉ điểm đến.",
+  "ports": [
+   {
+    "id": "from",
+    "dir": "in",
+    "type": "object",
+    "old": "Từ",
+    "newVi": "Từ",
+    "newEn": "From"
+   },
+   {
+    "id": "to",
+    "dir": "in",
+    "type": "object",
+    "old": "Tới",
+    "newVi": "Tới",
+    "newEn": "To"
+   },
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện",
+    "newVi": "Hiện",
+    "newEn": "Show"
+   },
+   {
+    "id": "distance",
+    "dir": "out",
+    "type": "number",
+    "old": "Khoảng cách",
+    "newVi": "Khoảng cách",
+    "newEn": "Distance"
+   }
+  ]
+ },
+ {
+  "id": "hand-tool",
+  "category": "action",
+  "oldLabel": "Cầm tay",
+  "newVi": "Cầm dụng cụ",
+  "newEn": "Equip Tool",
+  "reason": "Equip là từ chuẩn RPG/Unity cho đồ cầm trên tay.",
+  "ports": [
+   {
+    "id": "character",
+    "dir": "in",
+    "type": "object",
+    "old": "Nhân vật",
+    "newVi": "Nhân vật",
+    "newEn": "Character"
+   },
+   {
+    "id": "toggle",
+    "dir": "in",
+    "type": "bool",
+    "old": "Cầm/Cất",
+    "newVi": "Cầm / Cất",
+    "newEn": "Equip"
+   },
+   {
+    "id": "use",
+    "dir": "in",
+    "type": "bool",
+    "old": "Dùng",
+    "newVi": "Dùng",
+    "newEn": "Use"
+   },
+   {
+    "id": "holding",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang cầm tay",
+    "newVi": "Đang cầm tay",
+    "newEn": "Equipped"
+   },
+   {
+    "id": "tool",
+    "dir": "out",
+    "type": "object",
+    "old": "Món trên tay",
+    "newVi": "Món trên tay",
+    "newEn": "Tool"
+   },
+   {
+    "id": "used",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa dùng",
+    "newVi": "Vừa dùng",
+    "newEn": "Used"
+   },
+   {
+    "id": "hit",
+    "dir": "out",
+    "type": "object",
+    "old": "Trúng",
+    "newVi": "Trúng",
+    "newEn": "Hit"
+   }
+  ]
+ },
+ {
+  "id": "health",
+  "category": "action",
+  "oldLabel": "Máu",
+  "newVi": "Máu",
+  "newEn": "Health",
+  "reason": "Giữ tên; Health/HP là chuẩn.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Nhân vật",
+    "newVi": "Nhân vật",
+    "newEn": "Character"
+   },
+   {
+    "id": "heal",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hồi máu",
+    "newVi": "Hồi máu",
+    "newEn": "Heal"
+   },
+   {
+    "id": "hp",
+    "dir": "out",
+    "type": "number",
+    "old": "Máu còn",
+    "newVi": "Máu còn",
+    "newEn": "HP"
+   },
+   {
+    "id": "hurtPulse",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bị đánh",
+    "newVi": "Vừa bị đánh",
+    "newEn": "Damaged"
+   },
+   {
+    "id": "dead",
+    "dir": "out",
+    "type": "bool",
+    "old": "Hết máu",
+    "newVi": "Hết máu",
+    "newEn": "Dead"
+   }
+  ]
+ },
+ {
+  "id": "interact",
+  "category": "action",
+  "oldLabel": "Tương tác",
+  "newVi": "Tương tác",
+  "newEn": "Interact",
+  "reason": "Giữ tên; Interact là chuẩn.",
+  "ports": [
+   {
+    "id": "character",
+    "dir": "in",
+    "type": "object",
+    "old": "Nhân vật",
+    "newVi": "Nhân vật",
+    "newEn": "Character"
+   },
+   {
+    "id": "press",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bấm",
+    "newVi": "Bấm",
+    "newEn": "Press"
+   },
+   {
+    "id": "fired",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đã tương tác",
+    "newVi": "Vừa tương tác",
+    "newEn": "Interacted"
+   },
+   {
+    "id": "target",
+    "dir": "out",
+    "type": "object",
+    "old": "Món được dùng",
+    "newVi": "Món được dùng",
+    "newEn": "Target"
+   }
+  ]
+ },
+ {
+  "id": "item",
+  "category": "object",
+  "oldLabel": "Đồ vật",
+  "newVi": "Đồ vật",
+  "newEn": "Item",
+  "reason": "Giữ tên; Item là chuẩn trong game có túi đồ.",
+  "ports": [
+   {
+    "id": "hide",
+    "dir": "in",
+    "type": "bool",
+    "old": "Ẩn đi",
+    "newVi": "Ẩn đi (1 nhịp)",
+    "newEn": "Hide"
+   },
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện lại",
+    "newVi": "Hiện lại (1 nhịp)",
+    "newEn": "Show"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Đồ vật",
+    "newVi": "Đồ vật",
+    "newEn": "Self"
+   },
+   {
+    "id": "held",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang được cầm",
+    "newVi": "Đang bị khiêng",
+    "newEn": "Is carried"
+   },
+   {
+    "id": "interacted",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa được tương tác",
+    "newVi": "Vừa được dùng",
+    "newEn": "Interacted"
+   },
+   {
+    "id": "inHand",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang ở trên tay",
+    "newVi": "Đang cầm tay",
+    "newEn": "In hand"
+   },
+   {
+    "id": "usedOn",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bị dùng lên",
+    "newVi": "Bị dùng lên",
+    "newEn": "Used on"
+   }
+  ]
+ },
+ {
+  "id": "key",
+  "category": "input",
+  "oldLabel": "Phím bấm",
+  "newVi": "Phím bấm",
+  "newEn": "Key Input",
+  "reason": "Giữ nguyên ý, thêm từ chuẩn của Unity/Scratch.",
+  "ports": [
+   {
+    "id": "held",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang giữ",
+    "newVi": "Đang giữ phím",
+    "newEn": "Is held"
+   },
+   {
+    "id": "pressed",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bấm",
+    "newVi": "Vừa nhấn",
+    "newEn": "Just pressed"
+   }
+  ]
+ },
+ {
+  "id": "latch",
+  "category": "logic",
+  "oldLabel": "Công tắc nhớ",
+  "newVi": "Công tắc nhớ",
+  "newEn": "Latch / Toggle",
+  "reason": "Giữ tên rất hay; thêm Latch/Toggle (flip-flop) cho người học lập trình.",
+  "ports": [
+   {
+    "id": "set",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bật",
+    "newVi": "Bật",
+    "newEn": "Set"
+   },
+   {
+    "id": "reset",
+    "dir": "in",
+    "type": "bool",
+    "old": "Tắt",
+    "newVi": "Tắt",
+    "newEn": "Reset"
+   },
+   {
+    "id": "toggle",
+    "dir": "in",
+    "type": "bool",
+    "old": "Đảo",
+    "newVi": "Đảo",
+    "newEn": "Toggle"
+   },
+   {
+    "id": "on",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang bật",
+    "newVi": "Đang bật",
+    "newEn": "Is on"
+   }
+  ]
+ },
+ {
+  "id": "map-range",
+  "category": "math",
+  "oldLabel": "Đổi thang số",
+  "newVi": "Đổi thang số",
+  "newEn": "Map Range",
+  "reason": "Giữ tên; Map/Remap Range quen thuộc ở Unity, Unreal.",
+  "ports": [
+   {
+    "id": "value",
+    "dir": "in",
+    "type": "number",
+    "old": "Số vào",
+    "newVi": "Số vào",
+    "newEn": "Input"
+   },
+   {
+    "id": "value",
+    "dir": "out",
+    "type": "number",
+    "old": "Số ra",
+    "newVi": "Số ra",
+    "newEn": "Output"
+   }
+  ]
+ },
+ {
+  "id": "math",
+  "category": "math",
+  "oldLabel": "Phép tính",
+  "newVi": "Phép tính",
+  "newEn": "Math",
+  "reason": "Giữ tên; Math là khối chuẩn.",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "number",
+    "old": "Số A",
+    "newVi": "Số A",
+    "newEn": "A"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "number",
+    "old": "Số B",
+    "newVi": "Số B",
+    "newEn": "B"
+   },
+   {
+    "id": "out",
+    "dir": "out",
+    "type": "number",
+    "old": "Kết quả",
+    "newVi": "Kết quả",
+    "newEn": "Result"
+   }
+  ]
+ },
+ {
+  "id": "moving-platform",
+  "category": "object",
+  "oldLabel": "Bệ di chuyển",
+  "newVi": "Bệ di chuyển",
+  "newEn": "Moving Platform",
+  "reason": "Giữ tên; đúng thuật ngữ game platformer.",
+  "ports": [
+   {
+    "id": "run",
+    "dir": "in",
+    "type": "bool",
+    "old": "Chạy",
+    "newVi": "Chạy",
+    "newEn": "Run"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Bệ",
+    "newVi": "Bệ",
+    "newEn": "Self"
+   },
+   {
+    "id": "moving",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang chạy",
+    "newVi": "Đang chạy",
+    "newEn": "Is moving"
+   },
+   {
+    "id": "arrived",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa tới đầu mút",
+    "newVi": "Vừa tới cuối đường",
+    "newEn": "Reached end"
+   }
+  ]
+ },
+ {
+  "id": "on-start",
+  "category": "input",
+  "oldLabel": "Khi bắt đầu",
+  "newVi": "Khi bắt đầu",
+  "newEn": "On Start",
+  "reason": "Y hệt khối \"when flag clicked\" của Scratch và \"Start\" của Unity.",
+  "ports": [
+   {
+    "id": "fired",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bắt đầu",
+    "newVi": "Vừa bắt đầu",
+    "newEn": "Fired"
+   }
+  ]
+ },
+ {
+  "id": "patrol",
+  "category": "brain",
+  "oldLabel": "Đi tuần",
+  "newVi": "Đi tuần",
+  "newEn": "Patrol",
+  "reason": "Giữ tên; Patrol là chuẩn AI.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Bot",
+    "newVi": "Bot",
+    "newEn": "Agent"
+   },
+   {
+    "id": "on",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hoạt động",
+    "newVi": "Hoạt động",
+    "newEn": "Active"
+   },
+   {
+    "id": "moveX",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "atEnd",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa tới đầu",
+    "newVi": "Vừa tới đầu mút",
+    "newEn": "At end"
+   }
+  ]
+ },
+ {
+  "id": "portal",
+  "category": "object",
+  "oldLabel": "Cổng dịch chuyển",
+  "newVi": "Cổng dịch chuyển",
+  "newEn": "Portal",
+  "reason": "Giữ tên; Portal là chuẩn.",
+  "ports": [
+   {
+    "id": "partner",
+    "dir": "in",
+    "type": "object",
+    "old": "Cổng đối diện",
+    "newVi": "Cổng đối diện",
+    "newEn": "Partner"
+   },
+   {
+    "id": "on",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bật",
+    "newVi": "Bật",
+    "newEn": "Enabled"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Cổng",
+    "newVi": "Cổng",
+    "newEn": "Self"
+   },
+   {
+    "id": "used",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa có người vào",
+    "newVi": "Vừa có người vào",
+    "newEn": "Entered"
+   },
+   {
+    "id": "who",
+    "dir": "out",
+    "type": "object",
+    "old": "Người vừa vào",
+    "newVi": "Người vừa vào",
+    "newEn": "Who"
+   }
+  ]
+ },
+ {
+  "id": "random",
+  "category": "math",
+  "oldLabel": "Số ngẫu nhiên",
+  "newVi": "Số ngẫu nhiên",
+  "newEn": "Random",
+  "reason": "Giữ tên; Random là từ chuẩn Scratch/Unity.",
+  "ports": [
+   {
+    "id": "roll",
+    "dir": "in",
+    "type": "bool",
+    "old": "Tung",
+    "newVi": "Tung",
+    "newEn": "Roll"
+   },
+   {
+    "id": "value",
+    "dir": "out",
+    "type": "number",
+    "old": "Số",
+    "newVi": "Số",
+    "newEn": "Value"
+   },
+   {
+    "id": "rolled",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa tung",
+    "newVi": "Vừa tung",
+    "newEn": "Rolled"
+   }
+  ]
+ },
+ {
+  "id": "rotating-platform",
+  "category": "object",
+  "oldLabel": "Bệ xoay",
+  "newVi": "Bệ xoay",
+  "newEn": "Rotating Platform",
+  "reason": "Giữ tên; đúng thuật ngữ game platformer.",
+  "ports": [
+   {
+    "id": "turn",
+    "dir": "in",
+    "type": "bool",
+    "old": "Xoay",
+    "newVi": "Xoay",
+    "newEn": "Rotate"
+   },
+   {
+    "id": "run",
+    "dir": "in",
+    "type": "bool",
+    "old": "Chạy",
+    "newVi": "Chạy",
+    "newEn": "Run"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Hộp xoay",
+    "newVi": "Hộp xoay",
+    "newEn": "Self"
+   },
+   {
+    "id": "angle",
+    "dir": "out",
+    "type": "number",
+    "old": "Góc (độ)",
+    "newVi": "Góc (độ)",
+    "newEn": "Angle"
+   },
+   {
+    "id": "turned",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa xoay xong",
+    "newVi": "Vừa xoay xong",
+    "newEn": "Rotated"
+   }
+  ]
+ },
+ {
+  "id": "route-follow",
+  "category": "brain",
+  "oldLabel": "Chạy theo tuyến",
+  "newVi": "Chạy theo tuyến",
+  "newEn": "Follow Path",
+  "reason": "Follow Path là chuẩn Godot/Unity.",
+  "ports": [
+   {
+    "id": "self",
+    "dir": "in",
+    "type": "object",
+    "old": "Ai",
+    "newVi": "Ai",
+    "newEn": "Agent"
+   },
+   {
+    "id": "on",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bật",
+    "newVi": "Bật",
+    "newEn": "Enable"
+   },
+   {
+    "id": "stop",
+    "dir": "in",
+    "type": "bool",
+    "old": "Dừng",
+    "newVi": "Dừng",
+    "newEn": "Stop"
+   },
+   {
+    "id": "moveX",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "out",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "jump",
+    "dir": "out",
+    "type": "bool",
+    "old": "Nhảy",
+    "newVi": "Nhảy",
+    "newEn": "Jump"
+   },
+   {
+    "id": "blocked",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang bị chặn",
+    "newVi": "Đang bị chặn",
+    "newEn": "Blocked"
+   },
+   {
+    "id": "reached",
+    "dir": "out",
+    "type": "bool",
+    "old": "Tới điểm",
+    "newVi": "Tới điểm",
+    "newEn": "Reached point"
+   },
+   {
+    "id": "index",
+    "dir": "out",
+    "type": "number",
+    "old": "Điểm hiện tại",
+    "newVi": "Điểm hiện tại",
+    "newEn": "Current point"
+   }
+  ]
+ },
+ {
+  "id": "select-number",
+  "category": "logic",
+  "oldLabel": "Chọn theo số",
+  "newVi": "Chọn theo số",
+  "newEn": "Switch / Select",
+  "reason": "Giống khối \"switch case\"; vẫn dễ hiểu cho trẻ.",
+  "ports": [
+   {
+    "id": "value",
+    "dir": "in",
+    "type": "number",
+    "old": "Số",
+    "newVi": "Số",
+    "newEn": "Value"
+   },
+   {
+    "id": "changed",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa đổi",
+    "newVi": "Vừa đổi",
+    "newEn": "Changed"
+   },
+   {
+    "id": "is1",
+    "dir": "out",
+    "type": "bool",
+    "old": "Là 1",
+    "newVi": "Bằng 1",
+    "newEn": "Case 1"
+   },
+   {
+    "id": "is2",
+    "dir": "out",
+    "type": "bool",
+    "old": "Là 2",
+    "newVi": "Bằng 2",
+    "newEn": "Case 2"
+   },
+   {
+    "id": "is3",
+    "dir": "out",
+    "type": "bool",
+    "old": "Là 3",
+    "newVi": "Bằng 3",
+    "newEn": "Case 3"
+   }
+  ]
+ },
+ {
+  "id": "sequence",
+  "category": "brain",
+  "oldLabel": "Chuỗi việc",
+  "newVi": "Chuỗi việc",
+  "newEn": "Sequence",
+  "reason": "Giữ tên; Sequence là chuẩn (Unreal Sequence, Behavior Tree).",
+  "ports": [
+   {
+    "id": "next",
+    "dir": "in",
+    "type": "bool",
+    "old": "Xong việc",
+    "newVi": "Xong việc",
+    "newEn": "Step done"
+   },
+   {
+    "id": "reset",
+    "dir": "in",
+    "type": "bool",
+    "old": "Làm lại từ đầu",
+    "newVi": "Làm lại từ đầu",
+    "newEn": "Restart"
+   },
+   {
+    "id": "index",
+    "dir": "out",
+    "type": "number",
+    "old": "Đang làm việc số",
+    "newVi": "Đang làm việc số",
+    "newEn": "Current step"
+   },
+   {
+    "id": "finished",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đã xong hết",
+    "newVi": "Đã xong hết",
+    "newEn": "All done"
+   },
+   {
+    "id": "step1",
+    "dir": "out",
+    "type": "bool",
+    "old": "Việc 1",
+    "newVi": "Việc 1",
+    "newEn": "Step 1"
+   },
+   {
+    "id": "step2",
+    "dir": "out",
+    "type": "bool",
+    "old": "Việc 2",
+    "newVi": "Việc 2",
+    "newEn": "Step 2"
+   },
+   {
+    "id": "step3",
+    "dir": "out",
+    "type": "bool",
+    "old": "Việc 3",
+    "newVi": "Việc 3",
+    "newEn": "Step 3"
+   }
+  ]
+ },
+ {
+  "id": "shooter",
+  "category": "action",
+  "oldLabel": "Bắn đạn",
+  "newVi": "Bắn đạn",
+  "newEn": "Shoot",
+  "reason": "Giữ tên; thêm từ Shoot chuẩn.",
+  "ports": [
+   {
+    "id": "shooter",
+    "dir": "in",
+    "type": "object",
+    "old": "Người bắn",
+    "newVi": "Người bắn",
+    "newEn": "Shooter"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Mục tiêu (tuỳ chọn)",
+    "newVi": "Ngắm vào (tuỳ chọn)",
+    "newEn": "Aim at"
+   },
+   {
+    "id": "fire",
+    "dir": "in",
+    "type": "bool",
+    "old": "Bắn",
+    "newVi": "Bắn",
+    "newEn": "Fire"
+   },
+   {
+    "id": "hit",
+    "dir": "out",
+    "type": "bool",
+    "old": "Trúng",
+    "newVi": "Trúng",
+    "newEn": "Hit"
+   },
+   {
+    "id": "lastHit",
+    "dir": "out",
+    "type": "object",
+    "old": "Vừa trúng",
+    "newVi": "Vật vừa trúng",
+    "newEn": "Hit object"
+   }
+  ]
+ },
+ {
+  "id": "show-number",
+  "category": "output",
+  "oldLabel": "Hiện số",
+  "newVi": "Hiện số",
+  "newEn": "Show Number",
+  "reason": "Giữ tên; thêm từ chuẩn.",
+  "ports": [
+   {
+    "id": "value",
+    "dir": "in",
+    "type": "number",
+    "old": "Số cần hiện",
+    "newVi": "Số cần hiện",
+    "newEn": "Number"
+   }
+  ]
+ },
+ {
+  "id": "show-text",
+  "category": "output",
+  "oldLabel": "Hiện chữ",
+  "newVi": "Hiện chữ",
+  "newEn": "Show Text",
+  "reason": "Giữ tên; thêm từ chuẩn.",
+  "ports": [
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện",
+    "newVi": "Hiện",
+    "newEn": "Show"
+   },
+   {
+    "id": "anchor",
+    "dir": "in",
+    "type": "object",
+    "old": "Gắn vào vật",
+    "newVi": "Gắn vào vật",
+    "newEn": "Attach to"
+   }
+  ]
+ },
+ {
+  "id": "spawner",
+  "category": "action",
+  "oldLabel": "Sinh vật thể",
+  "newVi": "Tạo vật mới",
+  "newEn": "Spawner",
+  "reason": "\"Sinh vật thể\" nghe như sinh học; \"Tạo vật mới\" dễ hiểu; Spawner là chuẩn.",
+  "ports": [
+   {
+    "id": "spawn",
+    "dir": "in",
+    "type": "bool",
+    "old": "Sinh ra",
+    "newVi": "Tạo ra",
+    "newEn": "Spawn"
+   },
+   {
+    "id": "at",
+    "dir": "in",
+    "type": "object",
+    "old": "Tại vật",
+    "newVi": "Tại vật",
+    "newEn": "At"
+   },
+   {
+    "id": "toucher",
+    "dir": "in",
+    "type": "object",
+    "old": "Ai chạm",
+    "newVi": "Vật thử chạm",
+    "newEn": "Touch with"
+   },
+   {
+    "id": "lastSpawned",
+    "dir": "out",
+    "type": "object",
+    "old": "Vật mới nhất",
+    "newVi": "Vật mới nhất",
+    "newEn": "Latest"
+   },
+   {
+    "id": "count",
+    "dir": "out",
+    "type": "number",
+    "old": "Đang có",
+    "newVi": "Đang có",
+    "newEn": "Count"
+   },
+   {
+    "id": "spawned",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa sinh",
+    "newVi": "Vừa tạo",
+    "newEn": "Spawned"
+   },
+   {
+    "id": "touched",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang chạm \"Ai chạm\"",
+    "newVi": "Đang chạm vật thử",
+    "newEn": "Touching"
+   }
+  ]
+ },
+ {
+  "id": "speed-sensor",
+  "category": "logic",
+  "oldLabel": "Cảm biến tốc độ",
+  "newVi": "Đo tốc độ",
+  "newEn": "Speed",
+  "reason": "Ngắn, có động từ; Speed giống Scratch/Unity.",
+  "ports": [
+   {
+    "id": "who",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật",
+    "newVi": "Vật",
+    "newEn": "Object"
+   },
+   {
+    "id": "speed",
+    "dir": "out",
+    "type": "number",
+    "old": "Tốc độ",
+    "newVi": "Tốc độ",
+    "newEn": "Speed"
+   },
+   {
+    "id": "still",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang đứng yên",
+    "newVi": "Đứng yên",
+    "newEn": "Is still"
+   },
+   {
+    "id": "fast",
+    "dir": "out",
+    "type": "bool",
+    "old": "Nhanh hơn ngưỡng",
+    "newVi": "Nhanh quá mức",
+    "newEn": "Above limit"
+   }
+  ]
+ },
+ {
+  "id": "stick",
+  "category": "input",
+  "oldLabel": "Cần điều khiển",
+  "newVi": "Cần điều khiển",
+  "newEn": "Joystick / Axis",
+  "reason": "Giống \"Input Axis\" của Unity: trả số âm/dương theo hướng.",
+  "ports": [
+   {
+    "id": "x",
+    "dir": "out",
+    "type": "number",
+    "old": "Ngang (trái-phải)",
+    "newVi": "Ngang (trái-phải)",
+    "newEn": "Horizontal"
+   },
+   {
+    "id": "y",
+    "dir": "out",
+    "type": "number",
+    "old": "Dọc (xuống-lên)",
+    "newVi": "Dọc (xuống-lên)",
+    "newEn": "Vertical"
+   }
+  ]
+ },
+ {
+  "id": "teleport",
+  "category": "action",
+  "oldLabel": "Dịch chuyển",
+  "newVi": "Dịch chuyển",
+  "newEn": "Teleport",
+  "reason": "Giữ tên; Teleport là chuẩn.",
+  "ports": [
+   {
+    "id": "who",
+    "dir": "in",
+    "type": "object",
+    "old": "Ai (vật)",
+    "newVi": "Ai (vật)",
+    "newEn": "Who"
+   },
+   {
+    "id": "go",
+    "dir": "in",
+    "type": "bool",
+    "old": "Đi",
+    "newVi": "Đi",
+    "newEn": "Go"
+   },
+   {
+    "id": "dest",
+    "dir": "in",
+    "type": "object",
+    "old": "Nơi đến (vật)",
+    "newVi": "Nơi đến (vật)",
+    "newEn": "Destination"
+   },
+   {
+    "id": "done",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa dịch chuyển",
+    "newVi": "Vừa dịch chuyển",
+    "newEn": "Done"
+   }
+  ]
+ },
+ {
+  "id": "timer",
+  "category": "math",
+  "oldLabel": "Hẹn giờ",
+  "newVi": "Hẹn giờ",
+  "newEn": "Timer",
+  "reason": "Giữ tên; Timer là từ chuẩn.",
+  "ports": [
+   {
+    "id": "run",
+    "dir": "in",
+    "type": "bool",
+    "old": "Chạy",
+    "newVi": "Chạy",
+    "newEn": "Start"
+   },
+   {
+    "id": "reset",
+    "dir": "in",
+    "type": "bool",
+    "old": "Đếm lại",
+    "newVi": "Đếm lại",
+    "newEn": "Restart"
+   },
+   {
+    "id": "left",
+    "dir": "out",
+    "type": "number",
+    "old": "Giây còn lại",
+    "newVi": "Giây còn lại",
+    "newEn": "Time left"
+   },
+   {
+    "id": "done",
+    "dir": "out",
+    "type": "bool",
+    "old": "Hết giờ",
+    "newVi": "Hết giờ",
+    "newEn": "Finished"
+   }
+  ]
+ },
+ {
+  "id": "touch",
+  "category": "logic",
+  "oldLabel": "Cảm biến chạm",
+  "newVi": "Chạm nhau",
+  "newEn": "Collision / Touch",
+  "reason": "Nói thẳng việc: hai vật chạm nhau. Collision là từ chuẩn Unity/Godot.",
+  "ports": [
+   {
+    "id": "a",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật A",
+    "newVi": "Vật chính",
+    "newEn": "Self"
+   },
+   {
+    "id": "b",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật B",
+    "newVi": "Vật kia",
+    "newEn": "Other"
+   },
+   {
+    "id": "touching",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang chạm",
+    "newVi": "Đang chạm",
+    "newEn": "Stay"
+   },
+   {
+    "id": "began",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa chạm",
+    "newVi": "Mới chạm",
+    "newEn": "Enter"
+   },
+   {
+    "id": "ended",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa thôi chạm",
+    "newVi": "Vừa rời",
+    "newEn": "Exit"
+   }
+  ]
+ },
+ {
+  "id": "ui-button",
+  "category": "input",
+  "oldLabel": "Nút trên màn hình",
+  "newVi": "Nút bấm",
+  "newEn": "UI Button",
+  "reason": "Gọn hơn \"Nút trên màn hình\"; tên chuẩn của mọi game engine.",
+  "ports": [
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện",
+    "newVi": "Hiện",
+    "newEn": "Show"
+   },
+   {
+    "id": "pressed",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bấm",
+    "newVi": "Vừa bấm",
+    "newEn": "Pressed"
+   },
+   {
+    "id": "held",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang giữ",
+    "newVi": "Đang giữ chuột",
+    "newEn": "Held"
+   }
+  ]
+ },
+ {
+  "id": "ui-dialog",
+  "category": "input",
+  "oldLabel": "Hộp hỏi",
+  "newVi": "Hộp hỏi",
+  "newEn": "Dialog / Choice",
+  "reason": "Giữ tên dễ hiểu; thêm từ \"Dialog\" quen thuộc.",
+  "ports": [
+   {
+    "id": "ask",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hỏi",
+    "newVi": "Hỏi",
+    "newEn": "Ask"
+   },
+   {
+    "id": "a1",
+    "dir": "out",
+    "type": "bool",
+    "old": "Chọn 1",
+    "newVi": "Chọn 1",
+    "newEn": "Option 1"
+   },
+   {
+    "id": "a2",
+    "dir": "out",
+    "type": "bool",
+    "old": "Chọn 2",
+    "newVi": "Chọn 2",
+    "newEn": "Option 2"
+   },
+   {
+    "id": "a3",
+    "dir": "out",
+    "type": "bool",
+    "old": "Chọn 3",
+    "newVi": "Chọn 3",
+    "newEn": "Option 3"
+   },
+   {
+    "id": "asking",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đang hỏi",
+    "newVi": "Đang hỏi",
+    "newEn": "Is asking"
+   }
+  ]
+ },
+ {
+  "id": "ui-meter",
+  "category": "output",
+  "oldLabel": "Thanh đo",
+  "newVi": "Thanh đo",
+  "newEn": "Progress Bar",
+  "reason": "Progress/Health Bar là từ chuẩn UI.",
+  "ports": [
+   {
+    "id": "value",
+    "dir": "in",
+    "type": "number",
+    "old": "Số cần đo",
+    "newVi": "Số cần đo",
+    "newEn": "Value"
+   },
+   {
+    "id": "anchor",
+    "dir": "in",
+    "type": "object",
+    "old": "Gắn vào vật",
+    "newVi": "Gắn vào vật",
+    "newEn": "Attach to"
+   },
+   {
+    "id": "show",
+    "dir": "in",
+    "type": "bool",
+    "old": "Hiện",
+    "newVi": "Hiện",
+    "newEn": "Show"
+   }
+  ]
+ },
+ {
+  "id": "ui-pick",
+  "category": "input",
+  "oldLabel": "Bấm vào vật",
+  "newVi": "Bấm vào vật",
+  "newEn": "Click Object",
+  "reason": "Tương đương OnMouseDown của Unity / \"when this sprite clicked\" của Scratch.",
+  "ports": [
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Vật",
+    "newVi": "Vật cần bấm",
+    "newEn": "Object"
+   },
+   {
+    "id": "pressed",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa bấm",
+    "newVi": "Vừa bấm",
+    "newEn": "Clicked"
+   }
+  ]
+ },
+ {
+  "id": "ui-start",
+  "category": "input",
+  "oldLabel": "Màn hình bắt đầu",
+  "newVi": "Màn hình mở đầu",
+  "newEn": "Title Screen",
+  "reason": "\"Bắt đầu\" đã dùng cho nút Khi bắt đầu; \"mở đầu\" tránh nhầm, \"Title Screen\" là từ chuẩn.",
+  "ports": [
+   {
+    "id": "started",
+    "dir": "out",
+    "type": "bool",
+    "old": "Đã bắt đầu",
+    "newVi": "Đã bắt đầu",
+    "newEn": "Started"
+   }
+  ]
+ },
+ {
+  "id": "vehicle",
+  "category": "object",
+  "oldLabel": "Phương tiện",
+  "newVi": "Xe",
+  "newEn": "Vehicle",
+  "reason": "\"Phương tiện\" quá dài, trẻ em nói \"xe\".",
+  "ports": [
+   {
+    "id": "moveX",
+    "dir": "in",
+    "type": "number",
+    "old": "Đi ngang",
+    "newVi": "Đi ngang",
+    "newEn": "Move X"
+   },
+   {
+    "id": "moveY",
+    "dir": "in",
+    "type": "number",
+    "old": "Đi dọc",
+    "newVi": "Đi dọc",
+    "newEn": "Move Y"
+   },
+   {
+    "id": "stop",
+    "dir": "in",
+    "type": "bool",
+    "old": "Dừng",
+    "newVi": "Phanh",
+    "newEn": "Brake"
+   },
+   {
+    "id": "leader",
+    "dir": "in",
+    "type": "object",
+    "old": "Kéo theo bởi",
+    "newVi": "Theo xe đầu",
+    "newEn": "Follow leader"
+   },
+   {
+    "id": "self",
+    "dir": "out",
+    "type": "object",
+    "old": "Xe",
+    "newVi": "Xe",
+    "newEn": "Self"
+   },
+   {
+    "id": "hasDriver",
+    "dir": "out",
+    "type": "bool",
+    "old": "Có người lái",
+    "newVi": "Có người lái",
+    "newEn": "Has driver"
+   },
+   {
+    "id": "speed",
+    "dir": "out",
+    "type": "number",
+    "old": "Tốc độ",
+    "newVi": "Tốc độ",
+    "newEn": "Speed"
+   },
+   {
+    "id": "driver",
+    "dir": "out",
+    "type": "object",
+    "old": "Người lái",
+    "newVi": "Người lái",
+    "newEn": "Driver"
+   },
+   {
+    "id": "crashed",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa va chạm",
+    "newVi": "Vừa va chạm",
+    "newEn": "Crashed"
+   },
+   {
+    "id": "crashedWith",
+    "dir": "out",
+    "type": "object",
+    "old": "Va với",
+    "newVi": "Va với",
+    "newEn": "Hit by"
+   }
+  ]
+ },
+ {
+  "id": "vision-sensor",
+  "category": "logic",
+  "oldLabel": "Cảm biến tầm nhìn",
+  "newVi": "Tầm nhìn",
+  "newEn": "Line of Sight",
+  "reason": "Thấy trong hình quạt trước mặt; \"Line of Sight\" là thuật ngữ AI game.",
+  "ports": [
+   {
+    "id": "viewer",
+    "dir": "in",
+    "type": "object",
+    "old": "Người nhìn",
+    "newVi": "Người nhìn",
+    "newEn": "Viewer"
+   },
+   {
+    "id": "target",
+    "dir": "in",
+    "type": "object",
+    "old": "Mục tiêu",
+    "newVi": "Mục tiêu",
+    "newEn": "Target"
+   },
+   {
+    "id": "seen",
+    "dir": "out",
+    "type": "bool",
+    "old": "Thấy",
+    "newVi": "Đang thấy",
+    "newEn": "Can see"
+   },
+   {
+    "id": "gained",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa thấy",
+    "newVi": "Vừa thấy",
+    "newEn": "Spotted"
+   },
+   {
+    "id": "lost",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa mất dấu",
+    "newVi": "Vừa mất dấu",
+    "newEn": "Lost"
+   },
+   {
+    "id": "nearest",
+    "dir": "out",
+    "type": "object",
+    "old": "Vật thấy gần nhất",
+    "newVi": "Vật gần nhất",
+    "newEn": "Nearest"
+   },
+   {
+    "id": "distance",
+    "dir": "out",
+    "type": "number",
+    "old": "Khoảng cách",
+    "newVi": "Khoảng cách",
+    "newEn": "Distance"
+   }
+  ]
+ },
+ {
+  "id": "win-lose",
+  "category": "output",
+  "oldLabel": "Thắng/Thua",
+  "newVi": "Thắng / Thua",
+  "newEn": "Game Over",
+  "reason": "Game Over / Win-Lose là chuẩn.",
+  "ports": [
+   {
+    "id": "win",
+    "dir": "in",
+    "type": "bool",
+    "old": "Thắng",
+    "newVi": "Thắng",
+    "newEn": "Win"
+   },
+   {
+    "id": "lose",
+    "dir": "in",
+    "type": "bool",
+    "old": "Thua",
+    "newVi": "Thua",
+    "newEn": "Lose"
+   }
+  ]
+ },
+ {
+  "id": "zone",
+  "category": "logic",
+  "oldLabel": "Cảm biến vùng",
+  "newVi": "Vùng kích hoạt",
+  "newEn": "Trigger Zone",
+  "reason": "\"Cảm biến vùng\" khó đoán; Trigger/Area là từ chuẩn của Unity và Godot.",
+  "ports": [
+   {
+    "id": "follow",
+    "dir": "in",
+    "type": "object",
+    "old": "Bám theo vật",
+    "newVi": "Gắn vào vật",
+    "newEn": "Follow"
+   },
+   {
+    "id": "inside",
+    "dir": "out",
+    "type": "bool",
+    "old": "Có ai trong vùng",
+    "newVi": "Có ai trong vùng",
+    "newEn": "Is inside"
+   },
+   {
+    "id": "entered",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa vào",
+    "newVi": "Vừa vào",
+    "newEn": "On enter"
+   },
+   {
+    "id": "exited",
+    "dir": "out",
+    "type": "bool",
+    "old": "Vừa ra",
+    "newVi": "Vừa ra",
+    "newEn": "On exit"
+   },
+   {
+    "id": "count",
+    "dir": "out",
+    "type": "number",
+    "old": "Số lượng",
+    "newVi": "Số lượng",
+    "newEn": "Count"
+   },
+   {
+    "id": "first",
+    "dir": "out",
+    "type": "object",
+    "old": "Vật đầu tiên",
+    "newVi": "Vật đầu tiên",
+    "newEn": "First object"
+   }
+  ]
+ }
+]

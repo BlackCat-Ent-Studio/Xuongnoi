@@ -1,0 +1,405 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0"><title>Bản mẫu xưởng phân loại</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: the running floor plan is the page; counters sit right under it; below, tabs open each machine to show what is inside its board. */
+:root {
+  --bg: #eef0f3; --panel: #ffffff; --ink: #1c2330; --muted: #5b6577; --line: #d5d9e0;
+  --floor: #c9cdd3; --lane: #b4b9c1; --lane-mark: #eef0f3; --steel: #7d8794; --dark: #2b303a;
+  --agv: #e8830c; --agv-deep: #b8620a; --belt: #2a6fd0; --gate: #e9b20e; --ok: #1f8a4c;
+  --soft: #e6e9ee; --agv-soft: #fdf0dd;
+  --body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161d; --panel: #1b212b; --ink: #e8ecf2; --muted: #9aa5b6; --line: #303947;
+  --floor: #262c36; --lane: #343c49; --lane-mark: #4a5463; --steel: #8a95a5; --dark: #0f1319;
+  --agv: #ff9f33; --agv-deep: #c9731a; --belt: #4f8fe8; --gate: #f2c23a; --ok: #5fd08c;
+  --soft: #262e3a; --agv-soft: #3a2a12; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1b212b; --ink: #e8ecf2; --muted: #9aa5b6; --line: #303947;
+  --floor: #262c36; --lane: #343c49; --lane-mark: #4a5463; --steel: #8a95a5; --dark: #0f1319;
+  --agv: #ff9f33; --agv-deep: #c9731a; --belt: #4f8fe8; --gate: #f2c23a; --ok: #5fd08c;
+  --soft: #262e3a; --agv-soft: #3a2a12; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.55; }
+.wrap { max-width: 1040px; margin: 0 auto; padding-block: 22px 48px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 18px; }
+h1 { font-size: clamp(1.5rem, 4vw, 2.1rem); line-height: 1.15; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-size: 1.15rem; margin: 0; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+.eyebrow { font-family: var(--mono); font-size: .76rem; letter-spacing: .08em; text-transform: uppercase; color: var(--agv); }
+.lead { color: var(--muted); margin-top: 6px; }
+.honest { background: var(--agv-soft); border: 1px solid var(--agv); border-radius: 8px; padding: 9px 14px; font-size: .93rem; }
+
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 960 / 560; background: var(--floor); }
+.bar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 10px 14px; border-top: 1px solid var(--line); }
+.group { display: flex; gap: 6px; align-items: center; }
+.group > span { color: var(--muted); font-size: .88rem; }
+button { font: inherit; font-size: .92rem; font-weight: 600; color: var(--ink); background: var(--soft); border: 1px solid var(--line); border-radius: 8px; padding: 6px 13px; cursor: pointer; }
+button:hover { border-color: var(--steel); }
+button:focus-visible { outline: 3px solid var(--belt); outline-offset: 2px; }
+button[aria-pressed="true"], button.primary { background: var(--belt); border-color: var(--belt); color: #fff; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; min-width: 0; }
+.stat b { display: block; font-size: 1.45rem; line-height: 1.15; font-variant-numeric: tabular-nums; }
+.stat span { color: var(--muted); font-size: .86rem; }
+.stat.wide { grid-column: span 2; }
+.stat.wide b { font-size: 1.15rem; line-height: 1.5; }
+@media (max-width: 520px) { .stat.wide { grid-column: auto; } }
+.chutes { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.chute { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; min-width: 0; }
+.dot { width: 16px; height: 16px; border-radius: 4px; flex: 0 0 auto; border: 1px solid rgba(0,0,0,.25); }
+.chute small { color: var(--muted); display: block; font-size: .8rem; }
+.chute b { font-variant-numeric: tabular-nums; font-size: 1.1rem; }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.inside { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px 22px; }
+.cols h3 { margin: 0 0 6px; font-size: .78rem; letter-spacing: .07em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+.cols ul { margin: 0; padding-left: 1.1em; display: flex; flex-direction: column; gap: 4px; font-size: .95rem; }
+.pin { font-family: var(--mono); font-size: .82rem; background: var(--soft); border-radius: 5px; padding: 1px 7px; white-space: nowrap; }
+.crumb { font-family: var(--mono); font-size: .85rem; color: var(--muted); }
+footer { color: var(--muted); font-size: .86rem; border-top: 1px solid var(--line); padding-top: 12px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Xưởng Nối · bản mẫu thiết kế</div>
+    <h1>Xưởng phân loại kiện hàng</h1>
+    <p class="lead">Băng chuyền đưa kiện tới, cổng quét đọc màu và khối lượng, tay máy đặt kiện lên xe, xe chạy vòng một chiều tới đúng cửa rồi nghiêng mâm đổ ngang.</p>
+  </header>
+
+  <p class="honest"><b>Đây là hình minh hoạ thiết kế</b>, vẽ riêng cho trang này để bạn duyệt cách xưởng vận hành. Nó chưa phải engine thật của Xưởng Nối và chưa có vật lý thật.</p>
+
+  <div class="stage">
+    <canvas id="floor" width="960" height="560" role="img" aria-label="Sơ đồ nhìn từ trên: băng chuyền bên trái, tay máy, đường vòng một chiều có xe AGV, sáu cửa thả ở trên và dưới"></canvas>
+    <div class="bar">
+      <div class="group"><button id="play" class="primary" type="button">Tạm dừng</button><button id="reset" type="button">Đặt lại</button></div>
+      <div class="group"><span>Tốc độ</span><button type="button" data-speed="1" aria-pressed="true">1×</button><button type="button" data-speed="2" aria-pressed="false">2×</button><button type="button" data-speed="4" aria-pressed="false">4×</button></div>
+      <div class="group"><span>Số xe</span><button type="button" data-fleet="2" aria-pressed="false">2</button><button type="button" data-fleet="4" aria-pressed="false">4</button><button type="button" data-fleet="8" aria-pressed="true">8</button></div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><b id="s-done">0</b><span>kiện đã vào cửa</span></div>
+    <div class="stat"><b id="s-rate">0</b><span>kiện mỗi phút</span></div>
+    <div class="stat"><b id="s-wait">0</b><span>kiện đang chờ trên băng chuyền</span></div>
+    <div class="stat wide"><b id="s-scan">—</b><span>kiện vừa quét</span></div>
+    <div class="stat"><b id="s-idle">0</b><span>xe đang rảnh</span></div>
+  </div>
+  <div class="chutes" id="chutes"></div>
+
+  <section style="display:flex;flex-direction:column;gap:10px">
+    <h2>Bên trong từng bảng mạch</h2>
+    <div class="tabs" role="tablist">
+      <button type="button" data-tab="xuong" aria-pressed="true">Xưởng</button>
+      <button type="button" data-tab="tram" aria-pressed="false">Trạm nạp</button>
+      <button type="button" data-tab="xe" aria-pressed="false">Xe AGV ×8</button>
+      <button type="button" data-tab="cua" aria-pressed="false">Cửa thả ×6</button>
+    </div>
+    <div class="inside" id="inside"></div>
+  </section>
+
+  <footer>Trong game thật, mỗi khối ở đây là một bảng mạch ghép từ mảnh ghép và dây nối. Bấm đúp vào khối để vào xem bên trong; sửa bảng mạch "Xe AGV" một lần thì cả 8 xe đổi theo.</footer>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  const cv = document.getElementById('floor');
+  const ctx = cv.getContext('2d');
+  const W = 960, H = 560;
+  const $ = (id) => document.getElementById(id);
+
+  // ---- theme tokens for the canvas
+  let T = {};
+  const readTokens = () => {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of ['floor', 'lane', 'lane-mark', 'steel', 'dark', 'agv', 'agv-deep', 'belt', 'gate', 'ok', 'ink', 'muted', 'panel', 'line']) T[k] = cs.getPropertyValue('--' + k).trim();
+  };
+  readTokens();
+  try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', readTokens); } catch (e) { /* older browsers */ }
+  new MutationObserver(readTokens).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // ---- what is sorted: five colours, and anything of 4 kg or more goes to door 6
+  const CLASSES = [
+    { name: 'Đỏ', color: '#e5484d' }, { name: 'Vàng', color: '#f2c23a' }, { name: 'Xanh lá', color: '#3fae5a' },
+    { name: 'Xanh dương', color: '#3b82f6' }, { name: 'Tím', color: '#a855f7' },
+  ];
+  const HEAVY = 4;
+  const CARTON = '#c8975a';
+
+  // ---- one-way loop
+  const L = 330, R = 880, TOP = 150, BOT = 410, RAD = 60;
+  const ST = R - L - 2 * RAD, SS = BOT - TOP - 2 * RAD, ARC = Math.PI * RAD / 2;
+  const TOTAL = 2 * ST + 2 * SS + 4 * ARC;
+  function at(s) {
+    s = ((s % TOTAL) + TOTAL) % TOTAL;
+    const arc = (cx, cy, a0, u) => { const a = a0 + u / RAD; return { x: cx + RAD * Math.cos(a), y: cy + RAD * Math.sin(a), ang: a + Math.PI / 2 }; };
+    if (s < ST) return { x: L + RAD + s, y: TOP, ang: 0 }; s -= ST;
+    if (s < ARC) return arc(R - RAD, TOP + RAD, -Math.PI / 2, s); s -= ARC;
+    if (s < SS) return { x: R, y: TOP + RAD + s, ang: Math.PI / 2 }; s -= SS;
+    if (s < ARC) return arc(R - RAD, BOT - RAD, 0, s); s -= ARC;
+    if (s < ST) return { x: R - RAD - s, y: BOT, ang: Math.PI }; s -= ST;
+    if (s < ARC) return arc(L + RAD, BOT - RAD, Math.PI / 2, s); s -= ARC;
+    if (s < SS) return { x: L, y: BOT - RAD - s, ang: -Math.PI / 2 }; s -= SS;
+    return arc(L + RAD, TOP + RAD, Math.PI, s);
+  }
+  const PICK_S = 2 * ST + SS + 3 * ARC + SS / 2;
+  const XS = [450, 605, 760];
+  const DOORS = [
+    ...XS.map((x) => ({ s: x - (L + RAD) })),
+    ...XS.slice().reverse().map((x) => ({ s: ST + ARC + SS + ARC + (R - RAD - x) })),
+  ].map((d, i) => {
+    const p = at(d.s);
+    return { ...d, n: i + 1, x: p.x + Math.sin(p.ang) * 82, y: p.y - Math.cos(p.ang) * 82, count: 0, pulse: 0 };
+  });
+  const ahead = (from, to) => (((to - from) % TOTAL) + TOTAL) % TOTAL;
+
+  // ---- induction station
+  const BELT = { x0: 18, x1: 196, y: 280, gate: 104, speed: 62, gap: 36 };
+  const ARM = { bx: 256, by: 222 };
+  const HAND_BELT = { x: BELT.x1 - 8, y: BELT.y }, HAND_AGV = { x: L, y: 280 }, HAND_REST = { x: 262, y: 300 };
+
+  // ---- state
+  let agvs, belt, arm, fly, time, done, spawnIn, lastScan, seed, fleet = 8, speed = 1, running = true;
+  const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
+  function newParcel() {
+    const cls = Math.floor(rnd() * CLASSES.length);
+    const kg = rnd() < 0.17 ? 4 + Math.floor(rnd() * 3) : 1 + Math.floor(rnd() * 3);
+    return { cls, kg, door: kg >= HEAVY ? 6 : cls + 1, x: BELT.x0, scanned: false };
+  }
+  function reset() {
+    seed = 20261119; time = 0; done = 0; spawnIn = 0.4; lastScan = null; fly = []; belt = [];
+    arm = { phase: 'rest', t: 0, hand: { ...HAND_REST }, holding: null, target: null };
+    agvs = Array.from({ length: fleet }, (_, i) => ({ id: i + 1, s: PICK_S - i * 78, load: null, state: 'empty', t: 0, v: 0 }));
+    for (const d of DOORS) { d.count = 0; d.pulse = 0; }
+  }
+
+  const ease = (t) => t * t * (3 - 2 * t);
+  const lerp = (a, b, t) => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+
+  function step(dt) {
+    time += dt;
+    // belt
+    spawnIn -= dt;
+    if (spawnIn <= 0 && belt.length < 5 && (belt.length === 0 || belt[belt.length - 1].x > BELT.x0 + BELT.gap)) { belt.push(newParcel()); spawnIn = 1.9 + rnd() * 0.9; }
+    belt.forEach((p, i) => {
+      const limit = i === 0 ? BELT.x1 - 8 : belt[i - 1].x - BELT.gap;
+      p.x = Math.min(limit, p.x + BELT.speed * dt);
+      if (!p.scanned && p.x >= BELT.gate) { p.scanned = true; lastScan = { ...p, at: time }; }
+    });
+    // arm: belt end -> the empty robot standing at the hand-over spot
+    const waiting = agvs.find((a) => a.state === 'empty' && a.v === 0 && ahead(a.s, PICK_S) < 0.5);
+    const ready = belt[0] && belt[0].x >= BELT.x1 - 8.5 && belt[0].scanned;
+    arm.t += dt;
+    if (arm.phase === 'rest') { if (waiting && ready) { arm.phase = 'reach'; arm.t = 0; arm.target = waiting; waiting.state = 'loading'; } }
+    else if (arm.phase === 'reach') { arm.hand = lerp(HAND_REST, HAND_BELT, ease(Math.min(1, arm.t / 0.35))); if (arm.t >= 0.35) { arm.holding = belt.shift(); arm.phase = 'carry'; arm.t = 0; } }
+    else if (arm.phase === 'carry') { arm.hand = lerp(HAND_BELT, HAND_AGV, ease(Math.min(1, arm.t / 0.75))); if (arm.t >= 0.75) { arm.target.load = arm.holding; arm.target.state = 'loaded'; arm.holding = null; arm.phase = 'back'; arm.t = 0; } }
+    else { arm.hand = lerp(HAND_AGV, HAND_REST, ease(Math.min(1, arm.t / 0.4))); if (arm.t >= 0.4) { arm.phase = 'rest'; arm.target = null; } }
+    // robots: one direction, keep a gap, stop at the hand-over spot or at their door
+    const CRUISE = 150, GAP = 64;
+    for (const a of agvs) {
+      a.t += dt;
+      if (a.state === 'loading') { a.v = 0; continue; }
+      if (a.state === 'dumping') {
+        a.v = 0;
+        if (a.t >= 1.25) { a.state = 'empty'; a.load = null; a.tilt = 0; }
+        continue;
+      }
+      const goal = a.state === 'empty' ? PICK_S : DOORS[a.load.door - 1].s;
+      let room = ahead(a.s, goal);
+      for (const o of agvs) if (o !== a) room = Math.min(room, Math.max(0, ahead(a.s, o.s) - GAP));
+      const want = Math.min(CRUISE, room * 4 + 4);
+      a.v += Math.max(-600 * dt, Math.min(260 * dt, want - a.v));
+      const move = Math.min(room, Math.max(0, a.v) * dt);
+      a.s = (a.s + move) % TOTAL;
+      if (move >= room || room < 0.01) a.v = 0;
+      if (a.state === 'loaded' && ahead(a.s, goal) < 0.5 && a.v === 0) {
+        a.state = 'dumping'; a.t = 0;
+        const d = DOORS[a.load.door - 1], p = at(a.s);
+        fly.push({ p: a.load, from: { x: p.x, y: p.y }, to: { x: d.x, y: d.y }, t: -0.3, door: d });
+      }
+    }
+    for (const f of fly) {
+      f.t += dt;
+      if (f.t >= 0.85 && !f.landed) { f.landed = true; f.door.count++; f.door.pulse = 1; done++; }
+    }
+    fly = fly.filter((f) => f.t < 1.15);
+    for (const d of DOORS) d.pulse = Math.max(0, d.pulse - dt * 1.6);
+  }
+
+  // ---- drawing
+  function rr(x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+  function parcel(x, y, p, size = 22, alpha = 1) {
+    ctx.save(); ctx.globalAlpha = alpha; ctx.translate(x, y);
+    ctx.fillStyle = 'rgba(0,0,0,.22)'; rr(-size / 2 + 2, -size / 2 + 3, size, size, 3); ctx.fill();
+    ctx.fillStyle = CARTON; rr(-size / 2, -size / 2, size, size, 3); ctx.fill();
+    ctx.fillStyle = CLASSES[p.cls].color; ctx.fillRect(-size / 2, -4, size, 8);
+    ctx.strokeStyle = 'rgba(0,0,0,.35)'; ctx.lineWidth = 1; rr(-size / 2, -size / 2, size, size, 3); ctx.stroke();
+    ctx.fillStyle = '#1b1b1b'; ctx.font = '600 9px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(p.kg + 'kg', 0, size / 2 - 5.5);
+    ctx.restore();
+  }
+  function label(text, x, y, align = 'center', color = T.muted, font = '600 12px "Be Vietnam Pro", sans-serif') { ctx.fillStyle = color; ctx.font = font; ctx.textAlign = align; ctx.textBaseline = 'middle'; ctx.fillText(text, x, y); }
+
+  function draw() {
+    const k = cv.width / W; ctx.setTransform(k, 0, 0, k, 0, 0);
+    ctx.fillStyle = T.floor; ctx.fillRect(0, 0, W, H);
+
+    // lane
+    ctx.lineJoin = 'round'; ctx.strokeStyle = T.lane; ctx.lineWidth = 58; rr(L, TOP, R - L, BOT - TOP, RAD); ctx.stroke();
+    ctx.strokeStyle = T['lane-mark']; ctx.lineWidth = 2; ctx.setLineDash([10, 14]); rr(L, TOP, R - L, BOT - TOP, RAD); ctx.stroke(); ctx.setLineDash([]);
+    for (const s of [ST * 0.18, ST * 0.82, ST + ARC + SS / 2, ST + ARC + SS + ARC + ST * 0.18, ST + ARC + SS + ARC + ST * 0.82]) {
+      const p = at(s); ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang); ctx.fillStyle = T['lane-mark']; ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(-6, -7); ctx.lineTo(-6, 7); ctx.closePath(); ctx.fill(); ctx.restore();
+    }
+    label('Đường vòng một chiều', (L + R) / 2, (TOP + BOT) / 2 - 10, 'center', T.muted, '600 14px "Be Vietnam Pro", sans-serif');
+    label('xe giữ khoảng cách, không đi ngược', (L + R) / 2, (TOP + BOT) / 2 + 12, 'center', T.muted, '400 12px "Be Vietnam Pro", sans-serif');
+
+    // floor markers at every stop
+    const mark = (s, text) => { const p = at(s); ctx.strokeStyle = T.gate; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(p.x, p.y, 15, 0, 7); ctx.stroke(); if (text) label(text, p.x, p.y, 'center', T.gate, '700 12px "JetBrains Mono", monospace'); };
+    DOORS.forEach((d) => mark(d.s, String(d.n))); mark(PICK_S, '0');
+
+    // doors
+    for (const d of DOORS) {
+      const grow = 1 + d.pulse * 0.12;
+      ctx.save(); ctx.translate(d.x, d.y); ctx.scale(grow, grow);
+      ctx.fillStyle = T.dark; rr(-44, -34, 88, 68, 8); ctx.fill();
+      ctx.strokeStyle = T.gate; ctx.lineWidth = 4; rr(-27, -20, 54, 40, 4); ctx.stroke();
+      ctx.fillStyle = d.n === 6 ? T.steel : CLASSES[d.n - 1].color; rr(-23, -16, 46, 32, 3); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.28)'; rr(-23, -16, 46, 32, 3); ctx.fill();
+      label(String(d.count), 0, 1, 'center', '#fff', '700 18px "Be Vietnam Pro", sans-serif');
+      ctx.restore();
+      const up = d.y < H / 2;
+      label('Cửa ' + d.n + (d.n === 6 ? ' · từ ' + HEAVY + ' kg' : ' · ' + CLASSES[d.n - 1].name), d.x, d.y + (up ? -46 : 46), 'center', T.ink, '600 12px "Be Vietnam Pro", sans-serif');
+    }
+
+    // belt, legs hinted by shadow; low blue lips on both sides
+    ctx.fillStyle = 'rgba(0,0,0,.18)'; rr(BELT.x0 + 3, BELT.y - 15, BELT.x1 - BELT.x0, 38, 5); ctx.fill();
+    ctx.fillStyle = T.dark; rr(BELT.x0, BELT.y - 19, BELT.x1 - BELT.x0, 38, 5); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.rect(BELT.x0, BELT.y - 15, BELT.x1 - BELT.x0, 30); ctx.clip();
+    ctx.strokeStyle = 'rgba(255,255,255,.16)'; ctx.lineWidth = 3;
+    const off = (time * BELT.speed) % 26;
+    for (let x = BELT.x0 - 26 + off; x < BELT.x1; x += 26) { ctx.beginPath(); ctx.moveTo(x, BELT.y - 8); ctx.lineTo(x + 8, BELT.y); ctx.lineTo(x, BELT.y + 8); ctx.stroke(); }
+    ctx.restore();
+    ctx.fillStyle = T.belt; ctx.fillRect(BELT.x0, BELT.y - 22, BELT.x1 - BELT.x0, 5); ctx.fillRect(BELT.x0, BELT.y + 17, BELT.x1 - BELT.x0, 5);
+    for (const p of belt) parcel(p.x, BELT.y, p);
+    // scan gate
+    const lit = lastScan && time - lastScan.at < 0.5;
+    ctx.fillStyle = T.gate; ctx.fillRect(BELT.gate - 4, BELT.y - 32, 8, 64);
+    ctx.fillStyle = lit ? CLASSES[lastScan.cls].color : T.steel; ctx.beginPath(); ctx.arc(BELT.gate, BELT.y - 36, 6, 0, 7); ctx.fill();
+    if (lit) { ctx.strokeStyle = CLASSES[lastScan.cls].color; ctx.globalAlpha = 0.5; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(BELT.gate, BELT.y - 15); ctx.lineTo(BELT.gate, BELT.y + 15); ctx.stroke(); ctx.globalAlpha = 1; }
+    label('Băng chuyền', BELT.x0 + 4, BELT.y + 40, 'left', T.ink);
+    label('Cổng quét + cân', BELT.gate, BELT.y - 52, 'center', T.ink);
+    label('TRẠM NẠP', BELT.x0 + 4, 196, 'left', T.belt, '700 12px "JetBrains Mono", monospace');
+
+    // robots
+    for (const a of agvs) {
+      const p = at(a.s);
+      const dump = a.state === 'dumping' ? Math.min(1, a.t / 0.3) * (a.t > 0.95 ? Math.max(0, 1 - (a.t - 0.95) / 0.3) : 1) : 0;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.ang);
+      ctx.fillStyle = 'rgba(0,0,0,.22)'; rr(-24, -15, 52, 36, 9); ctx.fill();
+      ctx.fillStyle = T.dark; for (const [wx, wy] of [[-15, -20], [15, -20], [-15, 20], [15, 20]]) { rr(wx - 7, wy - 3.5, 14, 7, 3); ctx.fill(); }
+      ctx.fillStyle = T.agv; rr(-27, -19, 54, 38, 10); ctx.fill();
+      ctx.strokeStyle = T['agv-deep']; ctx.lineWidth = 1.5; rr(-27, -19, 54, 38, 10); ctx.stroke();
+      ctx.fillStyle = a.load ? '#3fd07a' : '#58a6ff'; ctx.fillRect(22, -9, 3, 18);
+      // tray: slides a little to the outside while it tips
+      ctx.fillStyle = '#3a3f49'; rr(-19, -14 - dump * 6, 38, 28, 4); ctx.fill();
+      ctx.strokeStyle = '#e8eaee'; ctx.lineWidth = 1.5; rr(-19, -14 - dump * 6, 38, 28, 4); ctx.stroke();
+      ctx.restore();
+      if (a.load && a.state !== 'dumping') parcel(p.x, p.y, a.load, 20);
+      label(String(a.id), p.x + Math.cos(p.ang) * -19 - Math.sin(p.ang) * 0, p.y + Math.sin(p.ang) * -19, 'center', '#fff', '700 9px "JetBrains Mono", monospace');
+    }
+    for (const f of fly) {
+      const t = Math.max(0, Math.min(1, f.t / 0.85)); const q = lerp(f.from, f.to, ease(t));
+      parcel(q.x, q.y, f.p, 20 - t * 5, f.t > 0.85 ? Math.max(0, 1 - (f.t - 0.85) / 0.3) : 1);
+    }
+
+    // arm (two links with an elbow), drawn over the robots
+    ctx.fillStyle = 'rgba(0,0,0,.2)'; ctx.beginPath(); ctx.arc(ARM.bx + 2, ARM.by + 3, 19, 0, 7); ctx.fill();
+    ctx.fillStyle = T.dark; ctx.beginPath(); ctx.arc(ARM.bx, ARM.by, 19, 0, 7); ctx.fill();
+    const hx = arm.hand.x, hy = arm.hand.y, mx = (ARM.bx + hx) / 2, my = (ARM.by + hy) / 2;
+    const dist = Math.hypot(hx - ARM.bx, hy - ARM.by), bend = Math.sqrt(Math.max(0, 62 * 62 - (dist / 2) * (dist / 2)));
+    const ex = mx + (-(hy - ARM.by) / dist) * bend, ey = my + ((hx - ARM.bx) / dist) * bend;
+    ctx.lineCap = 'round'; ctx.strokeStyle = T['agv-deep']; ctx.lineWidth = 15; ctx.beginPath(); ctx.moveTo(ARM.bx, ARM.by); ctx.lineTo(ex, ey); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.strokeStyle = T.agv; ctx.lineWidth = 11; ctx.beginPath(); ctx.moveTo(ARM.bx, ARM.by); ctx.lineTo(ex, ey); ctx.lineTo(hx, hy); ctx.stroke();
+    ctx.fillStyle = T.dark; for (const [jx, jy, jr] of [[ARM.bx, ARM.by, 9], [ex, ey, 7]]) { ctx.beginPath(); ctx.arc(jx, jy, jr, 0, 7); ctx.fill(); }
+    if (arm.holding) parcel(hx, hy, arm.holding, 22);
+    ctx.fillStyle = T.dark; rr(hx - 14, hy - 4, 28, 8, 3); ctx.fill();
+    label('Tay máy', ARM.bx, ARM.by - 32, 'center', T.ink);
+    label('Điểm giao', L - 38, 336, 'right', T.ink);
+  }
+
+  // ---- counters
+  const doorBox = $('chutes');
+  DOORS.forEach((d) => {
+    const el = document.createElement('div'); el.className = 'chute';
+    const c = d.n === 6 ? 'var(--steel)' : CLASSES[d.n - 1].color;
+    el.innerHTML = '<span class="dot" style="background:' + c + '"></span><div><small>Cửa ' + d.n + ' · ' + (d.n === 6 ? 'từ ' + HEAVY + ' kg' : CLASSES[d.n - 1].name) + '</small><b id="d' + d.n + '">0</b></div>';
+    doorBox.appendChild(el);
+  });
+  function counters() {
+    $('s-done').textContent = done;
+    $('s-rate').textContent = time > 5 ? (done / time * 60).toFixed(1).replace('.', ',') : '—';
+    $('s-wait').textContent = belt.length;
+    $('s-scan').textContent = lastScan ? (lastScan.kg >= HEAVY ? 'Nặng' : CLASSES[lastScan.cls].name) + ' · ' + lastScan.kg + ' kg → cửa ' + lastScan.door : '—';
+    $('s-idle').textContent = agvs.filter((a) => a.state === 'empty').length;
+    DOORS.forEach((d) => { $('d' + d.n).textContent = d.count; });
+  }
+
+  // ---- loop
+  function fit() { const dpr = Math.min(2, window.devicePixelRatio || 1); const w = Math.max(320, Math.round(cv.clientWidth * dpr)); if (cv.width !== w) { cv.width = w; cv.height = Math.round(w * H / W); } }
+  let last = 0, tick = 0;
+  function frame(now) {
+    fit();
+    const dt = Math.min(0.05, (now - last) / 1000 || 0); last = now;
+    if (running) for (let i = 0; i < speed; i++) step(dt);
+    draw();
+    if (++tick % 8 === 0) counters();
+    requestAnimationFrame(frame);
+  }
+  function warm() { for (let i = 0; i < 14 * 60; i++) step(1 / 60); counters(); }
+
+  // ---- controls
+  const press = (sel, el) => document.querySelectorAll(sel).forEach((b) => b.setAttribute('aria-pressed', String(b === el)));
+  $('play').addEventListener('click', () => { running = !running; $('play').textContent = running ? 'Tạm dừng' : 'Chạy'; });
+  $('reset').addEventListener('click', () => { reset(); counters(); });
+  document.querySelectorAll('[data-speed]').forEach((b) => b.addEventListener('click', () => { speed = Number(b.dataset.speed); press('[data-speed]', b); }));
+  document.querySelectorAll('[data-fleet]').forEach((b) => b.addEventListener('click', () => { fleet = Number(b.dataset.fleet); press('[data-fleet]', b); reset(); counters(); }));
+
+  // ---- inside each board
+  const pin = (t) => '<span class="pin">' + t + '</span>';
+  const INSIDE = {
+    xuong: { crumb: 'Xưởng', text: 'Tầng trên cùng chỉ có khoảng 10–15 khối. Các bảng hiện số nằm ở đây, không nằm trong từng xe.', cols: [
+      ['Các khối', ['1 × Trạm nạp', '1 × Bộ điều phối (8 máy)', '8 × Xe AGV, xếp chồng thành "Xe AGV ×8"', '6 × Cửa thả, xếp chồng "×6"', 'Luật chọn cửa: màu → cửa 1–5, từ ' + HEAVY + ' kg → cửa 6', 'Bảng hiện số: tổng kiện, kiện sai loại']],
+      ['Dây nối chính', ['Trạm nạp ' + pin('Có kiện chờ') + ' → Bộ điều phối ' + pin('Có việc'), 'Luật chọn cửa → Bộ điều phối ' + pin('Mã việc'), 'Bộ điều phối ' + pin('Giao máy k') + ' → Xe k ' + pin('Nhận việc'), 'Bộ điều phối ' + pin('Mã vừa giao') + ' → Xe k ' + pin('Số cửa'), 'Xe k ' + pin('Đang bận') + ' → Bộ điều phối ' + pin('Máy k đang bận')]],
+    ] },
+    tram: { crumb: 'Xưởng › Trạm nạp', text: 'Chỉ nạp kiện kế tiếp khi điểm giao đã trống.', cols: [
+      ['Mảnh ghép bên trong', ['Tạo đối tượng: thùng carton, sinh ngẫu nhiên theo loại (màu + kg)', 'Vật thể kiểu "Băng chuyền khung xanh"', 'Vùng kích hoạt + Đọc màu (cổng quét)', 'Cảm biến lực (cân)', 'Tay máy: khớp xoay, thanh nối, tay kẹp', 'Chuỗi bước điều khiển tay máy']],
+      ['Chân ra', [pin('Có kiện chờ') + ' kiện đã nằm ở điểm giao', pin('Loại kiện') + ' số màu 1–5', pin('Khối lượng') + ' kg']],
+      ['Chân vào · thông số mở', [pin('Đã lấy kiện') + ' cho nạp tiếp', 'Số loại, nhịp cấp kiện, hạt giống']],
+    ] },
+    xe: { crumb: 'Xưởng › Xe AGV 3', text: 'Một bảng mạch, tám bản sao. Mỗi bản sao có chỗ đứng và số xe riêng.', cols: [
+      ['Mảnh ghép bên trong', ['Thân robot + 2 động cơ + bánh', 'Nhớ số: giữ số cửa phải tới', 'Tìm mốc sàn: số cửa → vị trí mốc', 'Đi tới điểm: ra lệnh cho hai động cơ', 'Dò phía trước: giữ khoảng cách với xe trước', 'Mâm: khớp xoay + khớp nghiêng + thanh có bề rộng', 'Chuỗi bước: tới cửa → nghiêng mâm → hạ mâm → về điểm giao']],
+      ['Chân vào', [pin('Nhận việc') + ' một nhịp khi được giao', pin('Số cửa') + ' con số đi kèm việc']],
+      ['Chân ra', [pin('Đang bận') + ' bật từ lúc nhận tới lúc về', pin('Đã đổ') + ' một nhịp sau khi đổ xong']],
+    ] },
+    cua: { crumb: 'Xưởng › Cửa thả 2', text: 'Kiện rơi vào được đếm rồi dọn đi, để cửa không bao giờ đầy.', cols: [
+      ['Mảnh ghép bên trong', ['Vật thể kiểu "Cửa thả" có số cửa', 'Vùng kích hoạt: thấy kiện rơi vào', 'Đọc màu: kiện này loại nào', 'So sánh với "Số cửa"', 'Hai Bộ đếm: tổng kiện, kiện sai loại', 'Mảnh dọn kiện sau khi đếm']],
+      ['Chân ra', [pin('Số kiện') + ' tổng đã nhận', pin('Kiện sai loại') + ' phải luôn bằng 0']],
+      ['Thông số mở', [pin('Số cửa') + ' 1–6']],
+    ] },
+  };
+  function show(key) {
+    const d = INSIDE[key];
+    $('inside').innerHTML = '<div class="crumb">' + d.crumb + '</div><p>' + d.text + '</p><div class="cols">' + d.cols.map(([h, items]) => '<div><h3>' + h + '</h3><ul>' + items.map((i) => '<li>' + i + '</li>').join('') + '</ul></div>').join('') + '</div>';
+  }
+  document.querySelectorAll('[data-tab]').forEach((b) => b.addEventListener('click', () => { press('[data-tab]', b); show(b.dataset.tab); }));
+
+  reset(); warm(); show('xuong'); fit(); draw();
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) { running = false; $('play').textContent = 'Chạy'; }
+  requestAnimationFrame((t) => { last = t; requestAnimationFrame(frame); });
+})();
+</script>
+</body></html>

@@ -1,0 +1,1795 @@
+{
+  "format_version": 1,
+  "name": "Factory looks",
+  "mode": "3d",
+  "graph": {
+    "nodes": [
+      {
+        "id": "floor",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 16,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#cfd2d7",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": "go",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 260,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-body",
+        "kind": "robot-body",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 0.12,
+            "z": 2.2
+          },
+          "heading": 0,
+          "length": 0.9,
+          "width": 0.7,
+          "height": 0.24,
+          "mass": 8,
+          "friction": 0.8,
+          "color": "#3b82f6",
+          "look": "agv",
+          "solid": "yes",
+          "maxPayload": 0,
+          "showDistance": "no",
+          "showPayload": "no",
+          "pushObjects": "yes",
+          "showPush": "no",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1
+        },
+        "pos": {
+          "x": 520,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-m-fl",
+        "kind": "motor",
+        "params": {
+          "side": -0.385,
+          "forward": 0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 780,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-m-fr",
+        "kind": "motor",
+        "params": {
+          "side": 0.385,
+          "forward": 0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 1040,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-m-rl",
+        "kind": "motor",
+        "params": {
+          "side": -0.385,
+          "forward": -0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 1300,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-m-rr",
+        "kind": "motor",
+        "params": {
+          "side": 0.385,
+          "forward": -0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 1560,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-angle",
+        "kind": "const",
+        "params": {
+          "value": 25
+        },
+        "pos": {
+          "x": 1820,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-tilt",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": 0,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 200,
+          "maxSpeed": 60,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": -0.37,
+            "y": 0.19499999999999998,
+            "z": 0
+          },
+          "color": "#8b5cf6",
+          "look": "hinge"
+        },
+        "pos": {
+          "x": 2080,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-tray",
+        "kind": "link",
+        "params": {
+          "length": 0.74,
+          "mass": 1,
+          "thickness": 0.05,
+          "solid": "yes",
+          "color": "#a3a3a3",
+          "look": "factory",
+          "width": 0.62
+        },
+        "pos": {
+          "x": 2340,
+          "y": 0
+        }
+      },
+      {
+        "id": "a1-parcel",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 0.45399999999999996,
+            "z": 2.2
+          },
+          "size": {
+            "x": 0.3,
+            "y": 0.22,
+            "z": 0.26
+          },
+          "color": "#ecd2a2",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 0,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-body",
+        "kind": "robot-body",
+        "params": {
+          "position": {
+            "x": -1.2,
+            "y": 0.12,
+            "z": 2.2
+          },
+          "heading": 0,
+          "length": 0.9,
+          "width": 0.7,
+          "height": 0.24,
+          "mass": 8,
+          "friction": 0.8,
+          "color": "#3b82f6",
+          "look": "agv",
+          "solid": "yes",
+          "maxPayload": 0,
+          "showDistance": "no",
+          "showPayload": "no",
+          "pushObjects": "yes",
+          "showPush": "no",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1
+        },
+        "pos": {
+          "x": 260,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-m-fl",
+        "kind": "motor",
+        "params": {
+          "side": -0.385,
+          "forward": 0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 520,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-m-fr",
+        "kind": "motor",
+        "params": {
+          "side": 0.385,
+          "forward": 0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 780,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-m-rl",
+        "kind": "motor",
+        "params": {
+          "side": -0.385,
+          "forward": -0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 1040,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-m-rr",
+        "kind": "motor",
+        "params": {
+          "side": 0.385,
+          "forward": -0.261,
+          "wheelRadius": 0.085,
+          "maxRpm": 120,
+          "accel": 400,
+          "maxForce": 30,
+          "brakeForce": 0,
+          "reverse": "normal",
+          "showTurns": "no",
+          "showSlip": "no"
+        },
+        "pos": {
+          "x": 1300,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-angle",
+        "kind": "const",
+        "params": {
+          "value": 25
+        },
+        "pos": {
+          "x": 1560,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-turn",
+        "kind": "joint",
+        "params": {
+          "axis": "yaw",
+          "start": 90,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 200,
+          "maxSpeed": 60,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0.19499999999999998,
+            "z": 0.31
+          },
+          "color": "#8b5cf6",
+          "look": "hinge"
+        },
+        "pos": {
+          "x": 1820,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-tilt",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": 0,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 200,
+          "maxSpeed": 60,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "color": "#8b5cf6",
+          "look": "hinge"
+        },
+        "pos": {
+          "x": 2080,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-tray",
+        "kind": "link",
+        "params": {
+          "length": 0.62,
+          "mass": 1,
+          "thickness": 0.05,
+          "solid": "yes",
+          "color": "#a3a3a3",
+          "look": "factory",
+          "width": 0.74
+        },
+        "pos": {
+          "x": 2340,
+          "y": 220
+        }
+      },
+      {
+        "id": "a2-parcel",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -1.2,
+            "y": 0.45399999999999996,
+            "z": 2.2
+          },
+          "size": {
+            "x": 0.3,
+            "y": 0.22,
+            "z": 0.26
+          },
+          "color": "#ecd2a2",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 0,
+          "y": 440
+        }
+      },
+      {
+        "id": "arm-base",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 1.4,
+            "y": 0.15,
+            "z": 2.2
+          },
+          "size": {
+            "x": 0.48,
+            "y": 0.3,
+            "z": 0.48
+          },
+          "color": "#a3a3a3",
+          "type": "solid",
+          "style": "arm-base",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 260,
+          "y": 440
+        }
+      },
+      {
+        "id": "a-j1",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": 62,
+          "min": -180,
+          "max": 180,
+          "maxTorque": 2000,
+          "maxSpeed": 90,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0.27,
+            "z": 0
+          },
+          "color": "#8b5cf6",
+          "look": "factory"
+        },
+        "pos": {
+          "x": 520,
+          "y": 440
+        }
+      },
+      {
+        "id": "a-l1",
+        "kind": "link",
+        "params": {
+          "length": 0.8,
+          "mass": 1,
+          "thickness": 0.15,
+          "solid": "no",
+          "color": "#a3a3a3",
+          "look": "factory",
+          "width": 0
+        },
+        "pos": {
+          "x": 780,
+          "y": 440
+        }
+      },
+      {
+        "id": "a-j2",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": -95,
+          "min": -180,
+          "max": 180,
+          "maxTorque": 2000,
+          "maxSpeed": 90,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "color": "#8b5cf6",
+          "look": "factory"
+        },
+        "pos": {
+          "x": 1040,
+          "y": 440
+        }
+      },
+      {
+        "id": "a-l2",
+        "kind": "link",
+        "params": {
+          "length": 0.65,
+          "mass": 1,
+          "thickness": 0.15,
+          "solid": "no",
+          "color": "#a3a3a3",
+          "look": "factory",
+          "width": 0
+        },
+        "pos": {
+          "x": 1300,
+          "y": 440
+        }
+      },
+      {
+        "id": "a-grip",
+        "kind": "gripper",
+        "params": {
+          "defaultForce": 20,
+          "maxForce": 120,
+          "fingerMu": 0.8,
+          "width": 0.27,
+          "grip": "between",
+          "reach": 0.5,
+          "mass": 0.5,
+          "fingers": 2,
+          "color": "#f59e0b",
+          "look": "factory",
+          "fingerSpeed": 1,
+          "showFingerOuts": "no"
+        },
+        "pos": {
+          "x": 1560,
+          "y": 440
+        }
+      },
+      {
+        "id": "p0",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -2.8,
+            "y": 0.093,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.24,
+            "y": 0.18,
+            "z": 0.22
+          },
+          "color": "#ecd2a2",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 1,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 1820,
+          "y": 440
+        }
+      },
+      {
+        "id": "p1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -2.0999999999999996,
+            "y": 0.113,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.3,
+            "y": 0.22,
+            "z": 0.26
+          },
+          "color": "#ef4444",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 2080,
+          "y": 440
+        }
+      },
+      {
+        "id": "p2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -1.4,
+            "y": 0.163,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.42,
+            "y": 0.32,
+            "z": 0.36
+          },
+          "color": "#22c55e",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 5,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 2340,
+          "y": 440
+        }
+      },
+      {
+        "id": "p3",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -0.7,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#facc15",
+          "shape": "crate",
+          "look": "parcel-1",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 0,
+          "y": 660
+        }
+      },
+      {
+        "id": "p4",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#3b82f6",
+          "shape": "crate",
+          "look": "parcel-2",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 260,
+          "y": 660
+        }
+      },
+      {
+        "id": "p5",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 0.7,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#a855f7",
+          "shape": "crate",
+          "look": "parcel-3",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 520,
+          "y": 660
+        }
+      },
+      {
+        "id": "p6",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 1.4,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#f97316",
+          "shape": "crate",
+          "look": "parcel-4",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 780,
+          "y": 660
+        }
+      },
+      {
+        "id": "p7",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 2.0999999999999996,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#ef4444",
+          "shape": "crate",
+          "look": "parcel-5",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 1040,
+          "y": 660
+        }
+      },
+      {
+        "id": "p8",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 2.8,
+            "y": 0.203,
+            "z": 0.2
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.4
+          },
+          "color": "#22c55e",
+          "shape": "crate",
+          "look": "parcel-box",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 1300,
+          "y": 660
+        }
+      },
+      {
+        "id": "deck-l",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -3.31,
+            "y": 0.71,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.48,
+            "y": 0.08,
+            "z": 1.9
+          },
+          "color": "#2c3038",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 1560,
+          "y": 660
+        }
+      },
+      {
+        "id": "deck-r",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -1.8900000000000001,
+            "y": 0.71,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.48,
+            "y": 0.08,
+            "z": 1.9
+          },
+          "color": "#2c3038",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 1820,
+          "y": 660
+        }
+      },
+      {
+        "id": "deck-f",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -2.6,
+            "y": 0.71,
+            "z": -1.69
+          },
+          "size": {
+            "x": 0.94,
+            "y": 0.08,
+            "z": 0.48
+          },
+          "color": "#2c3038",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 2080,
+          "y": 660
+        }
+      },
+      {
+        "id": "deck-b",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -2.6,
+            "y": 0.71,
+            "z": -3.11
+          },
+          "size": {
+            "x": 0.94,
+            "y": 0.08,
+            "z": 0.48
+          },
+          "color": "#2c3038",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 2340,
+          "y": 660
+        }
+      },
+      {
+        "id": "chute",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -2.6,
+            "y": 0.375,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.94,
+            "y": 0.75,
+            "z": 0.94
+          },
+          "color": "#a3a3a3",
+          "type": "pickup",
+          "style": "chute",
+          "signText": "1",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 0,
+          "y": 880
+        }
+      },
+      {
+        "id": "belt",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 1.6,
+            "y": 0.25,
+            "z": -2.4
+          },
+          "size": {
+            "x": 2.4,
+            "y": 0.5,
+            "z": 0.6
+          },
+          "color": "#a3a3a3",
+          "type": "solid",
+          "style": "belt-frame",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0.35,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 260,
+          "y": 880
+        }
+      },
+      {
+        "id": "gate",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 2.08,
+            "y": 0.81,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.14,
+            "y": 0.72,
+            "z": 0.79
+          },
+          "color": "#45e07a",
+          "type": "pickup",
+          "style": "scan-gate",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 520,
+          "y": 880
+        }
+      },
+      {
+        "id": "belt-p1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 0.9000000000000001,
+            "y": 0.614,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.3,
+            "y": 0.22,
+            "z": 0.26
+          },
+          "color": "#ecd2a2",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 2,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 780,
+          "y": 880
+        }
+      },
+      {
+        "id": "belt-p2",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 1.5,
+            "y": 0.594,
+            "z": -2.4
+          },
+          "size": {
+            "x": 0.24,
+            "y": 0.18,
+            "z": 0.22
+          },
+          "color": "#ecd2a2",
+          "shape": "crate",
+          "look": "parcel-carton",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 1,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 1040,
+          "y": 880
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w0",
+        "from": {
+          "node": "a1-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a1-m-fl",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w1",
+        "from": {
+          "node": "a1-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a1-m-fr",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "a1-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a1-m-rl",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "a1-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a1-m-rr",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "a1-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a1-tilt",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "a1-tilt",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "a1-angle",
+          "port": "value"
+        },
+        "to": {
+          "node": "a1-tilt",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "a1-tilt",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a1-tray",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "a2-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a2-m-fl",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "a2-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a2-m-fr",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "a2-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a2-m-rl",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "a2-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a2-m-rr",
+          "port": "body"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "a2-body",
+          "port": "self"
+        },
+        "to": {
+          "node": "a2-turn",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "a2-turn",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "a2-turn",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a2-tilt",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "a2-tilt",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "a2-angle",
+          "port": "value"
+        },
+        "to": {
+          "node": "a2-tilt",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "a2-tilt",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a2-tray",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "arm-base",
+          "port": "self"
+        },
+        "to": {
+          "node": "a-j1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "a-j1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a-l1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "a-l1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a-j2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "a-j2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a-l2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "a-l2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "a-grip",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "a-j1",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "a-j2",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "belt",
+          "port": "run"
+        }
+      }
+    ],
+    "settings": {
+      "wireRule": true,
+      "realPhysics": true
+    }
+  }
+}

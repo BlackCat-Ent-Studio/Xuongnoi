@@ -1,0 +1,14 @@
+import { chromium } from 'file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs';
+const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+const page = await (await browser.newContext({ viewport: { width: 1400, height: 800 }, deviceScaleFactor: 4 })).newPage();
+const logs = [];
+page.on('console', (m) => logs.push(m.text()));
+page.on('pageerror', (e) => logs.push(e.message));
+await page.goto('http://localhost:5202/zz-debug.html');
+await new Promise((r) => setTimeout(r, 6000));
+const base = 'D:/workspace/GameBuilder/plans/reports/shots-pack-vehicles';
+await page.screenshot({ path: `${base}/lineup-cars.png`, clip: { x: 80, y: 200, width: 1160, height: 120 } });
+await page.screenshot({ path: `${base}/lineup-trucks.png`, clip: { x: 60, y: 310, width: 1220, height: 150 } });
+await page.screenshot({ path: `${base}/lineup-bikes.png`, clip: { x: 200, y: 505, width: 500, height: 100 } });
+console.log(logs.join('\n') || 'ok');
+await browser.close();

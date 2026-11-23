@@ -1,0 +1,434 @@
+{
+  "format_version": 1,
+  "name": "Tay khép đẩy thùng",
+  "mode": "3d",
+  "graph": {
+    "nodes": [
+      {
+        "id": "floor",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 30,
+            "y": 1,
+            "z": 30
+          },
+          "color": "#65a30d",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 20,
+          "y": 20
+        }
+      },
+      {
+        "id": "ped",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 0.4,
+            "y": 1,
+            "z": 0.4
+          },
+          "color": "#a3a3a3",
+          "type": "solid",
+          "style": "box",
+          "signText": "",
+          "color1": "#ef4444",
+          "color2": "#facc15",
+          "color3": "#22c55e",
+          "showHiddenOut": "no",
+          "beltSpeed": 0,
+          "beltDir": "x",
+          "beltWalls": "yes",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no"
+        },
+        "pos": {
+          "x": 320,
+          "y": 20
+        }
+      },
+      {
+        "id": "go",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 620,
+          "y": 20
+        }
+      },
+      {
+        "id": "yaw",
+        "kind": "const",
+        "params": {
+          "value": 40
+        },
+        "pos": {
+          "x": 920,
+          "y": 20
+        }
+      },
+      {
+        "id": "down",
+        "kind": "const",
+        "params": {
+          "value": -90
+        },
+        "pos": {
+          "x": 1220,
+          "y": 20
+        }
+      },
+      {
+        "id": "j1",
+        "kind": "joint",
+        "params": {
+          "axis": "yaw",
+          "start": 0,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 80,
+          "maxSpeed": 15,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 2.5,
+            "z": 0
+          },
+          "color": "#8b5cf6"
+        },
+        "pos": {
+          "x": 1520,
+          "y": 20
+        }
+      },
+      {
+        "id": "l1",
+        "kind": "link",
+        "params": {
+          "length": 1,
+          "mass": 0,
+          "thickness": 0.2,
+          "solid": "no",
+          "color": "#a3a3a3"
+        },
+        "pos": {
+          "x": 20,
+          "y": 220
+        }
+      },
+      {
+        "id": "j2",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": -90,
+          "min": -90,
+          "max": 90,
+          "maxTorque": 1000,
+          "maxSpeed": 90,
+          "solid": "no",
+          "tolerance": 1,
+          "mount": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "color": "#8b5cf6"
+        },
+        "pos": {
+          "x": 320,
+          "y": 220
+        }
+      },
+      {
+        "id": "l2",
+        "kind": "link",
+        "params": {
+          "length": 2.4,
+          "mass": 0,
+          "thickness": 0.2,
+          "solid": "no",
+          "color": "#a3a3a3"
+        },
+        "pos": {
+          "x": 620,
+          "y": 220
+        }
+      },
+      {
+        "id": "g",
+        "kind": "gripper",
+        "params": {
+          "defaultForce": 20,
+          "maxForce": 120,
+          "fingerMu": 0.8,
+          "width": 0.1,
+          "grip": "between",
+          "reach": 0.5,
+          "mass": 0,
+          "fingers": 2,
+          "color": "#f59e0b"
+        },
+        "pos": {
+          "x": 920,
+          "y": 220
+        }
+      },
+      {
+        "id": "k",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 1220,
+          "y": 220
+        }
+      },
+      {
+        "id": "c",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 1,
+            "y": 0.2,
+            "z": -0.55
+          },
+          "size": {
+            "x": 0.4,
+            "y": 0.4,
+            "z": 0.6
+          },
+          "color": "#a16207",
+          "shape": "crate",
+          "carryable": "yes",
+          "holdStyle": "head",
+          "damage": 0,
+          "tag": "",
+          "colliderSize": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "colliderOffset": {
+            "x": 0,
+            "y": 0,
+            "z": 0
+          },
+          "gravityScale": 1,
+          "mass": 10,
+          "mu": 0.5,
+          "crushLimit": 0,
+          "showDamagedOut": "no",
+          "showWeightOut": "no",
+          "friction": 10,
+          "bounce": 0
+        },
+        "pos": {
+          "x": 1520,
+          "y": 220
+        }
+      },
+      {
+        "id": "cam",
+        "kind": "camera",
+        "params": {
+          "mode": "fixed",
+          "point": {
+            "x": 0.9,
+            "y": 0.6,
+            "z": -0.5
+          },
+          "zoom": 2.2,
+          "smoothness": 5,
+          "view": "tilted",
+          "shakeTime": 0.5,
+          "shakeStrength": 1
+        },
+        "pos": {
+          "x": 20,
+          "y": 420
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w0",
+        "from": {
+          "node": "ped",
+          "port": "self"
+        },
+        "to": {
+          "node": "j1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w1",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "j1",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "j2",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "yaw",
+          "port": "value"
+        },
+        "to": {
+          "node": "j1",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "down",
+          "port": "value"
+        },
+        "to": {
+          "node": "j2",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "j1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "l1",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "l1",
+          "port": "tip"
+        },
+        "to": {
+          "node": "j2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "j2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "l2",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "l2",
+          "port": "tip"
+        },
+        "to": {
+          "node": "g",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "k",
+          "port": "held"
+        },
+        "to": {
+          "node": "g",
+          "port": "close"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "cam",
+          "port": "on"
+        }
+      }
+    ],
+    "settings": {
+      "wireRule": true,
+      "realPhysics": true
+    }
+  }
+}

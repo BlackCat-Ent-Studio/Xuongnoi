@@ -1,0 +1,171 @@
+<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0"><title>Xưởng phân loại kiện hàng</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: one reading column; the factory flow drawn as a row of machine blocks; pictures in a two-column gallery; state shown as chips. */
+:root {
+  --bg: #eef0f3; --panel: #ffffff; --ink: #1c2330; --muted: #5b6577; --line: #d5d9e0;
+  --agv: #e8830c; --agv-soft: #fdf0dd; --belt: #2a6fd0; --belt-soft: #e4eefb;
+  --ok: #1f8a4c; --ok-soft: #e0f3e7; --run: #b26a00; --run-soft: #fcefd4; --wait: #5b6577; --wait-soft: #e6e9ee; --risk: #b3261e; --risk-soft: #fbe5e3;
+  --body: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161d; --panel: #1b212b; --ink: #e8ecf2; --muted: #9aa5b6; --line: #303947;
+  --agv: #ff9f33; --agv-soft: #3a2a12; --belt: #6ea8ff; --belt-soft: #18283f;
+  --ok: #5fd08c; --ok-soft: #163324; --run: #ffc35c; --run-soft: #3a2c10; --wait: #9aa5b6; --wait-soft: #262e3a; --risk: #ff8a80; --risk-soft: #3d1b19; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1b212b; --ink: #e8ecf2; --muted: #9aa5b6; --line: #303947;
+  --agv: #ff9f33; --agv-soft: #3a2a12; --belt: #6ea8ff; --belt-soft: #18283f;
+  --ok: #5fd08c; --ok-soft: #163324; --run: #ffc35c; --run-soft: #3a2c10; --wait: #9aa5b6; --wait-soft: #262e3a; --risk: #ff8a80; --risk-soft: #3d1b19; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 28px 56px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: flex; flex-direction: column; gap: 36px; }
+h1 { font-size: clamp(1.7rem, 4.5vw, 2.5rem); line-height: 1.15; margin: 0; font-weight: 700; text-wrap: balance; }
+h2 { font-size: 1.3rem; margin: 0 0 4px; font-weight: 700; text-wrap: balance; }
+p { margin: 0; max-width: 66ch; }
+.lead { color: var(--muted); font-size: 1.05rem; }
+.eyebrow { font-family: var(--mono); font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; color: var(--agv); }
+section { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.note { color: var(--muted); font-size: .95rem; }
+
+/* state strip */
+.states { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+.state { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; }
+.state b { font-size: 1.6rem; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.state span { color: var(--muted); font-size: .9rem; }
+
+/* flow */
+.flow { display: flex; flex-wrap: wrap; align-items: stretch; gap: 10px; }
+.machine { flex: 1 1 170px; min-width: 0; background: var(--panel); border: 1px solid var(--line); border-top: 5px solid var(--belt); border-radius: 8px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.machine.agv { border-top-color: var(--agv); }
+.machine h3 { margin: 0; font-size: 1rem; }
+.machine small { color: var(--muted); font-size: .86rem; line-height: 1.45; }
+.count { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.arrow { align-self: center; color: var(--muted); font-size: 1.4rem; flex: 0 0 auto; }
+@media (max-width: 640px) { .arrow { width: 100%; text-align: center; transform: rotate(90deg); } }
+
+.levels { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-family: var(--mono); font-size: .88rem; }
+.levels span { background: var(--belt-soft); color: var(--belt); padding: 4px 10px; border-radius: 6px; }
+.levels i { color: var(--muted); font-style: normal; }
+
+/* gallery */
+.gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; display: flex; flex-direction: column; }
+figure img { display: block; width: 100%; height: auto; }
+figcaption { padding: 10px 14px 12px; font-size: .92rem; }
+figcaption b { display: block; }
+figcaption span { color: var(--muted); }
+figure.wide { grid-column: 1 / -1; }
+
+/* tables */
+.scroll { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; min-width: 560px; font-size: .95rem; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.chip { display: inline-block; white-space: nowrap; font-size: .8rem; font-weight: 600; padding: 2px 9px; border-radius: 999px; }
+.chip.ok { background: var(--ok-soft); color: var(--ok); }
+.chip.run { background: var(--run-soft); color: var(--run); }
+.chip.wait { background: var(--wait-soft); color: var(--wait); }
+.chip.risk { background: var(--risk-soft); color: var(--risk); }
+
+ul { margin: 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 8px; max-width: 70ch; }
+.callout { background: var(--agv-soft); border: 1px solid var(--agv); border-radius: 10px; padding: 14px 16px; }
+.callout p + p { margin-top: 8px; }
+code { font-family: var(--mono); font-size: .88em; background: var(--wait-soft); padding: 1px 6px; border-radius: 4px; }
+footer { color: var(--muted); font-size: .88rem; border-top: 1px solid var(--line); padding-top: 14px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Xưởng Nối · bài mẫu đang dựng · 19-11-2026</div>
+    <h1>Xưởng phân loại kiện hàng</h1>
+    <p class="lead" style="margin-top:10px">Bản thiết kế và tình trạng thật của bài mẫu: băng chuyền đưa kiện tới, cổng quét đọc màu và cân đọc khối lượng, tay máy đặt kiện lên xe, 8 xe AGV chở tới 6 cửa thả rồi đổ ngang. Mọi máy đều ghép từ mảnh ghép, dây nối và bảng mạch; không có code ép.</p>
+  </header>
+
+  <section>
+    <div class="states">
+      <div class="state"><b>77</b><span>mảnh ghép trong bản chính (đầu ngày là 71)</span></div>
+      <div class="state"><b>4228 / 4228</b><span>kiểm thử đạt ở lần chạy toàn bộ gần nhất</span></div>
+      <div class="state"><b>96 ảnh · 0 điểm</b><span>bài cũ so trước và sau khi thêm hình mới: không khác</span></div>
+      <div class="state"><b>3,8 ms</b><span>mỗi nhịp cho 8 xe (trước khi sửa: 22,1 ms)</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Dòng chạy của xưởng</h2>
+    <div class="flow">
+      <div class="machine"><span class="count">×1 · bảng mạch</span><h3>Trạm nạp</h3><small>Máy sinh kiện 2–6 loại → băng chuyền khung xanh → cổng quét màu + cân → tay máy đặt kiện ra điểm giao.</small></div>
+      <div class="arrow">→</div>
+      <div class="machine"><span class="count">×1 · mảnh ghép</span><h3>Bộ điều phối</h3><small>Có kiện chờ thì giao cho xe rảnh, kèm "Mã việc" là số cửa phải tới. Xe bận hết thì việc xếp hàng.</small></div>
+      <div class="arrow">→</div>
+      <div class="machine agv"><span class="count">×8 · bảng mạch</span><h3>Xe AGV</h3><small>Nhớ số cửa, "Đi tới điểm" trên lưới mốc sàn, mâm nghiêng đổ ngang, quay về chờ.</small></div>
+      <div class="arrow">→</div>
+      <div class="machine"><span class="count">×6 · bảng mạch</span><h3>Cửa thả</h3><small>Đếm kiện rơi vào, đọc màu để báo kiện sai loại. Tổng số hiện ở tầng xưởng.</small></div>
+    </div>
+    <div class="levels" aria-label="Các tầng bảng mạch"><span>Xưởng</span><i>›</i><span>Trạm / Xe / Cửa</span><i>›</i><span>Máy bên trong</span><i>›</i><span>Mảnh ghép</span></div>
+    <p class="note">Ở tầng xưởng chỉ thấy khoảng 10–15 khối. Bấm đúp vào một khối để vào xem thẻ và dây bên trong. Sửa bảng mạch "Xe AGV" một lần là cả 8 xe đổi theo.</p>
+    <p class="note">Luật phân loại: theo màu (loại 1…N vào cửa 1…N) và theo khối lượng (kiện nặng quá ngưỡng vào một cửa riêng).</p>
+  </section>
+
+  <section>
+    <h2>Hình bạn đã chọn, chụp từ game thật</h2>
+    <div class="gallery">
+      <figure class="wide"><img src="img/toan-canh.png" alt="Toàn cảnh các vật mới: cửa thả, băng chuyền, kiện hàng, hai xe AGV màu cam, tay máy và lưới mốc sàn đánh số"><figcaption><b>Toàn cảnh bộ hình mới</b><span>Cửa thả, băng chuyền + cổng quét, kiện hàng, xe AGV cam, tay máy, mốc sàn mẫu 2.</span></figcaption></figure>
+      <figure><img src="img/xe-do-ngang.png" alt="Xe AGV màu cam nghiêng mâm sang bên, thùng carton đang trượt"><figcaption><b>Mâm đổ ngang (9b)</b><span>Ghép từ khớp xoay + khớp nghiêng + thanh có bề rộng. Chưa vào bản chính.</span></figcaption></figure>
+      <figure><img src="img/bang-chuyen.png" alt="Băng chuyền khung xanh với gờ thấp, thùng 2 kg đi qua cổng quét vàng"><figcaption><b>Băng chuyền, thành thấp (11B)</b><span>Gờ 7 cm, thùng không còn bị che. Đã vào bản chính.</span></figcaption></figure>
+      <figure><img src="img/kien-hang.png" alt="Dãy kiện hàng: thùng carton có nhãn kg và các kiện màu"><figcaption><b>Kiện hàng (7a)</b><span>Xưởng dùng thùng carton, băng keo theo màu loại.</span></figcaption></figure>
+      <figure><img src="img/xep-chong.png" alt="Trình sửa: khối Xe AGV xếp chồng ×8 và danh sách 8 máy ở cột phải"><figcaption><b>Xếp chồng "Xe AGV ×8"</b><span>Tám máy giống nhau gom thành một khối, bung ra khi cần.</span></figcaption></figure>
+      <figure><img src="img/bang-8-xe.png" alt="Trình sửa: bảng chính với các khối Xe AGV kiểu thẻ thiết bị"><figcaption><b>Khối máy kiểu B</b><span>Mỗi xe là một "thẻ thiết bị" có chân vào/ra và nút Mở.</span></figcaption></figure>
+      <figure><img src="img/ban-thu.png" alt="Trình sửa: bên trong bảng mạch Xe AGV với dải bàn thử ở dưới"><figcaption><b>"Chạy thử máy này"</b><span>Chạy riêng một máy, gạt chân vào bằng tay, xem chân ra.</span></figcaption></figure>
+    </div>
+  </section>
+
+  <section>
+    <h2>Tình trạng từng phần</h2>
+    <div class="scroll"><table>
+      <thead><tr><th>Phần</th><th>Tình trạng</th><th>Ghi chú</th></tr></thead>
+      <tbody>
+        <tr><td>Lõi bảng mạch nhiều tầng</td><td><span class="chip ok">Xong</span></td><td>Trong bản chính</td></tr>
+        <tr><td>Trình sửa bảng mạch (2 phần)</td><td><span class="chip ok">Xong</span></td><td>Vào/ra tầng, chân, thông số mở, bàn thử, xuất/nhập tệp, mạch mẫu</td></tr>
+        <tr><td>Mảnh mới: Nhớ số, Bộ điều phối, Đọc màu 6 màu</td><td><span class="chip ok">Xong</span></td><td>Trong bản chính</td></tr>
+        <tr><td>Xe tự đi: Đi tới điểm, Mốc sàn, Đọc mốc, Tìm mốc</td><td><span class="chip ok">Xong</span></td><td>Dừng cách tâm mốc khoảng 2 cm</td></tr>
+        <tr><td>Hình mới (xe, tay máy, kiện, cửa thả, băng chuyền, mốc)</td><td><span class="chip ok">Xong</span></td><td>Là tuỳ chọn, bài cũ giữ nguyên</td></tr>
+        <tr><td>Tốc độ engine cho 8 xe</td><td><span class="chip ok">Xong</span></td><td>Chưa đo phần vẽ hình trên máy bạn</td></tr>
+        <tr><td>Bảng mạch "Trạm nạp" và "Cửa thả"</td><td><span class="chip run">Dở dang</span></td><td>Đã có bản đầu trên nhánh riêng, bài kiểm thử chưa xong, chưa vào bản chính</td></tr>
+        <tr><td>Thân xe va chạm xoay theo xe + mâm đổ ngang</td><td><span class="chip run">Dở dang</span></td><td>Làm được, nhưng thùng trên sàn xe trần bị trôi. Lần thử khử trôi đang dở</td></tr>
+        <tr><td>Bảng mạch "Xe AGV" và đội 8 xe</td><td><span class="chip wait">Chưa bắt đầu</span></td><td>Chờ hai phần dở dang ở trên</td></tr>
+        <tr><td>Bài mẫu trong menu "Bài mẫu"</td><td><span class="chip wait">Chưa có</span></td><td>Sẽ đưa phần trạm vào trước để bạn mở xem</td></tr>
+        <tr><td>3 bài học "Bảng mạch"</td><td><span class="chip wait">Chưa bắt đầu</span></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </section>
+
+  <section>
+    <h2>Rủi ro và giới hạn đã biết</h2>
+    <ul>
+      <li><span class="chip risk">Lớn nhất</span> Giao thông 8 xe chưa từng được thử. Mới thử 2 và 4 xe: đường một chiều và nhường bên phải thì ổn; hai xe đối đầu trong một làn thì đứng im; có lúc hai xe chỉ cách nhau 7–14 mm ở ngã tư. Phương án dự phòng là chạy theo vạch sơn.</li>
+      <li>Xe chỉ chạy đường thẳng tới đích, chưa biết vòng qua vật cản.</li>
+      <li>Gom thẻ thành bảng mạch đôi khi đổi thứ tự chạy của các thẻ. Mọi con số vẫn giống, trừ bảng có dây nối vòng thiếu cổng phản hồi.</li>
+      <li>Hai bài học mới ("Chia việc cho hai máy", "Robot tự tới mốc") bạn chưa xem.</li>
+      <li>Lần bấm "Từng bước" đầu tiên sau khi mở trang, ở bảng bật "Vật lý thật", không dừng từng bước. Lỗi có từ trước, chưa sửa.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Làm tiếp theo thứ tự này</h2>
+    <ul>
+      <li>Hoàn tất "Trạm nạp" và "Cửa thả", đưa vào menu "Bài mẫu" với tên ghi rõ đang dựng, để bạn mở xem.</li>
+      <li>Kết thúc lần thử khử trôi thùng. Không được thì quay lại hỏi bạn chọn <code>10b</code> hay <code>10c</code>.</li>
+      <li>Dựng bảng mạch "Xe AGV", thử giao thông với 8 xe ngay từ đầu.</li>
+      <li>Ghép cả xưởng, chạy phép thử "cắt từng dây thì xưởng phải hỏng", rồi bạn tự mở xem.</li>
+      <li>3 bài học, đo tốc độ trên máy bạn, thử các trình duyệt.</li>
+    </ul>
+    <div class="callout">
+      <p><b>Vì sao đang dừng:</b> hai agent đang làm dở thì tài khoản hết hạn mức tuần của Fable 5.2. Hạn mức mở lại lúc 2 giờ sáng 22-11 (giờ Việt Nam). Phần đã làm vẫn nằm nguyên trên hai nhánh riêng, không mất.</p>
+    </div>
+  </section>
+
+  <footer>Bản chính hiện tại: <code>3acb3da</code>, chạy trên máy của bạn ở cổng 5173, chưa đưa lên mạng. Các đường link localhost chỉ mở được trên máy đó.</footer>
+</div>
+</body></html>

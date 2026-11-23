@@ -1,0 +1,232 @@
+{
+ "5": {
+  "before": {
+   "ww": 20,
+   "wc": 14,
+   "total": 34,
+   "bounds": {
+    "x": 10,
+    "y": 10,
+    "w": 638,
+    "h": 644
+   }
+  },
+  "after": {
+   "ww": 5,
+   "wc": 0,
+   "total": 5,
+   "bounds": {
+    "x": 24,
+    "y": 24,
+    "w": 1022,
+    "h": 599
+   }
+  },
+  "current": {
+   "ww": 20,
+   "wc": 14,
+   "total": 34
+  },
+  "shown": {
+   "ww": 5,
+   "wc": 0,
+   "total": 5
+  },
+  "solo": {
+   "pins": {
+    "ww": 16,
+    "wc": 14,
+    "total": 30,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 638,
+     "h": 644
+    }
+   },
+   "avoid": {
+    "ww": 13,
+    "wc": 0,
+    "total": 13,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 638,
+     "h": 644
+    }
+   },
+   "arrange": {
+    "ww": 15,
+    "wc": 12,
+    "total": 27,
+    "bounds": {
+     "x": 24,
+     "y": 24,
+     "w": 952,
+     "h": 599
+    }
+   },
+   "labels": {
+    "ww": 13,
+    "wc": 11,
+    "total": 24,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 638,
+     "h": 644
+    }
+   },
+   "pins_avoid": {
+    "ww": 15,
+    "wc": 0,
+    "total": 15,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 638,
+     "h": 644
+    }
+   },
+   "arrange_avoid_pins": {
+    "ww": 7,
+    "wc": 0,
+    "total": 7,
+    "bounds": {
+     "x": 24,
+     "y": 24,
+     "w": 952,
+     "h": 599
+    }
+   }
+  }
+ },
+ "7": {
+  "before": {
+   "ww": 12,
+   "wc": 20,
+   "total": 32,
+   "bounds": {
+    "x": 10,
+    "y": 10,
+    "w": 978,
+    "h": 854
+   }
+  },
+  "after": {
+   "ww": 5,
+   "wc": 0,
+   "total": 5,
+   "bounds": {
+    "x": 24,
+    "y": 24,
+    "w": 1020,
+    "h": 713
+   }
+  },
+  "current": {
+   "ww": 12,
+   "wc": 20,
+   "total": 32
+  },
+  "shown": {
+   "ww": 5,
+   "wc": 0,
+   "total": 5
+  },
+  "solo": {
+   "pins": {
+    "ww": 14,
+    "wc": 17,
+    "total": 31,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 978,
+     "h": 854
+    }
+   },
+   "avoid": {
+    "ww": 32,
+    "wc": 0,
+    "total": 32,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 978,
+     "h": 854
+    }
+   },
+   "arrange": {
+    "ww": 17,
+    "wc": 15,
+    "total": 32,
+    "bounds": {
+     "x": 24,
+     "y": 24,
+     "w": 952,
+     "h": 713
+    }
+   },
+   "labels": {
+    "ww": 10,
+    "wc": 17,
+    "total": 27,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 978,
+     "h": 854
+    }
+   },
+   "pins_avoid": {
+    "ww": 35,
+    "wc": 0,
+    "total": 35,
+    "bounds": {
+     "x": 10,
+     "y": 10,
+     "w": 978,
+     "h": 854
+    }
+   },
+   "arrange_avoid_pins": {
+    "ww": 9,
+    "wc": 0,
+    "total": 9,
+    "bounds": {
+     "x": 24,
+     "y": 24,
+     "w": 952,
+     "h": 713
+    }
+   }
+  }
+ },
+ "knots": {
+  "sw9": [
+   {
+    "x": 536,
+    "y": 72
+   }
+  ]
+ },
+ "knotCounts": {
+  "ww": 11,
+  "wc": 0,
+  "total": 11
+ },
+ "knotsAfterRemove": {},
+ "phoneFocus": {
+  "node": "s-find",
+  "dimmed": 12
+ },
+ "phoneKnot": {
+  "sw5": [
+   {
+    "x": 536,
+    "y": 272
+   }
+  ]
+ }
+}

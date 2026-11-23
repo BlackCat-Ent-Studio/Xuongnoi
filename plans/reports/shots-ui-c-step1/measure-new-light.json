@@ -1,0 +1,156 @@
+{
+ "label": "new",
+ "theme": "light",
+ "samples": {
+  "student": {
+   "Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)": {
+    "cards": 19,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 194,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 6.15385, 6.15385)"
+   },
+   "Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)": {
+    "cards": 50,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 114,
+    "worstEndErrorPx": 0,
+    "avgCardH": 188,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 6.15385, 6.15385)"
+   },
+   "Robot đi hình vuông (quãng đường, chênh lệch góc, chuỗi bước, 3D)": {
+    "cards": 32,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 80,
+    "worstEndErrorPx": 0,
+    "avgCardH": 178,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 356.107, 6.15385)"
+   },
+   "Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn thật)": {
+    "cards": 26,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 220,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 14.6154, 14.6154)"
+   },
+   "Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)": {
+    "cards": 41,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 108,
+    "worstEndErrorPx": 0,
+    "avgCardH": 228,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 14.6154, 14.6154)"
+   },
+   "Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)": {
+    "cards": 31,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 62,
+    "worstEndErrorPx": 0,
+    "avgCardH": 214,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 14.6154, 14.6154)"
+   },
+   "Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)": {
+    "cards": 15,
+    "overlaps": 1,
+    "pairs": [
+     "grp-tram/grp-tay 12x328"
+    ],
+    "wireEnds": 76,
+    "worstEndErrorPx": 0,
+    "avgCardH": 318,
+    "zoom": "matrix(0.846154, 0, 0, 0.846154, 6.15385, 6.15385)"
+   }
+  },
+  "teacher": {
+   "Robot dò đường (3 mắt dò line, bộ PID, 2 động cơ, đường số 8, 3D)": {
+    "cards": 19,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 142,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 3.33333, 3.33333)"
+   },
+   "Robot tránh vật cản (3 mắt dò phía trước, 2 động cơ, phòng có tường và hộp, 3D)": {
+    "cards": 50,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 114,
+    "worstEndErrorPx": 0,
+    "avgCardH": 138,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 3.33333, 3.33333)"
+   },
+   "Robot đi hình vuông (quãng đường, chênh lệch góc, chuỗi bước, 3D)": {
+    "cards": 32,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 80,
+    "worstEndErrorPx": 0,
+    "avgCardH": 131,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 3.33333, 3.33333)"
+   },
+   "Cửa tự động (người tới, cảm biến vùng, hẹn giờ, khớp xoay nâng thanh chắn thật)": {
+    "cards": 26,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 52,
+    "worstEndErrorPx": 0,
+    "avgCardH": 161,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 12.5, 12.5)"
+   },
+   "Tay máy tự gắp và đặt (chuỗi bước, bảng giá trị góc dạy sẵn, lực kẹp, thùng dễ vỡ)": {
+    "cards": 41,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 108,
+    "worstEndErrorPx": 0,
+    "avgCardH": 166,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 12.5, 12.5)"
+   },
+   "Băng chuyền phân loại theo cân nặng (thùng ngẫu nhiên, cân, so sánh, xi lanh đẩy)": {
+    "cards": 31,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 62,
+    "worstEndErrorPx": 0.1,
+    "avgCardH": 157,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 12.5, 12.5)"
+   },
+   "Xe tự hành chở hàng (AGV: bám line, tay máy nạp hàng, xi lanh dỡ hàng, quá tải, 3D)": {
+    "cards": 15,
+    "overlaps": 0,
+    "pairs": [],
+    "wireEnds": 76,
+    "worstEndErrorPx": 0.1,
+    "avgCardH": 232,
+    "zoom": "matrix(0.916667, 0, 0, 0.916667, 3.33333, 3.33333)"
+   }
+  }
+ },
+ "ui": {
+  "student": {
+   "minFont": 12,
+   "minEl": "span.pip-chip \"Đang sửa\"",
+   "textBelow12": {},
+   "minHit": 28,
+   "minHitEl": "button.pn-jump 195x28",
+   "hitBelow24": {}
+  },
+  "teacher": {
+   "minFont": 12,
+   "minEl": "button.btn \"📘 Hướng dẫn\"",
+   "textBelow12": {},
+   "minHit": 24,
+   "minHitEl": "div.wc-port in 182x24",
+   "hitBelow24": {}
+  }
+ }
+}

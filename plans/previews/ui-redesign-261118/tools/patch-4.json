@@ -1,0 +1,4 @@
+[
+["display: grid; grid-template-rows: var(--topH) minmax(0, 1fr); overflow: hidden; font-variant-numeric: tabular-nums; }", "display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: var(--topH) minmax(0, 1fr); overflow: hidden; font-variant-numeric: tabular-nums; }"],
+[".ph-wrap { display: flex; flex-direction: column; min-height: 0;", ".ph-wrap { display: flex; flex-direction: column; min-height: 0; min-width: 0;"]
+]

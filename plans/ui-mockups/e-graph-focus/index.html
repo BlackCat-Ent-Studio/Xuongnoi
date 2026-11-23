@@ -1,0 +1,1169 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Nối · Tập trung nối dây (mockup E)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap&subset=vietnamese" rel="stylesheet">
+<!--
+  MOCKUP E: "Tập trung nối dây"
+  Annotation for developers:
+  - Shell = top bar (44px, never wraps) + main row: icon rail | palette drawer | graph stage | game dock | inspector.
+  - Layout presets set body[data-layout] = wire | play | balance. Panels move via CSS + the #game element is re-parented.
+  - Graph world = one transformed div (translate + scale). Wires are an SVG inside it, recomputed from port dot rects.
+  - Port types carry colour AND shape: Đúng/Sai = circle, Số = diamond, Vật thể = square. Category colours only tint icons.
+  - The game reads the graph live (wires and numbers), so beginners see cause and effect.
+-->
+<style>
+:root{
+  --bg:#0F1216; --panel:#151920; --panel-2:#1A1F27; --raised:#20262F; --raised-2:#272E39;
+  --line:#2A313C; --line-2:#3A4250; --text:#E9EDF3; --text-2:#B4BDC9; --text-3:#8F9AAA;
+  --accent:#FF8A3D; --accent-hi:#FFA368; --accent-ink:#1E1006; --accent-soft:rgba(255,138,61,.14);
+  --warn:#FFCC4D; --warn-bg:#3A2D0C; --err:#FF7070; --ok:#3FD68A;
+  --t-bool:#3FD68A; --t-num:#5B9DFF; --t-obj:#FF6FA8;
+  --c-input:#C3B4FF; --c-logic:#D3DAE3; --c-math:#66E3D3; --c-object:#FFC08A; --c-action:#F2E07A; --c-brain:#FF9F86; --c-output:#9ED8FF;
+  --r-s:6px; --r-m:10px; --r-l:14px;
+  --shadow:0 10px 28px -8px rgba(4,6,10,.65), 0 2px 6px rgba(4,6,10,.4);
+  --font:"Be Vietnam Pro", system-ui, "Segoe UI", sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font:400 14px/1.5 var(--font);overflow:hidden;
+  -webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;font-variant-numeric:tabular-nums}
+input,textarea{user-select:text;-webkit-user-select:text}
+::selection{background:rgba(255,138,61,.35);color:#fff}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+button:disabled{cursor:not-allowed}
+:focus-visible{outline:2px solid var(--accent-hi);outline-offset:2px;border-radius:6px}
+svg{display:block;flex:none}
+.ico{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.ico.sm{width:16px;height:16px}
+.ico.fill{fill:currentColor;stroke:none}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:#2E3541;border-radius:10px;border:3px solid transparent;background-clip:content-box}
+*::-webkit-scrollbar-thumb:hover{background-color:#3D4654}
+*::-webkit-scrollbar-track{background:transparent}
+kbd{font:600 11px/1 var(--font);padding:3px 5px;border-radius:4px;background:var(--raised-2);border:1px solid var(--line-2);color:var(--text-2)}
+
+/* ---------- top bar ---------- */
+.top{height:44px;display:flex;align-items:center;gap:10px;padding:0 10px;background:var(--panel);border-bottom:1px solid var(--line);
+  flex-wrap:nowrap;white-space:nowrap;position:relative;z-index:30}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:14px;letter-spacing:-.01em;flex:none}
+.brand .mark{width:26px;height:26px;border-radius:7px;background:var(--accent);display:grid;place-items:center;color:var(--accent-ink)}
+.tbtn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:var(--r-s);color:var(--text-2);font-weight:500;font-size:13px;flex:none}
+.tbtn:hover{background:var(--raised);color:var(--text)}
+.tbtn.icon{width:30px;padding:0;justify-content:center}
+.tbtn:disabled{opacity:.4;background:none}
+.name{flex:0 1 200px;min-width:90px;height:30px;border:1px solid transparent;background:transparent;color:var(--text);font:600 13px var(--font);
+  border-radius:var(--r-s);padding:0 8px;text-overflow:ellipsis}
+.name:hover{border-color:var(--line-2)} .name:focus{outline:none;border-color:var(--accent);background:var(--bg)}
+.sep{width:1px;height:20px;background:var(--line);flex:none}
+.spacer{flex:1 1 0;min-width:4px}
+.seg{display:flex;padding:3px;gap:2px;background:var(--bg);border:1px solid var(--line);border-radius:8px;flex:none}
+.seg button{height:24px;padding:0 10px;border-radius:5px;font-size:12.5px;font-weight:500;color:var(--text-2);display:flex;align-items:center;gap:6px}
+.seg button:hover{color:var(--text)}
+.seg button[aria-pressed=true]{background:var(--raised-2);color:var(--text);box-shadow:inset 0 0 0 1px var(--line-2)}
+.play-group{display:flex;gap:4px;flex:none}
+.pbtn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 11px;border-radius:var(--r-s);font-weight:600;font-size:13px;
+  background:var(--raised);color:var(--text);border:1px solid var(--line-2);transition:background .15s,transform .1s}
+.pbtn:hover:not(:disabled){background:var(--raised-2)}
+.pbtn:active:not(:disabled){transform:translateY(1px)}
+.pbtn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.pbtn.primary:hover:not(:disabled){background:var(--accent-hi)}
+.pbtn:disabled{opacity:.42}
+.save{display:flex;align-items:center;gap:6px;color:var(--text-3);font-size:12.5px;flex:none}
+.save .ico{color:var(--ok)}
+.kbtn{height:30px;display:inline-flex;align-items:center;gap:8px;padding:0 6px 0 10px;border-radius:var(--r-s);border:1px solid var(--line-2);
+  color:var(--text-3);font-size:12.5px;flex:none;background:var(--bg)}
+.kbtn:hover{color:var(--text);border-color:#4A5362}
+
+/* ---------- main row ---------- */
+.main{position:absolute;top:44px;left:0;right:0;bottom:0;display:flex}
+.rail{width:52px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;align-items:center;padding:8px 0;gap:4px;z-index:6}
+.rbtn{width:38px;height:38px;border-radius:9px;display:grid;place-items:center;color:var(--text-3);position:relative}
+.rbtn:hover{background:var(--raised);color:var(--text)}
+.rbtn[aria-pressed=true]{background:var(--raised-2);color:var(--text)}
+.rbtn .ico{color:var(--c,currentColor)}
+.rail .grow{flex:1}
+.rail hr{width:24px;border:0;border-top:1px solid var(--line);margin:4px 0}
+.tip{position:fixed;z-index:80;pointer-events:none;background:#0A0C10;border:1px solid var(--line-2);color:var(--text);font-size:12.5px;padding:5px 8px;border-radius:6px;white-space:nowrap;opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+
+/* palette drawer */
+.drawer{width:256px;flex:none;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0;
+  transition:margin-left .22s var(--ease);z-index:5}
+body.drawer-off .drawer{margin-left:-256px}
+.dhead{padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.dtitle{display:flex;align-items:center;justify-content:space-between}
+.dtitle h2{margin:0;font-size:13px;font-weight:600}
+.dtitle span{color:var(--text-3);font-size:12px}
+.search{position:relative}
+.search .ico{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-3)}
+.search input{width:100%;height:34px;border-radius:8px;border:1px solid var(--line-2);background:var(--bg);color:var(--text);font:400 13.5px var(--font);padding:0 30px 0 34px}
+.search input::placeholder{color:var(--text-3)}
+.search input:focus{outline:none;border-color:var(--accent)}
+.search .clear{position:absolute;right:4px;top:50%;transform:translateY(-50%);width:26px;height:26px;border-radius:6px;display:none;place-items:center;color:var(--text-3)}
+.search.has .clear{display:grid}
+.dlist{overflow:auto;flex:1;min-height:0;padding:0 6px 12px}
+.cat{margin-top:2px}
+.cat-h{position:sticky;top:0;z-index:2;width:100%;display:flex;align-items:center;gap:8px;height:34px;padding:0 8px;background:var(--panel);
+  color:var(--text);font-weight:600;font-size:12.5px;border-radius:6px}
+.cat-h:hover{background:var(--panel-2)}
+.cat-h .ico{color:var(--c)}
+.cat-h .n{margin-left:auto;color:var(--text-3);font-weight:500}
+.cat-h .chev{transition:transform .18s;color:var(--text-3)}
+.cat[data-open=false] .chev{transform:rotate(-90deg)}
+.cat[data-open=false] ul{display:none}
+.cat ul{list-style:none;margin:0;padding:2px 0 6px}
+.item{width:100%;display:grid;grid-template-columns:30px 1fr;gap:10px;align-items:start;text-align:left;padding:7px 8px;border-radius:8px;cursor:grab}
+.item:hover{background:var(--raised)}
+.item:active{cursor:grabbing}
+.chip{width:30px;height:30px;border-radius:8px;background:var(--raised-2);display:grid;place-items:center;color:var(--c)}
+.item b{display:block;font-weight:600;font-size:13px;color:var(--text);line-height:1.3}
+.item small{display:block;font-size:12px;color:var(--text-3);line-height:1.4}
+.item mark{background:rgba(255,138,61,.28);color:inherit;border-radius:2px}
+.noresult{padding:18px 10px;color:var(--text-2);font-size:13px}
+.noresult b{color:var(--text)}
+.dfoot{border-top:1px solid var(--line);padding:9px 12px;color:var(--text-3);font-size:12px;display:flex;gap:6px;align-items:center}
+
+/* ---------- stage ---------- */
+.stage{position:relative;flex:1 1 auto;min-width:0;overflow:hidden;background-color:#11151A;
+  background-image:radial-gradient(circle at 1px 1px,#252C36 1px,transparent 1.4px);background-size:24px 24px;cursor:default;touch-action:none}
+.stage.panning{cursor:grabbing}
+.world{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0}
+.wires{position:absolute;left:0;top:0;width:1px;height:1px;overflow:visible;pointer-events:none}
+.wires path.w{fill:none;stroke-width:2.4;opacity:.9}
+.wires path.hit{fill:none;stroke:transparent;stroke-width:14;pointer-events:stroke;cursor:pointer}
+.wires path.w.sel{stroke-width:4;opacity:1}
+.wires path.ghost{fill:none;stroke:var(--warn);stroke-width:2;stroke-dasharray:6 6;opacity:.85}
+.wires path.temp{fill:none;stroke-width:2.4;stroke-dasharray:2 0}
+.wires .badge rect{fill:#0B0E12;stroke:var(--line-2)}
+.wires .badge text{fill:var(--text);font:600 12px var(--font)}
+
+.node{position:absolute;min-width:216px;background:var(--panel-2);border:1px solid var(--line-2);border-radius:var(--r-m);box-shadow:var(--shadow);
+  transition:box-shadow .15s, border-color .15s}
+.node.glide{transition:left .32s var(--ease),top .32s var(--ease)}
+.node.sel{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent),var(--shadow)}
+.node.flash{animation:flash 1.1s var(--ease)}
+@keyframes flash{0%{box-shadow:0 0 0 6px rgba(255,138,61,.5),var(--shadow)}100%{box-shadow:0 0 0 0 rgba(255,138,61,0),var(--shadow)}}
+.node.fire .nh{background:#2A3240}
+.nh{display:flex;align-items:center;gap:9px;padding:9px 10px 8px;border-bottom:1px solid var(--line);cursor:grab;border-radius:var(--r-m) var(--r-m) 0 0;transition:background .2s}
+.nh:active{cursor:grabbing}
+.nh .chip{width:28px;height:28px;border-radius:7px}
+.nh .tt{min-width:0;flex:1}
+.nh .tt b{display:block;font-size:14px;font-weight:600;line-height:1.25;white-space:nowrap}
+.nh .tt small{display:block;font-size:12px;color:var(--text-3);line-height:1.3;white-space:nowrap}
+.miss[hidden]{display:none}
+.miss{display:inline-flex;align-items:center;gap:4px;height:22px;padding:0 7px;border-radius:999px;background:var(--warn-bg);color:var(--warn);font-size:11.5px;font-weight:600;white-space:nowrap;flex:none}
+.nb{padding:6px 0 8px}
+.port{position:relative;display:flex;align-items:center;gap:8px;height:28px;padding:0 14px;font-size:13.5px;color:var(--text-2);white-space:nowrap;cursor:crosshair}
+.port:hover{background:rgba(255,255,255,.035);color:var(--text)}
+.port.out{justify-content:flex-end}
+.port .dot{position:absolute;top:50%;width:12px;height:12px;margin-top:-6px;background:var(--tc);border:2px solid var(--panel-2);box-sizing:content-box}
+.port.in .dot{left:-8px} .port.out .dot{right:-8px}
+.dot.t-bool{--tc:var(--t-bool);border-radius:50%}
+.dot.t-num{--tc:var(--t-num);transform:rotate(45deg) scale(.86);border-radius:2px}
+.dot.t-obj{--tc:var(--t-obj);border-radius:2px}
+.port.missing .dot{background:var(--panel-2);box-shadow:inset 0 0 0 2px var(--tc)}
+.port .req{font-size:11px;color:var(--warn);font-weight:600}
+.port.missing{color:var(--text)}
+.nsplit{height:1px;background:var(--line);margin:5px 12px}
+.prop{display:flex;align-items:center;justify-content:space-between;height:28px;margin:2px 10px;padding:0 8px;border-radius:6px;background:var(--bg);font-size:12.5px;color:var(--text-3)}
+.prop b{color:var(--text);font-weight:600}
+.suggest{margin:6px 10px 2px;padding:8px;border-radius:8px;background:var(--warn-bg);color:#FFE4A0;font-size:12.5px;line-height:1.4;white-space:nowrap}
+.suggest .row{display:flex;align-items:center;gap:8px;margin-top:6px}
+.btn-help{height:26px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:6px;background:var(--warn);color:#2A1E00;font-weight:600;font-size:12.5px}
+.btn-help:hover{background:#FFD872}
+/* wire drag affordances */
+.dragging-wire .port.ok .dot{animation:pulse 1s ease-in-out infinite}
+.dragging-wire .port.no{opacity:.32}
+.dragging-wire .port.snap{background:rgba(255,255,255,.07);color:var(--text)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(255,255,255,.0)}50%{box-shadow:0 0 0 5px rgba(255,255,255,.22)}}
+.shake{animation:shake .38s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-6px)}40%{transform:translateX(5px)}60%{transform:translateX(-4px)}80%{transform:translateX(2px)}}
+/* semantic zoom: when far, hide labels, keep titles readable */
+.far .port span,.far .prop,.far .suggest .row{visibility:hidden}
+.far .nh .tt b{font-size:18px}
+
+/* stage overlays */
+.ov{position:absolute;z-index:8}
+.tut{left:12px;top:12px;width:min(540px,calc(100% - 240px));min-width:300px;background:var(--panel);border:1px solid var(--line-2);border-radius:var(--r-l);box-shadow:var(--shadow);padding:12px 14px 12px}
+.tut header{display:flex;align-items:center;gap:10px;white-space:nowrap}
+.tut header b{font-size:13px;font-weight:600}
+.tut header span{color:var(--text-3);font-size:12px}
+.tut .body{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:flex-end;margin-top:8px}
+.tut .body p{flex:1 1 250px;min-width:0}
+.tut .acts{flex:none}
+.steps{display:flex;gap:4px;flex:1;max-width:160px}
+.steps i{flex:1;height:4px;border-radius:4px;background:var(--line-2)}
+.steps i.done{background:var(--ok)} .steps i.now{background:var(--accent)}
+.tut p{margin:0;font-size:13.5px;line-height:1.5;color:var(--text)}
+.tut p em{font-style:normal;font-weight:600;color:var(--accent-hi)}
+.tut .acts{display:flex;gap:6px;align-items:center}
+.gbtn{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:7px;font-size:12.5px;font-weight:600;color:var(--text-2);border:1px solid var(--line-2);background:var(--raised)}
+.gbtn:hover{color:var(--text);background:var(--raised-2)}
+.gbtn.acc{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.gbtn.acc:hover{background:var(--accent-hi)}
+.gbtn.danger{color:#FFB3B3;border-color:#5A2A2E;background:transparent}
+.gbtn.danger:hover{background:#2A1517;color:#FFD0D0}
+.tut.min{width:auto;min-width:0;padding:6px 6px 6px 12px}
+.tut.min .steps{display:none}
+.tut.min .body{display:none}
+.tut .mintoggle{margin-left:4px}
+.tools{left:12px;bottom:12px;display:flex;gap:8px;align-items:flex-end}
+.zoom{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line-2);border-radius:10px;padding:3px;box-shadow:var(--shadow)}
+.zoom button{width:34px;height:32px;border-radius:7px;display:grid;place-items:center;color:var(--text-2)}
+.zoom button:hover{background:var(--raised);color:var(--text)}
+.zoom .pct{font-size:11.5px;font-weight:600;color:var(--text-2);height:26px}
+.zoom hr{border:0;border-top:1px solid var(--line);margin:2px 4px}
+.mini{background:var(--panel);border:1px solid var(--line-2);border-radius:10px;box-shadow:var(--shadow);padding:6px;width:188px}
+.mini canvas{display:block;width:176px;height:96px;border-radius:6px;background:#0D1014;cursor:pointer}
+.legend{display:flex;gap:10px;padding:6px 2px 0;font-size:11.5px;color:var(--text-2);white-space:nowrap}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend .dot{position:static;margin:0;width:9px;height:9px;border:0;background:var(--tc)}
+.legend .dot.t-num{transform:rotate(45deg) scale(.86)}
+.issues{right:12px;top:12px;display:flex;gap:6px}
+.ichip{height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 10px;border-radius:8px;background:var(--panel);border:1px solid var(--line-2);font-size:12.5px;font-weight:600;color:var(--text-2);box-shadow:var(--shadow)}
+.ichip.warn{color:var(--warn);border-color:#5C4A16}
+.ichip.okc{color:var(--ok)}
+.coach{left:12px;bottom:170px;font-size:12.5px;color:var(--text-2);background:var(--panel);border:1px solid var(--line-2);border-radius:8px;padding:6px 6px 6px 10px;display:flex;gap:8px;align-items:center;box-shadow:var(--shadow)}
+.coach button{width:24px;height:24px;border-radius:5px;display:grid;place-items:center;color:var(--text-3)}
+.coach button:hover{background:var(--raised);color:var(--text)}
+.toast{left:12px;top:12px;transform:translateY(-6px);opacity:0;pointer-events:none;max-width:min(460px,calc(100% - 24px));z-index:20;
+  background:#0B0E12;border:1px solid var(--line-2);border-radius:10px;padding:9px 12px;display:flex;gap:9px;align-items:flex-start;font-size:13px;line-height:1.45;box-shadow:var(--shadow);
+  transition:opacity .18s,transform .22s var(--ease)}
+.toast.on{opacity:1;transform:translateY(0)}
+.toast .ico{margin-top:1px}
+.toast.ok .ico{color:var(--ok)} .toast.err .ico{color:var(--err)} .toast.warn .ico{color:var(--warn)} .toast.info .ico{color:var(--t-num)}
+.ghost-item{position:fixed;z-index:90;pointer-events:none;padding:8px 12px;border-radius:9px;background:var(--raised-2);border:1px solid var(--accent);font-weight:600;font-size:13px;box-shadow:var(--shadow);display:flex;gap:8px;align-items:center}
+
+/* launchpad (empty board) */
+.launch{position:absolute;inset:0;z-index:12;display:none;place-items:center;background:#11151A}
+.launch.on{display:grid}
+.launch .box{width:min(520px,90%)}
+.launch h3{font-size:20px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.launch p{margin:0 0 18px;color:var(--text-2)}
+.lrow{display:flex;gap:14px;align-items:center;width:100%;text-align:left;padding:14px;border-radius:12px;border:1px solid var(--line-2);background:var(--panel);margin-bottom:10px}
+.lrow:hover{border-color:#4A5362;background:var(--panel-2)}
+.lrow.pri{border-color:var(--accent)}
+.lrow .chip{width:40px;height:40px;border-radius:10px}
+.lrow b{display:block;font-size:14.5px}
+.lrow small{color:var(--text-3);font-size:12.5px}
+.launch .back{margin-top:6px}
+
+/* ---------- game ---------- */
+.game{display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line-2);border-radius:var(--r-l);overflow:hidden}
+.game.pip{position:absolute;right:12px;bottom:12px;width:312px;z-index:9;box-shadow:var(--shadow)}
+.game.pip.min .gview,.game.pip.min .ghint{display:none}
+.gh{height:36px;display:flex;align-items:center;gap:6px;padding:0 6px 0 12px;border-bottom:1px solid var(--line);flex:none}
+.gh b{font-size:12.5px;font-weight:600}
+.gstate{font-size:11px;font-weight:700;letter-spacing:.04em;padding:2px 7px;border-radius:999px;background:var(--raised-2);color:var(--text-3)}
+.game.running .gstate{background:var(--accent);color:var(--accent-ink)}
+.gh .sp{flex:1}
+.gh button{width:28px;height:28px;border-radius:6px;display:grid;place-items:center;color:var(--text-3)}
+.gh button:hover{background:var(--raised);color:var(--text)}
+.gview{position:relative;flex:1;min-height:0;background:#0C1012;padding:6px}
+.gview canvas{display:block;width:100%;height:100%;border-radius:8px}
+.game.pip .gview{height:190px;flex:none}
+.game.running .gview{box-shadow:inset 0 0 0 2px var(--accent)}
+.ghint{display:flex;align-items:center;gap:8px;padding:7px 10px 8px;border-top:1px solid var(--line);font-size:12.5px;line-height:1.35;color:var(--text-2);flex:none}
+.ghint .k{display:flex;gap:3px;flex:none}
+.ghint p{margin:0}
+.gctrl{display:none;gap:4px}
+.game.full .gctrl{display:flex}
+.game.full{position:fixed;left:0;right:0;top:44px;bottom:0;z-index:60;border-radius:0;border:0}
+.game.full .gview{padding:16px}
+.dock{flex:none;display:none;min-width:0;border-left:1px solid var(--line);background:var(--panel);padding:10px}
+.dock .game{height:100%}
+body[data-layout=play] .dock{display:flex;width:52%}
+body[data-layout=balance] .dock{display:flex;width:420px}
+.dock .game{flex:1}
+
+/* ---------- inspector ---------- */
+.insp{width:292px;flex:none;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0;transition:width .22s var(--ease)}
+body.insp-off .insp{width:44px}
+body.insp-off .insp .ibody, body.insp-off .insp .ihead h2{display:none}
+body.insp-off .ihead{flex-direction:column;padding:8px 0}
+.ihead{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 14px;border-bottom:1px solid var(--line);height:44px}
+.ihead h2{margin:0;font-size:13px;font-weight:600;flex:1}
+.ibody{overflow:auto;flex:1;min-height:0;padding:14px}
+.ititle{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.ititle .chip{width:36px;height:36px;border-radius:9px}
+.ititle b{display:block;font-size:15px;font-weight:600;line-height:1.3}
+.ititle small{display:block;font-size:12px;color:var(--c);font-weight:600}
+.idesc{font-size:13.5px;color:var(--text-2);line-height:1.55;margin:0 0 14px}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px}
+.field label{font-size:12.5px;font-weight:600;color:var(--text-2)}
+.field input{height:34px;border-radius:7px;border:1px solid var(--line-2);background:var(--bg);color:var(--text);font:500 13.5px var(--font);padding:0 10px;width:100%}
+.field input:focus{outline:none;border-color:var(--accent)}
+.numrow{display:flex;gap:6px}
+.numrow input{flex:1}
+.numrow button{width:34px;height:34px;border-radius:7px;border:1px solid var(--line-2);background:var(--raised);display:grid;place-items:center;color:var(--text-2)}
+.numrow button:hover{color:var(--text);background:var(--raised-2)}
+.field .help{font-size:12px;color:var(--text-3)}
+.sec{font-size:12px;font-weight:600;color:var(--text-3);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
+.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+.live{display:inline-flex;align-items:center;gap:5px;color:var(--ok);font-weight:600}
+.issue{border-radius:10px;background:var(--warn-bg);padding:10px 12px;margin-bottom:14px;font-size:13px;color:#FFE4A0;line-height:1.5}
+.issue b{color:var(--warn);display:flex;gap:6px;align-items:center;margin-bottom:4px}
+.issue .btn-help{margin-top:8px}
+.plist{display:flex;flex-direction:column;gap:2px}
+.pi{display:grid;grid-template-columns:16px 1fr;gap:8px;padding:7px 6px;border-radius:7px}
+.pi .dot{position:static;margin:5px 0 0 2px;width:9px;height:9px;border:0;background:var(--tc)}
+.pi .dot.t-num{transform:rotate(45deg) scale(.86)}
+.pi b{font-size:13px;font-weight:600;display:block}
+.pi .ty{font-weight:500;color:var(--text-3);font-size:12px;margin-left:4px}
+.pi p{margin:1px 0 3px;font-size:12.5px;color:var(--text-3);line-height:1.45}
+.pi .link{font-size:12.5px;color:var(--text-2);display:inline-flex;align-items:center;gap:4px;padding:2px 6px;margin-left:-6px;border-radius:5px}
+.pi .link:hover{background:var(--raised);color:var(--text)}
+.pi .none{font-size:12.5px;color:var(--warn)}
+.pi .opt{font-size:12.5px;color:var(--text-3)}
+.iacts{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.idel{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}
+.tips{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.tips li{display:grid;grid-template-columns:20px 1fr;gap:8px;font-size:13px;color:var(--text-2)}
+.tips .ico{color:var(--text-3);margin-top:1px}
+.gloss{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:13px}
+.gloss dt{font-weight:600}
+.gloss dd{margin:0;color:var(--text-2)}
+
+/* popovers: command palette, file menu, help */
+.pop{position:fixed;z-index:70;background:var(--panel);border:1px solid var(--line-2);border-radius:12px;box-shadow:0 24px 60px -12px rgba(0,0,0,.7);display:none}
+.pop.on{display:block}
+.cmdk{left:50%;top:64px;transform:translateX(-50%);width:min(560px,92vw)}
+.cmdk .search{margin:10px}
+.cmdk .search input{height:40px;font-size:14.5px}
+.cmdk .filter{margin:0 12px 6px;font-size:12px;color:var(--text-3);display:flex;align-items:center;gap:6px}
+.clist{max-height:360px;overflow:auto;padding:0 6px 8px}
+.clist .grp{font-size:11.5px;font-weight:600;color:var(--text-3);padding:8px 10px 4px}
+.copt{width:100%;display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:7px 8px;border-radius:8px;text-align:left}
+.copt[aria-selected=true]{background:var(--raised-2)}
+.copt b{font-weight:600;font-size:13.5px;display:block}
+.copt small{font-size:12px;color:var(--text-3);display:block}
+.copt .hint{font-size:11.5px;color:var(--text-3)}
+.cfoot{border-top:1px solid var(--line);padding:8px 12px;display:flex;gap:14px;font-size:12px;color:var(--text-3)}
+.cfoot span{display:flex;gap:5px;align-items:center}
+.menu{min-width:220px;padding:6px}
+.menu button{width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:7px;font-size:13px;text-align:left;color:var(--text)}
+.menu button:hover,.menu button:focus-visible{background:var(--raised-2)}
+.menu button kbd{margin-left:auto}
+.menu hr{border:0;border-top:1px solid var(--line);margin:5px 4px}
+.keys{width:340px;padding:14px}
+.keys h3{margin:0 0 10px;font-size:14px}
+.keys dl{display:grid;grid-template-columns:auto 1fr;gap:7px 12px;margin:0;font-size:13px}
+.keys dt{display:flex;gap:3px} .keys dd{margin:0;color:var(--text-2)}
+
+@media (max-width:1360px){ .brand .word{display:none} .save .lbl{display:none} }
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important}
+}
+</style>
+</head>
+<body data-layout="wire">
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-logo" viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="6" rx="2"/><rect x="14" y="14" width="7" height="6" rx="2"/><path d="M10 7h2a3 3 0 0 1 3 3v4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7.5 5.2v13.6a.8.8 0 0 0 1.2.7l10.6-6.8a.8.8 0 0 0 0-1.4L8.7 4.5a.8.8 0 0 0-1.2.7z"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
+    <symbol id="i-input" viewBox="0 0 24 24"><rect x="3" y="6.5" width="18" height="11" rx="2.5"/><path d="M7 10.5h.01M10.5 10.5h.01M14 10.5h.01M17 10.5h.01M8 14h8"/></symbol>
+    <symbol id="i-logic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8.2 6H11a3 3 0 0 1 3 3v3M8.2 18H11a3 3 0 0 0 3-3v-3M14 12h1.8"/></symbol>
+    <symbol id="i-math" viewBox="0 0 24 24"><path d="M5 7.5h6M8 4.5v6M14 7.5h5M5 16.5h6M14.5 14l4 5M18.5 14l-4 5"/></symbol>
+    <symbol id="i-object" viewBox="0 0 24 24"><path d="M12 3.5l7.5 4.2v8.6L12 20.5l-7.5-4.2V7.7z"/><path d="M12 12l7.5-4.3M12 12v8.5M12 12L4.5 7.7"/></symbol>
+    <symbol id="i-action" viewBox="0 0 24 24"><path d="M13 3.5L5.5 13.5h5.5l-1 7 7.5-10h-5.5z"/></symbol>
+    <symbol id="i-brain" viewBox="0 0 24 24"><rect x="4.5" y="8" width="15" height="11" rx="3"/><path d="M12 4.5V8M9.5 13.5h.01M14.5 13.5h.01M2.5 13v2M21.5 13v2"/></symbol>
+    <symbol id="i-output" viewBox="0 0 24 24"><rect x="3" y="4.5" width="18" height="12" rx="2"/><path d="M8.5 20h7M12 16.5V20"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15"/></symbol>
+    <symbol id="i-tidy" viewBox="0 0 24 24"><rect x="3.5" y="4" width="6" height="5" rx="1.5"/><rect x="3.5" y="15" width="6" height="5" rx="1.5"/><rect x="14.5" y="9.5" width="6" height="5" rx="1.5"/><path d="M9.5 6.5h2a2 2 0 0 1 2 2V12M9.5 17.5h2a2 2 0 0 0 2-2V12"/></symbol>
+    <symbol id="i-expand" viewBox="0 0 24 24"><path d="M14 4h6v6M10 20H4v-6M20 4l-6.5 6.5M4 20l6.5-6.5"/></symbol>
+    <symbol id="i-shrink" viewBox="0 0 24 24"><path d="M10 4v6H4M14 20v-6h6M10 10L4 4M14 14l6 6"/></symbol>
+    <symbol id="i-dock" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M14 4v16"/></symbol>
+    <symbol id="i-pip" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><rect x="12" y="12" width="6" height="5" rx="1"/></symbol>
+    <symbol id="i-collapse" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="i-panel-l" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16"/></symbol>
+    <symbol id="i-panel-r" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M15 4v16"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4.5 9.5 9 5"/><path d="M4.5 9.5H15a5 5 0 0 1 0 10h-3"/></symbol>
+    <symbol id="i-redo" viewBox="0 0 24 24"><path d="M15 14l4.5-4.5L15 5"/><path d="M19.5 9.5H9a5 5 0 0 0 0 10h3"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18.5a4.5 4.5 0 0 1-.6-9 6 6 0 0 1 11.4 1.7A3.7 3.7 0 0 1 17.5 18.5z"/><path d="M9.5 13.5l2 2 3.5-3.5"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 4l9 15.5H3z"/><path d="M12 10v4M12 17h.01"/></symbol>
+    <symbol id="i-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M9.6 9.5a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.2-2.4 3.6M12 17h.01"/></symbol>
+    <symbol id="i-wand" viewBox="0 0 24 24"><path d="M4.5 19.5l10-10M13 5l1-2 1 2 2 1-2 1-1 2-1-2-2-1zM18 11l.6-1.2 1.2-.6-1.2-.6L18 7.4l-.6 1.2-1.2.6 1.2.6z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V4.5h5V7M6.5 7l1 12.5h9l1-12.5M10 11v5M14 11v5"/></symbol>
+    <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V5.5A1.5 1.5 0 0 0 14.5 4h-9A1.5 1.5 0 0 0 4 5.5v9A1.5 1.5 0 0 0 5.5 16H8"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z"/><circle cx="12" cy="12" r="2.8"/></symbol>
+    <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3.5h8l4.5 4.5v12.5H6z"/><path d="M14 3.5V8h4.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+    <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12M11 11V5a1.5 1.5 0 0 1 3 0v6M14 11V6.5a1.5 1.5 0 0 1 3 0V14a6.5 6.5 0 0 1-6.5 6.5A5.5 5.5 0 0 1 6 18l-2.3-3.6a1.5 1.5 0 0 1 2.4-1.8L8 15"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4.5 5.5A1.5 1.5 0 0 1 6 4h13.5v14H6a1.5 1.5 0 0 0-1.5 1.5zM4.5 19.5A1.5 1.5 0 0 0 6 21h13.5v-3"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 4v16M4 12h16"/></symbol>
+  </defs>
+</svg>
+
+<header class="top" role="banner">
+  <div class="brand"><span class="mark"><svg class="ico" style="stroke-width:2"><use href="#i-logo"/></svg></span><span class="word">Xưởng Nối</span></div>
+  <button class="tbtn" id="fileBtn" aria-haspopup="menu" aria-expanded="false"><svg class="ico sm"><use href="#i-file"/></svg>Tệp</button>
+  <input class="name" id="projName" value="Nhặt xu trong vườn" aria-label="Tên game (bấm để đổi)">
+  <span class="sep"></span>
+  <button class="tbtn icon" id="undoBtn" data-tip="Hoàn tác (Ctrl+Z)" aria-label="Hoàn tác"><svg class="ico"><use href="#i-undo"/></svg></button>
+  <button class="tbtn icon" id="redoBtn" data-tip="Làm lại (Ctrl+Y)" aria-label="Làm lại"><svg class="ico"><use href="#i-redo"/></svg></button>
+  <span class="spacer"></span>
+  <div class="seg" role="group" aria-label="Cách sắp xếp màn hình">
+    <button data-layout="wire" aria-pressed="true"><svg class="ico sm"><use href="#i-tidy"/></svg>Nối dây</button>
+    <button data-layout="play" aria-pressed="false"><svg class="ico sm"><use href="#i-dock"/></svg>Chơi thử</button>
+    <button data-layout="balance" aria-pressed="false"><svg class="ico sm"><use href="#i-grid"/></svg>Cân bằng</button>
+  </div>
+  <span class="spacer"></span>
+  <div class="play-group" role="group" aria-label="Điều khiển game">
+    <button class="pbtn primary" id="btnPlay"><svg class="ico sm fill"><use href="#i-play"/></svg>Chơi</button>
+    <button class="pbtn" id="btnStop" disabled><svg class="ico sm fill"><use href="#i-stop"/></svg>Dừng</button>
+    <button class="pbtn" id="btnRestart" disabled><svg class="ico sm"><use href="#i-restart"/></svg>Chơi lại</button>
+  </div>
+  <span class="sep"></span>
+  <span class="save" id="saveState" role="status"><svg class="ico sm"><use href="#i-cloud"/></svg><span class="lbl">Đã lưu</span></span>
+  <button class="kbtn" id="cmdBtn" aria-label="Tìm lệnh hoặc mảnh ghép (Ctrl+K)"><svg class="ico sm"><use href="#i-search"/></svg>Tìm<kbd>Ctrl K</kbd></button>
+  <button class="tbtn icon" id="helpBtn" data-tip="Phím tắt và từ điển nhỏ" aria-label="Trợ giúp"><svg class="ico"><use href="#i-help"/></svg></button>
+</header>
+
+<div class="main">
+  <nav class="rail" aria-label="Thanh mảnh ghép">
+    <button class="rbtn" id="railToggle" data-tip="Ẩn/hiện mảnh ghép" aria-label="Ẩn hoặc hiện ngăn mảnh ghép" aria-pressed="true"><svg class="ico"><use href="#i-panel-l"/></svg></button>
+    <button class="rbtn" id="railSearch" data-tip="Tìm mảnh ghép" aria-label="Tìm mảnh ghép"><svg class="ico"><use href="#i-search"/></svg></button>
+    <hr>
+    <div id="railCats" style="display:flex;flex-direction:column;gap:4px"></div>
+    <div class="grow"></div>
+    <button class="rbtn" id="railLessons" data-tip="Bài học" aria-label="Bài học"><svg class="ico"><use href="#i-book"/></svg></button>
+  </nav>
+
+  <aside class="drawer" aria-label="Mảnh ghép">
+    <div class="dhead">
+      <div class="dtitle"><h2>Mảnh ghép</h2><span id="pcount"></span></div>
+      <div class="search" id="psearchWrap">
+        <svg class="ico sm"><use href="#i-search"/></svg>
+        <input id="psearch" type="search" placeholder="Tìm: nhan vat, dem..." aria-label="Tìm mảnh ghép, gõ không dấu cũng được" autocomplete="off">
+        <button class="clear" id="pclear" aria-label="Xóa tìm kiếm"><svg class="ico sm"><use href="#i-x"/></svg></button>
+      </div>
+    </div>
+    <div class="dlist" id="plist"></div>
+    <div class="dfoot"><svg class="ico sm"><use href="#i-hand"/></svg>Bấm để thêm hoặc kéo vào bảng</div>
+  </aside>
+
+  <main class="stage" id="stage" aria-label="Bảng nối dây">
+    <div class="world" id="world"><svg class="wires" id="wires"></svg></div>
+
+    <section class="ov tut" id="tut" aria-label="Bài học đang làm">
+      <header>
+        <svg class="ico sm" style="color:var(--accent)"><use href="#i-book"/></svg>
+        <b>Bài 2: Thắng và thua</b>
+        <div class="steps" id="tutBar"><i class="done"></i><i class="done"></i><i class="now"></i><i></i></div>
+        <span id="tutStep">Bước 3/4</span>
+        <span style="flex:1"></span>
+        <button class="tbtn icon mintoggle" id="tutMin" aria-label="Thu gọn bài học" style="width:26px;height:26px"><svg class="ico sm"><use href="#i-collapse"/></svg></button>
+      </header>
+      <div class="body">
+        <p id="tutText">Game chưa thể thua. Kéo dây từ <em>Hết giờ</em> của Hẹn giờ vào <em>Thua khi</em> của mảnh Thua.</p>
+        <div class="acts">
+          <button class="gbtn acc" id="tutHelp"><svg class="ico sm"><use href="#i-wand"/></svg>Nối giúp tôi</button>
+          <button class="gbtn" id="tutShow"><svg class="ico sm"><use href="#i-eye"/></svg>Chỉ chỗ</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="ov issues" id="issues"></div>
+
+    <div class="ov coach" id="coach" role="note">
+      <svg class="ico sm"><use href="#i-hand"/></svg>Kéo nền để di chuyển. Lăn chuột để phóng to.
+      <button id="coachX" aria-label="Đã hiểu, ẩn gợi ý"><svg class="ico sm"><use href="#i-x"/></svg></button>
+    </div>
+
+    <div class="ov tools">
+      <div class="zoom" role="toolbar" aria-label="Thu phóng">
+        <button id="zIn" data-tip="Phóng to" aria-label="Phóng to"><svg class="ico"><use href="#i-plus"/></svg></button>
+        <button class="pct" id="zPct" data-tip="Về 100%" aria-label="Mức phóng hiện tại, bấm để về 100%">100%</button>
+        <button id="zOut" data-tip="Thu nhỏ" aria-label="Thu nhỏ"><svg class="ico"><use href="#i-minus"/></svg></button>
+        <hr>
+        <button id="zFit" data-tip="Vừa màn hình" aria-label="Vừa màn hình"><svg class="ico"><use href="#i-fit"/></svg></button>
+        <button id="zTidy" data-tip="Sắp xếp gọn" aria-label="Sắp xếp gọn"><svg class="ico"><use href="#i-tidy"/></svg></button>
+      </div>
+      <div class="mini">
+        <canvas id="mini" width="352" height="192" aria-label="Bản đồ nhỏ, bấm để tới chỗ đó"></canvas>
+        <div class="legend" aria-label="Loại dây">
+          <span><i class="dot t-bool"></i>Đúng/Sai</span><span><i class="dot t-num"></i>Số</span><span><i class="dot t-obj"></i>Vật thể</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="ov toast" id="toast" role="status" aria-live="polite"><svg class="ico sm"><use href="#i-check"/></svg><span></span></div>
+
+    <div class="launch" id="launch">
+      <div class="box">
+        <h3>Bắt đầu game mới</h3>
+        <p>Chọn một cách. Bạn luôn có thể đổi ý sau.</p>
+        <button class="lrow pri" data-launch="lesson"><span class="chip" style="--c:var(--accent)"><svg class="ico"><use href="#i-book"/></svg></span><span><b>Học từ đầu</b><small>Bài 1: cho nhân vật chạy, khoảng 3 phút</small></span></button>
+        <button class="lrow" data-launch="sample"><span class="chip" style="--c:var(--c-object)"><svg class="ico"><use href="#i-grid"/></svg></span><span><b>Mở game mẫu</b><small>Nhặt xu, Né và bắn, Đua xe. Mở ra là chơi được</small></span></button>
+        <button class="lrow" data-launch="blank"><span class="chip" style="--c:var(--text-2)"><svg class="ico"><use href="#i-plus"/></svg></span><span><b>Tự làm từ bảng trống</b><small>Kéo mảnh ghép từ ngăn bên trái vào đây</small></span></button>
+        <button class="gbtn back" data-launch="back"><svg class="ico sm" style="transform:scaleX(-1)"><use href="#i-arrow"/></svg>Quay lại game đang làm</button>
+      </div>
+    </div>
+
+    <!-- game view starts as picture-in-picture inside the stage -->
+    <section class="game pip" id="game" aria-label="Xem game">
+      <div class="gh">
+        <b>Xem game</b><span class="gstate" id="gstate">CHƯA CHẠY</span>
+        <span class="sp"></span>
+        <div class="gctrl" id="gctrl"></div>
+        <button id="gMin" data-tip="Thu gọn" aria-label="Thu gọn cửa sổ game"><svg class="ico sm"><use href="#i-collapse"/></svg></button>
+        <button id="gDock" data-tip="Ghim vào cạnh phải" aria-label="Ghim vào cạnh phải"><svg class="ico sm"><use href="#i-dock"/></svg></button>
+        <button id="gFull" data-tip="Toàn màn hình (Esc để thoát)" aria-label="Toàn màn hình"><svg class="ico sm"><use href="#i-expand"/></svg></button>
+      </div>
+      <div class="gview"><canvas id="gcanvas" aria-label="Màn hình game Nhặt xu"></canvas></div>
+      <div class="ghint" id="ghint"><span class="k"><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></span><p>Di chuyển, nhặt đủ xu trước khi hết giờ</p></div>
+    </section>
+  </main>
+
+  <div class="dock" id="dock"></div>
+
+  <aside class="insp" aria-label="Thuộc tính">
+    <div class="ihead">
+      <h2>Thuộc tính</h2>
+      <button class="tbtn icon" id="inspToggle" data-tip="Ẩn/hiện Thuộc tính" aria-label="Ẩn hoặc hiện Thuộc tính"><svg class="ico"><use href="#i-panel-r"/></svg></button>
+    </div>
+    <div class="ibody" id="ibody"></div>
+  </aside>
+</div>
+
+<div class="pop cmdk" id="cmdk" role="dialog" aria-label="Tìm lệnh hoặc mảnh ghép">
+  <div class="search"><svg class="ico sm"><use href="#i-search"/></svg><input id="cq" placeholder="Gõ tên mảnh ghép hoặc lệnh..." aria-label="Tìm" autocomplete="off" role="combobox" aria-controls="clist" aria-expanded="true"></div>
+  <div class="filter" id="cfilter" hidden></div>
+  <div class="clist" id="clist" role="listbox"></div>
+  <div class="cfoot"><span><kbd>↑</kbd><kbd>↓</kbd>chọn</span><span><kbd>Enter</kbd>thêm</span><span><kbd>Esc</kbd>đóng</span></div>
+</div>
+<div class="pop menu" id="fileMenu" role="menu">
+  <button role="menuitem" data-file="new"><svg class="ico sm"><use href="#i-plus"/></svg>Tạo mới...</button>
+  <button role="menuitem" data-file="open"><svg class="ico sm"><use href="#i-file"/></svg>Mở tệp...<kbd>Ctrl O</kbd></button>
+  <button role="menuitem" data-file="sample"><svg class="ico sm"><use href="#i-grid"/></svg>Game mẫu</button>
+  <hr>
+  <button role="menuitem" data-file="save"><svg class="ico sm"><use href="#i-cloud"/></svg>Lưu<kbd>Ctrl S</kbd></button>
+  <button role="menuitem" data-file="view"><svg class="ico sm"><use href="#i-eye"/></svg>Góc nhìn: 2D từ trên xuống...</button>
+</div>
+<div class="pop keys" id="helpPop" role="dialog" aria-label="Phím tắt">
+  <h3>Phím tắt</h3>
+  <dl>
+    <dt><kbd>Ctrl</kbd><kbd>K</kbd></dt><dd>Tìm và thêm mảnh ghép</dd>
+    <dt><kbd>Nháy đúp</kbd></dt><dd>Thêm mảnh ghép tại chỗ đó</dd>
+    <dt><kbd>Ctrl</kbd><kbd>Z</kbd></dt><dd>Hoàn tác</dd>
+    <dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>Nhân đôi mảnh đang chọn</dd>
+    <dt><kbd>Delete</kbd></dt><dd>Xóa mảnh hoặc dây đang chọn</dd>
+    <dt><kbd>Shift</kbd><kbd>1</kbd></dt><dd>Vừa màn hình</dd>
+    <dt><kbd>Esc</kbd></dt><dd>Thoát toàn màn hình, bỏ chọn</dd>
+  </dl>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+"use strict";
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const ico=(id,cls='ico')=>`<svg class="${cls}"><use href="#i-${id}"/></svg>`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fold=s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+
+/* ---------- vocabulary ---------- */
+const TYPES={bool:{name:'Đúng/Sai',color:'#3FD68A'},num:{name:'Số',color:'#5B9DFF'},obj:{name:'Vật thể',color:'#FF6FA8'}};
+const CATS={
+  input:{name:'Đầu vào',icon:'input',c:'var(--c-input)',hex:'#C3B4FF'},
+  logic:{name:'Logic',icon:'logic',c:'var(--c-logic)',hex:'#D3DAE3'},
+  math:{name:'Toán',icon:'math',c:'var(--c-math)',hex:'#66E3D3'},
+  object:{name:'Đối tượng',icon:'object',c:'var(--c-object)',hex:'#FFC08A'},
+  action:{name:'Hành động',icon:'action',c:'var(--c-action)',hex:'#F2E07A'},
+  brain:{name:'Não bot',icon:'brain',c:'var(--c-brain)',hex:'#FF9F86'},
+  output:{name:'Đầu ra',icon:'output',c:'var(--c-output)',hex:'#9ED8FF'}
+};
+const P=(k,label,type,req,help)=>({k,label,type,req:!!req,help});
+const KINDS={
+  arrows:{t:'Phím mũi tên',cat:'input',d:'Đọc 4 phím mũi tên thành hướng đi',outs:[P('x','Trục ngang','num',0,'-1 khi bấm trái, 1 khi bấm phải, 0 khi không bấm.'),P('y','Trục dọc','num',0,'-1 khi bấm lên, 1 khi bấm xuống.'),P('held','Đang bấm','bool',0,'Đúng khi có ít nhất một phím đang được giữ.')]},
+  key:{t:'Phím bất kỳ',cat:'input',d:'Đúng khi một phím bạn chọn được bấm',outs:[P('down','Vừa bấm','bool')],props:[{k:'key',label:'Phím',def:'Space',text:1}]},
+  mouse:{t:'Chuột bấm',cat:'input',d:'Vị trí chuột và lúc bấm chuột',outs:[P('click','Vừa bấm','bool'),P('mx','Vị trí X','num'),P('my','Vị trí Y','num')]},
+  timer:{t:'Hẹn giờ',cat:'input',d:'Đếm ngược, báo khi hết giờ',outs:[P('left','Còn lại (giây)','num',0,'Số giây còn lại, giảm dần về 0.'),P('done','Hết giờ','bool',0,'Đúng đúng một lần, khi thời gian về 0.')],props:[{k:'sec',label:'Thời gian (giây)',def:20,min:5,max:120,step:5}]},
+  start:{t:'Lúc bắt đầu',cat:'input',d:'Đúng một lần khi game vừa chạy',outs:[P('go','Vừa bắt đầu','bool')]},
+  touch:{t:'Khi chạm',cat:'logic',d:'Báo khi hai vật thể chạm nhau',ins:[P('a','Vật A','obj',1,'Thường là nhân vật của bạn.'),P('b','Vật B','obj',1,'Vật cần chạm vào, ví dụ đồng xu.')],outs:[P('hit','Vừa chạm','bool',0,'Đúng ngay khoảnh khắc A chạm B.')]},
+  and:{t:'Và',cat:'logic',d:'Đúng khi cả hai đầu vào đều đúng',ins:[P('a','Điều kiện 1','bool',1),P('b','Điều kiện 2','bool',1)],outs:[P('o','Cả hai đúng','bool')]},
+  or:{t:'Hoặc',cat:'logic',d:'Đúng khi ít nhất một đầu vào đúng',ins:[P('a','Điều kiện 1','bool',1),P('b','Điều kiện 2','bool',1)],outs:[P('o','Một cái đúng','bool')]},
+  not:{t:'Đảo ngược',cat:'logic',d:'Biến Đúng thành Sai và ngược lại',ins:[P('a','Điều kiện','bool',1)],outs:[P('o','Ngược lại','bool')]},
+  counter:{t:'Bộ đếm',cat:'math',d:'Cộng thêm 1 mỗi lần được báo',ins:[P('inc','Cộng 1 khi','bool',1,'Mỗi lần dây này báo Đúng, bộ đếm tăng 1.'),P('reset','Đặt lại khi','bool',0,'Không bắt buộc. Khi Đúng, bộ đếm về 0.')],outs:[P('val','Giá trị','num',0,'Con số hiện tại của bộ đếm.')]},
+  compare:{t:'So sánh',cat:'math',d:'Kiểm tra một số đã đạt mốc chưa',ins:[P('a','Số cần xét','num',1,'Số được đem ra so với mốc.')],outs:[P('o','Đã đạt mốc','bool',0,'Đúng khi số cần xét lớn hơn hoặc bằng mốc.')],props:[{k:'goal',label:'Mốc',def:6,min:1,max:30,step:1}]},
+  add:{t:'Cộng',cat:'math',d:'Cộng hai số lại với nhau',ins:[P('a','Số thứ nhất','num',1),P('b','Số thứ hai','num',1)],outs:[P('o','Tổng','num')]},
+  rand:{t:'Số ngẫu nhiên',cat:'math',d:'Cho một số bất kỳ trong khoảng',outs:[P('o','Số','num')],props:[{k:'max',label:'Lớn nhất',def:10,min:1,max:100,step:1}]},
+  const:{t:'Hằng số',cat:'math',d:'Một con số cố định do bạn nhập',outs:[P('o','Số','num')],props:[{k:'v',label:'Giá trị',def:5,min:-99,max:999,step:1}]},
+  player:{t:'Nhân vật',cat:'object',d:'Vật thể do người chơi điều khiển',ins:[P('mx','Đi ngang','num',1,'Nối vào Trục ngang để đi trái phải.'),P('my','Đi dọc','num',1,'Nối vào Trục dọc để đi lên xuống.')],outs:[P('self','Bản thân','obj',0,'Chính nhân vật này, dùng cho Khi chạm.')],props:[{k:'speed',label:'Tốc độ',def:4,min:1,max:10,step:1}]},
+  coin:{t:'Đồng xu',cat:'object',d:'Vật nhỏ để nhân vật nhặt',outs:[P('self','Bản thân','obj',0,'Các đồng xu trong màn chơi.')],props:[{k:'count',label:'Số lượng',def:6,min:1,max:20,step:1}]},
+  box:{t:'Hộp',cat:'object',d:'Vật cản đứng yên, không đi xuyên được',outs:[P('self','Bản thân','obj')]},
+  enemy:{t:'Kẻ địch',cat:'object',d:'Vật thể gây thua khi chạm vào',outs:[P('self','Bản thân','obj')],props:[{k:'speed',label:'Tốc độ',def:3,min:1,max:10,step:1}]},
+  spawn:{t:'Sinh vật thể',cat:'object',d:'Tạo thêm bản sao của một vật',ins:[P('what','Vật mẫu','obj',1),P('when','Tạo khi','bool',1)],outs:[P('o','Bản mới','obj')]},
+  moveto:{t:'Di chuyển tới',cat:'action',d:'Đưa vật thể tới một vị trí',ins:[P('who','Vật thể','obj',1),P('x','Tới X','num',1),P('y','Tới Y','num',1)]},
+  jump:{t:'Nhảy',cat:'action',d:'Cho vật thể bật lên một lần',ins:[P('who','Vật thể','obj',1),P('when','Nhảy khi','bool',1)]},
+  shoot:{t:'Bắn',cat:'action',d:'Bắn viên đạn theo hướng đang nhìn',ins:[P('who','Người bắn','obj',1),P('when','Bắn khi','bool',1)]},
+  destroy:{t:'Biến mất',cat:'action',d:'Xóa vật thể khỏi màn chơi',ins:[P('who','Vật thể','obj',1),P('when','Xóa khi','bool',1)]},
+  chase:{t:'Đuổi theo',cat:'brain',d:'Bot tự chạy về phía mục tiêu',ins:[P('who','Bot','obj',1),P('target','Mục tiêu','obj',1)]},
+  patrol:{t:'Đi tuần',cat:'brain',d:'Bot đi qua lại giữa hai điểm',ins:[P('who','Bot','obj',1)],props:[{k:'dist',label:'Quãng đường',def:120,min:20,max:400,step:10}]},
+  flee:{t:'Né tránh',cat:'brain',d:'Bot chạy ra xa vật nguy hiểm',ins:[P('who','Bot','obj',1),P('danger','Vật nguy hiểm','obj',1)]},
+  show:{t:'Hiện số',cat:'output',d:'Hiện một con số lên góc màn hình',ins:[P('n','Số cần hiện','num',1,'Số này sẽ hiện ở góc trên bên trái game.')],props:[{k:'label',label:'Chữ đứng trước',def:'Xu:',text:1}]},
+  win:{t:'Thắng',cat:'output',d:'Kết thúc game với màn hình thắng',ins:[P('when','Thắng khi','bool',1,'Khi dây này báo Đúng, người chơi thắng.')]},
+  lose:{t:'Thua',cat:'output',d:'Kết thúc game với màn hình thua',ins:[P('when','Thua khi','bool',1,'Khi dây này báo Đúng, người chơi thua.')]},
+  sound:{t:'Phát âm thanh',cat:'output',d:'Phát một tiếng động ngắn',ins:[P('when','Phát khi','bool',1)]},
+  shakecam:{t:'Rung màn hình',cat:'output',d:'Rung nhẹ màn hình để nhấn mạnh',ins:[P('when','Rung khi','bool',1)]}
+};
+
+/* ---------- state ---------- */
+let nodes=[], wires=[], sel=null, selWire=null, uid=100;
+const view={x:0,y:0,s:1};
+const hist=[], fut=[];
+const stage=$('#stage'), world=$('#world'), svg=$('#wires');
+
+function sample(){
+  nodes=[
+    {id:'n1',kind:'arrows',x:0,y:0,name:'Bàn phím'},
+    {id:'n2',kind:'player',x:280,y:0,name:'Mèo cam',props:{speed:4}},
+    {id:'n3',kind:'coin',x:0,y:190,name:'Xu vàng',props:{count:6}},
+    {id:'n4',kind:'touch',x:280,y:225,name:'Mèo nhặt xu'},
+    {id:'n5',kind:'counter',x:560,y:130,name:'Số xu đã nhặt'},
+    {id:'n6',kind:'show',x:850,y:0,name:'Góc trên trái',props:{label:'Xu:'}},
+    {id:'n7',kind:'compare',x:560,y:330,name:'Đủ 6 xu chưa',props:{goal:6}},
+    {id:'n8',kind:'timer',x:0,y:345,name:'Đồng hồ màn 1',props:{sec:20}},
+    {id:'n9',kind:'win',x:850,y:165,name:'Màn thắng'},
+    {id:'n10',kind:'lose',x:850,y:310,name:'Màn thua'}
+  ];
+  wires=[
+    {f:['n1','x'],t:['n2','mx']},{f:['n1','y'],t:['n2','my']},
+    {f:['n2','self'],t:['n4','a']},{f:['n3','self'],t:['n4','b']},
+    {f:['n4','hit'],t:['n5','inc']},{f:['n5','val'],t:['n6','n']},
+    {f:['n5','val'],t:['n7','a']},{f:['n7','o'],t:['n9','when']}
+  ];
+  nodes.forEach(n=>{n.props=Object.assign(defProps(n.kind),n.props||{})});
+}
+function defProps(kind){const o={};(KINDS[kind].props||[]).forEach(p=>o[p.k]=p.def);return o}
+const N=id=>nodes.find(n=>n.id===id);
+const portDef=(n,k,dir)=>(KINDS[n.kind][dir==='out'?'outs':'ins']||[]).find(p=>p.k===k);
+
+/* ---------- history ---------- */
+function snap(){hist.push(JSON.stringify({nodes,wires}));if(hist.length>60)hist.shift();fut.length=0;syncUndo();markDirty()}
+function restore(s){const o=JSON.parse(s);nodes=o.nodes;wires=o.wires;sel=null;selWire=null;renderAll()}
+function undo(){if(!hist.length)return;fut.push(JSON.stringify({nodes,wires}));restore(hist.pop());syncUndo();toast('Đã hoàn tác','info','undo')}
+function redo(){if(!fut.length)return;hist.push(JSON.stringify({nodes,wires}));restore(fut.pop());syncUndo()}
+function syncUndo(){$('#undoBtn').disabled=!hist.length;$('#redoBtn').disabled=!fut.length}
+let saveT;
+function markDirty(){const s=$('#saveState');s.innerHTML=ico('cloud','ico sm')+'<span class="lbl">Đang lưu...</span>';s.querySelector('.ico').style.color='var(--text-3)';
+  clearTimeout(saveT);saveT=setTimeout(()=>{s.innerHTML=ico('cloud','ico sm')+'<span class="lbl">Đã lưu</span>'},700)}
+
+/* ---------- node rendering ---------- */
+function nodeHTML(n){
+  const k=KINDS[n.kind], c=CATS[k.cat];
+  const ins=(k.ins||[]).map(p=>`<div class="port in" data-dir="in" data-port="${p.k}" data-type="${p.type}" title="${esc(p.help||TYPES[p.type].name)}"><i class="dot t-${p.type}"></i><span>${esc(p.label)}</span></div>`).join('');
+  const props=(k.props||[]).map(p=>`<div class="prop"><span>${esc(p.label)}</span><b data-prop="${p.k}">${esc(n.props[p.k])}</b></div>`).join('');
+  const outs=(k.outs||[]).map(p=>`<div class="port out" data-dir="out" data-port="${p.k}" data-type="${p.type}" title="${esc(p.help||TYPES[p.type].name)}"><span>${esc(p.label)}</span><i class="dot t-${p.type}"></i></div>`).join('');
+  const split=(ins||props)&&outs?'<div class="nsplit"></div>':'';
+  return `<div class="nh"><span class="chip" style="--c:${c.c}">${ico(c.icon)}</span><div class="tt"><b>${esc(k.t)}</b><small>${esc(n.name||'')}</small></div><span class="miss" hidden></span></div>
+  <div class="nb">${ins}${props}${split}${outs}<div class="sg"></div></div>`;
+}
+function mountNode(n){
+  const el=document.createElement('div');el.className='node';el.dataset.id=n.id;el.innerHTML=nodeHTML(n);
+  el.style.left=n.x+'px';el.style.top=n.y+'px';world.appendChild(el);return el;
+}
+const elOf=id=>world.querySelector(`.node[data-id="${id}"]`);
+function renderAll(){
+  $$('.node',world).forEach(e=>e.remove());
+  nodes.forEach(mountNode);
+  refreshIssues();renderWires();renderInspector();drawMini();
+}
+function refreshNode(n){const el=elOf(n.id);if(!el)return;el.innerHTML=nodeHTML(n);if(sel===n.id)el.classList.add('sel')}
+
+/* ---------- issues: unwired required inputs + suggestion ---------- */
+function missingOf(n){return (KINDS[n.kind].ins||[]).filter(p=>p.req&&!wires.some(w=>w.t[0]===n.id&&w.t[1]===p.k))}
+function suggestFor(n,p){
+  // prefer an unused output of the same type, timers first for Thua (lesson-aware heuristic)
+  const cands=[];
+  nodes.forEach(m=>{if(m.id===n.id)return;(KINDS[m.kind].outs||[]).forEach(o=>{if(o.type!==p.type)return;
+    const used=wires.some(w=>w.f[0]===m.id&&w.f[1]===o.k);let score=used?1:3;if(n.kind==='lose'&&m.kind==='timer'&&o.k==='done')score+=10;cands.push({m,o,score})})});
+  cands.sort((a,b)=>b.score-a.score);return cands[0]||null;
+}
+function refreshIssues(){
+  let total=0;
+  nodes.forEach(n=>{
+    const el=elOf(n.id);if(!el)return;const miss=missingOf(n);total+=miss.length;
+    $$('.port.in',el).forEach(r=>r.classList.toggle('missing',miss.some(p=>p.k===r.dataset.port)));
+    $$('.port.in .req',el).forEach(x=>x.remove());
+    miss.forEach(p=>{const r=el.querySelector(`.port.in[data-port="${p.k}"]`);r.insertAdjacentHTML('beforeend','<span class="req">cần nối</span>')});
+    const b=el.querySelector('.miss');b.hidden=!miss.length;b.innerHTML=ico('alert','ico sm')+`Thiếu ${miss.length} dây`;
+    const sg=el.querySelector('.sg');sg.innerHTML='';
+    if(miss.length){const s=suggestFor(n,miss[0]);if(s){sg.innerHTML=`<div class="suggest">Gợi ý: nối <b>${esc(KINDS[s.m.kind].t)} &rsaquo; ${esc(s.o.label)}</b><div class="row"><button class="btn-help" data-auto="${n.id}|${miss[0].k}">${ico('wand','ico sm')}Nối giúp tôi</button></div></div>`}}
+  });
+  const box=$('#issues');
+  box.innerHTML=total?`<button class="ichip warn" id="issueChip">${ico('alert','ico sm')}${total} việc cần sửa</button>`:`<span class="ichip okc">${ico('check','ico sm')}Mọi dây cần thiết đã nối</span>`;
+  const chip=$('#issueChip');if(chip)chip.onclick=()=>{const n=nodes.find(m=>missingOf(m).length);if(n){select(n.id);centerOn(n)}};
+  return total;
+}
+function autoWire(nid,pk){
+  const n=N(nid),p=portDef(n,pk,'in'),s=suggestFor(n,p);if(!s)return;
+  snap();wires.push({f:[s.m.id,s.o.k],t:[nid,pk]});
+  refreshIssues();renderWires();renderInspector();
+  elOf(nid).classList.remove('flash');void elOf(nid).offsetWidth;elOf(nid).classList.add('flash');
+  toast(`Đã nối ${KINDS[s.m.kind].t} › ${s.o.label} vào ${KINDS[n.kind].t} › ${p.label}`,'ok','check');
+  lessonCheck();
+}
+
+/* ---------- wires ---------- */
+function portPos(nid,pk,dir){
+  const d=world.querySelector(`.node[data-id="${nid}"] .port.${dir}[data-port="${pk}"] .dot`);if(!d)return null;
+  const r=d.getBoundingClientRect(),w=world.getBoundingClientRect();
+  return {x:(r.left+r.width/2-w.left)/view.s,y:(r.top+r.height/2-w.top)/view.s};
+}
+const curve=(a,b)=>{const dx=Math.max(50,Math.abs(b.x-a.x)*.5);return `M${a.x},${a.y} C${a.x+dx},${a.y} ${b.x-dx},${b.y} ${b.x},${b.y}`};
+let ghostWire=null, tempWire=null;
+function renderWires(){
+  let h='';
+  wires.forEach((w,i)=>{const a=portPos(w.f[0],w.f[1],'out'),b=portPos(w.t[0],w.t[1],'in');if(!a||!b)return;
+    const t=portDef(N(w.f[0]),w.f[1],'out').type,d=curve(a,b);
+    h+=`<path class="w${selWire===i?' sel':''}" d="${d}" stroke="${TYPES[t].color}"/><path class="hit" data-wire="${i}" d="${d}"/>`;
+    if(G.state==='running'&&t==='num'){const v=wireValue(w);if(v!=null){const mx=(a.x+b.x)/2,my=(a.y+b.y)/2,tw=String(v).length*7+14;
+      h+=`<g class="badge" transform="translate(${mx-tw/2},${my-10})"><rect width="${tw}" height="20" rx="6"/><text x="${tw/2}" y="14" text-anchor="middle">${v}</text></g>`}}
+  });
+  if(ghostWire){const a=portPos(...ghostWire.f,'out'),b=portPos(...ghostWire.t,'in');if(a&&b)h+=`<path class="ghost" d="${curve(a,b)}"/>`}
+  if(tempWire)h+=`<path class="temp" d="${tempWire.d}" stroke="${TYPES[tempWire.type].color}"/>`;
+  svg.innerHTML=h;
+}
+
+/* ---------- view: pan / zoom / fit ---------- */
+function applyView(){
+  world.style.transform=`translate(${view.x}px,${view.y}px) scale(${view.s})`;
+  $('#zPct').textContent=Math.round(view.s*100)+'%';
+  stage.classList.toggle('far',view.s<.5);
+  drawMini();
+}
+function zoomAt(ns,cx,cy){ns=Math.min(1.8,Math.max(.35,ns));const wx=(cx-view.x)/view.s,wy=(cy-view.y)/view.s;view.s=ns;view.x=cx-wx*ns;view.y=cy-wy*ns;applyView();renderWires()}
+function zoomStep(f){const r=stage.getBoundingClientRect();zoomAt(view.s*f,r.width/2,r.height/2)}
+function bounds(list=nodes){let x1=1e9,y1=1e9,x2=-1e9,y2=-1e9;list.forEach(n=>{const e=elOf(n.id);if(!e)return;x1=Math.min(x1,n.x);y1=Math.min(y1,n.y);x2=Math.max(x2,n.x+e.offsetWidth);y2=Math.max(y2,n.y+e.offsetHeight)});return {x1,y1,x2,y2}}
+function fit(){
+  if(!nodes.length)return;const r=stage.getBoundingClientRect(),b=bounds(),pad=20;
+  const g=$('#game'),pip=g.parentElement===stage&&g.classList.contains('pip')&&!g.classList.contains('full');
+  // overlays the board must not hide nodes under (screen rects relative to the stage)
+  const ovs=['#tut','#issues','.tools','#coach'].concat(pip?['#game']:[]).map(q=>$(q)).filter(e=>e&&e.offsetParent&&e.style.display!=='none').map(e=>{const q=e.getBoundingClientRect();return {x1:q.left-r.left-8,y1:q.top-r.top-8,x2:q.right-r.left+8,y2:q.bottom-r.top+8}});
+  const tut=$('#tut').getBoundingClientRect(),tutB=tut.bottom-r.top+12;
+  const cands=[{top:pad,bottom:pad},{top:tutB,bottom:pad},{top:tutB,bottom:pip?g.offsetHeight+24:pad}];
+  let best=null;
+  cands.forEach(c=>{const aw=r.width-2*pad,ah=r.height-c.top-c.bottom;
+    const s=Math.max(.42,Math.min(aw/(b.x2-b.x1),ah/(b.y2-b.y1),1.1));const cw=(b.x2-b.x1)*s,ch=(b.y2-b.y1)*s;
+    const x=pad+Math.max(0,(aw-cw)/2)-b.x1*s,y=c.top+Math.max(0,(ah-ch)/2)-b.y1*s;
+    const hits=nodes.reduce((k,n)=>{const e=elOf(n.id),nx=x+n.x*s,ny=y+n.y*s,nw=e.offsetWidth*s,nh=e.offsetHeight*s;return k+ovs.filter(o=>nx<o.x2&&nx+nw>o.x1&&ny<o.y2&&ny+nh>o.y1).length},0);
+    const score=s-hits;if(!best||score>best.score)best={score,s,x,y}});
+  view.s=best.s;view.x=best.x;view.y=best.y;applyView();renderWires();
+}
+function centerOn(n){const e=elOf(n.id),r=stage.getBoundingClientRect();view.x=r.width/2-(n.x+e.offsetWidth/2)*view.s;view.y=r.height/2.4-(n.y+e.offsetHeight/2)*view.s;
+  world.style.transition='transform .3s var(--ease)';applyView();setTimeout(()=>{world.style.transition='';renderWires()},320);renderWires()}
+
+/* ---------- minimap ---------- */
+const mini=$('#mini'),mctx=mini.getContext('2d');let miniMap=null;
+function drawMini(){
+  const W=mini.width,H=mini.height;mctx.clearRect(0,0,W,H);if(!nodes.length)return;
+  const r=stage.getBoundingClientRect(),b=bounds();const vx1=-view.x/view.s,vy1=-view.y/view.s,vx2=vx1+r.width/view.s,vy2=vy1+r.height/view.s;
+  const x1=Math.min(b.x1,vx1)-40,y1=Math.min(b.y1,vy1)-40,x2=Math.max(b.x2,vx2)+40,y2=Math.max(b.y2,vy2)+40;
+  const s=Math.min(W/(x2-x1),H/(y2-y1)),ox=(W-(x2-x1)*s)/2,oy=(H-(y2-y1)*s)/2;miniMap={x1,y1,s,ox,oy};
+  nodes.forEach(n=>{const e=elOf(n.id);if(!e)return;mctx.fillStyle=n.id===sel?'#FF8A3D':CATS[KINDS[n.kind].cat].hex;mctx.globalAlpha=n.id===sel?1:.75;
+    mctx.fillRect(ox+(n.x-x1)*s,oy+(n.y-y1)*s,Math.max(3,e.offsetWidth*s),Math.max(3,e.offsetHeight*s))});
+  mctx.globalAlpha=1;mctx.strokeStyle='#E9EDF3';mctx.lineWidth=2;mctx.strokeRect(ox+(vx1-x1)*s,oy+(vy1-y1)*s,(vx2-vx1)*s,(vy2-vy1)*s);
+}
+function miniJump(e){if(!miniMap)return;const rc=mini.getBoundingClientRect(),k=mini.width/rc.width;const mx=(e.clientX-rc.left)*k,my=(e.clientY-rc.top)*k;
+  const wx=(mx-miniMap.ox)/miniMap.s+miniMap.x1,wy=(my-miniMap.oy)/miniMap.s+miniMap.y1;const r=stage.getBoundingClientRect();
+  view.x=r.width/2-wx*view.s;view.y=r.height/2-wy*view.s;applyView();renderWires()}
+mini.addEventListener('pointerdown',e=>{miniJump(e);mini.setPointerCapture(e.pointerId);const mv=ev=>miniJump(ev),up=()=>{mini.removeEventListener('pointermove',mv);mini.removeEventListener('pointerup',up)};mini.addEventListener('pointermove',mv);mini.addEventListener('pointerup',up)});
+
+/* ---------- selection & inspector ---------- */
+function select(id){sel=id;selWire=null;$$('.node',world).forEach(e=>e.classList.toggle('sel',e.dataset.id===id));renderWires();renderInspector();drawMini()}
+function renderInspector(){
+  const b=$('#ibody');const n=sel&&N(sel);
+  if(!n){b.innerHTML=`<p class="idesc">Chọn một mảnh ghép trên bảng để xem và chỉnh thuộc tính của nó.</p>
+    <ul class="tips"><li>${ico('hand','ico sm')}<span>Kéo từ chấm tròn ở cạnh mảnh ghép sang chấm cùng màu để nối dây.</span></li>
+    <li>${ico('search','ico sm')}<span>Nháy đúp vào chỗ trống trên bảng để tìm và thêm mảnh ghép ngay tại đó.</span></li>
+    <li>${ico('play','ico sm fill')}<span>Khi đang chơi, bạn vẫn chỉnh được các con số. Game đổi theo ngay.</span></li></ul>
+    <div class="sec">Từ điển nhỏ</div>
+    <dl class="gloss"><dt>Mảnh ghép</dt><dd>Một ô trên bảng, làm một việc.</dd><dt>Cổng</dt><dd>Chấm ở cạnh mảnh ghép. Bên trái nhận vào, bên phải đưa ra.</dd><dt>Dây</dt><dd>Đường nối hai cổng cùng màu.</dd><dt>Vật thể</dt><dd>Thứ nhìn thấy trong game: nhân vật, xu, hộp.</dd></dl>`;return}
+  const k=KINDS[n.kind],c=CATS[k.cat],miss=missingOf(n);let h='';
+  h+=`<div class="ititle" style="--c:${c.c}"><span class="chip">${ico(c.icon)}</span><div><b>${esc(k.t)}</b><small>${esc(c.name)}</small></div></div>`;
+  h+=`<p class="idesc">${esc(k.d)}.</p>`;
+  if(miss.length){const p=miss[0],s=suggestFor(n,p);h+=`<div class="issue" role="alert"><b>${ico('alert','ico sm')}Cổng "${esc(p.label)}" chưa có dây</b>${n.kind==='lose'?'Không có dây này, game không bao giờ thua.':'Mảnh ghép này sẽ không làm gì cho tới khi được nối.'}${s?`<br>Gợi ý: ${esc(KINDS[s.m.kind].t)} › ${esc(s.o.label)}.<br><button class="btn-help" data-auto="${n.id}|${p.k}">${ico('wand','ico sm')}Nối giúp tôi</button>`:''}</div>`}
+  h+=`<div class="field"><label for="iname">Tên riêng</label><input id="iname" value="${esc(n.name||'')}" placeholder="Ví dụ: Sàn 1"><span class="help">Giúp phân biệt khi có nhiều mảnh giống nhau.</span></div>`;
+  if(k.props&&k.props.length){h+=`<div class="sec">Thông số <span class="live">${ico('play','ico sm fill')}chỉnh được khi đang chơi</span></div>`;
+    k.props.forEach(p=>{h+=p.text?`<div class="field"><label for="ip-${p.k}">${esc(p.label)}</label><input id="ip-${p.k}" data-prop="${p.k}" value="${esc(n.props[p.k])}"></div>`
+      :`<div class="field"><label for="ip-${p.k}">${esc(p.label)}</label><div class="numrow"><button data-step="-1" data-for="${p.k}" aria-label="Giảm ${esc(p.label)}">${ico('minus','ico sm')}</button><input id="ip-${p.k}" type="number" inputmode="numeric" data-prop="${p.k}" min="${p.min}" max="${p.max}" step="${p.step}" value="${n.props[p.k]}"><button data-step="1" data-for="${p.k}" aria-label="Tăng ${esc(p.label)}">${ico('plus','ico sm')}</button></div><span class="help">Từ ${p.min} đến ${p.max}</span></div>`})}
+  const plist=(arr,dir)=>arr.map(p=>{
+    const ws=wires.filter(w=>dir==='in'?(w.t[0]===n.id&&w.t[1]===p.k):(w.f[0]===n.id&&w.f[1]===p.k));
+    const links=ws.map(w=>{const o=N(dir==='in'?w.f[0]:w.t[0]),pk=dir==='in'?w.f[1]:w.t[1],pd=portDef(o,pk,dir==='in'?'out':'in');return `<button class="link" data-jump="${o.id}">${ico('arrow','ico sm')}${esc(KINDS[o.kind].t)} › ${esc(pd.label)}</button>`}).join('<br>');
+    return `<div class="pi"><i class="dot t-${p.type}"></i><div><b>${esc(p.label)}<span class="ty">${TYPES[p.type].name}</span></b>${p.help?`<p>${esc(p.help)}</p>`:''}${links||(p.req?'<span class="none">Chưa nối, cần nối</span>':'<span class="opt">Chưa nối (không bắt buộc)</span>')}</div></div>`}).join('');
+  if(k.ins&&k.ins.length)h+=`<div class="sec">Cổng nhận vào</div><div class="plist">${plist(k.ins,'in')}</div>`;
+  if(k.outs&&k.outs.length)h+=`<div class="sec">Cổng đưa ra</div><div class="plist">${plist(k.outs,'out')}</div>`;
+  h+=`<div class="iacts"><button class="gbtn" id="iDup">${ico('copy','ico sm')}Nhân đôi</button>${k.cat==='object'?`<button class="gbtn" id="iSee">${ico('eye','ico sm')}Xem trong game</button>`:''}</div>`;
+  h+=`<div class="idel"><button class="gbtn danger" id="iDel">${ico('trash','ico sm')}Xóa mảnh ghép này</button></div>`;
+  b.innerHTML=h;
+  $('#iname').oninput=e=>{n.name=e.target.value;const s=elOf(n.id).querySelector('.tt small');s.textContent=n.name;renderWires();markDirty()};
+  $$('[data-prop]',b).forEach(inp=>inp.oninput=()=>setProp(n,inp.dataset.prop,inp.value));
+  $$('[data-step]',b).forEach(bt=>bt.onclick=()=>{const p=k.props.find(q=>q.k===bt.dataset.for);setProp(n,p.k,Math.min(p.max,Math.max(p.min,Number(n.props[p.k])+p.step*Number(bt.dataset.step))));$('#ip-'+p.k).value=n.props[p.k]});
+  $$('[data-jump]',b).forEach(bt=>bt.onclick=()=>{const o=N(bt.dataset.jump);select(o.id);centerOn(o)});
+  $('#iDup').onclick=()=>dup(n);$('#iDel').onclick=()=>delNode(n.id);
+  if($('#iSee'))$('#iSee').onclick=()=>{G.flashKind=n.kind;G.flashT=1.2;if(G.state!=='running')drawGame();toast('Đang nháy sáng vật thể này trong cửa sổ game','info','eye')};
+}
+function setProp(n,k,v){const p=KINDS[n.kind].props.find(q=>q.k===k);n.props[k]=p.text?v:Number(v);const el=elOf(n.id).querySelector(`[data-prop="${k}"]`);if(el)el.textContent=n.props[k];markDirty();
+  if(n.kind==='coin'&&G.state!=='running')gameReset();if(n.kind==='timer'&&G.state!=='running')gameReset();if(G.state!=='running')drawGame()}
+
+/* ---------- add / remove ---------- */
+function reservedWorldRects(){
+  const sr=stage.getBoundingClientRect(),out=[];
+  ['#tut','.tools','#coach','#issues'].forEach(q=>{const e=$(q);if(e&&e.offsetParent)out.push(e.getBoundingClientRect())});
+  const g=$('#game');if(g.parentElement===stage&&!g.classList.contains('full'))out.push(g.getBoundingClientRect());
+  return out.map(r=>({x1:(r.left-sr.left-view.x)/view.s-16,y1:(r.top-sr.top-view.y)/view.s-16,x2:(r.right-sr.left-view.x)/view.s+16,y2:(r.bottom-sr.top-view.y)/view.s+16}));
+}
+function freeSpot(w,h,pref){
+  const sr=stage.getBoundingClientRect(),gap=28;
+  const vp={x1:-view.x/view.s+10,y1:-view.y/view.s+10,x2:(sr.width-view.x)/view.s-10,y2:(sr.height-view.y)/view.s-10};
+  const rects=nodes.map(n=>{const e=elOf(n.id);return {x1:n.x-gap,y1:n.y-gap,x2:n.x+e.offsetWidth+gap,y2:n.y+e.offsetHeight+gap}}).concat(reservedWorldRects());
+  const hit=(x,y)=>rects.some(r=>x<r.x2&&x+w>r.x1&&y<r.y2&&y+h>r.y1);
+  const cx=pref?pref.x:(vp.x1+vp.x2)/2-w/2,cy=pref?pref.y:(vp.y1+vp.y2)/2-h/2;
+  for(let pass=0;pass<2;pass++)for(let rad=0;rad<2400;rad+=24){const steps=Math.max(1,Math.round(rad/12));for(let i=0;i<steps;i++){const a=i/steps*Math.PI*2,x=Math.round(cx+Math.cos(a)*rad),y=Math.round(cy+Math.sin(a)*rad*.7);
+    if(pass===0&&(x<vp.x1||y<vp.y1||x+w>vp.x2||y+h>vp.y2))continue;if(!hit(x,y))return {x,y,inView:pass===0}}}
+  return {x:cx,y:cy,inView:false};
+}
+function addNode(kind,pref,opts={}){
+  snap();const k=KINDS[kind],same=nodes.filter(n=>n.kind===kind).length;
+  const n={id:'n'+(++uid),kind,x:0,y:0,name:same?`${k.t} ${same+1}`:'Mới thêm',props:defProps(kind)};
+  nodes.push(n);const el=mountNode(n);el.style.visibility='hidden';
+  const spot=freeSpot(el.offsetWidth,el.offsetHeight,pref);n.x=spot.x;n.y=spot.y;el.style.left=n.x+'px';el.style.top=n.y+'px';el.style.visibility='';
+  if(!spot.inView)centerOn(n);
+  el.classList.add('flash');select(n.id);refreshIssues();renderWires();
+  if(opts.wireFrom)tryWire(opts.wireFrom,n,true);
+  toast(`Đã thêm "${k.t}" vào chỗ trống${spot.inView?'':' gần đó'}`,'ok','check');return n;
+}
+function dup(n){const c=addNode(n.kind,{x:n.x+40,y:n.y+40});c.props={...n.props};refreshNode(c);refreshIssues();renderWires()}
+function delNode(id){snap();const n=N(id);nodes=nodes.filter(m=>m.id!==id);wires=wires.filter(w=>w.f[0]!==id&&w.t[0]!==id);elOf(id).remove();sel=null;
+  refreshIssues();renderWires();renderInspector();drawMini();toast(`Đã xóa "${KINDS[n.kind].t}". Bấm Ctrl+Z nếu lỡ tay.`,'info','trash')}
+
+/* auto layout: columns by data-flow depth */
+function tidy(){
+  snap();const depth={};const d=id=>{if(depth[id]!=null)return depth[id];depth[id]=0;const ins=wires.filter(w=>w.t[0]===id);depth[id]=ins.length?Math.max(...ins.map(w=>d(w.f[0])+1)):0;return depth[id]};
+  nodes.forEach(n=>d(n.id));const cols={};nodes.forEach(n=>(cols[depth[n.id]]=cols[depth[n.id]]||[]).push(n));
+  Object.keys(cols).forEach(c=>{let y=0;cols[c].sort((a,b)=>a.y-b.y).forEach(n=>{n.x=c*290;n.y=y;y+=elOf(n.id).offsetHeight+30})});
+  nodes.forEach(n=>{const e=elOf(n.id);e.classList.add('glide');e.style.left=n.x+'px';e.style.top=n.y+'px'});
+  const t0=performance.now();(function f(){renderWires();if(performance.now()-t0<360)requestAnimationFrame(f);else{nodes.forEach(n=>elOf(n.id).classList.remove('glide'));fit()}})();
+  toast('Đã sắp xếp theo dòng chảy: trái sang phải','ok','tidy');
+}
+
+/* ---------- wiring rules ---------- */
+function compat(a,b){ // a,b: {nid,pk,dir,type}
+  if(a.nid===b.nid)return {ok:false,why:'Không nối một mảnh ghép với chính nó.'};
+  if(a.dir===b.dir)return {ok:false,why:a.dir==='out'?'Hai cổng đều là cổng đưa ra. Hãy thả vào cổng bên trái của mảnh khác.':'Hai cổng đều là cổng nhận vào. Hãy bắt đầu từ cổng bên phải.'};
+  if(a.type!==b.type)return {ok:false,why:`Không hợp loại: dây mang ${TYPES[a.type].name}, còn cổng này nhận ${TYPES[b.type].name}.`};
+  return {ok:true};
+}
+function addWire(out,inp){
+  wires=wires.filter(w=>!(w.t[0]===inp.nid&&w.t[1]===inp.pk));
+  wires.push({f:[out.nid,out.pk],t:[inp.nid,inp.pk]});
+}
+function tryWire(src,n,silent){ // after quick-add from a wire drop: connect first compatible port
+  const k=KINDS[n.kind],list=src.dir==='out'?(k.ins||[]):(k.outs||[]);const p=list.find(q=>q.type===src.type);if(!p)return;
+  const other={nid:n.id,pk:p.k,dir:src.dir==='out'?'in':'out',type:p.type};
+  if(src.dir==='out')addWire(src,other);else addWire(other,src);refreshIssues();renderWires();renderInspector();lessonCheck();
+}
+const portInfo=el=>({nid:el.closest('.node').dataset.id,pk:el.dataset.port,dir:el.dataset.dir,type:el.dataset.type,el});
+
+/* ---------- pointer interactions on stage ---------- */
+let drag=null;
+stage.addEventListener('pointerdown',e=>{
+  if(e.button!==0&&e.button!==1)return;
+  if(e.target.closest('.ov,.game,.launch'))return;
+  const auto=e.target.closest('[data-auto]');if(auto){e.stopPropagation();return}
+  const port=e.target.closest('.port'),node=e.target.closest('.node'),hit=e.target.closest('path.hit');
+  stage.setPointerCapture(e.pointerId);
+  if(port&&e.button===0){
+    let src=portInfo(port);
+    if(src.dir==='in'){const ex=wires.find(w=>w.t[0]===src.nid&&w.t[1]===src.pk);
+      if(ex){snap();wires=wires.filter(w=>w!==ex);src=portInfo(world.querySelector(`.node[data-id="${ex.f[0]}"] .port.out[data-port="${ex.f[1]}"]`));src.detached=true;refreshIssues()}}
+    drag={mode:'wire',src,moved:false};stage.classList.add('dragging-wire');
+    $$('.port',world).forEach(p=>{const c=compat(src,portInfo(p));p.classList.toggle('ok',c.ok);p.classList.toggle('no',!c.ok&&p!==src.el)});
+    wireMove(e);return;
+  }
+  if(hit){selWire=Number(hit.dataset.wire);sel=null;$$('.node.sel',world).forEach(n=>n.classList.remove('sel'));renderWires();renderInspector();toast('Đã chọn dây. Bấm Delete để xóa, hoặc kéo đầu dây ra khỏi cổng.','info','check');return}
+  if(node){const n=N(node.dataset.id);if(sel!==n.id)select(n.id);if(e.target.closest('input,button'))return;
+    drag={mode:'node',n,el:node,sx:e.clientX,sy:e.clientY,ox:n.x,oy:n.y,moved:false};return}
+  drag={mode:'pan',sx:e.clientX,sy:e.clientY,ox:view.x,oy:view.y,moved:false};stage.classList.add('panning');
+});
+function nearestPort(e,src){
+  let best=null,bd=24*24;$$('.port.ok',world).forEach(p=>{const r=p.querySelector('.dot').getBoundingClientRect(),dx=r.left+r.width/2-e.clientX,dy=r.top+r.height/2-e.clientY,d=dx*dx+dy*dy;if(d<bd){bd=d;best=p}});
+  const under=document.elementFromPoint(e.clientX,e.clientY);const up=under&&under.closest('.port');
+  if(up&&up!==src.el)return up;return best;
+}
+function wireMove(e){
+  const s=drag.src,a=portPos(s.nid,s.pk,s.dir),w=world.getBoundingClientRect();
+  let b={x:(e.clientX-w.left)/view.s,y:(e.clientY-w.top)/view.s};
+  const t=nearestPort(e,s);$$('.port.snap',world).forEach(p=>p.classList.remove('snap'));
+  if(t&&t.classList.contains('ok')){t.classList.add('snap');const pi=portInfo(t);b=portPos(pi.nid,pi.pk,pi.dir)}
+  tempWire={type:s.type,d:s.dir==='out'?curve(a,b):curve(b,a)};renderWires();
+}
+stage.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  if(drag.mode==='wire'){drag.moved=true;wireMove(e);return}
+  const dx=e.clientX-drag.sx,dy=e.clientY-drag.sy;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;
+  if(drag.mode==='node'){drag.n.x=Math.round(drag.ox+dx/view.s);drag.n.y=Math.round(drag.oy+dy/view.s);drag.el.style.left=drag.n.x+'px';drag.el.style.top=drag.n.y+'px';renderWires()}
+  else if(drag.mode==='pan'){view.x=drag.ox+dx;view.y=drag.oy+dy;applyView();if(drag.moved)hideCoach()}
+});
+stage.addEventListener('pointerup',e=>{
+  if(!drag)return;const d=drag;drag=null;stage.classList.remove('panning');
+  if(d.mode==='wire'){
+    stage.classList.remove('dragging-wire');tempWire=null;
+    const t=nearestPort(e,d.src);$$('.port',world).forEach(p=>p.classList.remove('ok','no','snap'));
+    if(t){const ti=portInfo(t),c=compat(d.src,ti);
+      if(c.ok){if(!d.src.detached)snap();d.src.dir==='out'?addWire(d.src,ti):addWire(ti,d.src);
+        const o=d.src.dir==='out'?d.src:ti,i=d.src.dir==='out'?ti:d.src;toast(`Đã nối ${KINDS[N(o.nid).kind].t} › ${portDef(N(o.nid),o.pk,'out').label} vào ${KINDS[N(i.nid).kind].t} › ${portDef(N(i.nid),i.pk,'in').label}`,'ok','check');lessonCheck()}
+      else if(t!==d.src.el){t.classList.remove('shake');void t.offsetWidth;t.classList.add('shake');toast(c.why+' Hãy tìm chấm cùng màu, cùng hình.','err','alert')}}
+    else if(d.moved){const w=world.getBoundingClientRect();quickAdd({x:(e.clientX-w.left)/view.s,y:(e.clientY-w.top)/view.s-20},d.src)}
+    else if(d.src.detached)toast('Đã tháo dây. Bấm Ctrl+Z để nối lại.','info','undo');
+    refreshIssues();renderWires();renderInspector();return;
+  }
+  if(d.mode==='node'&&d.moved){hist.push(JSON.stringify({nodes:nodes.map(n=>n===d.n?{...n,x:d.ox,y:d.oy}:n),wires}));fut.length=0;syncUndo();markDirty();drawMini()}
+  if(d.mode==='pan'&&!d.moved&&e.target.closest('.stage')&&!e.target.closest('.node')){sel=null;selWire=null;$$('.node.sel',world).forEach(n=>n.classList.remove('sel'));renderWires();renderInspector();drawMini()}
+});
+stage.addEventListener('click',e=>{const a=e.target.closest('[data-auto]');if(a){const [nid,pk]=a.dataset.auto.split('|');autoWire(nid,pk)}});
+stage.addEventListener('dblclick',e=>{if(e.target.closest('.node,.ov,.game,.launch'))return;const w=world.getBoundingClientRect();quickAdd({x:(e.clientX-w.left)/view.s,y:(e.clientY-w.top)/view.s})});
+stage.addEventListener('wheel',e=>{if(e.target.closest('.game,.ov'))return;e.preventDefault();const r=stage.getBoundingClientRect();zoomAt(view.s*Math.exp(-e.deltaY*.0015),e.clientX-r.left,e.clientY-r.top);hideCoach()},{passive:false});
+function hideCoach(){$('#coach').style.display='none'}
+$('#coachX').onclick=hideCoach;
+$('#ibody').addEventListener('click',e=>{const a=e.target.closest('[data-auto]');if(a){const [nid,pk]=a.dataset.auto.split('|');autoWire(nid,pk)}});
+
+/* ---------- palette ---------- */
+const catOrder=['input','logic','math','object','action','brain','output'];
+function renderPalette(q=''){
+  const fq=fold(q.trim());let html='',hits=0;
+  catOrder.forEach(c=>{const items=Object.entries(KINDS).filter(([k,v])=>v.cat===c&&(!fq||fold(v.t+' '+v.d+' '+CATS[c].name).includes(fq)));
+    if(!items.length)return;hits+=items.length;
+    html+=`<section class="cat" data-cat="${c}" data-open="true"><button class="cat-h" style="--c:${CATS[c].c}" aria-expanded="true">${ico(CATS[c].icon,'ico sm')}${CATS[c].name}<span class="n">${items.length}</span>${ico('chev','ico sm chev')}</button><ul>`+
+    items.map(([k,v])=>`<li><button class="item" data-kind="${k}" title="Bấm để thêm, hoặc kéo vào bảng"><span class="chip" style="--c:${CATS[c].c}">${ico(CATS[c].icon,'ico sm')}</span><span><b>${hl(v.t,fq)}</b><small>${hl(v.d,fq)}</small></span></button></li>`).join('')+'</ul></section>'});
+  $('#plist').innerHTML=hits?html:`<div class="noresult">Không thấy "<b>${esc(q)}</b>".<br>Thử gõ ngắn hơn, ví dụ: <b>dem</b>, <b>cham</b>, <b>thang</b>.</div>`;
+  $('#pcount').textContent=fq?`${hits} kết quả`:`${Object.keys(KINDS).length} mảnh`;
+  $('#psearchWrap').classList.toggle('has',!!q);
+}
+function hl(text,fq){ // highlight a diacritic-insensitive match on the original text
+  if(!fq)return esc(text);const f=fold(text),i=f.indexOf(fq);if(i<0)return esc(text);
+  return esc(text.slice(0,i))+'<mark>'+esc(text.slice(i,i+fq.length))+'</mark>'+esc(text.slice(i+fq.length));
+}
+$('#psearch').addEventListener('input',e=>renderPalette(e.target.value));
+$('#pclear').onclick=()=>{$('#psearch').value='';renderPalette();$('#psearch').focus()};
+$('#plist').addEventListener('click',e=>{
+  const h=e.target.closest('.cat-h');if(h){const s=h.parentElement,o=s.dataset.open!=='false';s.dataset.open=String(!o);h.setAttribute('aria-expanded',String(!o));return}
+  const it=e.target.closest('.item');if(it){if(suppressClick){suppressClick=false;return}addNode(it.dataset.kind)}
+});
+let pdrag=null,suppressClick=false;
+$('#plist').addEventListener('pointerdown',e=>{const it=e.target.closest('.item');if(!it||e.button!==0)return;pdrag={kind:it.dataset.kind,sx:e.clientX,sy:e.clientY,ghost:null}});
+window.addEventListener('pointermove',e=>{if(!pdrag)return;
+  if(!pdrag.ghost&&Math.hypot(e.clientX-pdrag.sx,e.clientY-pdrag.sy)>6){const k=KINDS[pdrag.kind];const g=document.createElement('div');g.className='ghost-item';g.innerHTML=`<span style="color:${CATS[k.cat].c}">${ico(CATS[k.cat].icon,'ico sm')}</span>${esc(k.t)}`;document.body.appendChild(g);pdrag.ghost=g}
+  if(pdrag.ghost){pdrag.ghost.style.left=e.clientX+12+'px';pdrag.ghost.style.top=e.clientY+8+'px'}});
+window.addEventListener('pointerup',e=>{if(!pdrag)return;const d=pdrag;pdrag=null;if(!d.ghost)return;d.ghost.remove();suppressClick=true;setTimeout(()=>suppressClick=false,50);
+  const sr=stage.getBoundingClientRect();if(e.clientX>sr.left&&e.clientX<sr.right&&e.clientY>sr.top&&e.clientY<sr.bottom){const w=world.getBoundingClientRect();addNode(d.kind,{x:(e.clientX-w.left)/view.s-100,y:(e.clientY-w.top)/view.s-20})}});
+
+function renderRail(){
+  $('#railCats').innerHTML=catOrder.map(c=>`<button class="rbtn" data-railcat="${c}" style="--c:${CATS[c].c}" data-tip="${CATS[c].name}" aria-label="${CATS[c].name}">${ico(CATS[c].icon)}</button>`).join('');
+}
+$('#railCats').addEventListener('click',e=>{const b=e.target.closest('[data-railcat]');if(!b)return;setDrawer(true);$('#psearch').value='';renderPalette();
+  const s=$(`.cat[data-cat="${b.dataset.railcat}"]`);$$('.cat').forEach(x=>{x.dataset.open=String(x===s)});s.scrollIntoView({block:'start'});const f=s.querySelector('.item');if(f)f.focus()});
+function setDrawer(on){document.body.classList.toggle('drawer-off',!on);$('#railToggle').setAttribute('aria-pressed',String(on));setTimeout(()=>{renderWires();drawMini()},240)}
+$('#railToggle').onclick=()=>setDrawer(document.body.classList.contains('drawer-off'));
+$('#railSearch').onclick=()=>{setDrawer(true);setTimeout(()=>$('#psearch').focus(),60)};
+$('#railLessons').onclick=()=>{const t=$('#tut');t.style.display='';t.classList.remove('min');toast('Bài học đang làm: Bài 2, bước 3 trên 4','info','book')};
+function setInsp(on){document.body.classList.toggle('insp-off',!on);setTimeout(()=>{renderWires();drawMini()},240)}
+$('#inspToggle').onclick=()=>setInsp(document.body.classList.contains('insp-off'));
+
+/* ---------- command palette / quick add ---------- */
+let cmdState={items:[],idx:0,pos:null,src:null};
+const COMMANDS=[
+  {t:'Vừa màn hình',d:'Cho mọi mảnh ghép vừa khung nhìn',icon:'fit',run:fit,hint:'Shift 1'},
+  {t:'Sắp xếp gọn',d:'Xếp lại theo dòng chảy trái sang phải',icon:'tidy',run:tidy},
+  {t:'Bố cục: Nối dây',d:'Bảng nối dây lớn, game nổi ở góc',icon:'tidy',run:()=>setLayout('wire')},
+  {t:'Bố cục: Chơi thử',d:'Game to bên phải, bảng bên trái',icon:'dock',run:()=>setLayout('play')},
+  {t:'Bố cục: Cân bằng',d:'Bảng, game và thuộc tính cùng lúc',icon:'grid',run:()=>setLayout('balance')},
+  {t:'Chơi',d:'Chạy game từ đầu',icon:'play',run:()=>gamePlay()},
+  {t:'Tạo game mới',d:'Mở màn hình bắt đầu',icon:'plus',run:()=>$('#launch').classList.add('on')}
+];
+function openCmd(pos=null,src=null){cmdState.pos=pos;cmdState.src=src;closePops();$('#cmdk').classList.add('on');const q=$('#cq');q.value='';
+  const f=$('#cfilter');if(src){f.hidden=false;f.innerHTML=`<i class="dot t-${src.type}" style="position:static;width:9px;height:9px;border:0;margin:0;background:${TYPES[src.type].color};${src.type==='num'?'transform:rotate(45deg) scale(.86)':src.type==='bool'?'border-radius:50%':''}"></i>Chỉ hiện mảnh ghép có cổng ${TYPES[src.type].name} ${src.dir==='out'?'nhận vào':'đưa ra'}`}else f.hidden=true;
+  renderCmd();q.focus()}
+function quickAdd(pos,src){openCmd(pos,src||null)}
+function renderCmd(){
+  const fq=fold($('#cq').value.trim()),src=cmdState.src;
+  let kinds=Object.entries(KINDS).filter(([k,v])=>!fq||fold(v.t+' '+v.d+' '+CATS[v.cat].name).includes(fq));
+  if(src)kinds=kinds.filter(([k,v])=>((src.dir==='out'?v.ins:v.outs)||[]).some(p=>p.type===src.type));
+  const cmds=src?[]:COMMANDS.filter(c=>!fq||fold(c.t+' '+c.d).includes(fq));
+  cmdState.items=[...kinds.slice(0,8).map(([k,v])=>({kind:k,v})),...cmds.map(c=>({cmd:c}))];cmdState.idx=0;
+  let h='';if(kinds.length)h+='<div class="grp">Thêm mảnh ghép</div>';
+  cmdState.items.forEach((it,i)=>{if(it.cmd&&(i===0||!cmdState.items[i-1].cmd))h+='<div class="grp">Lệnh</div>';
+    if(it.kind){const c=CATS[it.v.cat];h+=`<button class="copt" role="option" data-i="${i}"><span class="chip" style="--c:${c.c}">${ico(c.icon,'ico sm')}</span><span><b>${hl(it.v.t,fq)}</b><small>${esc(it.v.d)}</small></span><span class="hint">${c.name}</span></button>`}
+    else h+=`<button class="copt" role="option" data-i="${i}"><span class="chip" style="--c:var(--text-2)">${ico(it.cmd.icon,'ico sm')}</span><span><b>${esc(it.cmd.t)}</b><small>${esc(it.cmd.d)}</small></span><span class="hint">${it.cmd.hint||''}</span></button>`});
+  $('#clist').innerHTML=h||`<div class="noresult">Không thấy kết quả. Thử gõ không dấu, ví dụ "hen gio".</div>`;markCmd();
+}
+function markCmd(){$$('.copt').forEach(b=>b.setAttribute('aria-selected',String(Number(b.dataset.i)===cmdState.idx)));const s=$('.copt[aria-selected=true]');if(s)s.scrollIntoView({block:'nearest'})}
+function runCmd(i){const it=cmdState.items[i];if(!it)return;const {pos,src}=cmdState;closePops();
+  if(it.kind)addNode(it.kind,pos,{wireFrom:src});else it.cmd.run()}
+$('#cq').addEventListener('input',renderCmd);
+$('#cq').addEventListener('keydown',e=>{if(e.key==='ArrowDown'){e.preventDefault();cmdState.idx=Math.min(cmdState.items.length-1,cmdState.idx+1);markCmd()}
+  else if(e.key==='ArrowUp'){e.preventDefault();cmdState.idx=Math.max(0,cmdState.idx-1);markCmd()}else if(e.key==='Enter'){e.preventDefault();runCmd(cmdState.idx)}});
+$('#clist').addEventListener('click',e=>{const b=e.target.closest('.copt');if(b)runCmd(Number(b.dataset.i))});
+$('#cmdBtn').onclick=()=>openCmd();
+
+/* popovers */
+function closePops(){$$('.pop.on').forEach(p=>p.classList.remove('on'));$('#fileBtn').setAttribute('aria-expanded','false')}
+function anchorPop(pop,btn,alignRight){const r=btn.getBoundingClientRect();pop.style.top=r.bottom+6+'px';if(alignRight){pop.style.left='auto';pop.style.right=(innerWidth-r.right)+'px'}else{pop.style.left=r.left+'px';pop.style.right='auto'}}
+$('#fileBtn').onclick=e=>{e.stopPropagation();const m=$('#fileMenu'),on=m.classList.contains('on');closePops();if(!on){anchorPop(m,e.currentTarget);m.classList.add('on');e.currentTarget.setAttribute('aria-expanded','true');m.querySelector('button').focus()}};
+$('#helpBtn').onclick=e=>{e.stopPropagation();const m=$('#helpPop'),on=m.classList.contains('on');closePops();if(!on){anchorPop(m,e.currentTarget,true);m.classList.add('on')}};
+document.addEventListener('pointerdown',e=>{if(!e.target.closest('.pop,#fileBtn,#helpBtn,#cmdBtn'))closePops()});
+$('#fileMenu').addEventListener('click',e=>{const b=e.target.closest('[data-file]');if(!b)return;closePops();const a=b.dataset.file;
+  if(a==='new')$('#launch').classList.add('on');else if(a==='save'){markDirty();toast('Đã lưu vào máy này','ok','cloud')}
+  else toast('Trong bản mockup, mục này chỉ để xem vị trí','info','file')});
+$('#launch').addEventListener('click',e=>{const b=e.target.closest('[data-launch]');if(!b)return;$('#launch').classList.remove('on');if(b.dataset.launch!=='back')toast('Mockup: quay lại game mẫu đang mở','info','grid')});
+
+/* ---------- layout presets ---------- */
+function setLayout(l){
+  document.body.dataset.layout=l;$$('.seg button').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.layout===l)));
+  const g=$('#game');g.classList.remove('full','min');
+  if(l==='wire'){setDrawer(true);setInsp(true);g.classList.add('pip');stage.appendChild(g)}
+  else if(l==='play'){setDrawer(false);setInsp(false);g.classList.remove('pip');$('#dock').appendChild(g)}
+  else{setDrawer(false);setInsp(true);g.classList.remove('pip');$('#dock').appendChild(g)}
+  $('#tut').classList.toggle('min',l!=='wire');syncGameBtns();setTimeout(()=>{fit();sizeGame()},260);
+}
+$$('.seg button').forEach(b=>b.onclick=()=>setLayout(b.dataset.layout));
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg,kind='ok',icon='check'){const t=$('#toast'),tu=$('#tut');t.style.top=(tu.style.display==='none'?12:tu.offsetTop+tu.offsetHeight+8)+'px';t.className='ov toast on '+kind;t.innerHTML=ico(icon,'ico sm')+`<span>${esc(msg)}</span>`;clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),3400)}
+
+/* ---------- tooltips for icon buttons ---------- */
+const tip=$('#tip');
+document.addEventListener('pointerover',e=>{const b=e.target.closest('[data-tip]');if(!b){tip.classList.remove('on');return}tip.textContent=b.dataset.tip;const r=b.getBoundingClientRect();
+  const inRail=b.closest('.rail,.zoom');tip.classList.add('on');const tw=tip.offsetWidth;
+  if(inRail){tip.style.left=r.right+8+'px';tip.style.top=r.top+r.height/2-14+'px'}else{tip.style.left=Math.min(innerWidth-tw-8,Math.max(8,r.left+r.width/2-tw/2))+'px';tip.style.top=r.bottom+6+'px'}});
+document.addEventListener('focusin',e=>{const b=e.target.closest&&e.target.closest('[data-tip]');if(!b)tip.classList.remove('on')});
+
+/* ---------- lesson ---------- */
+let lessonDone=false;
+function lessonCheck(){
+  if(lessonDone)return;const ok=wires.some(w=>N(w.f[0])&&N(w.f[0]).kind==='timer'&&w.f[1]==='done'&&N(w.t[0])&&N(w.t[0]).kind==='lose');
+  if(!ok)return;lessonDone=true;ghostWire=null;$('#tutStep').textContent='Bước 4/4';$('#tutBar').innerHTML='<i class="done"></i><i class="done"></i><i class="done"></i><i class="now"></i>';
+  $('#tutText').innerHTML='Xong rồi. Bấm <em>Chơi</em> rồi đứng yên cho hết giờ để xem màn thua.';
+  $('#tutHelp').outerHTML=`<button class="gbtn acc" id="tutHelp">${ico('play','ico sm fill')}Chơi thử ngay</button>`;$('#tutHelp').onclick=()=>gamePlay();
+}
+$('#tutHelp').onclick=()=>autoWire('n10','when');
+$('#tutShow').onclick=()=>{const n=N('n10');if(!n)return;ghostWire={f:['n8','done'],t:['n10','when']};centerOn(n);setTimeout(renderWires,330);setTimeout(()=>{ghostWire=null;renderWires()},4200);toast('Đường nét đứt màu vàng là dây cần kéo','info','eye')};
+$('#tutMin').onclick=()=>{const t=$('#tut');t.classList.toggle('min');$('#tutMin').setAttribute('aria-label',t.classList.contains('min')?'Mở bài học':'Thu gọn bài học')};
+
+/* ---------- game (reads the graph live) ---------- */
+const gc=$('#gcanvas'),gx=gc.getContext('2d');const GW=480,GH=300;
+const G={state:'idle',px:GW/2,py:GH/2,coins:[],score:0,left:20,keys:{},warned:false,end:null,flashKind:null,flashT:0,last:0};
+const linked=(fk,fo,tk,ti)=>wires.some(w=>{const a=N(w.f[0]),b=N(w.t[0]);return a&&b&&a.kind===fk&&w.f[1]===fo&&b.kind===tk&&w.t[1]===ti});
+const prop=(kind,k,def)=>{const n=nodes.find(m=>m.kind===kind);return n?n.props[k]:def};
+function wireValue(w){const a=N(w.f[0]);if(!a)return null;if(a.kind==='counter')return G.score;if(a.kind==='timer'&&w.f[1]==='left')return Math.ceil(G.left);return null}
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+function gameReset(){seed=7;G.px=GW/2;G.py=GH/2+20;G.score=0;G.left=prop('timer','sec',20);G.warned=false;G.end=null;
+  const n=prop('coin','count',6);G.coins=[];for(let i=0;i<n;i++){let x,y;do{x=30+rnd()*(GW-60);y=40+rnd()*(GH-70)}while(Math.hypot(x-G.px,y-G.py)<60);G.coins.push({x,y})}
+  if(G.state!=='running')G.state='idle';drawGame()}
+function gamePlay(){gameReset();G.state='running';G.last=performance.now();syncGameBtns();requestAnimationFrame(loop);
+  if(!linked('arrows','x','player','mx'))toast('Nhân vật chưa nối với Phím mũi tên nên sẽ đứng yên','warn','alert')}
+function gameStop(){G.state='idle';gameReset();syncGameBtns();renderWires()}
+function syncGameBtns(){const r=G.state!=='idle';$('#btnPlay').disabled=r;$('#btnStop').disabled=!r;$('#btnRestart').disabled=!r;
+  const g=$('#game');g.classList.toggle('running',G.state==='running');$('#gstate').textContent=G.state==='running'?'ĐANG CHƠI':G.state==='idle'?'CHƯA CHẠY':G.end==='win'?'ĐÃ THẮNG':'ĐÃ THUA';
+  $('#gctrl').innerHTML=g.classList.contains('full')?`<button class="pbtn primary" ${r?'disabled':''} data-g="play">${ico('play','ico sm fill')}Chơi</button><button class="pbtn" ${r?'':'disabled'} data-g="stop">${ico('stop','ico sm fill')}Dừng</button><button class="pbtn" ${r?'':'disabled'} data-g="restart">${ico('restart','ico sm')}Chơi lại</button>`:''}
+$('#gctrl').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;({play:gamePlay,stop:gameStop,restart:gamePlay})[b.dataset.g]()});
+$('#btnPlay').onclick=gamePlay;$('#btnStop').onclick=gameStop;$('#btnRestart').onclick=gamePlay;
+function fire(kind){nodes.filter(n=>n.kind===kind).forEach(n=>{const e=elOf(n.id);e.classList.add('fire');setTimeout(()=>e.classList.remove('fire'),260)})}
+function loop(t){
+  if(G.state!=='running'){drawGame();return}
+  const dt=Math.min(.05,(t-G.last)/1000);G.last=t;
+  const sp=prop('player','speed',4)*36;
+  let vx=(G.keys.ArrowRight?1:0)-(G.keys.ArrowLeft?1:0),vy=(G.keys.ArrowDown?1:0)-(G.keys.ArrowUp?1:0);
+  if(!linked('arrows','x','player','mx'))vx=0;if(!linked('arrows','y','player','my'))vy=0;
+  G.px=Math.max(14,Math.min(GW-14,G.px+vx*sp*dt));G.py=Math.max(14,Math.min(GH-14,G.py+vy*sp*dt));
+  if(linked('player','self','touch','a')&&linked('coin','self','touch','b')){
+    G.coins=G.coins.filter(c=>{if(Math.hypot(c.x-G.px,c.y-G.py)<20){fire('touch');if(linked('touch','hit','counter','inc')){G.score++;fire('counter')}return false}return true});
+  }
+  if(linked('counter','val','compare','a')&&linked('compare','o','win','when')&&G.score>=prop('compare','goal',6)){G.state='over';G.end='win';fire('win');syncGameBtns()}
+  G.left=Math.max(0,G.left-dt);
+  if(G.left<=0&&G.state==='running'){if(linked('timer','done','lose','when')){G.state='over';G.end='lose';fire('lose');syncGameBtns()}
+    else if(!G.warned){G.warned=true;toast('Hết giờ nhưng game không thua: mảnh Thua chưa được nối dây','warn','alert')}}
+  if(G.flashT>0)G.flashT-=dt;
+  drawGame();if(Math.round(t/250)!==Math.round((t-dt*1000)/250))renderWires();
+  requestAnimationFrame(loop);
+}
+function sizeGame(){const r=gc.getBoundingClientRect();const d=devicePixelRatio||1;if(!r.width)return;gc.width=Math.round(r.width*d);gc.height=Math.round(r.height*d);drawGame()}
+new ResizeObserver(sizeGame).observe(gc);
+function drawGame(){
+  const W=gc.width,H=gc.height;if(!W)return;const s=Math.min(W/GW,H/GH),ox=(W-GW*s)/2,oy=(H-GH*s)/2;
+  gx.setTransform(1,0,0,1,0,0);gx.fillStyle='#0C1012';gx.fillRect(0,0,W,H);gx.setTransform(s,0,0,s,ox,oy);
+  // garden floor
+  gx.fillStyle='#1D3A2F';gx.fillRect(0,0,GW,GH);
+  gx.fillStyle='#22443A';for(let y=0;y<GH;y+=30)for(let x=(y/30)%2?15:0;x<GW;x+=30)gx.fillRect(x,y,15,15);
+  gx.strokeStyle='#3B6B57';gx.lineWidth=4;gx.strokeRect(2,2,GW-4,GH-4);
+  // bushes
+  [[60,250],[420,60],[400,240]].forEach(([x,y])=>{gx.fillStyle='#2F5E45';gx.beginPath();gx.arc(x,y,16,0,7);gx.arc(x+14,y+6,12,0,7);gx.fill()});
+  const fl=G.flashT>0&&Math.floor(G.flashT*6)%2===0;
+  // coins
+  G.coins.forEach(c=>{gx.fillStyle=fl&&G.flashKind==='coin'?'#FFFFFF':'#FFD54A';gx.beginPath();gx.arc(c.x,c.y,8,0,7);gx.fill();gx.fillStyle='#E0A51E';gx.beginPath();gx.arc(c.x,c.y,4,0,7);gx.fill()});
+  // cat
+  const cx=G.px,cy=G.py;gx.fillStyle=fl&&G.flashKind==='player'?'#FFFFFF':'#FF8A3D';
+  gx.beginPath();gx.moveTo(cx-11,cy-6);gx.lineTo(cx-7,cy-17);gx.lineTo(cx-2,cy-9);gx.lineTo(cx+2,cy-9);gx.lineTo(cx+7,cy-17);gx.lineTo(cx+11,cy-6);gx.closePath();gx.fill();
+  gx.beginPath();gx.arc(cx,cy,12,0,7);gx.fill();gx.fillStyle='#1E1006';gx.fillRect(cx-6,cy-3,3,4);gx.fillRect(cx+3,cy-3,3,4);
+  // HUD (game-owned): counter only appears if Hiện số is wired
+  gx.font='600 15px "Be Vietnam Pro",sans-serif';gx.textBaseline='middle';
+  if(linked('counter','val','show','n')){const lbl=`${prop('show','label','Xu:')} ${G.score}`;gx.fillStyle='rgba(8,12,14,.7)';gx.fillRect(10,10,gx.measureText(lbl).width+18,26);gx.fillStyle='#FFE79A';gx.fillText(lbl,19,24)}
+  const tl=`${Math.ceil(G.left)} giây`;const tw=gx.measureText(tl).width+18;gx.fillStyle='rgba(8,12,14,.7)';gx.fillRect(GW-10-tw,10,tw,26);gx.fillStyle=G.left<6?'#FF9C9C':'#E9EDF3';gx.fillText(tl,GW-1-tw,24);
+  if(G.state==='idle'){gx.fillStyle='rgba(8,12,14,.62)';gx.fillRect(0,0,GW,GH);gx.fillStyle='#E9EDF3';gx.textAlign='center';gx.font='700 20px "Be Vietnam Pro",sans-serif';gx.fillText('Bấm Chơi để thử game',GW/2,GH/2-8);
+    gx.font='500 14px "Be Vietnam Pro",sans-serif';gx.fillStyle='#B4BDC9';gx.fillText(`Nhặt ${prop('compare','goal',6)} xu trong ${prop('timer','sec',20)} giây`,GW/2,GH/2+20);gx.textAlign='left'}
+  if(G.state==='over'){gx.fillStyle='rgba(8,12,14,.7)';gx.fillRect(0,0,GW,GH);gx.textAlign='center';gx.font='700 28px "Be Vietnam Pro",sans-serif';
+    gx.fillStyle=G.end==='win'?'#3FD68A':'#FF8A8A';gx.fillText(G.end==='win'?'Thắng rồi!':'Hết giờ. Thua rồi',GW/2,GH/2-6);gx.font='500 14px "Be Vietnam Pro",sans-serif';gx.fillStyle='#B4BDC9';gx.fillText('Bấm Chơi lại để thử lần nữa',GW/2,GH/2+24);gx.textAlign='left'}
+}
+
+/* game window controls */
+$('#gFull').onclick=()=>toggleFull();
+function toggleFull(force){const g=$('#game'),on=force!=null?force:!g.classList.contains('full');g.classList.toggle('full',on);
+  $('#gFull').innerHTML=ico(on?'shrink':'expand','ico sm');$('#gFull').dataset.tip=on?'Thoát toàn màn hình (Esc)':'Toàn màn hình (Esc để thoát)';$('#gFull').setAttribute('aria-label',on?'Thoát toàn màn hình':'Toàn màn hình');syncGameBtns();setTimeout(sizeGame,30)}
+$('#gDock').onclick=()=>{const g=$('#game');if(g.parentElement===stage)setLayout('balance');else setLayout('wire')};
+$('#gMin').onclick=()=>{const g=$('#game');if(!g.classList.contains('pip')){setLayout('wire');return}g.classList.toggle('min')};
+
+/* ---------- keyboard ---------- */
+document.addEventListener('keydown',e=>{
+  const typing=e.target.closest&&e.target.closest('input,textarea');
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'){e.preventDefault();openCmd();return}
+  if(e.key==='Escape'){if($('.pop.on')){closePops();return}if($('#game').classList.contains('full')){toggleFull(false);return}if($('#launch').classList.contains('on')){$('#launch').classList.remove('on');return}if(!typing){sel=null;selWire=null;$$('.node.sel',world).forEach(n=>n.classList.remove('sel'));renderWires();renderInspector()}return}
+  if(G.state==='running'&&e.key.startsWith('Arrow')&&!typing){G.keys[e.key]=true;e.preventDefault();return}
+  if(typing)return;
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo():undo();return}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();redo();return}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&sel){e.preventDefault();dup(N(sel));return}
+  if(e.key==='Delete'||e.key==='Backspace'){if(selWire!=null){snap();wires.splice(selWire,1);selWire=null;refreshIssues();renderWires();renderInspector();toast('Đã xóa dây. Bấm Ctrl+Z nếu lỡ tay.','info','trash')}else if(sel)delNode(sel);return}
+  if(e.shiftKey&&e.code==='Digit1'){fit();return}
+  if(e.key==='+'||e.key==='='){zoomStep(1.2)}else if(e.key==='-'){zoomStep(1/1.2)}
+});
+document.addEventListener('keyup',e=>{if(e.key.startsWith('Arrow'))G.keys[e.key]=false});
+
+/* zoom toolbar */
+$('#zIn').onclick=()=>zoomStep(1.2);$('#zOut').onclick=()=>zoomStep(1/1.2);$('#zFit').onclick=fit;$('#zTidy').onclick=tidy;
+$('#zPct').onclick=()=>{const r=stage.getBoundingClientRect();zoomAt(1,r.width/2,r.height/2)};
+$('#undoBtn').onclick=undo;$('#redoBtn').onclick=redo;
+new ResizeObserver(()=>{renderWires();drawMini()}).observe(stage);
+
+/* ---------- boot ---------- */
+sample();renderRail();renderPalette();renderAll();syncUndo();gameReset();
+select('n10');
+(document.fonts?document.fonts.ready:Promise.resolve()).then(()=>{fit();refreshIssues();renderWires();drawGame()});
+</script>
+</body>
+</html>

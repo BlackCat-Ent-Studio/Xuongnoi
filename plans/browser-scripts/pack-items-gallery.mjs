@@ -1,0 +1,16 @@
+const { chromium } = await import('file:///C:/Users/trong/AppData/Local/Temp/claude/D--workspace-GameBuilder/091c5a2d-ceff-4dfe-a2af-61a656b30d1c/scratchpad/smoke/node_modules/playwright/index.mjs');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const OUT = 'D:/workspace/GameBuilder/plans/reports/shots-pack-items';
+const browser = await chromium.launch({ headless: true, args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist', '--enable-webgl'] });
+const page = await (await browser.newContext({ viewport: { width: 1400, height: 800 } })).newPage();
+const logs = [];
+page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') logs.push(`[${m.type()}] ${m.text()}`); });
+page.on('pageerror', (e) => logs.push(`[pageerror] ${e.message}`));
+await page.goto('http://localhost:5203/pack-gallery.html');
+await sleep(6000);
+await page.screenshot({ path: `${OUT}/gallery-3d.png` });
+await page.evaluate(() => { const c = window.cam; c.position.set(-2.4, 1.1, 3); c.lookAt(-2.4, 0.6, -2.5); });
+await sleep(800);
+await page.screenshot({ path: `${OUT}/gallery-hands.png` });
+console.log(logs.join('\n') || 'no console errors');
+await browser.close();

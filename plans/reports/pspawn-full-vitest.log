@@ -1,0 +1,28 @@
+
+ RUN  v5.0.5 D:/workspace/GameBuilder-pspawn/app
+
+ ❯ tests/puzzle/level-7-decoy.test.ts (3 tests | 1 failed) 1206768ms
+   ❯ level 7: the spare "Đo tốc độ" gives no cheaper win (3)
+     × the spare cannot even replace a piece: with it added, no answer wins that is built from fewer pieces than the solution 1205589ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  tests/puzzle/level-7-decoy.test.ts > level 7: the spare "Đo tốc độ" gives no cheaper win > the spare cannot even replace a piece: with it added, no answer wins that is built from fewer pieces than the solution
+Error: Test timed out in 900000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ tests/puzzle/level-7-decoy.test.ts:47:3
+     45|   });
+     46|
+     47|   it('the spare cannot even replace a piece: with it added, no answer …
+       |   ^
+     48|     let tried = 0;
+     49|     for (const missing of sol.nodes) {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed | 207 passed (208)
+      Tests  1 failed | 3212 passed (3213)
+   Start at  14:21:16
+   Duration  1210.94s (tests 96%, transform 2%, import 2%)
+

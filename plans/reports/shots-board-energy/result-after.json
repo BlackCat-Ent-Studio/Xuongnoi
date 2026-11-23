@@ -1,0 +1,73 @@
+{
+  "edit": {
+    "wires": 31,
+    "flow": 31,
+    "live": 0,
+    "sparks": 0,
+    "portsLive": 0,
+    "hot": 0
+  },
+  "playSpark": {
+    "wires": 31,
+    "flow": 0,
+    "live": 12,
+    "sparks": 3,
+    "portsLive": 20,
+    "hot": 7
+  },
+  "playFrames": 1,
+  "play": {
+    "wires": 31,
+    "flow": 0,
+    "live": 12,
+    "sparks": 0,
+    "portsLive": 20,
+    "hot": 7
+  },
+  "smallPlayFps": 60.4,
+  "stoppedClean": {
+    "wires": 31,
+    "flow": 31,
+    "live": 0,
+    "sparks": 0,
+    "portsLive": 0,
+    "hot": 0
+  },
+  "offEdit": {
+    "wires": 31,
+    "flow": 0,
+    "live": 0,
+    "sparks": 0,
+    "portsLive": 0,
+    "hot": 0
+  },
+  "offPlay": {
+    "wires": 31,
+    "flow": 0,
+    "live": 0,
+    "sparks": 0,
+    "portsLive": 0,
+    "hot": 0
+  },
+  "storage": "off",
+  "storageOn": "on",
+  "cityEdit": {
+    "wires": 72,
+    "flow": 72,
+    "live": 0,
+    "sparks": 0,
+    "portsLive": 0,
+    "hot": 0
+  },
+  "cityEditFps": 60.4,
+  "cityPlayFps": 51.75,
+  "cityPlay": {
+    "wires": 72,
+    "flow": 0,
+    "live": 37,
+    "sparks": 0,
+    "portsLive": 48,
+    "hot": 6
+  },
+  "consoleErrors": []
+}

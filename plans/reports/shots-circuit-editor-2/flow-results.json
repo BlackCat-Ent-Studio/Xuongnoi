@@ -1,0 +1,521 @@
+{
+ "results": [
+  {
+   "name": "a: no bench strip on the main board",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: the path bar of an entered circuit has \"Chạy thử máy này\"",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: the strip opens under the board",
+   "ok": true,
+   "detail": "Bàn thử: Xe AGV"
+  },
+  {
+   "name": "a: the strip is a band below the canvas, as wide as it, and the game window stays clear of it",
+   "ok": true,
+   "detail": "{\"below\":true,\"sameWidth\":true,\"pipClear\":true}"
+  },
+  {
+   "name": "a: one row per pin of the circuit",
+   "ok": true,
+   "detail": "2 in / 2 out"
+  },
+  {
+   "name": "a: out pins show no value before the run",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: \"Chạy thử\" starts the run",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: the note says the values are those of this circuit alone",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: switching the in pins on by hand makes the machine go (out pins change)",
+   "ok": true,
+   "detail": "0.00 | 0.54  ->  1.00 | 0.11"
+  },
+  {
+   "name": "a: wires inside show live values during the bench run",
+   "ok": true,
+   "detail": "25 badges with a value"
+  },
+  {
+   "name": "a: the bench cannot be closed while it runs",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: \"Đặt lại\" switches the inputs off and keeps running from the start",
+   "ok": true,
+   "detail": "false,false"
+  },
+  {
+   "name": "a: \"Dừng\" stops the run",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: \"Thoát bàn thử\" closes the strip",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: nothing of the bench is saved with the board",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a Đúng/Sai pin has a switch and a press button",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a Số pin has a stepper",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a pin fed by a bench card says so",
+   "ok": true,
+   "detail": "Số BThẻ chạy thử \"Số cố định\" đang cấp"
+  },
+  {
+   "name": "a: a Vật thể pin is marked \"Cần nối ở bảng ngoài\"",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a pin not wired inside says so",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: the bench card is marked on the canvas",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: an opened setting shows the value the circuit holds, with a stepper",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: running, input off: \"Đã tắt\" is on, \"A lớn hơn B\" is off (0 > 5)",
+   "ok": true,
+   "detail": "Bật / Tắt"
+  },
+  {
+   "name": "a: switch on and A = 9 typed while running: \"Đã tắt\" goes off, \"A lớn hơn B\" goes on (9 > 5)",
+   "ok": true,
+   "detail": "Tắt / Bật"
+  },
+  {
+   "name": "a: \"Nhấn\" is on only while held",
+   "ok": true,
+   "detail": "held Tắt, released Bật"
+  },
+  {
+   "name": "a: the wire of the hand-driven number pin shows 9 on the canvas",
+   "ok": true,
+   "detail": "5.00 | Sai | 9.00 | 5.00 | — | Đúng | Đúng"
+  },
+  {
+   "name": "a: leaving the circuit ends its bench run and closes the bench",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a card inside a circuit has the \"Chỉ để chạy thử\" switch",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: a card that holds a pin cannot become a bench card (says why)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "a: the bench card shows its switch on",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "b: the whole board is running",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "b: the note names the copy whose values are shown",
+   "ok": true,
+   "detail": "Đang chạy: dòng điện của Xe AGV 1"
+  },
+  {
+   "name": "b: wires inside the entered copy carry values",
+   "ok": true,
+   "detail": "40/40 wires with a value"
+  },
+  {
+   "name": "b: the wire of an in pin shows what arrives from the board outside (\"Đúng\")",
+   "ok": true,
+   "detail": "Thân robot | Thân robot | Thân robot | 1.73 | 2.00 | Đúng | Sai | Đúng | 0.00 | 0.00 | 0.00 | 0.00"
+  },
+  {
+   "name": "b: number ports inside show value pills",
+   "ok": true,
+   "detail": "39 pills, e.g. 0.00 1.71 0.60 1.80"
+  },
+  {
+   "name": "b: leaving a copy does not stop the board",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "b: the note follows to the other copy",
+   "ok": true,
+   "detail": "Đang chạy: dòng điện của Xe AGV 8"
+  },
+  {
+   "name": "b: another copy of the same circuit shows its own values (its in pins have no wire outside, so nothing arrives)",
+   "ok": true,
+   "detail": "26 wires differ, e.g. 1.73≠0.11  Đúng≠Sai  Đúng≠Sai  0.00≠46.74  0.00≠46.74  0.00≠46.74; blank 0 vs 2"
+  },
+  {
+   "name": "b: the bench cannot be opened while the board runs",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "b: opened from the list, the note says no copy is chosen",
+   "ok": true,
+   "detail": "Đang chạy. Bảng mạch này mở từ danh sách nên chưa chọn bản sao nào: hãy quay ra và bấm \"Mở\" trên một bản sao để xem dòng điện của nó."
+  },
+  {
+   "name": "b: and no wire pretends to have a value",
+   "ok": true,
+   "detail": "— | — | — | — | — | —"
+  },
+  {
+   "name": "b: stop",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "h: the shipped board has notes with card-like ids",
+   "ok": true,
+   "detail": "n1,n2,n3,n4,n5"
+  },
+  {
+   "name": "h: a piece added from the palette gets an id no note has",
+   "ok": true,
+   "detail": "new card n6"
+  },
+  {
+   "name": "h: it is drawn as a card and every note is still a note",
+   "ok": true,
+   "detail": "33 cards, 5 notes"
+  },
+  {
+   "name": "h: the new card is the selected card (its settings show)",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "c: \"Xuất ra tệp\" downloads <tên>.bangmach.json with that circuit only",
+   "ok": true,
+   "detail": "Xe AGV.bangmach.json, 1 circuit(s)"
+  },
+  {
+   "name": "c: a file whose circuit name is taken is asked about in the palette (no browser dialog)",
+   "ok": true,
+   "detail": "Bảng này đã có bảng mạch tên \"Xe AGV\" (đang có 8 bản sao). Bạn muốn làm gì với bảng mạch trong tệp?Giữ cả haiT"
+  },
+  {
+   "name": "c: nothing is added before the choice",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "c: \"Giữ cả hai\" adds it under a numbered name",
+   "ok": true,
+   "detail": "Xe AGV|Máy thử|Xe AGV 2"
+  },
+  {
+   "name": "c: and says so",
+   "ok": true,
+   "detail": "Đã nhập bảng mạch \"Xe AGV 2\""
+  },
+  {
+   "name": "c: the imported circuit has the same inside as the exported one, under a new id",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "c: a copy of the imported circuit can be placed",
+   "ok": true,
+   "detail": "10"
+  },
+  {
+   "name": "c: \"Thay bảng mạch cũ\" puts the file in the place of the old circuit: same id, all pins back, copies kept",
+   "ok": true,
+   "detail": "4 pins, toast: Đã thay bảng mạch \"Xe AGV\" bằng bảng mạch trong tệp. Không ưng thì Hoàn tác."
+  },
+  {
+   "name": "c: wires that were on the board stay",
+   "ok": true,
+   "detail": "15 -> 15"
+  },
+  {
+   "name": "c: one undo brings the old circuit back",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "c: a whole-board file is refused with a message that says what it is",
+   "ok": true,
+   "detail": "Đây là tệp của cả một mô phỏng, không phải tệp bảng mạch. Hãy mở nó bằng \"Tệp › Mở từ file\"."
+  },
+  {
+   "name": "c: the file opens in another board without any question",
+   "ok": true,
+   "detail": "Xe AGV"
+  },
+  {
+   "name": "f: no colour dot before a colour is chosen",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "f: picking a colour in the row puts the dot on every copy and in the list",
+   "ok": true,
+   "detail": "8"
+  },
+  {
+   "name": "f: the colour is saved with the circuit",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "f: the summary of the entered circuit shows the picker with the colour on",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "f: changing it there is saved too",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "f: \"Màu mặc định\" removes the colour from the file again",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "f: undo brings the colour back",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "e: two cards are grouped (the starting point)",
+   "ok": true,
+   "detail": "[[\"than\",\"dc-trai\"]]"
+  },
+  {
+   "name": "e: the group inspector offers \"Chuyển nhóm thành bảng mạch\"",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "e: the group is gone and a circuit with its two cards stands in its place",
+   "ok": true,
+   "detail": "Nhóm 1: 7 pins"
+  },
+  {
+   "name": "e: it says what it did",
+   "ok": true,
+   "detail": "Đã chuyển nhóm thành bảng mạch \"Nhóm 1\" với 7 chân"
+  },
+  {
+   "name": "e: the wires inside the group moved into the circuit; every wire that left the group is still on the board, now on a pin",
+   "ok": true,
+   "detail": "12 crossing = 12 on the copy, 1 inside"
+  },
+  {
+   "name": "e: the board still runs",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "e: one undo brings the group back",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "d: the palette group lists the starter circuits",
+   "ok": true,
+   "detail": "Đèn nháy|Xe hai bánh tới mốc"
+  },
+  {
+   "name": "d: \"Thêm\" puts them in the board",
+   "ok": true,
+   "detail": "Đèn nháy|Xe hai bánh tới mốc"
+  },
+  {
+   "name": "d: inside, the starter is made of ordinary pieces, two of them bench cards",
+   "ok": true,
+   "detail": "7 cards, 2 bench"
+  },
+  {
+   "name": "d: on the bench the object pin is fed by the bench marker",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "d: the cart waits while \"Chạy\" is off (5 m from the bench marker)",
+   "ok": true,
+   "detail": "Đã tới Tắt, còn cách 5"
+  },
+  {
+   "name": "d: \"Chạy\" switched on: the cart drives to the marker and \"Đã tới\" comes on",
+   "ok": true,
+   "detail": "còn cách 0.02"
+  },
+  {
+   "name": "d: \"Đèn nháy\" stays off until \"Bật\", then goes on and off",
+   "ok": true,
+   "detail": "before Tắt, then Tắt/Bật"
+  },
+  {
+   "name": "i: the scene tree lists the objects inside the copies, named by copy",
+   "ok": true,
+   "detail": "51 rows, 48 inside copies, e.g. Xe AGV 1 › Máy quay #1 | Xe AGV 2 › Máy quay #2"
+  },
+  {
+   "name": "i: a row of a copy opens that copy and selects the card inside",
+   "ok": true,
+   "detail": "n8/may-quay: crumb Xe AGV, selected Máy quay"
+  },
+  {
+   "name": "i: the row stays marked as the selection",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "i: a selected copy marks its own objects in the tree",
+   "ok": true,
+   "detail": "Xe AGV 2 › Máy quay #2 | Xe AGV 2 › Hiện số #7 | Xe AGV 2 › Hiện số #8 | Xe AGV 2 › Hiện số #9 | Xe AGV 2 › Hiện chữ #2Đang làm | Xe AGV 2 › Hiện số #10"
+  },
+  {
+   "name": "i: clicks on the stage never break the page; an object of a copy selects the copy, a main-board object its own card",
+   "ok": true,
+   "detail": "135 clicks: 3 on objects of copies, 31 on main-board objects"
+  },
+  {
+   "name": "i: \"Từng bước\" inside an entered copy stops on cards of that copy",
+   "ok": true,
+   "detail": "4 cards lit"
+  },
+  {
+   "name": "i: \"Từng bước\" on the main board still stops",
+   "ok": true,
+   "detail": "8 cards lit"
+  },
+  {
+   "name": "i: no page errors through all of it",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "shots hoc-sinh-xam-diu: no page problems",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "shots giao-vien-xam-diu: no page problems",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "shots hoc-sinh-toi: no page problems",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "shots giao-vien-toi: no page problems",
+   "ok": true,
+   "detail": ""
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: live inside copy 3 at 92%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "5 pills and 16 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: bench run at 92%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "4 pills and 4 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: live inside copy 3 at 100%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "5 pills and 15 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: bench run at 100%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "4 pills and 3 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: bench of the circuit with number pins: nothing on a pin's dot or name",
+   "ok": true,
+   "detail": "2 pills and 4 badges on screen, 7 badges for 7 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap giao-vien-xam-diu: main board running: the same rule",
+   "ok": true,
+   "detail": "2 pills and 15 badges on screen, 15 badges for 16 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: live inside copy 3 at 85%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "9 pills and 17 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: bench run at 85%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "4 pills and 3 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: live inside copy 3 at 100%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "5 pills and 12 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: bench run at 100%: one pill per port, no pill or wire badge on a port name, no badge on a badge",
+   "ok": true,
+   "detail": "3 pills and 2 badges on screen, 40 badges for 40 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: bench of the circuit with number pins: nothing on a pin's dot or name",
+   "ok": true,
+   "detail": "2 pills and 4 badges on screen, 7 badges for 7 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  },
+  {
+   "name": "overlap hoc-sinh-toi: main board running: the same rule",
+   "ok": true,
+   "detail": "2 pills and 13 badges on screen, 15 badges for 16 wires on the board; two pills: -; pill on label: -; pill on dot: -; badge on label: -; badge on pill: -; badge on badge: -"
+  }
+ ],
+ "problems": [],
+ "dialogs": 0
+}

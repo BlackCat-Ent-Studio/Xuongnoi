@@ -1,0 +1,533 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Bánh Xe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#17123a; --panel:#241d55; --ink:#f6f1e4; --accent:#ffcc3d; --blue:#7cc4f0; --line:#3a3277; }
+  * { box-sizing: border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Be Vietnam Pro",system-ui,sans-serif; overflow-x:hidden; }
+  h1,h2 { font-family:"Baloo 2","Be Vietnam Pro",sans-serif; margin:0; }
+  header { padding:16px 20px 4px; max-width:1200px; margin:0 auto; }
+  header h1 { font-size:clamp(1.6rem,5vw,2.2rem); color:var(--accent); }
+  header p { margin:2px 0 0; opacity:.8; font-size:.95rem; }
+  main { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; padding:12px 20px 28px; max-width:1200px; margin:0 auto; }
+  #stage { position:relative; min-width:0; height:min(74vh,640px); border-radius:24px; overflow:hidden; background:radial-gradient(circle at 50% 35%,#2d2570,#1b1544); border:2px solid var(--line); }
+  #stage canvas { display:block; width:100%; height:100%; touch-action:none; }
+  #hint { position:absolute; left:12px; bottom:10px; font-size:.8rem; opacity:.7; pointer-events:none; }
+  #tris { position:absolute; right:12px; bottom:10px; font-size:.75rem; opacity:.5; pointer-events:none; }
+  #loadmsg { position:absolute; inset:0; display:grid; place-items:center; font-family:"Baloo 2",sans-serif; font-size:1.2rem; }
+  aside { min-width:0; background:var(--panel); border:2px solid var(--line); border-radius:24px; padding:16px; }
+  aside h2 { font-size:1.15rem; color:var(--blue); margin:0 0 8px; }
+  .group { margin-bottom:18px; }
+  .anims { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  button { font:inherit; font-weight:600; color:var(--ink); background:#33298a; border:2px solid var(--line); border-radius:16px; padding:10px 8px; min-height:44px; cursor:pointer; transition:transform .1s, background .15s; }
+  button:hover { background:#41359f; }
+  button:active { transform:scale(.96); }
+  button:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); color:#2a2350; border-color:var(--accent); }
+  .row { display:flex; align-items:center; justify-content:space-between; gap:10px; margin:8px 0; font-size:.92rem; }
+  .row label { flex:0 0 auto; min-width:92px; }
+  input[type=color] { width:54px; height:36px; border:2px solid var(--line); border-radius:12px; background:none; padding:2px; cursor:pointer; }
+  input[type=range] { flex:1 1 auto; min-width:0; accent-color:var(--accent); height:32px; }
+  .val { flex:0 0 38px; text-align:right; opacity:.7; font-size:.82rem; font-variant-numeric:tabular-nums; }
+  .btns { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  #json { display:none; width:100%; margin-top:10px; min-height:130px; background:#150f36; color:var(--ink); border:2px solid var(--line); border-radius:12px; padding:8px; font:0.78rem/1.4 ui-monospace,Consolas,monospace; resize:vertical; }
+  #status { min-height:1.3em; margin:8px 0 0; font-size:.85rem; color:var(--accent); }
+  @media (max-width:820px) {
+    main { grid-template-columns:minmax(0,1fr); padding:12px 16px 24px; }
+    header { padding:14px 16px 0; }
+    #stage { height:min(58vh,440px); }
+  }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<header>
+  <h1>Robot Bánh Xe</h1>
+  <p>Robot một bánh tròn xoe. Kéo chuột để xoay, cuộn để phóng to.</p>
+</header>
+<main>
+  <section id="stage" aria-label="Khung xem robot 3D">
+    <div id="loadmsg">Đang tải robot…</div>
+    <div id="hint">Kéo để xoay quanh robot</div>
+    <div id="tris"></div>
+  </section>
+  <aside>
+    <div class="group">
+      <h2>Hoạt động</h2>
+      <div class="anims" id="anims">
+        <button type="button" data-anim="idle" aria-pressed="true">Đứng yên</button>
+        <button type="button" data-anim="run" aria-pressed="false">Chạy</button>
+        <button type="button" data-anim="jump" aria-pressed="false">Nhảy</button>
+        <button type="button" data-anim="happy" aria-pressed="false">Vui</button>
+        <button type="button" data-anim="sad" aria-pressed="false">Buồn</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Nối thân với bánh</h2>
+      <div class="anims" id="mounts">
+        <button type="button" data-mount="cang" aria-pressed="false">A. Càng đôi</button>
+        <button type="button" data-mount="chanbun" aria-pressed="true">B. Chắn bùn</button>
+        <button type="button" data-mount="vay" aria-pressed="false">C. Váy chuông</button>
+        <button type="button" data-mount="none" aria-pressed="false">Không (cũ)</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Màu sắc</h2>
+      <div class="row"><label for="c-body">Thân</label><input type="color" id="c-body" value="#7cc4f0"></div>
+      <div class="row"><label for="c-accent">Điểm nhấn</label><input type="color" id="c-accent" value="#ffcc3d"></div>
+      <div class="row"><label for="c-face">Mặt</label><input type="color" id="c-face" value="#f6f1e4"></div>
+    </div>
+    <div class="group">
+      <h2>Kích thước</h2>
+      <div class="row"><label for="s-head">Đầu</label><input type="range" id="s-head" min="0.7" max="1.3" step="0.01" value="1"><span class="val" id="v-head"></span></div>
+      <div class="row"><label for="s-body">Thân</label><input type="range" id="s-body" min="0.7" max="1.4" step="0.01" value="1"><span class="val" id="v-body"></span></div>
+      <div class="row"><label for="s-wheel">Bánh xe</label><input type="range" id="s-wheel" min="0.7" max="1.4" step="0.01" value="1"><span class="val" id="v-wheel"></span></div>
+      <div class="row"><label for="s-antenna">Ăng-ten</label><input type="range" id="s-antenna" min="0.4" max="2.2" step="0.01" value="1"><span class="val" id="v-antenna"></span></div>
+    </div>
+    <div class="btns">
+      <button type="button" id="reset">Đặt lại</button>
+      <button type="button" id="copy">Sao chép thông số</button>
+    </div>
+    <p id="status" role="status" aria-live="polite"></p>
+    <textarea id="json" readonly aria-label="Thông số hiện tại (JSON)"></textarea>
+  </aside>
+</main>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+const DEFAULTS = { body:'#7cc4f0', accent:'#ffcc3d', face:'#f6f1e4', head:1, bodySize:1, wheel:1, antenna:1, mount:'chanbun' };
+const P = { ...DEFAULTS };
+const C = { shade:'#4a8fd0', ink:'#2a2350', cheek:'#ff8fa8', metal:'#c9d2dc', tire:'#3b3f5c', ground:'#cdeee2' };
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- renderer / scene ---------- */
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+stage.prepend(renderer.domElement);
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 60);
+camera.position.set(3.3, 2.3, 5.6);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 1.25, 0);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 3.5; controls.maxDistance = 11;
+controls.maxPolarAngle = Math.PI * 0.52;
+controls.autoRotate = !reduceMotion;
+controls.autoRotateSpeed = 1.2;
+controls.addEventListener('start', () => { controls.autoRotate = false; });
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xbfe6dc, 1.7));
+const key = new THREE.DirectionalLight(0xfff0d2, 1.5);
+key.position.set(3, 5, 4);
+scene.add(key);
+
+/* toon gradient: 3 soft steps */
+const grad = new THREE.DataTexture(new Uint8Array([
+  150,150,150,255, 205,205,205,255, 255,255,255,255]), 3, 1, THREE.RGBAFormat);
+grad.minFilter = grad.magFilter = THREE.NearestFilter;
+grad.needsUpdate = true;
+const toon = (hex) => new THREE.MeshToonMaterial({ color:hex, gradientMap:grad });
+const flat = (hex) => new THREE.MeshBasicMaterial({ color:hex });
+
+/* ground + soft contact shadow */
+const ground = new THREE.Mesh(new THREE.CylinderGeometry(2.3, 2.3, 0.12, 96), toon(C.ground));
+ground.position.y = -0.06;
+scene.add(ground);
+const shadowTex = (() => {
+  const c = document.createElement('canvas'); c.width = c.height = 128;
+  const g = c.getContext('2d'), r = g.createRadialGradient(64,64,4,64,64,62);
+  r.addColorStop(0,'rgba(40,60,90,.55)'); r.addColorStop(1,'rgba(40,60,90,0)');
+  g.fillStyle = r; g.fillRect(0,0,128,128);
+  return new THREE.CanvasTexture(c);
+})();
+const shadow = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+  new THREE.MeshBasicMaterial({ map:shadowTex, transparent:true, depthWrite:false }));
+shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.005;
+scene.add(shadow);
+
+/* ---------- robot ---------- */
+const mats = {
+  body: toon(P.body), shade: toon(C.shade), face: toon(P.face), accent: toon(P.accent),
+  metal: toon(C.metal), tire: toon(C.tire), cheek: flat(C.cheek), ink: flat(C.ink),
+  white: flat('#ffffff'),
+};
+const sph = (r, mat, sx=1, sy=1, sz=1, ws=24, hs=16) => {
+  const m = new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs), mat);
+  m.scale.set(sx, sy, sz); return m;
+};
+
+/* Returns the robot and named parts. Local units: wheel outer radius .45, head radius .6 */
+function buildRobot() {
+  const root = new THREE.Group();          // sits on ground, squash/hop/yaw
+  const pivot = new THREE.Group();         // at wheel axle; lean rotates here
+  root.add(pivot);
+
+  // wheel (child of root so it stays upright when body leans)
+  const wheel = new THREE.Group();
+  const spin = new THREE.Group();
+  wheel.add(spin);
+  const tire = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.25, 18, 48), mats.tire);
+  tire.rotation.y = Math.PI / 2;
+  spin.add(tire);
+  for (const s of [-1, 1]) {
+    const hub = sph(0.25, mats.accent, 0.5, 1, 1, 24, 14);
+    hub.position.x = s * 0.22; spin.add(hub);
+    const bar = new RoundedBoxGeometry(0.06, 0.08, 0.36, 3, 0.03);
+    const b1 = new THREE.Mesh(bar, mats.metal); b1.position.x = s * 0.29; spin.add(b1);
+    const b2 = b1.clone(); b2.rotation.x = Math.PI / 2; spin.add(b2);
+  }
+  root.add(wheel);
+
+  // torso
+  const torso = new THREE.Group();
+  torso.add(new THREE.Mesh(new RoundedBoxGeometry(0.62, 0.5, 0.56, 4, 0.2), mats.shade));
+  const neck = new THREE.Mesh(new THREE.TorusGeometry(0.2, 0.06, 16, 40), mats.metal);
+  neck.rotation.x = Math.PI / 2; neck.position.y = 0.24; torso.add(neck);
+  const chest = sph(0.08, mats.accent, 1, 1, 0.5, 18, 12);
+  chest.position.set(0, -0.02, 0.29); torso.add(chest);
+  pivot.add(torso);
+
+  // arms
+  const arms = [];
+  for (const s of [-1, 1]) {
+    const arm = new THREE.Group();
+    const limb = new THREE.Mesh(new THREE.CapsuleGeometry(0.085, 0.14, 6, 16), mats.body);
+    limb.position.y = -0.14; arm.add(limb);
+    const hand = sph(0.1, mats.metal, 1, 1, 1, 18, 12); hand.position.y = -0.27; arm.add(hand);
+    arm.userData.side = s;
+    pivot.add(arm); arms.push(arm);
+  }
+
+  // head
+  const head = new THREE.Group();
+  const skull = sph(0.6, mats.body, 1.1, 1, 1, 44, 28);
+  head.add(skull);
+  for (const s of [-1, 1]) {              // ear caps
+    const ear = sph(0.12, mats.accent, 0.55, 1.2, 1.2, 18, 12);
+    ear.position.set(s * 0.65, -0.02, 0); head.add(ear);
+  }
+
+  // face
+  const face = new THREE.Group();
+  const screen = sph(1, mats.face, 0.5, 0.38, 0.14, 40, 24);
+  screen.position.z = 0.52; face.add(screen);
+  const eyes = [];
+  for (const s of [-1, 1]) {
+    const eye = new THREE.Group();
+    eye.position.set(s * 0.17, 0.06, 0.635);
+    const open = new THREE.Group();
+    const ball = new THREE.Mesh(new THREE.CapsuleGeometry(0.065, 0.09, 6, 16), mats.ink);
+    ball.scale.z = 0.5; open.add(ball);
+    const hl = sph(0.024, mats.white, 1, 1, 1, 8, 6); hl.position.set(0.02, 0.07, 0.04); open.add(hl);
+    const happy = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.03, 12, 28, Math.PI), mats.ink);
+    happy.position.y = -0.03; happy.scale.z = 0.6; happy.visible = false;
+    eye.add(open, happy);
+    eye.userData = { s, open, happy };
+    face.add(eye); eyes.push(eye);
+  }
+  const mouth = new THREE.Group();
+  const mArc = new THREE.Mesh(new THREE.TorusGeometry(0.075, 0.02, 12, 32, Math.PI), mats.ink);
+  mArc.rotation.z = Math.PI;               // lower half = smile
+  mArc.position.y = 0.04; mouth.add(mArc);
+  mouth.position.set(0, -0.1, 0.645);
+  face.add(mouth);
+  for (const s of [-1, 1]) {
+    const ch = sph(1, mats.cheek, 0.07, 0.045, 0.03, 20, 14);
+    ch.position.set(s * 0.3, -0.1, 0.605); face.add(ch);
+  }
+  head.add(face);
+
+  // antenna
+  const antenna = new THREE.Group();
+  antenna.position.y = 0.56;
+  const baseRing = sph(0.07, mats.metal, 1, 0.5, 1, 20, 12); antenna.add(baseRing);
+  const stalkGeo = new THREE.CylinderGeometry(0.028, 0.028, 1, 16); stalkGeo.translate(0, 0.5, 0);
+  const stalk = new THREE.Mesh(stalkGeo, mats.metal); antenna.add(stalk);
+  const ball = sph(0.095, mats.accent, 1, 1, 1, 28, 18); antenna.add(ball);
+  head.add(antenna);
+  pivot.add(head);
+
+  return { root, pivot, wheel, spin, torso, arms, head, eyes, mouth, antenna, stalk, ball };
+}
+
+const R = buildRobot();
+scene.add(R.root);
+
+/* Wheel mounts: decorative parts joining body and wheel. Built in axle-local units
+   (pivot origin = axle, wheel outer radius .55, tyre half-width .25); `lift` raises the
+   torso so it rests on top of the mount. Children of pivot, so they lean with the body. */
+function buildMounts() {
+  const out = {};
+  const caps = (x) => {
+    const g = new THREE.Group();
+    for (const s of [-1, 1]) {
+      const cap = sph(0.11, mats.accent, 0.45, 1, 1); cap.position.x = s * x; g.add(cap);
+    }
+    return g;
+  };
+
+  // A: twin side plates + saddle bar
+  const fork = new THREE.Group();
+  for (const s of [-1, 1]) {
+    const plate = new THREE.Mesh(new RoundedBoxGeometry(0.07, 0.66, 0.22, 3, 0.03), mats.shade);
+    plate.position.set(s * 0.4, 0.29, 0); fork.add(plate);
+  }
+  const saddle = new THREE.Mesh(new RoundedBoxGeometry(0.92, 0.11, 0.34, 3, 0.05), mats.body);
+  saddle.position.y = 0.64; fork.add(saddle);
+  fork.add(caps(0.45));
+  out.cang = { group: fork, lift: 0.22 };
+
+  // B: arched mudguard with centre stripe + struts down to the axle
+  const guard = new THREE.Group();
+  // arc covers only the top ~130° of the wheel; wrapper turns it into the wheel plane
+  const ARC = Math.PI * 0.72, START = (Math.PI - ARC) / 2;
+  const archWrap = new THREE.Group(); archWrap.rotation.y = Math.PI / 2; guard.add(archWrap);
+  const arch = new THREE.Mesh(new THREE.TorusGeometry(0.66, 0.06, 12, 48, ARC), mats.shade);
+  arch.rotation.z = START; arch.scale.z = 4.6; archWrap.add(arch);
+  const stripe = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.028, 8, 48, ARC), mats.accent);
+  stripe.rotation.z = START; archWrap.add(stripe);
+  for (const s of [-1, 1]) {
+    const strut = new THREE.Mesh(new RoundedBoxGeometry(0.05, 0.62, 0.12, 3, 0.02), mats.metal);
+    strut.position.set(s * 0.33, 0.3, 0); guard.add(strut);
+  }
+  guard.add(caps(0.4));
+  out.chanbun = { group: guard, lift: 0.25 };
+
+  // C: bell skirt with accent rim, hides the top of the wheel
+  const skirt = new THREE.Group();
+  const prof = [[0, 0.64], [0.3, 0.64], [0.41, 0.57], [0.48, 0.44], [0.51, 0.31], [0.49, 0.25]]
+    .map(([r, y]) => new THREE.Vector2(r, y));
+  mats.shade.side = THREE.DoubleSide;      // the bell is an open shell; other shade parts are closed
+  const bell = new THREE.Mesh(new THREE.LatheGeometry(prof, 48), mats.shade);
+  const rimWrap = new THREE.Group();
+  const rim = new THREE.Mesh(new THREE.TorusGeometry(0.5, 0.045, 10, 56), mats.accent);
+  rim.rotation.x = Math.PI / 2; rim.position.y = 0.26; rimWrap.add(rim);
+  const bellWrap = new THREE.Group(); bellWrap.add(bell, rimWrap); bellWrap.scale.z = 1.25;
+  skirt.add(bellWrap, caps(0.38));
+  out.vay = { group: skirt, lift: 0.2 };
+
+  out.none = { group: new THREE.Group(), lift: 0 };
+  for (const m of Object.values(out)) R.pivot.add(m.group);
+  return out;
+}
+const MOUNTS = buildMounts();
+
+/* parametric layout (sliders) */
+const HS = 1.08;
+function applyLayout() {
+  const w = P.wheel, b = P.bodySize, h = P.head, a = P.antenna;
+  const axle = 0.54 * w;
+  R.wheel.position.y = axle; R.wheel.scale.setScalar(w);
+  R.pivot.position.y = axle;
+  const mount = MOUNTS[P.mount] || MOUNTS.none;
+  for (const m of Object.values(MOUNTS)) m.group.visible = m === mount;
+  mount.group.scale.setScalar(w);
+  const torsoC = 1.08 * w - 0.1 + 0.25 * b + mount.lift * w;
+  R.torso.position.y = torsoC - axle; R.torso.scale.setScalar(b);
+  const hs = h * HS;
+  const headC = torsoC + 0.25 * b - 0.14 + 0.6 * hs;
+  R.head.position.y = headC - axle; R.head.scale.setScalar(hs);
+  for (const arm of R.arms) {
+    arm.position.set(arm.userData.side * 0.34 * b, torsoC + 0.09 * b - axle, 0);
+    arm.scale.setScalar(b);
+  }
+  R.stalk.scale.y = 0.3 * a;
+  R.ball.position.y = 0.3 * a + 0.04;
+  // camera framing follows total height
+  controls.target.y = (headC + 0.6 * hs) * 0.5 - 0.05;
+}
+
+function applyColors() {
+  mats.body.color.set(P.body);
+  // shade keeps the default body->shade ratio, so recolouring stays harmonious
+  const d = new THREE.Color(DEFAULTS.body), ds = new THREE.Color(C.shade);
+  mats.shade.color.set(P.body).multiply(new THREE.Color(ds.r / d.r, ds.g / d.g, ds.b / d.b));
+  mats.accent.color.set(P.accent);
+  mats.face.color.set(P.face);
+}
+
+/* ---------- animation ---------- */
+let state = 'idle';
+const pose = { bob:0, lean:0, spin:0, sy:1, hop:0, yaw:0, armL:0.3, armR:0.3, happy:0, sad:0, droop:0,
+               headPitch:0, headRoll:0, wobble:1 };
+const sm = (x) => x * x * (3 - 2 * x);
+const clamp01 = (x) => Math.min(1, Math.max(0, x));
+
+function target(t) {
+  const T = { bob:0, lean:0, spin:0, sy:1, hop:0, yaw:0, armL:0.3, armR:0.3, happy:0, sad:0, droop:0,
+              headPitch:0, headRoll:0, wobble:1 };
+  if (state === 'idle') {
+    T.bob = Math.sin(t * 2) * 0.012; T.sy = 1 + Math.sin(t * 2) * 0.012;
+    T.armL = T.armR = 0.28 + Math.sin(t * 2) * 0.04;
+    T.headRoll = Math.sin(t * 0.8) * 0.03;
+  } else if (state === 'run') {
+    T.spin = 7; T.lean = 0.2; T.hop = Math.abs(Math.sin(t * 7)) * 0.035;
+    T.armL = 0.7 + Math.sin(t * 7) * 0.35; T.armR = 0.7 - Math.sin(t * 7) * 0.35;
+    T.headPitch = -0.05; T.happy = 0.15; T.wobble = 1.8;
+  } else if (state === 'jump') {
+    const D = 1.3, p = (t % D) / D;
+    let sy = 1, hop = 0, arm = 0.2;
+    if (p < 0.18) { sy = 1 - 0.26 * sm(p / 0.18); arm = 0.1; }
+    else if (p < 0.25) { const k = sm((p - 0.18) / 0.07); sy = 0.74 + 0.4 * k; arm = 0.1 + 1.5 * k; }
+    else if (p < 0.78) { const u = (p - 0.25) / 0.53; hop = 0.75 * 4 * u * (1 - u); sy = 1 + 0.12 * Math.abs(2 * u - 1); arm = 2.0 - 0.3 * u; }
+    else if (p < 0.88) { const k = sm((p - 0.78) / 0.1); sy = 1.12 - 0.38 * k; arm = 1.7 - 1.4 * k; }
+    else { const k = sm((p - 0.88) / 0.12); sy = 0.74 + 0.26 * k; arm = 0.3 - 0.1 * k; }
+    T.sy = sy; T.hop = hop; T.armL = T.armR = arm; T.happy = hop > 0.05 ? 0.8 : 0; T.spin = hop > 0.05 ? 3 : 0;
+    T.wobble = 2;
+  } else if (state === 'happy') {
+    T.happy = 1; T.hop = Math.abs(Math.sin(t * 5)) * 0.2; T.yaw = Math.sin(t * 2.4) * 0.7;
+    T.armL = 2.5 + Math.sin(t * 10) * 0.25; T.armR = 2.5 - Math.sin(t * 10) * 0.25;
+    T.sy = 1 + (Math.abs(Math.sin(t * 5)) - 0.5) * 0.04; T.headRoll = Math.sin(t * 5) * 0.07;
+    T.spin = Math.sin(t * 2.4) * 3; T.wobble = 2.2;
+  } else if (state === 'sad') {
+    T.sad = 1; T.droop = 1; T.headPitch = 0.3; T.lean = -0.04; T.sy = 0.93 + Math.sin(t * 1.2) * 0.008;
+    T.armL = T.armR = 0.05; T.headRoll = 0.05; T.wobble = 0.2;
+  }
+  return T;
+}
+
+let blinkAt = 2.5, blinkT = -1;
+const tmpEyes = { y:1 };
+
+function animate(t, dt) {
+  const T = target(t);
+  const k = 1 - Math.exp(-dt * (state === 'jump' ? 16 : 8));
+  for (const key in pose) pose[key] += (T[key] - pose[key]) * k;
+
+  spinAngle += pose.spin * dt;
+  R.spin.rotation.x = -spinAngle;
+  R.root.position.y = pose.hop + pose.bob;
+  R.root.scale.set(1 / Math.sqrt(pose.sy), pose.sy, 1 / Math.sqrt(pose.sy));
+  R.root.rotation.y = pose.yaw;
+  R.pivot.rotation.x = pose.lean;
+  R.head.rotation.x = pose.headPitch; R.head.rotation.z = pose.headRoll;
+  R.arms[0].rotation.z = -pose.armL; R.arms[1].rotation.z = pose.armR;
+  R.arms[0].rotation.x = R.arms[1].rotation.x = Math.sin(t * 7) * 0.0;
+
+  // antenna wobble + droop
+  const w = pose.wobble;
+  R.antenna.rotation.z = Math.sin(t * 3.1) * 0.13 * w * (1 - pose.droop) + pose.droop * 1.15 - pose.lean * 0.5;
+  R.antenna.rotation.x = Math.cos(t * 2.3) * 0.09 * w * (1 - pose.droop) - pose.lean * 0.8 + pose.droop * 0.35;
+
+  // blink (idle & friends, not while happy arcs)
+  if (blinkT < 0 && t > blinkAt) blinkT = 0;
+  let blink = 1;
+  if (blinkT >= 0) {
+    blinkT += dt;
+    blink = 1 - Math.sin(Math.min(1, blinkT / 0.16) * Math.PI) * 0.92;
+    if (blinkT > 0.16) { blinkT = -1; blinkAt = t + 2.5 + Math.random() * 2.5; }
+  }
+
+  const hp = pose.happy, sd = pose.sad;
+  for (const eye of R.eyes) {
+    const { s, open, happy } = eye.userData;
+    open.visible = hp < 0.6;
+    happy.visible = hp >= 0.6;
+    open.scale.set(1 + sd * 0.05, Math.max(0.05, (1 - sd * 0.5) * blink * (1 - hp * 0.6)), 1);
+    open.rotation.z = -s * sd * 0.4;
+    open.position.y = -sd * 0.025;
+    const hs = clamp01((hp - 0.6) / 0.4) * 0.35 + 0.65;
+    happy.scale.set(hs, hs, 0.6);
+  }
+  R.mouth.scale.y = 1 + hp * 0.5 - sd * 1.55;       // negative = frown
+  R.mouth.scale.x = 1 + hp * 0.35 - sd * 0.1;
+
+  // shadow follows hop
+  const sc = (0.95 + 0.25 * P.wheel) * (1 - Math.min(0.4, pose.hop * 0.3));
+  shadow.scale.set(sc * 1.5, sc * 1.5, 1);
+  shadow.material.opacity = 1 - Math.min(0.5, pose.hop * 0.4);
+}
+let spinAngle = 0;
+
+/* ---------- UI ---------- */
+const $ = (id) => document.getElementById(id);
+const setStatus = (m) => { $('status').textContent = m; };
+
+document.querySelectorAll('#anims button').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    state = btn.dataset.anim; clock0 = clock.elapsedTime;
+    document.querySelectorAll('#anims button').forEach((b) => b.setAttribute('aria-pressed', String(b === btn)));
+  });
+});
+
+const sliders = { head:['s-head','v-head'], bodySize:['s-body','v-body'], wheel:['s-wheel','v-wheel'], antenna:['s-antenna','v-antenna'] };
+const colors = { body:'c-body', accent:'c-accent', face:'c-face' };
+function syncUI() {
+  for (const [key, [sid, vid]] of Object.entries(sliders)) {
+    $(sid).value = P[key]; $(vid).textContent = Number(P[key]).toFixed(2);
+  }
+  for (const [key, id] of Object.entries(colors)) $(id).value = P[key];
+  document.querySelectorAll('#mounts button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mount === P.mount)));
+}
+document.querySelectorAll('#mounts button').forEach((btn) => {
+  btn.addEventListener('click', () => { P.mount = btn.dataset.mount; syncUI(); applyLayout(); });
+});
+for (const [key, [sid, vid]] of Object.entries(sliders)) {
+  $(sid).addEventListener('input', (e) => {
+    P[key] = parseFloat(e.target.value); $(vid).textContent = P[key].toFixed(2); applyLayout();
+  });
+}
+for (const [key, id] of Object.entries(colors)) {
+  $(id).addEventListener('input', (e) => { P[key] = e.target.value; applyColors(); });
+}
+$('reset').addEventListener('click', () => {
+  Object.assign(P, DEFAULTS); syncUI(); applyLayout(); applyColors(); setStatus('Đã đặt lại về mặc định.');
+  $('json').style.display = 'none';
+});
+$('copy').addEventListener('click', async () => {
+  const text = JSON.stringify({ robot:'banh-xe', ...P }, null, 2);
+  const ta = $('json');
+  try {
+    if (!navigator.clipboard) throw new Error('no clipboard');
+    await navigator.clipboard.writeText(text);
+    ta.style.display = 'none';
+    setStatus('Đã sao chép thông số. Hãy dán gửi cho chúng tôi nhé!');
+  } catch (err) {
+    ta.value = text; ta.style.display = 'block'; ta.focus(); ta.select();
+    setStatus('Không sao chép tự động được. Hãy bôi đen và chép ô bên dưới.');
+  }
+});
+
+/* ---------- loop ---------- */
+function resize() {
+  const w = Math.max(1, stage.clientWidth), h = Math.max(1, stage.clientHeight);
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h;
+  // keep the whole robot in view on narrow stages
+  camera.fov = w / h < 0.9 ? 46 : 36;
+  camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+
+const clock = new THREE.Clock();
+let clock0 = 0;
+syncUI(); applyColors(); applyLayout(); resize();
+$('loadmsg').remove();
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  animate(state === 'jump' ? t - clock0 : t, dt);
+  controls.update();
+  renderer.render(scene, camera);
+  $('tris').textContent = renderer.info.render.triangles + ' tam giác';
+});
+window.__robot = { setState:(s) => { state = s; clock0 = clock.elapsedTime; } };
+</script>
+</body>
+</html>

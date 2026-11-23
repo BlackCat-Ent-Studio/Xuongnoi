@@ -1,0 +1,881 @@
+{
+  "format_version": 1,
+  "name": "Tay máy gắp thùng",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "floor",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 30,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d"
+        },
+        "pos": {
+          "x": 20,
+          "y": 20
+        }
+      },
+      {
+        "id": "pillar",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -1.8,
+            "y": 0.8,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 1.6,
+            "z": 1
+          },
+          "color": "#a3a3a3"
+        },
+        "pos": {
+          "x": 20,
+          "y": 190
+        }
+      },
+      {
+        "id": "table",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0.6,
+            "y": 0.3,
+            "z": 0
+          },
+          "size": {
+            "x": 2.6,
+            "y": 0.6,
+            "z": 1
+          },
+          "color": "#78716c"
+        },
+        "pos": {
+          "x": 20,
+          "y": 360
+        }
+      },
+      {
+        "id": "crate-light",
+        "kind": "item",
+        "params": {
+          "shape": "box",
+          "position": {
+            "x": -0.24,
+            "y": 0.9,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#a16207",
+          "mass": 2
+        },
+        "pos": {
+          "x": 20,
+          "y": 530
+        }
+      },
+      {
+        "id": "crate-heavy",
+        "kind": "item",
+        "params": {
+          "shape": "box",
+          "position": {
+            "x": 0.61,
+            "y": 0.9,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#ef4444",
+          "mass": 6
+        },
+        "pos": {
+          "x": 20,
+          "y": 700
+        }
+      },
+      {
+        "id": "crate-fragile",
+        "kind": "item",
+        "params": {
+          "shape": "box",
+          "position": {
+            "x": 1.37,
+            "y": 0.9,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "mass": 2,
+          "crushLimit": 60
+        },
+        "pos": {
+          "x": 20,
+          "y": 870
+        }
+      },
+      {
+        "id": "go",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 320,
+          "y": 20
+        }
+      },
+      {
+        "id": "shoulder",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": 50,
+          "min": -60,
+          "max": 90,
+          "maxTorque": 120,
+          "maxSpeed": 60,
+          "mount": {
+            "x": 0,
+            "y": 0.8,
+            "z": 0
+          }
+        },
+        "pos": {
+          "x": 620,
+          "y": 190
+        }
+      },
+      {
+        "id": "upper",
+        "kind": "link",
+        "params": {
+          "length": 1.8,
+          "mass": 1.2,
+          "thickness": 0.22
+        },
+        "pos": {
+          "x": 920,
+          "y": 190
+        }
+      },
+      {
+        "id": "elbow",
+        "kind": "joint",
+        "params": {
+          "axis": "pitch",
+          "start": -90,
+          "min": -150,
+          "max": 30,
+          "maxTorque": 130,
+          "maxSpeed": 60
+        },
+        "pos": {
+          "x": 1220,
+          "y": 190
+        }
+      },
+      {
+        "id": "fore",
+        "kind": "link",
+        "params": {
+          "length": 1.4,
+          "mass": 0.9,
+          "thickness": 0.18
+        },
+        "pos": {
+          "x": 1520,
+          "y": 190
+        }
+      },
+      {
+        "id": "gripper",
+        "kind": "gripper",
+        "params": {
+          "defaultForce": 10,
+          "maxForce": 120,
+          "fingerMu": 0.8,
+          "width": 1,
+          "reach": 0.5,
+          "mass": 0.5
+        },
+        "pos": {
+          "x": 1820,
+          "y": 190
+        }
+      },
+      {
+        "id": "key-w",
+        "kind": "key",
+        "params": {
+          "key": "KeyW"
+        },
+        "pos": {
+          "x": 320,
+          "y": 360
+        }
+      },
+      {
+        "id": "key-s",
+        "kind": "key",
+        "params": {
+          "key": "KeyS"
+        },
+        "pos": {
+          "x": 320,
+          "y": 530
+        }
+      },
+      {
+        "id": "count-shoulder",
+        "kind": "counter",
+        "params": {
+          "start": 8
+        },
+        "pos": {
+          "x": 620,
+          "y": 360
+        }
+      },
+      {
+        "id": "scale-shoulder",
+        "kind": "map-range",
+        "params": {
+          "inMin": 0,
+          "inMax": 12,
+          "outMin": -30,
+          "outMax": 90,
+          "clamp": "yes"
+        },
+        "pos": {
+          "x": 920,
+          "y": 360
+        }
+      },
+      {
+        "id": "key-d",
+        "kind": "key",
+        "params": {
+          "key": "KeyD"
+        },
+        "pos": {
+          "x": 320,
+          "y": 700
+        }
+      },
+      {
+        "id": "key-a",
+        "kind": "key",
+        "params": {
+          "key": "KeyA"
+        },
+        "pos": {
+          "x": 320,
+          "y": 870
+        }
+      },
+      {
+        "id": "count-elbow",
+        "kind": "counter",
+        "params": {
+          "start": 4
+        },
+        "pos": {
+          "x": 620,
+          "y": 700
+        }
+      },
+      {
+        "id": "scale-elbow",
+        "kind": "map-range",
+        "params": {
+          "inMin": 0,
+          "inMax": 12,
+          "outMin": -150,
+          "outMax": 30,
+          "clamp": "yes"
+        },
+        "pos": {
+          "x": 920,
+          "y": 700
+        }
+      },
+      {
+        "id": "key-close",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 1220,
+          "y": 360
+        }
+      },
+      {
+        "id": "key-up",
+        "kind": "key",
+        "params": {
+          "key": "ArrowUp"
+        },
+        "pos": {
+          "x": 1220,
+          "y": 530
+        }
+      },
+      {
+        "id": "key-down",
+        "kind": "key",
+        "params": {
+          "key": "ArrowDown"
+        },
+        "pos": {
+          "x": 1220,
+          "y": 700
+        }
+      },
+      {
+        "id": "count-force",
+        "kind": "counter",
+        "params": {
+          "start": 1
+        },
+        "pos": {
+          "x": 1520,
+          "y": 530
+        }
+      },
+      {
+        "id": "scale-force",
+        "kind": "map-range",
+        "params": {
+          "inMin": 0,
+          "inMax": 12,
+          "outMin": 0,
+          "outMax": 120,
+          "clamp": "yes"
+        },
+        "pos": {
+          "x": 1820,
+          "y": 530
+        }
+      },
+      {
+        "id": "show-force",
+        "kind": "show-number",
+        "params": {
+          "label": "Lực kẹp mỗi ngón (N)",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 190
+        }
+      },
+      {
+        "id": "show-shoulder",
+        "kind": "show-number",
+        "params": {
+          "label": "Mô-men vai (N·m)",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 360
+        }
+      },
+      {
+        "id": "show-elbow",
+        "kind": "show-number",
+        "params": {
+          "label": "Mô-men khuỷu (N·m)",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 530
+        }
+      },
+      {
+        "id": "text-over-shoulder",
+        "kind": "show-text",
+        "params": {
+          "text": "Vai quá tải: tay không nâng nổi!",
+          "corner": "top-right",
+          "color": "#ef4444"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 700
+        }
+      },
+      {
+        "id": "text-over-elbow",
+        "kind": "show-text",
+        "params": {
+          "text": "Khuỷu quá tải: tay không nâng nổi!",
+          "corner": "top-right",
+          "color": "#ef4444"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 870
+        }
+      },
+      {
+        "id": "latch-slip",
+        "kind": "latch",
+        "params": {},
+        "pos": {
+          "x": 1820,
+          "y": 700
+        }
+      },
+      {
+        "id": "text-slip",
+        "kind": "show-text",
+        "params": {
+          "text": "Vật tuột! Tăng lực kẹp rồi kẹp lại.",
+          "corner": "top-right",
+          "color": "#f59e0b"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 1040
+        }
+      },
+      {
+        "id": "latch-crush",
+        "kind": "latch",
+        "params": {},
+        "pos": {
+          "x": 1820,
+          "y": 870
+        }
+      },
+      {
+        "id": "text-crush",
+        "kind": "show-text",
+        "params": {
+          "text": "Vật bị hỏng vì kẹp quá mạnh!",
+          "corner": "top-right",
+          "color": "#ef4444"
+        },
+        "pos": {
+          "x": 2120,
+          "y": 1210
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "pillar",
+          "port": "self"
+        },
+        "to": {
+          "node": "shoulder",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "shoulder",
+          "port": "tip"
+        },
+        "to": {
+          "node": "upper",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "upper",
+          "port": "tip"
+        },
+        "to": {
+          "node": "elbow",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "elbow",
+          "port": "tip"
+        },
+        "to": {
+          "node": "fore",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "fore",
+          "port": "tip"
+        },
+        "to": {
+          "node": "gripper",
+          "port": "base"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "shoulder",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "go",
+          "port": "started"
+        },
+        "to": {
+          "node": "elbow",
+          "port": "power"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "key-w",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-shoulder",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "key-s",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-shoulder",
+          "port": "down"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "count-shoulder",
+          "port": "value"
+        },
+        "to": {
+          "node": "scale-shoulder",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "scale-shoulder",
+          "port": "value"
+        },
+        "to": {
+          "node": "shoulder",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "key-d",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-elbow",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "key-a",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-elbow",
+          "port": "down"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "count-elbow",
+          "port": "value"
+        },
+        "to": {
+          "node": "scale-elbow",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "scale-elbow",
+          "port": "value"
+        },
+        "to": {
+          "node": "elbow",
+          "port": "angle"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "key-close",
+          "port": "held"
+        },
+        "to": {
+          "node": "gripper",
+          "port": "close"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "key-up",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-force",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "key-down",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "count-force",
+          "port": "down"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "count-force",
+          "port": "value"
+        },
+        "to": {
+          "node": "scale-force",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "scale-force",
+          "port": "value"
+        },
+        "to": {
+          "node": "gripper",
+          "port": "force"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "gripper",
+          "port": "gripForce"
+        },
+        "to": {
+          "node": "show-force",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "shoulder",
+          "port": "load"
+        },
+        "to": {
+          "node": "show-shoulder",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "elbow",
+          "port": "load"
+        },
+        "to": {
+          "node": "show-elbow",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "shoulder",
+          "port": "overloaded"
+        },
+        "to": {
+          "node": "text-over-shoulder",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "elbow",
+          "port": "overloaded"
+        },
+        "to": {
+          "node": "text-over-elbow",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w26",
+        "from": {
+          "node": "gripper",
+          "port": "slipped"
+        },
+        "to": {
+          "node": "latch-slip",
+          "port": "set"
+        }
+      },
+      {
+        "id": "w27",
+        "from": {
+          "node": "key-close",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "latch-slip",
+          "port": "reset"
+        }
+      },
+      {
+        "id": "w28",
+        "from": {
+          "node": "latch-slip",
+          "port": "on"
+        },
+        "to": {
+          "node": "text-slip",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w29",
+        "from": {
+          "node": "gripper",
+          "port": "crushedOut"
+        },
+        "to": {
+          "node": "latch-crush",
+          "port": "set"
+        }
+      },
+      {
+        "id": "w30",
+        "from": {
+          "node": "latch-crush",
+          "port": "on"
+        },
+        "to": {
+          "node": "text-crush",
+          "port": "show"
+        }
+      }
+    ],
+    "settings": {
+      "wireRule": true,
+      "realPhysics": true
+    }
+  },
+  "notes": [
+    {
+      "id": "note1",
+      "color": "yellow",
+      "pos": {
+        "x": 20,
+        "y": 1500
+      },
+      "size": {
+        "w": 320,
+        "h": 340
+      },
+      "text": "Điều khiển (bấm Chạy):\n• W / S: nâng / hạ vai (mỗi lần 10 độ)\n• D / A: mở / gập khuỷu (mỗi lần 15 độ)\n• Cách (giữ): kẹp lại\n• Mũi tên lên / xuống: tăng / giảm lực kẹp (10 N mỗi lần)\nĐưa tay kẹp tới sát một cái thùng rồi giữ phím Cách. Bảng này đã bật \"Vật lý thật\": thùng là vật rắn thật, nhả ra thì rơi xuống bàn và nằm yên; kẹp nhẹ hơn 19,6 N thì thùng tuột ngay khi hai ngón khép lại."
+    },
+    {
+      "id": "note2",
+      "color": "green",
+      "pos": {
+        "x": 360,
+        "y": 1500
+      },
+      "size": {
+        "w": 340,
+        "h": 260
+      },
+      "text": "Thử 1: thùng nâu nặng 2 kg, ma sát 0,5. Kẹp giữ được khi 2 ngón × 0,5 × lực ≥ 2 × 9,81 = 19,6 N, tức mỗi ngón ≥ 19,6 N. Bắt đầu 10 N thì thùng TUỘT; bấm mũi tên lên cho tới khi giữ được rồi nâng vai lên."
+    },
+    {
+      "id": "note3",
+      "color": "pink",
+      "pos": {
+        "x": 740,
+        "y": 1500
+      },
+      "size": {
+        "w": 340,
+        "h": 260
+      },
+      "text": "Thử 2: thùng vàng 2 kg nhưng dễ vỡ (chịu tối đa 60 N). Tổng lực ép = 2 ngón × lực. Quá 30 N mỗi ngón là thùng bị HỎNG (méo, sẫm màu). Cần giữ trong khoảng 19,6 đến 30 N."
+    },
+    {
+      "id": "note4",
+      "color": "blue",
+      "pos": {
+        "x": 1120,
+        "y": 1500
+      },
+      "size": {
+        "w": 360,
+        "h": 260
+      },
+      "text": "Thử 3: thùng đỏ nặng 6 kg cần ≥ 58,9 N mỗi ngón, và vai (tối đa 120 N·m) KHÔNG nâng nổi: hiện \"Vai quá tải\" rồi tay sụp dần. Chọn mảnh Khớp xoay \"vai\", mở Thuộc tính, tăng \"Mô-men tối đa\" lên 250 rồi chạy lại. Mô-men = khối lượng × 9,81 × khoảng cách ngang tới khớp."
+    }
+  ]
+}

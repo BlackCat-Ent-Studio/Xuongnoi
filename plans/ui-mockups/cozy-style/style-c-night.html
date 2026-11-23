@@ -1,0 +1,468 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Bot · Phong cách C "Đêm sao dịu"</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Be+Vietnam+Pro:wght@400;600;700&display=swap">
+<style>
+/* Direction C "Đêm sao dịu": indigo/plum sky, moon, fireflies, lit workshop window. All art is CSS/SVG; only the mascot and robots are PNGs.
+   Animations touch transform/opacity only; prefers-reduced-motion freezes them. */
+:root {
+  --sky-top: #14103f; --sky-mid: #2a1b5e; --sky-low: #5a2f7c; --sky-glow: #a8508f;
+  --ink: #f6f1ff;          /* text on dark */
+  --ink-dark: #2a1b4d;     /* text on light/warm */
+  --muted: #cbbfee;
+  --moon: #fff2c7;
+  --lamp: #ffc857;         /* warm window / primary */
+  --lamp-deep: #e08a1e;
+  --mint: #7fe3c3; --pink: #ff8fbf; --lilac: #b9a4ff; --sky-blue: #7cc4ff;
+  --panel: #241a52; --panel-line: #4a3b95;
+  --display: "Baloo 2", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: #0d0a2a; color: var(--ink); }
+body { font-family: var(--body); padding: 18px max(16px, env(safe-area-inset-right, 0px)) 40px max(16px, env(safe-area-inset-left, 0px)); }
+.wrap { max-width: 980px; margin: 0 auto; display: grid; gap: 18px; }
+h1, h2, h3 { font-family: var(--display); margin: 0; letter-spacing: .2px; }
+h1 { font-size: clamp(22px, 3.4vw, 32px); }
+.lede { margin: 4px 0 0; color: var(--muted); font-size: 14px; line-height: 1.5; }
+
+/* ---------- tab strip ---------- */
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button { font: 800 16px/1 var(--display); color: var(--ink); background: var(--panel); border: 2px solid var(--panel-line); border-radius: 99px; padding: 10px 18px; cursor: pointer; }
+.tabs button[aria-selected="true"] { background: var(--lamp); color: var(--ink-dark); border-color: var(--lamp); box-shadow: 0 0 18px rgba(255,200,87,.45); }
+button:focus-visible, input:focus-visible + .tg { outline: 3px solid #fff; outline-offset: 2px; }
+
+/* ---------- phone ---------- */
+.phone { container-type: inline-size; width: 100%; aspect-ratio: 844 / 390; background: #07051c; border-radius: 4.2cqw; padding: 1.2cqw; box-shadow: 0 2cqw 5cqw -1cqw rgba(0,0,0,.7), inset 0 0 0 .3cqw #3a2f80; }
+.screen { position: relative; width: 100%; height: 100%; border-radius: 3.2cqw; overflow: hidden; isolation: isolate;
+  background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 48%, var(--sky-low) 82%, var(--sky-glow) 100%); font-size: 1.7cqw; }
+.view { position: absolute; inset: 0; display: none; }
+.view.on { display: block; }
+
+/* ---------- night backdrop ---------- */
+.sky { position: absolute; inset: 0; pointer-events: none; }
+.moon { position: absolute; left: 9%; top: 8%; width: 21cqw; aspect-ratio: 1; border-radius: 50%;
+  background:
+    radial-gradient(circle at 36% 38%, rgba(214,190,140,.55) 0 4%, transparent 4.5%),
+    radial-gradient(circle at 62% 60%, rgba(214,190,140,.5) 0 6%, transparent 6.5%),
+    radial-gradient(circle at 58% 26%, rgba(214,190,140,.4) 0 3%, transparent 3.5%),
+    radial-gradient(circle at 40% 36%, #fffbe6 0, var(--moon) 55%, #f5d98c 100%); }
+.moon::before { content: ""; position: absolute; inset: -42%; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,236,170,.34) 0, rgba(255,236,170,.16) 32%, rgba(255,236,170,0) 62%); animation: breathe 7s ease-in-out infinite; }
+.star { position: absolute; width: var(--s); aspect-ratio: 1; border-radius: 50%; left: var(--x); top: var(--y);
+  background: radial-gradient(circle, #fff 0 28%, rgba(255,255,255,.55) 38%, rgba(255,255,255,0) 70%); opacity: .9; animation: twinkle var(--d) ease-in-out var(--dl) infinite; }
+.firefly { position: absolute; left: var(--x); top: var(--y); width: 2.6cqw; aspect-ratio: 1; border-radius: 50%;
+  background: radial-gradient(circle, #fffbd0 0 14%, rgba(255,230,120,.75) 26%, rgba(255,214,80,.22) 52%, rgba(255,214,80,0) 72%);
+  animation: drift var(--d) ease-in-out var(--dl) infinite alternate, glow var(--g) ease-in-out var(--dl) infinite; will-change: transform, opacity; }
+.shoot { position: absolute; left: 62%; top: 7%; width: 13cqw; height: .45cqw; border-radius: 99px; opacity: 0;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.9)); transform: rotate(24deg); animation: shoot 11s linear 3s infinite; }
+@keyframes twinkle { 0%, 100% { opacity: .95; transform: scale(1); } 50% { opacity: .25; transform: scale(.7); } }
+@keyframes breathe { 50% { transform: scale(1.08); opacity: .8; } }
+@keyframes drift { from { transform: translate(0, 0); } to { transform: translate(var(--dx), var(--dy)); } }
+@keyframes glow { 0%, 100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes shoot { 0%, 86% { opacity: 0; transform: rotate(24deg) translateX(0); } 88% { opacity: 1; } 97% { opacity: 0; transform: rotate(24deg) translateX(34cqw); } 100% { opacity: 0; } }
+.screen[data-view=map] .moon { transform: scale(.5); transform-origin: 0 0; left: 3%; top: 20%; }
+.hills { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 34%; display: block; }
+.win-glow { animation: breathe 5s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+
+/* ---------- shared bits ---------- */
+.ic { width: 1em; height: 1em; fill: currentColor; stroke: currentColor; stroke-linejoin: round; stroke-linecap: round; flex: none; }
+.btn { border: 0; cursor: pointer; font-family: var(--display); font-weight: 800; color: var(--ink-dark); background: linear-gradient(180deg, #ffe08a, var(--lamp)); border-radius: 99px;
+  box-shadow: 0 .55cqw 0 var(--lamp-deep), 0 1.2cqw 2.4cqw -.6cqw rgba(255,200,87,.5); transition: transform .12s, box-shadow .12s; }
+.btn:active, .btn.is-pressed { transform: translateY(.45cqw); box-shadow: 0 .1cqw 0 var(--lamp-deep), 0 .4cqw 1cqw -.4cqw rgba(255,200,87,.4); }
+.btn.sec { color: var(--ink); background: linear-gradient(180deg, #4b3a9e, #3a2c82); box-shadow: 0 .55cqw 0 #1c1445, inset 0 0 0 .2cqw #6a58c4; }
+.btn.sec:active, .btn.sec.is-pressed { box-shadow: 0 .1cqw 0 #1c1445, inset 0 0 0 .2cqw #6a58c4; }
+.round { width: 5.4cqw; height: 5.4cqw; border-radius: 50%; padding: 0; display: grid; place-items: center; font-size: 2.6cqw; }
+.round .ic { width: 1em; height: 1em; }
+.frame { border-radius: 50%; overflow: hidden; border: .55cqw solid #ffe9a8; background: #3a2c82; box-shadow: 0 0 0 .5cqw rgba(255,200,87,.25), 0 0 3.5cqw rgba(255,200,87,.45), 0 1cqw 2cqw rgba(0,0,0,.4); }
+.frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* robot PNGs are full-page captures: crop to the robot */
+.frame.crop img { object-position: 18% 50%; transform: scale(1.6); }
+.starrow { display: inline-flex; gap: .3cqw; color: #6b5ca8; }
+.starrow .ic { width: 2.3cqw; height: 2.3cqw; }
+.starrow .on { color: var(--lamp); filter: none; }
+
+/* ---------- 1. title ---------- */
+.v-title .tools { position: absolute; right: 2.4cqw; top: 2.2cqw; display: flex; gap: 1.4cqw; }
+.logo { position: absolute; left: 50%; top: 12%; transform: translateX(-50%); text-align: center; white-space: nowrap; }
+.logo h2 { font-size: 11.5cqw; line-height: 1; font-weight: 800; color: #fff3cf; text-shadow: 0 .7cqw 0 #8a4a1d, 0 0 4cqw rgba(255,214,120,.7); }
+.logo p { margin: 1cqw 0 0; font-size: 2.1cqw; color: var(--ink); letter-spacing: .08em; text-shadow: 0 .2cqw .6cqw rgba(0,0,0,.6); }
+.play { position: absolute; left: 50%; top: 56%; transform: translateX(-50%); font-size: 5.4cqw; padding: .9cqw 9cqw; display: flex; gap: 1.4cqw; align-items: center; }
+.play:active { transform: translateX(-50%) translateY(.45cqw); }
+.mascot-wrap { position: absolute; left: 4cqw; bottom: 3.2cqw; width: 17cqw; }
+.mascot-wrap .frame { width: 17cqw; height: 17cqw; }
+.name-tag { position: absolute; left: 50%; bottom: -1.4cqw; transform: translateX(-50%); background: var(--panel); color: var(--ink); font: 800 1.9cqw/1 var(--display); padding: .6cqw 1.6cqw; border-radius: 99px; border: .2cqw solid var(--panel-line); white-space: nowrap; }
+.robots { position: absolute; right: 4cqw; bottom: 3.6cqw; display: flex; gap: 1.6cqw; align-items: flex-end; }
+.robots .frame { width: 11cqw; height: 11cqw; }
+.robots .frame:first-child { width: 13cqw; height: 13cqw; }
+.v-title .ver { position: absolute; left: 50%; bottom: 1.4cqw; transform: translateX(-50%); font-size: 1.5cqw; color: var(--muted); }
+
+/* ---------- 2. level map ---------- */
+.map-head { position: absolute; left: 2.4cqw; right: 2.4cqw; top: 2.2cqw; display: flex; align-items: center; gap: 1.6cqw; }
+.map-head h2 { font-size: 4cqw; color: #fff3cf; text-shadow: 0 .4cqw 0 #6b3a2a, 0 0 2.4cqw rgba(255,214,120,.5); flex: 1; text-align: center; margin-right: 11cqw; }
+.back { font-size: 2.2cqw; padding: 1cqw 2.2cqw; display: flex; align-items: center; gap: .8cqw; }
+.tally { position: absolute; right: 2.4cqw; top: 2.8cqw; display: flex; align-items: center; gap: .6cqw; font: 800 2.2cqw/1 var(--display); background: var(--panel); border-radius: 99px; padding: .7cqw 1.4cqw; border: .2cqw solid var(--panel-line); }
+.tally .ic { color: var(--lamp); width: 2.4cqw; height: 2.4cqw; }
+.map { position: absolute; inset: 0; }
+.map svg.lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+.map svg.lines line { stroke: rgba(205,190,255,.5); stroke-width: .35cqw; stroke-dasharray: .1cqw 1.3cqw; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.map svg.lines line.done { stroke: #ffe08a; stroke-dasharray: none; stroke-width: .45cqw; opacity: .85; }
+.stop { position: absolute; transform: translate(-50%, -50%); width: 12cqw; display: grid; justify-items: center; gap: .3cqw; text-align: center; }
+.stop .dot { position: relative; width: 7.4cqw; height: 7.4cqw; border-radius: 50%; display: grid; place-items: center; font: 800 3.6cqw/1 var(--display); color: var(--ink-dark);
+  background: radial-gradient(circle at 35% 30%, #fff8dc, #ffd56a 62%, #f0a53a); border: .45cqw solid #fff3cf; box-shadow: 0 0 0 .6cqw rgba(255,214,120,.28), 0 0 3.6cqw rgba(255,214,120,.65); }
+.stop.locked .dot { color: #c9bdf0; background: radial-gradient(circle at 35% 30%, #5b4aa8, #3a2c82); border-color: #6d5cc0; box-shadow: none; }
+.stop.locked .dot .ic { width: 3.4cqw; height: 3.4cqw; }
+.stop.current .dot { background: radial-gradient(circle at 35% 30%, #ffffff, #ffe9a8 55%, #ffc857); }
+.stop.current .dot::before { content: ""; position: absolute; inset: -4.2cqw; border-radius: 50%; background: radial-gradient(circle, rgba(255,224,138,.85) 0, rgba(255,224,138,.3) 40%, rgba(255,224,138,0) 68%); animation: pulse 1.8s ease-in-out infinite; z-index: -1; }
+@keyframes pulse { 0%, 100% { transform: scale(.7); opacity: .6; } 50% { transform: scale(1.1); opacity: 1; } }
+.stop .lbl { font: 800 1.75cqw/1.12 var(--display); color: var(--ink); text-shadow: 0 .1cqw .5cqw #0b0830, 0 0 .8cqw #0b0830; }
+.stop.locked .lbl { color: #c4b8ee; }
+.stop .starrow { margin-top: .1cqw; }
+.stop .starrow .ic { width: 2cqw; height: 2cqw; }
+.stop .starrow .on { filter: none; }
+.stop.locked .starrow { visibility: hidden; }
+.stop.current .starrow { color: #8a79c9; }
+
+/* ---------- 3. in-level ---------- */
+.v-level { display: none; grid-template-columns: 44% 56%; }
+.v-level.on { display: grid; }
+.stage { position: relative; overflow: hidden; background: #1a1448; border-right: .4cqw solid #3a2f80; }
+.stage > svg.scene { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hud { position: absolute; left: 1.6cqw; right: 1.6cqw; top: 1.4cqw; display: flex; align-items: flex-start; gap: 1cqw; }
+.badge { font: 800 1.95cqw/1.2 var(--display); background: var(--panel); color: var(--ink); padding: .4cqw 1.5cqw; border-radius: 99px; border: .2cqw solid var(--panel-line); box-shadow: 0 .4cqw 0 #0e0a30; white-space: nowrap; }
+.hud .starrow { margin-left: auto; background: rgba(20,14,60,.7); border-radius: 99px; padding: .5cqw 1cqw; }
+.hud .starrow .ic { width: 2.6cqw; height: 2.6cqw; }
+.botpos { position: absolute; left: 8%; top: 40%; width: 12cqw; height: 12cqw; }
+.helper { position: absolute; left: 1.4cqw; bottom: 1.2cqw; right: 1.4cqw; display: flex; align-items: flex-end; gap: 1.2cqw; }
+.helper .frame { width: 8.4cqw; height: 8.4cqw; flex: none; }
+.bubble { position: relative; background: #fff8e4; color: var(--ink-dark); border-radius: 1.8cqw; padding: .9cqw 1.4cqw; font-size: 1.6cqw; line-height: 1.35; box-shadow: 0 .5cqw 0 #c9ae6a; margin-bottom: 1.4cqw; font-weight: 600; }
+.bubble b { font-family: var(--display); font-size: 1.75cqw; color: #8a4a00; display: block; }
+.bubble::before { content: ""; position: absolute; left: -1.1cqw; bottom: 1.6cqw; border: .7cqw solid transparent; border-right: .7cqw solid #fff8e4; border-left: 0; transform: scale(1, 1.2); }
+
+.board { position: relative; background-color: #1d1650; background-image: radial-gradient(#4a3f9e .18cqw, transparent .2cqw); background-size: 2.4cqw 2.4cqw; overflow: hidden; }
+.board > svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.wire { fill: none; stroke: var(--pc); stroke-width: .4cqw; stroke-linecap: round; }
+.wire.glow { stroke-width: .9cqw; opacity: .2; }
+.wire.flow { stroke: #fff; stroke-width: .22cqw; stroke-dasharray: .2cqw 1.4cqw; opacity: .55; animation: wflow 2.4s linear infinite; }
+@keyframes wflow { to { stroke-dashoffset: -1.6cqw; } }
+.t-obj { --pc: #f27ad0; } .t-bool { --pc: #f7d046; }
+.card { --cc: #aab2bd; --card: #231c4f; position: absolute; min-width: 11.5cqw; white-space: nowrap; background: var(--card); color: #ece8ff;
+  border: .2cqw solid color-mix(in srgb, var(--cc) 45%, var(--card)); border-radius: 1.7cqw; box-shadow: 0 .55cqw 0 color-mix(in srgb, var(--cc) 35%, #0b0830), 0 1.2cqw 2cqw -1cqw rgba(0,0,0,.8); font-size: 1.3cqw; font-weight: 600; }
+.card header { display: flex; align-items: center; gap: .7cqw; padding: .45cqw .9cqw; border-radius: 1.45cqw 1.45cqw 0 0; background: var(--cc); color: #1a1238; }
+.card .tile { flex: none; width: 2.1cqw; height: 2.1cqw; border-radius: 50%; background: rgba(255,255,255,.4); display: grid; place-items: center; }
+.card .tile svg { width: 1.3cqw; height: 1.3cqw; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+.card .ttl { display: flex; flex-direction: column; line-height: 1.15; margin-right: auto; }
+.card .ttl b { font: 800 1.4cqw/1.15 var(--display); }
+.card .ttl small { font-size: 1.05cqw; font-weight: 600; color: rgba(26,18,56,.75); }
+.card .lock { width: 1.3cqw; height: 1.3cqw; fill: none; stroke: #1a1238; stroke-width: 2; opacity: .65; flex: none; }
+.card .x { flex: none; border: 0; background: rgba(26,18,56,.2); color: #1a1238; width: 2.2cqw; height: 2.2cqw; border-radius: 50%; font: 800 1.4cqw/1 var(--display); }
+.rows { display: flex; flex-direction: column; padding: .3cqw 0 .5cqw; }
+.ports { display: flex; flex-direction: column; } .ports.outs { align-items: flex-end; }
+.row { display: flex; align-items: center; gap: .7cqw; height: 2.5cqw; padding: 0 .9cqw; }
+.row.out { flex-direction: row-reverse; }
+.port { flex: none; width: 1.15cqw; height: 1.15cqw; background: var(--pc); box-shadow: 0 0 .9cqw var(--pc); }
+.port.t-bool { border-radius: 50%; } .port.t-obj { border-radius: .2cqw; }
+.cat-object { --cc: #ffa56b; } .cat-logic { --cc: #b7a6ff; }
+
+.tray { position: absolute; left: 1.4cqw; bottom: 1.4cqw; display: flex; gap: .9cqw; align-items: flex-end; }
+.chip { font: 800 1.4cqw/1.1 var(--display); color: #1a1238; background: var(--cc); padding: .7cqw 1.1cqw; border-radius: 1.2cqw; box-shadow: 0 .5cqw 0 rgba(0,0,0,.4); display: grid; text-align: left; }
+.chip span { font: 600 1.1cqw var(--body); opacity: .85; }
+.chip.used { opacity: .45; }
+.actions { position: absolute; right: 1.4cqw; bottom: 1.4cqw; display: flex; gap: .9cqw; align-items: center; }
+.actions .round { width: 4.6cqw; height: 4.6cqw; font-size: 2.1cqw; position: relative; font-family: var(--display); }
+.pip { position: absolute; right: -.5cqw; top: -.5cqw; min-width: 2cqw; height: 2cqw; border-radius: 99px; background: var(--pink); color: #3a0f2a; font: 800 1.3cqw/2cqw var(--display); text-align: center; padding: 0 .4cqw; box-shadow: 0 0 0 .25cqw #1d1650; }
+.run { font-size: 2.8cqw; padding: .8cqw 2.8cqw; display: flex; align-items: center; gap: .8cqw; }
+
+/* ---------- UI kit (outside the phone, regular px) ---------- */
+.kit { background: var(--panel); border: 2px solid var(--panel-line); border-radius: 18px; padding: 16px 18px 20px; display: grid; gap: 14px; }
+.kit h2 { font-size: 22px; }
+.kit-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+.kit-cell { background: rgba(10,6,40,.45); border-radius: 14px; padding: 12px 14px; display: grid; gap: 10px; align-content: start; }
+.kit-cell h3 { font-size: 15px; color: var(--muted); font-weight: 600; }
+.kit-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.kit .phone-scale { font-size: 0; }
+/* kit buttons use px so they render outside the phone's cqw context */
+.kit .btn { font-size: 18px; padding: 10px 24px; box-shadow: 0 5px 0 var(--lamp-deep); }
+.kit .btn.sec { box-shadow: 0 5px 0 #1c1445, inset 0 0 0 2px #6a58c4; }
+.kit .btn.is-pressed { transform: translateY(4px); box-shadow: 0 1px 0 var(--lamp-deep); }
+.kit .btn.sec.is-pressed { box-shadow: 0 1px 0 #1c1445, inset 0 0 0 2px #6a58c4; }
+.kit .starrow .ic { width: 30px; height: 30px; }
+.kit .big-lock { width: 38px; height: 38px; color: #c9bdf0; }
+.sample-card { background: #2d2266; border: 2px solid var(--panel-line); border-radius: 16px; padding: 12px 14px; box-shadow: 0 5px 0 #150f3a; }
+.sample-card b { font-family: var(--display); font-size: 18px; display: block; }
+.sample-card span { font-size: 14px; color: var(--muted); }
+.tg-wrap { display: inline-flex; align-items: center; gap: 10px; font-weight: 600; font-size: 15px; cursor: pointer; }
+.tg-wrap input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tg { width: 56px; height: 30px; border-radius: 99px; background: #3a2c82; border: 2px solid #6a58c4; position: relative; transition: background .2s; flex: none; }
+.tg::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--ink); transition: transform .2s; }
+input:checked + .tg { background: var(--lamp); border-color: #fff3cf; }
+input:checked + .tg::after { transform: translateX(26px); background: var(--ink-dark); }
+.font-d { font: 800 30px/1.1 var(--display); color: #fff3cf; } .font-b { font: 400 15px/1.5 var(--body); color: var(--ink); } .font-b b { font-weight: 700; }
+.swatches { display: flex; gap: 6px; flex-wrap: wrap; } .swatches i { width: 28px; height: 28px; border-radius: 8px; display: block; border: 2px solid rgba(255,255,255,.25); }
+.note { color: var(--muted); font-size: 13px; margin: 0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .star, .firefly, .shoot, .moon::before, .win-glow, .stop.current .dot::before, .wire.flow { animation: none !important; }
+  .shoot { display: none; }
+  .firefly { opacity: .8; }
+  .btn, .tg::after, .tg { transition: none; }
+}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-star" viewBox="0 0 24 24"><path d="M12 2.6l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.2 1.2-6.5-4.8-4.6 6.6-.9z" stroke-width="1.6"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="3" stroke-width="1.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3" fill="none" stroke-width="2.4"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3" fill="none" stroke-width="2.2"/><path d="M12 2.8v3M12 18.2v3M2.8 12h3M18.2 12h3M5.5 5.5l2.1 2.1M16.4 16.4l2.1 2.1M18.5 5.5l-2.1 2.1M7.6 16.4l-2.1 2.1" fill="none" stroke-width="2.6"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" stroke-width="1.4"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" fill="none" stroke-width="2.2"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M14.5 5l-7 7 7 7" fill="none" stroke-width="3.2"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z" stroke-width="1.6"/></symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <header>
+    <h1>Xưởng Bot · Phong cách C "Đêm sao dịu"</h1>
+    <p class="lede">Bản xem trước phong cách: bầu trời tím chàm, trăng lớn, đom đóm bay, xưởng nhỏ sáng đèn trên đồi. Bấm các nút bên dưới để đổi màn hình.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Chọn màn hình xem thử">
+    <button role="tab" aria-selected="true" data-view="title">1 · Màn hình chính</button>
+    <button role="tab" aria-selected="false" data-view="map">2 · Bản đồ màn chơi</button>
+    <button role="tab" aria-selected="false" data-view="level">3 · Trong màn chơi</button>
+  </div>
+
+  <div class="phone" aria-label="Màn hình điện thoại cầm ngang">
+    <div class="screen" id="screen">
+
+      <!-- shared night backdrop -->
+      <div class="sky" id="sky" aria-hidden="true">
+        <div class="moon"></div>
+        <div class="shoot"></div>
+        <svg class="hills" viewBox="0 0 844 133" preserveAspectRatio="none">
+          <defs>
+            <radialGradient id="wg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd37a" stop-opacity=".75"/><stop offset=".45" stop-color="#ffb84a" stop-opacity=".25"/><stop offset="1" stop-color="#ffb84a" stop-opacity="0"/></radialGradient>
+          </defs>
+          <path d="M0 62 C120 20 230 30 340 58 S560 84 700 40 S800 30 844 44 V133 H0Z" fill="#3b2275"/>
+          <!-- workshop silhouette on far hill -->
+          <g transform="translate(590 22)">
+            <ellipse class="win-glow" cx="30" cy="30" rx="48" ry="40" fill="url(#wg)"/>
+            <path d="M0 52 V28 L30 6 L60 28 V52Z" fill="#241553"/>
+            <rect x="46" y="8" width="7" height="14" rx="1.5" fill="#241553"/>
+            <rect x="21" y="26" width="18" height="15" rx="3" fill="#ffd37a"/>
+            <path d="M30 26v15M21 33.5h18" stroke="#c97a1e" stroke-width="1.6"/>
+            <rect x="8" y="38" width="9" height="14" rx="2" fill="#17103c"/>
+          </g>
+          <path d="M0 96 C140 58 260 70 380 96 S640 118 780 84 L844 78 V133 H0Z" fill="#241553"/>
+          <path d="M0 122 C200 100 400 112 600 118 S780 112 844 108 V133 H0Z" fill="#170f3c"/>
+        </svg>
+      </div>
+
+      <!-- 1. TITLE -->
+      <section class="view v-title on" id="v-title" aria-label="Màn hình chính">
+        <div class="tools">
+          <button class="btn sec round" type="button" aria-label="Cài đặt" title="Cài đặt"><svg class="ic"><use href="#i-gear"/></svg></button>
+          <button class="btn sec round" type="button" id="soundBtn" aria-pressed="true" aria-label="Bật/tắt âm thanh" title="Âm thanh"><svg class="ic"><use href="#i-sound"/></svg></button>
+        </div>
+        <div class="logo"><h2 data-game-name>Xưởng Bot</h2><p>Nối dây · Giải đố · Cùng bot</p></div>
+        <button class="btn play" type="button" data-go="map">Chơi <svg class="ic"><use href="#i-play"/></svg></button>
+        <div class="mascot-wrap"><div class="frame"><img src="mascot-cat.png" alt="Mèo Mun"></div><span class="name-tag">Mèo Mun</span></div>
+        <div class="robots"><div class="frame crop"><img src="robot-default.png" alt="Bot"></div><div class="frame crop"><img src="robot-happy.png" alt="Bot vui"></div></div>
+      </section>
+
+      <!-- 2. LEVEL MAP -->
+      <section class="view v-map" id="v-map" aria-label="Bản đồ màn chơi">
+        <div class="map" id="map"><svg class="lines" id="mapLines" viewBox="0 0 100 100" preserveAspectRatio="none"></svg></div>
+        <div class="map-head">
+          <button class="btn sec back" type="button" data-go="title"><svg class="ic" style="width:2.2cqw;height:2.2cqw"><use href="#i-back"/></svg>Quay lại</button>
+          <h2>Chọn màn chơi</h2>
+        </div>
+        <div class="tally" aria-label="Tổng số sao"><svg class="ic"><use href="#i-star"/></svg><span id="tally">6 / 24</span></div>
+      </section>
+
+      <!-- 3. IN-LEVEL -->
+      <section class="view v-level" id="v-level" aria-label="Trong màn chơi">
+        <div class="stage">
+          <svg class="scene" viewBox="0 0 380 390" preserveAspectRatio="xMidYMid slice" aria-label="Cảnh màn Cửa kho ban đêm">
+            <defs>
+              <linearGradient id="sg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1a1448"/><stop offset=".6" stop-color="#3a2478"/><stop offset="1" stop-color="#6b3a86"/></linearGradient>
+              <radialGradient id="mg" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff2c7" stop-opacity=".5"/><stop offset="1" stop-color="#fff2c7" stop-opacity="0"/></radialGradient>
+              <linearGradient id="gg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#6f7fd0"/><stop offset="1" stop-color="#3d4a9a"/></linearGradient>
+              <radialGradient id="pool" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#fff2c7" stop-opacity=".55"/><stop offset="1" stop-color="#fff2c7" stop-opacity="0"/></radialGradient>
+            </defs>
+            <rect width="380" height="390" fill="url(#sg)"/>
+            <circle cx="300" cy="104" r="64" fill="url(#mg)"/><circle cx="300" cy="104" r="26" fill="#fff2c7"/>
+            <g fill="#fff" opacity=".85"><circle cx="40" cy="96" r="1.8"/><circle cx="90" cy="150" r="1.4"/><circle cx="150" cy="86" r="2"/><circle cx="210" cy="140" r="1.4"/><circle cx="350" cy="190" r="1.6"/><circle cx="120" cy="190" r="1.2"/><circle cx="240" cy="78" r="1.5"/></g>
+            <path d="M0 214 C60 190 130 196 200 212 S320 220 380 200 V250 H0Z" fill="#2a1b62"/>
+            <!-- moonlit ground strip -->
+            <rect x="0" y="232" width="380" height="84" fill="url(#gg)"/>
+            <rect x="0" y="232" width="380" height="5" fill="#9aa7f0" opacity=".7"/>
+            <g fill="#4a58ac" opacity=".7"><rect x="0" y="262" width="380" height="2"/><rect x="0" y="290" width="380" height="2"/></g>
+            <ellipse cx="300" cy="274" rx="110" ry="26" fill="url(#pool)"/>
+            <rect x="0" y="316" width="380" height="74" fill="#1a1244"/>
+            <!-- red button -->
+            <ellipse cx="128" cy="268" rx="22" ry="7" fill="#1a1244" opacity=".5"/>
+            <rect x="108" y="256" width="40" height="12" rx="6" fill="#ff6b78"/><rect x="108" y="256" width="40" height="5" rx="2.5" fill="#ff9aa2"/>
+            <!-- door + frame -->
+            <rect x="222" y="170" width="46" height="98" rx="8" fill="#3a2c82" stroke="#8c7ad8" stroke-width="3"/>
+            <rect x="231" y="180" width="28" height="82" rx="5" fill="#6a58c4"/><circle cx="252" cy="224" r="3.2" fill="#ffd37a"/>
+            <!-- flag -->
+            <path d="M338 268 V196" stroke="#cfc4ff" stroke-width="4" stroke-linecap="round"/><path d="M340 198 L368 208 L340 220Z" fill="#7fe3c3"/>
+          </svg>
+          <div class="frame crop botpos"><img src="robot-default.png" alt="Bot"></div>
+          <div class="hud"><span class="badge">Màn 2 · Cửa kho</span>
+            <span class="starrow"><svg class="ic on"><use href="#i-star"/></svg><svg class="ic on"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg></span></div>
+          <div class="helper"><div class="frame"><img src="mascot-cat.png" alt="Mèo Mun"></div>
+            <div class="bubble"><b>Mèo Mun</b>Bot chạm nút đỏ thì cửa mở. Nối cảm biến với công tắc nhé!</div></div>
+        </div>
+        <div class="board" id="board" aria-label="Bàn nối">
+          <svg id="wires"></svg>
+          <div class="card cat-object" data-id="bot" style="left:2%;top:4%"><header><span class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></span><span class="ttl"><b>Nhân vật</b><small>Bot</small></span><svg class="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></header>
+            <div class="rows"><div class="ports outs"><div class="row out"><i class="port t-obj" data-p="bot.self"></i><span>Nhân vật</span></div></div></div></div>
+          <div class="card cat-object" data-id="btn" style="left:2%;top:34%"><header><span class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></span><span class="ttl"><b>Hộp</b><small>Nút đỏ</small></span><svg class="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></header>
+            <div class="rows"><div class="ports outs"><div class="row out"><i class="port t-obj" data-p="btn.self"></i><span>Hộp</span></div></div></div></div>
+          <div class="card cat-logic" data-id="touch" style="left:27%;top:4%"><header><span class="tile"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8 6h3a3 3 0 0 1 3 3v1M8 18h3a3 3 0 0 0 3-3v-1M14 12h1.8"/></svg></span><span class="ttl"><b>Cảm biến chạm</b><small>Logic</small></span><button class="x" type="button" aria-label="Trả về khay">×</button></header>
+            <div class="rows"><div class="ports ins"><div class="row in"><i class="port t-obj" data-p="touch.a"></i><span>Vật A</span></div><div class="row in"><i class="port t-obj" data-p="touch.b"></i><span>Vật B</span></div></div>
+              <div class="ports outs"><div class="row out"><i class="port t-bool" data-p="touch.on"></i><span>Đang chạm</span></div><div class="row out"><i class="port t-bool"></i><span>Vừa chạm</span></div><div class="row out"><i class="port t-bool"></i><span>Vừa thôi chạm</span></div></div></div></div>
+          <div class="card cat-logic" data-id="latch" style="left:61%;top:4%"><header><span class="tile"><svg viewBox="0 0 24 24"><circle cx="6" cy="6" r="2.2"/><circle cx="6" cy="18" r="2.2"/><circle cx="18" cy="12" r="2.2"/><path d="M8 6h3a3 3 0 0 1 3 3v1M8 18h3a3 3 0 0 0 3-3v-1M14 12h1.8"/></svg></span><span class="ttl"><b>Công tắc nhớ</b><small>Logic</small></span><button class="x" type="button" aria-label="Trả về khay">×</button></header>
+            <div class="rows"><div class="ports ins"><div class="row in"><i class="port t-bool" data-p="latch.set"></i><span>Bật</span></div><div class="row in"><i class="port t-bool"></i><span>Tắt</span></div><div class="row in"><i class="port t-bool"></i><span>Đảo</span></div></div>
+              <div class="ports outs"><div class="row out"><i class="port t-bool" data-p="latch.on"></i><span>Đang bật</span></div></div></div></div>
+          <div class="card cat-object" data-id="door" style="left:62%;top:46%"><header><span class="tile"><svg viewBox="0 0 24 24"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9z"/><path d="M4 7.5 12 12l8-4.5M12 12v9"/></svg></span><span class="ttl"><b>Hộp</b><small>Cửa kho</small></span><svg class="lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></header>
+            <div class="rows"><div class="ports ins"><div class="row in"><i class="port t-bool" data-p="door.open"></i><span>Ẩn đi</span></div></div></div></div>
+          <div class="tray"><div class="chip cat-logic used">Cảm biến chạm<span>đã dùng</span></div><div class="chip cat-logic used">Công tắc nhớ<span>đã dùng</span></div></div>
+          <div class="actions">
+            <button class="btn sec round" type="button" aria-label="Gợi ý" title="Gợi ý">?<span class="pip">2</span></button>
+            <button class="btn sec round" type="button" aria-label="Làm lại" title="Làm lại">↺</button>
+            <button class="btn run" type="button">CHẠY <svg class="ic" style="width:1em;height:1em"><use href="#i-play"/></svg></button>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <section class="kit" aria-label="Bộ thành phần giao diện">
+    <h2>Bộ thành phần (UI kit)</h2>
+    <div class="kit-grid">
+      <div class="kit-cell"><h3>Nút chính · thường / đang nhấn</h3>
+        <div class="kit-row"><button class="btn" type="button">Chơi</button><button class="btn is-pressed" type="button">Chơi</button></div></div>
+      <div class="kit-cell"><h3>Nút phụ · thường / đang nhấn</h3>
+        <div class="kit-row"><button class="btn sec" type="button">Quay lại</button><button class="btn sec is-pressed" type="button">Quay lại</button></div></div>
+      <div class="kit-cell"><h3>Bảng / thẻ</h3>
+        <div class="sample-card"><b>Cửa kho</b><span>Cho: Cảm biến chạm, Công tắc nhớ</span></div></div>
+      <div class="kit-cell"><h3>Sao (được / chưa)</h3>
+        <div class="kit-row"><span class="starrow"><svg class="ic on"><use href="#i-star"/></svg><svg class="ic on"><use href="#i-star"/></svg><svg class="ic"><use href="#i-star"/></svg></span></div></div>
+      <div class="kit-cell"><h3>Ổ khoá</h3>
+        <div class="kit-row"><svg class="ic big-lock"><use href="#i-lock"/></svg><svg class="ic big-lock" style="color:var(--lamp)"><use href="#i-lock"/></svg></div></div>
+      <div class="kit-cell"><h3>Công tắc bật / tắt</h3>
+        <div class="kit-row"><label class="tg-wrap"><input type="checkbox" checked><span class="tg"></span>Âm thanh</label><label class="tg-wrap"><input type="checkbox"><span class="tg"></span>Rung</label></div></div>
+      <div class="kit-cell"><h3>Chữ</h3>
+        <div class="font-d">Baloo 2 · Xưởng Bot</div><div class="font-b">Be Vietnam Pro: <b>Nối dây cho bot đi tới cờ</b>, mở cửa kho.</div></div>
+      <div class="kit-cell"><h3>Bảng màu</h3>
+        <div class="swatches"><i style="background:#14103f"></i><i style="background:#2a1b5e"></i><i style="background:#5a2f7c"></i><i style="background:#fff2c7"></i><i style="background:#ffc857"></i><i style="background:#7fe3c3"></i><i style="background:#ff8fbf"></i><i style="background:#b9a4ff"></i></div></div>
+    </div>
+    <p class="note">Tên game là chữ giữ chỗ, đổi ở một hằng số GAME_NAME trong đoạn script cuối trang.</p>
+  </section>
+</div>
+
+<script>
+(() => {
+  const GAME_NAME = 'Xưởng Bot';
+  document.querySelectorAll('[data-game-name]').forEach((e) => { e.textContent = GAME_NAME; });
+
+  // ---- backdrop: stars + fireflies (seeded so every load looks the same) ----
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const sky = document.getElementById('sky');
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 46; i++) {
+    const s = document.createElement('i'); s.className = 'star';
+    s.style.cssText = `--x:${(rnd() * 98).toFixed(1)}%;--y:${(rnd() * 62).toFixed(1)}%;--s:${(.7 + rnd() * 1.3).toFixed(2)}cqw;--d:${(2.5 + rnd() * 4).toFixed(1)}s;--dl:-${(rnd() * 6).toFixed(1)}s`;
+    frag.append(s);
+  }
+  for (let i = 0; i < 12; i++) {
+    const f = document.createElement('i'); f.className = 'firefly';
+    f.style.cssText = `--x:${(4 + rnd() * 90).toFixed(1)}%;--y:${(38 + rnd() * 50).toFixed(1)}%;--dx:${((rnd() - .5) * 12).toFixed(1)}cqw;--dy:${((rnd() - .6) * 9).toFixed(1)}cqw;--d:${(6 + rnd() * 6).toFixed(1)}s;--g:${(2.4 + rnd() * 2.6).toFixed(1)}s;--dl:-${(rnd() * 8).toFixed(1)}s`;
+    frag.append(f);
+  }
+  sky.prepend(frag);
+
+  // ---- level map ----
+  // pos = % of the screen; stars = earned (0-3); state: done | current | locked
+  const LEVELS = [
+    { n: 1, t: 'Bot đầu tiên', x: 9, y: 66, s: 3, st: 'done' },
+    { n: 2, t: 'Cửa kho', x: 22, y: 40, s: 2, st: 'done' },
+    { n: 3, t: 'Nhặt sao', x: 35, y: 66, s: 1, st: 'done' },
+    { n: 4, t: 'Hai nút một cửa', x: 48, y: 40, s: 0, st: 'current' },
+    { n: 5, t: 'Đủ ba thùng', x: 61, y: 66, s: 0, st: 'locked' },
+    { n: 6, t: 'Né lính gác', x: 74, y: 40, s: 0, st: 'locked' },
+    { n: 7, t: 'Cầu nhấp nháy', x: 86, y: 66, s: 0, st: 'locked' },
+    { n: 8, t: 'Xưởng tổng hợp', x: 92, y: 36, s: 0, st: 'locked' },
+  ];
+  const star = (on) => `<svg class="ic ${on ? 'on' : ''}"><use href="#i-star"/></svg>`;
+  const map = document.getElementById('map'), lines = document.getElementById('mapLines');
+  LEVELS.forEach((l, i) => {
+    if (i) {
+      const p = LEVELS[i - 1], ln = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      ln.setAttribute('x1', p.x); ln.setAttribute('y1', p.y); ln.setAttribute('x2', l.x); ln.setAttribute('y2', l.y);
+      if (l.st !== 'locked') ln.setAttribute('class', 'done');
+      lines.append(ln);
+    }
+    const b = document.createElement('div');
+    b.className = `stop ${l.st}`; b.style.left = l.x + '%'; b.style.top = l.y + '%';
+    const label = l.st === 'locked' ? `Màn ${l.n}: ${l.t} (đang khoá)` : `Màn ${l.n}: ${l.t}, ${l.s} sao`;
+    b.setAttribute('role', 'img'); b.setAttribute('aria-label', label);
+    b.innerHTML = `<div class="dot">${l.st === 'locked' ? '<svg class="ic"><use href="#i-lock"/></svg>' : l.n}</div>
+      <span class="starrow">${[0, 1, 2].map((k) => star(k < l.s)).join('')}</span><span class="lbl">${l.n}. ${l.t}</span>`;
+    map.append(b);
+  });
+  const total = LEVELS.reduce((a, l) => a + l.s, 0);
+  document.getElementById('tally').textContent = `${total} / ${LEVELS.length * 3}`;
+
+  // ---- tabs ----
+  const tabs = [...document.querySelectorAll('.tabs button')];
+  function show(v) {
+    document.querySelectorAll('.view').forEach((e) => e.classList.toggle('on', e.id === 'v-' + v));
+    tabs.forEach((t) => t.setAttribute('aria-selected', String(t.dataset.view === v)));
+    // the in-level screen paints its own scene, so hide the sky behind it
+    document.getElementById('screen').dataset.view = v;
+    document.getElementById('sky').style.visibility = v === 'level' ? 'hidden' : 'visible';
+    if (v === 'level') requestAnimationFrame(drawWires);
+    history.replaceState(null, '', '#' + v);
+  }
+  tabs.forEach((t) => t.addEventListener('click', () => show(t.dataset.view)));
+  document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => show(b.dataset.go)));
+  const sb = document.getElementById('soundBtn');
+  sb.addEventListener('click', () => {
+    const on = sb.getAttribute('aria-pressed') !== 'true';
+    sb.setAttribute('aria-pressed', String(on));
+    sb.style.opacity = on ? 1 : .6;
+    sb.querySelector('use').setAttribute('href', on ? '#i-sound' : '#i-sound');
+  });
+
+  // ---- wires (level screen): drawn between port centres ----
+  const board = document.getElementById('board'), svg = document.getElementById('wires'), NS = 'http://www.w3.org/2000/svg';
+  const WIRES = [['bot.self', 'touch.a', 'obj'], ['btn.self', 'touch.b', 'obj'], ['touch.on', 'latch.set', 'bool'], ['latch.on', 'door.open', 'bool']];
+  function drawWires() {
+    svg.innerHTML = '';
+    const B = board.getBoundingClientRect(); if (!B.width) return;
+    const c = (p) => { const e = board.querySelector(`[data-p="${p}"]`).getBoundingClientRect(); return [e.left + e.width / 2 - B.left, e.top + e.height / 2 - B.top]; };
+    WIRES.forEach(([a, b, k]) => {
+      const [x1, y1] = c(a), [x2, y2] = c(b), dx = Math.max(30, Math.abs(x2 - x1) * .5);
+      const d = `M${x1},${y1} C${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`;
+      ['wire glow', 'wire', 'wire flow'].forEach((cls) => { const p = document.createElementNS(NS, 'path'); p.setAttribute('class', `${cls} t-${k}`); p.setAttribute('d', d); svg.append(p); });
+    });
+  }
+  new ResizeObserver(drawWires).observe(board);
+
+  const initial = location.hash.slice(1);
+  show(['title', 'map', 'level'].includes(initial) ? initial : 'title');
+})();
+</script>
+</body>
+</html>

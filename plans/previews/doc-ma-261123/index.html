@@ -1,0 +1,839 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Đọc mã – chọn kiểu nhãn số, thẻ và cổng quét</title>
+<style>
+  :root { --bg:#e6e8eb; --card:#f7f8f9; --panel:#ffffff; --ink:#22252b; --soft:#525a65; --line:#c9cdd3; --accent:#1f6fd0; --btn:#ffffff; --btnh:#eef1f4; --noteb:#fff3cd; --notel:#e3c96a; --view:#cfd2d7; --newb:#d9f2e3; --newl:#2e9a5b; --oldb:#e3e6ea; --oldl:#8b93a0; }
+  html.dark { --bg:#17191d; --card:#22252b; --panel:#2a2e35; --ink:#eef0f3; --soft:#b3bac4; --line:#444a54; --accent:#6aa9f5; --btn:#2f343c; --btnh:#3a4049; --noteb:#3c3520; --notel:#8a7630; --view:#23262c; --newb:#1d3b2a; --newl:#4fc487; --oldb:#30343c; --oldl:#7d8592; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; background:var(--bg); color:var(--ink); font-family:"Segoe UI",system-ui,Arial,sans-serif; }
+  html { scroll-padding-top:70px; }
+  #gl { position:fixed; left:0; top:0; z-index:5; pointer-events:none; }
+  .top { position:sticky; top:0; z-index:20; background:var(--panel); border-bottom:2px solid var(--line); padding:8px 18px; display:flex; flex-wrap:wrap; gap:8px 18px; align-items:center; }
+  .top .notice { font-size:1.05rem; font-weight:800; padding:6px 12px; border-radius:10px; background:var(--noteb); border:1px solid var(--notel); }
+  .top nav { display:flex; gap:6px; flex-wrap:wrap; margin-left:auto; align-items:center; }
+  .top a { color:var(--ink); font-weight:700; text-decoration:none; padding:6px 10px; border-radius:10px; border:2px solid var(--line); background:var(--btn); }
+  .top a:hover { background:var(--btnh); }
+  main { max-width:1320px; margin:0 auto; padding:10px 18px 30px; }
+  h1 { font-size:1.5rem; margin:6px 0 2px; }
+  .intro { color:var(--soft); margin:0 0 6px; font-size:1rem; max-width:1000px; }
+  button { font:inherit; font-weight:700; color:var(--ink); background:var(--btn); border:2px solid #aeb4bd; border-radius:12px; padding:6px 14px; min-height:40px; cursor:pointer; }
+  button:hover { background:var(--btnh); }
+  button:focus-visible, a:focus-visible { outline:3px solid var(--accent); outline-offset:2px; }
+  button[aria-pressed="true"] { background:var(--accent); border-color:var(--accent); color:#ffffff; }
+  html.dark button[aria-pressed="true"] { color:#10151b; }
+  section.part { background:var(--card); border:2px solid var(--line); border-radius:18px; padding:10px 16px 14px; margin:16px 0; }
+  section.part > h2 { margin:0 0 2px; font-size:1.45rem; }
+  section.part > p.lead { margin:0 0 8px; color:var(--soft); max-width:1050px; }
+  .bar { display:flex; flex-wrap:wrap; gap:8px 20px; align-items:center; margin:8px 0; }
+  .grp { display:flex; flex-wrap:wrap; gap:6px; align-items:center; }
+  .grp > span { font-weight:700; font-size:.95rem; margin-right:2px; }
+  .hint { font-size:.9rem; color:var(--soft); margin:0; }
+  .opt { background:var(--panel); border:2px solid var(--line); border-radius:14px; padding:10px 12px 12px; margin:12px 0 0; }
+  .opt > header { display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin:0 0 8px; }
+  .opt h3 { margin:0; font-size:1.2rem; }
+  .code { font:800 1.25rem ui-monospace,Consolas,monospace; background:var(--accent); color:#ffffff; border-radius:8px; padding:2px 10px; }
+  html.dark .code { color:#10151b; }
+  .rec { font-size:.85rem; font-weight:800; padding:2px 10px; border-radius:999px; border:2px solid var(--newl); background:var(--newb); }
+  .tag { display:inline-block; font-size:.85rem; font-weight:800; padding:1px 9px; border-radius:999px; border:2px solid var(--oldl); background:var(--oldb); white-space:nowrap; }
+  .tag.new { border-color:var(--newl); background:var(--newb); }
+  .view { background:var(--view); touch-action:none; cursor:grab; border-radius:8px; }
+  .view:active { cursor:grabbing; }
+  .view.strip { height:230px; }
+  .view.far { height:130px; cursor:default; }
+  .view.gate { height:380px; }
+  .cap { font-size:.9rem; font-weight:700; color:var(--soft); margin:8px 0 4px; }
+  .sees { margin:8px 0 0; font-size:1rem; max-width:1100px; }
+  .sees b { font-weight:800; }
+  .warn { margin:6px 0 0; padding:6px 10px; border-radius:10px; background:var(--noteb); border:1px solid var(--notel); font-size:.95rem; max-width:1100px; }
+  .swatches { display:flex; flex-wrap:wrap; gap:6px 10px; margin:8px 0 0; font-size:.9rem; font-weight:700; }
+  .swatches span { display:inline-flex; align-items:center; gap:5px; }
+  .swatches i { width:22px; height:14px; border-radius:4px; border:1px solid rgba(0,0,0,.45); display:inline-block; }
+  .two { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+  .two .opt { margin:0; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 16px; align-items:center; margin:8px 0; font-size:.98rem; }
+  .answer { background:var(--panel); border:2px solid var(--accent); border-radius:14px; padding:10px 16px; font-size:1.15rem; font-weight:700; text-align:center; margin:16px 0 0; }
+  .answer code { font:800 1.2rem ui-monospace,Consolas,monospace; background:var(--btnh); border:1px solid var(--line); border-radius:8px; padding:2px 9px; margin:0 2px; }
+  .answer span { display:block; font-size:1rem; font-weight:600; color:var(--soft); margin-top:4px; }
+  #fail { display:none; margin:12px 0; padding:12px 14px; border-radius:12px; background:#ffe1de; color:#22252b; border:2px solid #e08a82; font-weight:700; }
+  footer { text-align:center; color:var(--soft); padding:10px 0 0; font-size:.9rem; font-weight:700; }
+
+  /* ---------- wiring board: an imitation of the editor's card look (colours and sizes copied from the app's tokens) ---------- */
+  .board {
+    --b-bg:#dfe3e8; --b-grid:#b9c1cc; --card-bg:#f1f3f6; --card-line:#767164; --text:#1b2330; --text2:#4a5361; --b-panel:#eceff3; --b-panel2:#e3e7ec; --line2:#8a8577;
+    --t-bool:#f2b800; --t-num:#1d74e0; --t-obj:#d9369b; --t-bool-edge:#8a6400; --t-num-edge:#0f4fa8; --t-obj-edge:#9c1d6b;
+    --c-logic:#8a4fd6; --ci-logic:#ffffff; --c-math:#15a04c; --ci-math:#10151b;
+    --shadow-card:0 1px 2px rgba(21,32,43,.1), 0 4px 10px -4px rgba(21,32,43,.18);
+    position:relative; display:flex; gap:86px; align-items:flex-start; padding:24px 28px 26px; overflow-x:auto; border-radius:10px;
+    background-color:var(--b-bg); background-image:radial-gradient(var(--b-grid) 1.4px, transparent 1.6px); background-size:24px 24px;
+    color:var(--text); font-family:"Be Vietnam Pro",system-ui,"Segoe UI",sans-serif; font-size:15px; font-variant-numeric:tabular-nums;
+  }
+  html.dark .board {
+    --b-bg:#15181e; --b-grid:#2b303a; --card-bg:#22262f; --card-line:#646e82; --text:#eceef2; --text2:#b3bac6; --b-panel:#1c2028; --b-panel2:#15181e; --line2:#757e90;
+    --t-bool:#f7d046; --t-num:#5aa9ff; --t-obj:#f27ad0; --t-bool-edge:#f7d046; --t-num-edge:#5aa9ff; --t-obj-edge:#f27ad0;
+    --c-logic:#be89ef; --ci-logic:#10151b; --c-math:#d3f89c; --ci-math:#10151b;
+    --shadow-card:0 2px 4px rgba(0,0,0,.35), 0 10px 18px -10px rgba(0,0,0,.7);
+  }
+  .board .col { display:flex; flex-direction:column; gap:22px; flex:none; position:relative; }
+  .board .col.mid { padding-top:26px; }
+  .board .newtag { position:absolute; top:-4px; left:0; font:800 12.5px "Segoe UI",system-ui,sans-serif; padding:1px 9px; border-radius:999px; border:2px solid var(--newl); background:var(--newb); color:var(--ink); }
+  .board svg.wires { position:absolute; left:0; top:0; pointer-events:none; z-index:2; overflow:visible; }
+  .board .type-bool { --pc:var(--t-bool); --pe:var(--t-bool-edge); }
+  .board .type-number { --pc:var(--t-num); --pe:var(--t-num-edge); }
+  .board .type-object { --pc:var(--t-obj); --pe:var(--t-obj-edge); }
+  .board .cat-logic { --cc:var(--c-logic); --ci:var(--ci-logic); }
+  .board .cat-math { --cc:var(--c-math); --ci:var(--ci-math); }
+  .wires .case { fill:none; stroke:var(--pe); stroke-width:4.6; stroke-linecap:round; }
+  .wires .core { fill:none; stroke:var(--pc); stroke-width:2.8; stroke-linecap:round; }
+  .wc-node { position:relative; width:max-content; min-width:184px; white-space:nowrap; background:var(--card-bg); color:var(--text); border:1.5px solid var(--card-line); border-radius:12px; box-shadow:var(--shadow-card); }
+  .wc-node-head { position:relative; display:flex; align-items:center; gap:10px; min-height:50px; padding:4px 44px 4px 10px; background:var(--cc); color:var(--ci); border-radius:10px 10px 0 0; }
+  .wc-tile { flex:none; width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, var(--ci) 20%, transparent); color:var(--ci); }
+  .wc-tile svg { width:17px; height:17px; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; }
+  .wc-title { display:flex; flex-direction:column; line-height:1.15; }
+  .wc-name { font-size:15px; font-weight:700; }
+  .wc-sub { font-size:13px; line-height:1.2; font-weight:500; }
+  .wc-help { position:absolute; right:10px; top:50%; transform:translateY(-50%); width:28px; height:28px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb, var(--ci) 16%, transparent); border:1px solid color-mix(in srgb, var(--ci) 60%, transparent); font-size:13px; font-weight:700; }
+  .wc-ports-body { display:flex; flex-direction:column; padding:4px 0 6px; }
+  .wc-port { position:relative; display:flex; align-items:center; gap:8px; height:34px; padding:0 10px; font-size:14px; font-weight:600; }
+  .wc-port.out { flex-direction:row-reverse; }
+  .wc-dot { flex:none; width:14px; height:14px; border:2px solid var(--pe); background:var(--pc); box-sizing:border-box; }
+  .wc-dot.type-bool { border-radius:50%; }
+  .wc-dot.type-number { transform:rotate(45deg) scale(.84); border-radius:2px; }
+  .wc-dot.type-object { border-radius:3px; }
+  .wc-port.live .wc-dot { box-shadow:0 0 0 3px color-mix(in srgb, var(--pc) 32%, transparent); }
+  .wc-port-val { position:absolute; top:50%; transform:translateY(-50%); padding:3px 6px; border-radius:10px; border:1px solid var(--pe); background:color-mix(in srgb, var(--pc) 16%, var(--card-bg)); color:var(--text); font:700 13px/1 ui-monospace,Consolas,monospace; }
+  .wc-port.in .wc-port-val { right:10px; }
+  .wc-port.out .wc-port-val { left:10px; }
+  .wc-port.has-val.in { padding-right:64px; }
+  .wc-port.has-val.out { padding-left:64px; }
+  /* the side panel with the "Nâng cao" fold (imitation) */
+  .insp { flex:none; width:250px; background:var(--b-panel); border:1px solid var(--line2); border-radius:10px; padding:10px 12px 12px; font-size:13px; color:var(--text); }
+  .insp .ttl { font-size:12px; color:var(--text2); font-weight:700; margin:0 0 6px; }
+  .insp .chip { display:inline-block; font-weight:700; font-size:14px; padding:3px 10px; border-radius:6px; background:var(--cc); color:var(--ci); margin-bottom:8px; }
+  .insp details { border-top:1px solid var(--line2); padding-top:6px; }
+  .insp summary { font-weight:700; font-size:14px; cursor:pointer; padding:4px 0; }
+  .insp label { display:block; font-size:12px; color:var(--text2); margin:6px 0 3px; }
+  .insp .box { padding:6px 8px; border:1px solid var(--line2); border-radius:6px; background:var(--b-panel2); font-weight:600; font-size:14px; }
+  @media (max-width:900px) { .two { grid-template-columns:1fr; } }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div class="top">
+  <div class="notice">Đây là bản xem trước để chọn kiểu, chưa có trong trò chơi.</div>
+  <nav>
+    <a href="#p1">1. Nhãn số trên thùng</a>
+    <a href="#p2">2. Thẻ Đọc mã</a>
+    <a href="#p3">3. Cổng quét</a>
+    <button type="button" data-key="bg" data-val="light">Nền sáng</button>
+    <button type="button" data-key="bg" data-val="dark">Nền tối</button>
+  </nav>
+</div>
+<main>
+  <h1>Đọc mã: mỗi thùng hàng mang một số tuyến từ 1 đến 9</h1>
+  <p class="intro">Thùng mang số nào thì đi tới lỗ số đó trong lưới 3×3. Một mảnh nhỏ mới tên <b>“Đọc mã”</b> đọc số của thùng đang ở trước nó và đưa số đó ra dây. Hãy chọn một kiểu ở mỗi phần rồi gõ lại ba mã, ví dụ <b>N-B T-B Q-B</b>.</p>
+  <div id="fail">Không tải được thư viện 3D (three.js). Trang cần mạng Internet để tải thư viện; hãy kiểm tra mạng rồi mở lại.</div>
+
+  <!-- ============================================================ 1 -->
+  <section class="part" id="p1">
+    <h2>1. Nhãn số trên thùng</h2>
+    <p class="lead">Cùng một thùng giấy như trong trò chơi, bốn cách in số tuyến. Ở mỗi kiểu: hàng trên là 9 thùng số 1 đến 9 nhìn gần, hàng dưới là các thùng đó trên băng chuyền nhìn từ xa để xem số còn đọc được không.</p>
+    <div class="bar">
+      <div class="grp"><span>Nhìn gần:</span>
+        <button type="button" data-pose="cheo">Nhìn chéo</button>
+        <button type="button" data-pose="tren">Nhìn từ trên</button>
+        <button type="button" data-pose="ngang">Nhìn ngang</button>
+        <button type="button" data-key="spin" data-val="on">Tự xoay</button>
+      </div>
+      <div class="grp"><span>Nhìn từ xa:</span>
+        <button type="button" data-key="far" data-val="gan">Gần</button>
+        <button type="button" data-key="far" data-val="vua">Vừa</button>
+        <button type="button" data-key="far" data-val="xa">Xa</button>
+      </div>
+      <p class="hint">Kéo chuột trên hàng thùng: sang ngang để xoay thùng, lên xuống để đổi góc nhìn. Bốn hàng xoay cùng nhau.</p>
+    </div>
+    <div id="looks"></div>
+  </section>
+
+  <!-- ============================================================ 2 -->
+  <section class="part" id="p2">
+    <h2>2. Thẻ “Đọc mã”</h2>
+    <p class="lead">Ba mức của thẻ mới, vẽ theo đúng kiểu thẻ đang dùng: đầu thẻ màu tím của nhóm Logic (cùng nhóm với “Đọc màu” và “Vùng kích hoạt”), cổng vuông hồng là vật, cổng thoi xanh là số, cổng tròn vàng là bật / tắt. Mỗi thẻ được nối thử trong một mạch nhỏ. Ô số cạnh cổng là giá trị lúc đang chạy (trò chơi hiện số kiểu 7.00).</p>
+    <div id="cards"></div>
+  </section>
+
+  <!-- ============================================================ 3 -->
+  <section class="part" id="p3">
+    <h2>3. Cổng quét</h2>
+    <p class="lead">Khi thùng đi qua cổng, người học cần thấy cổng “vừa đọc” và đọc ra số mấy.</p>
+    <div class="legend">
+      <span><span class="tag">ĐÃ CÓ</span> khung cổng vàng, hộp đọc đen, đèn xanh, băng chuyền, thùng giấy: giữ nguyên như trong trò chơi</span>
+      <span><span class="tag new">MỚI</span> vệt sáng lóe lên lúc đọc, và con số</span>
+    </div>
+    <div class="two">
+      <article class="opt" id="Q-A">
+        <header><span class="code">Q-A</span><h3>Số bay lên trên cổng</h3></header>
+        <div class="view gate" id="v-QA"></div>
+        <p class="sees"><b>Người học thấy:</b> thùng tới cổng, một vệt sáng lóe lên, rồi một bảng ghi số vừa đọc (ví dụ “Mã 3”) hiện ra phía trên cổng, bay lên một chút và mờ dần sau khoảng 1,5 giây. Bảng luôn quay về phía người xem. Không thêm vật gì lên cổng.</p>
+      </article>
+      <article class="opt" id="Q-B">
+        <header><span class="code">Q-B</span><h3>Số trên màn hình nhỏ gắn ở cổng</h3><span class="rec">Gợi ý</span></header>
+        <div class="view gate" id="v-QB"></div>
+        <p class="sees"><b>Người học thấy:</b> thùng tới cổng, một vệt sáng lóe lên, rồi màn hình nhỏ trên đầu cổng đổi sang số vừa đọc và <b>giữ nguyên</b> tới khi thùng sau đi qua. Màn hình có số ở cả bốn mặt nên nhìn từ phía nào cũng thấy. Cổng có thêm một hộp nhỏ màu đen.</p>
+      </article>
+    </div>
+    <div class="bar">
+      <p class="hint">Kéo chuột để xoay, lăn chuột để phóng to. Hai khung xoay cùng nhau. Nhãn trên thùng ở phần này dùng tạm kiểu N-A.</p>
+    </div>
+  </section>
+
+  <div class="answer">Trả lời bằng ba mã, mỗi phần một mã:
+    <code>N-A</code><code>N-B</code><code>N-C</code><code>N-D</code> · <code>T-A</code><code>T-B</code><code>T-C</code> · <code>Q-A</code><code>Q-B</code>
+    <span>Ví dụ: “N-B T-B Q-B”. Nhãn “Gợi ý” là ý của người làm bản xem trước, bạn chọn khác cũng được.</span>
+  </div>
+  <footer>Bản xem trước – chưa phải sản phẩm</footer>
+</main>
+
+<script>
+  // If the 3D library never arrives (no network), say so instead of leaving empty grey boxes.
+  setTimeout(function () { if (!window.__ready) document.getElementById('fail').style.display = 'block'; }, 9000);
+</script>
+
+<!-- ================================================================ part 2: cards (plain DOM, works without the 3D library) -->
+<script>
+(function () {
+  var GLYPH = { logic: 'M3 3h5v5H3zM8 8h5v5H8z', math: 'M8 3v10M3 8h10' };
+  function P(id, type, label, extra) { return Object.assign({ id: id, type: type, label: label }, extra || {}); }
+  var ZONE = { key: 'zone', cat: 'logic', name: 'Vùng kích hoạt', sub: 'Logic',
+    ins: [P('follow', 'object', 'Bám theo đối tượng')],
+    outs: [P('inside', 'bool', 'Đang có đối tượng', { live: 1 }), P('entered', 'bool', 'Khi đối tượng vào'), P('exited', 'bool', 'Khi đối tượng ra'), P('count', 'number', 'Số đối tượng', { val: '1.00' }), P('first', 'object', 'Đối tượng đầu tiên')] };
+  var TABLE = { key: 'table', cat: 'math', name: 'Bảng giá trị', sub: 'Tính toán',
+    ins: [P('index', 'number', 'Số thứ tự', { val: '7.00' })], outs: [P('value', 'number', 'Giá trị', { val: '90.00' })] };
+  var COMPARE = { key: 'cmp', cat: 'logic', name: 'So sánh', sub: 'Logic',
+    ins: [P('a', 'number', 'Số A', { val: '7.00' }), P('b', 'number', 'Số B')], outs: [P('out', 'bool', 'Kết quả', { live: 1 })] };
+  function docMa(outs) { return { key: 'doc', cat: 'logic', name: 'Đọc mã', sub: 'Logic', isNew: true, ins: [P('thing', 'object', 'Vật cần đọc')], outs: outs }; }
+  var CODE = P('code', 'number', 'Mã', { val: '7.00' });
+  var HAS = P('has', 'bool', 'Có mã', { live: 1 });
+  var SEEN = P('seen', 'object', 'Vật vừa đọc');
+  var W_IN = ['zone', 'first', 'doc', 'thing', 'object'];
+  var W_TABLE = ['doc', 'code', 'table', 'index', 'number'];
+  var W_CMP = ['doc', 'code', 'cmp', 'a', 'number'];
+
+  var VARIANTS = [
+    { id: 'T-A', name: 'Tối giản', cols: [[ZONE], [docMa([CODE])], [TABLE]], wires: [W_IN, W_TABLE],
+      sees: 'một thẻ rất gọn: nối một vật vào “Vật cần đọc”, lấy số ở “Mã”. Không có thùng, hoặc thùng không có số, thì “Mã” ra 0 (giống “Đọc màu” ra 0 khi không đọc được). Muốn biết “đã đọc được chưa” phải tự thêm thẻ So sánh (Mã lớn hơn 0).' },
+    { id: 'T-B', name: 'Thêm cổng “Có mã”', rec: true, cols: [[ZONE], [docMa([CODE, HAS])], [TABLE, COMPARE]], wires: [W_IN, W_TABLE, W_CMP],
+      sees: 'thêm một cổng tròn vàng “Có mã”: bật khi thùng trước mặt có số, tắt khi không có gì để đọc. Người học nối thẳng cổng này để “chỉ chạy khi đã đọc được”, không cần thêm thẻ So sánh. Giống “Đọc màu” đang có hai cổng ra (một số, một bật / tắt).' },
+    { id: 'T-C', name: 'Đầy đủ, có mục Nâng cao', cols: [[ZONE], [docMa([CODE, HAS, SEEN])], [TABLE, COMPARE]], wires: [W_IN, W_TABLE, W_CMP], insp: true,
+      sees: 'thêm cổng vuông hồng “Vật vừa đọc” (đưa chính thùng đó sang thẻ khác, ví dụ cho tay kẹp biết gắp thùng nào) và mục gập “Nâng cao” có “Phạm vi đọc” ở bảng thuộc tính bên phải. Mạnh nhất nhưng thẻ cao hơn và có nhiều thứ để hỏi hơn.' },
+  ];
+
+  function h(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+  function portRow(bid, card, dir, p) {
+    var row = h('div', 'wc-port ' + dir + (p.live ? ' live' : '') + (p.val ? ' has-val' : ''));
+    var dot = h('span', 'wc-dot type-' + p.type);
+    dot.id = bid + '-' + card.key + '-' + dir + '-' + p.id;
+    row.append(dot, h('span', 'wc-pl', p.label));
+    if (p.val) row.append(h('span', 'wc-port-val type-' + p.type, p.val));
+    return row;
+  }
+  function cardEl(bid, c) {
+    var box = h('div', 'wc-node cat-' + c.cat);
+    var head = h('div', 'wc-node-head');
+    var tile = h('span', 'wc-tile');
+    tile.innerHTML = '<svg viewBox="0 0 16 16" aria-hidden="true"><path d="' + GLYPH[c.cat] + '"/></svg>';
+    var title = h('span', 'wc-title');
+    title.append(h('b', 'wc-name', c.name), h('small', 'wc-sub', c.sub));
+    head.append(tile, title, h('span', 'wc-help', '?'));
+    var body = h('div', 'wc-ports-body');
+    c.ins.forEach(function (p) { body.append(portRow(bid, c, 'in', p)); });
+    c.outs.forEach(function (p) { body.append(portRow(bid, c, 'out', p)); });
+    box.append(head, body);
+    return box;
+  }
+  var NS = 'http://www.w3.org/2000/svg';
+  function drawWires(board, wires) {
+    var svg = board.querySelector('svg.wires');
+    svg.innerHTML = '';
+    svg.setAttribute('width', board.scrollWidth);
+    svg.setAttribute('height', board.scrollHeight);
+    var r0 = board.getBoundingClientRect();
+    function mid(id) { var r = document.getElementById(id).getBoundingClientRect(); return [r.left + r.width / 2 - r0.left + board.scrollLeft, r.top + r.height / 2 - r0.top + board.scrollTop]; }
+    wires.forEach(function (w) {
+      var a = mid(board.id + '-' + w[0] + '-out-' + w[1]);
+      var b = mid(board.id + '-' + w[2] + '-in-' + w[3]);
+      var dx = Math.max(40, Math.abs(b[0] - a[0]) / 2);
+      var d = 'M' + a[0] + ' ' + a[1] + ' C' + (a[0] + dx) + ' ' + a[1] + ' ' + (b[0] - dx) + ' ' + b[1] + ' ' + b[0] + ' ' + b[1];
+      var g = document.createElementNS(NS, 'g');
+      g.setAttribute('class', 'type-' + w[4]);
+      ['case', 'core'].forEach(function (cls) { var p = document.createElementNS(NS, 'path'); p.setAttribute('class', cls); p.setAttribute('d', d); g.append(p); });
+      svg.append(g);
+    });
+  }
+  var wrap = document.getElementById('cards');
+  var boards = [];
+  VARIANTS.forEach(function (v) {
+    var art = h('article', 'opt');
+    art.id = v.id;
+    var head = h('header');
+    head.append(h('span', 'code', v.id), h('h3', '', v.name));
+    if (v.rec) head.append(h('span', 'rec', 'Gợi ý'));
+    var board = h('div', 'board');
+    board.id = 'b' + v.id;
+    v.cols.forEach(function (cards, k) {
+      var col = h('div', 'col' + (k === 1 ? ' mid' : ''));
+      cards.forEach(function (c) { if (c.isNew) col.append(h('span', 'newtag', 'Mảnh mới')); col.append(cardEl(board.id, c)); });
+      board.append(col);
+    });
+    if (v.insp) {
+      var insp = h('div', 'insp cat-logic');
+      insp.innerHTML = '<p class="ttl">Bảng thuộc tính bên phải, khi chọn thẻ (bắt chước)</p><span class="chip">Đọc mã</span>' +
+        '<details open><summary>Nâng cao</summary><label>Phạm vi đọc (ô)</label><div class="box">1.5</div>' +
+        '<label style="margin-top:8px">Thùng ở xa hơn mức này thì không đọc.</label></details>';
+      board.append(insp);
+    }
+    var svg = document.createElementNS(NS, 'svg');
+    svg.setAttribute('class', 'wires');
+    board.append(svg);
+    var sees = h('p', 'sees');
+    sees.innerHTML = '<b>Người học thấy:</b> ' + v.sees;
+    art.append(head, board, sees);
+    wrap.append(art);
+    boards.push([board, v.wires]);
+  });
+  function redraw() { boards.forEach(function (b) { drawWires(b[0], b[1]); }); }
+  redraw();
+  window.addEventListener('resize', redraw);
+  window.addEventListener('load', redraw);
+})();
+</script>
+
+<!-- ================================================================ parts 1 and 3: 3D -->
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+
+// ================================================================ state
+const POSES = { cheo: { elev: 38, yaw: 0.5 }, tren: { elev: 86, yaw: 0 }, ngang: { elev: 9, yaw: 0 } };
+const S = { bg: 'light', spin: 'off', far: 'vua', elev: POSES.cheo.elev, yaw: POSES.cheo.yaw };
+const BG = { light: '#cfd2d7', dark: '#23262c' };
+/** "Nhìn từ xa": camera distance (m). The strip is a cut-out of a 3D pane 600 px high with the game's 50 degree lens. */
+const FAR = { gan: 4, vua: 7, xa: 12 };
+const GAME_FOV = 50, GAME_PITCH = 0.6, GAME_PANE = 600;
+
+// Numbers of the real carton and factory (app/src/render/factory-parcels.ts, app/src/samples/sorting-factory-stations.ts).
+const PARCEL = { x: 0.32, y: 0.26, z: 0.28 };
+const CARTON = '#cf9f62';
+const CLASS_COLORS = ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#a855f7'];
+/** Tape per route for look D: the six numbered colours of the app, plus three suggested here (7, 8, 9). */
+const ROUTE_COLORS = ['#ef4444', '#facc15', '#22c55e', '#3b82f6', '#a855f7', '#f97316', '#ec4899', '#14b8a6', '#334155'];
+const ROUTE_NAMES = ['đỏ', 'vàng', 'xanh lá', 'xanh dương', 'tím', 'cam', 'hồng', 'xanh ngọc', 'xám đen'];
+const INK = '#23252b';
+
+const LOOKS = [
+  { id: 'A', name: 'Số lớn trên mặt thùng',
+    sees: 'một ô trắng có số to ở mặt trên của thùng. Nhìn từ trên hoặc nhìn chéo đọc rất rõ; nhìn ngang thì không thấy số. Băng keo vẫn là màu loại hàng như hiện nay. Số 6 và số 9 có gạch chân để không lẫn khi thùng xoay.' },
+  { id: 'B', name: 'Số trên mặt thùng và hai mặt bên', rec: true,
+    sees: 'giống kiểu A, thêm cùng con số ở hai mặt bên dài của thùng. Nhìn từ trên, nhìn chéo hay nhìn ngang đều thấy ít nhất một số. Băng keo vẫn là màu loại hàng.' },
+  { id: 'C', name: 'Tem gửi hàng',
+    sees: 'một tem trắng dán trên mặt thùng như tem bưu kiện thật: chữ “TUYẾN”, con số và mấy vạch mã giả. Trông thật nhất, nhưng con số nhỏ hơn kiểu A nên nhìn từ xa khó đọc hơn; nhìn ngang không thấy. Băng keo vẫn là màu loại hàng.' },
+  { id: 'D', name: 'Số và băng keo màu theo tuyến',
+    sees: 'số to trên mặt thùng như kiểu A, và băng keo đổi màu theo tuyến (9 màu), nên từ rất xa vẫn đoán được tuyến nhờ màu.',
+    warn: 'Lưu ý: hiện nay màu băng keo đang cho biết <b>loại hàng</b>. Chọn kiểu này thì màu băng keo chuyển sang nghĩa <b>số tuyến</b>, người học không còn nhìn màu để biết loại hàng. Ba màu 7, 8, 9 (hồng, xanh ngọc, xám đen) là màu đề xuất thêm, trò chơi mới có 6 màu.' },
+];
+
+// ================================================================ materials / geometry helpers (same family as the earlier previews)
+const GRAD = (() => {
+  const t = new THREE.DataTexture(new Uint8Array([110, 110, 110, 255, 170, 170, 170, 255, 220, 220, 220, 255, 255, 255, 255, 255]), 4, 1, THREE.RGBAFormat);
+  t.minFilter = t.magFilter = THREE.NearestFilter;
+  t.needsUpdate = true;
+  return t;
+})();
+const mats = new Map();
+/** One shared toon material per colour. */
+function M(hex) {
+  let m = mats.get(hex);
+  if (!m) { m = new THREE.MeshToonMaterial({ color: hex, gradientMap: GRAD }); mats.set(hex, m); }
+  return m;
+}
+const geos = new Map();
+const q = (v) => Math.round(v * 1000) / 1000;
+function G(key, make) {
+  let g = geos.get(key);
+  if (!g) { g = make(); geos.set(key, g); }
+  return g;
+}
+const box = (w, h, d) => G(`b|${q(w)}|${q(h)}|${q(d)}`, () => new THREE.BoxGeometry(w, h, d));
+const rbox = (w, h, d, r = 0.02) =>
+  G(`rb|${q(w)}|${q(h)}|${q(d)}|${q(r)}`, () => new RoundedBoxGeometry(w, h, d, 1, Math.max(0.002, Math.min(r, w / 2 - 1e-3, h / 2 - 1e-3, d / 2 - 1e-3))));
+const cyl = (axis, r, len, seg = 16) =>
+  G(`c|${axis}|${q(r)}|${q(len)}|${seg}`, () => {
+    const g = new THREE.CylinderGeometry(r, r, len, seg);
+    if (axis === 'z') g.rotateX(Math.PI / 2);
+    if (axis === 'x') g.rotateZ(-Math.PI / 2);
+    return g;
+  });
+const planeGeo = (w, h) => G(`p|${q(w)}|${q(h)}`, () => new THREE.PlaneGeometry(w, h));
+function add(parent, geo, mat, x = 0, y = 0, z = 0) {
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x, y, z);
+  m.castShadow = !mat.transparent && !mat.isMeshBasicMaterial;
+  m.receiveShadow = !mat.isMeshBasicMaterial && !mat.transparent;
+  parent.add(m);
+  return m;
+}
+const texs = new Map();
+function canvasTex(key, w, h, draw) {
+  let t = texs.get(key);
+  if (t) return t;
+  const c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  t.anisotropy = 8;
+  texs.set(key, t);
+  return t;
+}
+const picMats = new Map();
+/** Unlit picture (a printed label keeps its white whatever the light), drawn just above the face it sits on. */
+function picMat(tex) {
+  let m = picMats.get(tex);
+  if (!m) { m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }); picMats.set(tex, m); }
+  return m;
+}
+const FONT = '"Segoe UI",Arial,sans-serif';
+
+// ================================================================ route labels
+/** White tile with a dark rim and one big digit; 6 and 9 are underlined so a turned carton cannot be misread. */
+function badgeTex(n) {
+  return canvasTex(`badge|${n}`, 256, 256, (g, W, H) => {
+    g.fillStyle = INK;
+    g.beginPath(); g.roundRect(4, 4, W - 8, H - 8, 52); g.fill();
+    g.fillStyle = '#ffffff';
+    g.beginPath(); g.roundRect(20, 20, W - 40, H - 40, 38); g.fill();
+    g.fillStyle = INK;
+    g.font = `800 188px ${FONT}`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(String(n), W / 2, H * 0.5);
+    if (n === 6 || n === 9) g.fillRect(W / 2 - 46, H - 52, 92, 14);
+  });
+}
+/** Shipping-label sticker: the word "TUYẾN", the digit, and made-up barcode bars. */
+function stickerTex(n) {
+  return canvasTex(`sticker|${n}`, 384, 256, (g, W, H) => {
+    g.fillStyle = INK;
+    g.beginPath(); g.roundRect(2, 2, W - 4, H - 4, 22); g.fill();
+    g.fillStyle = '#ffffff';
+    g.beginPath(); g.roundRect(9, 9, W - 18, H - 18, 16); g.fill();
+    g.fillStyle = INK;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = `800 34px ${FONT}`;
+    g.fillText('TUYẾN', 96, 44);
+    g.font = `800 168px ${FONT}`;
+    g.fillText(String(n), 96, 150);
+    if (n === 6 || n === 9) g.fillRect(58, 222, 76, 11);
+    g.fillRect(186, 24, 4, H - 48);
+    // made-up bars: the same for the same digit, they encode nothing
+    let seed = n * 7919 + 13;
+    const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    let x = 208;
+    while (x < 356) {
+      const w = 3 + Math.floor(rnd() * 3) * 3;
+      if (x + w > 360) break;
+      g.fillRect(x, 28, w, 150);
+      x += w + 3 + Math.floor(rnd() * 3) * 3;
+    }
+    g.font = `700 26px ui-monospace,Consolas,monospace`;
+    g.fillText(`XN 00${n} 26`, 284, 208);
+  });
+}
+
+/** The code-drawn carton of the game (rounded body, tape band) with a route label in one of the four looks. */
+function carton(n, look, k = n - 1) {
+  const g = new THREE.Group();
+  const { x: sx, y: sy, z: sz } = PARCEL;
+  const tape = look === 'D' ? ROUTE_COLORS[n - 1] : CLASS_COLORS[k % CLASS_COLORS.length];
+  add(g, rbox(sx, sy, sz, 0.013), M(CARTON));
+  add(g, box(sx + 0.004, sy + 0.004, sz * 0.16), M(tape));
+  const onTop = (tex, w, h) => {
+    const p = new THREE.Mesh(planeGeo(w, h), picMat(tex));
+    p.rotation.x = -Math.PI / 2;
+    p.position.y = sy / 2 + 0.005;
+    g.add(p);
+  };
+  if (look === 'C') onTop(stickerTex(n), 0.27, 0.18);
+  else onTop(badgeTex(n), 0.2, 0.2);
+  if (look === 'B') {
+    for (const s of [1, -1]) {
+      const p = new THREE.Mesh(planeGeo(0.18, 0.18), picMat(badgeTex(n)));
+      p.position.z = s * (sz / 2 + 0.003);
+      if (s < 0) p.rotation.y = Math.PI;
+      g.add(p);
+    }
+  }
+  return g;
+}
+
+// ================================================================ conveyor and scan gate (redrawn here from the numbers in app/src/render/factory-blocks.ts)
+const BLUE = '#2f7fe0', DARK = '#2a2d34', TYRE = '#23252b', STEEL = '#8f97a3', YELLOW = '#ffc21a', GATE_IDLE = '#2b6f86';
+const BELT_W = 0.6, BELT_H = 0.5, RAIL = 0.05, CHEVRON = 0.4;
+
+function chevronTex() {
+  const t = canvasTex('belt', 128, 128, (g, W) => {
+    g.fillStyle = '#2f333b'; g.fillRect(0, 0, W, W);
+    g.strokeStyle = '#59606b'; g.lineWidth = 9; g.lineJoin = 'round';
+    g.beginPath(); g.moveTo(44, 24); g.lineTo(84, 64); g.lineTo(44, 104); g.stroke();
+  }).clone();
+  t.wrapS = t.wrapT = THREE.RepeatWrapping;
+  t.needsUpdate = true;
+  return t;
+}
+
+/** Open-frame belt of length L along x, running toward -x; returns { group, run(distance) }. */
+function buildBelt(L) {
+  const g = new THREE.Group();
+  const W = BELT_W, H = BELT_H;
+  const bw = W - 2 * RAIL, bl = L - 0.06;
+  add(g, box(bl, 0.06, bw), M(DARK), 0, H - 0.032, 0);
+  const legH = H - 0.09, inset = Math.min(0.25, L * 0.2);
+  const pairs = Math.max(2, Math.round((L - 2 * inset) / 1.6) + 1);
+  for (const s of [-1, 1]) {
+    add(g, rbox(L, 0.1, RAIL, 0.015), M(BLUE), 0, H - 0.04, s * (W / 2 - RAIL / 2));
+    add(g, cyl('z', 0.045, bw, 12), M(TYRE), s * (L / 2 - 0.05), H - 0.049, 0);
+    add(g, box(L - 2 * inset, 0.03, 0.03), M(STEEL), 0, 0.16, s * (W / 2 - 0.055));
+    for (let i = 0; i < pairs; i++) {
+      const u = -L / 2 + inset + ((L - 2 * inset) * i) / (pairs - 1);
+      add(g, rbox(0.05, legH, 0.05, 0.01), M(STEEL), u, legH / 2, s * (W / 2 - 0.055));
+      add(g, rbox(0.11, 0.02, 0.11, 0.008), M(TYRE), u, 0.01, s * (W / 2 - 0.055));
+    }
+  }
+  const tex = chevronTex();
+  tex.repeat.set(-bl / CHEVRON, 1);
+  const surface = new THREE.Mesh(planeGeo(bl, bw), new THREE.MeshLambertMaterial({ map: tex }));
+  surface.rotation.x = -Math.PI / 2;
+  surface.position.y = H + 0.002;
+  surface.receiveShadow = true;
+  g.add(surface);
+  return { group: g, run: (d) => { tex.offset.x = -((d / CHEVRON) % 1); } };
+}
+
+const GATE = { S: BELT_W + 0.19, top: BELT_H + 0.67 };
+GATE.beamY = GATE.top - 0.08;
+/** The scan gate as the game draws it: yellow frame, dark reader, dim blue lamps. */
+function addGate(g, gx) {
+  const { S, top, beamY } = GATE;
+  const lamp = new THREE.MeshBasicMaterial({ color: GATE_IDLE });
+  add(g, rbox(0.08, 0.06, S, 0.012), M(YELLOW), gx, beamY, 0);
+  add(g, rbox(0.14, 0.06, 0.22, 0.012), M(TYRE), gx, beamY - 0.055, 0);
+  for (const s of [-1, 1]) add(g, rbox(0.06, beamY, 0.06, 0.012), M(YELLOW), gx, beamY / 2, s * (S / 2 - 0.03));
+  add(g, box(0.024, 0.02, (S - 0.19) * 0.7), lamp, gx, beamY - 0.092, 0);
+  add(g, cyl('y', 0.035, 0.05, 12), lamp, gx, top - 0.025, 0);
+}
+
+// ---------------------------------------------------------------- new things at the gate
+/** "Mã 7" on a white pill, always facing the viewer (variant Q-A). */
+function floatTex(n) {
+  return canvasTex(`float|${n}`, 320, 160, (g, W, H) => {
+    g.fillStyle = INK;
+    g.beginPath(); g.roundRect(4, 4, W - 8, H - 8, 46); g.fill();
+    g.fillStyle = '#ffffff';
+    g.beginPath(); g.roundRect(16, 16, W - 32, H - 32, 36); g.fill();
+    g.fillStyle = INK;
+    g.font = `800 96px ${FONT}`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(`Mã ${n}`, W / 2, H * 0.53);
+  });
+}
+/** Green digit on a dark screen (variant Q-B). */
+function screenTex(n) {
+  return canvasTex(`screen|${n}`, 160, 128, (g, W, H) => {
+    g.fillStyle = '#0c1410';
+    g.beginPath(); g.roundRect(0, 0, W, H, 14); g.fill();
+    g.strokeStyle = '#3a4a40'; g.lineWidth = 5;
+    g.beginPath(); g.roundRect(3, 3, W - 6, H - 6, 12); g.stroke();
+    g.fillStyle = '#6dff96';
+    g.shadowColor = '#3cff78'; g.shadowBlur = 12;
+    g.font = `800 104px ui-monospace,Consolas,monospace`;
+    g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.fillText(String(n), W / 2, H * 0.55);
+  });
+}
+
+const GATE_RUN = { L: 2.6, gx: -0.04, speed: 0.35, span: 2.1, numbers: [3, 7, 5] };
+const FLASH_S = 0.35, FLOAT_S = 1.6;
+
+/** Belt + gate + three cartons going through; `variant` is 'QA' (floating number) or 'QB' (display on the gate). */
+function buildGateScene(variant) {
+  const g = new THREE.Group();
+  const belt = buildBelt(GATE_RUN.L);
+  g.add(belt.group);
+  const { gx, speed, span, numbers } = GATE_RUN;
+  addGate(g, gx);
+  const restY = BELT_H + 0.006 + PARCEL.y / 2;
+  const parcels = numbers.map((n) => { const c = carton(n, 'A'); g.add(c); return c; });
+
+  // the read flash: a short sheet of light from the reader down to the carton, and a bright line across its top
+  const sheetMat = new THREE.MeshBasicMaterial({ color: '#4fdcff', transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false });
+  const lineMat = new THREE.MeshBasicMaterial({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false });
+  const sheetTop = GATE.beamY - 0.1, sheetBottom = BELT_H + PARCEL.y;
+  const sheet = new THREE.Mesh(planeGeo(PARCEL.z + 0.06, sheetTop - sheetBottom), sheetMat);
+  sheet.rotation.y = Math.PI / 2;
+  sheet.position.set(gx, (sheetTop + sheetBottom) / 2, 0);
+  const line = new THREE.Mesh(box(0.016, 0.004, PARCEL.z + 0.02), lineMat);
+  line.position.set(gx, BELT_H + 0.006 + PARCEL.y + 0.009, 0);
+  sheet.renderOrder = line.renderOrder = 3;
+  g.add(sheet, line);
+
+  let sprite = null;
+  const faces = [];
+  if (variant === 'QA') {
+    sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: floatTex(numbers[0]), transparent: true, depthWrite: false }));
+    sprite.scale.set(0.44, 0.22, 1);
+    sprite.renderOrder = 4;
+    g.add(sprite);
+  } else {
+    const side = 0.22, tall = 0.18;
+    const at = [gx, GATE.top - 0.05 + tall / 2, GATE.S / 2 - side / 2];
+    add(g, rbox(side, tall, side, 0.02), M(TYRE), ...at);
+    for (let k = 0; k < 4; k++) {
+      const p = new THREE.Mesh(planeGeo(side * 0.8, tall * 0.8), new THREE.MeshBasicMaterial({ map: screenTex(numbers[0]), transparent: true }));
+      const a = (k * Math.PI) / 2;
+      p.position.set(at[0] + Math.sin(a) * (side / 2 + 0.002), at[1], at[2] + Math.cos(a) * (side / 2 + 0.002));
+      p.rotation.y = a;
+      g.add(p);
+      faces.push(p);
+    }
+  }
+
+  /** Where everything is at time T (s): pure, so a screenshot can freeze any moment. */
+  function update(T) {
+    belt.run(T * speed);
+    const u0 = (span / 2 - gx) / span;
+    let since = Infinity, last = numbers[0];
+    parcels.forEach((p, i) => {
+      const u = (((T * speed) / span + i / parcels.length) % 1 + 1) % 1;
+      p.position.set(span / 2 - u * span, restY, 0);
+      const t = ((((u - u0) % 1) + 1) % 1) * span / speed;
+      if (t < since) { since = t; last = numbers[i]; }
+    });
+    const flash = since < FLASH_S ? 1 - since / FLASH_S : 0;
+    sheetMat.opacity = 0.8 * flash;
+    lineMat.opacity = flash;
+    if (sprite) {
+      const k = Math.min(1, since / FLOAT_S);
+      sprite.material.map = floatTex(last);
+      sprite.material.opacity = k < 0.6 ? 1 : Math.max(0, 1 - (k - 0.6) / 0.4);
+      sprite.visible = since < FLOAT_S;
+      sprite.position.set(gx, GATE.top + 0.2 + 0.16 * k, 0);
+    }
+    for (const f of faces) f.material.map = screenTex(last);
+  }
+  update(0);
+  return { group: g, update };
+}
+
+// ================================================================ views (one canvas over the page, each view in its own rectangle)
+const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gl'), antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+const views = [];
+function makeScene(tgt, reach) {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(BG[S.bg]);
+  scene.add(new THREE.HemisphereLight('#ffffff', '#9aa0a8', 1.15));
+  const key = new THREE.DirectionalLight('#ffffff', 2.1);
+  key.position.set(tgt.x + 3, tgt.y + 7, tgt.z + 4.5);
+  key.target.position.copy(tgt);
+  key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  const sc = key.shadow.camera;
+  sc.left = sc.bottom = -reach; sc.right = sc.top = reach; sc.near = 0.5; sc.far = 30;
+  key.shadow.bias = -0.0015;
+  key.shadow.normalBias = 0.03;
+  key.shadow.radius = 3;
+  const fill = new THREE.DirectionalLight('#dfe8ff', 0.55);
+  fill.position.set(-4, 3, -2);
+  scene.add(key, key.target, fill);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.ShadowMaterial({ opacity: 0.22 }));
+  ground.rotation.x = -Math.PI / 2;
+  ground.receiveShadow = true;
+  scene.add(ground);
+  return scene;
+}
+
+// ---------------------------------------------------------------- part 1: nine cartons in a row, near and far
+const ROW_STEP = 0.5, ROW_SPAN = 8 * ROW_STEP + 0.5;
+const rowTgt = new THREE.Vector3(0, PARCEL.y / 2, 0);
+/** No perspective here: all nine cartons are seen from exactly the same angle, so only the labels differ. */
+const rowCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 80);
+function nearView(el, look) {
+  const scene = makeScene(rowTgt, 3);
+  const cartons = [];
+  for (let n = 1; n <= 9; n++) {
+    const c = carton(n, look);
+    c.position.set((n - 5) * ROW_STEP, PARCEL.y / 2, 0);
+    scene.add(c);
+    cartons.push(c);
+  }
+  views.push({ el, scene, tick() { for (const c of cartons) c.rotation.y = S.yaw; },
+    camera(aspect) {
+      const half = Math.max((ROW_SPAN + 0.3) / (2 * aspect), 0.36);
+      rowCam.top = half; rowCam.bottom = -half; rowCam.left = -half * aspect; rowCam.right = half * aspect;
+      const d = 12;
+      const e = THREE.MathUtils.degToRad(S.elev);
+      rowCam.position.set(0, rowTgt.y + Math.sin(e) * d, Math.cos(e) * d);
+      rowCam.lookAt(rowTgt);
+      return rowCam;
+    } });
+  // drag: sideways turns every carton on the spot, up and down tilts the view
+  let drag = null;
+  el.addEventListener('pointerdown', (e) => { drag = { x: e.clientX, y: e.clientY }; el.setPointerCapture(e.pointerId); set({ spin: 'off' }); });
+  el.addEventListener('pointermove', (e) => {
+    if (!drag) return;
+    S.yaw += (e.clientX - drag.x) * 0.012;
+    S.elev = Math.min(88, Math.max(4, S.elev + (e.clientY - drag.y) * 0.3));
+    drag = { x: e.clientX, y: e.clientY };
+  });
+  const end = () => { drag = null; };
+  el.addEventListener('pointerup', end);
+  el.addEventListener('pointercancel', end);
+}
+const farTgt = new THREE.Vector3(0, 0.6, 0);
+const farCam = new THREE.PerspectiveCamera(GAME_FOV, 4, 0.1, 80);
+function farView(el, look) {
+  const scene = makeScene(farTgt, 3.2);
+  scene.add(buildBelt(ROW_SPAN + 0.3).group);
+  for (let n = 1; n <= 9; n++) {
+    const c = carton(n, look);
+    c.position.set((n - 5) * ROW_STEP, BELT_H + 0.006 + PARCEL.y / 2, 0);
+    scene.add(c);
+  }
+  views.push({ el, scene, tick() {},
+    camera(aspect, vh) {
+      const d = FAR[S.far];
+      // same pixels per metre as the game's lens in a pane 600 px high: this strip is a cut-out of that picture
+      farCam.fov = THREE.MathUtils.radToDeg(2 * Math.atan(Math.tan(THREE.MathUtils.degToRad(GAME_FOV / 2)) * vh / GAME_PANE));
+      farCam.position.set(0, farTgt.y + Math.sin(GAME_PITCH) * d, Math.cos(GAME_PITCH) * d);
+      farCam.lookAt(farTgt);
+      return farCam;
+    } });
+}
+/** Width of one carton on screen in the far strip (px), for the caption. */
+const farPx = (key) => Math.round((PARCEL.x * GAME_PANE) / (2 * FAR[key] * Math.tan(THREE.MathUtils.degToRad(GAME_FOV / 2))));
+
+function fillLooks() {
+  const wrap = document.getElementById('looks');
+  for (const lk of LOOKS) {
+    const art = document.createElement('article');
+    art.className = 'opt';
+    art.id = `N-${lk.id}`;
+    const swatches = lk.id === 'D' ? `<div class="swatches">${ROUTE_COLORS.map((c, i) => `<span><i style="background:${c}"></i>${i + 1} ${ROUTE_NAMES[i]}</span>`).join('')}</div>` : '';
+    art.innerHTML = `<header><span class="code">N-${lk.id}</span><h3>${lk.name}</h3>${lk.rec ? '<span class="rec">Gợi ý</span>' : ''}</header>
+      <div class="view strip" id="v-near-${lk.id}"></div>
+      <p class="cap">Nhìn từ xa trên băng chuyền <span data-farcap></span></p>
+      <div class="view far" id="v-far-${lk.id}"></div>
+      <p class="sees"><b>Người học thấy:</b> ${lk.sees}</p>${swatches}${lk.warn ? `<p class="warn">${lk.warn}</p>` : ''}`;
+    wrap.append(art);
+    nearView(art.querySelector('.strip'), lk.id);
+    farView(art.querySelector('.far'), lk.id);
+  }
+}
+
+// ---------------------------------------------------------------- part 3: the gate
+const gateTgt = new THREE.Vector3(0, 0.78, 0);
+const gateCam = new THREE.PerspectiveCamera(35, 1.5, 0.1, 80);
+gateCam.position.set(1.9, 1.85, 3.05);
+gateCam.lookAt(gateTgt);
+function gateView(el, variant) {
+  const scene = makeScene(gateTgt, 3);
+  const built = buildGateScene(variant);
+  scene.add(built.group);
+  const controls = new OrbitControls(gateCam, el);
+  controls.target = gateTgt;
+  controls.enablePan = false;
+  controls.minDistance = 1.3;
+  controls.maxDistance = 9;
+  controls.maxPolarAngle = Math.PI * 0.495;
+  controls.update();
+  views.push({ el, scene, tick: (T) => built.update(T), camera: () => gateCam });
+}
+
+// ================================================================ page wiring
+function syncUi() {
+  for (const b of document.querySelectorAll('button[data-key]')) {
+    const k = b.dataset.key;
+    b.setAttribute('aria-pressed', k === 'spin' ? String(S.spin === 'on') : String(S[k] === b.dataset.val));
+  }
+  document.documentElement.classList.toggle('dark', S.bg === 'dark');
+  for (const v of views) v.scene.background.set(BG[S.bg]);
+  const names = { gan: 'gần', vua: 'vừa', xa: 'xa' };
+  for (const c of document.querySelectorAll('[data-farcap]')) c.textContent = `(mức ${names[S.far]}: mỗi thùng rộng khoảng ${farPx(S.far)} điểm ảnh trên màn hình)`;
+}
+function set(patch) {
+  Object.assign(S, patch);
+  syncUi();
+}
+
+fillLooks();
+gateView(document.getElementById('v-QA'), 'QA');
+gateView(document.getElementById('v-QB'), 'QB');
+
+document.addEventListener('click', (e) => {
+  const p = e.target.closest('button[data-pose]');
+  if (p) { set({ spin: 'off', ...POSES[p.dataset.pose] }); return; }
+  const b = e.target.closest('button[data-key]');
+  if (!b) return;
+  const k = b.dataset.key;
+  if (k === 'spin') set({ spin: S.spin === 'on' ? 'off' : 'on' });
+  else set({ [k]: b.dataset.val });
+});
+syncUi();
+
+let last = performance.now();
+const size = new THREE.Vector2();
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.1, (now - last) / 1000);
+  last = now;
+  const T = window.__freezeT ?? now / 1000;
+  const w = document.documentElement.clientWidth, h = window.innerHeight;
+  renderer.getSize(size);
+  if (size.x !== w || size.y !== h) renderer.setSize(w, h, true);
+  if (S.spin === 'on') S.yaw += dt * 0.6;
+  renderer.setScissorTest(false);
+  renderer.setClearColor(0x000000, 0);
+  renderer.clear();
+  renderer.setScissorTest(true);
+  for (const v of views) {
+    const r = v.el.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > h || r.right < 0 || r.left > w || r.width < 2 || r.height < 2) continue;
+    v.tick(T);
+    const left = Math.round(r.left), bottom = Math.round(h - r.bottom), vw = Math.round(r.width), vh = Math.round(r.height);
+    renderer.setViewport(left, bottom, vw, vh);
+    renderer.setScissor(left, bottom, vw, vh);
+    const cam = v.camera(vw / vh, vh);
+    if (cam.isPerspectiveCamera) cam.aspect = vw / vh;
+    cam.updateProjectionMatrix();
+    renderer.render(v.scene, cam);
+  }
+  window.__ready = true;
+}
+requestAnimationFrame(frame);
+
+/** For screenshot scripts: change state, freeze the animation clock. */
+window.preview = { set, state: S, poses: POSES, freeze: (t) => { window.__freezeT = t; }, gateCamera: gateCam };
+</script>
+</body>
+</html>
