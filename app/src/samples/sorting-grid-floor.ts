@@ -158,7 +158,7 @@ export const GRID_MAIN_WIRES: readonly Link[] = [
 
 const note = (id: string, color: NoteColor, x: number, y: number, w: number, h: number, text: string): Note => ({ id, color, pos: { x, y }, size: { w, h }, text });
 
-const MAIN_COLS = [0, 330, 660, 1060, 1390, 1720] as const;
+const MAIN_COLS = [0, 330, 730, 1010, 1340, 1600] as const;
 const BANNER_H = 220;
 /** Step between the copies of a stacked block (the smallest the app leaves between two cards). */
 const STACK_STEP = 104;
@@ -179,7 +179,7 @@ export function createGridFloorBoard(): Board {
   const stationPlace = (s: 1 | 2): Vec3 => cellPlace(...stationCell(s));
   const laid: [GraphNode, number][] = [
     [card('bat-dau', 'on-start'), 0],
-    [card('may-quay', 'camera', { mode: 'fixed', point: { x: mm(middle - 1), y: GRID.top, z: mm(middle + 0.4) }, zoom: 0.55, view: 'tilted' }), 0],
+    [card('may-quay', 'camera', { mode: 'fixed', point: { x: mm(middle - 1), y: GRID.top, z: mm(middle + 0.4) }, zoom: 0.72, view: 'tilted' }), 0],
     [card('nen', 'block', { position: { x: mm(middle - 1), y: -0.5, z: middle }, size: { x: 20, y: 1, z: 16 }, color: '#cfd2d7' }), 0],
     [copy('san-luoi', GRID_IDS.floor, 'Sàn lưới', null), 0],
     [copy('tram-1', GRID_IDS.station, 'Trạm nạp 1', stationPlace(1), { 'hat-giong': GRID.seed + 1 }), 1],
@@ -222,7 +222,7 @@ export function createGridFloorBoard(): Board {
   }
   const nodes = laid.map(([n]) => n);
   const graph: Graph = { nodes, wires: wires(GRID_MAIN_WIRES), settings: { wireRule: true, realPhysics: true }, stacks };
-  const notesX = MARGIN + MAIN_COLS[5] + 330;
+  const notesX = MARGIN + MAIN_COLS[5] + 240;
   return {
     name: GRID_FLOOR_NAME,
     mode: '3d',
@@ -243,16 +243,16 @@ export function createGridFloorBoard(): Board {
         notesX,
         MARGIN,
         380,
-        330,
-        'Xe phân loại (6 bản sao của một bảng mạch): mỗi xe nối 5 dây với "Bảng giữ ô" để không xe nào vào ô xe khác đang giữ (ô đang bị giữ đổi màu đỏ). Trong xe có ba "Bảng giá trị" tra theo mã thùng: ô phải tới để đổ, khay quay sang bên nào, đổ xong về trạm nào. Khay trống thì xe về trạm; có thùng nằm yên 1,2 giây thì xe mới chạy. Tới giữa ô đích thì khay nghiêng 35 độ, thùng rơi khỏi khay thì khay hạ xuống và xe đi tiếp.',
+        400,
+        'Xe phân loại (6 bản sao của một bảng mạch): mỗi xe nối 5 dây với "Bảng giữ ô" để không xe nào vào ô xe khác đang giữ (ô đang bị giữ đổi màu đỏ). Trong xe có ba "Bảng giá trị" tra theo mã thùng: hai bảng xếp chồng lên nhau là "ô phải tới để đổ" (trên) và "đổ xong về trạm nào" (dưới); bảng đứng cạnh "Nhớ số" là "khay quay sang bên nào" (90 = bên phải, -90 = bên trái). Khay trống thì xe về trạm; có thùng nằm yên 1,2 giây thì xe mới chạy. Tới giữa ô đích, khay quay về phía lỗ rồi nghiêng 35 độ; thùng rơi khỏi khay thì khay hạ xuống và xe đi tiếp.',
       ),
       note(
         'note3',
         'green',
         notesX,
-        MARGIN + 330 + GAP_Y,
+        MARGIN + 400 + GAP_Y,
         380,
-        330,
+        360,
         'Ô nhận tuyến (9 bản sao): băng dẫn ngắn trên sàn đưa thùng vào lỗ, bốn vách dưới đất giữ thùng nằm dưới lỗ, "Vùng kích hoạt" đếm thùng rơi vào, "Đọc mã" so mã thùng với tuyến của ô: khác thì tính là sai ô. Trên bảng chính, "Vùng thu hồi" báo thùng đã đếm cho cả hai trạm; trạm nào tạo ra thùng đó thì "Thu hồi" nó. Góc trái màn hình: số thùng của từng tuyến. Góc phải: tổng số thùng, số thùng vào sai ô, số lần có thùng nằm lại trên mặt sàn quá 1 giây (phải luôn là 0).',
       ),
     ],

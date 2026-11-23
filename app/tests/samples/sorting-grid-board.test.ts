@@ -162,7 +162,7 @@ describe('the grid-floor sorting sample as it ships', () => {
     const rows = new Map(board.circuits!.map((c) => [c.id, Math.max(c.pins.filter((p) => p.dir === 'in').length, c.pins.filter((p) => p.dir === 'out').length)]));
     const drawn = board.graph.nodes.filter((n) => !stacks.includes(String(n.params.circuit)) || n === board.graph.nodes.find((m) => m.params.circuit === n.params.circuit));
     expect(drawn.length).toBe(board.graph.nodes.length - (GRID.robots - 1) - (GRID.routes - 1));
-    const boxes = drawn.map((n) => ({ id: n.id, x: n.pos.x, y: n.pos.y, ...(n.kind === CIRCUIT_KIND ? { w: 300, h: 60 + 34 * (rows.get(String(n.params.circuit)) ?? 4) } : estimateNodeSize(n, STUDENT_CARD_METRICS)) }));
+    const boxes = drawn.map((n) => ({ id: n.id, x: n.pos.x, y: n.pos.y, ...(n.kind === CIRCUIT_KIND ? { w: 350, h: 60 + 34 * (rows.get(String(n.params.circuit)) ?? 4) } : estimateNodeSize(n, STUDENT_CARD_METRICS)) }));
     for (const p of boxes) for (const q of boxes) if (p.id < q.id) expect(overlap(p, q), `${p.id}/${q.id}`).toBe(false);
     // The notes lie on no card either.
     for (const note of board.notes!) for (const q of boxes) expect(overlap({ x: note.pos.x, y: note.pos.y, w: note.size.w, h: note.size.h }, q), `${note.id}/${q.id}`).toBe(false);
