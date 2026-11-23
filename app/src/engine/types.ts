@@ -924,6 +924,15 @@ export interface WorldApi {
    */
   moveBlock(id: EntityId, to: Vec3): boolean;
   /**
+   * Moves several blocks as one body, right away: the first goes to `to` and every other one keeps its place against it. Every
+   * one of them makes each step or none does, so the body never comes apart; false when something would be squeezed and the body
+   * stopped short (as a whole), or when an id is not a visible block (then nothing moves). Together the solid ones behave as one
+   * moving solid block: what stands on any of them rides along, what is in the way of any of them is pushed, and they never
+   * push, stop or crush each other. Loose crates between them (real physics) are carried and pushed by contact. Call it with
+   * the same blocks every tick the body moves; a block may also be moved alone again with `moveBlock`.
+   */
+  moveBlocks(ids: readonly EntityId[], to: Vec3): boolean;
+  /**
    * Turns a block to `rad`. Solid blocks only take quarter turns (nearest multiple of 90 degrees; width and depth swap so collision
    * stays exact) and wait (false) while whoever is in the way has no free spot to be moved to. Non-solid blocks spin freely and
    * touch through their real rotated outline.
