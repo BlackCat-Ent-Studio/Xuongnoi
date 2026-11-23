@@ -75,6 +75,8 @@ export const ROBOT = {
   /** Seconds a carton must lie on the tray before the robot turns its tray and drives. */
   settleS: 1.2,
   drive: { power: 0.8, slowDistance: 0.6 },
+  /** "Độ tăng tốc" of both motors (rpm per second). Gentler than the motor's own 400: from standstill to full speed in 0.4 s, so a carton does not creep backwards on the tray at every start. */
+  motorAccel: 250,
 } as const;
 /** Height of the tray's upper face above the floor the robot stands on. */
 export const TRAY_TOP = mm(ROBOT.height + ROBOT.tray.gap + ROBOT.tray.thickness);

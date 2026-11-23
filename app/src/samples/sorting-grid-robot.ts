@@ -64,13 +64,10 @@ export const ROBOT_WIRES: readonly Link[] = [
   ['lenh-do.out', 'goc-nghieng.on'],
   ['goc-nghieng.value', 'khop-nghieng.angle'],
   ['lenh-do.out', 'dem-do.up'],
-  // Drive: only with the tray flat, and either empty or with the carton taken
-  ['lenh-do.out', 'khong-do.in'],
-  ['khong-do.out', 'khay-phang.a'],
-  ['khop-nghieng.reached', 'khay-phang.b'],
+  // Drive: only while the tray is where it was told to be (flat, or tipped at the goal, where there is nowhere to drive to), and either empty or with the carton taken
+  ['khop-nghieng.reached', 'chay.a'],
   ['khay-trong.out', 'duoc-di.a'],
   ['cho-yen.done', 'duoc-di.b'],
-  ['khay-phang.out', 'chay.a'],
   ['duoc-di.out', 'chay.b'],
   ['chay.out', 'lai.go'],
 ];
@@ -82,8 +79,8 @@ export function robotCircuit(): Circuit {
     // --- chassis and drive
     ['bat-dau', 'on-start', 0],
     ['than', 'robot-body', 0, { position: { x: 0, y: ROBOT.height / 2, z: 0 }, heading: 0, length: ROBOT.length, width: ROBOT.width, height: ROBOT.height, mass: ROBOT.mass, friction: 0.8, look: 'agv', color: '#f59e0b' }],
-    ['trai', 'motor', 0, { side: -MOTOR_SIDE }],
-    ['phai', 'motor', 0, { side: MOTOR_SIDE }],
+    ['trai', 'motor', 0, { side: -MOTOR_SIDE, accel: ROBOT.motorAccel }],
+    ['phai', 'motor', 0, { side: MOTOR_SIDE, accel: ROBOT.motorAccel }],
     ['doc-moc', 'floor-marker-sensor', 1],
     ['tim-duong', 'grid-route', 1],
     ['tim-moc', 'floor-marker-find', 1],
@@ -113,8 +110,6 @@ export function robotCircuit(): Circuit {
     ['lenh-do', 'and', 7],
     ['goc-nghieng', 'bool-to-number', 7, { whenOn: ROBOT.tilt, whenOff: 0 }],
     ['dem-do', 'counter', 7],
-    ['khong-do', 'not', 8],
-    ['khay-phang', 'and', 8],
     ['duoc-di', 'or', 8],
     ['chay', 'and', 8],
   ];
@@ -125,7 +120,6 @@ export function robotCircuit(): Circuit {
     graph: { nodes: cards(specs), wires: wires(ROBOT_WIRES) },
     pins: [
       pin('o-duoc-di', 'Ô được đi', 'in', 'number', 'tim-moc.number'),
-      pin('dang-cho', 'Đang chờ ô', 'in', 'bool', 'tim-duong.avoid'),
       pin('dung-giua-o', 'Đứng giữa ô', 'in', 'bool', 'dung-o-dich.a'),
       pin('robot', 'Robot', 'out', 'object', 'than.self'),
       pin('o-muon', 'Ô muốn tới', 'out', 'number', 'tim-duong.next'),

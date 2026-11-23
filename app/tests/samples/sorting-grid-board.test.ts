@@ -59,10 +59,10 @@ describe('the grid-floor sorting sample as it ships', () => {
     expect(copiesOf(board, GRID_IDS.adder).length).toBe(2);
     expect(board.graph.nodes.filter((n) => n.kind === 'cell-hold').length).toBe(1);
     expect(board.graph.nodes.find((n) => n.kind === 'cell-hold')!.params.robots).toBe(GRID.robots);
-    // Every robot is wired to its own row of the one hold card with five wires.
+    // Every robot is wired to its own row of the one hold card with four wires.
     const links = GRID_MAIN_WIRES.map((w) => w.join('>'));
     for (let k = 1; k <= GRID.robots; k++) {
-      for (const w of [`xe-${k}.robot>giu-o.robot${k}`, `xe-${k}.o-muon>giu-o.want${k}`, `giu-o.cell${k}>xe-${k}.o-duoc-di`, `giu-o.wait${k}>xe-${k}.dang-cho`, `giu-o.stood${k}>xe-${k}.dung-giua-o`]) expect(links, w).toContain(w);
+      for (const w of [`xe-${k}.robot>giu-o.robot${k}`, `xe-${k}.o-muon>giu-o.want${k}`, `giu-o.cell${k}>xe-${k}.o-duoc-di`, `giu-o.stood${k}>xe-${k}.dung-giua-o`]) expect(links, w).toContain(w);
     }
     // No wire leads from a robot to a station or to a catch box: they meet only in the world.
     for (const [from, to] of GRID_MAIN_WIRES) {

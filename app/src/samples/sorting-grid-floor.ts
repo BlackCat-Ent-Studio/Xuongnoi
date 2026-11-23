@@ -120,12 +120,11 @@ export const catchPlace = (k: number): Vec3 => {
   return { x: mm(c * GRID.pitch), y: 0, z: mm(r * GRID.pitch) };
 };
 
-/** The five wires between copy k of "Xe phân loại" and row k of the hold card. */
+/** The four wires between copy k of "Xe phân loại" and row k of the hold card. */
 export const robotLinks = (k: number): Link[] => [
   [`xe-${k}.robot`, `giu-o.robot${k}`],
   [`xe-${k}.o-muon`, `giu-o.want${k}`],
   [`giu-o.cell${k}`, `xe-${k}.o-duoc-di`],
-  [`giu-o.wait${k}`, `xe-${k}.dang-cho`],
   [`giu-o.stood${k}`, `xe-${k}.dung-giua-o`],
 ];
 
@@ -244,7 +243,7 @@ export function createGridFloorBoard(): Board {
         MARGIN,
         380,
         400,
-        'Xe phân loại (6 bản sao của một bảng mạch): mỗi xe nối 5 dây với "Bảng giữ ô" để không xe nào vào ô xe khác đang giữ (ô đang bị giữ đổi màu đỏ). Trong xe có ba "Bảng giá trị" tra theo mã thùng: hai bảng xếp chồng lên nhau là "ô phải tới để đổ" (trên) và "đổ xong về trạm nào" (dưới); bảng đứng cạnh "Nhớ số" là "khay quay sang bên nào" (90 = bên phải, -90 = bên trái). Khay trống thì xe về trạm; có thùng nằm yên 1,2 giây thì xe mới chạy. Tới giữa ô đích, khay quay về phía lỗ rồi nghiêng 35 độ; thùng rơi khỏi khay thì khay hạ xuống và xe đi tiếp.',
+        'Xe phân loại (6 bản sao của một bảng mạch): mỗi xe nối 4 dây với "Bảng giữ ô" để không xe nào vào ô xe khác đang giữ (ô đang bị giữ đổi màu đỏ). Trong xe có ba "Bảng giá trị" tra theo mã thùng: hai bảng xếp chồng lên nhau là "ô phải tới để đổ" (trên) và "đổ xong về trạm nào" (dưới); bảng đứng cạnh "Nhớ số" là "khay quay sang bên nào" (90 = bên phải, -90 = bên trái). Khay trống thì xe về trạm; có thùng nằm yên 1,2 giây thì xe mới chạy. Tới giữa ô đích, khay quay về phía lỗ rồi nghiêng 35 độ; thùng rơi khỏi khay thì khay hạ xuống và xe đi tiếp.',
       ),
       note(
         'note3',
