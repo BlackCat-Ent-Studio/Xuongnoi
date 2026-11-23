@@ -1235,6 +1235,8 @@ export const NODE_NAMES: Record<string, NodeNames> = {
     ports: {
       out: {
         'self': ['Đối tượng', 'Self'],
+        'sizeX': ['Chiều dài thật (m)', 'Real length (m)'],
+        'sizeZ': ['Chiều rộng thật (m)', 'Real width (m)'],
       },
     },
   },

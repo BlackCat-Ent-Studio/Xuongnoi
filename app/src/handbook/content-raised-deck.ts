@@ -14,6 +14,8 @@ export const HANDBOOK_RAISED_DECK: readonly HandbookEntry[] = [
       'Khi xưởng cần hai tầng: robot phân loại chạy ở tầng trên và thả kiện hàng qua lỗ xuống thùng hứng ở tầng dưới; hoặc khi cần một sàn cao có chỗ trống để thả đồ, để tay máy thò xuống, để xe ở dưới chạy ngang qua.',
     ports: {
       self: 'Ra: tấm sàn đầu tiên của sàn nâng (dải sàn nằm trước hàng lỗ đầu tiên). Nối vào bất cứ chỗ nào cần một "Đối tượng", ví dụ Đo khoảng cách.',
+      sizeX: 'Ra: chiều dài sàn thật sự dùng, đo theo trục X, tính bằng mét. Bằng số đã gõ ở "Chiều dài sàn"; nếu số đó nhỏ quá (hoặc để 0) thì đây là chiều dài sàn tự tính. Nối vào Hiện số để xem.',
+      sizeZ: 'Ra: chiều rộng sàn thật sự dùng, đo theo trục Z, tính bằng mét. Cách hiểu giống "Chiều dài thật".',
     },
     params: {
       position:
@@ -24,7 +26,11 @@ export const HANDBOOK_RAISED_DECK: readonly HandbookEntry[] = [
       hole: 'Cạnh của mỗi lỗ vuông, tính bằng mét, từ 0,3 đến 3. Mặc định 0,7: vừa cho một thùng carton nhỏ rơi qua.',
       pitch:
         'Khoảng cách từ tâm lỗ này tới tâm lỗ bên cạnh, tính bằng mét. Mặc định 2. Lối đi giữa hai lỗ rộng bằng số này trừ đi "Cạnh lỗ" (2 - 0,7 = 1,3 m). Số nhỏ quá thì sàn tự giữ lại ít nhất 10 cm sàn giữa hai lỗ.',
-      margin: 'Phần sàn từ mép lỗ ngoài cùng ra tới mép sàn, tính bằng mét, từ 0,1 đến 10. Mặc định 1,3: bằng một lối đi. Sàn tự rộng ra theo số lỗ, khoảng cách và lề.',
+      margin:
+        'Phần sàn từ mép lỗ ngoài cùng ra tới mép sàn, tính bằng mét, từ 0,1 đến 10. Mặc định 1,3: bằng một lối đi. Chỉ dùng cho chiều nào chưa gõ cỡ (chiều dài hoặc chiều rộng đang để 0): chiều đó sàn tự rộng ra theo số lỗ, khoảng cách và lề.',
+      length:
+        'Chiều dài của cả tấm sàn, đo theo trục X, tính bằng mét, tối đa 100. Mặc định 0: chưa gõ, sàn tự tính theo lề. Gõ một số lớn hơn 0 thì sàn dài đúng bằng số đó, các lỗ vẫn nằm chính giữa và giữ nguyên khoảng cách. Số nhỏ hơn mức các lỗ cần thì sàn tự dài ra vừa đủ: từ mép lỗ đầu tới mép lỗ cuối, cộng 10 cm sàn mỗi bên. Ví dụ 3 lỗ cạnh 0,7 cách nhau 2 m cần ít nhất 4,9 m. Chiều dài thật đọc ở cổng ra "Chiều dài thật".',
+      width: 'Chiều rộng của cả tấm sàn, đo theo trục Z, tính bằng mét, tối đa 100. Mặc định 0: chưa gõ, sàn tự tính theo lề. Luật giống hệt "Chiều dài sàn", tính theo số lỗ trục Z.',
       thickness: 'Bề dày của tấm sàn, tính bằng mét, từ 0,05 đến 1. Mặc định 0,2.',
       color: 'Màu mặt sàn. Mặc định xám thép. Đổi được ngay lúc đang chạy. Viền vàng, viền xanh và chân trụ giữ màu riêng.',
       legs: 'Có vẽ chân trụ quanh mép sàn hay không. Chân trụ chỉ là hình vẽ: robot và thùng hàng đi xuyên qua được. Cần cột thật thì đặt thêm Vật thể.',
@@ -33,7 +39,8 @@ export const HANDBOOK_RAISED_DECK: readonly HandbookEntry[] = [
       'Đặt một Vật thể làm mặt đất, đặt Sàn nâng có lỗ phía trên. Thân robot có "Vị trí xuất hiện" cao hơn mặt sàn; Đi tới điểm lái robot dọc lối đi cạnh lỗ; khay nghiêng đổ thùng hàng vào lỗ; một Vùng đặt dưới lỗ đếm thùng rơi xuống.',
     tips: [
       'Sàn chỉ là các tấm rắn ghép lại, giống Vật thể: 1 lỗ là 4 tấm, 3 x 3 lỗ là 16 tấm. Cái gì dùng được với Vật thể thì dùng được với sàn.',
-      'Đổi số lỗ, cạnh lỗ, khoảng cách, lề, độ cao hay bề dày xong phải bấm Chạy lại; chỉ có màu đổi được ngay lúc đang chạy.',
+      'Đổi số lỗ, cạnh lỗ, khoảng cách, lề, chiều dài, chiều rộng, độ cao hay bề dày xong phải bấm Chạy lại; chỉ có màu đổi được ngay lúc đang chạy.',
+      'Muốn sàn đúng một cỡ, ví dụ 12 x 8 m: gõ 12 vào "Chiều dài sàn" và 8 vào "Chiều rộng sàn". Các lỗ luôn nằm giữa sàn. Gõ nhỏ quá thì sàn tự lớn lên vừa đủ chứa các lỗ; nối "Chiều dài thật" vào Hiện số để biết sàn thật sự dài bao nhiêu.',
       'Thùng rơi xuống nền trống sẽ trượt đi xa. Muốn thùng nằm lại dưới lỗ thì quây bốn Vật thể làm thành hứng ở tầng dưới.',
       'Cho robot đi trên lối đi giữa các lỗ: lối đi rộng bằng "Khoảng cách giữa hai lỗ" trừ "Cạnh lỗ", nên để rộng hơn chiều dài robot để robot quay đầu được.',
       'Sàn dùng cho góc nhìn 3D. Ở góc nhìn ngang chỉ thấy một lát cắt qua hàng lỗ giữa; ở góc nhìn từ trên xuống sàn chỉ là hình vẽ, không cản đường.',

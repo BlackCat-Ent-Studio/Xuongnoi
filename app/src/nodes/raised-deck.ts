@@ -12,6 +12,8 @@ const MIN_LAND = 0.1;
 const MAX_PITCH = 10;
 const MIN_MARGIN = 0.1;
 const MAX_MARGIN = 10;
+/** Longest side a typed deck size may have (m). */
+const MAX_SIDE = 100;
 const MIN_THICKNESS = 0.05;
 const MAX_THICKNESS = 1;
 const MAX_TOP = 20;
@@ -30,8 +32,14 @@ export interface DeckShape {
   hole: number;
   /** Distance between the middles of two neighbouring holes. */
   pitch: number;
-  /** Floor left between an outer hole and the edge of the deck. */
+  /** Floor left between an outer hole and the edge of the deck, where the side below is not typed. */
   margin: number;
+  /**
+   * Typed size of the deck along x and along z, already raised to the least that fits the holes. Absent = that side
+   * follows the holes, the pitch and `margin` (every deck made before the size could be typed).
+   */
+  length?: number;
+  width?: number;
 }
 
 /** A rectangle of floor, measured from the middle of the deck. */
@@ -48,21 +56,43 @@ export interface DeckFrame extends DeckShape {
   legs: number;
 }
 
-/** The shape the settings ask for, with every number brought into its allowed range. */
+/** From the first hole edge to the last along one axis: what `count` holes take up. */
+const holeSpan = (count: number, s: Pick<DeckShape, 'hole' | 'pitch'>): number => (count - 1) * s.pitch + s.hole;
+
+/** The smallest deck side that still leaves the least rim of floor outside `count` holes. */
+export function leastDeckSide(count: number, s: Pick<DeckShape, 'hole' | 'pitch'>): number {
+  return holeSpan(count, s) + 2 * MIN_MARGIN;
+}
+
+/**
+ * The shape the settings ask for, with every number brought into its allowed range. A typed side (above 0) wins over
+ * the margin on its axis; one too short for the holes grows to the least that fits them. The holes stay centred.
+ */
 export function deckShape(params: Params): DeckShape {
   const hole = clamp(numParam(params, 'hole', 0.7), MIN_HOLE, MAX_HOLE);
-  return {
+  const shape: DeckShape = {
     cols: Math.round(clamp(numParam(params, 'holeCols', 1), 1, DECK_MAX_HOLES)),
     rows: Math.round(clamp(numParam(params, 'holeRows', 1), 1, DECK_MAX_HOLES)),
     hole,
     pitch: clamp(numParam(params, 'pitch', 2), hole + MIN_LAND, MAX_PITCH),
     margin: clamp(numParam(params, 'margin', 1.3), MIN_MARGIN, MAX_MARGIN),
   };
+  const length = numParam(params, 'length', 0);
+  const width = numParam(params, 'width', 0);
+  if (length > 0) shape.length = clamp(length, leastDeckSide(shape.cols, shape), MAX_SIDE);
+  if (width > 0) shape.width = clamp(width, leastDeckSide(shape.rows, shape), MAX_SIDE);
+  return shape;
 }
 
 /** Full size of the deck along x and z. */
 export function deckSize(s: DeckShape): { x: number; z: number } {
-  return { x: (s.cols - 1) * s.pitch + s.hole + 2 * s.margin, z: (s.rows - 1) * s.pitch + s.hole + 2 * s.margin };
+  return { x: s.length ?? holeSpan(s.cols, s) + 2 * s.margin, z: s.width ?? holeSpan(s.rows, s) + 2 * s.margin };
+}
+
+/** Floor between the outer holes and the edge of the deck, on the two sides across x and the two across z. */
+export function deckMargins(s: DeckShape): { x: number; z: number } {
+  const size = deckSize(s);
+  return { x: (size.x - holeSpan(s.cols, s)) / 2, z: (size.z - holeSpan(s.rows, s)) / 2 };
 }
 
 /** Middles of the holes along one axis, for `count` holes. */
@@ -110,19 +140,27 @@ export function platesFor(s: DeckShape, mode: ViewMode): DeckPlate[] {
 }
 
 const FRAME_FIELDS = 7;
+/** With a typed size the text gets two more numbers: the length and the width (0 = that side is not typed). */
+const SIZED_FRAME_FIELDS = FRAME_FIELDS + 2;
 
-/** The trim of a deck written as the text its first plate carries. */
+/** The trim of a deck written as the text its first plate carries. A deck without a typed size writes the seven numbers it always wrote. */
 export function frameLabel(f: DeckFrame): string {
-  return [f.cols, f.rows, f.hole, f.pitch, f.margin, f.thickness, f.legs].join('|');
+  const base = [f.cols, f.rows, f.hole, f.pitch, f.margin, f.thickness, f.legs];
+  return (f.length === undefined && f.width === undefined ? base : [...base, f.length ?? 0, f.width ?? 0]).join('|');
 }
 
 /** Reads `frameLabel` back; null for anything else. */
 export function frameOfLabel(label: string | undefined): DeckFrame | null {
   const n = (label ?? '').split('|').map(Number);
-  if (n.length !== FRAME_FIELDS || n.some((v) => !Number.isFinite(v) || v < 0)) return null;
-  const [cols, rows, hole, pitch, margin, thickness, legs] = n as [number, number, number, number, number, number, number];
+  if ((n.length !== FRAME_FIELDS && n.length !== SIZED_FRAME_FIELDS) || n.some((v) => !Number.isFinite(v) || v < 0)) return null;
+  const [cols, rows, hole, pitch, margin, thickness, legs, length = 0, width = 0] = n as [number, number, number, number, number, number, number, number?, number?];
   if (!Number.isInteger(cols) || !Number.isInteger(rows) || cols < 1 || rows < 1 || cols > DECK_MAX_HOLES || rows > DECK_MAX_HOLES || hole <= 0 || pitch <= hole) return null;
-  return { cols, rows, hole, pitch, margin, thickness, legs };
+  const frame: DeckFrame = { cols, rows, hole, pitch, margin, thickness, legs };
+  // A side shorter than its holes is not a deck this card can have made.
+  if ((length > 0 && length < leastDeckSide(cols, frame) - 1e-9) || (width > 0 && width < leastDeckSide(rows, frame) - 1e-9)) return null;
+  if (length > 0) frame.length = length;
+  if (width > 0) frame.width = width;
+  return frame;
 }
 
 interface DeckState {
@@ -140,9 +178,13 @@ export const raisedDeckNode: NodeDef<DeckState> = {
   label: 'Sàn nâng có lỗ',
   category: 'object',
   description:
-    'Một tầng sàn thép đặt trên cao, có các lỗ vuông xếp thành hàng và cột. Robot chạy trên mặt sàn như chạy trên mặt đất; kiện hàng thả vào lỗ thì rơi xuống tầng dưới; robot ở tầng dưới chạy bên dưới sàn không bị ảnh hưởng. Sàn được ghép từ các tấm rắn giống "Vật thể" (1 lỗ = 4 tấm, 3 x 3 lỗ = 16 tấm). Viền vàng quanh lỗ, viền xanh quanh mép sàn và các chân trụ chỉ là hình vẽ, không cản thứ gì. Dùng ở góc nhìn 3D. Ở góc nhìn ngang, sàn hiện thành một lát cắt qua hàng lỗ giữa; ở góc nhìn từ trên xuống, sàn chỉ là hình vẽ trên nền, không cản đường.',
+    'Một tầng sàn thép đặt trên cao, có các lỗ vuông xếp thành hàng và cột. Robot chạy trên mặt sàn như chạy trên mặt đất; kiện hàng thả vào lỗ thì rơi xuống tầng dưới; robot ở tầng dưới chạy bên dưới sàn không bị ảnh hưởng. Sàn được ghép từ các tấm rắn giống "Vật thể" (1 lỗ = 4 tấm, 3 x 3 lỗ = 16 tấm). Cỡ sàn: gõ "Chiều dài sàn" và "Chiều rộng sàn", các lỗ luôn nằm giữa sàn; để 0 thì sàn tự tính theo "Lề quanh lỗ ngoài cùng". Gõ số nhỏ hơn mức các lỗ cần thì sàn tự lớn lên vừa đủ (còn 10 cm sàn ngoài hàng lỗ ngoài cùng); cỡ thật đọc ở hai cổng ra "Chiều dài thật" và "Chiều rộng thật". Viền vàng quanh lỗ, viền xanh quanh mép sàn và các chân trụ chỉ là hình vẽ, không cản thứ gì. Dùng ở góc nhìn 3D. Ở góc nhìn ngang, sàn hiện thành một lát cắt qua hàng lỗ giữa; ở góc nhìn từ trên xuống, sàn chỉ là hình vẽ trên nền, không cản đường.',
   inputs: [],
-  outputs: [{ id: 'self', type: 'object', label: 'Đối tượng' }],
+  outputs: [
+    { id: 'self', type: 'object', label: 'Đối tượng' },
+    { id: 'sizeX', type: 'number', label: 'Chiều dài thật (m)' },
+    { id: 'sizeZ', type: 'number', label: 'Chiều rộng thật (m)' },
+  ],
   params: [
     { id: 'position', label: 'Vị trí (y = mặt đất bên dưới)', kind: 'vec3', default: DEFAULT_POSITION, place: 'point' },
     { id: 'top', label: 'Cao mặt sàn (m)', kind: 'number', default: 2.6, min: 0.3, max: MAX_TOP, step: 0.1 },
@@ -151,6 +193,8 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     { id: 'hole', label: 'Cạnh lỗ (m)', kind: 'number', default: 0.7, min: MIN_HOLE, max: MAX_HOLE, step: 0.05 },
     { id: 'pitch', label: 'Khoảng cách giữa hai lỗ (m)', kind: 'number', default: 2, min: MIN_HOLE + MIN_LAND, max: MAX_PITCH, step: 0.1 },
     { id: 'margin', label: 'Lề quanh lỗ ngoài cùng (m)', kind: 'number', default: 1.3, min: MIN_MARGIN, max: MAX_MARGIN, step: 0.1 },
+    { id: 'length', label: 'Chiều dài sàn theo trục X (m; 0 = tự tính theo lề)', kind: 'number', default: 0, min: 0, max: MAX_SIDE, step: 0.1 },
+    { id: 'width', label: 'Chiều rộng sàn theo trục Z (m; 0 = tự tính theo lề)', kind: 'number', default: 0, min: 0, max: MAX_SIDE, step: 0.1 },
     { id: 'thickness', label: 'Bề dày sàn (m)', kind: 'number', default: 0.2, min: MIN_THICKNESS, max: MAX_THICKNESS, step: 0.05 },
     { id: 'color', label: 'Màu mặt sàn', kind: 'color', default: DEFAULT_COLOR },
     {
@@ -165,7 +209,7 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     },
   ],
   // The plates are laid once when the run starts; only the colour can change while it runs.
-  createOnly: ['position', 'top', 'holeCols', 'holeRows', 'hole', 'pitch', 'margin', 'thickness', 'legs'],
+  createOnly: ['position', 'top', 'holeCols', 'holeRows', 'hole', 'pitch', 'margin', 'length', 'width', 'thickness', 'legs'],
   liveApply: {
     color: (ctx, p, s) => {
       for (const id of s.ids) ctx.world.setEntityStyle(id, { color: String(p.color) });
@@ -198,7 +242,9 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     );
     return { ids };
   },
-  evaluate(_ctx, _i, _params, s) {
-    return { self: s.ids[0] ?? null };
+  evaluate(_ctx, _i, params, s) {
+    // The size the deck really has: a typed side that was too short for the holes reads here as what was built.
+    const size = deckSize(deckShape(params));
+    return { self: s.ids[0] ?? null, sizeX: size.x, sizeZ: size.z };
   },
 };

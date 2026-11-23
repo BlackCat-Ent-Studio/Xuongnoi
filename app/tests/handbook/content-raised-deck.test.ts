@@ -43,7 +43,7 @@ describe('handbook page of the raised deck', () => {
   it('the page quotes the defaults the card really has', () => {
     const def = getNodeDef('raised-deck')!;
     const value = (id: string): string => String(def.params.find((p) => p.id === id)!.default).replace('.', ',');
-    for (const id of ['top', 'hole', 'pitch', 'margin', 'thickness', 'holeCols', 'holeRows']) expect(entry.params[id], id).toContain(`Mặc định ${value(id)}`);
+    for (const id of ['top', 'hole', 'pitch', 'margin', 'length', 'width', 'thickness', 'holeCols', 'holeRows']) expect(entry.params[id], id).toContain(`Mặc định ${value(id)}`);
   });
 
   it('no lesson teaches the deck yet: the course pack names the kind and the page offers no lesson', () => {

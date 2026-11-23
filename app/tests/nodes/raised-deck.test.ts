@@ -7,7 +7,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import type { Board, EntityView, ParamValue, ViewMode, World } from '../../src/engine/types';
 import { parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
-import { RAISED_DECK_LOOK, deckPlates, deckShape, deckSize, frameLabel, frameOfLabel } from '../../src/nodes/raised-deck';
+import { RAISED_DECK_LOOK, deckPlates, deckShape, deckSize, frameLabel, frameOfLabel, leastDeckSide } from '../../src/nodes/raised-deck';
 import { EDGE_BEAM, RaisedDeckFigure, deckLegSpots } from '../../src/render/raised-deck-figure';
 import { SceneView } from '../../src/render/scene-view';
 import { createWorld } from '../../src/world/world';
@@ -36,10 +36,10 @@ const overlap = (a: Rect, b: Rect): number => Math.max(0, Math.min(a.x1, b.x1) -
 const covers = (rects: readonly Rect[], x: number, z: number): boolean => rects.some((r) => x > r.x0 && x < r.x1 && z > r.z0 && z < r.z1);
 
 /** The plates tile the deck exactly: no two overlap, together they are the deck minus the holes, and every hole is open. */
-function expectTiling(list: readonly EntityView[], at: { x: number; z: number }, cols: number, rows: number, hole: number, pitch: number, margin: number): void {
+function expectTiling(list: readonly EntityView[], at: { x: number; z: number }, cols: number, rows: number, hole: number, pitch: number, margin: number, typed: { x?: number; z?: number } = {}): void {
   const rects = list.map(rectOf);
-  const sizeX = (cols - 1) * pitch + hole + 2 * margin;
-  const sizeZ = (rows - 1) * pitch + hole + 2 * margin;
+  const sizeX = typed.x ?? (cols - 1) * pitch + hole + 2 * margin;
+  const sizeZ = typed.z ?? (rows - 1) * pitch + hole + 2 * margin;
   for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) expect(overlap(rects[i]!, rects[j]!), `${i} x ${j}`).toBeLessThan(1e-9);
   expect(rects.reduce((sum, r) => sum + area(r), 0)).toBeCloseTo(sizeX * sizeZ - cols * rows * hole * hole, 9);
   expect(Math.min(...rects.map((r) => r.x0))).toBeCloseTo(at.x - sizeX / 2, 9);
@@ -164,6 +164,92 @@ describe('raised deck: the plates it lays', () => {
   });
 });
 
+describe('raised deck: a typed length and width', () => {
+  const key = (list: readonly EntityView[]): string => list.map((e) => [e.position.x, e.position.y, e.position.z, e.size.x, e.size.y, e.size.z, e.label ?? ''].join(',')).join(';');
+  const sizeOut = (params: DeckParams): [unknown, unknown] => {
+    const r = rig([['deck', 'raised-deck', params]], [], '3d');
+    r.tick(1);
+    return [r.out('deck', 'sizeX'), r.out('deck', 'sizeZ')];
+  };
+
+  it('the deck is as long (x) and as wide (z) as typed, the holes stay centred at their pitch', () => {
+    const one = plates({ length: 6, width: 4, position: { x: 1, y: 0, z: -3 } });
+    expect(one).toHaveLength(4);
+    expectTiling(one, { x: 1, z: -3 }, 1, 1, 0.7, 2, 0, { x: 6, z: 4 });
+    const nine = plates({ holeCols: 3, holeRows: 3, hole: 0.8, pitch: 1.5, length: 12, width: 5 });
+    expect(nine).toHaveLength(16);
+    expectTiling(nine, { x: 0, z: 0 }, 3, 3, 0.8, 1.5, 0, { x: 12, z: 5 });
+    expect(deckSize(deckShape({ holeCols: 3, holeRows: 3, hole: 0.8, pitch: 1.5, length: 12, width: 5 }))).toEqual({ x: 12, z: 5 });
+    expect(sizeOut({ length: 6, width: 4 })).toEqual([6, 4]);
+  });
+
+  it('a typed side too short for the holes grows to the least that fits them (10 cm of floor outside the outer holes), and the card says so', () => {
+    // 3 holes of 0.7 m at 2 m need 4.7 m from the first hole edge to the last, plus 2 x 0.1 m.
+    const small = plates({ holeCols: 3, holeRows: 2, length: 1, width: 0.5 });
+    expectTiling(small, { x: 0, z: 0 }, 3, 2, 0.7, 2, 0.1);
+    expect(leastDeckSide(3, { hole: 0.7, pitch: 2 })).toBeCloseTo(4.9, 9);
+    const [x, z] = sizeOut({ holeCols: 3, holeRows: 2, length: 1, width: 0.5 }) as [number, number];
+    expect(x).toBeCloseTo(4.9, 9);
+    expect(z).toBeCloseTo(2.9, 9);
+    // Just enough is taken as typed.
+    expect(deckSize(deckShape({ holeCols: 3, length: 4.9, width: 0.9 }))).toEqual({ x: expect.closeTo(4.9, 9), z: expect.closeTo(0.9, 9) });
+    expect(deckSize(deckShape({ length: 5000 })).x).toBe(100);
+  });
+
+  it('one side typed, the other still follows "Lề quanh lỗ ngoài cùng"', () => {
+    expectTiling(plates({ holeCols: 2, margin: 0.5, length: 8 }), { x: 0, z: 0 }, 2, 1, 0.7, 2, 0.5, { x: 8 });
+    expectTiling(plates({ holeRows: 2, margin: 0.5, width: 8 }), { x: 0, z: 0 }, 1, 2, 0.7, 2, 0.5, { z: 8 });
+    expect(sizeOut({ holeCols: 2, margin: 0.5, length: 8 })).toEqual([8, expect.closeTo(1.7, 9)]);
+  });
+
+  it('a card saved before the size could be typed keeps exactly its plates and its trim text; 0 means the same as absent', () => {
+    for (const old of [{}, { holeCols: 2, top: 2.6 }, { holeCols: 3, holeRows: 3, hole: 0.8, pitch: 1.6, margin: 0.9 }, { holeCols: 5, holeRows: 2, margin: 0.1, legs: 'no' }] as DeckParams[]) {
+      const shape = deckShape(old);
+      expect(shape.length).toBeUndefined();
+      expect(shape.width).toBeUndefined();
+      const list = plates(old);
+      expectTiling(list, { x: 0, z: 0 }, shape.cols, shape.rows, shape.hole, shape.pitch, shape.margin);
+      // The trim text is the seven numbers it always was.
+      expect(list[0]!.label!.split('|')).toHaveLength(7);
+      expect(key(plates({ ...old, length: 0, width: 0 }))).toBe(key(list));
+      expect(key(plates({ ...old, length: -3, width: Number.NaN }))).toBe(key(list));
+    }
+    expect(plates({ holeCols: 2, top: 2.6 })[0]!.label).toBe('2|1|0.7|2|1.3|0.2|2.4');
+    expect(sizeOut({})).toEqual([expect.closeTo(3.3, 9), expect.closeTo(3.3, 9)]);
+  });
+
+  it('typing the size the margin already gives lays the same plates', () => {
+    const rects = (list: readonly EntityView[]): string => list.map((e) => [e.position.x, e.position.z, e.size.x, e.size.z].map((v) => v.toFixed(9)).join(',')).join(';');
+    expect(rects(plates({ holeCols: 3, holeRows: 2, length: 7.3, width: 5.3 }))).toBe(rects(plates({ holeCols: 3, holeRows: 2 })));
+  });
+
+  it('the trim text of a typed deck reads back with its size, and the trim is drawn round the typed deck', () => {
+    const list = plates({ holeCols: 2, length: 9, width: 3, position: { x: 0, y: 0, z: 0 } });
+    const frame = frameOfLabel(list[0]!.label)!;
+    expect(frame).toMatchObject({ cols: 2, rows: 1, length: 9, width: 3 });
+    expect(deckSize(frame)).toEqual({ x: 9, z: 3 });
+    expect(frameOfLabel(frameLabel(frame))).toEqual(frame);
+    const onlyWidth = frameOfLabel(plates({ width: 6 })[0]!.label)!;
+    expect(onlyWidth.length).toBeUndefined();
+    expect(deckSize(onlyWidth)).toEqual({ x: expect.closeTo(3.3, 9), z: 6 });
+    // A text naming a side shorter than its holes is not a deck.
+    expect(frameOfLabel('3|1|0.7|2|1.3|0.2|2.4|4|0')).toBeNull();
+    expect(frameOfLabel('3|1|0.7|2|1.3|0.2|2.4|4.9')).toBeNull();
+
+    const fig = new RaisedDeckFigure(list[0]!);
+    fig.object.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(fig.object);
+    expect([b.min.x, b.max.x, b.min.z, b.max.z]).toEqual([-4.5 - EDGE_BEAM, 4.5 + EDGE_BEAM, -1.5 - EDGE_BEAM, 1.5 + EDGE_BEAM].map((v) => expect.closeTo(v, 6)));
+  });
+
+  it('the size needs a restart like the rest of the shape', () => {
+    const r = rig([['deck', 'raised-deck', {}]], [], '3d');
+    r.tick(2);
+    expect(r.set('deck', { length: 5 })).toBe(false);
+    expect(r.set('deck', { width: 5 })).toBe(false);
+  });
+});
+
 describe('raised deck: in the editor', () => {
   const emptyBoard = (): Board => ({ name: 't', mode: '3d', graph: { nodes: [], wires: [] } });
   const deckBlocks = (board: Board): EntityView[] => {
@@ -177,9 +263,11 @@ describe('raised deck: in the editor', () => {
     expect(def.label).toBe('Sàn nâng có lỗ');
     expect(def.category).toBe('object');
     expect(def.modes).toBeUndefined();
-    expect(def.outputs.map((p) => [p.id, p.label])).toEqual([['self', 'Đối tượng']]);
+    expect(def.outputs.map((p) => [p.id, p.label])).toEqual([['self', 'Đối tượng'], ['sizeX', 'Chiều dài thật (m)'], ['sizeZ', 'Chiều rộng thật (m)']]);
     expect(def.inputs).toEqual([]);
-    expect(def.params.map((p) => p.id)).toEqual(['position', 'top', 'holeCols', 'holeRows', 'hole', 'pitch', 'margin', 'thickness', 'color', 'legs']);
+    expect(def.params.map((p) => p.id)).toEqual(['position', 'top', 'holeCols', 'holeRows', 'hole', 'pitch', 'margin', 'length', 'width', 'thickness', 'color', 'legs']);
+    // A new card starts with no typed size, exactly like a card saved before the setting existed.
+    expect(def.params.filter((p) => p.id === 'length' || p.id === 'width').map((p) => [p.default, p.legacyDefault])).toEqual([[0, undefined], [0, undefined]]);
     for (const p of def.params) expect(p.label, p.id).toMatch(/[À-ỹ]/);
   });
 
