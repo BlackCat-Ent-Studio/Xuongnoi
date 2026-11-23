@@ -44,7 +44,8 @@ function restsPlain(top: Entity, base: Entity): boolean {
   return boxOverlap(top, base, 'x') > 0 && boxOverlap(top, base, 'z') > 0;
 }
 
-const massKgOf = (e: Entity): number => e.mass ?? DEFAULT_MASS_KG[e.kind];
+/** A chassis on wheel traction weighs the mass on its card; every other body its own mass, else the default of its kind. */
+const massKgOf = (e: Entity): number => (e.robot?.traction ? e.robot.spec.mass : (e.mass ?? DEFAULT_MASS_KG[e.kind]));
 const isFreeCrate = (e: Entity): boolean => e.rigid === true && e.kind === 'item' && e.heldBy === null && !e.inHand && !e.bullet;
 
 /** Every pair asked in full, nothing passed over. */

@@ -539,8 +539,9 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
 }
 
 /**
- * A block has come into a chassis from the side since its last move: a moving block or a machine piece that pushes bodies by
- * the upright square round them reaches the corner of a chassis that stands askew before it reaches that square. The chassis
+ * A block has come into a chassis from the side since its last move without pushing it out of its way: a moving block pushes
+ * a chassis by its real outline as it travels (platforms.ts), but a block that was resized, turned or set down somewhere else
+ * may end up in a corner of it. The chassis
  * gives way the shortest way out on the ground, by what the block went in, as if pushed by it. A block whose shortest way out
  * is up or down is left alone (the chassis stands a hair in the floor it rests on; a piece that presses on its top does not
  * shove it sideways). Only a chassis with a real outline; nothing else is moved.
@@ -775,7 +776,11 @@ export function stepPhysics(
 export function overlapsSolid(box: Entity, solids: readonly Entity[]): boolean {
   // `overlapsAll` of the box and each solid, with the box's bounds (a turned crate's take some working out) made once.
   const bb = boundsBox(box);
+  // A chassis with a real outline fits where that outline is clear, as when it drives: not where the square round it is.
+  const chassis = box.robot !== undefined && hasChassisOutline(box);
   return solids.some((s) => {
+    const gap = chassis ? chassisBlockGap(box, s) : null;
+    if (gap !== null) return gap < -SKIN;
     const sb = boundsBox(s);
     return spanOverlap(bb, sb, 'x') > SKIN && spanOverlap(bb, sb, 'y') > SKIN && spanOverlap(bb, sb, 'z') > SKIN;
   });
