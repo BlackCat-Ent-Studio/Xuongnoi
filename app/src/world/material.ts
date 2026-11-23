@@ -102,7 +102,12 @@ function rests(top: Entity, base: Entity): boolean {
   return boxOverlap(top, base, 'x') > 0 && boxOverlap(top, base, 'z') > 0;
 }
 
-const massKgOf = (e: Entity): number => e.mass ?? DEFAULT_MASS_KG[e.kind];
+/**
+ * What a body weighs (kg) on a scale and on whatever carries it. A robot chassis on wheel traction ("Vật lý thật" on) weighs
+ * what its card says, the mass its wheels and the pushers already reckon with; every other body its own mass, else the
+ * default of its kind.
+ */
+const massKgOf = (e: Entity): number => (e.robot?.traction ? e.robot.spec.mass : (e.mass ?? DEFAULT_MASS_KG[e.kind]));
 
 /** A loose crate under the rigid-body engine (real physics on) that nothing carries: the only kind that is weighed by its share. */
 const isFreeCrate = (e: Entity): boolean => e.rigid === true && e.kind === 'item' && e.heldBy === null && !e.inHand && !e.bullet;
@@ -463,7 +468,7 @@ function massOnWhole(list: readonly Entity[], target: Entity, parts: ReadonlySet
       if (seen.has(e.id) || !e.visible || e.inHand || e.zone) continue;
       if (!mayRestOn(e, base, machineOf) || !rests(e, base)) continue;
       seen.add(e.id);
-      total += e.mass ?? DEFAULT_MASS_KG[e.kind];
+      total += massKgOf(e);
       queue.push(e);
     }
   }
