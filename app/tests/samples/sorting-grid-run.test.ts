@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { registerAllNodes } from '../../src/nodes';
-import { CARTON, GRID } from '../../src/samples/sorting-grid-plan';
+import { CARTON, GRID, ROBOT } from '../../src/samples/sorting-grid-plan';
 import { loadRapier } from '../../src/world/rapier-loader';
 import { say } from '../traffic/traffic-log';
 import { ROBOTS, ROUTE_CODES, gridLine, runGrid, shippedGrid, type GridResult } from '../helpers/grid-sample-run';
@@ -24,7 +24,8 @@ describe('the grid-floor sorting sample, 300 s', () => {
   it('every carton that leaves a tray ends in the catch box of its own route; none stays on the deck floor or lands outside a box', { timeout: 1_200_000 }, () => {
     const x = run300();
     say(gridLine('GRID300', x));
-    // Sorted: a real number of cartons, each in the box of its route.
+    // Sorted: a real number of cartons, each in the box of its route (measured 58 = 11.6 a minute; the margin is for
+    // changes of the general physics rules, not for a floor that stands still).
     expect(x.sortedRight).toBeGreaterThanOrEqual(40);
     expect(x.sortedWrong).toBe(0);
     expect(x.onDeck).toEqual([]);
@@ -46,6 +47,12 @@ describe('the grid-floor sorting sample, 300 s', () => {
     expect(x.shownTotal).toBe(x.sortedRight);
     expect(x.shownWrong).toBe(0);
     expect(x.shownOnDeck).toBe(0);
+    // The numbers on the screen itself (the "Hiện số" cards), not only the wires that feed them.
+    expect(x.hud['Tổng kiện đã phân loại']).toBe(x.sortedRight);
+    expect(x.hud['Kiện vào sai ô']).toBe(0);
+    expect(x.hud['Kiện nằm lại trên mặt sàn']).toBe(0);
+    for (const k of ROUTE_CODES) expect(x.hud[`Tuyến ${k}`], `screen, route ${k}`).toBe(x.truth[k]);
+    expect(x.cameraHeld).toBe(true);
     // Random codes 1..9: in 300 s every route gets cartons.
     for (const k of ROUTE_CODES) expect(x.truth[k], `route ${k}`).toBeGreaterThan(0);
     // Each tip of a tray put one carton into a box; each load of a station put one carton on a tray.
@@ -53,6 +60,9 @@ describe('the grid-floor sorting sample, 300 s', () => {
     expect(sum(x.tips)).toBeLessThanOrEqual(x.sortedRight + GRID.robots);
     expect(sum(x.loads)).toBeGreaterThanOrEqual(sum(x.tips));
     expect(sum(x.loads)).toBeLessThanOrEqual(sum(x.tips) + GRID.robots);
+    // A carton stays near the middle of its tray all the way: the tray reaches 370 mm from its middle to its end (measured 84 mm).
+    expect(x.handOvers).toBeGreaterThanOrEqual(x.sortedRight);
+    expect(x.carriedSlip).toBeLessThan(0.2);
   });
 
   it('the robots: nobody on a hole, nobody fallen, nobody near anybody, the floor never stands still, every robot and both stations work', { timeout: 1_200_000 }, () => {
@@ -62,6 +72,11 @@ describe('the grid-floor sorting sample, 300 s', () => {
     expect(x.deadlocks).toEqual([]);
     expect(x.stuckAtEnd).toBe(false);
     expect(x.minGap).toBeGreaterThan(0.3);
+    // On every tick: no chassis reaches over the opening of a hole, sinks below the deck's face, or is inside a plate, a
+    // post, a table, a belt or a wall (a chassis standing on a plate touches it: depth 0).
+    expect(x.overHoleTicks).toBe(0);
+    expect(x.lowest).toBeGreaterThan(GRID.top + ROBOT.height / 2 - 0.005);
+    expect(x.deepestInSolid).toBeLessThan(0.001);
     expect(x.moved).toEqual(ROBOTS);
     // Nobody is passed over for good: every robot keeps tipping, both stations keep loading.
     for (const k of ROBOTS) expect(x.tips[k], `robot ${k}`).toBeGreaterThan(sum(x.tips) / GRID.robots / 2);

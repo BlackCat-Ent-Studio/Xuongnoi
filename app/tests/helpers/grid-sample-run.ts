@@ -53,6 +53,17 @@ export interface GridResult {
   sortedWrong: number;
   /** Robots that left the cell they started on. */
   moved: number[];
+  /** Cartons that lay on a robot's tray at some moment. */
+  carried: number;
+  /** Hand-overs: how far from the middle of the tray the carton lay when the robot took it (m, worst case along and across the chassis), and how many were measured. */
+  handOvers: number;
+  handOverAlong: number;
+  handOverAcross: number;
+  /** How far along the chassis a taken carton ever lay from the middle of the tray while the tray was flat (m): what the starts and stops of the drive shift it. */
+  carriedSlip: number;
+  /** Seconds a robot stood on its stop cell per tip, from "standing on the middle" to "tray flat again": mean and longest. */
+  tipSecondsMean: number;
+  tipSecondsMax: number;
   /** What the counters of the catch boxes say (index 1..9), and their "wrong route" counters. */
   counts: number[];
   wrongs: number[];
@@ -60,6 +71,11 @@ export interface GridResult {
   shownTotal: number;
   shownWrong: number;
   shownOnDeck: number;
+  /** What the screen shows at the end, by the label of each "Hiện số" card; and whether the board's "Máy quay" card holds the camera. */
+  hud: Record<string, number>;
+  /** The largest number each of those cards showed at any moment of the run. */
+  hudMax: Record<string, number>;
+  cameraHeld: boolean;
   /** Cartons that lay on the deck floor for more than a second / lay on the ground outside every box (ids). */
   onDeck: string[];
   onGround: string[];
@@ -71,6 +87,12 @@ export interface GridResult {
   minGap: number;
   holeTicks: number;
   fallen: number[];
+  /** Ticks on which a chassis outline reached over the opening of a hole, and the lowest any chassis middle ever was (m). */
+  overHoleTicks: number;
+  lowest: number;
+  /** How deep a chassis outline ever was inside a solid thing that stands still (deck plate, post, table, belt, wall; m), and inside what. Standing on a plate reads about 0. */
+  deepestInSolid: number;
+  inSolidWith: string;
   /** Times when no robot moved for 20 s (seconds each lasted), and the longest any single robot stood. */
   deadlocks: number[];
   stuckAtEnd: boolean;
@@ -78,7 +100,9 @@ export interface GridResult {
   standstillBy: string;
   heldMax: number;
   msMean: number;
+  msP50: number;
   msP95: number;
+  msP99: number;
   msMax: number;
   hash: number;
 }
@@ -129,17 +153,23 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
   const ms = new Float64Array(ticks);
   const nums = (f: (k: number) => unknown, list: readonly number[]): number[] => [0, ...list.map((k) => Number(f(k)))];
   const res: GridResult = {
-    seconds, made: 0, alive: 0, maxAlive: 0, goneRight: 0, goneWrong: 0, goneElsewhere: 0, lyingRight: 0, lyingWrong: 0, truth: [], sortedRight: 0, sortedWrong: 0, moved: [], counts: [], wrongs: [], shownTotal: 0, shownWrong: 0, shownOnDeck: 0,
-    onDeck: [], onGround: [], loads: [], tips: [], perMinute: 0, minGap: Infinity, holeTicks: 0, fallen: [], deadlocks: [], stuckAtEnd: false, longestStandstill: 0, standstillBy: '', heldMax: 0,
-    msMean: 0, msP95: 0, msMax: 0, hash: 2166136261,
+    seconds, made: 0, alive: 0, maxAlive: 0, goneRight: 0, goneWrong: 0, goneElsewhere: 0, lyingRight: 0, lyingWrong: 0, truth: [], sortedRight: 0, sortedWrong: 0, moved: [], carried: 0, handOvers: 0, handOverAlong: 0, handOverAcross: 0, carriedSlip: 0, tipSecondsMean: 0, tipSecondsMax: 0, counts: [], wrongs: [], shownTotal: 0, shownWrong: 0, shownOnDeck: 0, hud: {}, hudMax: {}, cameraHeld: false,
+    onDeck: [], onGround: [], loads: [], tips: [], perMinute: 0, minGap: Infinity, holeTicks: 0, fallen: [], overHoleTicks: 0, lowest: Infinity, deepestInSolid: -Infinity, inSolidWith: '', deadlocks: [], stuckAtEnd: false, longestStandstill: 0, standstillBy: '', heldMax: 0,
+    msMean: 0, msP50: 0, msP95: 0, msP99: 0, msMax: 0, hash: 2166136261,
   };
   res.truth = [0, ...ROUTE_CODES.map(() => 0)];
   const cartons = new Map<string, Carton>();
   const onDeck = new Set<string>();
   const onGround = new Set<string>();
   const anchor = ROBOTS.map((k) => g.robot(k)).map((v) => ({ x: v.position.x, z: v.position.z, h: v.robot!.heading, since: 0 }));
+  const taken = ROBOTS.map(() => false);
+  const tipFrom = ROBOTS.map(() => -1);
+  let tipSum = 0;
+  let tipCount = 0;
   const starts = ROBOTS.map((k) => ({ x: g.robot(k).position.x, z: g.robot(k).position.z }));
   let allStillSince = 0;
+  // The openings of the nine holes, as boxes through the deck's face.
+  const holes = ROUTES.map((r) => ({ position: { x: r.hole[1] * GRID.pitch, y: GRID.top, z: r.hole[0] * GRID.pitch }, size: { x: GRID.hole, y: 2, z: GRID.hole } }) as EntityView);
   for (let i = 0; i < ticks; i++) {
     const t0 = performance.now();
     run.tick();
@@ -157,7 +187,10 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
         cartons.set(e.id, c);
       }
       c.where = whereIs(e);
-      if (c.where === 'tray') c.carried = true;
+      if (c.where === 'tray' && !c.carried) {
+        c.carried = true;
+        res.carried += 1;
+      }
       c.deckTicks = c.where === 'deck' ? c.deckTicks + 1 : 0;
       if (c.deckTicks > 60) onDeck.add(e.id);
       if (c.where === 'ground') onGround.add(e.id);
@@ -188,12 +221,49 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
         res.standstillBy = `xe-${n + 1} until ${t.toFixed(0)} s`;
       }
       if (!isLaneCell(Math.round(v.position.z / GRID.pitch), Math.round(v.position.x / GRID.pitch))) res.holeTicks += 1;
+      if (holes.some((hole) => overlapDepth(v, hole) > 0)) res.overHoleTicks += 1;
+      res.lowest = Math.min(res.lowest, v.position.y);
+      for (const box of run.world.solidBoxes()) {
+        const depth = overlapDepth(v, box as EntityView);
+        if (depth > res.deepestInSolid) {
+          res.deepestInSolid = depth;
+          res.inSolidWith = `xe-${n + 1} at ${t.toFixed(1)} s in a box ${box.size.x.toFixed(2)} x ${box.size.y.toFixed(2)} x ${box.size.z.toFixed(2)} at ${box.position.x.toFixed(2)}, ${box.position.y.toFixed(2)}, ${box.position.z.toFixed(2)}`;
+        }
+      }
+      // The moment the robot takes a carton as loaded: where does it lie on the tray?
+      const k = n + 1;
+      const now = out(`xe-${k}/cho-yen`, 'done') === true;
+      if (now && !taken[n]) {
+        const carton = items.find((e) => e.id === out(`xe-${k}/tren-khay`, 'first'));
+        if (carton) {
+          const dx = carton.position.x - v.position.x;
+          const dz = carton.position.z - v.position.z;
+          res.handOvers += 1;
+          res.handOverAlong = Math.max(res.handOverAlong, Math.abs(dx * Math.cos(h) + dz * Math.sin(h)));
+          res.handOverAcross = Math.max(res.handOverAcross, Math.abs(-dx * Math.sin(h) + dz * Math.cos(h)));
+        }
+      }
+      if (now && out(`xe-${k}/lenh-do`, 'out') !== true) {
+        const carton = items.find((e) => e.id === out(`xe-${k}/tren-khay`, 'first'));
+        if (carton) res.carriedSlip = Math.max(res.carriedSlip, Math.abs((carton.position.x - v.position.x) * Math.cos(h) + (carton.position.z - v.position.z) * Math.sin(h)));
+      }
+      taken[n] = now;
+      // A tip: from the tick the robot stands on its goal with a taken carton until its tray is flat and empty again.
+      const atGoal = out(`xe-${k}/toi-noi`, 'out') === true;
+      if (atGoal && tipFrom[n]! < 0) tipFrom[n] = t;
+      if (!atGoal && tipFrom[n]! >= 0 && out(`xe-${k}/chay`, 'out') === true) {
+        tipSum += t - tipFrom[n]!;
+        tipCount += 1;
+        res.tipSecondsMax = Math.max(res.tipSecondsMax, t - tipFrom[n]!);
+        tipFrom[n] = -1;
+      }
     });
     if (anyMoved) {
       if (t - allStillSince >= 20) res.deadlocks.push(t - allStillSince);
       allStillSince = t;
     }
     res.heldMax = Math.max(res.heldMax, Number(out('giu-o', 'held')));
+    for (const h of run.world.hudItems()) res.hudMax[h.label] = Math.max(res.hudMax[h.label] ?? 0, Number(h.value));
     opts.each?.(t, g);
   }
   if (seconds - allStillSince >= 20) {
@@ -217,13 +287,18 @@ export function runGrid(board: Board, seconds: number, opts: GridRunOptions = {}
   res.shownTotal = Number(out('tong-kien/cong-8', 'out'));
   res.shownWrong = Number(out('tong-sai/cong-8', 'out'));
   res.shownOnDeck = Number(out('dem-roi', 'value'));
+  res.hud = Object.fromEntries(run.world.hudItems().map((h) => [h.label, Number(h.value)]));
+  res.cameraHeld = run.world.cameraCommand() !== null;
   res.loads = nums((s) => out(`tram-${s}/dem-nap`, 'value'), [1, 2]);
   res.tips = nums((k) => out(`xe-${k}/dem-do`, 'value'), ROBOTS);
   res.perMinute = (res.sortedRight + res.sortedWrong) / (seconds / 60);
+  res.tipSecondsMean = tipCount > 0 ? tipSum / tipCount : 0;
   res.fallen = ROBOTS.filter((k) => g.robot(k).position.y < GRID.top);
   const sorted = Array.from(ms).sort((a, b) => a - b);
   res.msMean = sorted.reduce((a, b) => a + b, 0) / ticks;
+  res.msP50 = sorted[Math.floor(ticks * 0.5)]!;
   res.msP95 = sorted[Math.floor(ticks * 0.95)]!;
+  res.msP99 = sorted[Math.floor(ticks * 0.99)]!;
   res.msMax = sorted[ticks - 1]!;
   run.dispose();
   return res;
@@ -235,7 +310,9 @@ export function gridLine(name: string, x: GridResult): string {
     `${name} (${x.seconds} s): made ${x.made}, reached own box ${x.sortedRight}, another box ${x.sortedWrong}, taken back from a box ${x.goneRight + x.goneWrong} / from elsewhere ${x.goneElsewhere}, alive ${x.alive} (max ${x.maxAlive}) = ${x.perMinute.toFixed(2)} sorted/min`,
     `  counters ${x.counts.slice(1).join('/')} (truth ${x.truth.slice(1).join('/')}), wrong ${x.wrongs.slice(1).join('/')}; shown total ${x.shownTotal}, wrong ${x.shownWrong}, on deck ${x.shownOnDeck}`,
     `  on the deck floor > 1 s: ${x.onDeck.length}, on the ground outside a box: ${x.onGround.length}; loads ${x.loads.slice(1).join('/')}, tips ${x.tips.slice(1).join('/')}`,
+    `  hand-overs ${x.handOvers}: carton off the tray middle at most ${mm(x.handOverAlong)} mm along / ${mm(x.handOverAcross)} mm across, while carried at most ${mm(x.carriedSlip)} mm along; a tip takes ${x.tipSecondsMean.toFixed(1)} s (longest ${x.tipSecondsMax.toFixed(1)} s)`,
     `  min gap ${mm(x.minGap)} mm, middle in a hole cell ${x.holeTicks} ticks, fallen [${x.fallen.join(',')}], deadlocks ${x.deadlocks.length}${x.deadlocks.length ? ` [${x.deadlocks.map((d) => d.toFixed(0)).join(', ')} s]${x.stuckAtEnd ? ' STUCK AT END' : ''}` : ''}, longest standstill ${x.longestStandstill.toFixed(1)} s (${x.standstillBy}), held max ${x.heldMax}`,
-    `  ms/tick mean ${x.msMean.toFixed(3)} p95 ${x.msP95.toFixed(3)} max ${x.msMax.toFixed(1)}, hash ${x.hash.toString(16)}`,
+    `  chassis over a hole opening ${x.overHoleTicks} ticks, lowest chassis middle ${x.lowest.toFixed(3)} m, deepest in a solid ${mm(x.deepestInSolid)} mm (${x.inSolidWith})`,
+    `  ms/tick mean ${x.msMean.toFixed(3)} p50 ${x.msP50.toFixed(3)} p95 ${x.msP95.toFixed(3)} p99 ${x.msP99.toFixed(3)} max ${x.msMax.toFixed(1)}, hash ${x.hash.toString(16)}`,
   ].join('\n');
 }
