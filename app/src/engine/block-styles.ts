@@ -20,7 +20,17 @@ export type BlockStyle =
   | 'scan-gate'
   | 'chute'
   | 'arm-base'
-  | 'code-display';
+  | 'code-display'
+  | 'roll-cage'
+  | 'signal-tower'
+  | 'hole-cover'
+  | 'truck-flatbed'
+  | 'dock-door'
+  | 'dock-door-open'
+  | 'scan-gate-sheet'
+  | 'warehouse'
+  | 'floor-lane'
+  | 'floor-frame';
 
 export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   box: 'Hộp',
@@ -44,6 +54,16 @@ export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   chute: 'Cửa thả + túi vải (số ghi ở "Chữ trên biển")',
   'arm-base': 'Đế tay máy',
   'code-display': 'Màn hình hiện mã (hộp đen, số ghi ở "Chữ trên biển")',
+  'roll-cage': 'Lồng lưới có bánh (thành lưới, bốn bánh nhỏ)',
+  'signal-tower': 'Đèn tháp ba tầng (sáng theo "Đặt màu": 1 đỏ, 2 vàng, 3 xanh lá)',
+  'hole-cover': 'Nắp trượt sọc đỏ trắng (đậy lỗ thả; đặt thêm một nắp cạnh lỗ cho lúc mở)',
+  'truck-flatbed': 'Xe tải thùng phẳng thành thấp (mặt hộp là sàn thùng, đầu xe ở đầu hộp)',
+  'dock-door': 'Cửa cuốn bến, đang đóng (khung vàng, hộp cuốn phía trên)',
+  'dock-door-open': 'Cửa cuốn bến, đang mở (cửa cuộn lên hộp cuốn)',
+  'scan-gate-sheet': 'Cổng quét có tấm sáng (vạch quét chạy; đổi màu là lúc vừa đọc)',
+  warehouse: 'Cảnh nhà kho (tường bến có cửa, cột, kèo mái, đèn, kệ hàng; chỉ để ngắm)',
+  'floor-lane': 'Vạch làn xe trên sàn (mũi tên dọc cạnh dài; ghi "-" ở "Chữ trên biển" để đảo chiều)',
+  'floor-frame': 'Ô vạch sơn trên sàn (viền quanh hộp)',
 };
 
 export const BLOCK_STYLES = Object.keys(BLOCK_STYLE_LABELS) as readonly BlockStyle[];

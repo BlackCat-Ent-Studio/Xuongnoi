@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { BLOCK_STYLES, TRAFFIC_COLORS, blockStyleOf } from '../../src/engine/block-styles';
 import type { EntityView } from '../../src/engine/types';
 import { buildBlockLook, countMeshes, trafficLampIndex } from '../../src/render/block-looks';
+import { isFactoryBlockStyle } from '../../src/render/factory-blocks';
 import { buildItem } from '../../src/render/item-shapes';
 import { BLOCK_PACK } from '../../src/render/pack-model-table';
 import { pickVariant, setPackTemplateForTests } from '../../src/render/pack-models';
@@ -42,7 +43,8 @@ describe('block looks', () => {
       expect(box.min.z, style).toBeGreaterThanOrEqual(-0.51);
       expect(box.max.z, style).toBeLessThanOrEqual(0.51);
       expect(box.min.y, style).toBeGreaterThanOrEqual(-0.51);
-      expect(box.max.y, style).toBeLessThanOrEqual(1.2);
+      // The flatbed truck's block is its bed: cab, board and side rails stand on it.
+      expect(box.max.y, style).toBeLessThanOrEqual(style === 'truck-flatbed' ? 1.5 : 1.2);
       fig.dispose();
     }
   });
@@ -103,7 +105,7 @@ describe('pack looks', () => {
 
   it('code-drawn styles are exactly those without a pool', () => {
     for (const style of BLOCK_STYLES) {
-      expect(['box', 'sign', 'conveyor', 'rail', 'belt-frame', 'scan-gate', 'chute', 'arm-base', 'code-display'].includes(style), style).toBe(BLOCK_PACK[style] === undefined);
+      expect(['box', 'sign', 'conveyor', 'rail'].includes(style) || isFactoryBlockStyle(style), style).toBe(BLOCK_PACK[style] === undefined);
     }
   });
 

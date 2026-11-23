@@ -20,6 +20,12 @@ export const ROBOT_LOOKS: readonly LookOption[] = [
   { value: AGV_LOOK, label: 'Xe AGV bo tròn (vè bánh, dải đèn quanh thân)' },
 ];
 
+/**
+ * Body colour of the tug fleet: a robot chassis whose "Màu" is set to it is drawn teal in whichever look it has, so tugs
+ * are told from the sorting robots (which keep the look's own orange). It is an ordinary colour value, nothing more.
+ */
+export const TUG_TEAL = '#12a594';
+
 /** Links, joints and grippers: the tidy factory arm; a link with a width is drawn as the AGV tray. */
 export const FACTORY_ARM_LOOK = 'factory';
 export const ARM_LOOKS: readonly LookOption[] = [

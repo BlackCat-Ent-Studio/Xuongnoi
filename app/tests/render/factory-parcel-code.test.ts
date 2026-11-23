@@ -214,8 +214,8 @@ describe('the code display', () => {
   const size = { x: 0.22, y: 0.18, z: 0.22 };
   const view = (label?: string): EntityView => ({ id: 'd', kind: 'block', ownerNodeId: 'n', position: { x: 0, y: 0, z: 0 }, size, color: '#a3a3a3', visible: true, blockStyle: 'code-display', ...(label ? { label } : {}) });
 
-  it('is a style of its own at the end of the list; the scan gate is listed as before', () => {
-    expect(BLOCK_STYLES.at(-1)).toBe('code-display');
+  it('is a style of its own after the other factory styles; the scan gate is listed as before', () => {
+    expect(BLOCK_STYLES.indexOf('code-display')).toBe(BLOCK_STYLES.indexOf('arm-base') + 1);
     expect(BLOCK_STYLE_LABELS['scan-gate']).toBe('Cổng quét (khung vàng, đèn theo màu)');
     expect(BLOCK_STYLES.indexOf('scan-gate')).toBe(BLOCK_STYLES.indexOf('belt-frame') + 1);
   });
