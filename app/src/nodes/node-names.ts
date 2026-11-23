@@ -1238,6 +1238,31 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'grid-route': {
+    vi: 'Tìm đường trên lưới',
+    en: 'Grid Route',
+    ports: {
+      in: {
+        'at': ['Ô đang đứng', 'Current cell'],
+        'goal': ['Ô đích', 'Goal cell'],
+        'avoid': ['Tránh ô bị giữ', 'Avoid held cell'],
+      },
+      out: {
+        'next': ['Ô kế tiếp', 'Next cell'],
+        'hasNext': ['Còn phải đi', 'Not there yet'],
+        'steps': ['Số ô còn lại', 'Cells left'],
+      },
+    },
+  },
+  'cell-hold': {
+    vi: 'Bảng giữ ô',
+    en: 'Cell Hold Table',
+    ports: {
+      out: {
+        'held': ['Số ô đang bị giữ', 'Cells held'],
+      },
+    },
+  },
 };
 
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */

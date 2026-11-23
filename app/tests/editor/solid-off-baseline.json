@@ -147,5 +147,7 @@
  "handbook:floor-marker-find": "16137d45:900",
  "handbook:code-reader": "667b373d:900",
  "lesson:robot-to-marker": "e6e7abad:900",
- "handbook:raised-deck": "796a39b6:900"
+ "handbook:raised-deck": "796a39b6:900",
+ "handbook:grid-route": "f53dff5b:900",
+ "handbook:cell-hold": "767b4546:900"
 }

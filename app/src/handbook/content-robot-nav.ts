@@ -63,16 +63,20 @@ export const HANDBOOK_ROBOT_NAV: readonly HandbookEntry[] = [
       number: 'Ra (số): số ghi trên ô.',
     },
     params: {
-      number: 'Số của mốc, từ 1 đến 99, là số nguyên. Mặc định 1. Đây là số mà Đọc mốc sàn báo ra và Tìm mốc sàn tìm theo. Nên đặt mỗi mốc một số khác nhau.',
+      number: 'Số của mốc, từ 1 đến 999, là số nguyên. Mặc định 1. Đây là số mà Đọc mốc sàn báo ra và Tìm mốc sàn tìm theo. Nên đặt mỗi mốc một số khác nhau.',
       position: 'Chỗ đặt tâm ô, tính bằng mét: x và z là vị trí trên sàn, y là độ cao mặt sàn nơi ô được sơn (mặc định 0,5, trùng mặt trên của một hộp sàn dày 1).',
       size: 'Cạnh của ô vuông, tính bằng mét, từ 0,2 đến 10. Mặc định 1. Ô to thì Đọc mốc sàn bắt được robot từ xa tâm hơn.',
       color: 'Màu của ô. Mặc định cam. Màu chỉ để nhìn.',
+      exits:
+        'Mũi tên chiều đi vẽ trên ô: robot được rời ô này theo hướng nào. Mặc định "Không có mũi tên": ô trông và chạy y như trước. Một mũi tên là một đoạn làn một chiều; hai mũi tên là ngã rẽ. Mảnh Tìm đường trên lưới chỉ đi theo các mũi tên này. Hướng tính trên sàn: sang phải là +x, xuống dưới là +z (giống "Hướng" 0 và 90 độ của Thân robot).',
     },
     example: 'Mốc sàn (số 3) "Đối tượng" → "Đích" của Đi tới điểm. Hoặc: Hằng số 3 → "Số mốc" của Tìm mốc sàn → "Mốc" → "Đích".',
     tips: [
       'Mốc là hình sơn phẳng: không chặn robot, không chặn thùng hàng, cảm biến Dò phía trước không thấy nó.',
       'Đổi số, vị trí hay cỡ xong phải bấm Chạy lại; chỉ có màu đổi được ngay lúc đang chạy.',
       'Hai mốc trùng số thì Tìm mốc sàn lấy mốc được tạo trước. Tốt nhất đừng để trùng.',
+      'Sàn có hai tầng: đặt số khác nhau cho mỗi tầng (ví dụ tầng trên từ 1, tầng dưới từ 101), vì Tìm mốc sàn tìm theo số trên cả bảng.',
+      'Khi game chạy, ô đang bị một robot giữ (xem Bảng giữ ô) tạm đổi sang màu đỏ rồi trở lại màu của nó.',
     ],
     lessonId: LESSON,
     tryBoard: tryFloorMarker,
@@ -83,7 +87,7 @@ export const HANDBOOK_ROBOT_NAV: readonly HandbookEntry[] = [
     whenToUse: 'Robot cần biết mình đang ở trạm nào: tới đúng cửa số 3 mới đổ hàng, về tới mốc đỗ thì báo rảnh, đi qua mốc ngã tư thì chạy chậm lại.',
     ports: {
       who: 'Vào: vật cần hỏi (thân robot, xe, nhân vật). Bắt buộc nối. Tâm của vật phải nằm trong ô mốc thì mới tính là đang đứng trên mốc.',
-      number: 'Ra (số): số của mốc vật đang đứng trên; 0 khi không đứng trên mốc nào. Hai ô chồng lên nhau thì lấy ô có tâm gần vật hơn.',
+      number: 'Ra (số): số của mốc vật đang đứng trên; 0 khi không đứng trên mốc nào. Hai ô chồng lên nhau thì lấy ô có tâm gần vật hơn; hai tầng sàn chồng lên nhau thì lấy ô của tầng gần chân vật nhất.',
       on: 'Ra: bật suốt lúc vật đang đứng trên một mốc.',
       entered: 'Ra: bật một nhịp mỗi lần vật vừa vào một mốc (kể cả đi thẳng từ mốc này sang mốc khác).',
       marker: 'Ra: chính ô mốc đó (để trống khi không đứng trên mốc nào).',

@@ -2917,5 +2917,43 @@
    "colliderMismatch": 0,
    "hash": "667b373d"
   }
+ },
+ {
+  "id": "handbook:grid-route",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f53dff5b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "f53dff5b"
+  }
+ },
+ {
+  "id": "handbook:cell-hold",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "767b4546"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "767b4546"
+  }
  }
 ]
