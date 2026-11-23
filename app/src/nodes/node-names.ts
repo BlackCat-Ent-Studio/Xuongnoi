@@ -1278,6 +1278,22 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'hitch': {
+    vi: 'Chốt gài',
+    en: 'Hitch',
+    ports: {
+      in: {
+        'carrier': ['Xe', 'Carrier'],
+        'on': ['Gài', 'Hold'],
+      },
+      out: {
+        'holding': ['Đang gài', 'Holding'],
+        'thing': ['Vật đang gài', 'Held object'],
+        'took': ['Khi gài', 'On taken'],
+        'released': ['Khi nhả', 'On released'],
+      },
+    },
+  },
 };
 
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */
