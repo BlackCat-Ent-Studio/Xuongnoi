@@ -514,6 +514,25 @@
   }
  },
  {
+  "id": "sample:sorting-factory-grid",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4b9fae3b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "4b9fae3b"
+  }
+ },
+ {
   "id": "lesson:walk-jump",
   "off": {
    "ended": "running",
