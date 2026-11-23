@@ -1,0 +1,729 @@
+{
+  "format_version": 1,
+  "name": "Nhặt sao",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-1",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "character-1",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6"
+        },
+        "pos": {
+          "x": 260,
+          "y": 40
+        }
+      },
+      {
+        "id": "floor-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 12,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 330
+        }
+      },
+      {
+        "id": "floor-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 14.5,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 12,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 490
+        }
+      },
+      {
+        "id": "platform-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 4.5,
+            "y": 1.25,
+            "z": 0
+          },
+          "size": {
+            "x": 3,
+            "y": 0.3,
+            "z": 1
+          },
+          "color": "#a16207",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 650
+        }
+      },
+      {
+        "id": "wall-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -6.5,
+            "y": 2,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 5,
+            "z": 1
+          },
+          "color": "#737373",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 260,
+          "y": 810
+        }
+      },
+      {
+        "id": "star-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 970
+        }
+      },
+      {
+        "id": "star-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 2,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1130
+        }
+      },
+      {
+        "id": "star-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 4.5,
+            "y": 2.1,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1391
+        }
+      },
+      {
+        "id": "star-4",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 7.25,
+            "y": 2,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1551
+        }
+      },
+      {
+        "id": "star-5",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 12,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 260,
+          "y": 1711
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-2",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 226
+        }
+      },
+      {
+        "id": "touch-3",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 412
+        }
+      },
+      {
+        "id": "touch-4",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 598
+        }
+      },
+      {
+        "id": "touch-5",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 500,
+          "y": 784
+        }
+      },
+      {
+        "id": "or-1",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 40
+        }
+      },
+      {
+        "id": "or-2",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 200
+        }
+      },
+      {
+        "id": "or-3",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 360
+        }
+      },
+      {
+        "id": "or-4",
+        "kind": "or",
+        "params": {},
+        "pos": {
+          "x": 720,
+          "y": 520
+        }
+      },
+      {
+        "id": "counter-1",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 5
+        },
+        "pos": {
+          "x": 960,
+          "y": 40
+        }
+      },
+      {
+        "id": "compare-1",
+        "kind": "compare",
+        "params": {
+          "op": "lt"
+        },
+        "pos": {
+          "x": 500,
+          "y": 970
+        }
+      },
+      {
+        "id": "const-1",
+        "kind": "const",
+        "params": {
+          "value": -5
+        },
+        "pos": {
+          "x": 260,
+          "y": 1290
+        }
+      },
+      {
+        "id": "show-number-1",
+        "kind": "show-number",
+        "params": {
+          "label": "Sao",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 1200,
+          "y": 40
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn nhặt đủ 5 sao rồi!",
+          "loseMessage": "Bạn rơi xuống vực mất rồi!"
+        },
+        "pos": {
+          "x": 1200,
+          "y": 190
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-1",
+          "port": "held"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "star-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "touch-1",
+          "port": "began"
+        },
+        "to": {
+          "node": "star-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "star-2",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "touch-2",
+          "port": "began"
+        },
+        "to": {
+          "node": "star-2",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "star-3",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "touch-3",
+          "port": "began"
+        },
+        "to": {
+          "node": "star-3",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-4",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "star-4",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-4",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "touch-4",
+          "port": "began"
+        },
+        "to": {
+          "node": "star-4",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-5",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "star-5",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-5",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "touch-5",
+          "port": "began"
+        },
+        "to": {
+          "node": "star-5",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "touch-1",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "touch-2",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "or-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-2",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "touch-3",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-2",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "or-2",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-3",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "touch-4",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-3",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w24",
+        "from": {
+          "node": "or-3",
+          "port": "out"
+        },
+        "to": {
+          "node": "or-4",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w25",
+        "from": {
+          "node": "touch-5",
+          "port": "began"
+        },
+        "to": {
+          "node": "or-4",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w26",
+        "from": {
+          "node": "or-4",
+          "port": "out"
+        },
+        "to": {
+          "node": "counter-1",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w27",
+        "from": {
+          "node": "character-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "compare-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w28",
+        "from": {
+          "node": "const-1",
+          "port": "value"
+        },
+        "to": {
+          "node": "compare-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w29",
+        "from": {
+          "node": "counter-1",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-number-1",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w30",
+        "from": {
+          "node": "counter-1",
+          "port": "reached"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w31",
+        "from": {
+          "node": "compare-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "lose"
+        }
+      }
+    ]
+  }
+}

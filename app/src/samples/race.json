@@ -1,0 +1,611 @@
+{
+  "format_version": 1,
+  "name": "Đua xe về đích",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-e",
+        "kind": "key",
+        "params": {
+          "key": "KeyE"
+        },
+        "pos": {
+          "x": 40,
+          "y": 220
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -19,
+            "y": 0.5,
+            "z": 6.5
+          },
+          "speed": 5,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 360,
+          "y": 40
+        }
+      },
+      {
+        "id": "car-player",
+        "kind": "vehicle",
+        "params": {
+          "position": {
+            "x": -17,
+            "y": 0.4,
+            "z": 6.5
+          },
+          "model": "car",
+          "steerMode": "direction",
+          "maxSpeed": 9,
+          "accel": 9,
+          "color": "#3b82f6",
+          "solid": "yes",
+          "control": "driver"
+        },
+        "pos": {
+          "x": 360,
+          "y": 330
+        }
+      },
+      {
+        "id": "enter-1",
+        "kind": "enter-exit",
+        "params": {
+          "reach": 1.5
+        },
+        "pos": {
+          "x": 700,
+          "y": 40
+        }
+      },
+      {
+        "id": "start-1",
+        "kind": "on-start",
+        "params": {},
+        "pos": {
+          "x": 40,
+          "y": 560
+        }
+      },
+      {
+        "id": "bot-driver",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -17,
+            "y": 0.5,
+            "z": 10
+          },
+          "speed": 5,
+          "color": "#ef4444",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 360,
+          "y": 620
+        }
+      },
+      {
+        "id": "car-bot",
+        "kind": "vehicle",
+        "params": {
+          "position": {
+            "x": -17,
+            "y": 0.4,
+            "z": 10
+          },
+          "model": "car",
+          "steerMode": "direction",
+          "maxSpeed": 7.5,
+          "accel": 8,
+          "color": "#ef4444",
+          "solid": "yes",
+          "control": "driver"
+        },
+        "pos": {
+          "x": 360,
+          "y": 910
+        }
+      },
+      {
+        "id": "enter-bot",
+        "kind": "enter-exit",
+        "params": {
+          "reach": 1.5
+        },
+        "pos": {
+          "x": 700,
+          "y": 620
+        }
+      },
+      {
+        "id": "goto-1",
+        "kind": "go-to",
+        "params": {
+          "targetPos": {
+            "x": 17,
+            "y": 0.5,
+            "z": -8
+          },
+          "stopDistance": 0.6,
+          "pathfind": "on"
+        },
+        "pos": {
+          "x": 700,
+          "y": 880
+        }
+      },
+      {
+        "id": "finish",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 17,
+            "y": 0.5,
+            "z": -8
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 7
+          },
+          "color": "#fde047",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 1060,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-p",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 1060,
+          "y": 330
+        }
+      },
+      {
+        "id": "touch-b",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 1060,
+          "y": 560
+        }
+      },
+      {
+        "id": "end-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn về nhất rồi! Giỏi quá!",
+          "loseMessage": "Bot về đích trước bạn mất rồi!"
+        },
+        "pos": {
+          "x": 1360,
+          "y": 330
+        }
+      },
+      {
+        "id": "wall-n",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -12.5
+          },
+          "size": {
+            "x": 42,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#64748b",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1700,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-s",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 12.5
+          },
+          "size": {
+            "x": 42,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#64748b",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1970,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-w",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -20.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 26
+          },
+          "color": "#64748b",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 2240,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-e",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 20.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 26
+          },
+          "color": "#64748b",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1700,
+          "y": 260
+        }
+      },
+      {
+        "id": "bar-a",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 0.5,
+            "z": 4
+          },
+          "size": {
+            "x": 34,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#94a3b8",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1970,
+          "y": 260
+        }
+      },
+      {
+        "id": "bar-b",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 0.5,
+            "z": -4
+          },
+          "size": {
+            "x": 34,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#94a3b8",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 2240,
+          "y": 260
+        }
+      },
+      {
+        "id": "pillar-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -4,
+            "y": 0.5,
+            "z": 8.5
+          },
+          "size": {
+            "x": 2,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#a16207",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1700,
+          "y": 480
+        }
+      },
+      {
+        "id": "pillar-2",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 2,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#a16207",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 1970,
+          "y": 480
+        }
+      },
+      {
+        "id": "pillar-3",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 0.5,
+            "z": -8
+          },
+          "size": {
+            "x": 2,
+            "y": 1,
+            "z": 2
+          },
+          "color": "#a16207",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 2240,
+          "y": 480
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "car-player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "car-player",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "enter-1",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "key-e",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "enter-1",
+          "port": "press"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "start-1",
+          "port": "fired"
+        },
+        "to": {
+          "node": "enter-bot",
+          "port": "press"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "bot-driver",
+          "port": "self"
+        },
+        "to": {
+          "node": "enter-bot",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "car-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "goto-1",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "finish",
+          "port": "self"
+        },
+        "to": {
+          "node": "goto-1",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "goto-1",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "car-bot",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "goto-1",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "car-bot",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-p",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "finish",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-p",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "touch-p",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "car-bot",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-b",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "finish",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-b",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "touch-b",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "lose"
+        }
+      }
+    ]
+  }
+}

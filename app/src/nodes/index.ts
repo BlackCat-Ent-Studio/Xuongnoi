@@ -1,0 +1,104 @@
+import { getNodeDef, registerNode } from '../engine/registry';
+import type { NodeCategory, NodeDef } from '../engine/types';
+import { andNode, notNode, orNode } from './bool-gates';
+import { blockNode } from './block';
+import { characterNode } from './character';
+import { chaseNode } from './chase';
+import { compareNode } from './compare';
+import { carryNode } from './carry';
+import { constNode } from './const';
+import { counterNode } from './counter';
+import { fightNode } from './fight';
+import { goToNode } from './go-to';
+import { handToolNode } from './hand-tool';
+import { healthNode } from './health';
+import { interactNode } from './interact';
+import { itemNode } from './item';
+import { keyNode } from './key';
+import { mathNode } from './math';
+import { onStartNode } from './on-start';
+import { patrolNode } from './patrol';
+import { sequenceNode } from './sequence';
+import { showNumberNode } from './show-number';
+import { showTextNode } from './show-text';
+import { stickNode } from './stick';
+import { timerNode } from './timer';
+import { touchNode } from './touch';
+import { winLoseNode } from './win-lose';
+import { enterExitNode } from './enter-exit';
+import { vehicleNode } from './vehicle';
+import { randomNode } from './random';
+import { latchNode } from './latch';
+import { mapRangeNode } from './map-range';
+import { zoneSensorNode } from './zone-sensor';
+import { distanceNode } from './distance';
+import { cameraNode } from './camera';
+import { teleportNode } from './teleport';
+import { portalNode } from './portal';
+import { movingPlatformNode } from './moving-platform';
+import { rotatingPlatformNode } from './rotating-platform';
+import { shooterNode } from './shooter';
+import { spawnerNode } from './spawner';
+
+export const NODE_CATEGORY_LABELS: Record<NodeCategory, string> = {
+  input: 'Đầu vào',
+  logic: 'Logic',
+  math: 'Tính toán',
+  object: 'Vật thể',
+  action: 'Hành động',
+  brain: 'Bộ não',
+  output: 'Kết quả',
+};
+
+// Per-node state types differ; they are erased at the registry boundary.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const STEP_1_NODES: NodeDef<any>[] = [
+  keyNode,
+  stickNode,
+  onStartNode,
+  andNode,
+  orNode,
+  notNode,
+  constNode,
+  mathNode,
+  compareNode,
+  counterNode,
+  timerNode,
+  characterNode,
+  blockNode,
+  touchNode,
+  winLoseNode,
+  showNumberNode,
+  showTextNode,
+  itemNode,
+  carryNode,
+  interactNode,
+  handToolNode,
+  patrolNode,
+  goToNode,
+  chaseNode,
+  sequenceNode,
+  healthNode,
+  fightNode,
+  vehicleNode,
+  enterExitNode,
+  randomNode,
+  latchNode,
+  mapRangeNode,
+  zoneSensorNode,
+  distanceNode,
+  cameraNode,
+  teleportNode,
+  portalNode,
+  movingPlatformNode,
+  rotatingPlatformNode,
+  shooterNode,
+  spawnerNode,
+];
+
+/** Registers all step-1 nodes. Safe to call repeatedly. */
+export function registerAllNodes(): void {
+  for (const def of STEP_1_NODES) {
+    if (!getNodeDef(def.kind)) registerNode(def);
+  }
+}

@@ -1,0 +1,572 @@
+{
+  "format_version": 1,
+  "name": "Lính gác",
+  "mode": "2d-top",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "wasd"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": 0.5,
+            "z": 4
+          },
+          "speed": 5,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "guard",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -4,
+            "y": 0.5,
+            "z": 0
+          },
+          "speed": 3.5,
+          "color": "#ef4444",
+          "look": "robot",
+          "role": "bot"
+        },
+        "pos": {
+          "x": 1060,
+          "y": 40
+        }
+      },
+      {
+        "id": "patrol-1",
+        "kind": "patrol",
+        "params": {
+          "pointA": {
+            "x": -4,
+            "y": 0.5,
+            "z": 0
+          },
+          "pointB": {
+            "x": 4,
+            "y": 0.5,
+            "z": 0
+          },
+          "wait": 1,
+          "turnAtEdge": "no"
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "chase-1",
+        "kind": "chase",
+        "params": {
+          "mode": "chase",
+          "sightRange": 5,
+          "giveUpRange": 8
+        },
+        "pos": {
+          "x": 560,
+          "y": 330
+        }
+      },
+      {
+        "id": "not-1",
+        "kind": "not",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 360
+        }
+      },
+      {
+        "id": "math-x",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "math-y",
+        "kind": "math",
+        "params": {
+          "op": "add"
+        },
+        "pos": {
+          "x": 820,
+          "y": 200
+        }
+      },
+      {
+        "id": "touch-caught",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 1320,
+          "y": 40
+        }
+      },
+      {
+        "id": "touch-key",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "touch-goal",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 300,
+          "y": 516
+        }
+      },
+      {
+        "id": "end-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn lẻn qua mặt lính gác và tới đích!",
+          "loseMessage": "Lính gác bắt được bạn rồi!"
+        },
+        "pos": {
+          "x": 1580,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall-n",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": -6.5
+          },
+          "size": {
+            "x": 22,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 702
+        }
+      },
+      {
+        "id": "wall-s",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 0,
+            "y": 0.5,
+            "z": 6.5
+          },
+          "size": {
+            "x": 22,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 862
+        }
+      },
+      {
+        "id": "wall-w",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -10.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 1022
+        }
+      },
+      {
+        "id": "wall-e",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 10.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#525252",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 1182
+        }
+      },
+      {
+        "id": "door-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 6,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 12
+          },
+          "color": "#92400e",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 560,
+          "y": 640
+        }
+      },
+      {
+        "id": "key-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -8,
+            "y": 0.5,
+            "z": -4
+          },
+          "size": {
+            "x": 0.7,
+            "y": 1,
+            "z": 0.7
+          },
+          "color": "#facc15",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 560,
+          "y": 800
+        }
+      },
+      {
+        "id": "goal-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 8.5,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1.6,
+            "y": 1,
+            "z": 1.6
+          },
+          "color": "#22c55e",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 560,
+          "y": 960
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "stick-1",
+          "port": "y"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "guard",
+          "port": "self"
+        },
+        "to": {
+          "node": "patrol-1",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "guard",
+          "port": "self"
+        },
+        "to": {
+          "node": "chase-1",
+          "port": "self"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "chase-1",
+          "port": "target"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "chase-1",
+          "port": "seeing"
+        },
+        "to": {
+          "node": "not-1",
+          "port": "in"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "not-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "patrol-1",
+          "port": "on"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "patrol-1",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "math-x",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "chase-1",
+          "port": "moveX"
+        },
+        "to": {
+          "node": "math-x",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "patrol-1",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "math-y",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "chase-1",
+          "port": "moveY"
+        },
+        "to": {
+          "node": "math-y",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "math-x",
+          "port": "out"
+        },
+        "to": {
+          "node": "guard",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "math-y",
+          "port": "out"
+        },
+        "to": {
+          "node": "guard",
+          "port": "moveY"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "guard",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-caught",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-caught",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "touch-caught",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "lose"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-key",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w18",
+        "from": {
+          "node": "key-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-key",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w19",
+        "from": {
+          "node": "touch-key",
+          "port": "touching"
+        },
+        "to": {
+          "node": "key-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w20",
+        "from": {
+          "node": "touch-key",
+          "port": "touching"
+        },
+        "to": {
+          "node": "door-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w21",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-goal",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w22",
+        "from": {
+          "node": "goal-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-goal",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w23",
+        "from": {
+          "node": "touch-goal",
+          "port": "touching"
+        },
+        "to": {
+          "node": "end-1",
+          "port": "win"
+        }
+      }
+    ]
+  }
+}
