@@ -1,0 +1,14 @@
+import { openBrowser, sleep, openSample, SCRATCH } from './common.mjs';
+const { browser, page } = await openBrowser();
+await page.goto(`http://localhost:${process.env.PORT ?? 5173}/`);
+await sleep(1200);
+await page.locator('[data-tut="invite-no"]').click().catch(() => {});
+await openSample(page, 'side-stars');
+await page.evaluate(() => (document.querySelector('.app.playing') ? document.querySelector('.pbtn.stop') : document.querySelector('[data-tut="play"]')).click());
+await sleep(500);
+await page.screenshot({ path: `${SCRATCH}/bots/move2-0.png`, clip: { x: 1020, y: 56, width: 420, height: 300 } });
+await page.keyboard.down('ArrowRight');
+await sleep(1000);
+await page.screenshot({ path: `${SCRATCH}/bots/move2-1.png`, clip: { x: 1020, y: 56, width: 420, height: 300 } });
+await page.keyboard.up('ArrowRight');
+await browser.close();

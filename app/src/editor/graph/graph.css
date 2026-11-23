@@ -1,0 +1,129 @@
+/* Wiring graph. Tokens come from the shell; fallbacks are the mockup values. */
+.wc {
+  --g-bg: #15171b;
+  --g-dot: #2a2f37;
+  --g-raise: #2b3038;
+  --g-line2: #3a404a;
+  flex: 1; position: relative; overflow: hidden; min-width: 0; outline: none; cursor: grab; touch-action: none;
+  background-color: var(--g-bg); background-image: radial-gradient(circle, var(--g-dot) 1px, transparent 1.3px);
+  color: var(--text, #e7e9ec); font-size: 13px; line-height: 1.45;
+}
+.wc.panning, .wc:active { cursor: grabbing; }
+.wc-world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; }
+.wc-wires { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: visible; pointer-events: none; }
+.wc-nodes, .wc-badges, .wc-notes { position: absolute; left: 0; top: 0; }
+.wc-badges { pointer-events: none; }
+
+/* port types: colour + shape */
+.wc .type-bool { --pc: var(--t-bool, #f7d046); }
+.wc .type-number { --pc: var(--t-num, #5aa9ff); }
+.wc .type-object { --pc: var(--t-obj, #f27ad0); }
+
+/* wires */
+.wc .wc-wire { fill: none; stroke: var(--pc); stroke-width: 2.4; stroke-linecap: round; }
+.wc .wc-wire.selected { stroke-width: 4.5; filter: drop-shadow(0 0 3px var(--pc)); }
+.wc .wc-wire-hit { fill: none; stroke: transparent; stroke-width: 14; pointer-events: stroke; cursor: pointer; }
+.wc .wc-wire-temp { fill: none; stroke: var(--pc, var(--text2, #aab2bd)); stroke-width: 2.4; stroke-dasharray: 6 5; pointer-events: none; }
+.wc-badge { position: absolute; transform: translate(-50%, -50%); padding: 0 7px; font-size: 11px; font-weight: 600; line-height: 18px; white-space: nowrap; background: #0f1114; border: 1px solid var(--pc); border-radius: 9px; color: var(--text, #e7e9ec); }
+
+/* nodes */
+.wc .wc-node { position: absolute; width: max-content; min-width: 168px; white-space: nowrap; user-select: none; cursor: default; background: var(--panel2, #23272e); border: 1px solid var(--g-line2); border-radius: 8px; box-shadow: 0 6px 16px rgba(4, 6, 9, .45); }
+.wc .wc-node.selected { border-color: var(--accent, #3ecf8e); box-shadow: 0 0 0 1px var(--accent, #3ecf8e), 0 8px 20px rgba(4, 6, 9, .5); }
+.wc .wc-node.shake { animation: wc-shake .42s; }
+.wc .wc-node.new { animation: wc-newpulse 1.1s ease-out; }
+@keyframes wc-shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(2px); } }
+@keyframes wc-newpulse { 0% { outline: 3px solid var(--accent, #3ecf8e); outline-offset: 8px; } 100% { outline: 3px solid transparent; outline-offset: 0; } }
+.wc.arranging .wc-node { transition: left .24s cubic-bezier(.2, .8, .2, 1), top .24s cubic-bezier(.2, .8, .2, 1); }
+.wc .wc-node-head { display: flex; align-items: center; gap: 8px; padding: 7px 10px 7px 8px; border-bottom: 1px solid var(--line, #2c3139); cursor: move; background: transparent; color: var(--text, #e7e9ec); }
+.wc .wc-tile { --cc: var(--text2, #aab2bd); width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; flex: none; background: color-mix(in srgb, var(--cc) 17%, transparent); color: var(--cc); }
+.wc .wc-tile svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+.wc .cat-input { --cc: var(--c-input, #4cc9d9); }
+.wc .cat-logic { --cc: var(--c-logic, #a894ff); }
+.wc .cat-math { --cc: var(--c-math, #a9d861); }
+.wc .cat-object { --cc: var(--c-object, #f0965a); }
+.wc .cat-action { --cc: var(--c-action, #ff7f7f); }
+.wc .cat-brain { --cc: var(--c-brain, #d3b48a); }
+.wc .cat-output { --cc: var(--c-output, #b9c4d0); }
+.wc .wc-title { display: flex; flex-direction: column; line-height: 1.2; margin-right: auto; min-width: 0; }
+.wc .wc-name { font-weight: 600; font-size: 13px; }
+.wc .wc-sub { font-size: 11.5px; color: var(--text2, #aab2bd); }
+.wc .wc-miss-badge { margin-left: 8px; padding: 1px 7px; border-radius: 10px; background: var(--warn, #f2b33d); color: #1f1503; font-size: 11px; font-weight: 600; }
+
+/* ports: whole row is the hit area */
+.wc .wc-ports { padding: 3px 0; }
+.wc .wc-ports.ins + .wc-ports.outs { border-top: 1px solid var(--line, #2c3139); }
+.wc .wc-port { position: relative; display: flex; align-items: center; gap: 8px; height: 26px; padding: 0 16px; font-size: 12.5px; cursor: crosshair; }
+.wc .wc-port.out { justify-content: flex-end; }
+.wc .wc-port:hover { background: rgba(255, 255, 255, .06); }
+.wc .wc-dot { position: absolute; top: 50%; width: 10px; height: 10px; margin-top: -7px; box-sizing: content-box; border: 2px solid var(--panel2, #23272e); background: var(--pc); transition: box-shadow .15s; }
+.wc .wc-port.in .wc-dot { left: -8px; }
+.wc .wc-port.out .wc-dot { right: -8px; }
+.wc .wc-dot.type-bool, .wc .wc-shape.type-bool { border-radius: 50%; }
+.wc .wc-dot.type-number { transform: rotate(45deg) scale(.86); border-radius: 2px; }
+.wc .wc-dot.type-object { border-radius: 2px; }
+.wc .wc-port.missing .wc-dot { background: var(--panel2, #23272e); border-color: var(--warn, #f2b33d); }
+.wc .wc-need { font-size: 10.5px; font-weight: 600; color: var(--warn, #f2b33d); }
+.wc .wc-port.ok { background: transparent; outline: 0; }
+.wc.wiring .wc-port.no { opacity: .32; cursor: not-allowed; }
+.wc.wiring .wc-port.ok .wc-dot { animation: wc-pulse 1s ease-in-out infinite; }
+.wc.wiring .wc-port.snap { background: var(--accent-soft, rgba(62, 207, 142, .14)); }
+.wc.wiring .wc-port.bad { background: rgba(255, 123, 123, .18); outline: 1px solid var(--danger, #ff7b7b); opacity: 1; }
+@keyframes wc-pulse { 0%, 100% { box-shadow: 0 0 0 2px color-mix(in srgb, var(--pc) 25%, transparent); } 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--pc) 35%, transparent); } }
+.wc.readonly .wc-port { cursor: default; }
+.wc.readonly .wc-node-head { cursor: default; }
+
+/* semantic zoom */
+.wc.lowzoom .wc-pl, .wc.lowzoom .wc-need { visibility: hidden; }
+.wc.lowzoom .wc-name { font-size: 19px; }
+
+/* overlays (not scaled) */
+.wc-corner { position: absolute; left: 12px; bottom: 12px; z-index: 3; display: flex; flex-direction: column; gap: 8px; align-items: stretch; cursor: default; transition: opacity .15s; }
+.wc-corner.dim { opacity: .35; }
+.wc-corner-row { display: flex; gap: 8px; align-items: flex-end; }
+.wc-corner svg.ic { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.wc-coach { width: 0; min-width: 100%; box-sizing: border-box; display: flex; gap: 8px; align-items: center; justify-content: space-between; padding: 6px 6px 6px 10px; font-size: 12.5px; line-height: 1.35; color: var(--text2, #aab2bd); background: var(--panel, #1c1f25); border: 1px solid var(--g-line2); border-radius: 8px; box-shadow: 0 4px 12px rgba(4, 6, 9, .4); }
+.wc-coach[hidden] { display: none; }
+.wc-coach-x { flex: none; width: 24px; height: 24px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 5px; background: none; color: var(--text3, #8f98a4); cursor: pointer; }
+.wc-coach-x:hover { background: var(--g-raise); color: var(--text, #e7e9ec); }
+.wc-rail { display: flex; flex-direction: column; padding: 3px; background: var(--panel, #1c1f25); border: 1px solid var(--g-line2); border-radius: 10px; box-shadow: 0 4px 12px rgba(4, 6, 9, .4); }
+.wc-rail button { width: 34px; height: 32px; display: grid; place-items: center; padding: 0; border: 0; border-radius: 7px; background: none; color: var(--text2, #aab2bd); font: inherit; cursor: pointer; }
+.wc-rail button:hover { background: var(--g-raise); color: var(--text, #e7e9ec); }
+.wc-rail .wc-pct { height: 26px; font-size: 11.5px; font-weight: 600; }
+.wc-sep { border: 0; border-top: 1px solid var(--line, #2c3139); margin: 2px 4px; width: auto; height: 0; background: none; }
+.wc-mini { width: 188px; box-sizing: border-box; padding: 6px; background: var(--panel, #1c1f25); border: 1px solid var(--g-line2); border-radius: 10px; box-shadow: 0 4px 12px rgba(4, 6, 9, .4); }
+.wc-minimap { display: block; height: 96px; margin-bottom: 6px; background: #0d1014; border-radius: 6px; cursor: pointer; }
+.wc-minimap[hidden] { display: none; }
+.wc-minimap canvas { width: 100%; height: 100%; display: block; border-radius: 6px; }
+.wc-legend { display: flex; gap: 10px; padding: 0 2px; font-size: 11.5px; color: var(--text2, #aab2bd); white-space: nowrap; }
+.wc-legend-item { display: flex; align-items: center; gap: 5px; }
+.wc-shape { width: 9px; height: 9px; display: block; background: var(--pc); }
+.wc-shape.type-number { transform: rotate(45deg) scale(.86); }
+.wc-hint { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 40px; text-align: center; color: var(--text2, #aab2bd); pointer-events: none; }
+.wc-tip { position: absolute; z-index: 20; max-width: 280px; padding: 6px 10px; background: #5c1f1f; border: 1px solid var(--danger, #ff7b7b); color: #ffe3e3; font-size: 12.5px; border-radius: 6px; pointer-events: none; }
+.wc-marquee { position: absolute; z-index: 15; border: 1px dashed var(--accent, #3ecf8e); background: var(--accent-soft, rgba(62, 207, 142, .14)); pointer-events: none; }
+
+/* sticky notes */
+.wc .wc-note { position: absolute; display: flex; flex-direction: column; border: 2px solid rgba(0, 0, 0, .18); border-radius: 8px; box-shadow: 0 2px 6px rgba(0, 0, 0, .3); background: #fef3a6; color: #1f2937; overflow: hidden; cursor: move; }
+.wc .wc-note.color-yellow { background: #fef3a6; }
+.wc .wc-note.color-green { background: #c8f0c8; }
+.wc .wc-note.color-blue { background: #c7e3fb; }
+.wc .wc-note.color-pink { background: #fbcfe0; }
+.wc .wc-note.selected { border-color: var(--accent, #3ecf8e); box-shadow: 0 0 0 3px var(--accent-soft, rgba(62, 207, 142, .3)); }
+.wc .wc-note-tools { display: flex; align-items: center; gap: 6px; padding: 3px 6px; background: rgba(0, 0, 0, .07); font-size: 13px; user-select: none; }
+.wc .wc-note-grip { flex: 1; }
+.wc .wc-note-colors { display: inline-flex; gap: 4px; }
+.wc .wc-note-dot { width: 14px; height: 14px; padding: 0; border-radius: 50%; border: 1px solid rgba(0, 0, 0, .35); cursor: pointer; }
+.wc .wc-note-dot.dot-yellow { background: #fef3a6; }
+.wc .wc-note-dot.dot-green { background: #c8f0c8; }
+.wc .wc-note-dot.dot-blue { background: #c7e3fb; }
+.wc .wc-note-dot.dot-pink { background: #fbcfe0; }
+.wc .wc-note-del { border: none; background: transparent; cursor: pointer; padding: 0 2px; font-size: 13px; }
+.wc .wc-note-text { flex: 1; min-height: 0; width: 100%; box-sizing: border-box; resize: none; border: none; outline: none; background: transparent; padding: 6px 8px; font: inherit; font-size: 14px; color: inherit; cursor: text; }
+.wc .wc-note-resize { position: absolute; right: 0; bottom: 0; width: 16px; height: 16px; cursor: nwse-resize; background: linear-gradient(135deg, transparent 50%, rgba(0, 0, 0, .35) 50%); }
+.wc.readonly .wc-note { cursor: default; }
+.wc.readonly .wc-note-resize { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wc .wc-node.shake, .wc .wc-node.new, .wc.wiring .wc-port.ok .wc-dot { animation: none; }
+  .wc.arranging .wc-node { transition: none; }
+}

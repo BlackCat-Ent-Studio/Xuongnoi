@@ -1,0 +1,491 @@
+{
+  "format_version": 1,
+  "name": "Xúc xắc và vùng",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-jump",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 200
+        }
+      },
+      {
+        "id": "key-e",
+        "kind": "key",
+        "params": {
+          "key": "KeyE"
+        },
+        "pos": {
+          "x": 40,
+          "y": 330
+        }
+      },
+      {
+        "id": "player",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -5,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6",
+          "look": "human",
+          "role": "player"
+        },
+        "pos": {
+          "x": 360,
+          "y": 40
+        }
+      },
+      {
+        "id": "floor",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 4,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 24,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 700,
+          "y": 40
+        }
+      },
+      {
+        "id": "wall",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": -8.5,
+            "y": 2,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 5,
+            "z": 1
+          },
+          "color": "#737373",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 700,
+          "y": 200
+        }
+      },
+      {
+        "id": "goal",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 12,
+            "y": 1,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 2,
+            "z": 1
+          },
+          "color": "#ef4444",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 700,
+          "y": 360
+        }
+      },
+      {
+        "id": "dice-zone",
+        "kind": "zone",
+        "params": {
+          "center": {
+            "x": 1,
+            "y": 1.5,
+            "z": 0
+          },
+          "size": {
+            "x": 4,
+            "y": 3,
+            "z": 1
+          },
+          "filter": "player",
+          "color": "#22c55e"
+        },
+        "pos": {
+          "x": 360,
+          "y": 330
+        }
+      },
+      {
+        "id": "and-roll",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 360,
+          "y": 535
+        }
+      },
+      {
+        "id": "dice",
+        "kind": "random",
+        "params": {
+          "min": 1,
+          "max": 6,
+          "whole": "yes",
+          "mode": "press",
+          "seed": 0
+        },
+        "pos": {
+          "x": 620,
+          "y": 706
+        }
+      },
+      {
+        "id": "show-dice",
+        "kind": "show-number",
+        "params": {
+          "label": "Xúc xắc",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 900,
+          "y": 540
+        }
+      },
+      {
+        "id": "big-enough",
+        "kind": "compare",
+        "params": {
+          "op": "ge"
+        },
+        "pos": {
+          "x": 900,
+          "y": 660
+        }
+      },
+      {
+        "id": "five",
+        "kind": "const",
+        "params": {
+          "value": 5
+        },
+        "pos": {
+          "x": 620,
+          "y": 866
+        }
+      },
+      {
+        "id": "luck",
+        "kind": "latch",
+        "params": {
+          "start": "off"
+        },
+        "pos": {
+          "x": 1140,
+          "y": 600
+        }
+      },
+      {
+        "id": "hint",
+        "kind": "show-text",
+        "params": {
+          "text": "Đứng trong vùng xanh, bấm E để đổ xúc xắc. Được 5 hoặc 6 thì cổng mở!",
+          "corner": "bottom-left"
+        },
+        "pos": {
+          "x": 360,
+          "y": 695
+        }
+      },
+      {
+        "id": "open-text",
+        "kind": "show-text",
+        "params": {
+          "text": "Cổng đã mở! Chạy tới lá cờ đỏ.",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1380,
+          "y": 640
+        }
+      },
+      {
+        "id": "dist",
+        "kind": "distance",
+        "params": {
+          "threshold": 1.5
+        },
+        "pos": {
+          "x": 700,
+          "y": 520
+        }
+      },
+      {
+        "id": "percent",
+        "kind": "map-range",
+        "params": {
+          "inMin": 0,
+          "inMax": 18,
+          "outMin": 100,
+          "outMax": 0,
+          "clamp": "yes"
+        },
+        "pos": {
+          "x": 940,
+          "y": 380
+        }
+      },
+      {
+        "id": "show-near",
+        "kind": "show-number",
+        "params": {
+          "label": "Gần cờ (%)",
+          "corner": "top-right"
+        },
+        "pos": {
+          "x": 1160,
+          "y": 380
+        }
+      },
+      {
+        "id": "and-win",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 1380,
+          "y": 480
+        }
+      },
+      {
+        "id": "win",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Bạn gặp may và tới được lá cờ!",
+          "loseMessage": "Thua mất rồi!"
+        },
+        "pos": {
+          "x": 1600,
+          "y": 480
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "player",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-jump",
+          "port": "held"
+        },
+        "to": {
+          "node": "player",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "key-e",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "and-roll",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "dice-zone",
+          "port": "inside"
+        },
+        "to": {
+          "node": "and-roll",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "and-roll",
+          "port": "out"
+        },
+        "to": {
+          "node": "dice",
+          "port": "roll"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "dice",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-dice",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "dice",
+          "port": "value"
+        },
+        "to": {
+          "node": "big-enough",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "five",
+          "port": "value"
+        },
+        "to": {
+          "node": "big-enough",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "big-enough",
+          "port": "out"
+        },
+        "to": {
+          "node": "luck",
+          "port": "set"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "luck",
+          "port": "on"
+        },
+        "to": {
+          "node": "open-text",
+          "port": "show"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "luck",
+          "port": "on"
+        },
+        "to": {
+          "node": "and-win",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "player",
+          "port": "self"
+        },
+        "to": {
+          "node": "dist",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "goal",
+          "port": "self"
+        },
+        "to": {
+          "node": "dist",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "dist",
+          "port": "distance"
+        },
+        "to": {
+          "node": "percent",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "percent",
+          "port": "value"
+        },
+        "to": {
+          "node": "show-near",
+          "port": "value"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "dist",
+          "port": "within"
+        },
+        "to": {
+          "node": "and-win",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "and-win",
+          "port": "out"
+        },
+        "to": {
+          "node": "win",
+          "port": "win"
+        }
+      }
+    ]
+  }
+}

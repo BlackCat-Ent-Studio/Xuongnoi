@@ -1,0 +1,39 @@
+/** Vietnamese strings for the Bảng tin dock and the play-state controls. */
+export const CONSOLE_TEXT = {
+  issuesTitle: 'Việc cần sửa',
+  issuesNone: 'Không có gì cần sửa.',
+  logTitle: 'Nhật ký',
+  logEmpty: 'Chưa có gì xảy ra.',
+  view: 'Xem',
+  viewTip: 'Chọn và đưa mảnh ghép này vào giữa màn hình',
+  filterAll: 'Tất cả',
+  filterWarn: 'Cảnh báo',
+  filterError: 'Lỗi',
+  clear: 'Xóa',
+  clearTip: 'Xóa nhật ký',
+  filterAria: 'Lọc nhật ký',
+  missingWire: (node: string, port: string) => `${node}: chưa nối dây vào "${port}"`,
+  noCharacter: 'Chưa có mảnh ghép Nhân vật nên chưa có ai để chơi',
+
+  // play controls
+  restart: 'Chơi lại',
+  restartTip: 'Bắt đầu lại từ đầu (Ctrl+Enter để dừng)',
+  resume: 'Tiếp tục',
+  resumeTip: 'Chạy tiếp từ chỗ đang dừng',
+  pauseTip: 'Tạm dừng để xem giá trị trên dây',
+  stepTip: 'Chạy đúng 1 khung hình (chỉ khi đang tạm dừng)',
+  statePaused: 'Tạm dừng',
+
+  // log lines
+  logPlayStart: 'Bắt đầu chơi',
+  logPlayStop: 'Đã dừng chơi',
+  logRestart: 'Chơi lại từ đầu',
+  logPause: 'Tạm dừng',
+  logResume: 'Chạy tiếp',
+  logStep: 'Chạy 1 khung hình',
+  logWin: (msg: string) => (msg ? `Thắng: ${msg}` : 'Thắng!'),
+  logLose: (msg: string) => (msg ? `Thua: ${msg}` : 'Thua rồi'),
+  logLiveApplied: 'Đã đổi giá trị khi đang chơi',
+  logLiveDeferred: 'Sẽ áp dụng khi chơi lại',
+  blockedStructure: 'Bấm Dừng để thêm/xóa/nối',
+} as const;
