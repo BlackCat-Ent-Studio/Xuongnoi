@@ -1,0 +1,28 @@
+/** Vietnamese messages for save / load. */
+export const IO_TEXT = {
+  newBoardName: 'Game mới',
+  fallbackFileName: 'game',
+  badJson: 'Tệp này không đọc được: nội dung không phải JSON hợp lệ.',
+  notBoard: 'Tệp này không phải một game của Xưởng Nối.',
+  badVersion: 'Tệp thiếu số phiên bản hợp lệ.',
+  newerVersion: (v: number, max: number) =>
+    `Tệp này được lưu bằng phiên bản mới hơn (${v}). Bản hiện tại chỉ mở được đến phiên bản ${max}. Hãy cập nhật Xưởng Nối.`,
+  noMigration: (v: number) => `Không thể nâng cấp tệp từ phiên bản ${v}.`,
+  badName: 'Tên game không hợp lệ.',
+  badMode: 'Kiểu game không hợp lệ (phải là 2d-side, 2d-top hoặc 3d).',
+  badGraph: 'Sơ đồ nối dây trong tệp bị hỏng.',
+  badNode: (i: number) => `Mảnh ghép số ${i + 1} trong tệp bị hỏng.`,
+  dupNode: (id: string) => `Có hai mảnh ghép trùng mã "${id}".`,
+  unknownKind: (id: string, kind: string) => `Mảnh ghép "${id}" có loại "${kind}" mà Xưởng Nối không biết.`,
+  badParam: (id: string, param: string) => `Mảnh ghép "${id}": giá trị của "${param}" không hợp lệ.`,
+  badWire: (i: number) => `Dây số ${i + 1} trong tệp bị hỏng.`,
+  dupWire: (id: string) => `Có hai dây trùng mã "${id}".`,
+  wireRejected: (id: string, reason: string) => `Dây "${id}" không nối được: ${reason}.`,
+  badNotes: 'Danh sách ghi chú trong tệp bị hỏng.',
+  badNote: (i: number) => `Ghi chú số ${i + 1} trong tệp bị hỏng.`,
+  dupNote: (id: string) => `Có hai ghi chú trùng mã "${id}".`,
+  fileTooBig: 'Tệp quá lớn để là một game của Xưởng Nối.',
+  readFailed: 'Không đọc được tệp đã chọn.',
+  autosaveFailed: 'Không lưu tự động được (bộ nhớ trình duyệt đầy hoặc bị chặn).',
+  autosaveCorrupt: 'Bản lưu tự động bị hỏng nên không mở được. Bản hỏng đã được giữ lại để cứu.',
+} as const;

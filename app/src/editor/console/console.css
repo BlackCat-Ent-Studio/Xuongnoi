@@ -1,0 +1,29 @@
+/* Bảng tin dock + play-state ring */
+.cs { display: flex; height: 100%; min-height: 0; font-size: 12px; color: var(--text, #e7e9ec); }
+.cs-col { display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.cs-issues { flex: 0 0 38%; max-width: 380px; border-right: 1px solid var(--line, #2a2f37); }
+.cs-log { flex: 1 1 auto; }
+.cs-head { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border-bottom: 1px solid var(--line, #2a2f37); color: var(--text2, #aab0b8); font-weight: 600; flex: 0 0 auto; }
+.cs-head .grow { flex: 1; }
+.cs-group { display: flex; gap: 4px; }
+.cs-list { list-style: none; margin: 0; padding: 0; overflow: auto; flex: 1 1 auto; min-height: 0; }
+.cs-issue { display: flex; align-items: center; gap: 8px; padding: 5px 10px; border-bottom: 1px solid var(--line, #2a2f37); }
+.cs-issue::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--warn, #f5a524); flex: 0 0 auto; }
+.cs-issue span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.cs-empty { padding: 10px; color: var(--text3, #7b828c); }
+.cs button.cs-btn { font: inherit; font-size: 11.5px; color: var(--text2, #aab0b8); background: transparent; border: 1px solid var(--line, #2a2f37); border-radius: 5px; padding: 2px 8px; cursor: pointer; }
+.cs button.cs-btn:hover { color: var(--text, #e7e9ec); border-color: var(--text3, #7b828c); }
+.cs button.cs-btn.on { color: var(--accent, #3ecf8e); border-color: var(--accent, #3ecf8e); }
+.cs-line { display: flex; gap: 8px; padding: 3px 10px; font-family: ui-monospace, Consolas, monospace; font-size: 11.5px; }
+.cs-line time { color: var(--text3, #7b828c); flex: 0 0 auto; }
+.cs-line.info { color: var(--text2, #aab0b8); }
+.cs-line.ok { color: var(--accent, #3ecf8e); }
+.cs-line.warn { color: var(--warn, #f5a524); }
+.cs-line.error { color: var(--danger, #ef5350); }
+.cs-badge { margin-left: 6px; min-width: 16px; padding: 0 5px; border-radius: 8px; background: var(--warn, #f5a524); color: #1b1d21; font-size: 10.5px; font-weight: 700; line-height: 16px; text-align: center; }
+.cs-badge[hidden] { display: none; }
+
+/* paused: amber ring instead of green */
+.app.paused .game-box::after { border-color: var(--warn, #f5a524); }
+.app.paused .livechip i { background: var(--warn, #f5a524); }
+.topbar.paused .pstate { color: var(--warn, #f5a524); }

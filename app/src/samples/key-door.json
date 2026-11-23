@@ -1,0 +1,471 @@
+{
+  "format_version": 1,
+  "name": "Chìa khoá và cánh cửa",
+  "mode": "2d-side",
+  "graph": {
+    "nodes": [
+      {
+        "id": "stick-1",
+        "kind": "stick",
+        "params": {
+          "scheme": "arrows"
+        },
+        "pos": {
+          "x": 40,
+          "y": 40
+        }
+      },
+      {
+        "id": "key-jump",
+        "kind": "key",
+        "params": {
+          "key": "Space"
+        },
+        "pos": {
+          "x": 40,
+          "y": 190
+        }
+      },
+      {
+        "id": "key-grab",
+        "kind": "key",
+        "params": {
+          "key": "KeyE"
+        },
+        "pos": {
+          "x": 40,
+          "y": 330
+        }
+      },
+      {
+        "id": "key-throw",
+        "kind": "key",
+        "params": {
+          "key": "KeyQ"
+        },
+        "pos": {
+          "x": 40,
+          "y": 470
+        }
+      },
+      {
+        "id": "key-use",
+        "kind": "key",
+        "params": {
+          "key": "KeyF"
+        },
+        "pos": {
+          "x": 40,
+          "y": 610
+        }
+      },
+      {
+        "id": "character-1",
+        "kind": "character",
+        "params": {
+          "position": {
+            "x": -6,
+            "y": 1,
+            "z": 0
+          },
+          "speed": 5,
+          "jumpPower": 10,
+          "color": "#3b82f6",
+          "look": "human"
+        },
+        "pos": {
+          "x": 300,
+          "y": 40
+        }
+      },
+      {
+        "id": "carry-1",
+        "kind": "carry",
+        "params": {
+          "mode": "toggle",
+          "throwPower": 8
+        },
+        "pos": {
+          "x": 560,
+          "y": 40
+        }
+      },
+      {
+        "id": "interact-1",
+        "kind": "interact",
+        "params": {
+          "reach": 1.5
+        },
+        "pos": {
+          "x": 560,
+          "y": 330
+        }
+      },
+      {
+        "id": "and-1",
+        "kind": "and",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 330
+        }
+      },
+      {
+        "id": "touch-1",
+        "kind": "touch",
+        "params": {},
+        "pos": {
+          "x": 820,
+          "y": 40
+        }
+      },
+      {
+        "id": "win-lose-1",
+        "kind": "win-lose",
+        "params": {
+          "winMessage": "Cánh cửa đã mở, bạn thắng rồi!",
+          "loseMessage": "Bạn thua rồi!"
+        },
+        "pos": {
+          "x": 1080,
+          "y": 40
+        }
+      },
+      {
+        "id": "floor-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 2,
+            "y": -0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 24,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#65a30d",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 330
+        }
+      },
+      {
+        "id": "door-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 3,
+            "y": 1.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 3,
+            "z": 1
+          },
+          "color": "#92400e",
+          "type": "solid"
+        },
+        "pos": {
+          "x": 300,
+          "y": 490
+        }
+      },
+      {
+        "id": "goal-1",
+        "kind": "block",
+        "params": {
+          "position": {
+            "x": 8,
+            "y": 0.5,
+            "z": 0
+          },
+          "size": {
+            "x": 1,
+            "y": 1,
+            "z": 1
+          },
+          "color": "#22c55e",
+          "type": "pickup"
+        },
+        "pos": {
+          "x": 300,
+          "y": 650
+        }
+      },
+      {
+        "id": "key-item",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": -3,
+            "y": 0.4,
+            "z": 0
+          },
+          "size": {
+            "x": 0.8,
+            "y": 0.8,
+            "z": 0.8
+          },
+          "color": "#facc15",
+          "shape": "key",
+          "carryable": "yes"
+        },
+        "pos": {
+          "x": 300,
+          "y": 810
+        }
+      },
+      {
+        "id": "lock-1",
+        "kind": "item",
+        "params": {
+          "position": {
+            "x": 1.8,
+            "y": 0.3,
+            "z": 0
+          },
+          "size": {
+            "x": 0.6,
+            "y": 0.6,
+            "z": 0.6
+          },
+          "color": "#7c3aed",
+          "shape": "lock",
+          "carryable": "no"
+        },
+        "pos": {
+          "x": 300,
+          "y": 1048
+        }
+      },
+      {
+        "id": "hint-1",
+        "kind": "show-text",
+        "params": {
+          "text": "Bấm F để mở",
+          "color": "#7c3aed",
+          "corner": "top-left"
+        },
+        "pos": {
+          "x": 560,
+          "y": 780
+        }
+      },
+      {
+        "id": "opened-1",
+        "kind": "counter",
+        "params": {
+          "start": 0,
+          "target": 1
+        },
+        "pos": {
+          "x": 820,
+          "y": 560
+        }
+      },
+      {
+        "id": "not-1",
+        "kind": "not",
+        "params": {},
+        "pos": {
+          "x": 1080,
+          "y": 560
+        }
+      }
+    ],
+    "wires": [
+      {
+        "id": "w1",
+        "from": {
+          "node": "stick-1",
+          "port": "x"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "moveX"
+        }
+      },
+      {
+        "id": "w2",
+        "from": {
+          "node": "key-jump",
+          "port": "held"
+        },
+        "to": {
+          "node": "character-1",
+          "port": "jump"
+        }
+      },
+      {
+        "id": "w3",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w4",
+        "from": {
+          "node": "key-grab",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "grab"
+        }
+      },
+      {
+        "id": "w5",
+        "from": {
+          "node": "key-throw",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "carry-1",
+          "port": "throw"
+        }
+      },
+      {
+        "id": "w6",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "interact-1",
+          "port": "character"
+        }
+      },
+      {
+        "id": "w7",
+        "from": {
+          "node": "key-use",
+          "port": "pressed"
+        },
+        "to": {
+          "node": "interact-1",
+          "port": "press"
+        }
+      },
+      {
+        "id": "w8",
+        "from": {
+          "node": "lock-1",
+          "port": "interacted"
+        },
+        "to": {
+          "node": "and-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w9",
+        "from": {
+          "node": "carry-1",
+          "port": "holding"
+        },
+        "to": {
+          "node": "and-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w10",
+        "from": {
+          "node": "and-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "door-1",
+          "port": "hide"
+        }
+      },
+      {
+        "id": "w11",
+        "from": {
+          "node": "character-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "a"
+        }
+      },
+      {
+        "id": "w12",
+        "from": {
+          "node": "goal-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "touch-1",
+          "port": "b"
+        }
+      },
+      {
+        "id": "w13",
+        "from": {
+          "node": "touch-1",
+          "port": "touching"
+        },
+        "to": {
+          "node": "win-lose-1",
+          "port": "win"
+        }
+      },
+      {
+        "id": "w14",
+        "from": {
+          "node": "lock-1",
+          "port": "self"
+        },
+        "to": {
+          "node": "hint-1",
+          "port": "anchor"
+        }
+      },
+      {
+        "id": "w15",
+        "from": {
+          "node": "and-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "opened-1",
+          "port": "up"
+        }
+      },
+      {
+        "id": "w16",
+        "from": {
+          "node": "opened-1",
+          "port": "reached"
+        },
+        "to": {
+          "node": "not-1",
+          "port": "in"
+        }
+      },
+      {
+        "id": "w17",
+        "from": {
+          "node": "not-1",
+          "port": "out"
+        },
+        "to": {
+          "node": "hint-1",
+          "port": "show"
+        }
+      }
+    ]
+  }
+}

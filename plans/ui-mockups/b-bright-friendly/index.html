@@ -1,0 +1,1179 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Xưởng Nối — Mockup B "Sáng thân thiện"</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=Nunito:wght@800;900&display=swap&subset=vietnamese" rel="stylesheet">
+<style>
+/* ================================================================
+   DESIGN TOKENS — "Sáng thân thiện"
+   Warm paper background, white floating trays, pastel category tints
+   with dark ink text (AA), port colours fixed by type.
+   ================================================================ */
+:root{
+  /* surfaces */
+  --bg:#F3EFE8;            /* warm paper behind trays */
+  --tray:#FFFFFF;          /* panels */
+  --canvas:#FBF9F5;        /* wiring board */
+  --canvas-dot:#E3DDD2;
+  --sunk:#F6F3EE;          /* inputs, wells */
+  --line:#ECE6DC;          /* hairline dividers inside trays only */
+  /* ink */
+  --ink:#1E2230;           /* 15.6:1 on white */
+  --ink-2:#4E5466;         /* 7.4:1 on white */
+  --ink-3:#60667A;         /* 5.2:1 on wells, 5.9:1 on white */
+  /* brand */
+  --brand:#5145CD;         /* 6.6:1 white on brand */
+  --brand-ink:#3F34B0;
+  --brand-tint:#ECEAFE;
+  --brand-ring:rgba(81,69,205,.35);
+  /* ports (type colours; shape also differs for colour-blind users) */
+  --p-bool:#16A34A;  --p-bool-tint:#DCFCE7;
+  --p-num:#2563EB;   --p-num-tint:#DBEAFE;
+  --p-obj:#D9670A;   --p-obj-tint:#FFEDD5;
+  /* categories: [strong, ink on tint, tint] */
+  /* Category hues deliberately avoid the port hues (green/blue/orange) so a header colour
+     is never mistaken for a wire type. Headers use dark ink on pastel tint (all >= 7:1). */
+  --c-input:#E11D48; --c-input-ink:#9F1239; --c-input-tint:#FFE4E6;
+  --c-logic:#7C3AED; --c-logic-ink:#5B21B6; --c-logic-tint:#EDE9FE;
+  --c-math:#CA8A04;  --c-math-ink:#713F12;  --c-math-tint:#FEF9C3;
+  --c-object:#A47148;--c-object-ink:#5C3A1E;--c-object-tint:#F3E8DC;
+  --c-action:#C026D3;--c-action-ink:#86198F;--c-action-tint:#FAE8FF;
+  --c-brain:#0F9488; --c-brain-ink:#134E4A; --c-brain-tint:#D5F5EF;
+  --c-output:#475569;--c-output-ink:#1E293B;--c-output-tint:#E6EBF1;
+  --warn:#B4231F; --warn-tint:#FEE7E5;
+  --note:#FFF4C2; --note-ink:#6B4E00;
+  --danger:#C2364A; --danger-tint:#FDECEE;
+  /* shape */
+  --r-xs:8px; --r-sm:10px; --r-md:14px; --r-lg:18px; --r-pill:999px;
+  /* elevation: one declaration per surface, diffused + offset */
+  --e1:0 1px 2px rgba(60,44,20,.05),0 2px 8px -2px rgba(60,44,20,.06);
+  --e2:0 2px 4px rgba(60,44,20,.05),0 10px 24px -8px rgba(60,44,20,.12);
+  --e3:0 4px 8px rgba(60,44,20,.06),0 24px 48px -12px rgba(60,44,20,.22);
+  /* type */
+  --f-ui:"Be Vietnam Pro",system-ui,"Segoe UI",sans-serif;
+  --f-brand:"Nunito","Be Vietnam Pro",system-ui,sans-serif;
+  --t-xs:11.5px; --t-sm:12.5px; --t-md:13.5px; --t-lg:15px; --t-xl:18px;
+  /* motion */
+  --ease:cubic-bezier(.32,.72,0,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+  --dur-1:140ms; --dur-2:260ms; --dur-3:520ms;
+  /* layout */
+  --topbar:60px; --palette:248px; --side:356px; --gap:8px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:var(--f-ui);font-size:var(--t-md);color:var(--ink);background:var(--bg);
+  -webkit-font-smoothing:antialiased;overflow:hidden;caret-color:var(--brand);font-feature-settings:"tnum" 0}
+::selection{background:var(--brand-tint);color:var(--brand-ink)}
+button,input,select{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0;padding:0}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.num{font-variant-numeric:tabular-nums}
+:focus{outline:none}
+:focus-visible{outline:2.5px solid var(--brand);outline-offset:2px;border-radius:10px}
+*::-webkit-scrollbar{width:10px;height:10px}
+*::-webkit-scrollbar-thumb{background:#DDD5C8;border-radius:10px;border:3px solid transparent;background-clip:padding-box}
+*::-webkit-scrollbar-thumb:hover{background-color:#C9BFAE}
+*::-webkit-scrollbar-track{background:transparent}
+kbd{font-family:var(--f-ui);font-size:10.5px;font-weight:600;color:var(--ink-2);background:var(--tray);
+  border-radius:6px;padding:1px 6px;box-shadow:0 0 0 1px #E2DBCF inset,0 1px 0 #E2DBCF;font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ================= APP GRID ================= */
+.app{display:grid;height:100vh;padding:0 var(--gap) var(--gap);gap:var(--gap);
+  grid-template-columns:var(--palette) 1fr var(--side);grid-template-rows:var(--topbar) 1fr}
+.tray{background:var(--tray);border-radius:var(--r-lg);box-shadow:var(--e1);min-height:0;position:relative}
+
+/* ================= TOP BAR ================= */
+.topbar{grid-column:1/-1;display:flex;align-items:center;gap:10px;padding:0 4px}
+.brand{display:flex;align-items:center;gap:10px;padding-right:6px;width:calc(var(--palette) - 10px)}
+.brand-mark{width:34px;height:34px;border-radius:11px;background:var(--brand);display:grid;place-items:center;box-shadow:var(--e2)}
+.brand-name{font-family:var(--f-brand);font-weight:900;font-size:19px;letter-spacing:-.01em;color:var(--ink)}
+.board-name{display:flex;flex-direction:column;line-height:1.2;min-width:0}
+.board-name input{border:0;background:transparent;font-weight:600;font-size:var(--t-lg);padding:3px 8px;border-radius:8px;width:170px;margin-left:-8px}
+.board-name input:hover{background:rgba(255,255,255,.7)}
+.board-name input:focus-visible{background:#fff;outline-offset:0}
+.saved{font-size:var(--t-xs);color:var(--ink-3);display:flex;align-items:center;gap:5px}
+.saved::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--p-bool)}
+.saved.dirty::before{background:#D97706}
+
+.btn{white-space:nowrap;height:38px;display:inline-flex;align-items:center;gap:7px;padding:0 13px;border-radius:12px;font-weight:500;color:var(--ink);
+  transition:background var(--dur-1) var(--ease),transform var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease)}
+.btn:hover{background:rgba(255,255,255,.85)}
+.btn:active{transform:scale(.97)}
+.btn[disabled]{color:#A8A296;cursor:not-allowed;background:none;transform:none}
+.btn.icon{width:38px;padding:0;justify-content:center}
+.group{display:flex;align-items:center;background:rgba(255,255,255,.55);border-radius:14px;padding:3px;gap:2px}
+.group .btn{height:34px;border-radius:11px}
+.group .btn:hover{background:#fff}
+.sep{flex:1}
+
+/* tooltips (CSS-only, keyboard friendly via :focus-visible) */
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translate(-50%,-4px);
+  white-space:nowrap;background:var(--ink);color:#fff;font-size:var(--t-xs);font-weight:500;padding:6px 9px;border-radius:9px;
+  opacity:0;pointer-events:none;transition:opacity var(--dur-1) var(--ease),transform var(--dur-2) var(--ease);z-index:40}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1;transform:translate(-50%,0);transition-delay:350ms}
+
+/* segmented control with sliding thumb */
+.seg{position:relative;display:inline-grid;grid-auto-flow:column;grid-auto-columns:1fr;background:rgba(255,255,255,.55);border-radius:14px;padding:3px}
+.seg-thumb{position:absolute;top:3px;bottom:3px;left:3px;border-radius:11px;background:#fff;box-shadow:var(--e1);
+  transition:transform var(--dur-3) var(--ease),width var(--dur-3) var(--ease)}
+.seg button{position:relative;z-index:1;height:34px;padding:0 12px;border-radius:11px;font-weight:500;color:var(--ink-2);
+  display:flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:color var(--dur-2) var(--ease)}
+.seg button[aria-checked="true"]{color:var(--ink);font-weight:600}
+.seg .lbl-sm{font-size:var(--t-xs);color:var(--ink-3);font-weight:500}
+
+/* Primary: Chơi ⇄ Sửa (button-in-button icon) */
+.play{height:44px;display:inline-flex;align-items:center;gap:10px;padding:0 6px 0 20px;border-radius:var(--r-pill);
+  background:var(--brand);color:#fff;font-weight:700;font-size:16px;box-shadow:0 2px 0 rgba(40,30,140,.25),0 10px 22px -8px rgba(81,69,205,.65);
+  transition:background var(--dur-2) var(--ease),transform var(--dur-1) var(--ease),box-shadow var(--dur-2) var(--ease)}
+.play:hover{background:var(--brand-ink)}
+.play:active{transform:scale(.97)}
+.play .knob{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.play:hover .knob{transform:translateX(2px) scale(1.06)}
+.play kbd{background:rgba(255,255,255,.16);color:#fff;box-shadow:none;margin-left:-2px}
+.play .face{display:flex;align-items:center;gap:8px}
+.play .face-edit{display:none}
+body.playing .play{background:var(--ink);box-shadow:0 2px 0 rgba(0,0,0,.25),0 10px 22px -8px rgba(30,34,48,.6)}
+body.playing .play:hover{background:#000}
+body.playing .play .face-play{display:none}
+body.playing .play .face-edit{display:flex}
+
+/* ================= PALETTE ================= */
+.palette{display:flex;flex-direction:column;overflow:hidden;transition:opacity var(--dur-2) var(--ease)}
+.pal-head{padding:14px 14px 10px}
+.pal-title{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px}
+.pal-title h2{margin:0;font-size:var(--t-lg);font-weight:700}
+.pal-title span{font-size:var(--t-xs);color:var(--ink-3)}
+.search{display:flex;align-items:center;gap:8px;background:var(--sunk);border-radius:12px;padding:0 10px;height:40px;color:var(--ink-3);
+  transition:box-shadow var(--dur-1) var(--ease),background var(--dur-1) var(--ease)}
+.search:focus-within{background:#fff;box-shadow:0 0 0 2px var(--brand) inset}
+.search input{flex:1;border:0;background:transparent;min-width:0;height:100%;color:var(--ink)}
+.search input::placeholder{color:var(--ink-3)}
+.pal-note{margin:10px 0 0;width:100%;display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:12px;background:var(--note);color:var(--note-ink);font-weight:600;
+  transition:transform var(--dur-1) var(--ease)}
+.pal-note:hover{transform:translateY(-1px)}
+.pal-list{overflow:auto;padding:2px 8px 14px;flex:1}
+.cat{margin-top:6px}
+.cat-h{width:100%;display:flex;align-items:center;gap:9px;padding:7px 8px;border-radius:10px;font-weight:600;font-size:var(--t-sm);color:var(--ink)}
+.cat-h:hover{background:var(--sunk)}
+.cat-ic{width:24px;height:24px;border-radius:8px;display:grid;place-items:center;background:var(--tint);color:var(--ink-c)}
+.cat-ic svg.i{width:15px;height:15px}
+.cat-h .count{margin-left:auto;font-size:var(--t-xs);color:var(--ink-3);font-weight:500}
+.cat-h .chev{width:16px;height:16px;color:var(--ink-3);transition:transform var(--dur-2) var(--ease)}
+.cat[data-open="false"] .chev{transform:rotate(-90deg)}
+.cat-body{display:grid;grid-template-rows:1fr;transition:grid-template-rows var(--dur-2) var(--ease)}
+.cat[data-open="false"] .cat-body{grid-template-rows:0fr}
+.cat-body>div{overflow:hidden;display:grid;gap:2px;padding-left:10px}
+.item{position:relative;display:flex;align-items:center;gap:9px;padding:7px 8px 7px 10px;border-radius:10px;text-align:left;width:100%;
+  color:var(--ink);transition:background var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+.item::before{content:"";width:8px;height:8px;border-radius:3px;background:var(--strong);flex:none}
+.item:hover,.item:focus-visible{background:var(--tint)}
+.item:active{transform:scale(.98)}
+.item .add{margin-left:auto;opacity:0;color:var(--ink-c);transition:opacity var(--dur-1) var(--ease)}
+.item:hover .add,.item:focus-visible .add{opacity:1}
+.item mark{background:#FFE58A;color:inherit;border-radius:3px;padding:0 1px}
+.pal-empty{padding:24px 12px;color:var(--ink-2);text-align:center;font-size:var(--t-sm);display:none}
+body.playing .palette{opacity:.45;pointer-events:none}
+/* hover card for palette items */
+.hovercard{position:fixed;z-index:30;width:248px;background:#fff;border-radius:var(--r-md);box-shadow:var(--e3);padding:12px 14px;
+  opacity:0;transform:translateX(-6px);pointer-events:none;transition:opacity var(--dur-1) var(--ease),transform var(--dur-2) var(--ease)}
+.hovercard.on{opacity:1;transform:none}
+.hovercard h4{margin:0 0 4px;font-size:var(--t-md);display:flex;align-items:center;gap:8px}
+.hovercard p{margin:0;color:var(--ink-2);font-size:var(--t-sm);line-height:1.55}
+.hovercard .hint{margin-top:8px;font-size:var(--t-xs);color:var(--ink-3);display:flex;gap:6px;align-items:center}
+
+/* ================= CANVAS ================= */
+.board{overflow:hidden;touch-action:none;background:var(--canvas);
+  background-image:radial-gradient(var(--canvas-dot) 1.2px,transparent 1.3px);background-size:22px 22px}
+.world{position:absolute;left:0;top:0;width:2000px;height:1600px;cursor:grab;transform-origin:0 0;transition:transform var(--dur-3) var(--ease)}
+.world.dragging{transition:none}
+svg.wires{position:absolute;left:0;top:0;overflow:visible;pointer-events:none}
+.wire{fill:none;stroke-width:3;stroke-linecap:round;opacity:.9;transition:stroke-width var(--dur-1) var(--ease),opacity var(--dur-2) var(--ease)}
+.wire.bool{stroke:var(--p-bool)} .wire.number{stroke:var(--p-num)} .wire.object{stroke:var(--p-obj)}
+.wire-under{fill:none;stroke:var(--canvas);stroke-width:7;stroke-linecap:round}
+.wire.hot{stroke-width:4}
+.board.has-sel .wire:not(.hot){opacity:.5}
+body.playing .wire.live{stroke-dasharray:2 9;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-22}}
+
+.node{position:absolute;width:max-content;min-width:var(--w,184px);max-width:260px;background:#fff;border-radius:var(--r-md);box-shadow:var(--e2);user-select:none;
+  transition:box-shadow var(--dur-2) var(--ease),transform var(--dur-2) var(--ease)}
+.node:hover{box-shadow:var(--e3)}
+.node.sel{box-shadow:0 0 0 2.5px var(--brand),var(--e3)}
+.node.dragging{transform:scale(1.02) rotate(-.4deg);box-shadow:var(--e3);z-index:5;transition:none}
+.node-h{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:var(--r-md) var(--r-md) 0 0;background:var(--tint);cursor:grab}
+.node-h:active{cursor:grabbing}
+.node-ic{width:24px;height:24px;border-radius:8px;background:#fff;color:var(--ink-c);display:grid;place-items:center;flex:none}
+.node-ic svg.i{width:15px;height:15px}
+.node-t{font-weight:700;font-size:var(--t-sm);color:var(--ink-c);line-height:1.15}
+.node-s{display:block;font-weight:500;font-size:var(--t-xs);color:var(--ink-c);opacity:.85}
+.ports{padding:6px 0 8px}
+.port{position:relative;display:flex;align-items:center;gap:6px;height:24px;padding:0 14px;font-size:var(--t-sm);color:var(--ink-2);white-space:nowrap}
+.port.out{justify-content:flex-end}
+.port.in+.port.out,.port.out+.port.in{margin-top:4px}
+.port.out+.port.in{border-top:1px dashed var(--line);padding-top:4px;height:28px}
+.dot{position:absolute;width:12px;height:12px;top:50%;margin-top:-6px;background:var(--pc);box-shadow:0 0 0 2.5px #fff;cursor:crosshair;
+  transition:transform var(--dur-2) var(--ease-spring)}
+.port.in .dot{left:-6px} .port.out .dot{right:-6px}
+.port.out+.port.in .dot{margin-top:-4px}
+.port:hover .dot{transform:scale(1.35)}
+.port[data-t="bool"]{--pc:var(--p-bool)} .port[data-t="bool"] .dot{border-radius:50%}
+.port[data-t="number"]{--pc:var(--p-num)} .port[data-t="number"] .dot{border-radius:3px;transform:rotate(45deg) scale(.88)}
+.port[data-t="number"]:hover .dot{transform:rotate(45deg) scale(1.2)}
+.port[data-t="object"]{--pc:var(--p-obj)} .port[data-t="object"] .dot{border-radius:3.5px}
+.pv{display:none;font-size:var(--t-xs);font-weight:700;padding:1px 7px;border-radius:var(--r-pill);font-variant-numeric:tabular-nums}
+body.playing .pv{display:inline-block}
+.pv.bool-on{background:var(--p-bool-tint);color:#14532D}
+.pv.bool-off{background:var(--sunk);color:var(--ink-3)}
+.pv.number{background:var(--p-num-tint);color:#1E3A8A}
+.node-chip{margin:0 10px 10px;padding:5px 9px;border-radius:9px;background:var(--sunk);font-size:var(--t-xs);color:var(--ink-2);display:flex;gap:6px;align-items:center}
+.node-chip b{color:var(--ink);font-weight:600}
+.more{margin:0 10px 10px;width:calc(100% - 20px);font-size:var(--t-xs);color:var(--ink-3);padding:4px 8px;border-radius:8px;text-align:left}
+.more:hover{background:var(--sunk);color:var(--ink-2)}
+.sticky{position:absolute;width:196px;background:var(--note);color:var(--note-ink);border-radius:var(--r-md);padding:12px 14px 14px;
+  box-shadow:var(--e1);transform:rotate(-1.2deg);font-size:var(--t-sm);line-height:1.5}
+.sticky b{display:block;font-size:var(--t-md);margin-bottom:2px}
+/* floating canvas chrome */
+.float{position:absolute;z-index:6;background:rgba(255,255,255,.92);border-radius:14px;box-shadow:var(--e2);display:flex;align-items:center;gap:2px;padding:4px}
+.float .btn{height:34px;border-radius:10px;font-size:var(--t-sm)}
+.float .btn:hover{background:var(--sunk)}
+.tools{left:12px;top:12px}
+.dock{right:12px;top:12px;padding:4px 4px 4px 12px;gap:4px}
+.dock-l{font-size:var(--t-xs);color:var(--ink-3);font-weight:600;margin-right:4px}
+.tg{height:30px;padding:0 10px;border-radius:9px;font-size:var(--t-xs);font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:6px;background:var(--sunk);
+  transition:background var(--dur-1) var(--ease),color var(--dur-1) var(--ease)}
+.tg[aria-pressed="true"]{background:var(--brand-tint);color:var(--brand-ink)}
+.tg .sw{width:22px;height:13px;border-radius:9px;background:#D4CCBE;position:relative;transition:background var(--dur-2) var(--ease)}
+.tg .sw::after{content:"";position:absolute;left:2px;top:2px;width:9px;height:9px;border-radius:50%;background:#fff;transition:transform var(--dur-2) var(--ease-spring)}
+.tg[aria-pressed="true"] .sw{background:var(--brand)}
+.tg[aria-pressed="true"] .sw::after{transform:translateX(9px)}
+.mapwrap{right:12px;bottom:12px;flex-direction:column;align-items:stretch;padding:8px;gap:6px;width:212px}
+.legendwrap{left:12px;bottom:12px;padding:8px 12px}
+.legend{display:flex;gap:12px;font-size:var(--t-xs);color:var(--ink-2);align-items:center}
+.legend b{font-weight:600;color:var(--ink)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:9px;height:9px;background:var(--pc)}
+.minimap{position:relative;height:84px;border-radius:9px;background:var(--canvas);overflow:hidden;cursor:pointer}
+.minimap i{position:absolute;border-radius:2px;background:var(--strong);opacity:.75}
+.minimap .vp{position:absolute;border:1.5px solid var(--brand);border-radius:4px;background:rgba(81,69,205,.06);transition:all var(--dur-3) var(--ease)}
+.zoom{display:flex;align-items:center;justify-content:space-between}
+.zoom .btn{height:30px;width:30px;padding:0;justify-content:center}
+.zoom .btn:hover{background:var(--sunk)}
+.zoom output{font-size:var(--t-xs);font-weight:600;color:var(--ink-2);min-width:42px;text-align:center}
+.zoom .fit{white-space:nowrap;width:auto;padding:0 8px;font-size:var(--t-xs);font-weight:600}
+.play-banner{position:absolute;left:50%;bottom:12px;z-index:7;transform:translate(-50%,160%);display:flex;align-items:center;gap:10px;
+  background:var(--ink);color:#fff;padding:8px 8px 8px 14px;border-radius:var(--r-pill);font-size:var(--t-sm);box-shadow:var(--e3);
+  transition:transform var(--dur-3) var(--ease)}
+.play-banner .live{width:8px;height:8px;border-radius:50%;background:#4ADE80;box-shadow:0 0 0 4px rgba(74,222,128,.25);animation:pulse 1.6s var(--ease) infinite}
+.play-banner button{background:rgba(255,255,255,.14);padding:5px 11px;border-radius:var(--r-pill);font-weight:600;font-size:var(--t-xs)}
+.play-banner button:hover{background:rgba(255,255,255,.24)}
+body.playing .play-banner{transform:translate(-50%,0)}
+body.playing .legendwrap{opacity:0}
+body.playing .tools{opacity:0;pointer-events:none}
+@keyframes pulse{50%{box-shadow:0 0 0 7px rgba(74,222,128,0)}}
+
+/* ================= SIDE: GAME + PROPERTIES ================= */
+.side{display:flex;flex-direction:column;gap:var(--gap);min-height:0}
+.game{flex:none;overflow:hidden;padding:6px}
+.game-head{display:flex;align-items:center;justify-content:space-between;padding:4px 6px 8px 8px}
+.game-head h3{margin:0;font-size:var(--t-md);font-weight:700;display:flex;align-items:center;gap:8px}
+.state-pill{font-size:var(--t-xs);font-weight:600;padding:2px 9px;border-radius:var(--r-pill);background:var(--sunk);color:var(--ink-2);display:inline-flex;align-items:center;gap:6px}
+.state-pill::before{content:"";width:6px;height:6px;border-radius:50%;background:#B9B1A3}
+body.playing .state-pill{background:var(--p-bool-tint);color:#14532D}
+body.playing .state-pill::before{background:var(--p-bool);animation:pulse 1.6s infinite}
+.stage{position:relative;aspect-ratio:16/10;border-radius:12px;overflow:hidden;background:#E8F4FF}
+.stage>svg{position:absolute;inset:0;width:100%;height:100%}
+.stage .scene{opacity:0;transition:opacity var(--dur-3) var(--ease)}
+.stage .scene.on{opacity:1}
+.hud{position:absolute;top:8px;display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.9);padding:3px 10px 3px 6px;border-radius:var(--r-pill);
+  font-weight:700;font-size:var(--t-sm);font-variant-numeric:tabular-nums;color:var(--ink)}
+.hud.l{left:8px} .hud.r{right:8px}
+.hud small{font-weight:500;color:var(--ink-2)}
+.stage-cover{position:absolute;inset:0;display:grid;place-items:center;background:rgba(251,249,245,.55);transition:opacity var(--dur-3) var(--ease)}
+.stage-cover button{display:flex;align-items:center;gap:8px;background:#fff;color:var(--brand-ink);font-weight:700;padding:9px 16px 9px 12px;border-radius:var(--r-pill);box-shadow:var(--e2)}
+body.playing .stage-cover{opacity:0;pointer-events:none}
+.player{transform-box:fill-box}
+body.playing .player{animation:run 3.2s var(--ease) infinite}
+@keyframes run{0%{transform:translate(0,0)}22%{transform:translate(46px,-34px)}40%{transform:translate(90px,0)}70%{transform:translate(150px,0)}85%{transform:translate(150px,-30px)}100%{transform:translate(0,0)}}
+body.playing .star{animation:tw 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes tw{50%{transform:scale(.82) rotate(12deg)}}
+.game.max{position:fixed;z-index:20;left:calc(var(--palette) + var(--gap)*2);right:var(--gap);top:calc(var(--topbar));bottom:var(--gap);
+  box-shadow:var(--e3);animation:grow var(--dur-3) var(--ease)}
+.game.max .stage{aspect-ratio:auto;height:calc(100% - 44px)}
+@keyframes grow{from{opacity:.4;transform:scale(.96)}}
+
+.props{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.props-head{display:flex;align-items:center;gap:10px;padding:14px 16px 12px}
+.props-head .node-ic{width:34px;height:34px;border-radius:11px;background:var(--tint)}
+.props-head .node-ic svg.i{width:19px;height:19px}
+.props-head h3{margin:0;font-size:var(--t-lg);font-weight:700;line-height:1.2}
+.props-head p{margin:1px 0 0;font-size:var(--t-xs);color:var(--ink-3)}
+.props-head .act{margin-left:auto;display:flex;gap:2px}
+.props-head .act .btn{height:32px;width:32px}
+.props-head .act .btn:hover{background:var(--sunk)}
+.props-body{overflow:auto;padding:0 16px 16px;flex:1}
+.desc{font-size:var(--t-sm);color:var(--ink-2);line-height:1.55;margin:0 0 14px;background:var(--sunk);padding:9px 11px;border-radius:11px}
+.lock{display:none;align-items:center;gap:8px;font-size:var(--t-sm);color:#713F12;background:#FEF3C7;padding:9px 11px;border-radius:11px;margin-bottom:12px}
+body.playing .lock{display:flex}
+body.playing .props-body .field{opacity:.55;pointer-events:none}
+.field{margin-bottom:16px}
+.field>label,.field>.lab{display:flex;justify-content:space-between;align-items:baseline;font-weight:600;font-size:var(--t-sm);margin-bottom:7px}
+.field .hint{font-weight:500;color:var(--ink-3);font-size:var(--t-xs)}
+.inp{width:100%;height:38px;border:0;border-radius:11px;background:var(--sunk);padding:0 12px;transition:box-shadow var(--dur-1) var(--ease),background var(--dur-1) var(--ease)}
+.inp:hover{background:#F0ECE5}
+.inp:focus-visible{outline:none;background:#fff;box-shadow:0 0 0 2px var(--brand) inset}
+.xyz{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.xyz label{position:relative}
+.xyz span{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:var(--t-xs);font-weight:700;color:var(--ink-3)}
+.xyz .inp{padding-left:26px;font-variant-numeric:tabular-nums}
+.looks{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.look{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 4px 6px;border-radius:12px;background:var(--sunk);font-size:var(--t-xs);font-weight:500;color:var(--ink-2);
+  transition:background var(--dur-1) var(--ease),box-shadow var(--dur-1) var(--ease),transform var(--dur-1) var(--ease)}
+.look svg{width:44px;height:40px}
+.look:hover{background:#EEE9E1}
+.look:active{transform:scale(.96)}
+.look[aria-checked="true"]{background:var(--brand-tint);color:var(--brand-ink);font-weight:700;box-shadow:0 0 0 2px var(--brand) inset}
+.swatches{display:flex;gap:7px;align-items:center}
+.swatch{width:28px;height:28px;border-radius:50%;background:var(--c);box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform var(--dur-2) var(--ease-spring)}
+.swatch:hover{transform:scale(1.12)}
+.swatch[aria-checked="true"]{box-shadow:0 0 0 2px #fff,0 0 0 4px var(--c)}
+.swatch.custom{background:conic-gradient(#f43f5e,#f59e0b,#22c55e,#06b6d4,#6366f1,#f43f5e);position:relative;overflow:hidden}
+.swatch.custom input{opacity:0;position:absolute;inset:0;cursor:pointer}
+.slider{display:flex;align-items:center;gap:10px}
+input[type=range]{-webkit-appearance:none;appearance:none;flex:1;height:6px;border-radius:6px;background:linear-gradient(var(--brand),var(--brand)) 0/var(--v,50%) 100% no-repeat,#E7E1D6}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 0 0 2px var(--brand),var(--e1);transition:transform var(--dur-2) var(--ease-spring)}
+input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15)}
+input[type=range]:focus-visible{outline:none}
+input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 2px var(--brand),0 0 0 6px var(--brand-ring)}
+.slider output{min-width:44px;text-align:center;font-weight:700;font-size:var(--t-sm);background:var(--sunk);border-radius:9px;padding:5px 0;font-variant-numeric:tabular-nums}
+.seg.full{display:grid;width:100%;background:var(--sunk)}
+.seg.full .seg-thumb{box-shadow:var(--e1)}
+.keycap{display:flex;align-items:center;justify-content:space-between;height:44px;border-radius:12px;background:var(--sunk);padding:0 8px 0 14px;width:100%}
+.keycap kbd{font-size:13px;padding:4px 12px}
+.keycap.listening{box-shadow:0 0 0 2px var(--brand) inset;background:#fff}
+.props-foot{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+.props-foot .btn{height:36px;background:var(--sunk);font-size:var(--t-sm)}
+.props-foot .btn:hover{background:#EEE9E1}
+.props-foot .danger{margin-left:auto;color:var(--danger);background:transparent}
+.props-foot .danger:hover{background:var(--danger-tint)}
+.empty{padding:6px 16px 16px;color:var(--ink-2)}
+.empty h3{margin:6px 0 4px;font-size:var(--t-lg);color:var(--ink)}
+.empty p{margin:0 0 14px;font-size:var(--t-sm);line-height:1.55}
+.empty ul{list-style:none;padding:0;margin:0;display:grid;gap:8px;font-size:var(--t-sm)}
+.empty li{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:var(--sunk);border-radius:10px}
+
+/* ================= TUTORIAL ================= */
+.tut{position:absolute;left:8px;right:8px;bottom:8px;z-index:8;background:#fff;border-radius:var(--r-md);box-shadow:var(--e3);padding:12px 14px;
+  transform:translateY(16px);opacity:0;pointer-events:none;transition:transform var(--dur-3) var(--ease),opacity var(--dur-2) var(--ease)}
+body.tutorial .tut{transform:none;opacity:1;pointer-events:auto}
+body.tutorial .pal-list{padding-bottom:330px}
+.tut-top .lesson{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tut-top{display:flex;align-items:center;gap:8px;font-size:var(--t-xs);color:var(--ink-3);font-weight:600}
+.tut-top .step{white-space:nowrap;color:var(--brand-ink);background:var(--brand-tint);padding:2px 8px;border-radius:var(--r-pill);font-variant-numeric:tabular-nums}
+.tut-top .x{margin-left:auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--ink-3)}
+.tut-top .x:hover{background:var(--sunk);color:var(--ink)}
+.bars{display:grid;grid-auto-flow:column;gap:4px;margin:10px 0 12px}
+.bars i{height:5px;border-radius:5px;background:#EEE8DE;transition:background var(--dur-3) var(--ease)}
+.bars i.done{background:var(--brand)}
+.tut h4{text-wrap:balance;margin:0 0 5px;font-size:var(--t-md);font-weight:700;line-height:1.3}
+.tut p{margin:0;font-size:var(--t-sm);color:var(--ink-2);line-height:1.6}
+.tut .tip{margin-top:10px;display:flex;gap:8px;font-size:var(--t-xs);color:var(--ink-2);background:var(--sunk);border-radius:10px;padding:8px 10px;line-height:1.5}
+.tut-nav{display:flex;justify-content:space-between;align-items:center;margin-top:12px}
+.tut-nav .btn{height:36px;font-size:var(--t-sm)}
+.tut-nav .btn:hover{background:var(--sunk)}
+.tut-nav .next{background:var(--brand);color:#fff;font-weight:600;padding:0 14px}
+.tut-nav .next:hover{background:var(--brand-ink)}
+.ring{position:fixed;z-index:25;pointer-events:none;border-radius:14px;box-shadow:0 0 0 3px var(--brand),0 0 0 9px var(--brand-ring);
+  opacity:0;transition:left var(--dur-3) var(--ease),top var(--dur-3) var(--ease),width var(--dur-3) var(--ease),height var(--dur-3) var(--ease),opacity var(--dur-2) var(--ease)}
+body.tutorial .ring{opacity:1;animation:ringp 1.8s var(--ease) infinite}
+@keyframes ringp{50%{box-shadow:0 0 0 3px var(--brand),0 0 0 14px rgba(81,69,205,0)}}
+.ring-label{position:absolute;left:calc(100% + 14px);top:50%;transform:translateY(-50%);}
+.ring[data-pos="left"] .ring-label{left:auto;right:calc(100% + 14px)}
+.ring[data-pos="below"] .ring-label{left:50%;top:calc(100% + 12px);transform:translateX(-50%)}
+.ring[data-pos="none"] .ring-label{display:none}
+.ring-label{white-space:nowrap;background:var(--brand);color:#fff;font-size:var(--t-xs);font-weight:600;padding:5px 10px;border-radius:var(--r-pill)}
+
+/* ================= TOAST (overlay; never shifts layout) ================= */
+.toasts{position:fixed;z-index:50;left:calc(var(--palette) + var(--gap)*2);right:calc(var(--side) + var(--gap)*2);top:calc(var(--topbar) + 60px);
+  display:flex;flex-direction:column;align-items:center;gap:8px;pointer-events:none}
+.toast{display:flex;align-items:center;gap:10px;background:var(--ink);color:#fff;padding:9px 10px 9px 12px;border-radius:14px;box-shadow:var(--e3);font-size:var(--t-sm);
+  pointer-events:auto;animation:tin var(--dur-3) var(--ease)}
+.toast .ok{width:24px;height:24px;border-radius:50%;background:#22C55E;display:grid;place-items:center;color:#fff}
+.toast .ok svg.i{width:14px;height:14px;stroke-width:2.5}
+.toast button{color:#C7C2FF;font-weight:600;padding:3px 8px;border-radius:8px}
+.toast button:hover{background:rgba(255,255,255,.1)}
+.toast.out{animation:tout var(--dur-2) var(--ease) forwards}
+@keyframes tin{from{opacity:0;transform:translateY(-10px) scale(.97)}}
+@keyframes tout{to{opacity:0;transform:translateY(-8px) scale(.97)}}
+
+/* required input that is not wired yet */
+.port.need .dot{background:#fff;box-shadow:0 0 0 2px var(--warn),0 0 0 4.5px #fff}
+.port.need .pl{color:var(--warn);font-weight:600}
+.need-tag{font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-tint);padding:1px 6px;border-radius:var(--r-pill)}
+.node-warn{position:absolute;right:10px;top:-11px;display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;color:var(--warn);background:var(--warn-tint);padding:2px 8px 2px 6px;border-radius:var(--r-pill);box-shadow:0 0 0 2px var(--canvas)}
+.node-warn svg.i{width:12px;height:12px;stroke-width:2.2}
+.node.landed{animation:land var(--dur-3) var(--ease-spring)}
+@keyframes land{from{transform:translateY(-14px) scale(.94);opacity:0}}
+.ghost{position:absolute;border:2px dashed var(--brand);border-radius:var(--r-md);background:rgba(81,69,205,.05);pointer-events:none;animation:ghost 900ms var(--ease) forwards}
+@keyframes ghost{0%{opacity:0;transform:scale(1.08)}30%{opacity:1;transform:none}100%{opacity:0}}
+.wire.temp{stroke-dasharray:6 6;opacity:.8}
+.port.can-drop .dot{transform:scale(1.5)}
+body.wiring .port.in:not(.can-drop){opacity:.4}
+/* secondary "Chơi lại" — only while playing */
+.restart{white-space:nowrap;display:none;height:44px;padding:0 14px;border-radius:var(--r-pill);background:#fff;box-shadow:var(--e1);font-weight:600;align-items:center;gap:7px}
+.restart:hover{background:var(--brand-tint);color:var(--brand-ink)}
+body.playing .restart{display:inline-flex}
+.stage-hint{display:flex;align-items:center;gap:8px;padding:9px 8px 4px;font-size:var(--t-xs);color:var(--ink-2)}
+.stage-hint button{white-space:nowrap;margin-left:auto;display:inline-flex;align-items:center;gap:6px;color:var(--brand-ink);font-weight:700;padding:5px 10px;border-radius:var(--r-pill);background:var(--brand-tint)}
+body.playing .stage-hint .idle{display:none}
+.stage-hint .run{display:none}
+body.playing .stage-hint .run{display:flex;gap:8px;align-items:center}
+/* empty board */
+.board-empty{position:absolute;inset:0;z-index:4;display:none;place-items:center}
+body.empty-board .board-empty{display:grid}
+body.empty-board .world,body.empty-board .mapwrap,body.empty-board #tTidy{display:none}
+.be-card{width:420px;text-align:center;padding:8px}
+.be-card svg.art{width:220px;height:110px;margin-bottom:6px}
+.be-card h3{text-wrap:balance;margin:0 0 6px;font-size:22px;font-weight:700;letter-spacing:-.01em}
+.be-card p{margin:0 auto 18px;max-width:340px;color:var(--ink-2);line-height:1.6;font-size:var(--t-md)}
+.be-acts{display:grid;gap:8px}
+.be-acts button{display:flex;align-items:center;gap:12px;text-align:left;padding:12px 14px;border-radius:var(--r-md);background:#fff;box-shadow:var(--e1);transition:transform var(--dur-1) var(--ease),box-shadow var(--dur-2) var(--ease)}
+.be-acts button:hover{transform:translateY(-1px);box-shadow:var(--e2)}
+.be-acts button.primary{background:var(--brand);color:#fff}
+.be-acts b{display:block;font-size:var(--t-md)}
+.be-acts small{font-size:var(--t-xs);opacity:.85}
+.be-acts .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:var(--sunk);color:var(--ink-2);flex:none}
+.be-acts .primary .ico{background:rgba(255,255,255,.18);color:#fff}
+body.playing .group .btn .t{display:none} body.playing .group .btn{width:36px;padding:0;justify-content:center}
+body.playing .play kbd{display:none}
+/* stay on one line down to 1280px */
+@media (max-width:1400px){
+  #btnGuide .t{display:none}
+  .dock{top:58px} .dock-l{display:none}
+  .group .btn .t{display:none} .group .btn{width:36px;padding:0;justify-content:center}
+  .board-name input{width:150px} .brand{width:auto}
+  .play kbd{display:none}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:1ms!important;animation-iteration-count:1!important;transition-duration:1ms!important}
+}
+</style>
+</head>
+<body class="tutorial">
+<!-- ============ ICON SPRITE (authored, 1.75 stroke, rounded) ============ -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.4-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/></symbol>
+  <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6.5" y="6.5" width="11" height="11" rx="2.5" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-restart" viewBox="0 0 24 24"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3"/><path d="M4.5 4.5v4h4"/></symbol>
+  <symbol id="i-warn" viewBox="0 0 24 24"><path d="M12 4 21 19.5H3Z"/><path d="M12 10v4.5M12 17h.01"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h3.6l2 2.2h7.4a2 2 0 0 1 2 2v7.8a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2Z"/></symbol>
+  <symbol id="i-save" viewBox="0 0 24 24"><path d="M5 4.5h11l3.5 3.5v11a1 1 0 0 1-1 1h-13a1 1 0 0 1-1-1v-13.5a1 1 0 0 1 .5-1Z"/><path d="M8 4.5v4h7v-4M8 20v-6h8v6"/></symbol>
+  <symbol id="i-new" viewBox="0 0 24 24"><path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-10Z"/><path d="M14 3.5v5h5M12 11.5v6M9 14.5h6"/></symbol>
+  <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4H11v16H5.5A1.5 1.5 0 0 1 4 18.5Z"/><path d="M20 5.5A1.5 1.5 0 0 0 18.5 4H13v16h5.5a1.5 1.5 0 0 0 1.5-1.5Z"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14 4.5 9.5 9 5"/><path d="M4.5 9.5H15a5 5 0 0 1 0 10h-3"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 24 24"><path d="m15 14 4.5-4.5L15 5"/><path d="M19.5 9.5H9a5 5 0 0 0 0 10h3"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-left" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-right" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+  <symbol id="i-max" viewBox="0 0 24 24"><path d="M14 4.5h5.5V10M10 19.5H4.5V14M19.5 4.5 13.5 10.5M4.5 19.5l6-6"/></symbol>
+  <symbol id="i-min" viewBox="0 0 24 24"><path d="M19.5 4.5l-6 6M13.5 6v4.5H18M4.5 19.5l6-6M10.5 18v-4.5H6"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M5 4.5h14a.5.5 0 0 1 .5.5v9.5l-5 5H5a.5.5 0 0 1-.5-.5V5a.5.5 0 0 1 .5-.5Z"/><path d="M14.5 19.5v-5h5M8 9h8M8 12.5h4"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4.5 9V5.5a1 1 0 0 1 1-1H9M15 4.5h3.5a1 1 0 0 1 1 1V9M19.5 15v3.5a1 1 0 0 1-1 1H15M9 19.5H5.5a1 1 0 0 1-1-1V15"/><rect x="9" y="9" width="6" height="6" rx="1.2"/></symbol>
+  <symbol id="i-tidy" viewBox="0 0 24 24"><rect x="4" y="4.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4.5" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 24 24"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5v-2a2 2 0 0 0-2-2h-7a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h2"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M9.5 7V5a1 1 0 0 1 1-1h3a1 1 0 0 1 1 1v2M6.5 7l.8 12a1 1 0 0 0 1 1h7.4a1 1 0 0 0 1-1l.8-12"/></symbol>
+  <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 17.5h6M10 20.5h4M12 3.5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2v.2h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 3.5Z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10.5" width="14" height="9.5" rx="2"/><path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5"/></symbol>
+  <symbol id="i-hand" viewBox="0 0 24 24"><path d="M8.5 12V5.8a1.5 1.5 0 0 1 3 0V11m0-1.5V4.5a1.5 1.5 0 0 1 3 0V11m0-4a1.5 1.5 0 0 1 3 0v6.5a6.5 6.5 0 0 1-6.5 6.5h-.3a6 6 0 0 1-4.6-2.1l-2.7-3.3a1.6 1.6 0 0 1 2.4-2.1l1.7 1.7"/></symbol>
+  <!-- category icons -->
+  <symbol id="c-input" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="11" rx="3"/><path d="M7 11h.01M10 11h.01M13 11h.01M16 11h.01M8 14.5h8"/></symbol>
+  <symbol id="c-logic" viewBox="0 0 24 24"><circle cx="6" cy="6" r="2"/><circle cx="6" cy="18" r="2"/><circle cx="18" cy="12" r="2"/><path d="M8 6h2.5a3 3 0 0 1 3 3v0a3 3 0 0 0 3 3H16M8 18h2.5a3 3 0 0 0 3-3v0a3 3 0 0 1 3-3"/></symbol>
+  <symbol id="c-math" viewBox="0 0 24 24"><rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M8 8h8M8.5 12.5h.01M12 12.5h.01M15.5 12.5h.01M8.5 16.5h.01M12 16.5h.01M15.5 16.5h.01"/></symbol>
+  <symbol id="c-object" viewBox="0 0 24 24"><path d="M12 3.5 19.5 7.7v8.6L12 20.5 4.5 16.3V7.7Z"/><path d="M4.5 7.7 12 12l7.5-4.3M12 12v8.5"/></symbol>
+  <symbol id="c-action" viewBox="0 0 24 24"><path d="M13 3.5 5.5 13.5H12l-1 7 7.5-10H12Z"/></symbol>
+  <symbol id="c-brain" viewBox="0 0 24 24"><circle cx="6" cy="18" r="2"/><circle cx="18" cy="6" r="2"/><path d="M8 18h6.5a3 3 0 0 0 0-6h-5a3 3 0 0 1 0-6H16"/></symbol>
+  <symbol id="c-output" viewBox="0 0 24 24"><path d="M5.5 20.5V4.5M5.5 5h11.2a.6.6 0 0 1 .5.9L15.3 9l1.9 3.1a.6.6 0 0 1-.5.9H5.5"/></symbol>
+</svg>
+
+<div class="app" id="app">
+  <!-- ================= TOP BAR ================= -->
+  <header class="topbar" role="banner">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"><circle cx="6" cy="7" r="2.4" fill="#fff"/><circle cx="18" cy="17" r="2.4" fill="#fff"/><path d="M8.4 7c5 0 2.2 10 7.2 10"/></svg>
+      </div>
+      <span class="brand-name">Xưởng Nối</span>
+    </div>
+    <div class="board-name">
+      <label class="sr" for="boardName">Tên game</label>
+      <input id="boardName" value="Nhặt sao trên đồi" spellcheck="false">
+      <span class="saved" id="saved">Đã lưu lúc 14:38</span>
+    </div>
+    <div class="group" role="group" aria-label="Tệp">
+      <button class="btn" aria-label="Tạo mới" data-tip="Bắt đầu một game mới"><svg class="i"><use href="#i-new"/></svg><span class="t">Tạo mới</span></button>
+      <button class="btn" aria-label="Mở" data-tip="Mở game đã lưu hoặc game mẫu"><svg class="i"><use href="#i-folder"/></svg><span class="t">Mở</span></button>
+      <button class="btn" id="btnSave" aria-label="Lưu" data-tip="Lưu  ·  Ctrl + S"><svg class="i"><use href="#i-save"/></svg><span class="t">Lưu</span></button>
+    </div>
+    <div class="group" role="group" aria-label="Hoàn tác">
+      <button class="btn icon" id="btnUndo" aria-label="Hoàn tác" data-tip="Hoàn tác  ·  Ctrl + Z" disabled><svg class="i"><use href="#i-undo"/></svg></button>
+      <button class="btn icon" id="btnRedo" aria-label="Làm lại" data-tip="Làm lại  ·  Ctrl + Y" disabled><svg class="i"><use href="#i-redo"/></svg></button>
+    </div>
+    <div class="sep"></div>
+    <div class="seg" role="radiogroup" aria-label="Góc nhìn game" id="modeSeg">
+      <span class="seg-thumb"></span>
+      <button role="radio" aria-checked="true" data-mode="side">2D ngang</button>
+      <button role="radio" aria-checked="false" data-mode="top">2D trên</button>
+      <button role="radio" aria-checked="false" data-mode="iso">3D</button>
+    </div>
+    <button class="btn" id="btnGuide" aria-label="Hướng dẫn" data-tip="Các bài học từng bước"><svg class="i"><use href="#i-book"/></svg><span class="t">Hướng dẫn</span></button>
+    <button class="restart" id="btnRestart" data-tip="Chơi lại từ đầu  ·  R"><svg class="i"><use href="#i-restart"/></svg>Chơi lại</button>
+    <button class="play" id="btnPlay" aria-label="Chơi thử game (Ctrl + Enter)">
+      <span class="face face-play">Chơi <kbd>Ctrl ↵</kbd></span>
+      <span class="face face-edit">Dừng <kbd>Esc</kbd></span>
+      <span class="knob"><svg class="i face-play" style="width:16px;height:16px"><use href="#i-play"/></svg><svg class="i face-edit" style="width:16px;height:16px"><use href="#i-stop"/></svg></span>
+    </button>
+  </header>
+
+  <!-- ================= PALETTE ================= -->
+  <aside class="tray palette" aria-label="Kho khối lệnh">
+    <div class="pal-head">
+      <div class="pal-title"><h2>Kho khối lệnh</h2><span class="num">41 khối lệnh</span></div>
+      <label class="search">
+        <svg class="i"><use href="#i-search"/></svg>
+        <span class="sr">Tìm khối</span>
+        <input id="q" type="search" placeholder="Tìm khối lệnh…" autocomplete="off">
+        <kbd>/</kbd>
+      </label>
+    </div>
+    <div class="pal-list" id="palList"></div>
+    <!-- tutorial coach: docked in palette so it never covers the board or game -->
+    <section class="tut" aria-live="polite" aria-label="Bài hướng dẫn">
+      <div class="tut-top"><span class="step num" id="tStep">Bước 2/5</span><span class="lesson">Bài 1 · Nhân vật biết nhảy</span>
+        <button class="x" id="tClose" aria-label="Thoát bài học"><svg class="i" style="width:16px;height:16px"><use href="#i-x"/></svg></button></div>
+      <div class="bars" id="tBars"></div>
+      <h4 id="tTitle"></h4>
+      <p id="tBody"></p>
+      <div class="tip"><svg class="i" style="width:16px;height:16px;color:#B45309"><use href="#i-bulb"/></svg><span id="tTip"></span></div>
+      <div class="tut-nav">
+        <button class="btn" id="tPrev"><svg class="i"><use href="#i-left"/></svg>Quay lại</button>
+        <button class="btn next" id="tNext">Tiếp theo<svg class="i"><use href="#i-right"/></svg></button>
+      </div>
+    </section>
+    <div class="pal-empty" id="palEmpty">Không thấy khối nào khớp.<br>Thử gõ ngắn hơn, ví dụ “chạm”.</div>
+  </aside>
+
+  <!-- ================= BOARD ================= -->
+  <main class="tray board" id="board" aria-label="Bảng nối dây">
+    <div class="world" id="world">
+      <svg class="wires" id="wires" width="1200" height="1000"></svg>
+    </div>
+
+    <div class="float tools" role="toolbar" aria-label="Công cụ bảng">
+      <button class="btn" id="tAddNote" data-tip="Thêm ghi chú  ·  N"><svg class="i"><use href="#i-note"/></svg>Ghi chú</button>
+      <button class="btn" id="tTidy" data-tip="Xếp các khối cho gọn"><svg class="i"><use href="#i-tidy"/></svg>Dọn gọn</button>
+
+
+    </div>
+
+    <div class="float dock" aria-label="Xem thử các trạng thái của bản mẫu">
+      <span class="dock-l">Xem thử</span>
+      <button class="tg" id="tgPlay" aria-pressed="false"><span class="sw"></span><span id="tgPlayL">Đang sửa</span></button>
+      <button class="tg" id="tgSel" aria-pressed="true"><span class="sw"></span>Chọn khối</button>
+      <button class="tg" id="tgTut" aria-pressed="true"><span class="sw"></span>Bài hướng dẫn</button>
+      <button class="tg" id="tgEmpty" aria-pressed="false"><span class="sw"></span>Bảng trống</button>
+    </div>
+
+    <div class="play-banner" role="status"><span class="live"></span>Đang chơi — bảng tạm khoá<button id="bannerEdit">Dừng để sửa</button></div>
+
+    <div class="float legendwrap">
+      <div class="legend" role="note" aria-label="Màu cổng"><b>Chấm nối:</b>
+        <span style="--pc:var(--p-bool)"><i style="border-radius:50%"></i>Bật/tắt</span>
+        <span style="--pc:var(--p-num)"><i style="border-radius:2px;transform:rotate(45deg) scale(.85)"></i>Con số</span>
+        <span style="--pc:var(--p-obj)"><i style="border-radius:2px"></i>Vật</span>
+      </div>
+    </div>
+    <div class="float mapwrap">
+      <div class="minimap" id="minimap" aria-hidden="true"><span class="vp" id="vp"></span></div>
+      <div class="zoom">
+        <button class="btn" id="zOut" aria-label="Thu nhỏ" data-tip="Thu nhỏ  ·  −"><svg class="i"><use href="#i-minus"/></svg></button>
+        <output id="zVal" class="num">100%</output>
+        <button class="btn" id="zIn" aria-label="Phóng to" data-tip="Phóng to  ·  +"><svg class="i"><use href="#i-plus"/></svg></button>
+        <button class="btn fit" id="zFit" data-tip="Thấy hết các khối  ·  0"><svg class="i" style="width:15px;height:15px"><use href="#i-fit"/></svg>Vừa màn hình</button>
+      </div>
+    </div>
+
+    <div class="board-empty" aria-label="Bảng trống">
+      <div class="be-card">
+        <svg class="art" viewBox="0 0 220 110" aria-hidden="true">
+          <rect x="8" y="22" width="78" height="56" rx="12" fill="#fff" stroke="#E6DFD3"/><path d="M8 34a12 12 0 0 1 12-12h54a12 12 0 0 1 12 12v6H8Z" fill="#FFE4E6"/>
+          <rect x="134" y="34" width="78" height="56" rx="12" fill="#fff" stroke="#E6DFD3"/><path d="M134 46a12 12 0 0 1 12-12h54a12 12 0 0 1 12 12v6h-78Z" fill="#F3E8DC"/>
+          <path d="M86 60C112 60 108 72 134 72" stroke="#16A34A" stroke-width="3" fill="none" stroke-linecap="round" stroke-dasharray="4 6"/>
+          <circle cx="86" cy="60" r="5" fill="#16A34A" stroke="#fff" stroke-width="2"/><circle cx="134" cy="72" r="5" fill="#16A34A" stroke="#fff" stroke-width="2"/>
+          <rect x="20" y="52" width="40" height="6" rx="3" fill="#EEE8DE"/><rect x="160" y="64" width="40" height="6" rx="3" fill="#EEE8DE"/>
+        </svg>
+        <h3>Bảng còn trống. Làm game đầu tiên nhé!</h3>
+        <p>Mỗi khối lệnh làm một việc nhỏ. Nối dây giữa các chấm màu để chúng truyền tín hiệu cho nhau.</p>
+        <div class="be-acts">
+          <button class="primary" id="beLesson"><span class="ico"><svg class="i"><use href="#i-book"/></svg></span><span><b>Học bài 1: Nhân vật biết nhảy</b><small>5 bước, khoảng 5 phút</small></span></button>
+          <button id="beSample"><span class="ico"><svg class="i"><use href="#i-folder"/></svg></span><span><b>Mở một game mẫu</b><small>13 game có sẵn để xem và sửa</small></span></button>
+          <button id="beDrag"><span class="ico"><svg class="i"><use href="#i-hand"/></svg></span><span><b>Tự kéo khối lệnh đầu tiên</b><small>Gợi ý: bắt đầu với “Nhân vật”</small></span></button>
+        </div>
+      </div>
+    </div>
+
+
+  </main>
+
+  <!-- ================= SIDE ================= -->
+  <div class="side">
+    <section class="tray game" id="game" aria-label="Khung game">
+      <div class="game-head">
+        <h3>Khung game <span class="state-pill" id="statePill">Đang dừng</span></h3>
+        <button class="btn icon" id="btnMax" aria-label="Phóng to khung game" data-tip="Phóng to  ·  F"><svg class="i"><use href="#i-max"/></svg></button>
+      </div>
+      <div class="stage" id="stage">
+        <!-- 2D side view -->
+        <svg class="scene on" data-scene="side" viewBox="0 0 360 225" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D7EEFF"/><stop offset="1" stop-color="#FFF4E0"/></linearGradient></defs>
+          <rect width="360" height="225" fill="url(#sky)"/>
+          <circle cx="300" cy="44" r="18" fill="#FFE08A"/>
+          <ellipse cx="70" cy="215" rx="140" ry="70" fill="#C9EBC4"/><ellipse cx="290" cy="225" rx="160" ry="80" fill="#B6E2AE"/>
+          <rect x="0" y="186" width="360" height="39" fill="#7CC67A"/><rect x="0" y="186" width="360" height="6" fill="#9BD98F"/>
+          <rect x="128" y="138" width="78" height="14" rx="7" fill="#A97A57"/><rect x="128" y="138" width="78" height="5" rx="2.5" fill="#8FD68A"/>
+          <rect x="238" y="104" width="70" height="14" rx="7" fill="#A97A57"/><rect x="238" y="104" width="70" height="5" rx="2.5" fill="#8FD68A"/>
+          <g fill="#FFC531" stroke="#E5A100" stroke-width="1.2" stroke-linejoin="round">
+            <path class="star" d="M166 112l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7-6.9-3.6-6.9 3.6 1.3-7.7-5.6-5.4 7.7-1.1z"/>
+            <path class="star" d="M273 78l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7-6.9-3.6-6.9 3.6 1.3-7.7-5.6-5.4 7.7-1.1z" style="animation-delay:.3s"/>
+            <path class="star" d="M330 158l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7-6.9-3.6-6.9 3.6 1.3-7.7-5.6-5.4 7.7-1.1z" style="animation-delay:.6s"/>
+          </g>
+          <g class="player"><g transform="translate(46 154)">
+            <path d="M3 8 6 0l6 6h8l6-6 3 8" fill="var(--char,#3B82F6)"/>
+            <rect x="1" y="6" width="30" height="26" rx="9" fill="var(--char,#3B82F6)"/>
+            <circle cx="11" cy="17" r="2.6" fill="#1E2230"/><circle cx="21" cy="17" r="2.6" fill="#1E2230"/>
+            <path d="M13.5 23q2.5 2 5 0" stroke="#1E2230" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+          </g></g>
+        </svg>
+        <!-- 2D top view -->
+        <svg class="scene" data-scene="top" viewBox="0 0 360 225" preserveAspectRatio="xMidYMid slice">
+          <rect width="360" height="225" fill="#EAF6E4"/>
+          <g stroke="#D6EBCD" stroke-width="1"><path d="M0 30H360M0 60H360M0 90H360M0 120H360M0 150H360M0 180H360M0 210H360M30 0V225M60 0V225M90 0V225M120 0V225M150 0V225M180 0V225M210 0V225M240 0V225M270 0V225M300 0V225M330 0V225"/></g>
+          <g fill="#C7B39C"><rect x="60" y="60" width="120" height="16" rx="5"/><rect x="240" y="30" width="16" height="120" rx="5"/><rect x="120" y="150" width="90" height="16" rx="5"/></g>
+          <g fill="#FFC531" stroke="#E5A100" stroke-width="1.2"><circle class="star" cx="105" cy="105" r="8"/><circle class="star" cx="285" cy="180" r="8"/><circle class="star" cx="210" cy="45" r="8"/></g>
+          <g class="player"><circle cx="45" cy="180" r="13" fill="var(--char,#3B82F6)"/><circle cx="41" cy="176" r="2.2" fill="#1E2230"/><circle cx="50" cy="176" r="2.2" fill="#1E2230"/></g>
+        </svg>
+        <!-- 3D (isometric preview) -->
+        <svg class="scene" data-scene="iso" viewBox="0 0 360 225" preserveAspectRatio="xMidYMid slice">
+          <defs><linearGradient id="sky3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E4ECFF"/><stop offset="1" stop-color="#FDF6EC"/></linearGradient></defs>
+          <rect width="360" height="225" fill="url(#sky3)"/>
+          <path d="M180 70 330 145 180 220 30 145Z" fill="#B9E3B1"/><path d="M30 145 180 220v8L30 153Z" fill="#8CC981"/><path d="M330 145 180 220v8l150-75Z" fill="#78B86E"/>
+          <g stroke="#A6D69D" stroke-width="1"><path d="M67.5 126.25 217.5 201.25M105 107.5 255 182.5M142.5 88.75 292.5 163.75M217.5 88.75 67.5 163.75M255 107.5 105 182.5M292.5 126.25 142.5 201.25"/></g>
+          <g><path d="M240 120l22-11 22 11-22 11Z" fill="#E7D3BC"/><path d="M240 120v20l22 11v-20Z" fill="#C7AE92"/><path d="M284 120v20l-22 11v-20Z" fill="#B49A7E"/></g>
+          <path class="star" d="M200 96l3.5 7 7.7 1.1-5.6 5.4 1.3 7.7-6.9-3.6-6.9 3.6 1.3-7.7-5.6-5.4 7.7-1.1z" fill="#FFC531" stroke="#E5A100" stroke-width="1.2"/>
+          <g class="player"><path d="M110 142l12-6 12 6-12 6Z" fill="#93C5FD"/><path d="M110 142v16l12 6v-16Z" fill="var(--char,#3B82F6)"/><path d="M134 142v16l-12 6v-16Z" fill="#1D4ED8"/></g>
+        </svg>
+        <div class="hud l"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 3.5l2.6 5.3 5.8.8-4.2 4.1 1 5.8L12 16.8l-5.2 2.7 1-5.8-4.2-4.1 5.8-.8z" fill="#FFC531" stroke="#E5A100" stroke-width="1.2" stroke-linejoin="round"/></svg><small>Điểm</small><span id="hudScore">0</span>/5</div>
+        <div class="hud r"><small>Giây</small><span id="hudTime">60</span></div>
+      </div>
+      <div class="stage-hint"><span class="idle">Game đang dừng. Kéo vật trong khung để đặt chỗ.</span><button class="idle" id="coverPlay"><svg class="i" style="width:14px;height:14px"><use href="#i-play"/></svg>Chơi thử</button>
+        <span class="run">Điều khiển: <kbd>← →</kbd> đi · <kbd>Cách</kbd> nhảy</span></div>
+    </section>
+
+    <section class="tray props" id="props" aria-label="Thuộc tính khối"></section>
+  </div>
+</div>
+
+<div class="hovercard" id="hc" role="tooltip"></div>
+<div class="ring" id="ring"><span class="ring-label" id="ringLabel"></span></div>
+<div class="toasts" id="toasts" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   DATA — real node names/categories from app/src/nodes
+   ============================================================ */
+const CATS = [
+  ['input','Đầu vào'],['logic','Logic'],['math','Tính toán'],['object','Vật thể'],
+  ['action','Hành động'],['brain','Bộ não'],['output','Kết quả']];
+const CAT_LABEL = Object.fromEntries(CATS);
+const PALETTE = {
+  input:[['Phím bấm','Bật khi bạn giữ hoặc vừa bấm một phím, ví dụ phím Cách để nhảy.'],
+         ['Cần điều khiển','Cho ra hướng đi ngang và dọc từ phím mũi tên hoặc WASD.'],
+         ['Khi bắt đầu','Bật đúng một nhịp ngay khi trò chơi bắt đầu chạy.']],
+  logic:[['Và','Chỉ bật khi CẢ HAI đầu vào đều bật.'],['Hoặc','Bật khi có ít nhất một đầu vào bật.'],['Không','Đảo ngược: đang bật thành tắt, đang tắt thành bật.'],
+         ['So sánh','So sánh hai số và bật khi điều kiện đúng, ví dụ “A lớn hơn B”.'],
+         ['Cảm biến chạm','Kiểm tra hai vật có đang chạm nhau không. “Vừa chạm” chỉ bật một nhịp.'],
+         ['Công tắc nhớ','Bật một lần là nhớ mãi, cho tới khi được tắt.'],['Cảm biến vùng','Bật khi một vật đi vào vùng bạn vẽ.'],['Khoảng cách','Cho biết hai vật cách nhau bao xa.']],
+  math:[['Hằng số','Một con số cố định mà bạn tự đặt.'],['Phép tính','Cộng, trừ, nhân hoặc chia hai số. Chia cho 0 sẽ ra 0.'],
+        ['Bộ đếm','Đếm lên hoặc xuống. Bật “Đã đủ” khi chạm mục tiêu.'],['Hẹn giờ','Đếm ngược số giây đã đặt. Hết giờ thì “Hết giờ” bật.'],
+        ['Số ngẫu nhiên','Cho ra một số bất kỳ trong khoảng bạn chọn.'],['Đổi thang số','Đổi một số từ khoảng này sang khoảng khác.']],
+  object:[['Nhân vật','Nhân vật của bạn. Nối hướng đi và nút nhảy vào để điều khiển.'],['Hộp','Hộp gạch để làm sàn, tường hoặc vật cản. (Trước đây tên là “Khối”.)'],
+          ['Đồ vật','Vật có thể nhặt, cầm hoặc dùng, như sao, chìa khoá.'],['Phương tiện','Xe để nhân vật lên lái.'],['Cổng dịch chuyển','Bước vào cổng này là ra ở cổng kia.'],
+          ['Bệ di chuyển','Bệ tự chạy qua lại giữa hai điểm.'],['Bệ xoay','Bệ tự quay tròn.']],
+  action:[['Cầm / Thả','Cho nhân vật nhặt và thả đồ vật.'],['Tương tác','Bấm để tương tác với vật ở gần.'],['Cầm tay','Dùng món đồ đang cầm lên vật khác.'],
+          ['Máu','Theo dõi máu, hết máu thì bật “Hết máu”.'],['Lên / Xuống xe','Cho nhân vật lên hoặc xuống phương tiện.'],['Máy quay','Chọn camera đi theo ai.'],
+          ['Dịch chuyển','Đưa một vật tới chỗ khác ngay lập tức.'],['Bắn đạn','Bắn đạn theo hướng đang nhìn.'],['Sinh vật thể','Tạo thêm bản sao của một vật.']],
+  brain:[['Đi tuần','Bot đi qua lại theo các điểm.'],['Đi tới','Bot tự tìm đường tới một vật.'],['Đuổi theo / Tránh xa','Bot đuổi theo hoặc chạy khỏi một vật.'],
+         ['Chuỗi việc','Làm từng việc một theo thứ tự.'],['Đánh nhau','Bot tấn công khi đối thủ ở gần.']],
+  output:[['Thắng/Thua','Kết thúc trò chơi. “Thắng” bật thì báo thắng, “Thua” bật thì báo thua.'],
+          ['Hiện số','Hiện một con số lên màn hình, ví dụ điểm hoặc số giây.'],['Hiện chữ','Hiện một dòng chữ trên màn hình hoặc trên đầu một vật.']],
+};
+const DESC = Object.fromEntries(Object.values(PALETTE).flat());
+
+/* Sample board "Nhặt sao trên đồi": 10 nodes, 10 wires. outs first, ins after. */
+const NODES = [
+  {id:'stick',cat:'input',w:184,t:'Cần điều khiển',s:'Mũi tên / WASD',x:12,y:170,outs:[['x','number','Ngang (trái-phải)'],['y','number','Dọc (xuống-lên)']],ins:[]},
+  {id:'key',cat:'input',w:184,t:'Phím bấm',x:12,y:288,outs:[['held','bool','Đang giữ'],['pressed','bool','Vừa bấm']],ins:[],chip:['Phím','Cách']},
+  {id:'timer',cat:'math',w:184,t:'Hẹn giờ',x:12,y:436,outs:[['left','number','Giây còn lại'],['done','bool','Hết giờ']],ins:[['run','bool','Chạy'],['reset','bool','Đếm lại']],chip:['Đếm','60 giây']},
+  {id:'char',cat:'object',w:192,t:'Nhân vật',s:'Bé Mèo',x:226,y:144,outs:[['self','object','Nhân vật'],['onGround','bool','Đang chạm đất'],['x','number','Vị trí X'],['y','number','Vị trí Y']],ins:[['moveX','number','Đi ngang'],['moveY','number','Đi dọc'],['jump','bool','Nhảy']]},
+  {id:'item',cat:'object',w:192,t:'Đồ vật',s:'Ngôi sao',x:226,y:436,outs:[['self','object','Đồ vật']],ins:[['hide','bool','Ẩn đi']],more:4},
+  {id:'touch',cat:'logic',w:176,t:'Cảm biến chạm',x:448,y:230,outs:[['touching','bool','Đang chạm'],['began','bool','Vừa chạm']],ins:[['a','object','Vật A',1],['b','object','Vật B',1]]},
+  {id:'counter',cat:'math',w:176,t:'Bộ đếm',s:'Số sao',x:448,y:420,outs:[['value','number','Số đếm'],['reached','bool','Đã đủ']],ins:[['up','bool','Cộng 1'],['down','bool','Trừ 1'],['reset','bool','Về đầu']],chip:['Mục tiêu','5']},
+  {id:'score',cat:'output',w:150,t:'Hiện số',s:'Điểm',x:652,y:342,outs:[],ins:[['value','number','Số cần hiện']]},
+  {id:'win',cat:'output',w:150,t:'Thắng/Thua',x:652,y:462,outs:[],ins:[['win','bool','Thắng'],['lose','bool','Thua']]},
+  {id:'clock',cat:'output',w:150,t:'Hiện số',s:'Giây',x:652,y:582,outs:[],ins:[['value','number','Số cần hiện']]},
+];
+const WIRES = [
+  ['stick','x','char','moveX'],
+  ['char','self','touch','a'],
+  ['touch','began','counter','up'],['touch','began','item','hide'],
+  ['counter','value','score','value'],['counter','reached','win','win'],
+  ['timer','done','win','lose'],['timer','left','clock','value'],
+];
+const NOTE = {x:12,y:58,title:'Luật chơi',body:'Chạm vào sao thì được 1 điểm. Gom đủ 5 sao trước khi hết 60 giây là thắng!'};
+const LIVE = {'stick.x':'0.8','stick.y':'0','key.held':false,'key.pressed':true,'timer.left':'47','timer.done':false,
+  'char.self':null,'char.onGround':true,'char.x':'4.2','char.y':'1.0','touch.touching':false,'touch.began':true,'counter.value':'2','counter.reached':false,'item.self':null};
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const ic = (id,cls='i')=>`<svg class="${cls}"><use href="#${id}"/></svg>`;
+const catVars = c=>`--strong:var(--c-${c});--tint:var(--c-${c}-tint);--ink-c:var(--c-${c}-ink)`;
+const norm = s=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();
+
+/* ============================================================
+   PALETTE: grouped, collapsible, live search (diacritic-insensitive)
+   ============================================================ */
+const palList = $('#palList');
+function renderPalette(q=''){
+  const nq = norm(q.trim());
+  let total = 0;
+  palList.innerHTML = CATS.map(([c,label])=>{
+    const items = PALETTE[c].filter(([n,d])=>!nq || norm(n).includes(nq) || norm(d).includes(nq));
+    total += items.length;
+    if(!items.length) return '';
+    const open = nq ? 'true' : (palList.dataset['o_'+c] ?? (['input','logic','object','output'].includes(c)?'true':'false'));
+    return `<div class="cat" data-cat="${c}" data-open="${open}" style="${catVars(c)}">
+      <button class="cat-h" aria-expanded="${open}"><span class="cat-ic">${ic('c-'+c)}</span>${label}<span class="count num">${items.length}</span>${ic('i-chev','i chev')}</button>
+      <div class="cat-body"><div>${items.map(([n])=>{
+        const i = nq ? norm(n).indexOf(nq) : -1;
+        const shown = i>=0 ? n.slice(0,i)+'<mark>'+n.slice(i,i+nq.length)+'</mark>'+n.slice(i+nq.length) : n;
+        return `<button class="item" data-name="${n}" data-cat="${c}" ${open==='false'?'tabindex="-1"':''}>${shown}<span class="add">${ic('i-plus')}</span></button>`;}).join('')}</div></div></div>`;
+  }).join('');
+  $('#palEmpty').style.display = total ? 'none' : 'block';
+}
+renderPalette();
+$('#q').addEventListener('input',e=>renderPalette(e.target.value));
+palList.addEventListener('click',e=>{
+  const h = e.target.closest('.cat-h');
+  if(h){const cat=h.parentElement;const o=cat.dataset.open==='true'?'false':'true';cat.dataset.open=o;h.setAttribute('aria-expanded',o);
+    palList.dataset['o_'+cat.dataset.cat]=o;$$('.item',cat).forEach(b=>o==='true'?b.removeAttribute('tabindex'):b.setAttribute('tabindex','-1'));return;}
+  const it = e.target.closest('.item');
+  if(it){addNode(it.dataset.name,it.dataset.cat);}
+});
+/* hover card */
+const hc = $('#hc'); let hcT;
+function showHC(it){
+  const c = it.dataset.cat, n = it.dataset.name, r = it.getBoundingClientRect();
+  hc.setAttribute('style',catVars(c));
+  hc.innerHTML = `<h4><span class="cat-ic" style="width:22px;height:22px">${ic('c-'+c)}</span>${n}</h4><p>${DESC[n]}</p>
+    <div class="hint"><kbd>Enter</kbd> thêm vào bảng · nhóm ${CAT_LABEL[c]}</div>`;
+  hc.style.left = (r.right+12)+'px'; hc.style.top = Math.min(r.top-6, innerHeight-140)+'px';
+  hc.classList.add('on');
+}
+palList.addEventListener('pointerover',e=>{const it=e.target.closest('.item');clearTimeout(hcT);if(it)hcT=setTimeout(()=>showHC(it),250);else hc.classList.remove('on');});
+palList.addEventListener('pointerleave',()=>{clearTimeout(hcT);hc.classList.remove('on');});
+palList.addEventListener('focusin',e=>{const it=e.target.closest('.item');if(it)showHC(it);});
+palList.addEventListener('focusout',()=>hc.classList.remove('on'));
+
+/* ============================================================
+   BOARD: nodes, wires, drag, select, zoom, minimap
+   ============================================================ */
+const world = $('#world'), wiresSvg = $('#wires'), board = $('#board');
+let zoom = 1, pan = {x:0,y:0}, selected = 'char';
+function portHTML(n,[id,t,l,req],dir){
+  const key = n.id+'.'+id, v = LIVE[key];
+  let pv = '';
+  if(dir==='out' && v!==undefined && v!==null) pv = t==='bool' ? `<span class="pv ${v?'bool-on':'bool-off'}">${v?'Đúng':'Sai'}</span>` : `<span class="pv number">${v}</span>`;
+  const need = dir==='in' && req && !WIRES.some(w=>w[2]===n.id&&w[3]===id);
+  return `<div class="port ${dir}${need?' need':''}" data-t="${t}" data-p="${id}" ${need?'title="Cổng này cần nối dây thì khối mới chạy"':''}>${dir==='in'?'<i class="dot"></i>':''}${dir==='out'?pv:''}<span class="pl">${l}</span>${dir==='out'?'<i class="dot"></i>':''}</div>`;
+}
+function nodeEl(n){
+  const el = document.createElement('div');
+  el.className = 'node'; el.dataset.id = n.id; el.tabIndex = 0;
+  el.setAttribute('style',`${catVars(n.cat)};left:${n.x}px;top:${n.y}px;--w:${n.w||184}px`);
+  const missing = n.ins.filter(p=>p[3] && !WIRES.some(w=>w[2]===n.id&&w[3]===p[0])).length;
+  el.setAttribute('aria-label',`Khối ${n.t}${n.s?' — '+n.s:''}`);
+  el.innerHTML = `<div class="node-h"><span class="node-ic">${ic('c-'+n.cat)}</span><span class="node-t">${n.t}${n.s?`<span class="node-s">${n.s}</span>`:''}</span>${missing?`<span class="node-warn">${ic('i-warn','i')}Thiếu ${missing} dây</span>`:''}</div>
+    <div class="ports">${n.outs.map(p=>portHTML(n,p,'out')).join('')}${n.ins.map(p=>portHTML(n,p,'in')).join('')}</div>
+    ${n.chip?`<div class="node-chip">${n.chip[0]}: <b>${n.chip[1]}</b></div>`:''}
+    ${n.more?`<button class="more">+${n.more} cổng ít dùng</button>`:''}`;
+  return el;
+}
+function rerenderNode(id){const n=NODES.find(x=>x.id===id),old=$(`.node[data-id="${id}"]`,world);const el=nodeEl(n);old.replaceWith(el);}
+function renderBoard(){
+  $$('.node,.sticky',world).forEach(e=>e.remove());
+  const st = document.createElement('div');
+  st.className='sticky'; st.style.left=NOTE.x+'px'; st.style.top=NOTE.y+'px';
+  st.innerHTML=`<b>${NOTE.title}</b>${NOTE.body}`;
+  world.append(st);
+  NODES.forEach(n=>world.append(nodeEl(n)));
+  applySel(); drawWires(); drawMinimap();
+}
+function portPos(nid,pid,dir){
+  const n = $(`.node[data-id="${nid}"]`,world); if(!n) return null;
+  const d = $(`.port.${dir}[data-p="${pid}"] .dot`,n);
+  const nx = parseFloat(n.style.left), ny = parseFloat(n.style.top);
+  return {x: nx + (dir==='out'?n.offsetWidth:0), y: ny + d.parentElement.offsetTop + d.offsetTop + 6};
+}
+function drawWires(){
+  const typeOf = (nid,pid)=>NODES.find(n=>n.id===nid).outs.find(p=>p[0]===pid)[1];
+  let under='', over='';
+  WIRES.forEach(([a,ap,b,bp])=>{
+    const p1 = portPos(a,ap,'out'), p2 = portPos(b,bp,'in'); if(!p1||!p2) return;
+    const dx = Math.max(56, Math.abs(p2.x-p1.x)*.5) * (p2.x<p1.x ? 1.4 : 1);
+    const d = `M${p1.x} ${p1.y} C${p1.x+dx} ${p1.y} ${p2.x-dx} ${p2.y} ${p2.x} ${p2.y}`;
+    const t = typeOf(a,ap), hot = selected && (a===selected||b===selected);
+    const v = LIVE[a+'.'+ap]; const live = t==='object' || v===true || (t==='number' && v && v!=='0');
+    under += `<path class="wire-under" d="${d}"/>`;
+    over  += `<path class="wire ${t}${hot?' hot':''}${live?' live':''}" d="${d}"/>`;
+  });
+  wiresSvg.innerHTML = under+over;
+}
+function applySel(){
+  $$('.node',world).forEach(n=>n.classList.toggle('sel',n.dataset.id===selected));
+  board.classList.toggle('has-sel',!!selected);
+  $('#tgSel').setAttribute('aria-pressed',String(!!selected));
+  drawWires(); renderProps();
+}
+function setZoom(z){
+  zoom = Math.min(1.6,Math.max(.5,Math.round(z*100)/100));
+  world.style.transform = `translate(${pan.x}px,${pan.y}px) scale(${zoom})`;
+  $('#zVal').textContent = Math.round(zoom*100)+'%'; drawMinimap(); requestAnimationFrame(placeRing);
+}
+$('#zIn').onclick=()=>setZoom(zoom+.1); $('#zOut').onclick=()=>setZoom(zoom-.1);
+$('#zFit').onclick=()=>{pan={x:0,y:0};const W=Math.max(...NODES.map(n=>n.x+($(`.node[data-id="${n.id}"]`)?.offsetWidth||184)))+16,H=Math.max(...NODES.map(n=>n.y+($(`.node[data-id="${n.id}"]`)?.offsetHeight||80)))+16;setZoom(Math.min(1,board.clientWidth/W,board.clientHeight/H));toast('Đã thu vừa màn hình — thấy hết các khối');};
+board.addEventListener('wheel',e=>{if(e.ctrlKey){e.preventDefault();setZoom(zoom-(e.deltaY>0?.08:-.08));}},{passive:false});
+
+/* drag nodes + undo history */
+const hist = [], fut = [];
+let drag = null;
+let wiring=null, panning=null;
+world.addEventListener('pointerdown',e=>{
+  const od = e.target.closest('.port.out .dot');
+  if(od && !document.body.classList.contains('playing')){
+    e.stopPropagation(); const n=od.closest('.node'), port=od.parentElement;
+    wiring={from:n.dataset.id,port:port.dataset.p,type:port.dataset.t,p1:portPos(n.dataset.id,port.dataset.p,'out')};
+    document.body.classList.add('wiring');
+    $$(`.port.in[data-t="${wiring.type}"]`,world).forEach(p=>p.closest('.node')!==n&&p.classList.add('can-drop'));
+    world.setPointerCapture(e.pointerId); return;
+  }
+  const n = e.target.closest('.node');
+  if(!n){selected=null;applySel();if(!e.target.closest('.sticky')){panning={sx:e.clientX,sy:e.clientY,ox:pan.x,oy:pan.y};world.classList.add('dragging');world.setPointerCapture(e.pointerId);}return;}
+  if(document.body.classList.contains('playing')) return;
+  selected = n.dataset.id; applySel();
+  if(!e.target.closest('.node-h')) return;
+  const m = NODES.find(x=>x.id===n.dataset.id);
+  drag = {n,m,sx:e.clientX,sy:e.clientY,ox:m.x,oy:m.y,moved:false};
+  n.setPointerCapture(e.pointerId);
+});
+world.addEventListener('pointermove',e=>{
+  if(wiring){const wr=world.getBoundingClientRect();const x=(e.clientX-wr.left)/zoom,y=(e.clientY-wr.top)/zoom,p=wiring.p1,dx=Math.max(56,Math.abs(x-p.x)*.5);
+    drawWires();wiresSvg.insertAdjacentHTML('beforeend',`<path class="wire temp ${wiring.type}" d="M${p.x} ${p.y} C${p.x+dx} ${p.y} ${x-dx} ${y} ${x} ${y}"/>`);return;}
+  if(panning){pan={x:panning.ox+e.clientX-panning.sx,y:panning.oy+e.clientY-panning.sy};world.style.transform=`translate(${pan.x}px,${pan.y}px) scale(${zoom})`;drawMinimap();placeRing();return;}
+  if(!drag) return;
+  const dx=(e.clientX-drag.sx)/zoom, dy=(e.clientY-drag.sy)/zoom;
+  if(!drag.moved && Math.hypot(dx,dy)<3) return;
+  drag.moved = true; drag.n.classList.add('dragging');
+  drag.m.x = Math.round((drag.ox+dx)/2)*2; drag.m.y = Math.round((drag.oy+dy)/2)*2;
+  drag.n.style.left = drag.m.x+'px'; drag.n.style.top = drag.m.y+'px'; drawWires(); placeRing();
+});
+world.addEventListener('pointerup',e=>{
+  if(wiring){
+    const t=document.elementFromPoint(e.clientX,e.clientY)?.closest('.port.in.can-drop');
+    $$('.can-drop',world).forEach(p=>p.classList.remove('can-drop'));document.body.classList.remove('wiring');
+    if(t){const to=t.closest('.node').dataset.id,tp=t.dataset.p;
+      for(let i=WIRES.length-1;i>=0;i--)if(WIRES[i][2]===to&&WIRES[i][3]===tp)WIRES.splice(i,1);
+      WIRES.push([wiring.from,wiring.port,to,tp]);rerenderNode(to);applySel();markDirty();toast('Đã nối dây');}
+    else if(e.target.closest('.port.in'))toast('Hai chấm khác hình nên không nối được. Hãy nối chấm cùng hình, cùng màu.');
+    wiring=null;drawWires();return;
+  }
+  if(panning){panning=null;world.classList.remove('dragging');return;}
+  if(!drag) return;
+  drag.n.classList.remove('dragging');
+  if(drag.moved){hist.push({id:drag.m.id,x:drag.ox,y:drag.oy});fut.length=0;markDirty();syncUndo();drawMinimap();}
+  drag=null;
+});
+function moveBack(from,to){const h=from.pop();if(!h)return;const m=NODES.find(x=>x.id===h.id);to.push({id:m.id,x:m.x,y:m.y});m.x=h.x;m.y=h.y;
+  const el=$(`.node[data-id="${m.id}"]`);el.style.transition='left var(--dur-3) var(--ease),top var(--dur-3) var(--ease)';el.style.left=m.x+'px';el.style.top=m.y+'px';
+  const t0=performance.now();(function f(){drawWires();if(performance.now()-t0<540)requestAnimationFrame(f);else{el.style.transition='';drawMinimap();}})();syncUndo();}
+function syncUndo(){$('#btnUndo').disabled=!hist.length;$('#btnRedo').disabled=!fut.length;}
+$('#btnUndo').onclick=()=>{moveBack(hist,fut);toast('Đã hoàn tác: di chuyển khối');};
+$('#btnRedo').onclick=()=>moveBack(fut,hist);
+
+function drawMinimap(){
+  const mm = $('#minimap'), W = mm.clientWidth, H = mm.clientHeight, sx = W/860, sy = H/760, s = Math.min(sx,sy);
+  $$('i',mm).forEach(i=>i.remove());
+  NODES.forEach(n=>{const el=$(`.node[data-id="${n.id}"]`);const i=document.createElement('i');
+    i.setAttribute('style',`${catVars(n.cat)};left:${n.x*s+6}px;top:${n.y*s+4}px;width:${(el?el.offsetWidth:184)*s}px;height:${(el?el.offsetHeight:80)*s}px`);mm.append(i);});
+  const vp = $('#vp');
+  vp.style.left = (6-pan.x*s/zoom)+'px'; vp.style.top=(4-pan.y*s/zoom)+'px';
+  vp.style.width = (board.clientWidth/zoom*s)+'px'; vp.style.height=(board.clientHeight/zoom*s)+'px';
+}
+
+let addCount = 0;
+/* Smart placement: scan the visible area (then below it) on a 24px grid for the first
+   rectangle that clears every node and note by 24px. Never drops on top of another node. */
+function freeSpot(w,h){
+  const pad=24, rects=$$('.node,.sticky',world).map(e=>({x:parseFloat(e.style.left),y:parseFloat(e.style.top),w:e.offsetWidth,h:e.offsetHeight}));
+  const hit=(x,y)=>rects.some(r=>x<r.x+r.w+pad&&x+w+pad>r.x&&y<r.y+r.h+pad&&y+h+pad>r.y);
+  const vx=-pan.x/zoom, vy=-pan.y/zoom, vw=board.clientWidth/zoom-w-24, vh=board.clientHeight/zoom-h-24;
+  for(let y=vy+120;y<vy+vh;y+=24)for(let x=vx+12;x<vx+vw;x+=24)if(!hit(x,y))return{x,y};
+  for(let y=vy+vh;;y+=24)for(let x=vx+12;x<vx+vw;x+=24)if(!hit(x,y))return{x,y,scrolled:true};
+}
+function addNode(name,cat){
+  if(document.body.classList.contains('playing')) return;
+  const id = 'n'+(++addCount);
+  const ins = {output:[['in','bool','Bật']],object:[['hide','bool','Ẩn đi']],brain:[['go','bool','Bắt đầu'],['target','object','Mục tiêu']]}[cat]||[['in','bool','Vào']];
+  const outs = {output:[],object:[['self','object',name]],input:[['on','bool','Đang bật']],math:[['value','number','Kết quả']]}[cat]||[['out','bool','Ra']];
+  const spot = freeSpot(184, 40 + 26*((cat==='input'?0:ins.length)+outs.length));
+  NODES.push({id,cat,t:name,x:spot.x,y:spot.y,outs,ins:cat==='input'?[]:ins});
+  const el = nodeEl(NODES.at(-1)); el.classList.add('landed'); world.append(el);
+  const g=document.createElement('div');g.className='ghost';Object.assign(g.style,{left:spot.x-6+'px',top:spot.y-6+'px',width:el.offsetWidth+12+'px',height:el.offsetHeight+12+'px'});world.append(g);setTimeout(()=>g.remove(),950);
+  if(spot.scrolled){pan={x:Math.min(0,-(spot.x*zoom-board.clientWidth/2)),y:Math.min(0,-(spot.y*zoom-board.clientHeight/2))};setZoom(zoom);}
+  selected=id; applySel(); drawMinimap(); markDirty();
+  toast(`Đã đặt “${name}” vào chỗ trống`,'Hoàn tác',()=>{NODES.pop();$(`.node[data-id="${id}"]`).remove();selected=null;applySel();drawMinimap();});
+}
+
+/* ============================================================
+   PROPERTIES PANEL
+   ============================================================ */
+const LOOKS = [
+  ['human','Người khối','<rect x="14" y="4" width="16" height="14" rx="4" fill="#FCD9B6"/><rect x="11" y="18" width="22" height="18" rx="5" fill="C"/><circle cx="19" cy="11" r="1.6" fill="#1E2230"/><circle cx="25" cy="11" r="1.6" fill="#1E2230"/>'],
+  ['robot','Rô-bốt','<path d="M22 2v5" stroke="#6B7183" stroke-width="2"/><circle cx="22" cy="2.5" r="2" fill="#F97316"/><rect x="9" y="7" width="26" height="20" rx="6" fill="C"/><rect x="13" y="12" width="18" height="8" rx="4" fill="#E0F2FE"/><circle cx="18" cy="16" r="1.8" fill="#1E2230"/><circle cx="26" cy="16" r="1.8" fill="#1E2230"/><rect x="14" y="28" width="16" height="9" rx="3" fill="C" opacity=".8"/>'],
+  ['cat','Mèo','<path d="M9 14 12 4l6 7h8l6-7 3 10" fill="C"/><rect x="8" y="10" width="28" height="26" rx="10" fill="C"/><circle cx="17" cy="21" r="2.2" fill="#1E2230"/><circle cx="27" cy="21" r="2.2" fill="#1E2230"/><path d="M20 27q2 1.8 4 0" stroke="#1E2230" stroke-width="1.6" fill="none" stroke-linecap="round"/>'],
+  ['chick','Gà con','<circle cx="22" cy="21" r="14" fill="#FFD447"/><path d="M19 5q3-4 6 0" stroke="#F59E0B" stroke-width="2.2" fill="none" stroke-linecap="round"/><circle cx="17" cy="18" r="2" fill="#1E2230"/><circle cx="27" cy="18" r="2" fill="#1E2230"/><path d="M19 23h6l-3 4Z" fill="#F97316"/>'],
+  ['jelly','Thạch nhún','<path d="M8 34V20a14 14 0 0 1 28 0v14q-3.5 3-7 0-3.5 3-7 0-3.5 3-7 0-3.5 3-7 0Z" fill="C" opacity=".85"/><circle cx="17" cy="20" r="2" fill="#1E2230"/><circle cx="27" cy="20" r="2" fill="#1E2230"/><ellipse cx="15" cy="13" rx="3" ry="2" fill="#fff" opacity=".6"/>'],
+  ['dino','Khủng long nhỏ','<path d="M6 30q0-12 12-14h6q10 0 12-8 3 4 2 10-2 6-8 8v8H10Z" fill="#4ADE80"/><circle cx="31" cy="13" r="1.8" fill="#1E2230"/><path d="M15 16l2-4 2 4M21 15l2-4 2 4" fill="#22C55E"/>'],
+];
+const SWATCH = ['#3B82F6','#F97316','#EC4899','#14B8A6','#8B5CF6','#EAB308'];
+const charState = {look:'cat',color:'#3B82F6',speed:5,jump:10,role:'player'};
+
+function head(n){
+  return `<div class="props-head" style="${catVars(n.cat)}"><span class="node-ic">${ic('c-'+n.cat)}</span>
+    <div><h3>${n.t}${n.s?` · <span style="font-weight:500;color:var(--ink-2)">${n.s}</span>`:''}</h3><p>Nhóm ${CAT_LABEL[n.cat]}</p></div>
+    <div class="act"><button class="btn icon" aria-label="Nhân đôi khối" data-tip="Nhân đôi · Ctrl + D">${ic('i-copy')}</button></div></div>`;
+}
+function sliderField(id,label,v,min,max,step,unit,hint){
+  return `<div class="field"><label for="${id}">${label}${hint?`<span class="hint">${hint}</span>`:''}</label>
+    <div class="slider"><input type="range" id="${id}" min="${min}" max="${max}" step="${step}" value="${v}" style="--v:${(v-min)/(max-min)*100}%"><output class="num" for="${id}">${v}${unit}</output></div></div>`;
+}
+function segField(label,name,opts,val){
+  return `<div class="field"><span class="lab">${label}</span><div class="seg full" role="radiogroup" aria-label="${label}" data-seg="${name}"><span class="seg-thumb"></span>
+    ${opts.map(([v,l])=>`<button role="radio" aria-checked="${v===val}" data-v="${v}">${l}</button>`).join('')}</div></div>`;
+}
+const foot = `<div class="props-foot"><button class="btn">${ic('i-copy')}Nhân đôi</button><button class="btn danger">${ic('i-trash')}Xoá khối <kbd>Del</kbd></button></div>`;
+const lockMsg = `<div class="lock">${ic('i-lock')}Đang chơi — bấm “Dừng” để chỉnh thuộc tính.</div>`;
+
+function renderProps(){
+  const p = $('#props'); const n = NODES.find(x=>x.id===selected);
+  if(!n){
+    p.innerHTML = `<div class="props-head"><span class="node-ic" style="background:var(--sunk);color:var(--ink-3)">${ic('i-hand')}</span><div><h3>Thuộc tính</h3><p>Chưa chọn khối nào</p></div></div>
+    <div class="empty"><p>Bấm vào một khối trên bảng để đổi màu, tốc độ, lời thắng thua… Kéo vật trong khung game để đặt vị trí.</p>
+    <ul><li>Thêm khối nhanh<kbd>/</kbd></li><li>Chơi thử<kbd>Ctrl ↵</kbd></li><li>Hoàn tác<kbd>Ctrl Z</kbd></li><li>Xoá khối đang chọn<kbd>Del</kbd></li><li>Thêm ghi chú<kbd>N</kbd></li></ul></div>`;
+    return;
+  }
+  let body = '';
+  if(n.id==='char'){
+    body = `<div class="field"><label for="pName">Tên khối<span class="hint">hiện trên bảng</span></label><input class="inp" id="pName" value="${n.s}"></div>
+    <div class="field"><span class="lab">Kiểu dáng<span class="hint">6 kiểu</span></span><div class="looks" role="radiogroup" aria-label="Kiểu dáng">
+      ${LOOKS.map(([v,l,svg])=>`<button class="look" role="radio" aria-checked="${v===charState.look}" data-look="${v}"><svg viewBox="0 0 44 40">${svg.replaceAll('"C"','"'+charState.color+'"')}</svg>${l}</button>`).join('')}</div></div>
+    <div class="field"><span class="lab">Màu</span><div class="swatches" role="radiogroup" aria-label="Màu">
+      ${SWATCH.map(c=>`<button class="swatch" role="radio" aria-label="Màu ${c}" aria-checked="${c===charState.color}" style="--c:${c}" data-c="${c}"></button>`).join('')}
+      <label class="swatch custom" aria-label="Chọn màu khác"><input type="color" value="${charState.color}" id="pColor"></label></div></div>
+    ${sliderField('pSpeed','Tốc độ chạy',charState.speed,0,15,.5,'','mặc định 5')}
+    ${sliderField('pJump','Sức nhảy',charState.jump,0,20,.5,'','mặc định 10')}
+    ${segField('Vai trò','role',[['player','Người chơi'],['bot','Bot']],charState.role)}
+    <div class="field"><span class="lab">Vị trí xuất hiện<span class="hint">hoặc kéo trong khung game</span></span><div class="xyz">
+      <label><span>X</span><input class="inp" value="0" inputmode="decimal" aria-label="Vị trí X"></label><label><span>Y</span><input class="inp" value="1" aria-label="Vị trí Y"></label><label><span>Z</span><input class="inp" value="0" aria-label="Vị trí Z"></label></div></div>`;
+  } else if(n.id==='key'){
+    body = `<div class="field"><span class="lab">Phím<span class="hint">bấm ô rồi nhấn phím muốn dùng</span></span>
+      <button class="keycap" id="keycap"><span id="keyHint">Phím đang dùng</span><kbd id="keyVal">Cách</kbd></button></div>`;
+  } else if(n.id==='timer'){
+    body = sliderField('pSec','Đếm ngược',60,5,180,5,' giây','') + `<div class="field"><label class="lab" style="justify-content:flex-start;gap:10px;font-weight:500"><input type="checkbox" checked style="accent-color:var(--brand);width:18px;height:18px"> Tự chạy khi bắt đầu</label></div>`;
+  } else if(n.id==='counter'){
+    body = `<div class="field"><label for="pStart">Bắt đầu từ</label><input class="inp num" id="pStart" type="number" value="0"></div>
+            <div class="field"><label for="pTarget">Mục tiêu<span class="hint">“Đã đủ” bật khi đếm tới số này</span></label><input class="inp num" id="pTarget" type="number" value="5"></div>`;
+  } else if(n.id==='win'){
+    body = `<div class="field"><label for="pW">Lời khi thắng</label><input class="inp" id="pW" value="Bạn thắng rồi!"></div>
+            <div class="field"><label for="pL">Lời khi thua</label><input class="inp" id="pL" value="Hết giờ mất rồi!"></div>`;
+  } else if(n.cat==='output'){
+    body = `<div class="field"><label for="pLab">Tên hiển thị</label><input class="inp" id="pLab" value="${n.s||'Điểm'}"></div>
+      <div class="field"><label for="pCorner">Góc màn hình</label><select class="inp" id="pCorner"><option>Trên trái</option><option>Trên phải</option><option>Dưới trái</option><option>Dưới phải</option></select></div>`;
+  } else {
+    body = `<p style="color:var(--ink-3);font-size:var(--t-sm)">Khối này không có gì cần chỉnh. Hãy nối dây vào các cổng của nó.</p>`;
+  }
+  p.innerHTML = head(n) + `<div class="props-body">${lockMsg}<p class="desc">${DESC[n.t]||''}</p>${body}</div>` + foot;
+  initSegs(p);
+}
+/* props interactions (delegated) */
+$('#props').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.type==='range'){t.style.setProperty('--v',(t.value-t.min)/(t.max-t.min)*100+'%');const o=t.nextElementSibling;o.textContent=t.value+(t.id==='pSec'?' giây':'');
+    if(t.id==='pSpeed')charState.speed=+t.value; if(t.id==='pJump')charState.jump=+t.value; markDirty();}
+  if(t.id==='pColor'){setColor(t.value);}
+  if(t.id==='pName'){const n=NODES.find(x=>x.id==='char');n.s=t.value||'Nhân vật';$('.node[data-id="char"] .node-s').textContent=n.s;markDirty();}
+});
+$('#props').addEventListener('click',e=>{
+  const lk=e.target.closest('.look'); if(lk){charState.look=lk.dataset.look;$$('.look').forEach(b=>b.setAttribute('aria-checked',String(b===lk)));markDirty();return;}
+  const sw=e.target.closest('.swatch[data-c]'); if(sw){setColor(sw.dataset.c);return;}
+  const kc=e.target.closest('#keycap'); if(kc){kc.classList.add('listening');$('#keyHint').textContent='Nhấn một phím bất kỳ…';$('#keyVal').textContent='…';
+    const f=ev=>{ev.preventDefault();const k=ev.key===' '?'Cách':ev.key.length===1?ev.key.toUpperCase():ev.key;$('#keyVal').textContent=k;$('#keyHint').textContent='Phím đang dùng';kc.classList.remove('listening');
+      NODES.find(x=>x.id==='key').chip[1]=k;$('.node[data-id="key"] .node-chip b').textContent=k;toast(`Đã đổi phím thành “${k}”`);};
+    addEventListener('keydown',f,{once:true,capture:true});}
+});
+function setColor(c){charState.color=c;document.documentElement.style.setProperty('--char',c);renderProps();markDirty();}
+
+/* segmented controls with sliding thumb */
+function placeThumb(seg){const on=$('[aria-checked="true"]',seg),th=$('.seg-thumb',seg);if(!on||!th)return;th.style.width=on.offsetWidth+'px';th.style.transform=`translateX(${on.offsetLeft-3}px)`;}
+function initSegs(root=document){$$('.seg',root).forEach(seg=>{placeThumb(seg);seg.onclick=e=>{const b=e.target.closest('button[role=radio]');if(!b)return;
+  $$('button[role=radio]',seg).forEach(x=>x.setAttribute('aria-checked',String(x===b)));placeThumb(seg);seg.dispatchEvent(new CustomEvent('change',{detail:b}));};
+  seg.onkeydown=e=>{if(!['ArrowLeft','ArrowRight'].includes(e.key))return;const bs=$$('button[role=radio]',seg);let i=bs.findIndex(b=>b.getAttribute('aria-checked')==='true');
+    i=(i+(e.key==='ArrowRight'?1:-1)+bs.length)%bs.length;bs[i].click();bs[i].focus();};});}
+$('#modeSeg').addEventListener('change',e=>{const m=e.detail.dataset.mode;$$('.scene').forEach(s=>s.classList.toggle('on',s.dataset.scene===m));
+  toast(`Đã đổi góc nhìn: ${e.detail.textContent}`);});
+
+/* ============================================================
+   PLAY ⇄ EDIT
+   ============================================================ */
+let tick;
+function setPlaying(on){
+  document.body.classList.toggle('playing',on);
+  $('#tgPlay').setAttribute('aria-pressed',String(on)); $('#tgPlayL').textContent = on?'Đang chơi':'Đang sửa';
+  $('#statePill').textContent = on?'Đang chạy':'Đang dừng';
+  $('#btnPlay').setAttribute('aria-label',on?'Dừng game để sửa (Esc)':'Chơi thử game (Ctrl + Enter)');
+  clearInterval(tick);
+  if(on){let s=0,t=60;$('#hudScore').textContent=0;$('#hudTime').textContent=60;
+    tick=setInterval(()=>{t=Math.max(0,t-1);if(t%4===0&&s<5)s++;$('#hudScore').textContent=s;$('#hudTime').textContent=t;},1000);}
+  drawWires(); renderProps(); requestAnimationFrame(placeRing);
+}
+$('#btnPlay').onclick=()=>setPlaying(!document.body.classList.contains('playing'));
+$('#coverPlay').onclick=()=>setPlaying(true);
+$('#btnRestart').onclick=()=>{setPlaying(true);toast('Chơi lại từ đầu');};
+$('#bannerEdit').onclick=()=>setPlaying(false);
+$('#tgPlay').onclick=()=>setPlaying(!document.body.classList.contains('playing'));
+$('#tgSel').onclick=()=>{selected = selected?null:'char'; applySel();};
+$('#btnMax').onclick=toggleMax;
+function toggleMax(){const g=$('#game');const on=!g.classList.contains('max');g.classList.toggle('max',on);
+  $('#btnMax').innerHTML=ic(on?'i-min':'i-max');$('#btnMax').dataset.tip=on?'Thu nhỏ  ·  Esc':'Phóng to  ·  F';$('#btnMax').setAttribute('aria-label',on?'Thu nhỏ khung game':'Phóng to khung game');}
+
+/* ============================================================
+   TUTORIAL with highlight ring
+   ============================================================ */
+const STEPS = [
+  {t:'Tìm khối “Phím bấm”',b:'Trong Kho khối, mở nhóm Đầu vào. Khối “Phím bấm” cho biết khi nào bạn nhấn một phím.',tip:'Gõ “phím” vào ô tìm để thấy nhanh hơn.',target:()=>$('.item[data-name="Phím bấm"]'),label:'Bấm vào đây',pos:'right'},
+  {t:'Nối “Vừa bấm” sang “Nhảy”',b:'Kéo từ chấm tròn xanh lá “Vừa bấm” của khối Phím bấm, thả vào cổng “Nhảy” của Nhân vật.',tip:'Chấm tròn xanh lá là tín hiệu bật/tắt. Chỉ nối được vào chấm cùng hình dạng.',target:()=>$('.node[data-id="key"] .port.out[data-p="pressed"]'),label:'Kéo từ chấm này',pos:'none'},
+  {t:'Đổi phím nhảy',b:'Chọn khối Phím bấm, rồi ở ô Thuộc tính bấm vào ô phím và nhấn phím bạn thích.',tip:'Phím Cách (Space) là phím nhảy quen thuộc nhất.',target:()=>$('.node[data-id="key"] .node-chip'),label:'Phím đang dùng',pos:'right'},
+  {t:'Chọn kiểu dáng',b:'Chọn khối Nhân vật để đổi kiểu dáng và màu. Có 6 kiểu, ví dụ Mèo hoặc Khủng long nhỏ.',tip:'Đổi màu nhân vật sẽ thấy ngay trong khung game.',target:()=>$('.looks')||$('.node[data-id="char"]'),label:'Chọn một kiểu',pos:'left'},
+  {t:'Bấm Chơi để thử',b:'Bấm nút Chơi. Nhấn phím Cách, nhân vật của bạn sẽ nhảy lên!',tip:'Bấm Dừng (hoặc phím Esc) để quay lại chỉnh. Bấm Chơi lại để bắt đầu từ đầu.',target:()=>$('#btnPlay'),label:'Bấm Chơi',pos:'below'},
+];
+let step = 1;
+function renderTut(){
+  const s = STEPS[step];
+  $('#tStep').textContent = `Bước ${step+1}/${STEPS.length}`;
+  $('#tBars').innerHTML = STEPS.map((_,i)=>`<i class="${i<=step?'done':''}"></i>`).join('');
+  $('#tTitle').textContent = s.t; $('#tBody').textContent = s.b; $('#tTip').textContent = s.tip;
+  $('#tPrev').disabled = step===0;
+  $('#tNext').innerHTML = step===STEPS.length-1 ? `Xong${ic('i-check')}` : `Tiếp theo${ic('i-right')}`;
+  $('#ringLabel').textContent = s.label; $('#ring').dataset.pos = s.pos||'right';
+  if(step===3 && selected!=='char'){selected='char';applySel();}
+  if(step===2 && selected!=='key'){selected='key';applySel();}
+  requestAnimationFrame(placeRing);
+}
+function placeRing(){
+  const r = $('#ring'); const el = STEPS[step].target(); if(!el) return;
+  const b = el.getBoundingClientRect(), pad = 5;
+  Object.assign(r.style,{left:b.left-pad+'px',top:b.top-pad+'px',width:b.width+pad*2+'px',height:b.height+pad*2+'px'});
+}
+$('#tNext').onclick=()=>{if(step===1&&!WIRES.some(w=>w[2]==='char'&&w[3]==='jump')){WIRES.push(['key','pressed','char','jump']);drawWires();}if(step<STEPS.length-1){step++;renderTut();toast('Làm tốt lắm! Sang bước tiếp.');}else{setTut(false);toast('Hoàn thành bài 1 — nhân vật đã biết nhảy');}};
+$('#tPrev').onclick=()=>{if(step>0){step--;renderTut();}};
+$('#tClose').onclick=()=>setTut(false);
+$('#btnGuide').onclick=()=>setTut(!document.body.classList.contains('tutorial'));
+$('#tgTut').onclick=()=>setTut(!document.body.classList.contains('tutorial'));
+function setEmpty(on){document.body.classList.toggle('empty-board',on);$('#tgEmpty').setAttribute('aria-pressed',String(on));if(on){setTut(false);setPlaying(false);selected=null;applySel();}else{drawWires();drawMinimap();}}
+$('#tgEmpty').onclick=()=>setEmpty(!document.body.classList.contains('empty-board'));
+$('#beLesson').onclick=()=>{setEmpty(false);step=0;setTut(true);};
+$('#beSample').onclick=()=>{setEmpty(false);toast('Đã mở game mẫu “Nhặt sao trên đồi”');};
+$('#beDrag').onclick=()=>{$('#q').value='nhân vật';renderPalette('nhân vật');$('.item',palList)?.focus();};
+function setTut(on){document.body.classList.toggle('tutorial',on);$('#tgTut').setAttribute('aria-pressed',String(on));if(on)renderTut();}
+
+/* ============================================================
+   TOAST — fixed overlay, stacked, auto-dismiss
+   ============================================================ */
+function toast(msg,action,fn){
+  const box=$('#toasts'); while(box.children.length>1) box.firstChild.remove();
+  const t=document.createElement('div'); t.className='toast'; t.setAttribute('role','status');
+  t.innerHTML=`<span class="ok">${ic('i-check')}</span><span>${msg}</span>${action?`<button>${action}</button>`:''}`;
+  if(action) t.querySelector('button').onclick=()=>{fn();t.remove();};
+  box.append(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),280);},2600);
+}
+function markDirty(){const s=$('#saved');s.classList.add('dirty');s.textContent='Có thay đổi chưa lưu';}
+function save(){const s=$('#saved');s.classList.remove('dirty');const d=new Date();s.textContent=`Đã lưu lúc ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+  toast(`Đã lưu “${$('#boardName').value}”`);}
+$('#btnSave').onclick=save;
+$('#tAddNote').onclick=()=>toast('Đã thêm ghi chú — bấm đúp để viết');
+$('#tTidy').onclick=()=>toast('Đã xếp khối gọn theo cột','Hoàn tác',()=>{});
+
+/* ============================================================
+   KEYBOARD
+   ============================================================ */
+addEventListener('keydown',e=>{
+  const typing = /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName);
+  if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();setPlaying(!document.body.classList.contains('playing'));return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='s'){e.preventDefault();save();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'&&!typing){e.preventDefault();$('#btnUndo').click();return;}
+  if(e.key==='Escape'){if($('#game').classList.contains('max'))toggleMax();else if(document.body.classList.contains('playing'))setPlaying(false);else if(typing)document.activeElement.blur();return;}
+  if(typing) return;
+  if(e.key==='/'){e.preventDefault();$('#q').focus();}
+  if(e.key==='f'||e.key==='F') toggleMax();
+  if((e.key==='r'||e.key==='R')&&document.body.classList.contains('playing')) $('#btnRestart').click();
+  if(e.key==='+'||e.key==='=') setZoom(zoom+.1);
+  if(e.key==='-') setZoom(zoom-.1);
+  if(e.key==='0') $('#zFit').click();
+  if(e.key==='Enter'&&document.activeElement.classList.contains('node')){selected=document.activeElement.dataset.id;applySel();}
+});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const f=$('.item',palList);if(f)f.click();}if(e.key==='ArrowDown'){e.preventDefault();$('.item:not([tabindex="-1"])',palList)?.focus();}});
+addEventListener('resize',()=>{drawMinimap();placeRing();$$('.seg').forEach(placeThumb);});
+
+/* boot */
+renderBoard(); initSegs(); setZoom(1); setTut(true);
+if(innerWidth<1400) setZoom(Math.max(.85,(board.clientWidth-16)/820));
+document.fonts && document.fonts.ready.then(()=>{drawWires();drawMinimap();$$('.seg').forEach(placeThumb);placeRing();});
+</script>
+</body>
+</html>

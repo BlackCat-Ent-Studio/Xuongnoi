@@ -1,0 +1,134 @@
+import { getNodeDef } from '../../engine/registry';
+import type { GraphNode } from '../../engine/types';
+
+export const MIN_ZOOM = 0.3;
+export const MAX_ZOOM = 2;
+/** Fit never zooms out below this, so labels stay readable. */
+export const FIT_FLOOR = 0.6;
+/** Below this zoom the graph switches to titles only. */
+export const LOW_ZOOM = 0.6;
+/** A dragged wire snaps to a compatible port this close (screen px). */
+export const SNAP_PX = 24;
+
+export interface Point {
+  x: number;
+  y: number;
+}
+export interface Size {
+  w: number;
+  h: number;
+}
+export interface Box extends Point, Size {}
+export interface View {
+  panX: number;
+  panY: number;
+  zoom: number;
+}
+
+export const clampZoom = (z: number): number => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, z));
+
+export function wirePath(x1: number, y1: number, x2: number, y2: number): string {
+  const dx = Math.max(40, Math.abs(x2 - x1) / 2);
+  return `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`;
+}
+
+/** New view after changing zoom so the point (mx, my) in canvas px stays under the cursor. */
+export function zoomAround(view: View, nextZoom: number, mx: number, my: number): View {
+  const zoom = clampZoom(nextZoom);
+  const wx = (mx - view.panX) / view.zoom;
+  const wy = (my - view.panY) / view.zoom;
+  return { zoom, panX: mx - wx * zoom, panY: my - wy * zoom };
+}
+
+/** The candidate closest to `p` within `radius`, or null. */
+export function nearestWithin<T extends Point>(candidates: readonly T[], p: Point, radius: number): T | null {
+  let best: T | null = null;
+  let bestD = radius;
+  for (const c of candidates) {
+    const d = Math.hypot(c.x - p.x, c.y - p.y);
+    if (d <= bestD) {
+      best = c;
+      bestD = d;
+    }
+  }
+  return best;
+}
+
+export const boxesOverlap = (a: Box, b: Box, margin = 0): boolean =>
+  a.x < b.x + b.w + margin && a.x + a.w + margin > b.x && a.y < b.y + b.h + margin && a.y + a.h + margin > b.y;
+
+/** Rough on-canvas size of a node before it has been measured in the DOM. */
+export function estimateNodeSize(node: GraphNode): Size {
+  const def = getNodeDef(node.kind);
+  if (!def) return { w: 168, h: 70 };
+  const longest = Math.max(def.label.length, ...def.inputs.map((p) => p.label.length), ...def.outputs.map((p) => p.label.length));
+  const rows = def.inputs.length + def.outputs.length;
+  return { w: Math.max(168, 60 + longest * 7.4), h: 40 + rows * 26 + 8 };
+}
+
+/** Bounding box that holds every box, or null when there are none. */
+export function unionBox(boxes: readonly Box[]): Box | null {
+  if (boxes.length === 0) return null;
+  const x = Math.min(...boxes.map((b) => b.x));
+  const y = Math.min(...boxes.map((b) => b.y));
+  return {
+    x,
+    y,
+    w: Math.max(...boxes.map((b) => b.x + b.w)) - x,
+    h: Math.max(...boxes.map((b) => b.y + b.h)) - y,
+  };
+}
+
+/** Screen-space size of an overlay pinned to a bottom corner of the canvas. */
+export interface CornerInset {
+  w: number;
+  h: number;
+}
+/** Overlays that sit on top of the canvas and must not hide content. */
+export interface CornerInsets {
+  bl: CornerInset;
+  br: CornerInset;
+}
+export const NO_INSETS: CornerInsets = { bl: { w: 0, h: 0 }, br: { w: 0, h: 0 } };
+
+const FIT_PAD = 40;
+/** Breathing room kept between content and an overlay. */
+export const CORNER_GAP = 16;
+
+/**
+ * View that shows `content` inside a viewport of the given size, never below the fit floor.
+ * Corner overlays are avoided: each one is dodged by giving up either a side column or a bottom strip,
+ * and the combination that leaves the biggest zoom wins.
+ */
+export function fitView(content: Box | null, viewport: Size, insets: CornerInsets = NO_INSETS): View {
+  if (!content) return { panX: FIT_PAD, panY: FIT_PAD, zoom: 1 };
+  const has = (c: CornerInset): boolean => c.w > 0 && c.h > 0;
+  let best: View | null = null;
+  let bestRaw = -Infinity;
+  for (const blSide of [true, false]) {
+    for (const brSide of [true, false]) {
+      const left = FIT_PAD + (blSide && has(insets.bl) ? insets.bl.w + CORNER_GAP : 0);
+      const right = FIT_PAD + (brSide && has(insets.br) ? insets.br.w + CORNER_GAP : 0);
+      const bottom =
+        FIT_PAD +
+        Math.max(!blSide && has(insets.bl) ? insets.bl.h + CORNER_GAP : 0, !brSide && has(insets.br) ? insets.br.h + CORNER_GAP : 0);
+      const raw = Math.min((viewport.w - left - right) / content.w, (viewport.h - FIT_PAD - bottom) / content.h);
+      if (raw > bestRaw + 1e-9) {
+        bestRaw = raw;
+        const zoom = Math.min(1, Math.max(FIT_FLOOR, raw));
+        best = { zoom, panX: left - content.x * zoom, panY: FIT_PAD - content.y * zoom };
+      }
+    }
+  }
+  return best as View;
+}
+
+/** A screen rectangle (canvas px) as a world-space box, grown by `margin` screen px. */
+export function screenRectToWorld(view: View, r: Box, margin = 0): Box {
+  return {
+    x: (r.x - margin - view.panX) / view.zoom,
+    y: (r.y - margin - view.panY) / view.zoom,
+    w: (r.w + margin * 2) / view.zoom,
+    h: (r.h + margin * 2) / view.zoom,
+  };
+}

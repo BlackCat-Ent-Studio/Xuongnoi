@@ -1,0 +1,409 @@
+import { getNodeDef } from '../engine/registry';
+import type { GraphNode, PortType, Runtime, Wire } from '../engine/types';
+import { h } from './dom';
+import type { EditorState } from './editor-state';
+import { CORNER_GAP, LOW_ZOOM, clampZoom, estimateNodeSize, fitView, screenRectToWorld, unionBox, wirePath, zoomAround, type Box, type CornerInsets, type Point, type Size, type View } from './graph/graph-geometry';
+import { createGraphToolbar } from './graph/graph-toolbar';
+import './graph/graph.css';
+import { listMissingWires } from './graph/missing-wires';
+import { createMinimap } from './graph/minimap';
+import { findFreeNodeSpot, occupiedBoxes } from './graph/node-placement';
+import { buildNodeView } from './graph/node-view';
+import { syncNotes, type NoteParts } from './graph/note-view';
+import type { PortDir } from './graph/port-compat';
+import { attachPointer } from './graph/canvas-pointer';
+import { createNodeActions } from './graph/node-actions';
+import { createWireDrag } from './graph/wire-drag';
+import { TEXT_VI, formatWireValue } from './text-vi';
+
+const SVG_NS = 'http://www.w3.org/2000/svg';
+const MIN_MAP_HEIGHT = 480;
+const ZOOM_STEP = 1.2;
+
+export interface WiringCanvas {
+  el: HTMLElement;
+  /** Convert screen coordinates to canvas (world) coordinates. */
+  clientToWorld(clientX: number, clientY: number): { x: number; y: number };
+  /** World coordinates of the visible center. */
+  viewCenter(): { x: number; y: number };
+  isOver(clientX: number, clientY: number): boolean;
+  fitToContent(): void;
+  /** Pan so the node sits in the middle of the view (zoom unchanged). No-op for an unknown id. */
+  centerOn(nodeId: string): void;
+  /** Update live wire value badges (play mode). */
+  refreshBadges(): void;
+  /** Nearest free spot (no overlap with nodes or notes) for a new node of `kind`, starting from `want`. */
+  findFreeSpot(want: Point, kind?: string): Point;
+  /** Re-lay out all nodes in layers, animated. */
+  arrange(): void;
+  /**
+   * Reserve the bottom-right corner (px of the canvas) for a floating window such as the game view.
+   * Fit and new-node placement keep clear of a `right` x `bottom` box pinned to that corner.
+   * Call again whenever the window moves or resizes; zeros (the default) release it.
+   */
+  setOverlayInsets(insets: { right: number; bottom: number }): void;
+}
+
+interface Deps {
+  state: EditorState;
+  getRuntime: () => Runtime | null;
+  notify: (text: string, kind?: 'info' | 'error') => void;
+}
+
+const svgEl = <K extends keyof SVGElementTagNameMap>(tag: K, className = ''): SVGElementTagNameMap[K] => {
+  const el = document.createElementNS(SVG_NS, tag);
+  if (className) el.setAttribute('class', className);
+  return el;
+};
+
+export function createWiringCanvas({ state, getRuntime, notify }: Deps): WiringCanvas {
+  const el = h('div', 'wc');
+  el.tabIndex = 0;
+  const world = h('div', 'wc-world');
+  const wireLayer = svgEl('svg', 'wc-wires');
+  const noteLayer = h('div', 'wc-notes');
+  const nodeLayer = h('div', 'wc-nodes');
+  const badgeLayer = h('div', 'wc-badges');
+  const hint = h('div', 'wc-hint', TEXT_VI.canvasEmpty);
+  const tip = h('div', 'wc-tip');
+  tip.hidden = true;
+  world.append(wireLayer, noteLayer, nodeLayer, badgeLayer);
+
+  let view: View = { panX: 40, panY: 40, zoom: 1 };
+  let overlayBR = { w: 0, h: 0 };
+  const nodeEls = new Map<string, HTMLElement>();
+  const noteEls = new Map<string, NoteParts>();
+  const portEls = new Map<string, HTMLElement>(); // `${node}|${port}|${dir}` → dot
+  const wirePaths = new Map<string, SVGPathElement>();
+  const badgeEls = new Map<string, { el: HTMLElement; wire: Wire; type: PortType }>();
+  const seenNodes = new Set(state.getGraph().nodes.map((n) => n.id));
+
+  const portKey = (node: string, port: string, dir: PortDir): string => `${node}|${port}|${dir}`;
+  const sizeOf = (id: string): Size | undefined => {
+    const box = nodeEls.get(id);
+    return box ? { w: box.offsetWidth, h: box.offsetHeight } : undefined;
+  };
+
+  function clientToWorld(cx: number, cy: number): Point {
+    const r = el.getBoundingClientRect();
+    return { x: (cx - r.left - view.panX) / view.zoom, y: (cy - r.top - view.panY) / view.zoom };
+  }
+
+  function portCenter(key: string): Point | null {
+    const r = portEls.get(key)?.getBoundingClientRect();
+    return r ? clientToWorld(r.left + r.width / 2, r.top + r.height / 2) : null;
+  }
+
+  function worldViewport(): Box {
+    const r = el.getBoundingClientRect();
+    const a = clientToWorld(r.left, r.top);
+    return { x: a.x, y: a.y, w: r.width / view.zoom, h: r.height / view.zoom };
+  }
+
+  function contentBoxes(): Box[] {
+    return [
+      ...state.getGraph().nodes.map((n) => ({ x: n.pos.x, y: n.pos.y, ...(sizeOf(n.id) ?? estimateNodeSize(n)) })),
+      ...state.getNotes().map((n) => ({ x: n.pos.x, y: n.pos.y, w: n.size.w, h: n.size.h })),
+    ];
+  }
+
+  // ---------- overlays ----------
+
+  const minimap = createMinimap({
+    items: contentBoxes,
+    viewport: worldViewport,
+    centerOn(p) {
+      const r = el.getBoundingClientRect();
+      view = { ...view, panX: r.width / 2 - p.x * view.zoom, panY: r.height / 2 - p.y * view.zoom };
+      applyView();
+    },
+  });
+  const toolbar = createGraphToolbar(
+    {
+      zoomOut: () => zoomBy(1 / ZOOM_STEP),
+      zoomIn: () => zoomBy(ZOOM_STEP),
+      reset: () => zoomBy(1 / view.zoom),
+      fit: () => fitToContent(),
+      arrange: () => arrange(),
+    },
+    minimap.el,
+  );
+  el.append(world, hint, toolbar.el, tip);
+
+  /** Canvas-relative screen rect of an element, or null when it is not laid out. */
+  function localRect(target: Element): Box | null {
+    const r = target.getBoundingClientRect();
+    if (r.width === 0 || r.height === 0) return null;
+    const c = el.getBoundingClientRect();
+    return { x: r.left - c.left, y: r.top - c.top, w: r.width, h: r.height };
+  }
+
+  /** Screen rects of the overlays that sit on the canvas (bottom-left cluster, reserved bottom-right box). */
+  function overlayRects(): Box[] {
+    const rects: Box[] = [];
+    const corner = localRect(toolbar.el);
+    if (corner) rects.push(corner);
+    if (overlayBR.w > 0 && overlayBR.h > 0) {
+      const c = el.getBoundingClientRect();
+      rects.push({ x: c.width - overlayBR.w, y: c.height - overlayBR.h, w: overlayBR.w, h: overlayBR.h });
+    }
+    return rects;
+  }
+
+  function cornerInsets(): CornerInsets {
+    const corner = localRect(toolbar.el);
+    const height = el.getBoundingClientRect().height;
+    return {
+      bl: corner ? { w: corner.x + corner.w, h: height - corner.y } : { w: 0, h: 0 },
+      br: { ...overlayBR },
+    };
+  }
+
+  const blockedWorld = (): Box[] => overlayRects().map((r) => screenRectToWorld(view, r, CORNER_GAP));
+
+  function applyView(): void {
+    world.style.transform = `translate(${view.panX}px, ${view.panY}px) scale(${view.zoom})`;
+    el.style.backgroundPosition = `${view.panX}px ${view.panY}px`;
+    el.style.backgroundSize = `${24 * view.zoom}px ${24 * view.zoom}px`;
+    el.classList.toggle('lowzoom', view.zoom < LOW_ZOOM);
+    toolbar.setZoom(view.zoom);
+    minimap.redraw();
+  }
+
+  function zoomBy(factor: number): void {
+    const r = el.getBoundingClientRect();
+    view = zoomAround(view, clampZoom(view.zoom * factor), r.width / 2, r.height / 2);
+    applyView();
+  }
+
+  function fitToContent(): void {
+    const r = el.getBoundingClientRect();
+    view = fitView(unionBox(contentBoxes()), { w: r.width || 800, h: r.height || 600 }, cornerInsets());
+    applyView();
+  }
+
+  if (typeof ResizeObserver !== 'undefined') {
+    new ResizeObserver(() => {
+      minimap.el.hidden = el.clientHeight < MIN_MAP_HEIGHT;
+      minimap.redraw();
+    }).observe(el);
+  }
+
+  // ---------- rendering ----------
+
+  function renderNodes(): void {
+    nodeLayer.replaceChildren();
+    nodeEls.clear();
+    portEls.clear();
+    const graph = state.getGraph();
+    const missing = new Map<string, Set<string>>();
+    for (const m of listMissingWires(graph)) {
+      const set = missing.get(m.nodeId) ?? new Set<string>();
+      set.add(m.portId);
+      missing.set(m.nodeId, set);
+    }
+    for (const node of graph.nodes) {
+      const { box, dots } = buildNodeView(node, missing.get(node.id) ?? new Set());
+      for (const [k, dot] of dots) {
+        const [dir, port] = k.split('|') as [PortDir, string];
+        portEls.set(portKey(node.id, port, dir), dot);
+      }
+      nodeLayer.append(box);
+      nodeEls.set(node.id, box);
+    }
+  }
+
+  function wireType(wire: Wire): PortType | null {
+    const from = state.getGraph().nodes.find((n) => n.id === wire.from.node);
+    return (from && getNodeDef(from.kind)?.outputs.find((p) => p.id === wire.from.port)?.type) || null;
+  }
+
+  function drawWires(): void {
+    wireLayer.replaceChildren();
+    wirePaths.clear();
+    badgeLayer.replaceChildren();
+    badgeEls.clear();
+    const playing = state.isPlaying();
+    for (const wire of state.getGraph().wires) {
+      const a = portCenter(portKey(wire.from.node, wire.from.port, 'out'));
+      const b = portCenter(portKey(wire.to.node, wire.to.port, 'in'));
+      const type = wireType(wire);
+      if (!a || !b || !type) continue;
+      const d = wirePath(a.x, a.y, b.x, b.y);
+      const hit = svgEl('path', 'wc-wire-hit');
+      hit.setAttribute('d', d);
+      hit.dataset.wire = wire.id;
+      const path = svgEl('path', `wc-wire type-${type}`);
+      path.setAttribute('d', d);
+      wireLayer.append(path, hit);
+      wirePaths.set(wire.id, path);
+      if (playing) {
+        const badge = h('div', `wc-badge type-${type}`);
+        badge.style.left = `${(a.x + b.x) / 2}px`;
+        badge.style.top = `${(a.y + b.y) / 2}px`;
+        badgeLayer.append(badge);
+        badgeEls.set(wire.id, { el: badge, wire, type });
+      }
+    }
+    applySelection();
+    refreshBadges();
+    minimap.redraw();
+  }
+
+  function render(): void {
+    renderNodes();
+    syncNotes(state, noteLayer, noteEls);
+    hint.hidden = state.getGraph().nodes.length > 0 || state.getNotes().length > 0;
+    el.classList.toggle('readonly', state.isPlaying());
+    drawWires();
+  }
+
+  function applySelection(): void {
+    const sel = state.getSelection();
+    const multi = state.getMulti();
+    for (const [id, box] of nodeEls) box.classList.toggle('selected', multi.has(id));
+    for (const [id, parts] of noteEls) parts.el.classList.toggle('selected', multi.has(id));
+    for (const [id, path] of wirePaths) path.classList.toggle('selected', sel?.kind === 'wire' && sel.id === id);
+  }
+
+  function refreshBadges(): void {
+    const rt = getRuntime();
+    if (!rt) return;
+    for (const { el: badge, wire, type } of badgeEls.values()) {
+      let text: string;
+      try {
+        const src = state.getGraph().nodes.find((n) => n.id === wire.from.node);
+        text = formatWireValue(type, rt.getWireValue(wire), (src && getNodeDef(src.kind)?.label) || TEXT_VI.none);
+      } catch {
+        text = TEXT_VI.none;
+      }
+      if (badge.textContent !== text) badge.textContent = text;
+    }
+  }
+
+  // ---------- placement, arrange, pulse ----------
+
+  function findFreeSpot(want: Point, kind?: string): Point {
+    const size = kind ? estimateNodeSize({ id: '', kind, params: {}, pos: want }) : { w: 168, h: 90 };
+    return findFreeNodeSpot(want, size, [...occupiedBoxes(state.getGraph(), state.getNotes(), sizeOf), ...blockedWorld()]);
+  }
+
+  const actions = createNodeActions({ el, state, nodeEls, sizeOf, drawWires, fit: () => fitToContent(), blocked: blockedWorld });
+  const { flash } = actions;
+  const arrange = actions.arrange;
+
+  // ---------- pointer interaction ----------
+
+  function setTip(text: string | null, cx = 0, cy = 0): void {
+    tip.hidden = !text;
+    if (!text) return;
+    const r = el.getBoundingClientRect();
+    tip.textContent = text;
+    tip.style.left = `${cx - r.left + 14}px`;
+    tip.style.top = `${cy - r.top + 14}px`;
+  }
+
+  const wires = createWireDrag({
+    root: el,
+    wireLayer,
+    state,
+    notify,
+    toWorld: clientToWorld,
+    showTip: setTip,
+    shake: (id) => flash(id, 'shake'),
+  });
+
+  attachPointer({
+    el, state, wires, nodeEls, noteEls, noteLayer,
+    getView: () => view,
+    setView: (v) => { view = v; applyView(); },
+    clientToWorld, render, drawWires,
+  });
+
+  // Fade the bottom-left cluster while a dragged node or wire passes under it (it still takes clicks).
+  let pressOnItem = false;
+  const touchesCorner = (e: PointerEvent): boolean => {
+    const c = el.getBoundingClientRect();
+    const corner = localRect(toolbar.el);
+    if (!corner) return false;
+    const m = CORNER_GAP;
+    const inside = (x: number, y: number): boolean =>
+      x > corner.x - m && x < corner.x + corner.w + m && y > corner.y - m && y < corner.y + corner.h + m;
+    if (inside(e.clientX - c.left, e.clientY - c.top)) return true;
+    for (const box of nodeEls.values()) {
+      if (!box.classList.contains('selected')) continue;
+      const r = box.getBoundingClientRect();
+      if (r.right - c.left > corner.x - m && r.left - c.left < corner.x + corner.w + m && r.bottom - c.top > corner.y - m && r.top - c.top < corner.y + corner.h + m) return true;
+    }
+    return false;
+  };
+  el.addEventListener('pointerdown', (e) => {
+    pressOnItem = e.target instanceof Element && !e.target.closest('.wc-ui') && !!e.target.closest('.wc-node, .wc-note');
+  }, true);
+  el.addEventListener('pointermove', (e) => {
+    toolbar.el.classList.toggle('dim', pressOnItem && (e.buttons & 1) === 1 && touchesCorner(e));
+  }, true);
+  const endDrag = (): void => {
+    pressOnItem = false;
+    toolbar.el.classList.remove('dim');
+  };
+  el.addEventListener('pointerup', endDrag, true);
+  el.addEventListener('pointercancel', endDrag, true);
+
+  // ---------- state sync ----------
+
+  state.subscribe((kind) => {
+    if (kind === 'board') {
+      seenNodes.clear();
+      for (const n of state.getGraph().nodes) seenNodes.add(n.id);
+      render();
+      fitToContent();
+    } else if (kind === 'graph' || kind === 'playing') {
+      render();
+      const fresh = state.getGraph().nodes.filter((n) => !seenNodes.has(n.id));
+      for (const n of fresh) seenNodes.add(n.id);
+      if (fresh.length === 1 && !state.isPlaying()) actions.placeNewNode(fresh[0] as GraphNode);
+    } else if (kind === 'notes') {
+      syncNotes(state, noteLayer, noteEls);
+      applySelection();
+      hint.hidden = state.getGraph().nodes.length > 0 || state.getNotes().length > 0;
+      minimap.redraw();
+    } else if (kind === 'selection') applySelection();
+  });
+
+  applyView();
+  render();
+
+  return {
+    el,
+    clientToWorld,
+    viewCenter() {
+      const r = el.getBoundingClientRect();
+      return clientToWorld(r.left + r.width / 2, r.top + r.height / 2);
+    },
+    isOver(cx, cy) {
+      const r = el.getBoundingClientRect();
+      return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+    },
+    fitToContent,
+    centerOn(nodeId) {
+      const node = state.getGraph().nodes.find((n) => n.id === nodeId);
+      if (!node) return;
+      const size = sizeOf(nodeId) ?? estimateNodeSize(node);
+      const r = el.getBoundingClientRect();
+      view = {
+        ...view,
+        panX: r.width / 2 - (node.pos.x + size.w / 2) * view.zoom,
+        panY: r.height / 2 - (node.pos.y + size.h / 2) * view.zoom,
+      };
+      applyView();
+    },
+    refreshBadges,
+    findFreeSpot,
+    arrange,
+    setOverlayInsets({ right, bottom }) {
+      const ok = (n: number): number => (Number.isFinite(n) && n > 0 ? Math.round(n) : 0);
+      overlayBR = { w: ok(right), h: ok(bottom) };
+    },
+  };
+}
