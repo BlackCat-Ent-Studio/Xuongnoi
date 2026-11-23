@@ -149,5 +149,7 @@
  "lesson:robot-to-marker": "e6e7abad:900",
  "handbook:raised-deck": "796a39b6:900",
  "handbook:grid-route": "f53dff5b:900",
- "handbook:cell-hold": "767b4546:900"
+ "handbook:cell-hold": "767b4546:900",
+ "lesson:grid-find-way": "b31277ed:900",
+ "lesson:two-robots-one-cell": "34ba2927:40"
 }
