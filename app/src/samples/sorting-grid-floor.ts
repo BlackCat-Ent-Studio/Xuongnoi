@@ -158,7 +158,7 @@ export const GRID_MAIN_WIRES: readonly Link[] = [
 
 const note = (id: string, color: NoteColor, x: number, y: number, w: number, h: number, text: string): Note => ({ id, color, pos: { x, y }, size: { w, h }, text });
 
-const MAIN_COLS = [0, 330, 730, 1010, 1340, 1600] as const;
+const MAIN_COLS = [0, 330, 730, 1010, 1400, 1660] as const;
 const BANNER_H = 220;
 /** Step between the copies of a stacked block (the smallest the app leaves between two cards). */
 const STACK_STEP = 104;
@@ -179,7 +179,7 @@ export function createGridFloorBoard(): Board {
   const stationPlace = (s: 1 | 2): Vec3 => cellPlace(...stationCell(s));
   const laid: [GraphNode, number][] = [
     [card('bat-dau', 'on-start'), 0],
-    [card('may-quay', 'camera', { mode: 'fixed', point: { x: mm(middle - 1), y: GRID.top, z: mm(middle + 0.4) }, zoom: 0.72, view: 'tilted' }), 0],
+    [card('may-quay', 'camera', { mode: 'fixed', point: { x: mm(middle - 1), y: GRID.top, z: mm(middle + 0.4) }, zoom: 0.72, view: 'free' }), 0],
     [card('nen', 'block', { position: { x: mm(middle - 1), y: -0.5, z: middle }, size: { x: 20, y: 1, z: 16 }, color: '#cfd2d7' }), 0],
     [copy('san-luoi', GRID_IDS.floor, 'Sàn lưới', null), 0],
     [copy('tram-1', GRID_IDS.station, 'Trạm nạp 1', stationPlace(1), { 'hat-giong': GRID.seed + 1 }), 1],

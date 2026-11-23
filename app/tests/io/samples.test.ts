@@ -27,7 +27,7 @@ describe('samples', () => {
 
   it('lists the samples with distinct ids and the expected modes', () => {
     expect(samples.map((s) => s.id)).toEqual(['side-stars', 'top-collect', '3d-hop', 'key-door', 'pickaxe-rock', 'guard-patrol', 'cleaner-bot', 'maze-chase', 'platform-bot', 'arena', 'race', 'dice-zones', 'portal-camera', 'dodge-shoot', 'city-delivery', 'city-delivery-3d', 'robot-arm', 'robot-line-follow', 'robot-avoid', 'robot-square', 'auto-door', 'auto-arm', 'weight-sorter', 'agv-shuttle', 'sorting-factory', 'sorting-factory-grid']);
-    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side', '2d-side', '2d-top', '3d', '2d-side', '3d', '3d', '3d', '3d', '3d', '3d', '3d', '3d']);
+    expect(samples.map((s) => s.board.mode)).toEqual(['2d-side', '2d-top', '3d', '2d-side', '2d-side', '2d-top', '2d-top', '2d-top', '2d-side', '2d-side', '2d-top', '2d-side', '2d-side', '2d-side', '2d-top', '3d', '2d-side', '3d', '3d', '3d', '3d', '3d', '3d', '3d', '3d', '3d']);
     for (const s of samples) expect(s.label.length).toBeGreaterThan(0);
   });
 
