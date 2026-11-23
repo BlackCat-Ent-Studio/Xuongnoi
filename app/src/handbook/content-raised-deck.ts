@@ -33,11 +33,13 @@ export const HANDBOOK_RAISED_DECK: readonly HandbookEntry[] = [
       width: 'Chiều rộng của cả tấm sàn, đo theo trục Z, tính bằng mét, tối đa 100. Mặc định 0: chưa gõ, sàn tự tính theo lề. Luật giống hệt "Chiều dài sàn", tính theo số lỗ trục Z.',
       thickness: 'Bề dày của tấm sàn, tính bằng mét, từ 0,05 đến 1. Mặc định 0,2.',
       color: 'Màu mặt sàn. Mặc định xám thép. Đổi được ngay lúc đang chạy. Viền vàng, viền xanh và chân trụ giữ màu riêng.',
-      legs: 'Có vẽ chân trụ quanh mép sàn hay không. Chân trụ chỉ là hình vẽ: robot và thùng hàng đi xuyên qua được. Cần cột thật thì đặt thêm Vật thể.',
+      legs:
+        'Chân trụ của sàn, ba lựa chọn. "Có, cột cứng" (thẻ mới đặt ra dùng kiểu này): mỗi chân là một cột vuông 10 cm rắn như Vật thể, robot và đồ vật ở tầng dưới đụng vào thì bị chặn lại. "Chỉ vẽ": chân chỉ là hình, đi xuyên qua được (thẻ lưu từ trước giữ kiểu này). "Không": sàn không có chân. Luật đặt chân: chân chỉ đứng quanh mép sàn, tâm chân cách mép 12 cm; bốn góc luôn có chân; dọc mỗi cạnh thêm chân cách đều sao cho hai chân cạnh nhau cách không quá 3 m; không có chân nào dưới lòng sàn và không chân nào nằm dưới lỗ. Vì vậy các làn dưới sàn luôn trống: xe chỉ cần đi vào giữa hai chân ở mép. Cần lối vào rộng hơn thì chọn "Chỉ vẽ" hoặc "Không" rồi tự đặt Vật thể làm cột. Cột cứng chỉ có ở góc nhìn 3D.',
     },
     example:
       'Đặt một Vật thể làm mặt đất, đặt Sàn nâng có lỗ phía trên. Thân robot có "Vị trí xuất hiện" cao hơn mặt sàn; Đi tới điểm lái robot dọc lối đi cạnh lỗ; khay nghiêng đổ thùng hàng vào lỗ; một Vùng đặt dưới lỗ đếm thùng rơi xuống.',
     tips: [
+      'Cho xe tầng dưới chạy ngang dưới sàn: đặt làn của xe vào giữa hai chân trụ ở mép sàn. Ví dụ sàn 3 x 3 lỗ mặc định (7,3 m mỗi cạnh) có 4 chân mỗi cạnh, cách nhau 2,35 m: làn ở chính giữa cạnh (thẳng hàng với cột lỗ giữa) đi lọt.',
       'Sàn chỉ là các tấm rắn ghép lại, giống Vật thể: 1 lỗ là 4 tấm, 3 x 3 lỗ là 16 tấm. Cái gì dùng được với Vật thể thì dùng được với sàn.',
       'Đổi số lỗ, cạnh lỗ, khoảng cách, lề, chiều dài, chiều rộng, độ cao hay bề dày xong phải bấm Chạy lại; chỉ có màu đổi được ngay lúc đang chạy.',
       'Muốn sàn đúng một cỡ, ví dụ 12 x 8 m: gõ 12 vào "Chiều dài sàn" và 8 vào "Chiều rộng sàn". Các lỗ luôn nằm giữa sàn. Gõ nhỏ quá thì sàn tự lớn lên vừa đủ chứa các lỗ; nối "Chiều dài thật" vào Hiện số để biết sàn thật sự dài bao nhiêu.',

@@ -7,8 +7,8 @@ import { createRuntime } from '../../src/engine/runtime';
 import type { Board, EntityView, ParamValue, ViewMode, World } from '../../src/engine/types';
 import { parseBoard, serializeBoard } from '../../src/io';
 import { registerAllNodes } from '../../src/nodes';
-import { RAISED_DECK_LOOK, deckPlates, deckShape, deckSize, frameLabel, frameOfLabel, leastDeckSide } from '../../src/nodes/raised-deck';
-import { EDGE_BEAM, RaisedDeckFigure, deckLegSpots } from '../../src/render/raised-deck-figure';
+import { DECK_LEG, RAISED_DECK_LOOK, deckLegSpots, deckPlates, deckShape, deckSize, frameLabel, frameOfLabel, isDeckLeg, leastDeckSide } from '../../src/nodes/raised-deck';
+import { EDGE_BEAM, RaisedDeckFigure } from '../../src/render/raised-deck-figure';
 import { SceneView } from '../../src/render/scene-view';
 import { createWorld } from '../../src/world/world';
 import { rig } from '../helpers/arm-rig';
@@ -17,10 +17,13 @@ registerAllNodes();
 
 type DeckParams = Record<string, ParamValue>;
 
-function plates(params: DeckParams = {}, mode: ViewMode = '3d'): EntityView[] {
+/** Everything the card made: the plates, then its solid legs if it has any. */
+function parts(params: DeckParams = {}, mode: ViewMode = '3d'): EntityView[] {
   const r = rig([['deck', 'raised-deck', params]], [], mode);
   return r.world.entities().filter((e) => e.ownerNodeId === 'deck');
 }
+const plates = (params: DeckParams = {}, mode: ViewMode = '3d'): EntityView[] => parts(params, mode).filter((e) => !isDeckLeg(e));
+const legsOf = (params: DeckParams = {}, mode: ViewMode = '3d'): EntityView[] => parts(params, mode).filter(isDeckLeg);
 
 interface Rect {
   x0: number;
@@ -250,13 +253,143 @@ describe('raised deck: a typed length and width', () => {
   });
 });
 
+describe('raised deck: legs', () => {
+  const SHAPES: DeckParams[] = [{}, { holeCols: 3, holeRows: 3 }, { holeCols: 5, holeRows: 2 }, { holeCols: 3, holeRows: 3, margin: 0.1 }, { holeCols: 2, length: 1, width: 1 }, { holeCols: 2, holeRows: 2, margin: 0.14, width: 9 }, { length: 20, width: 0.9 }];
+
+  it('"Chân trụ": a new card has solid legs, a card saved before the choice existed keeps drawn ones', () => {
+    const legs = getNodeDef('raised-deck')!.params.find((p) => p.id === 'legs')!;
+    expect(legs.label).toBe('Chân trụ');
+    expect(legs.options!.map((o) => o.value)).toEqual(['solid', 'yes', 'no']);
+    expect(legs.default).toBe('solid');
+    expect(legs.legacyDefault).toBe('yes');
+    // No setting at all (an old saved card), "Chỉ vẽ" and "Không": no solid leg; the trim draws the legs of the first two.
+    for (const [old, drawn] of [[{}, 2.4], [{ legs: 'yes' }, 2.4], [{ legs: 'no' }, 0]] as [DeckParams, number][]) {
+      expect(legsOf(old)).toEqual([]);
+      expect(parts(old)).toHaveLength(4);
+      expect(frameOfLabel(plates(old)[0]!.label)!.legs).toBe(drawn);
+    }
+  });
+
+  it('solid legs are plain solid posts from the ground to the underside of the floor, one per leg spot; the plates and the output stay as they were', () => {
+    for (const shape of SHAPES) {
+      const at = { x: 3, y: 0.5, z: -2 };
+      const r = rig([['deck', 'raised-deck', { ...shape, legs: 'solid', position: at }]], [], '3d');
+      r.tick(1);
+      const all = r.world.entities().filter((e) => e.ownerNodeId === 'deck');
+      const posts = all.filter(isDeckLeg);
+      const floor = all.filter((e) => !isDeckLeg(e));
+      const spots = deckLegSpots(deckShape(shape));
+      expect(posts.length, JSON.stringify(shape)).toBe(spots.length);
+      posts.forEach((p, i) => {
+        expect(p.kind).toBe('block');
+        expect(p.look).toBe(RAISED_DECK_LOOK);
+        expect([p.size.x, p.size.z]).toEqual([DECK_LEG, DECK_LEG]);
+        expect(p.position.x).toBeCloseTo(at.x + spots[i]!.x, 9);
+        expect(p.position.z).toBeCloseTo(at.z + spots[i]!.z, 9);
+        expect(p.position.y - p.size.y / 2).toBeCloseTo(at.y, 9);
+        expect(p.position.y + p.size.y / 2).toBeCloseTo(at.y + 2.6 - 0.2, 9);
+      });
+      // Same plates, in the same order with the same ids, as the deck with drawn legs; the plates come first.
+      const drawn = rig([['deck', 'raised-deck', { ...shape, legs: 'yes', position: at }]], [], '3d').world.entities();
+      expect(floor.map((e) => [e.id, e.position, e.size])).toEqual(drawn.map((e) => [e.id, e.position, e.size]));
+      expect(all.slice(0, floor.length)).toEqual(floor);
+      expect(r.out('deck', 'self')).toBe(floor[0]!.id);
+      // The trim no longer draws legs: each post draws itself.
+      expect(frameOfLabel(floor[0]!.label)!.legs).toBe(0);
+      expect((r.world.debugBodies?.() ?? []).every((b) => b.solid)).toBe(true);
+    }
+  });
+
+  it('the spacing rule: a ring just inside the edge, a leg at every corner, never more than 3 m between neighbours, none under the inside of the deck', () => {
+    for (const shape of SHAPES) {
+      const s = deckShape(shape);
+      const size = deckSize(s);
+      const spots = deckLegSpots(s);
+      const tag = JSON.stringify(shape);
+      expect(new Set(spots.map((p) => `${p.x.toFixed(6)},${p.z.toFixed(6)}`)).size, tag).toBe(spots.length);
+      const maxX = Math.max(...spots.map((p) => p.x));
+      const maxZ = Math.max(...spots.map((p) => p.z));
+      // The ring sits at most 12 cm inside the edge.
+      expect(size.x / 2 - maxX, tag).toBeLessThanOrEqual(0.12 + 1e-9);
+      expect(size.z / 2 - maxZ, tag).toBeLessThanOrEqual(0.12 + 1e-9);
+      for (const p of spots) expect(Math.abs(Math.abs(p.x) - maxX) < 1e-9 || Math.abs(Math.abs(p.z) - maxZ) < 1e-9, tag).toBe(true);
+      for (const [cx, cz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]] as const) expect(spots.some((p) => Math.abs(p.x - cx * maxX) < 1e-9 && Math.abs(p.z - cz * maxZ) < 1e-9), tag).toBe(true);
+      for (const axis of ['x', 'z'] as const) {
+        const along = [...new Set(spots.map((p) => Number(p[axis].toFixed(9))))].sort((a, b) => a - b);
+        for (let i = 1; i < along.length; i++) expect(along[i]! - along[i - 1]!, tag).toBeLessThanOrEqual(3 + 1e-9);
+      }
+    }
+    // A 3 x 3 deck (7.3 m a side): four legs per edge, 2.35 m apart, twelve in all.
+    expect(deckLegSpots(deckShape({ holeCols: 3, holeRows: 3 }))).toHaveLength(12);
+  });
+
+  it('no leg stands under a hole: every post lies wholly under floor, also where the rim outside the holes is only 10 cm', () => {
+    for (const shape of SHAPES) {
+      const all = parts({ ...shape, legs: 'solid', position: { x: 0, y: 0, z: 0 } });
+      const floor = all.filter((e) => !isDeckLeg(e)).map(rectOf);
+      for (const post of all.filter(isDeckLeg)) {
+        const r = rectOf(post);
+        // The four corners of the post, pulled in a hair, are each under some plate.
+        for (const [x, z] of [[r.x0, r.z0], [r.x0, r.z1], [r.x1, r.z0], [r.x1, r.z1]] as const) {
+          const inX = x + Math.sign(post.position.x - x) * 1e-6;
+          const inZ = z + Math.sign(post.position.z - z) * 1e-6;
+          expect(covers(floor, inX, inZ), `${JSON.stringify(shape)} @ ${x},${z}`).toBe(true);
+        }
+      }
+    }
+  });
+
+  it('a leg shorter than 5 cm is not made; the flat views have no solid legs; a repaint leaves the legs steel', () => {
+    expect(legsOf({ legs: 'solid', top: 0.24, thickness: 0.2 })).toEqual([]);
+    expect(legsOf({ legs: 'solid', top: 0.3, thickness: 0.2 })).toHaveLength(8);
+    expect(legsOf({ legs: 'solid', holeCols: 3 }, '2d-top')).toEqual([]);
+    expect(legsOf({ legs: 'solid', holeCols: 3 }, '2d-side')).toEqual([]);
+    const r = rig([['deck', 'raised-deck', { legs: 'solid' }]], [], '3d');
+    r.tick(2);
+    const before = r.world.entities().filter(isDeckLeg).map((e) => e.color);
+    expect(r.set('deck', { color: '#112233' })).toBe(true);
+    expect(r.world.entities().filter(isDeckLeg).map((e) => e.color)).toEqual(before);
+    expect(r.world.entities().filter((e) => !isDeckLeg(e)).every((e) => e.color === '#112233')).toBe(true);
+    expect(r.set('deck', { legs: 'no' })).toBe(false);
+  });
+
+  it('a solid leg is drawn as the post it is, on a foot, standing on the ground: the same leg the trim used to draw', () => {
+    const at = { x: 0, y: 0.5, z: 0 };
+    const post = legsOf({ legs: 'solid', position: at })[0]!;
+    const fig = new RaisedDeckFigure(post);
+    expect(fig.hasTrim).toBe(false);
+    fig.object.updateMatrixWorld(true);
+    const b = new THREE.Box3().setFromObject(fig.object);
+    expect(b.min.y).toBeCloseTo(0.5, 6);
+    expect(b.max.y).toBeCloseTo(0.5 + 2.4, 6);
+    // The foot is twice as wide as the post.
+    expect(b.max.x - b.min.x).toBeCloseTo(2 * DECK_LEG, 6);
+    expect((b.max.x + b.min.x) / 2).toBeCloseTo(post.position.x, 6);
+    fig.object.traverse((o) => expect(o.userData.ownerNodeId).toBe('deck'));
+    // Drawn legs and solid legs fill the same space on screen.
+    const whole = (params: DeckParams): THREE.Box3 => {
+      const group = new THREE.Group();
+      for (const e of parts({ ...params, position: at })) group.add(new RaisedDeckFigure(e).object);
+      group.updateMatrixWorld(true);
+      return new THREE.Box3().setFromObject(group);
+    };
+    const solid = whole({ legs: 'solid', holeCols: 2 });
+    const drawn = whole({ legs: 'yes', holeCols: 2 });
+    for (const k of ['x', 'y', 'z'] as const) {
+      expect(solid.min[k]).toBeCloseTo(drawn.min[k], 6);
+      expect(solid.max[k]).toBeCloseTo(drawn.max[k], 6);
+    }
+  });
+});
+
 describe('raised deck: in the editor', () => {
   const emptyBoard = (): Board => ({ name: 't', mode: '3d', graph: { nodes: [], wires: [] } });
-  const deckBlocks = (board: Board): EntityView[] => {
+  const deckParts = (board: Board): EntityView[] => {
     const world = createWorld(board.mode);
     createRuntime(board.graph, world, board.mode);
     return world.entities().filter((e) => e.look === RAISED_DECK_LOOK);
   };
+  const deckBlocks = (board: Board): EntityView[] => deckParts(board).filter((e) => !isDeckLeg(e));
 
   it('is offered under "Vật thể" in every view with Vietnamese names', () => {
     const def = getNodeDef('raised-deck')!;
@@ -278,6 +411,9 @@ describe('raised deck: in the editor', () => {
     expect(s.getSelection()).toEqual({ kind: 'node', id });
     expect(deckBlocks(s.getBoard())).toHaveLength(4);
     expect(readPosition(s.getGraph(), id)).toEqual({ x: 0, y: 0.5, z: 0 });
+    // A card placed now has solid legs, and says so in its saved settings.
+    expect(s.getGraph().nodes[0]!.params.legs).toBe('solid');
+    expect(deckParts(s.getBoard()).filter(isDeckLeg)).toHaveLength(8);
 
     s.setParam(id, 'holeCols', 3);
     s.setParam(id, 'holeRows', 3);
@@ -341,7 +477,7 @@ describe('raised deck: how it is drawn', () => {
     expect(boxOf(legless.object).min.y).toBeGreaterThan(0.5 + 2.6 - 0.2 - 0.02);
   });
 
-  it('legs stand round the outer edge only, never further apart than 3 m, and none under a hole', () => {
+  it('drawn legs stand round the outer edge only, never further apart than 3 m, and none under a hole', () => {
     for (const [cols, rows] of [[1, 1], [3, 3], [5, 2]] as const) {
       const frame = { ...deckShape({ holeCols: cols, holeRows: rows }), thickness: 0.2, legs: 2.4 };
       const size = deckSize(frame);

@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it } from 'vitest';
 import { TICK_DT, type EntityView, type ParamValue } from '../../src/engine/types';
-import { RAISED_DECK_LOOK } from '../../src/nodes/raised-deck';
+import { RAISED_DECK_LOOK, isDeckLeg } from '../../src/nodes/raised-deck';
 import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
 import { rig, type NodeSpec, type WireSpec } from '../helpers/arm-rig';
 import { FLOOR, poseOf } from '../helpers/nav-rig';
@@ -216,6 +216,70 @@ describe('raised deck: a carton tipped into a hole', () => {
     r.tick(seconds(7));
     expect(crateBottom(r.entity('r-crate')!)).toBeGreaterThan(TOP - 0.03);
     r.world.dispose?.();
+  });
+});
+
+describe('raised deck: solid legs', () => {
+  // A 3 x 3 deck is 7.3 m a side: legs stand 3.53 m from its middle, four to an edge, at -3.53, -1.177, 1.177 and 3.53.
+  const LEG_AT = 3.65 - 0.12;
+  const INNER_LEG = LEG_AT / 3;
+  const under = (legs: string): Parts => ({ nodes: [deck({ holeCols: 3, holeRows: 3, legs })], wires: [] });
+  const crosser = (z: number): Parts => bot({ id: 'b', x: -6, z, floor: 0, heading: 0, goal: { x: 6, z } });
+
+  it('the deck of this test has a leg where the robot is sent', () => {
+    const r = play(under('solid'));
+    const posts = r.world.entities().filter(isDeckLeg);
+    expect(posts).toHaveLength(12);
+    expect(posts.some((p) => Math.abs(p.position.x + LEG_AT) < 1e-9 && Math.abs(p.position.z + INNER_LEG) < 1e-9)).toBe(true);
+    // Nothing stands between z = -1.177 and z = 1.177 on the edge the robot of the next test enters by.
+    expect(posts.filter((p) => Math.abs(p.position.z) < INNER_LEG - 1e-6 && Math.abs(Math.abs(p.position.x) - LEG_AT) < 1e-9)).toEqual([]);
+    r.world.dispose?.();
+  });
+
+  it('a robot on the ground driving straight at a solid leg is stopped by it; with drawn legs it drives through', { timeout: 60_000 }, () => {
+    const solid = play(under('solid'), crosser(-INNER_LEG));
+    const blocked = drive(solid, 'b', seconds(20));
+    solid.world.dispose?.();
+    // Its nose never gets past the near face of the post.
+    const nose = Math.max(...blocked.points.map((p) => p.x)) + CHASSIS.length / 2;
+    expect(nose).toBeLessThan(-LEG_AT - 0.05 + 0.02);
+    expect(nose).toBeGreaterThan(-LEG_AT - 0.05 - 0.05);
+    expect(blocked.arrivedAt).toBe(-1);
+
+    const drawn = play(under('yes'), crosser(-INNER_LEG));
+    const free = drive(drawn, 'b', seconds(20));
+    drawn.world.dispose?.();
+    expect(free.arrivedAt).toBeGreaterThan(0);
+  });
+
+  it('between two legs the lane under the deck is open: the robot crosses under the whole deck tick for tick as without legs', { timeout: 60_000 }, () => {
+    const runs = ['solid', 'yes', 'no'].map((legs) => {
+      const r = play(under(legs), crosser(0));
+      const path = drive(r, 'b', seconds(20));
+      r.world.dispose?.();
+      return path;
+    });
+    const [solid, drawn, none] = runs as [Path, Path, Path];
+    expect(solid.arrivedAt).toBeGreaterThan(0);
+    expect(Math.abs(solid.points.at(-1)!.x - 6)).toBeLessThan(0.1);
+    expect(worstGap(solid, none)).toBe(0);
+    expect(worstGap(solid, drawn)).toBe(0);
+    expect(solid.arrivedAt).toBe(none.arrivedAt);
+  });
+
+  it('under the plain rules too ("Vật lý thật" off) a solid leg stops the robot and the lane between legs stays open', { timeout: 60_000 }, () => {
+    const plain = (legs: string, z: number): Path => {
+      const all = join(under(legs), crosser(z));
+      const r = rig([FLOOR, ...all.nodes], all.wires, '3d');
+      const path = drive(r, 'b', seconds(20));
+      return path;
+    };
+    const blocked = plain('solid', -INNER_LEG);
+    expect(Math.max(...blocked.points.map((p) => p.x)) + CHASSIS.length / 2).toBeLessThan(-LEG_AT - 0.05 + 0.02);
+    expect(plain('yes', -INNER_LEG).arrivedAt).toBeGreaterThan(0);
+    const open = plain('solid', 0);
+    expect(open.arrivedAt).toBeGreaterThan(0);
+    expect(worstGap(open, plain('no', 0))).toBe(0);
   });
 });
 

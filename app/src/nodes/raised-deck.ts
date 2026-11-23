@@ -1,4 +1,4 @@
-import type { EntityId, NodeDef, Params, ViewMode } from '../engine/types';
+import type { EntityId, EntityView, NodeDef, Params, ViewMode } from '../engine/types';
 import { clamp, numParam, strParam, vec3Param } from './util';
 
 /** `look` of the plates a raised deck is made of: the renderer draws them as a steel mezzanine floor. */
@@ -19,6 +19,18 @@ const MAX_THICKNESS = 1;
 const MAX_TOP = 20;
 /** Thickness of the deck where it is only paint on the floor (the top-down view). */
 const PAINT = 0.02;
+
+/**
+ * Legs: side of the square post, how far its middle sits inside the edge of the deck, the widest gap between the middles
+ * of two legs along an edge, and the shortest leg worth making (m).
+ */
+export const DECK_LEG = 0.1;
+export const DECK_LEG_INSET = 0.12;
+export const DECK_LEG_SPAN = 3;
+const MIN_LEG_HEIGHT = 0.05;
+/** Text a solid leg carries (a plate carries the deck's shape or nothing), and its colour. */
+export const DECK_LEG_LABEL = 'leg';
+export const DECK_LEG_COLOR = '#8f97a3';
 
 const DEFAULT_POSITION = { x: 0, y: 0.5, z: 0 };
 const DEFAULT_COLOR = '#93a1b3';
@@ -50,7 +62,10 @@ export interface DeckPlate {
   z1: number;
 }
 
-/** What the renderer needs to draw the trim of a whole deck: its shape, how thick the floor is and how far the legs reach down (0 = no legs). */
+/**
+ * What the renderer needs to draw the trim of a whole deck: its shape, how thick the floor is and how far the legs drawn
+ * with the trim reach down (0 = it draws none: the deck has no legs, or its legs are solid posts of their own).
+ */
 export interface DeckFrame extends DeckShape {
   thickness: number;
   legs: number;
@@ -139,6 +154,35 @@ export function platesFor(s: DeckShape, mode: ViewMode): DeckPlate[] {
   return plates.slice(from, from + s.cols + 1);
 }
 
+/** Leg middles along one edge of length `side`: `inset` in from both ends, and enough between them to keep every gap under `DECK_LEG_SPAN`. */
+function legStops(side: number, inset: number): number[] {
+  const run = Math.max(side - 2 * inset, 0);
+  const gaps = Math.max(1, Math.ceil(run / DECK_LEG_SPAN));
+  return Array.from({ length: gaps + 1 }, (_, i) => -run / 2 + (run * i) / gaps);
+}
+
+/**
+ * Where the legs of a deck stand, measured from its middle. The rule:
+ * - only on a ring just inside the outer edge (leg middle `DECK_LEG_INSET` from the edge): one at each corner, and along
+ *   each edge as many more, evenly spread, as keep two neighbours at most `DECK_LEG_SPAN` apart;
+ * - none anywhere under the inside of the deck, so every lane under it stays open between the edge legs;
+ * - never under a hole: where the rim of floor outside the holes is narrower than the ring, the ring moves out so the
+ *   whole post stays under that rim.
+ */
+export function deckLegSpots(s: DeckShape): { x: number; z: number }[] {
+  const size = deckSize(s);
+  const margins = deckMargins(s);
+  const xs = legStops(size.x, Math.min(DECK_LEG_INSET, margins.x - DECK_LEG / 2));
+  const zs = legStops(size.z, Math.min(DECK_LEG_INSET, margins.z - DECK_LEG / 2));
+  const out: { x: number; z: number }[] = [];
+  for (const x of xs) for (const z of [zs[0]!, zs[zs.length - 1]!]) out.push({ x, z });
+  for (const z of zs.slice(1, -1)) for (const x of [xs[0]!, xs[xs.length - 1]!]) out.push({ x, z });
+  return out;
+}
+
+/** True for a solid leg of a deck (not one of its plates). */
+export const isDeckLeg = (view: Pick<EntityView, 'kind' | 'look' | 'label'>): boolean => view.kind === 'block' && view.look === RAISED_DECK_LOOK && view.label === DECK_LEG_LABEL;
+
 const FRAME_FIELDS = 7;
 /** With a typed size the text gets two more numbers: the length and the width (0 = that side is not typed). */
 const SIZED_FRAME_FIELDS = FRAME_FIELDS + 2;
@@ -170,15 +214,16 @@ interface DeckState {
 
 /**
  * A steel floor on legs with a grid of square holes: an upper level robots drive on while parcels dropped into a hole
- * land on the level below. It is nothing but plain solid plates (the same solid a "Vật thể" is), so everything that
- * works on a block works on it. The trim and the legs are drawn only.
+ * land on the level below. It is nothing but plain solid blocks (the same solid a "Vật thể" is), so everything that
+ * works on a block works on it: the plates, and one post per leg when the legs are solid. The trim is drawn only, and
+ * so are the legs of a card that asks for drawn legs (every card saved before legs could be solid).
  */
 export const raisedDeckNode: NodeDef<DeckState> = {
   kind: 'raised-deck',
   label: 'Sàn nâng có lỗ',
   category: 'object',
   description:
-    'Một tầng sàn thép đặt trên cao, có các lỗ vuông xếp thành hàng và cột. Robot chạy trên mặt sàn như chạy trên mặt đất; kiện hàng thả vào lỗ thì rơi xuống tầng dưới; robot ở tầng dưới chạy bên dưới sàn không bị ảnh hưởng. Sàn được ghép từ các tấm rắn giống "Vật thể" (1 lỗ = 4 tấm, 3 x 3 lỗ = 16 tấm). Cỡ sàn: gõ "Chiều dài sàn" và "Chiều rộng sàn", các lỗ luôn nằm giữa sàn; để 0 thì sàn tự tính theo "Lề quanh lỗ ngoài cùng". Gõ số nhỏ hơn mức các lỗ cần thì sàn tự lớn lên vừa đủ (còn 10 cm sàn ngoài hàng lỗ ngoài cùng); cỡ thật đọc ở hai cổng ra "Chiều dài thật" và "Chiều rộng thật". Viền vàng quanh lỗ, viền xanh quanh mép sàn và các chân trụ chỉ là hình vẽ, không cản thứ gì. Dùng ở góc nhìn 3D. Ở góc nhìn ngang, sàn hiện thành một lát cắt qua hàng lỗ giữa; ở góc nhìn từ trên xuống, sàn chỉ là hình vẽ trên nền, không cản đường.',
+    'Một tầng sàn thép đặt trên cao, có các lỗ vuông xếp thành hàng và cột. Robot chạy trên mặt sàn như chạy trên mặt đất; kiện hàng thả vào lỗ thì rơi xuống tầng dưới; robot ở tầng dưới chạy bên dưới sàn không bị ảnh hưởng. Sàn được ghép từ các tấm rắn giống "Vật thể" (1 lỗ = 4 tấm, 3 x 3 lỗ = 16 tấm). Cỡ sàn: gõ "Chiều dài sàn" và "Chiều rộng sàn", các lỗ luôn nằm giữa sàn; để 0 thì sàn tự tính theo "Lề quanh lỗ ngoài cùng". Gõ số nhỏ hơn mức các lỗ cần thì sàn tự lớn lên vừa đủ (còn 10 cm sàn ngoài hàng lỗ ngoài cùng); cỡ thật đọc ở hai cổng ra "Chiều dài thật" và "Chiều rộng thật". Chân trụ là cột cứng: robot và đồ vật ở tầng dưới đụng vào thì bị chặn lại. Chân trụ chỉ đứng quanh mép sàn (bốn góc, dọc mỗi cạnh cách nhau không quá 3 m), không chân nào dưới lòng sàn hay dưới lỗ, nên các làn dưới sàn luôn trống; cần lối vào rộng hơn thì chọn "Chân trụ: Chỉ vẽ" hoặc "Không". Viền vàng quanh lỗ và viền xanh quanh mép sàn chỉ là hình vẽ, không cản thứ gì. Dùng ở góc nhìn 3D. Ở góc nhìn ngang, sàn hiện thành một lát cắt qua hàng lỗ giữa; ở góc nhìn từ trên xuống, sàn chỉ là hình vẽ trên nền, không cản đường.',
   inputs: [],
   outputs: [
     { id: 'self', type: 'object', label: 'Đối tượng' },
@@ -199,11 +244,14 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     { id: 'color', label: 'Màu mặt sàn', kind: 'color', default: DEFAULT_COLOR },
     {
       id: 'legs',
-      label: 'Vẽ chân trụ',
+      label: 'Chân trụ',
       kind: 'select',
-      default: 'yes',
+      default: 'solid',
+      // A card saved before legs could be solid drew them only: what stood or drove under it must still pass.
+      legacyDefault: 'yes',
       options: [
-        { value: 'yes', label: 'Có (chỉ là hình vẽ, không cản đường)' },
+        { value: 'solid', label: 'Có, cột cứng (robot và đồ vật ở dưới bị chặn lại)' },
+        { value: 'yes', label: 'Chỉ vẽ (đi xuyên qua được)' },
         { value: 'no', label: 'Không' },
       ],
     },
@@ -224,7 +272,10 @@ export const raisedDeckNode: NodeDef<DeckState> = {
     const thickness = flat ? PAINT : clamp(numParam(params, 'thickness', 0.2), MIN_THICKNESS, MAX_THICKNESS);
     // The floor never dips below the ground it stands on.
     const top = flat ? PAINT : clamp(numParam(params, 'top', 2.6), thickness, MAX_TOP);
-    const legs = !flat && strParam(params, 'legs', 'yes') !== 'no' ? top - thickness : 0;
+    const legKind = strParam(params, 'legs', 'yes');
+    const legs = !flat && legKind !== 'no' ? top - thickness : 0;
+    // Solid legs are blocks of their own (3D only: the side view is a cut through the middle, where no leg stands).
+    const solidLegs = legKind === 'solid' && mode === '3d' && legs > MIN_LEG_HEIGHT;
     const color = strParam(params, 'color', DEFAULT_COLOR);
     const ids = platesFor(shape, mode).map((p, i) =>
       ctx.world.spawn({
@@ -237,9 +288,24 @@ export const raisedDeckNode: NodeDef<DeckState> = {
         solid: !flat,
         ...(flat ? { zone: true } : {}),
         // The first plate carries the shape of the whole deck, so the trim and the legs are drawn once.
-        ...(i === 0 && mode !== '2d-side' ? { label: frameLabel({ ...shape, thickness, legs }) } : {}),
+        ...(i === 0 && mode !== '2d-side' ? { label: frameLabel({ ...shape, thickness, legs: solidLegs ? 0 : legs }) } : {}),
       }),
     );
+    // Made after the plates, so the plates keep the ids they always had.
+    if (solidLegs) {
+      for (const spot of deckLegSpots(shape)) {
+        ctx.world.spawn({
+          kind: 'block',
+          ownerNodeId: ctx.nodeId,
+          position: { x: at.x + spot.x, y: at.y + legs / 2, z: at.z + spot.z },
+          size: { x: DECK_LEG, y: legs, z: DECK_LEG },
+          color: DECK_LEG_COLOR,
+          look: RAISED_DECK_LOOK,
+          solid: true,
+          label: DECK_LEG_LABEL,
+        });
+      }
+    }
     return { ids };
   },
   evaluate(_ctx, _i, params, s) {
