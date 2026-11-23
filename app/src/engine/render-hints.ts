@@ -32,3 +32,19 @@ export function setArmOverload(ownerNodeId: string, entityId: string, overloaded
 export function armHintOf(ownerNodeId: string, entityId: string): ArmHint | undefined {
   return hints.get(keyOf(ownerNodeId, entityId));
 }
+
+/**
+ * Floor tiles ("Mốc sàn") a "Bảng giữ ô" holds right now. The card repaints a held tile in its held colour, which is all
+ * the world lets it change; this note tells the scene that the colour means "held", so it can wash the whole tile.
+ * A tile clears its own note when it is made, so nothing is left over from the run before.
+ */
+const heldTiles = new Set<string>();
+
+export function setTileHeld(ownerNodeId: string, entityId: string, held: boolean): void {
+  if (held) heldTiles.add(keyOf(ownerNodeId, entityId));
+  else heldTiles.delete(keyOf(ownerNodeId, entityId));
+}
+
+export function isTileHeld(ownerNodeId: string, entityId: string): boolean {
+  return heldTiles.has(keyOf(ownerNodeId, entityId));
+}

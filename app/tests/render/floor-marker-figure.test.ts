@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest';
 import * as THREE from 'three';
 import type { EntityView, ViewMode } from '../../src/engine/types';
 import { FLOOR_MARKER_LOOK } from '../../src/nodes/floor-marker';
-import { FloorMarkerFigure } from '../../src/render/floor-marker-figure';
+import { setTileHeld } from '../../src/engine/render-hints';
+import { FloorMarkerFigure, HELD_WASH_NAME } from '../../src/render/floor-marker-figure';
 import { SceneView } from '../../src/render/scene-view';
 
 const tile = (over: Partial<EntityView> = {}): EntityView => ({
@@ -109,6 +110,46 @@ describe('floor marker figure', () => {
     fig.object.traverse((o) => expect(o.userData.ownerNodeId).toBe('n1'));
     // The side view shows the floor edge-on: no arrows there.
     expect(meshesOf(new FloorMarkerFigure(tile({ blockStyle: 'marker-exits:ES' }), '2d-side'))).toHaveLength(2);
+  });
+
+  it('a held tile gets a light wash of its colour over the whole tile, under the ring and the arrows; let go, it is drawn as before', () => {
+    const view = tile({ id: 'held-1', blockStyle: 'marker-exits:E' });
+    const fig = new FloorMarkerFigure(view, '3d');
+    const before = meshesOf(fig).length;
+    fig.update(view);
+    expect(meshesOf(fig)).toHaveLength(before);
+
+    setTileHeld('n1', 'held-1', true);
+    fig.update({ ...view, color: '#ef4444' });
+    const wash = fig.object.getObjectByName(HELD_WASH_NAME) as THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+    expect(wash.visible).toBe(true);
+    expect(wash.material.color.getHexString()).toBe('ef4444');
+    expect(wash.material.transparent).toBe(true);
+    expect(wash.material.opacity).toBeGreaterThan(0.15);
+    expect(wash.material.opacity).toBeLessThan(0.5);
+    expect(wash.userData.ownerNodeId).toBe('n1');
+    // It covers exactly the tile, lies above the dark tile and below the ring and the arrows.
+    fig.object.updateMatrixWorld(true);
+    const box = new THREE.Box3().setFromObject(wash);
+    expect([box.min.x, box.max.x, box.min.z, box.max.z]).toEqual([expect.closeTo(3 - 0.7, 6), expect.closeTo(3 + 0.7, 6), expect.closeTo(-2 - 0.7, 6), expect.closeTo(-2 + 0.7, 6)]);
+    const [plate, ring, arrows] = meshesOf(fig)
+      .filter((m) => m !== wash)
+      .map((m) => new THREE.Box3().setFromObject(m).max.y) as [number, number, number];
+    expect(box.max.y).toBeGreaterThan(plate);
+    expect(box.max.y).toBeLessThan(ring);
+    expect(box.max.y).toBeLessThan(arrows);
+
+    setTileHeld('n1', 'held-1', false);
+    fig.update(view);
+    expect(wash.visible).toBe(false);
+    // A tile that was never held has no such mesh at all.
+    expect(new FloorMarkerFigure(tile({ id: 'free-1' }), '3d').object.getObjectByName(HELD_WASH_NAME)).toBeUndefined();
+    // Seen edge-on there is no tile face to wash.
+    setTileHeld('n1', 'held-1', true);
+    const side = new FloorMarkerFigure(view, '2d-side');
+    side.update(view);
+    expect(side.object.getObjectByName(HELD_WASH_NAME)).toBeUndefined();
+    setTileHeld('n1', 'held-1', false);
   });
 
   it('each arrow lies inside the tile, above it, and reaches toward the edge it points at', () => {

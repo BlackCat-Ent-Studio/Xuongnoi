@@ -1,4 +1,5 @@
 import type { EntityId, EntityView, NodeDef, Params, PortDef, PortValues } from '../engine/types';
+import { setTileHeld } from '../engine/render-hints';
 import { feetOf, listMarkers, markerAt, type MarkerSpot } from './floor-marker';
 import { asNum, asObject, clamp, numParam, strParam } from './util';
 
@@ -20,8 +21,8 @@ interface RobotSlot {
 
 interface CellHoldState {
   robots: RobotSlot[];
-  /** Tiles painted in the held colour right now: marker id -> the colour to give back. */
-  painted: Map<EntityId, string>;
+  /** Tiles painted in the held colour right now: marker id -> the colour to give back, and the card the tile belongs to. */
+  painted: Map<EntityId, { color: string; owner: string }>;
 }
 
 const rowPorts = (id: string, type: PortDef['type'], vi: (k: number) => string, en: (k: number) => string, extra: Partial<PortDef> = {}): PortDef[] =>
@@ -190,13 +191,18 @@ export const cellHoldNode: NodeDef<CellHoldState> = {
     }
     for (const [id, own] of s.painted) {
       if (heldIds.has(id)) continue;
-      ctx.world.setEntityStyle(id, { color: own });
+      ctx.world.setEntityStyle(id, { color: own.color });
+      setTileHeld(own.owner, id, false);
       s.painted.delete(id);
     }
     for (const id of heldIds) {
       const tile = ctx.world.getEntity(id);
       if (!tile) continue;
-      if (!s.painted.has(id)) s.painted.set(id, tile.color);
+      if (!s.painted.has(id)) {
+        s.painted.set(id, { color: tile.color, owner: tile.ownerNodeId });
+        // The scene washes the whole tile, so a held cell shows even with a robot standing on its ring and arrows.
+        setTileHeld(tile.ownerNodeId, id, true);
+      }
       if (tile.color !== heldColor) ctx.world.setEntityStyle(id, { color: heldColor });
     }
 

@@ -59,7 +59,7 @@ export const HANDBOOK_GRID_FLOOR: readonly HandbookEntry[] = [
       robots: `Số robot dùng chung bảng, từ 1 đến ${CELL_HOLD_MAX_ROBOTS}. Mặc định 2. Mỗi robot có hai cổng vào và ba cổng ra mang số của nó. Hai robot xin cùng một ô trong cùng một nhịp thì robot số nhỏ hơn được đi.`,
       flow: 'Mặc định "Có": robot đang đi thẳng được xin ô kế tiếp ngay khi tâm nó vào trong ô đang giữ, nên không phải dừng ở từng ô (trên sàn thử nhanh hơn khoảng 16 %). Trước khi rẽ robot vẫn dừng ở giữa ô. Chọn "Không" thì ô nào cũng vào giữa rồi mới xin.',
       arriveWithin: 'Robot được coi là đứng giữa ô khi tâm nó cách tâm ô không quá số mét này. Mặc định 0,06. Phải lớn hơn sai số dừng của Đi tới điểm (khoảng 0,02 đến 0,03 với cài đặt mặc định), nếu không robot không bao giờ được xin ô mới.',
-      heldColor: 'Màu của ô đang bị giữ lúc game chạy. Mặc định đỏ. Ô được trả lại màu của nó khi không còn ai giữ.',
+      heldColor: 'Màu của ô đang bị giữ lúc game chạy. Mặc định đỏ. Vòng tròn và mũi tên của ô đổi sang màu này, cả mặt ô được phủ một lớp nhạt cùng màu, nên robot đứng đè lên vẫn thấy ô đang bị giữ. Ô được trả lại màu của nó khi không còn ai giữ.',
     },
     example:
       'Mỗi robot: Thân robot "Đối tượng" → "Robot 1"; Tìm đường trên lưới "Ô kế tiếp" → "Ô robot 1 muốn tới"; "Ô robot 1 được đi" → "Số mốc" của Tìm mốc sàn → "Mốc" → "Đích" của Đi tới điểm; "Robot 1 đang chờ ô" → "Tránh ô bị giữ". Robot là một bảng mạch chép nhiều bản thì bốn sợi dây đó đi qua bốn chân của bảng mạch.',

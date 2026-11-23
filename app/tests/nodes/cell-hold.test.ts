@@ -1,4 +1,5 @@
 import { beforeAll, describe, expect, it } from 'vitest';
+import { isTileHeld, setTileHeld } from '../../src/engine/render-hints';
 import type { EntityView, GraphNode, ParamValue } from '../../src/engine/types';
 import { loadRapier, type RapierModule } from '../../src/world/rapier-loader';
 import { CHASSIS, TUNED_DRIVE, flatBoard, node, play, type Played } from '../helpers/grid-floor';
@@ -40,6 +41,8 @@ const set = (run: Played, id: string, value: number): void => {
   expect(run.rt.applyNodeParams(id, { value })).toBe(true);
 };
 const colourOf = (run: Played, number: number): string => run.entity(`m${number}`)!.color;
+/** Whether the scene is told that the tile of cell `number` is held (it then washes the whole tile). */
+const heldMark = (run: Played, number: number): boolean => isTileHeld(`m${number}`, run.entity(`m${number}`)!.id);
 /** True when the upright box round the turned chassis reaches over the tile of cell (x, z). */
 function bodyOn(v: EntityView, x: number, z: number): boolean {
   const r = v.robot!;
@@ -70,6 +73,25 @@ describe('Bảng giữ ô', () => {
     expect([out('stood', 'a'), out('stood', 'b')]).toEqual([true, true]);
     expect(run.out('hold', 'held')).toBe(2);
     expect([1, 2, 3].map((c) => colourOf(run, c))).toEqual([HELD, OWN, HELD]);
+    expect([1, 2, 3].map((c) => heldMark(run, c))).toEqual([true, false, true]);
+  });
+
+  it('a new run starts with no tile marked as held, whatever the run before left behind', () => {
+    const first = meeting(1).run;
+    first.tick(30);
+    expect(heldMark(first, 1)).toBe(true);
+    // The same run started again (same cards, same tile ids) with the wish to stay put: cell 2 was never held in it.
+    first.tick(8 * 60);
+    expect(heldMark(first, 2)).toBe(true);
+    const again = meeting(1).run;
+    expect(again.entity('m2')!.id).toBe(first.entity('m2')!.id);
+    expect(heldMark(again, 2)).toBe(false);
+    // A floor without a hold card marks nothing, even where the mark of an older run names one of its tiles.
+    const bare = (): Played => play(flatBoard([floor(), cell(1, 0, 0), cell(2, 1, 0), cell(3, 2, 0)], []), rapier);
+    setTileHeld('m1', bare().entity('m1')!.id, true);
+    const free = bare();
+    free.tick(5);
+    expect([1, 2, 3].map((c) => heldMark(free, c))).toEqual([false, false, false]);
   });
 
   it.each([1, 2] as const)('two robots ask for one cell on the same tick: the lower row gets it, the other waits where it is (robot a on row %s)', (aRow) => {
@@ -112,6 +134,7 @@ describe('Bảng giữ ô', () => {
     run.tick(8 * 60);
     expect([out('cell', 'a'), out('cell', 'b')]).toEqual([1, 2]);
     expect([1, 2, 3].map((c) => colourOf(run, c))).toEqual([HELD, HELD, OWN]);
+    expect([1, 2, 3].map((c) => heldMark(run, c))).toEqual([true, true, false]);
     expect(run.out('hold', 'held')).toBe(2);
   });
 

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { isTileHeld } from '../engine/render-hints';
 import type { EntityView, ViewMode } from '../engine/types';
 import { EXIT_DIRS, markerExits, type ExitDir } from '../nodes/floor-marker';
 import { canvasTexture } from './factory-kit';
@@ -72,6 +73,9 @@ function numberTexture(text: string): THREE.Texture | null {
 }
 
 const UNIT_PLANE = new THREE.PlaneGeometry(1, 1);
+/** A tile held by "Bảng giữ ô": how strongly its colour is washed over the whole tile, and the name of that mesh. */
+const HELD_WASH_OPACITY = 0.3;
+export const HELD_WASH_NAME = 'marker-held-wash';
 
 /** An arrow on the unit tile, pointing along +x: a stem that starts clear of the ring and a head that stops short of the edge. */
 const ARROW = { from: 0.17, neck: 0.31, tip: 0.46, stem: 0.03, head: 0.085 };
@@ -104,7 +108,9 @@ function arrowGeometry(exits: string): THREE.ShapeGeometry {
  * colour on the grid node, dashed light lines running to the four neighbours and the marker's number in the front-right
  * corner. In the side view, where the floor is seen edge-on, it is a short dark strip with a band in the marker's colour
  * and the number standing above it. A marker with one-way arrows gets them as a fourth flat mesh in the marker's colour,
- * from near the ring toward each edge it may be left by (not in the side view). Drawn only; nothing collides with it.
+ * from near the ring toward each edge it may be left by (not in the side view). While "Bảng giữ ô" holds the tile, a light
+ * wash of the tile's (held) colour covers the whole tile under the ring and the arrows, so the hold still shows round a
+ * robot that stands on them. Drawn only; nothing collides with it.
  */
 export class FloorMarkerFigure {
   readonly object = new THREE.Group();
@@ -115,6 +121,9 @@ export class FloorMarkerFigure {
   private readonly digits: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
   /** The one-way arrows, in the marker's colour; absent for a marker without arrows and in the side view. */
   private readonly arrows: THREE.Mesh<THREE.ShapeGeometry, THREE.MeshBasicMaterial> | null = null;
+  /** The wash of a held tile; made the first time the tile is held, hidden while it is free. */
+  private wash: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial> | null = null;
+  private readonly flat = new THREE.Group();
   private color = '';
 
   constructor(view: EntityView, private readonly mode: ViewMode) {
@@ -126,7 +135,7 @@ export class FloorMarkerFigure {
     const ring = side ? null : ringTexture();
     this.face = new THREE.Mesh(UNIT_PLANE, new THREE.MeshBasicMaterial({ map: ring, transparent: ring !== null, depthWrite: ring === null, side: THREE.DoubleSide }));
     this.face.position.z = 0.002;
-    const flat = new THREE.Group();
+    const flat = this.flat;
     flat.add(this.rim, this.face);
     const texture = numberTexture(view.label ?? '');
     if (texture) {
@@ -170,7 +179,17 @@ export class FloorMarkerFigure {
       this.color = view.color;
       this.face.material.color.set(view.color);
       this.arrows?.material.color.set(view.color);
+      this.wash?.material.color.set(view.color);
     }
+    const held = !side && isTileHeld(view.ownerNodeId, view.id);
+    if (held && !this.wash) {
+      this.wash = new THREE.Mesh(UNIT_PLANE, new THREE.MeshBasicMaterial({ color: view.color, transparent: true, opacity: HELD_WASH_OPACITY, depthWrite: false, side: THREE.DoubleSide }));
+      this.wash.name = HELD_WASH_NAME;
+      this.wash.position.z = 0.001;
+      this.wash.userData.ownerNodeId = view.ownerNodeId;
+      this.flat.add(this.wash);
+    }
+    if (this.wash) this.wash.visible = held;
   }
 
   /** The pictures are shared by every marker; only the per-marker materials are freed. */
@@ -179,5 +198,6 @@ export class FloorMarkerFigure {
     this.face.material.dispose();
     this.digits?.material.dispose();
     this.arrows?.material.dispose();
+    this.wash?.material.dispose();
   }
 }

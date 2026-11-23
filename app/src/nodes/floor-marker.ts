@@ -1,4 +1,5 @@
 import type { EntityId, EntityView, NodeDef, ViewMode, WorldApi } from '../engine/types';
+import { setTileHeld } from '../engine/render-hints';
 import { clamp, numParam, strParam, vec3Param } from './util';
 
 /** `look` of the block a floor marker is: the renderer draws it as a flat numbered tile, and marker readers find it by this. */
@@ -176,6 +177,8 @@ export const floorMarkerNode: NodeDef<{ id: EntityId }> = {
       solid: false,
       zone: true,
     });
+    // A fresh tile is free: whatever "Bảng giữ ô" marked in the run before is gone.
+    setTileHeld(ctx.nodeId, id, false);
     return { id };
   },
   evaluate(ctx, _i, params, s) {
