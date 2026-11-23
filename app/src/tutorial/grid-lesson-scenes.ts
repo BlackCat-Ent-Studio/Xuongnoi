@@ -12,7 +12,8 @@ import type { NodeSpec, WireSpec } from '../handbook/boards-robot-arm';
 
 /** Distance between the middles of two neighbouring cells, which is also the size of a cell (m). */
 export const CELL = 1.4;
-export const BLUE = '#3b82f6';
+/** The chassis colour every robot card starts with; the scene draws a chassis that still carries it in orange. */
+export const ORANGE = '#3b82f6';
 export const GREEN = '#22c55e';
 /** How near the middle of its goal cell a robot must stand to count as arrived (m). */
 const ARRIVE_WITHIN = 0.2;
@@ -104,7 +105,7 @@ const WAY_ARROWS: Record<number, string> = { 1: 'E', 2: 'ES', 3: 'S', 4: 'N', 5:
 export function findWayScene(): NodeSpec[] {
   const left = band(MARGIN, [
     [0, [{ alias: 'start', kind: 'on-start' }, { alias: 'goal', kind: 'const', params: { value: WAY_GOAL } }]],
-    [1, [body('body', WAY_START, 0, BLUE)]],
+    [1, [body('body', WAY_START, 0, ORANGE)]],
   ]);
   // The driver, the motors and, under the motors, the judge.
   const right = band(MARGIN, [
@@ -140,7 +141,7 @@ export const FIND_WAY_SOLUTION_WIRES: WireSpec[] = [
 
 // ---------------------------------------------------------------- two robots, one cell
 
-/** Where the two robots start and where each wants to go: the blue one drives along the row, the green one down the column. */
+/** Where the two robots start and where each wants to go: the orange one drives along the row, the green one down the column. */
 export const CROSS = { cell: 5, start1: 4, goal1: 6, start2: 2, goal2: 8 } as const;
 export const CROSS_WIN_TEXT = 'Cả hai robot tới đích, không ai đụng ai!';
 export const CROSS_LOSE_TEXT = 'Hai robot đụng nhau ở ô 5!';
@@ -169,7 +170,7 @@ const routedWires = (id: string): WireSpec[] => [
 
 const firstRobotBand = (): { nodes: NodeSpec[]; bottom: number; start: NodeSpec[] } => {
   const start = column(0, MARGIN, [{ alias: 'start', kind: 'on-start' }]);
-  return { ...band(start.bottom, routedRobot('1', CROSS.start1, 0, BLUE, CROSS.goal1)), start: start.nodes };
+  return { ...band(start.bottom, routedRobot('1', CROSS.start1, 0, ORANGE, CROSS.goal1)), start: start.nodes };
 };
 
 /** Top of the band of cards of the second robot: the cards of the first robot all lie above it. */

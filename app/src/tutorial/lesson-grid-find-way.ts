@@ -46,7 +46,7 @@ const T = {
   },
   play: {
     title: 'Xem robot tìm đường',
-    text: 'Bấm Chạy. Robot đi về phía ô 2, rẽ xuống ô 5 rồi tới ô 8.',
+    text: 'Bấm Chạy. Robot đi về phía ô 2, rẽ xuống ô 5 rồi tới ô 8. Robot có thể rẽ sớm và cắt qua góc ô; ở bài sau, "Bảng giữ ô" sẽ bắt nó vào giữa ô rồi mới rẽ.',
     explain: 'Ô 2 có hai mũi tên. Robot rẽ xuống vì lối đó chỉ còn 2 ô nữa là tới; đi vòng ngoài thì còn 4 ô.',
   },
   won: {

@@ -5,7 +5,7 @@ import { createRuntime } from '../../src/engine/runtime';
 import { TICK_DT, type Board, type GameResult, type Graph, type PortRef } from '../../src/engine/types';
 import { registerAllNodes } from '../../src/nodes';
 import { chapterOf } from '../../src/tutorial/course';
-import { BLUE, CROSS, CROSS_LOSE_TEXT, CROSS_WIN_TEXT, GREEN, cellPlace, crossingSecondRobotY, crossingSolutionNodes } from '../../src/tutorial/grid-lesson-scenes';
+import { ORANGE, CROSS, CROSS_LOSE_TEXT, CROSS_WIN_TEXT, GREEN, cellPlace, crossingSecondRobotY, crossingSolutionNodes } from '../../src/tutorial/grid-lesson-scenes';
 import { LESSONS, findLesson } from '../../src/tutorial/lessons';
 import { createRunner, type Runner } from '../../src/tutorial/runner';
 import { takeSnapshot } from '../../src/tutorial/snapshot';
@@ -23,7 +23,7 @@ function cards(g: Graph) {
   const pick = (kind: string, k: 1 | 2): string => g.nodes.find((n) => n.kind === kind && upper(n) === (k === 1))!.id;
   const body = (color: string): string => g.nodes.find((n) => n.kind === 'robot-body' && n.params.color === color)!.id;
   return {
-    body: { 1: body(BLUE), 2: body(GREEN) },
+    body: { 1: body(ORANGE), 2: body(GREEN) },
     route: { 1: pick('grid-route', 1), 2: pick('grid-route', 2) },
     find: { 1: pick('floor-marker-find', 1), 2: pick('floor-marker-find', 2) },
   };
@@ -33,8 +33,8 @@ interface Run {
   ended: GameResult | null;
   message: string | null;
   seconds: number;
-  /** Where the blue and the green chassis are at the end. */
-  blue: { x: number; z: number };
+  /** Where the orange and the green chassis are at the end. */
+  orange: { x: number; z: number };
   green: { x: number; z: number };
   /** Smallest distance between the two chassis middles over the run (m). */
   nearest: number;
@@ -61,7 +61,7 @@ function play(board: Board, graph: Graph, seconds: number): Run {
   for (; ticks < Math.round(seconds / TICK_DT) && !world.ended; ticks++) {
     rt.tick({ keysDown: new Set() });
     world.step(TICK_DT);
-    const a = chassis(BLUE);
+    const a = chassis(ORANGE);
     const b = chassis(GREEN);
     nearest = Math.min(nearest, Math.hypot(a.x - b.x, a.z - b.z));
     mostInCrossing = Math.max(mostInCrossing, Number(inCrossing(a)) + Number(inCrossing(b)));
@@ -72,7 +72,7 @@ function play(board: Board, graph: Graph, seconds: number): Run {
     ended: world.ended?.result ?? null,
     message: world.ended?.message ?? null,
     seconds: ticks * TICK_DT,
-    blue: xz(chassis(BLUE)),
+    orange: xz(chassis(ORANGE)),
     green: xz(chassis(GREEN)),
     nearest,
     mostInCrossing,
@@ -213,7 +213,7 @@ describe('lesson "Hai robot, một ô"', () => {
     const run = play(finished, g(), 60);
     expect(run.ended).toBe('win');
     expect(run.message).toBe(CROSS_WIN_TEXT);
-    expect(off(run.blue, CROSS.goal1)).toBeLessThanOrEqual(0.2);
+    expect(off(run.orange, CROSS.goal1)).toBeLessThanOrEqual(0.2);
     expect(off(run.green, CROSS.goal2)).toBeLessThanOrEqual(0.2);
     // Only one robot in the crossing cell at a time, and the chassis never came near each other.
     expect(run.mostInCrossing).toBe(1);
@@ -234,7 +234,7 @@ describe('lesson "Hai robot, một ô"', () => {
     const run = play(board, cut, 30);
     expect(run.ended).toBeNull();
     expect(off(run.green, CROSS.start2)).toBe(0);
-    expect(off(run.blue, CROSS.goal1)).toBeLessThanOrEqual(0.2);
+    expect(off(run.orange, CROSS.goal1)).toBeLessThanOrEqual(0.2);
     expect(runnerOn(cut, run.ended).step().id).toBe('wire-cell-2');
     expect(runnerOn(cut, 'win').step().id).toBe('wire-cell-2');
     // With the old wire left in place the green robot drives without asking: still not complete.
@@ -243,7 +243,7 @@ describe('lesson "Hai robot, một ô"', () => {
 
   it('is not complete without each of the other wires, whatever the run does', () => {
     // The steps count robots, whichever is wired first: with one robot complete, the lesson waits at the step of the
-    // second robot that matches the missing wire (wires 0-2 are the blue robot's, 3-4 the green one's).
+    // second robot that matches the missing wire (wires 0-2 are the orange robot's, 3-4 the green one's).
     const stuck = ['wire-robot-2', 'wire-want-2', 'wire-cell-2', 'wire-robot-2', 'wire-want-2'];
     stuck.forEach((id, i) => {
       const { graph } = solved([i]);
