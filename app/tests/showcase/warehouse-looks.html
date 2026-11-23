@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Warehouse looks (development only)</title>
+    <style>
+      html, body { margin: 0; background: #e6e8ec; font: 13px system-ui, sans-serif; color: #2a2d34; }
+      body { display: flex; flex-wrap: wrap; gap: 8px; padding: 8px; }
+      figure { margin: 0; }
+      canvas { display: block; width: 520px; height: 440px; background: #e6e8ec; }
+      canvas.only { width: 100vw; height: 100vh; }
+      body:has(canvas.only) { padding: 0; }
+      body:has(canvas.only) figcaption { display: none; }
+      figcaption { padding: 2px 4px; }
+    </style>
+  </head>
+  <body>
+    <script type="module" src="./warehouse-looks.ts"></script>
+  </body>
+</html>
