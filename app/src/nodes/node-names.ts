@@ -188,6 +188,19 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'code-reader': {
+    vi: 'Đọc mã',
+    en: 'Code Reader',
+    ports: {
+      in: {
+        'thing': ['Vật cần đọc', 'Object to read'],
+      },
+      out: {
+        'code': ['Mã', 'Code'],
+        'has': ['Có mã', 'Has code'],
+      },
+    },
+  },
   'color-sensor': {
     vi: 'Đọc màu',
     en: 'Color Check',

@@ -270,7 +270,7 @@ export const HANDBOOK_MATH_OBJECT_OUTPUT: readonly HandbookEntry[] = [
       carryable: '"Cầm được" thì nhân vật nhấc lên được. "Cố định" thì nằm yên, chỉ để bấm "Tương tác" (ví dụ ổ khoá).',
       holdStyle: '"Khiêng trên đầu" cho thùng hàng. "Cầm trên tay" cho dụng cụ như kiếm, cuốc, dùng với mảnh ghép Cầm dụng cụ.',
       damage: 'Sát thương khi dùng đánh. 0 nghĩa là tuỳ theo hình dạng.',
-      tag: 'Chữ ghi loại hàng, ví dụ "rau". Dùng với các mảnh ghép giao hàng để phân biệt loại. Để trống nếu không cần.',
+      tag: 'Chữ ghi loại hàng, ví dụ "rau". Dùng với các mảnh ghép giao hàng để phân biệt loại. Để trống nếu không cần. Ghi một số từ 1 đến 99 thì đó là mã của món đồ: mảnh Đọc mã đọc được số này, và kiểu "Thùng carton" in số lên thùng.',
       friction: 'Nâng cao. Độ trượt: càng lớn món đồ trượt càng mau dừng.',
       ...MATERIAL_OUT_PARAM_TEXT,
       bounce: 'Nâng cao. Độ nảy: 0 là không nảy, 1 là nảy lại gần hết sức.',

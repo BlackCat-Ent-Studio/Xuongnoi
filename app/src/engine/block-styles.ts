@@ -19,7 +19,8 @@ export type BlockStyle =
   | 'belt-frame'
   | 'scan-gate'
   | 'chute'
-  | 'arm-base';
+  | 'arm-base'
+  | 'code-display';
 
 export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   box: 'Hộp',
@@ -42,6 +43,7 @@ export const BLOCK_STYLE_LABELS: Record<BlockStyle, string> = {
   'scan-gate': 'Cổng quét (khung vàng, đèn theo màu)',
   chute: 'Cửa thả + túi vải (số ghi ở "Chữ trên biển")',
   'arm-base': 'Đế tay máy',
+  'code-display': 'Màn hình hiện mã (hộp đen, số ghi ở "Chữ trên biển")',
 };
 
 export const BLOCK_STYLES = Object.keys(BLOCK_STYLE_LABELS) as readonly BlockStyle[];

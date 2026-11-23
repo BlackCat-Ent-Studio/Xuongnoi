@@ -2898,5 +2898,24 @@
    "colliderMismatch": 0,
    "hash": "796a39b6"
   }
+ },
+ {
+  "id": "handbook:code-reader",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "667b373d"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "667b373d"
+  }
  }
 ]

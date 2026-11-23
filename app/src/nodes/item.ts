@@ -1,5 +1,6 @@
 import { HOLD_STYLES, ITEM_SHAPES, type EntityId, type HoldStyle, type ItemShape, type NodeDef } from '../engine/types';
 import { CLASSIC_LOOK, PARCEL_LOOKS, lookSpec } from '../engine/factory-looks';
+import { lookWithCode, parcelCodeOfTag } from '../engine/parcel-code';
 import { MATERIAL_OUT_PARAMS, materialPortValues, materialPortsActive, DAMAGED_PORT, WEIGHT_PORT } from './material-ports';
 import { BODY_PARAMS, BODY_PARAM_IDS, MATERIAL_PARAM_IDS, bodySpec, materialParams, materialSpec } from './body-params';
 import { DEFAULT_ITEM_FRICTION } from '../world/physics';
@@ -100,6 +101,7 @@ export const itemNode: NodeDef<ItemState> = {
     color: (ctx, p, s) => ctx.world.setEntityStyle(s.id, { color: String(p.color) }),
   },
   create(ctx, params) {
+    const tag = strParam(params, 'tag', '').trim();
     const id = ctx.world.spawn({
       kind: 'item',
       ownerNodeId: ctx.nodeId,
@@ -111,8 +113,9 @@ export const itemNode: NodeDef<ItemState> = {
       carryable: strParam(params, 'carryable', 'yes') !== 'no',
       holdStyle: holdStyleParam(strParam(params, 'holdStyle', 'head')),
       damage: numParam(params, 'damage', 0),
-      tag: strParam(params, 'tag', '').trim(),
-      ...lookSpec(params.look, PARCEL_LOOKS),
+      tag,
+      // A goods type that is a number from 1 to 99 is the item's code; the carton prints it.
+      ...lookWithCode(lookSpec(params.look, PARCEL_LOOKS), parcelCodeOfTag(tag)),
       ...bodySpec(params),
       ...materialSpec(params, 'item'),
       friction: numParam(params, 'friction', DEFAULT_ITEM_FRICTION),

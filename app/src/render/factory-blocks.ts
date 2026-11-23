@@ -5,16 +5,16 @@ import { adjustColor } from './arm-part-models';
 import { VERTEX_TOON_DOUBLE, bakedMesh, box, canvasTexture, cyl, glowMat, q, rbox, sizeKey, toonMapMat, type Part } from './factory-kit';
 
 /**
- * Factory looks for blocks ("Kiểu dáng"): the open-frame conveyor, the scan gate, the drop chute with its cloth bag
- * and the arm base. Each is built in real units inside the block's own box (the block's top is the belt surface, the
+ * Factory looks for blocks ("Kiểu dáng"): the open-frame conveyor, the scan gate, the drop chute with its cloth bag,
+ * the arm base and the little code display. Each is built in real units inside the block's own box (the block's top is the belt surface, the
  * floor level round a chute, the plane the arm stands on), so nothing is stretched when the block is resized; only a
  * chute's number board and kerb rise above the box. Collision is the block's own box, as for every look.
  *
  * A block still in the node's default grey gets the look's own colour; any other colour is the user's.
  */
 
-/** The four styles drawn here. */
-export const FACTORY_BLOCK_STYLES: readonly BlockStyle[] = ['belt-frame', 'scan-gate', 'chute', 'arm-base'];
+/** The styles drawn here. */
+export const FACTORY_BLOCK_STYLES: readonly BlockStyle[] = ['belt-frame', 'scan-gate', 'chute', 'arm-base', 'code-display'];
 export const isFactoryBlockStyle = (style: string): boolean => (FACTORY_BLOCK_STYLES as readonly string[]).includes(style);
 
 const BLOCK_DEFAULT = '#a3a3a3';
@@ -303,6 +303,96 @@ function numberMaterial(text: string): THREE.MeshBasicMaterial | null {
   return mat;
 }
 
+// ---------------------------------------------------------------- code display
+
+/** Seconds the screens stay lit up after a display appears with a number on it (a fresh read). */
+const DISPLAY_FLASH_S = 0.35;
+const SCREEN_GREEN = '#6dff96';
+
+const screenMats = new Map<string, THREE.MeshBasicMaterial | null>();
+/** A dark screen with a green number; an empty screen shows a dim dash. Null where there is no canvas. */
+function screenMaterial(text: string): THREE.MeshBasicMaterial | null {
+  if (screenMats.has(text)) return screenMats.get(text) ?? null;
+  const tex = canvasTexture(`code-screen|${text}`, 160, 128, (g, W, H) => {
+    g.fillStyle = '#0c1410';
+    g.beginPath();
+    g.roundRect(0, 0, W, H, 14);
+    g.fill();
+    g.strokeStyle = '#3a4a40';
+    g.lineWidth = 5;
+    g.beginPath();
+    g.roundRect(3, 3, W - 6, H - 6, 12);
+    g.stroke();
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    if (!text) {
+      g.fillStyle = '#2f6b45';
+      g.fillRect(W / 2 - 22, H / 2 - 5, 44, 10);
+      return;
+    }
+    g.fillStyle = SCREEN_GREEN;
+    g.shadowColor = '#3cff78';
+    g.shadowBlur = 12;
+    let px = 104;
+    g.font = `800 ${px}px ui-monospace,Consolas,monospace`;
+    const wide = g.measureText(text).width;
+    if (wide > 136) {
+      px = Math.max(18, (px * 136) / wide);
+      g.font = `800 ${px}px ui-monospace,Consolas,monospace`;
+    }
+    g.fillText(text, W / 2, H * 0.55);
+  });
+  const mat = tex ? new THREE.MeshBasicMaterial({ map: tex, transparent: true }) : null;
+  screenMats.set(text, mat);
+  return mat;
+}
+
+/** Centre and turn of the four screens of a display (one per upright face), and their width and height. */
+export function displayScreens(size: Vec3): { w: number; h: number; at: [number, number, number]; turn: number }[] {
+  return [0, 1, 2, 3].map((k) => {
+    const a = (k * Math.PI) / 2;
+    const alongX = k % 2 === 1; // faces +x / -x: the screen is as wide as the box is deep
+    return {
+      w: (alongX ? size.z : size.x) * 0.8,
+      h: size.y * 0.8,
+      at: [Math.sin(a) * (size.x / 2 + 0.002), 0, Math.cos(a) * (size.z / 2 + 0.002)],
+      turn: a,
+    };
+  });
+}
+
+/**
+ * The display: a dark box with the same number on all four upright faces, so it reads from every side. When it shows a
+ * number it lights up for a moment (it was just read). Returns what to run each frame and what to free, or null when nothing moves.
+ */
+function addDisplay(parent: THREE.Group, size: Vec3, text: string): { tick(): void; dispose(): void } | null {
+  parent.add(bakedMesh(`code-display|${sizeKey(size)}`, () => [{ geo: rbox(size.x, size.y, size.z, 0.02), color: TYRE }]));
+  const mat = screenMaterial(text);
+  if (!mat) return null;
+  const glow = text ? new THREE.MeshBasicMaterial({ color: '#d9ffe4', transparent: true, opacity: 0, depthWrite: false }) : null;
+  for (const s of displayScreens(size)) {
+    const screen = new THREE.Mesh(planeGeo(s.w, s.h), mat);
+    screen.position.set(...s.at);
+    screen.rotation.y = s.turn;
+    parent.add(screen);
+    if (!glow) continue;
+    const flash = new THREE.Mesh(planeGeo(s.w, s.h), glow);
+    flash.position.set(s.at[0] * 1.02, 0, s.at[2] * 1.02);
+    flash.rotation.y = s.turn;
+    flash.renderOrder = 3;
+    parent.add(flash);
+  }
+  if (!glow) return null;
+  const born = performance.now();
+  return {
+    tick() {
+      const t = Math.max(0, (performance.now() - born) / 1000);
+      glow.opacity = t < DISPLAY_FLASH_S ? 0.85 * (1 - t / DISPLAY_FLASH_S) : 0;
+    },
+    dispose: () => glow.dispose(),
+  };
+}
+
 // ---------------------------------------------------------------- arm base
 
 function armBaseParts(size: Vec3, color: string): Part[] {
@@ -341,6 +431,7 @@ export function buildFactoryBlockLook(style: BlockStyle, color: string, size: Ve
   let box3: Vec3 = { ...size };
   let tint = hexOf(color);
   let animate: ((view: EntityView) => void) | null = null;
+  let flash: { tick(): void; dispose(): void } | null = null;
   let lamp: THREE.Mesh | null = null;
 
   const paintLamp = (): void => {
@@ -350,6 +441,8 @@ export function buildFactoryBlockLook(style: BlockStyle, color: string, size: Ve
   const build = (): void => {
     inner.clear();
     animate = null;
+    flash?.dispose();
+    flash = null;
     lamp = null;
     const s = { x: Math.max(box3.x, 0.02), y: Math.max(box3.y, 0.02), z: Math.max(box3.z, 0.02) };
     inner.scale.set(1 / s.x, 1 / s.y, 1 / s.z);
@@ -381,6 +474,8 @@ export function buildFactoryBlockLook(style: BlockStyle, color: string, size: Ve
           inner.add(plane);
         }
       }
+    } else if (style === 'code-display') {
+      flash = addDisplay(inner, s, label.trim());
     } else {
       const c = ownColor(tint, ARM_ORANGE);
       inner.add(bakedMesh(`arm-base|${sk}|${c}`, () => armBaseParts(s, c)));
@@ -398,7 +493,7 @@ export function buildFactoryBlockLook(style: BlockStyle, color: string, size: Ve
       if (next === tint) return;
       tint = next;
       if (style === 'scan-gate') paintLamp();
-      else build();
+      else if (style !== 'code-display') build();
     },
     update(view) {
       const { x, y, z } = view.size;
@@ -407,8 +502,10 @@ export function buildFactoryBlockLook(style: BlockStyle, color: string, size: Ve
         build();
       }
       animate?.(view);
+      flash?.tick();
     },
     dispose() {
+      flash?.dispose();
       inner.clear();
     },
   };
