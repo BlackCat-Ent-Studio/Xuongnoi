@@ -1,7 +1,8 @@
 import type { Vec3, ViewMode } from '../engine/types';
 import { cargoPositions } from './cargo';
-import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, isTurnedBody, orientedBox, outlinePair, spanOverlap, type Box } from './collider';
-import { backOffAlong, mulQuat, obbBounds, obbGap, obbSeparation, yawQuat } from './oriented-box';
+import { chassisSupport, type ChassisSupport } from './chassis-support';
+import { boundsBox, boxOverlap, chassisOutline, colliderBox, colliderOffset, hasChassisOutline, isTurnedBody, meetingPair, orientedBox, outlineBoxSeparation, spanOverlap, type Box } from './collider';
+import { backOffAlong, mulQuat, obbBounds, obbGap, obbOf, obbSeparation, yawQuat, type Obb } from './oriented-box';
 import { lockMotion } from './combat';
 import { carryOnBelts, carryVehicleRiders, vehicleRides } from './conveyor';
 import type { CrateEngine } from './crate-engine';
@@ -9,8 +10,8 @@ import type { Entity } from './entity';
 import { isSpinner, spinnerTouches } from './platforms';
 import { massOn, weighSceneOf, type MachineOf, type WeighScene } from './material';
 import { LIFT_SPEED, approach, solidCarryPosition, isSolidBody, overlapsBox, updateCarryFloors, type BodyRules } from './solid-bodies';
-import { driveRobot, settleRobot } from './robot-drive';
-import { beginShove, finishShove, restsOnChassis } from './robot-push';
+import { driveRobot, settleRobot, type RobotBody } from './robot-drive';
+import { beginShove, finishShove, restsOnChassis, type PartsOf } from './robot-push';
 import { sameTrain } from './vehicle-train';
 import { CRASH_SPEED, SHOVE_SHARE, driveVehicle, seatPosition, settleVehicle, vehicleFacing } from './vehicles';
 
@@ -43,11 +44,32 @@ function gravityOf(e: Entity, g: number): number {
 }
 
 /**
+ * The outlines a mover and a solid (or two bodies that may touch) meet by when one of them is a chassis with a real outline;
+ * null when their upright boxes decide.
+ */
+function metByOutline(a: Entity, b: Entity): [Obb, Obb] | null {
+  if (a.robot === undefined && b.robot === undefined) return null;
+  return meetingPair(a, b);
+}
+
+/**
+ * How far apart a chassis with a real outline and an upright block are (`outlineBoxSeparation`: negative = inside each other);
+ * null for any other pair. A chassis asks this of every block near it every tick, so it is answered without building the outlines.
+ */
+function chassisBlockGap(a: Entity, b: Entity): number | null {
+  if (b.kind === 'block' && a.robot !== undefined && hasChassisOutline(a) && !isTurnedBody(b)) return outlineBoxSeparation(a, colliderBox(b));
+  if (a.kind === 'block' && b.robot !== undefined && hasChassisOutline(b) && !isTurnedBody(a)) return outlineBoxSeparation(b, colliderBox(a));
+  return null;
+}
+
+/**
  * Puts `c` flush against `b` on one side along `axis` (collision boxes touch; offsets are respected). When one of the two is a
- * chassis with a real outline (and neither is a block), `c` goes back the way it came just far enough for the outlines to touch.
+ * chassis with a real outline, `c` goes back the way it came just far enough for the outlines to touch. Up and down, a chassis
+ * and a block are set flush by their boxes as ever: the outline only turns about the vertical, so its top and underside are the
+ * box's, and a chassis that stands on a floor stands at the same height to the last bit, whatever its heading.
  */
 function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
-  const pair = outlinePair(c, b);
+  const pair = axis === 'y' && (c.kind === 'block' || b.kind === 'block') ? null : metByOutline(c, b);
   if (pair) {
     const dir = { x: 0, y: 0, z: 0 };
     dir[axis] = delta > 0 ? 1 : -1;
@@ -61,9 +83,13 @@ function pushOut(c: Entity, b: Entity, axis: Axis, delta: number): void {
 }
 
 function overlapsAll(a: Entity, b: Entity): boolean {
-  // A chassis with a real outline meets other bodies by that outline (see `chassisOutline`); blocks meet its upright square.
-  const pair = outlinePair(a, b);
-  if (pair) return obbSeparation(pair[0], pair[1]) < -SKIN;
+  // A chassis with a real outline meets every other body, blocks too, by that outline (see `chassisOutline`).
+  if (a.robot !== undefined || b.robot !== undefined) {
+    const gap = chassisBlockGap(a, b);
+    if (gap !== null) return gap < -SKIN;
+    const pair = meetingPair(a, b);
+    if (pair) return obbSeparation(pair[0], pair[1]) < -SKIN;
+  }
   return overlapOn(a, b, 'x') > SKIN && overlapOn(a, b, 'y') > SKIN && overlapOn(a, b, 'z') > SKIN;
 }
 
@@ -72,8 +98,10 @@ export function touching(a: Entity, b: Entity): boolean {
   // A spinning block touches through its rotated outline, not its bounding box.
   if (isSpinner(a)) return spinnerTouches(a, b);
   if (isSpinner(b)) return spinnerTouches(b, a);
-  // A chassis with a real outline touches other bodies through it (blocks stop it by its upright square, so they touch that).
-  const pair = outlinePair(a, b);
+  // A chassis with a real outline touches other bodies, blocks too, through it.
+  const gap = a.robot !== undefined || b.robot !== undefined ? chassisBlockGap(a, b) : null;
+  if (gap !== null) return gap <= CONTACT_EPS;
+  const pair = metByOutline(a, b);
   if (pair) return obbSeparation(pair[0], pair[1]) <= CONTACT_EPS;
   // A turned crate touches through its real outline, not through the upright box around it.
   if (isTurnedBody(a) || isTurnedBody(b)) return obbSeparation(orientedBox(a), orientedBox(b)) <= CONTACT_EPS;
@@ -94,8 +122,9 @@ const NEAR_PAD = 0.5;
  * of it. `picks` are places in `solids`, in order: every solid whose bounds reach into a region around the body. A solid only
  * stops the body when their bounds overlap, so while the body's bounds lie inside the region no solid outside `picks` can
  * stop it; `refresh` is asked after every change of the body's place and picks anew when the body has left the region (thrown
- * out of a solid it stood in, say). A number that is not finite never rules a solid out. A chassis among the solids stops the
- * body by its real outline, which reaches past its square when it stands askew: its bounds here are those of the outline.
+ * out of a solid it stood in, say). A number that is not finite never rules a solid out. A chassis, among the solids or as the
+ * body that moves, meets the others by its real outline, which reaches past its square when it stands askew: its bounds here
+ * are those of the outline (for the mover: half its diagonal round its position, which holds them at any heading).
  */
 function reachOf(solid: Entity): Box {
   const outline = chassisOutline(solid);
@@ -119,9 +148,10 @@ function nearSolids(solids: readonly Entity[], c: Entity, travel: number): NearS
     picks: [],
     refresh(): boolean {
       const b = boundsBox(c);
-      const hx = Math.abs(b.size.x) / 2;
+      const round = c.robot !== undefined && hasChassisOutline(c) ? Math.hypot(c.robot.spec.length, c.robot.spec.width) / 2 : 0;
+      const hx = Math.max(round, Math.abs(b.size.x) / 2);
       const hy = Math.abs(b.size.y) / 2;
-      const hz = Math.abs(b.size.z) / 2;
+      const hz = Math.max(round, Math.abs(b.size.z) / 2);
       if (b.pos.x - hx >= minX && b.pos.x + hx <= maxX && b.pos.y - hy >= minY && b.pos.y + hy <= maxY && b.pos.z - hz >= minZ && b.pos.z + hz <= maxZ) return false;
       const m = travel + NEAR_PAD;
       minX = b.pos.x - hx - m;
@@ -403,18 +433,52 @@ function stepVehicle(
 }
 
 /**
- * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
- * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
- * world, `own` the pieces bolted to this chassis, `meets` the other solid chassis it may run into (real physics only).
+ * A chassis whose middle hangs beyond everything under it slides off, away from what still holds it: it gains ground speed
+ * that way at the pull of gravity times the share of its reach it hangs out by (a hair over the edge it creeps, half over it
+ * goes). That stands for its tipping over the edge, which this model cannot show: once it is off (in the air) or held again
+ * (on its wheels or on its underside) the slide is gone, and it drops with the speed its wheels gave it. Returns that velocity.
  */
-function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>, machineOf?: MachineOf): void {
+function slideOff(body: RobotBody, support: ChassisSupport | null, pull: number, dt: number): { x: number; z: number } | null {
+  if (!support || !support.away) {
+    if (body.slide) delete body.slide;
+    return null;
+  }
+  const gain = Math.abs(pull) * support.away.share * dt;
+  const had = body.slide ?? { x: 0, z: 0 };
+  body.slide = { x: had.x + support.away.x * gain, z: had.z + support.away.z * gain };
+  return body.slide;
+}
+
+/** The ground velocity the wheels' own travel is left with after a move: the move's velocity less the slide (an axis a wall stopped has neither). */
+function drivenVel(vel: { x: number; z: number }, slide: { x: number; z: number } | null): { x: number; z: number } {
+  if (!slide) return vel;
+  if (vel.x === 0) slide.x = 0;
+  if (vel.z === 0) slide.z = 0;
+  return { x: vel.x - slide.x, z: vel.z - slide.z };
+}
+
+/**
+ * One tick of a robot chassis: wheels -> speed and turn -> velocity, then the usual fall and collision against blocks.
+ * With real physics on, only wheels with ground under them drive it, and it slides off an edge its middle hangs over
+ * (chassis-support.ts).
+ * What rests on top loads the motors (nothing rests on a chassis in the top-down view). `blocks` are the solid blocks of the
+ * world, `own` the pieces bolted to this chassis (`partsOf` gives them for any chassis), `meets` the other solid chassis it may
+ * run into (real physics only).
+ */
+function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: readonly Entity[], entities: readonly Entity[], byId: ReadonlyMap<string, Entity>, weigh: () => WeighScene, meets: ChassisMeets | null, own?: ReadonlySet<Entity>, machineOf?: MachineOf, partsOf?: PartsOf): void {
   const body = r.robot;
   if (!body) return;
   // The pieces bolted to this chassis travel with it: they are neither its load nor in its way (a solid hub or link sits right on its top).
   const solids = own && own.size > 0 ? blocks.filter((s) => !own.has(s)) : blocks;
+  giveWay(r, solids);
   const headingWas = body.heading;
   const facingWas = r.facing;
-  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf));
+  const support = body.traction ? chassisSupport(r, solids, mode, body.landed === true) : null;
+  // It appeared with no floor near under some wheel: it is not being set down, it is in the air or over an edge from the start.
+  if (support && !body.landed) body.landed = true;
+  const grip = support ? { wheels: support.grip, belly: support.state === 'belly' } : undefined;
+  const flat = driveRobot(body, dt, mode === '2d-side', mode === '2d-top' ? 0 : massOn(entities, r, own, weigh(), machineOf), grip);
+  const slide = body.traction ? slideOff(body, support, gravityOf(r, g), dt) : null;
   r.vel.x = flat.x;
   r.vel.z = flat.z;
   r.facing = mode === '2d-side' ? { x: 1, y: 0, z: 0 } : { x: Math.cos(body.heading), y: 0, z: Math.sin(body.heading) };
@@ -422,21 +486,26 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   else r.vel.y = Math.max(-TERMINAL_SPEED, r.vel.y + gravityOf(r, g) * dt);
   if (mode === '2d-side') r.pos.z = 0;
   const others = meets && r.solid ? meets.chassis.filter((o) => o !== r) : [];
-  if (!meets || others.length === 0) {
-    const shove = beginShove(r, entities, solids, dt, mode);
-    r.onGround = integrate(r, dt, mode, solids);
-    if (shove) finishShove(r, shove, byId, solids, mode);
-    settleRobot(body, r.vel, mode === '2d-side');
-    return;
-  }
   if (body.heading !== headingWas && !settleTurn(r, facingWas, others, solids)) {
-    // The turn would take a corner into another chassis and there is no room to back off: it does not turn this tick, and
-    // travels on along the heading it keeps.
+    // The turn would take a corner into a wall or another chassis and there is no room to back off: it does not turn this
+    // tick, and travels on along the heading it keeps.
     body.heading = headingWas;
     body.turnRate = 0;
     r.facing = facingWas;
     r.vel.x = Math.cos(headingWas) * body.travel;
     r.vel.z = Math.sin(headingWas) * body.travel;
+  }
+  if (slide) {
+    r.vel.x += slide.x;
+    r.vel.z += slide.z;
+  }
+  if (!meets || others.length === 0) {
+    const shove = beginShove(r, entities, solids, dt, mode, [], partsOf);
+    r.onGround = integrate(r, dt, mode, solids);
+    if (r.onGround && body.traction) body.landed = true;
+    if (shove) finishShove(r, shove, byId, solids, mode);
+    settleRobot(body, drivenVel(r.vel, slide), mode === '2d-side');
+    return;
   }
   // Another chassis that already shoved this one along this tick has given it that much of its own move: it does not travel it twice.
   const given = meets.shoved.get(r);
@@ -451,10 +520,11 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
     r.vel.z -= cut.z;
   }
   const from = { x: r.pos.x, z: r.pos.z };
-  const shove = beginShove(r, entities, solids, dt, mode, others);
+  const shove = beginShove(r, entities, solids, dt, mode, others, partsOf);
   // The chassis it shoves move once it has moved; every other one stops it like a wall.
   const rivals: Rivals = { list: shove && shove.shoved.size > 0 ? others.filter((o) => !shove.shoved.has(o.id)) : others, hit: new Set() };
   r.onGround = integrate(r, dt, mode, solids, rivals);
+  if (r.onGround) body.landed = true;
   if (shove) {
     for (const [o, d] of finishShove(r, shove, byId, solids, mode, dt)) {
       if (meets.stepped.has(o)) continue;
@@ -464,41 +534,77 @@ function stepRobot(r: Entity, dt: number, mode: ViewMode, g: number, blocks: rea
   }
   meets.stepped.add(r);
   // Stopped by a chassis that itself moves, it keeps the speed it really travelled at (a wall takes all of it, as ever).
-  const done = rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel;
+  const done = drivenVel(rivals.hit.size > 0 ? { x: (r.pos.x - from.x) / dt, z: (r.pos.z - from.z) / dt } : r.vel, slide);
   settleRobot(body, { x: done.x + cut.x, z: done.z + cut.z }, mode === '2d-side');
 }
 
-/** A chassis backs off at most this many times for one turn (once per chassis its corner went into; more means it is wedged). */
+/**
+ * A block has come into a chassis from the side since its last move: a moving block or a machine piece that pushes bodies by
+ * the upright square round them reaches the corner of a chassis that stands askew before it reaches that square. The chassis
+ * gives way the shortest way out on the ground, by what the block went in, as if pushed by it. A block whose shortest way out
+ * is up or down is left alone (the chassis stands a hair in the floor it rests on; a piece that presses on its top does not
+ * shove it sideways). Only a chassis with a real outline; nothing else is moved.
+ */
+function giveWay(r: Entity, solids: readonly Entity[]): void {
+  if (r.robot === undefined || !hasChassisOutline(r)) return;
+  for (let pass = 0; pass < TURN_PASSES; pass++) {
+    let moved = false;
+    for (const s of solids) {
+      if (isTurnedBody(s) || !(outlineBoxSeparation(r, colliderBox(s)) < -SKIN)) continue;
+      const { gap, axis } = obbGap(chassisOutline(r)!, orientedBox(s));
+      if (!(gap < -SKIN) || Math.abs(axis.y) > 1e-6) continue;
+      r.pos.x += axis.x * gap;
+      r.pos.z += axis.z * gap;
+      moved = true;
+    }
+    if (!moved) return;
+  }
+}
+
+/** A chassis backs off at most this many times for one turn (once per body its corner went into; more means it is wedged). */
 const TURN_PASSES = 4;
+/** Blocks further than this (m) from a chassis that has just turned cannot come into its way while it backs off (a back-off is millimetres). */
+const BACK_OFF_REACH = 0.5;
 
 /**
- * A chassis has just turned on its wheels. Chassis are solid for each other by their real outlines, so the turn may have swung
- * a corner into another one that it was clear of before. It then backs off the shortest way out (its wheels slip sideways by
- * those few millimetres), as a real robot pivoting against another is pushed away from it. False when that is not possible
- * (the place it would back off to is inside a block or yet another chassis): the caller undoes the turn. Nothing is changed then.
+ * A chassis has just turned on its wheels. Walls and other chassis are solid for it by its real outline, so the turn may have
+ * swung a corner into one that it was clear of before. It then backs off the shortest way out on the ground (its wheels slip
+ * sideways by those few millimetres), as a real robot pivoting against a wall or another robot is pushed away from it. False
+ * when that is not possible (backing off one takes it into another: a lane narrower than its diagonal, a corner): the caller
+ * undoes the turn. Nothing is changed then. No other body is ever moved by it.
  */
 function settleTurn(r: Entity, facingWas: Vec3, others: readonly Entity[], solids: readonly Entity[]): boolean {
   const before = chassisOutline({ ...r, facing: facingWas });
   if (!before) return true;
-  // Only chassis it was clear of before the turn count: two that already overlap (spawned so) may still part.
-  const rivals: Entity[] = [];
+  // Only bodies it was clear of before the turn count: what it already stood in (spawned so, or set down into it) may still part.
+  const rivals: Obb[] = [];
   for (const o of others) {
-    const pair = outlinePair(r, o);
-    if (pair && obbSeparation(before, pair[1]) >= -SKIN) rivals.push(o);
+    const pair = meetingPair(r, o);
+    if (pair && obbSeparation(before, pair[1]) >= -SKIN) rivals.push(pair[1]);
   }
-  if (rivals.length === 0) return true;
+  // Blocks: those within reach of a back-off (the floor under the wheels is among them: it is touched, never entered).
+  const walls: Box[] = [];
+  for (const s of solids) {
+    if (isTurnedBody(s)) continue;
+    const box = colliderBox(s);
+    if (outlineBoxSeparation(r, box) < BACK_OFF_REACH && outlineBoxSeparation(r, box, facingWas) >= -SKIN) walls.push(box);
+  }
   const start = { x: r.pos.x, z: r.pos.z };
-  const inside = (): Entity | undefined => rivals.find((o) => obbSeparation(chassisOutline(r)!, outlinePair(r, o)![1]) < -SKIN);
+  /** The body its corner is in now, as a turned box. */
+  const inside = (): Obb | undefined => {
+    for (const box of walls) if (outlineBoxSeparation(r, box) < -SKIN) return obbOf(box.pos, box.size);
+    if (rivals.length === 0) return undefined;
+    const now = chassisOutline(r)!;
+    return rivals.find((o) => obbSeparation(now, o) < -SKIN);
+  };
   let hit = inside();
-  if (!hit) return true;
-  const stoodIn = solids.filter((s) => overlapsAll(r, s));
   for (let pass = 0; hit && pass < TURN_PASSES; pass++) {
-    const { gap, axis } = obbGap(chassisOutline(r)!, outlinePair(r, hit)![1], true);
+    const { gap, axis } = obbGap(chassisOutline(r)!, hit, true);
     r.pos.x += axis.x * gap;
     r.pos.z += axis.z * gap;
     hit = inside();
   }
-  if (!hit && !solids.some((s) => overlapsAll(r, s) && !stoodIn.includes(s))) return true;
+  if (!hit) return true;
   r.pos.x = start.x;
   r.pos.z = start.z;
   return false;
@@ -611,7 +717,7 @@ export function stepPhysics(
   let weighing: WeighScene | null = null;
   const weigh = (): WeighScene => (weighing ??= weighSceneOf(entities));
   for (const c of entities) {
-    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c), machineOf);
+    if (c.kind === 'robot' && c.visible) stepRobot(c, dt, mode, g, solids, entities, byId, weigh, c.robot?.traction === true ? meets : null, partsOf?.(c), machineOf, partsOf);
   }
   carryVehicleRiders(rides, mode, carry, solidsFor);
   for (const c of entities) {

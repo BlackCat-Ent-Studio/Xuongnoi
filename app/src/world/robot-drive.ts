@@ -24,6 +24,8 @@ export const FORCE_PER_MOTOR = 6;
 const G = GRAVITY_N;
 /** Shortest width used for the turning lever of the chassis, metres. */
 const MIN_WIDTH = 0.1;
+/** Real physics: the smooth underside of a chassis that lies on the floor rubs with this share of the grip its wheels have. */
+const BELLY_GRIP = 0.5;
 
 export interface DriveWheel {
   side: number;
@@ -165,6 +167,22 @@ export interface RobotBody {
   traction: boolean;
   /** Traction only: the average forward speed (m/s) the chassis moved at in the last step. */
   travel: number;
+  /**
+   * Real physics only: the ground velocity (m/s) it has gained by sliding off an edge its middle hangs over (see
+   * chassis-support.ts). It is on top of `speed`, in any direction, and is gone the moment it is held again or has slid off.
+   */
+  slide?: { x: number; z: number };
+  /** Real physics only: set once it has stood on something; until then it is still being set down (see chassis-support.ts). */
+  landed?: boolean;
+}
+
+/**
+ * Real physics only, for a chassis that does not have ground under every wheel (see chassis-support.ts): the wheels that
+ * still grip, and whether it lies on its underside, which then brakes it.
+ */
+export interface WheelGrip {
+  wheels: ReadonlySet<MountedWheel>;
+  belly: boolean;
 }
 
 function positive(n: number | undefined, fallback: number): number {
@@ -227,9 +245,10 @@ export function isOverloaded(spec: Pick<RobotSpec, 'maxPayload'>, payload: numbe
  * One tick of drive: drops wheels that were not refreshed, fits the wheels, lets the chassis follow within its limits
  * and turns the heading (side view: no turning, the robot only rolls along x). `payload` is the weight (kg) resting on
  * the chassis: it adds to the mass the motors must push, and above the chassis's maximum the motors ask for no motion.
+ * `grip` is given only for a chassis on wheel traction whose wheels do not all have ground under them.
  * Returns the velocity on the ground plane.
  */
-export function driveRobot(body: RobotBody, dt: number, sideView: boolean, payload = 0): { x: number; z: number } {
+export function driveRobot(body: RobotBody, dt: number, sideView: boolean, payload = 0, grip?: WheelGrip): { x: number; z: number } {
   for (const [id, w] of body.wheels) if (!w.fresh) body.wheels.delete(id);
   const wheels = [...body.wheels.values()];
   body.pushing = false;
@@ -239,7 +258,7 @@ export function driveRobot(body: RobotBody, dt: number, sideView: boolean, paylo
   const ask = body.overloaded ? { speed: 0, turn: 0 } : solveDrive(wheels);
   if (sideView) ask.turn = 0;
   const loaded = body.payload > 0 ? { ...body.spec, mass: body.spec.mass + body.payload } : body.spec;
-  if (body.traction && wheels.length > 0) return driveOnTraction(body, wheels, loaded, dt, sideView);
+  if (body.traction && wheels.length > 0) return driveOnTraction(body, wheels, loaded, dt, sideView, grip);
   const next = followWheels({ speed: body.speed, turn: body.turnRate }, ask, loaded, wheels.length, dt);
   body.speed = next.speed;
   body.turnRate = next.turn;
@@ -270,21 +289,42 @@ export function settleRobot(body: RobotBody, vel: { x: number; z: number }, side
  * Drive of a chassis with real physics: every wheel gives a force (see robot-traction.ts), the chassis speed and turn rate
  * follow from them. The chassis moves, and turns, at the average of its old and new rate over the tick, so stopping and
  * starting distances match v^2 / (2a) instead of lagging a half tick behind.
+ *
+ * With `grip`, only the wheels that have ground under them give a force, and they share the weight among themselves. A wheel
+ * in the air gives none: it runs at the speed it is asked for and reads as slipping by that much against the chassis. With no
+ * wheel on the ground the chassis keeps its speed and turn rate. A chassis that lies on its underside is braked by it on top
+ * of whatever its wheels do: speed and turn rate are rubbed down at `BELLY_GRIP` * mu * g (the turn about a lever of a quarter
+ * of its diagonal), so one wheel that still grips can drag it on, and with none it stops.
  */
-function driveOnTraction(body: RobotBody, wheels: MountedWheel[], loaded: RobotSpec, dt: number, sideView: boolean): { x: number; z: number } {
-  const wanted: TractionWheel[] = wheels.map((w) => ({ side: w.side, command: body.overloaded ? 0 : wheelSpeed(w), driveN: w.driveN, brakeN: w.brakeN }));
+function driveOnTraction(body: RobotBody, wheels: MountedWheel[], loaded: RobotSpec, dt: number, sideView: boolean, grip?: WheelGrip): { x: number; z: number } {
+  const command = (w: MountedWheel): number => (body.overloaded ? 0 : wheelSpeed(w));
+  const live = grip ? wheels.filter((w) => grip.wheels.has(w)) : wheels;
+  const wanted: TractionWheel[] = live.map((w) => ({ side: w.side, command: command(w), driveN: w.driveN, brakeN: w.brakeN }));
   const was = { speed: body.speed, turn: sideView ? 0 : body.turnRate };
-  const res = tractionStep(was.speed, was.turn, wanted, { mass: loaded.mass, friction: loaded.friction, length: loaded.length, width: loaded.width }, dt);
+  const res = live.length > 0 ? tractionStep(was.speed, was.turn, wanted, { mass: loaded.mass, friction: loaded.friction, length: loaded.length, width: loaded.width }, dt) : { speed: was.speed, turn: was.turn, wheels: [] };
+  if (grip?.belly) {
+    const rub = BELLY_GRIP * Math.max(MIN_FRICTION, loaded.friction) * G;
+    res.speed = approach(res.speed, 0, rub * dt);
+    res.turn = approach(res.turn, 0, (rub / Math.max(MIN_WIDTH, Math.hypot(loaded.length, loaded.width) / 4)) * dt);
+  }
   const turn = sideView ? 0 : res.turn;
   body.speed = res.speed;
   body.turnRate = turn;
   body.travel = (was.speed + res.speed) / 2;
-  wheels.forEach((w, i) => {
-    const t = res.wheels[i]!;
-    w.traction = { force: t.force, gripN: t.gripN, slipping: t.slipping, slip: t.slip, rim: t.rim };
-    w.spin += (t.rim / w.radius) * dt;
+  let at = 0;
+  for (const w of wheels) {
+    if (grip && !grip.wheels.has(w)) {
+      const rim = command(w);
+      const slip = rim - (was.speed - was.turn * w.side);
+      w.traction = { force: 0, gripN: 0, slipping: Math.abs(slip) > 1e-9, slip, rim };
+      w.spin += (rim / w.radius) * dt;
+    } else {
+      const t = res.wheels[at++]!;
+      w.traction = { force: t.force, gripN: t.gripN, slipping: t.slipping, slip: t.slip, rim: t.rim };
+      w.spin += (t.rim / w.radius) * dt;
+    }
     w.fresh = false;
-  });
+  }
   if (sideView) return { x: body.travel, z: 0 };
   body.heading = wrapAngle(body.heading + ((was.turn + turn) / 2) * dt);
   return { x: Math.cos(body.heading) * body.travel, z: Math.sin(body.heading) * body.travel };

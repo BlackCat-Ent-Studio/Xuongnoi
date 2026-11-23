@@ -50,12 +50,42 @@ interface ChassisTop {
 
 const chassisTop = (chassis: Entity): ChassisTop => ({ top: colliderBox(chassis), under: boundsBox(chassis), outline: chassisOutline(chassis) });
 
-/** `restsOnChassis` for an item whose bounds (`lying`) and a chassis whose boxes are already worked out. */
+/**
+ * True when an item whose bounds are `lying` is over the top of a chassis whose boxes are already worked out, and not below it:
+ * it lies on the top, stands on something that does, or is on its way down to it. How high above it does not matter here.
+ */
 function restsOnTop(lying: Box, c: ChassisTop): boolean {
   const bottom = lying.pos.y - lying.size.y / 2;
   if (!(bottom >= c.top.pos.y + c.top.size.y / 2 - SUPPORT_SINK)) return false;
   if (c.outline) return overOutline(lying, c.outline, SKIN);
   return spanOverlap(lying, c.under, 'x') > SKIN && spanOverlap(lying, c.under, 'z') > SKIN;
+}
+
+/** How far (m) above the top of what carries it the underside of a rider may be: it stands on that, it does not hang over it. */
+const RIDE_GAP = 0.06;
+
+/**
+ * The loose items that ride on a chassis: over its top (`restsOnTop`) and standing on it, on a solid piece bolted to it (`parts`:
+ * a tray, a hub) or on another item that rides, with at most `RIDE_GAP` of air under them. An item that is merely somewhere in
+ * the column above the chassis (on a deck over a parked robot, say) does not ride: it is a loose body like any other.
+ */
+function ridersOn(c: ChassisTop, parts: ReadonlySet<Entity> | undefined, loose: readonly Box[]): Box[] {
+  const over = loose.filter((lying) => restsOnTop(lying, c));
+  if (over.length === 0) return over;
+  const carriers: Box[] = [];
+  if (parts) for (const p of parts) if (p.kind === 'block' && p.visible && p.solid) carriers.push(colliderBox(p));
+  const deck = c.top.pos.y + c.top.size.y / 2;
+  const bottomOf = (b: Box): number => b.pos.y - b.size.y / 2;
+  const riders: Box[] = [];
+  // From the lowest up, so that what stands on a rider finds it already counted.
+  for (const lying of [...over].sort((p, q) => bottomOf(p) - bottomOf(q))) {
+    let top = deck;
+    for (const k of carriers) if (spanOverlap(lying, k, 'x') > SKIN && spanOverlap(lying, k, 'z') > SKIN) top = Math.max(top, k.pos.y + k.size.y / 2);
+    if (bottomOf(lying) > top + RIDE_GAP) continue;
+    riders.push(lying);
+    carriers.push(lying);
+  }
+  return riders;
 }
 
 /** The chassis as the head of a push: its collision box, with its real outline when it has one. */
@@ -71,10 +101,13 @@ function solidOf(o: Entity): Box {
   return outline ? { ...obbBounds(outline), outline } : colliderBox(o);
 }
 
-/** True when `item` lies on (or is landing on) the top of `chassis`. */
+/** True when `item` lies on, stands above or is landing on the top of `chassis`: the top is solid for it. */
 export function restsOnChassis(item: Entity, chassis: Entity): boolean {
   return restsOnTop(boundsBox(item), chassisTop(chassis));
 }
+
+/** The pieces bolted to a chassis (a tray, a hub, an arm), when it has any. */
+export type PartsOf = (chassis: Entity) => ReadonlySet<Entity> | undefined;
 
 /** What the chassis sets up before it moves, and needs again once it has moved. */
 export interface ShoveState {
@@ -128,17 +161,21 @@ export function availablePushN(robot: NonNullable<Entity['robot']>, travel: numb
   return total;
 }
 
-function pushBodies(r: Entity, entities: readonly Entity[], mode: ViewMode, others: readonly Entity[]): PushBody[] {
-  const out: PushBody[] = [];
-  // Every item is held against every chassis here, so the boxes are worked out once per body, not once per pair.
-  const own = mode !== '2d-top' ? chassisTop(r) : null;
-  const tops = mode !== '2d-top' ? others.map(chassisTop) : [];
+function pushBodies(r: Entity, entities: readonly Entity[], mode: ViewMode, others: readonly Entity[], partsOf?: PartsOf): PushBody[] {
+  const loose: { e: Entity; lying: Box }[] = [];
   for (const e of entities) {
     if (e.kind !== 'item' || !e.visible || e.bullet || e.heldBy !== null || e.inHand) continue;
-    const lying = boundsBox(e);
-    if (own && restsOnTop(lying, own)) continue;
-    // What rides on another solid chassis goes where that chassis goes (it is carried, not shoved off its top).
-    if (tops.some((t) => restsOnTop(lying, t))) continue;
+    loose.push({ e, lying: boundsBox(e) });
+  }
+  // What rides on this chassis is carried, not shoved; what rides on another solid chassis goes where that chassis goes.
+  const riding = new Set<Box>();
+  if (mode !== '2d-top' && loose.length > 0) {
+    const boxes = loose.map((l) => l.lying);
+    for (const c of [r, ...others]) for (const lying of ridersOn(chassisTop(c), partsOf?.(c), boxes)) riding.add(lying);
+  }
+  const out: PushBody[] = [];
+  for (const { e, lying } of loose) {
+    if (riding.has(lying)) continue;
     const m = materialOf(e);
     out.push({ id: e.id, box: lying, massKg: m.massKg, mu: m.mu });
   }
@@ -201,9 +238,10 @@ export function somethingOnTheWay(r: Entity, entities: readonly Entity[], others
 /**
  * Before the chassis moves this tick: finds what its step would push. Returns null when nothing is in the way (the move
  * is then exactly the usual one). A stall zeroes the ground velocity; a push cut short by a solid scales it down.
- * `others` are the other solid chassis it may meet (real physics on; none otherwise).
+ * `others` are the other solid chassis it may meet (real physics on; none otherwise); `partsOf` gives the pieces bolted to a
+ * chassis, which carry what stands on them as its top does.
  */
-export function beginShove(r: Entity, entities: readonly Entity[], solids: readonly Entity[], dt: number, mode: ViewMode, others: readonly Entity[] = []): ShoveState | null {
+export function beginShove(r: Entity, entities: readonly Entity[], solids: readonly Entity[], dt: number, mode: ViewMode, others: readonly Entity[] = [], partsOf?: PartsOf): ShoveState | null {
   const body = r.robot;
   if (!body || body.spec.pushObjects !== true) return null;
   const dx = r.vel.x * dt;
@@ -212,7 +250,7 @@ export function beginShove(r: Entity, entities: readonly Entity[], solids: reado
   if (len < 1e-9) return null;
   // The plan below would find nothing to move and give the same answer; this saves making it for every chassis on an open floor.
   if (!somethingOnTheWay(r, entities, others, { x: dx, z: dz }, mode)) return null;
-  const loose = pushBodies(r, entities, mode, others);
+  const loose = pushBodies(r, entities, mode, others, partsOf);
   if (loose.length === 0 && others.length === 0) return null;
   const dir = { x: dx / len, z: dz / len };
   const travel = mode === '2d-side' ? dx : dx * Math.cos(body.heading) + dz * Math.sin(body.heading);

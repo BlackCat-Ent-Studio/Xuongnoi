@@ -24,8 +24,9 @@ import { isSpinner } from './platforms';
  *    A's axes, that is within √3·R_B of it; and that point is within R_A + √3·CONTACT_EPS of A's centre. So the centres are
  *    at most √3·(R_A + R_B + CONTACT_EPS) apart, and a cube of half side √3·(R + CONTACT_EPS) about each centre is enough.
  *    (That cube also holds the upright bounds the case before needs.)
- *  - a chassis with a real outline (see `chassisOutline`): against a block it is a plain body; against any other body it is
- *    a turned box about its position, so the cube of a turned crate with that box's half diagonal holds it.
+ *  - a chassis with a real outline (see `chassisOutline`): against every other body, blocks too, it is a turned box about
+ *    its position, so the cube of a turned crate with that box's half diagonal holds it (a block is then measured along its
+ *    own axes among others, which are the world's: its collision box is enough for it).
  * Sizes are taken without their sign, which can only make a box larger. All of the above is about ordinary numbers: with a place
  * or a size that is not a number, endless, or so large that products of it overflow, `touching` can answer anything, so such an
  * entity is asked against every other one, whatever their boxes say.

@@ -92,7 +92,7 @@ function restsTurned(top: Obb, base: Obb): boolean {
 
 /** True when `top` stands on `base`: its bottom meets base's top and the footprints overlap. */
 function rests(top: Entity, base: Entity): boolean {
-  // A chassis with a real outline bears, and stands on, other bodies by that outline (blocks meet its upright square).
+  // A chassis with a real outline bears, and stands on, other bodies by that outline (a block is still weighed against its upright square).
   const pair = outlinePair(top, base);
   if (pair) return restsTurned(pair[0], pair[1]);
   if (isTurnedBody(top) || isTurnedBody(base)) return restsTurned(orientedBox(top), orientedBox(base));
