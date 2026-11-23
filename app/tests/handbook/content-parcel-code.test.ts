@@ -4,7 +4,7 @@ import { buildClip, pasteClip } from '../../src/editor/clipboard';
 import { relayoutShipped } from '../../src/editor/graph/shipped-layout';
 import { activeInputs, getNodeDef, knownInputs, knownOutputs } from '../../src/engine/registry';
 import { createRuntime } from '../../src/engine/runtime';
-import { TICK_DT, type Board, type Graph, type GraphNode, type HudItem } from '../../src/engine/types';
+import { TICK_DT, type Board, type Graph, type GraphNode, type HudItem, type PlayCameraCommand } from '../../src/engine/types';
 import { handbookEntry } from '../../src/handbook';
 import { CODE_ALIVE_LABEL, CODE_LINE, CODE_LINE_WIRES, CODE_NOW_LABEL, CODE_READS_LABEL, tryCodeReader } from '../../src/handbook/boards-parcel-code';
 import { HANDBOOK_PARCEL_CODE } from '../../src/handbook/content-parcel-code';
@@ -46,6 +46,7 @@ function cards(graph: Graph, prefix = '') {
     now: one('show-number', (n) => n.params.label === CODE_NOW_LABEL),
     'read-count': one('show-number', (n) => n.params.label === CODE_READS_LABEL),
     alive: one('show-number', (n) => n.params.label === CODE_ALIVE_LABEL),
+    cam: one('camera'),
   };
 }
 type Alias = keyof ReturnType<typeof cards>;
@@ -65,6 +66,8 @@ interface Seen {
   display: string | null;
   /** Furthest any carton got along the belt (smallest x). */
   minX: number;
+  /** What the board's "Máy quay" asks of the view at the end (null = nothing: the app frames the whole scene). */
+  camera: PlayCameraCommand | null;
 }
 
 /** Plays `graph` for `seconds`, in the plain world a try-board opens in or with "Vật lý thật" on. */
@@ -72,7 +75,7 @@ function watch(graph: Graph, seconds: number, real: boolean, prefix = ''): Seen 
   const world = createWorld('3d', real ? { realPhysics: true, rapier } : undefined);
   const rt = createRuntime(graph, world, '3d');
   const id = cards(graph, prefix);
-  const seen: Seen = { made: [], reads: [], printed: [], counter: 0, maxAlive: 0, hud: {}, display: null, minX: Infinity };
+  const seen: Seen = { made: [], reads: [], printed: [], counter: 0, maxAlive: 0, hud: {}, display: null, minX: Infinity, camera: null };
   let reading: unknown = null;
   for (let n = 0; n < Math.round(seconds / TICK_DT); n++) {
     rt.tick({ keysDown: new Set() });
@@ -91,6 +94,7 @@ function watch(graph: Graph, seconds: number, real: boolean, prefix = ''): Seen 
     for (const e of world.entities()) if (e.kind === 'item' && e.visible && e.ownerNodeId === id.maker) seen.minX = Math.min(seen.minX, e.position.x);
   }
   seen.counter = Number(rt.getOutput(id.reads, 'value'));
+  seen.camera = world.cameraCommand();
   const screens = world.entities().filter((e) => e.blockStyle === 'code-display' && e.visible && e.ownerNodeId === id.reader);
   seen.display = screens.length === 0 ? null : screens.map((s) => s.label ?? '').join('+');
   world.dispose?.();
@@ -160,6 +164,25 @@ describe.each([
     expect(seen.minX).toBeGreaterThan(CODE_LINE.endX - 0.2);
   });
 
+  it('opens close to the scan gate: a "Máy quay" stands still on the gate, zoomed in, and leaves the angle to the learner', () => {
+    const board = tryCodeReader();
+    const seen = watch(board.graph, 1, real);
+    expect(seen.camera).toMatchObject({ mode: 'fixed', target: null, shake: 0 });
+    const { point, zoom, pitch } = seen.camera!;
+    // Aimed between the belt top and the display on the gate, at the gate.
+    expect(Math.abs(point.x - CODE_LINE.gateX)).toBeLessThan(0.5);
+    expect(Math.abs(point.z)).toBeLessThan(0.3);
+    expect(point.y).toBeGreaterThan(CODE_LINE.belt.topY);
+    expect(point.y).toBeLessThan(CODE_LINE.belt.topY + 0.8);
+    expect(zoom).toBeGreaterThanOrEqual(2);
+    expect(pitch).toBeUndefined();
+    // From the very first tick: the board never shows the far view first.
+    const first = createWorld('3d');
+    const rt = createRuntime(board.graph, first, '3d');
+    rt.tick({ keysDown: new Set() });
+    expect(first.cameraCommand()).not.toBeNull();
+  });
+
   const none = (v: number | undefined): boolean => v === undefined || v === 0;
   const full = (s: Seen): void => {
     expect(s.maxAlive).toBe(CODE_LINE.maxAlive);
@@ -205,6 +228,10 @@ describe.each([
     }],
     [['at-end', 'first', 'maker', 'recallThing'], 'nothing is taken back: the line fills up and stops', full],
     [['at-end', 'entered', 'maker', 'recall'], 'nothing is taken back: the line fills up and stops', full],
+    [['start', 'started', 'cam', 'on'], 'no camera takes over: the view stays far, on the whole line', (s) => {
+      expect(s.camera).toBeNull();
+      expect(s.reads.length).toBeGreaterThan(10);
+    }],
     [['maker', 'count', 'alive', 'value'], '"Số thùng đang có" shows nothing', (s) => {
       expect(s.maxAlive).toBeGreaterThan(2);
       expect(none(s.hud[CODE_ALIVE_LABEL])).toBe(true);

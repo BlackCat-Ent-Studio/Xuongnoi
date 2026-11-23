@@ -18,6 +18,12 @@ export const CODE_LINE = {
   endX: -2.2,
 } as const;
 
+/**
+ * Where the board's "Máy quay" looks: a point at the gate between the belt top and the display, and how far in. Close
+ * enough that the numbers on the cartons and on the display can be read at the size the app opens at.
+ */
+export const CODE_CAMERA = { point: { x: CODE_LINE.gateX, y: 0.8, z: 0 }, zoom: 2.6 } as const;
+
 const { parcel, belt } = CODE_LINE;
 const restY = belt.topY + parcel.y / 2;
 const gate = { x: 0.14, y: belt.topY + 0.67, z: belt.width + 0.19 };
@@ -67,12 +73,15 @@ const NODES: NodeSpec[] = [
   { alias: 'read-count', kind: 'show-number', x: 1920, y: 200, params: { label: CODE_READS_LABEL, corner: 'top-right' } },
   { alias: 'at-end', kind: 'zone', x: 780, y: 400, params: { center: { x: CODE_LINE.endX, y: restY, z: 0 }, size: { x: 0.3, y: 0.3, z: belt.width }, filter: 'item', rule: 'center', color: '#ef4444' } },
   { alias: 'alive', kind: 'show-number', x: 1160, y: 400, params: { label: CODE_ALIVE_LABEL, corner: 'top-left' } },
+  // Last in the list, so every other card keeps the id it had. The angle stays the learner's ("Tự do"); the camera only comes close, at once.
+  { alias: 'cam', kind: 'camera', x: 1160, y: 1100, params: { mode: 'fixed', point: { ...CODE_CAMERA.point }, zoom: CODE_CAMERA.zoom, smoothness: 0, view: 'free' } },
 ];
 
 /** Every wire of the board; cutting any one of them changes what the learner sees (see the tests). */
 export const CODE_LINE_WIRES: WireSpec[] = [
   ['start', 'started', 'beat', 'run'],
   ['start', 'started', 'belt', 'run'],
+  ['start', 'started', 'cam', 'on'],
   ['beat', 'done', 'dice', 'roll'],
   ['beat', 'done', 'maker', 'spawn'],
   ['dice', 'value', 'maker', 'code'],
@@ -88,7 +97,7 @@ export const CODE_LINE_WIRES: WireSpec[] = [
 export const tryCodeReader = (): Board =>
   build(
     'Đọc mã',
-    'Bấm Chạy: cứ 1,5 giây có một thùng mới, "Số ngẫu nhiên" cho nó một mã từ 1 đến 9 và mã được in trên thùng. Thùng đi qua cổng quét: "Đọc mã" đọc đúng số in trên thùng, màn hình nhỏ trên cổng giữ số đó tới khi thùng sau đi qua. Cuối băng chuyền, vùng đỏ báo cho "Tạo đối tượng" thu hồi thùng. Thử gỡ dây "Mã gắn lên vật": thùng không còn số, "Có mã" tắt. Thử gỡ dây "Thu hồi": thùng dồn lại ở cuối băng và máy ngừng tạo khi đủ 8 thùng.',
+    'Bấm Chạy: cứ 1,5 giây có một thùng mới, "Số ngẫu nhiên" cho nó một mã từ 1 đến 9 và mã được in trên thùng. Thùng đi qua cổng quét: "Đọc mã" đọc đúng số in trên thùng, màn hình nhỏ trên cổng giữ số đó tới khi thùng sau đi qua. Cuối băng chuyền, vùng đỏ báo cho "Tạo đối tượng" thu hồi thùng. Thử gỡ dây "Mã gắn lên vật": thùng không còn số, "Có mã" tắt. Thử gỡ dây "Thu hồi": thùng dồn lại ở cuối băng và máy ngừng tạo khi đủ 8 thùng. Thẻ "Máy quay" đưa góc nhìn lại gần cổng quét để đọc được số; gỡ dây "Bật" của nó thì thấy cả băng chuyền.',
     NODES,
     CODE_LINE_WIRES,
     '3d',
