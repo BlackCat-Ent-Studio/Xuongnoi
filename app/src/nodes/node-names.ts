@@ -1216,6 +1216,15 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'raised-deck': {
+    vi: 'Sàn nâng có lỗ',
+    en: 'Raised Deck',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+      },
+    },
+  },
 };
 
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */

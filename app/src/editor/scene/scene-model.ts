@@ -42,6 +42,7 @@ const KIND_INFO: Record<string, KindInfo> = {
   'rotating-platform': { group: 'objects', icon: 'ground' },
   portal: { group: 'objects', icon: 'flag' },
   spawner: { group: 'objects', icon: 'layers' },
+  'raised-deck': { group: 'objects', icon: 'ground' },
   zone: { group: 'zones', icon: 'expand' },
   camera: { group: 'cameras', icon: 'camera' },
   'show-number': { group: 'hud', icon: 'output' },

@@ -2879,5 +2879,24 @@
    "colliderMismatch": 0,
    "hash": "16137d45"
   }
+ },
+ {
+  "id": "handbook:raised-deck",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "796a39b6"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "796a39b6"
+  }
  }
 ]
