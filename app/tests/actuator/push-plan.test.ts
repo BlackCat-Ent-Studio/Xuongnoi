@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { dirOf } from '../../src/world/arm-kinematics';
 import { actuatorFrame, approach, exceeds, planPush, targetLength, type Box, type PushBody } from '../../src/world/linear-actuator';
+import { obbOf } from '../../src/world/oriented-box';
 
 const X = { x: 1, y: 0, z: 0 };
 /** Floor top at y = 0; head 0.6 m cube resting on it, front face at x = 0.3 (centre 0). */
@@ -50,6 +51,43 @@ describe('push force', () => {
     const up: Box = { pos: { x: 0, y: 0.3, z: 0 }, size: { x: 0.6, y: 0.6, z: 0.6 } };
     const p = planPush({ head: up, dir: { x: 0, y: 1, z: 0 }, step: 0.05, bodies: [crate('a', 0, 10, 0.5, 0.85)], solids: [], flat: 'z', lifting: true });
     expect(p.requiredN).toBeCloseTo(49.05 + 98.1, 6);
+  });
+});
+
+describe('a pushed robot chassis', () => {
+  /** A chassis 0.9 by 0.7 m and 0.24 m high on the floor, its back at x = 0.31 (the head's face is at 0.3). */
+  const chassisBox: Box = { pos: { x: 0.76, y: 0.12, z: 0 }, size: { x: 0.9, y: 0.24, z: 0.7 } };
+  const outline = obbOf(chassisBox.pos, chassisBox.size);
+  const chassis = (extra: Partial<PushBody> = {}): PushBody => ({ id: 'r', box: chassisBox, outline, massKg: 5, mu: 0.8, ...extra });
+  /** A 3 kg carton on the chassis top, sunk `sink` m into it (the crate engine rests a crate a hair inside what holds it). */
+  const carton = (sink: number): PushBody => ({ id: 'c', box: { pos: { x: 0.76, y: 0.24 + 0.15 - sink, z: 0 }, size: { x: 0.3, y: 0.3, z: 0.3 } }, massKg: 3, mu: 0.5 });
+  const push = (bodies: PushBody[]) => planPush({ head, dir: X, step: 0.05, bodies, solids: [floor], flat: null });
+
+  it('needs its own friction times its own mass', () => {
+    expect(push([chassis()]).requiredN).toBeCloseTo(0.8 * 5 * 9.81, 6);
+    expect(push([chassis({ massKg: 20 })]).requiredN).toBeCloseTo(0.8 * 20 * 9.81, 6);
+  });
+
+  for (const sink of [0, 0.0005]) {
+    it(`carries a carton that stands on its top (${sink} m into it): the carton rides, and only its weight on the chassis counts`, () => {
+      const p = push([chassis(), carton(sink)]);
+      expect(p.moves.find((m) => m.id === 'c')?.role).toBe('rider');
+      expect(p.moves.find((m) => m.id === 'c')?.delta.x).toBeCloseTo(p.moves.find((m) => m.id === 'r')!.delta.x, 9);
+      expect(p.requiredN).toBeCloseTo(0.8 * (5 + 3) * 9.81, 6);
+      expect([...p.needs.keys()]).toEqual(['r']);
+    });
+  }
+
+  it('with a hold force of its own, takes that force, whatever rides on it', () => {
+    const p = push([chassis({ holdN: 70 }), carton(0.0005)]);
+    expect(p.requiredN).toBe(70);
+  });
+
+  it('still shoves a carton that stands on the floor ahead of it', () => {
+    const ahead: PushBody = { id: 'c', box: { pos: { x: 1.36, y: 0.15, z: 0 }, size: { x: 0.3, y: 0.3, z: 0.3 } }, massKg: 3, mu: 0.5 };
+    const p = push([chassis(), ahead]);
+    expect(p.moves.find((m) => m.id === 'c')?.role).toBe('pushed');
+    expect(p.requiredN).toBeCloseTo(0.8 * 5 * 9.81 + 0.5 * 3 * 9.81, 6);
   });
 });
 

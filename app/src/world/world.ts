@@ -40,6 +40,7 @@ import { createTeleporter } from './teleport';
 import { lineOfSight } from './line-of-sight';
 import { probeAhead } from './probe-ahead';
 import { createRobotBody, sanitizeRobotSpec, setWheel } from './robot-drive';
+import { MIN_FRICTION } from './robot-traction';
 import { availablePushN } from './robot-push';
 import { createVehicleBody, seatPosition } from './vehicles';
 import { prepareTrains } from './vehicle-train';
@@ -585,7 +586,11 @@ export function createWorld(mode: ViewMode, options?: WorldOptions): World {
     },
     materialOf(id: EntityId) {
       const e = byId.get(id);
-      return e ? materialOf(e) : null;
+      if (!e) return null;
+      const m = materialOf(e);
+      // Real physics: a chassis weighs and grips what its own card says ("Khối lượng", "Độ bám"), as its wheels already do.
+      const chassis = e.robot?.traction ? e.robot.spec : null;
+      return chassis ? { ...m, massKg: chassis.mass, mu: Math.max(MIN_FRICTION, chassis.friction) } : m;
     },
     applySqueeze(id: EntityId, forceN: number, direction?: Vec3): boolean {
       const e = byId.get(id);

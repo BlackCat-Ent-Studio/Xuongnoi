@@ -165,7 +165,7 @@ describe('pistons and arm pieces meet the turned outline', () => {
   });
 
   it('a piston too weak for a chassis at 45 degrees stalls with its head on the corner: the chassis stays, "Lực đang đẩy" shows the limit and "Quá tải" is on', { timeout: 60_000 }, () => {
-    // Same line as above: the corner is at x = -0.566. Sliding this chassis takes a pusher 9.81 N (2 kg on friction 0.5, what the world gives as its material).
+    // Same line as above: the corner is at x = -0.566. Sliding this chassis takes a pusher 39.24 N (5 kg on friction 0.8, as its card says).
     const push = (maxForce: number) => {
       const b = bot({ id: 'r', x: 0, z: 0, floor: 0, heading: 45 });
       const nodes: NodeSpec[] = [...b.nodes, ['p', 'linear-actuator', { position: { x: -3, y: 0.2, z: -0.071 }, direction: 0, stroke: 2, headSize: 0.2, speed: 0.5, maxForce }], ['e', 'key', { key: 'KeyE' }]];
@@ -196,13 +196,13 @@ describe('pistons and arm pieces meet the turned outline', () => {
     expect(weak.moved).toBeLessThan(1e-6);
     expect(weak.overloaded).toBe(true);
     expect(weak.force).toBe(5);
-    // With force to spare the same piston slides the same chassis: it reads the 9.81 N from the corner on and is never overloaded.
+    // With force to spare the same piston slides the same chassis: it reads the 39.24 N from the corner on and is never overloaded.
     const strong = push(100);
     expect(strong.moved).toBeGreaterThan(1);
     expect(Number.isNaN(strong.overloadedAtFace)).toBe(true);
     expect(strong.forceAtFace).toBeGreaterThan(-0.566 - 0.01);
     expect(strong.forceAtFace).toBeLessThan(-0.566 + 0.01);
-    expect(strong.mostForce).toBeCloseTo(9.81, 6);
+    expect(strong.mostForce).toBeCloseTo(0.8 * 5 * 9.81, 6);
   });
 
   for (const heading of [30, 45, 60]) {

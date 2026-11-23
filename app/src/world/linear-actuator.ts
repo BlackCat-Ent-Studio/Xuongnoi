@@ -266,7 +266,8 @@ function contactSet(input: PushInput, d: number, early: boolean): ContactSet {
               ? -obbSeparation(pair[0], pair[1]) > TOUCH - skin
               : axes.every((ax) => overlapAlong(p, b.box, ax) > (Math.abs(input.dir[ax]) > 1e-9 ? TOUCH - skin : TOUCH));
         // Pushed sideways, a rigid crate does not push what only holds it up: the engine rests it a hair inside that body.
-        if (!meets || (sideways && rigidPusher[k] && holdsUp(b.box, p))) return false;
+        // Nor does a pushed chassis shove what stands on its top: it carries it (a rider, whose weight loads the chassis's grip).
+        if (!meets || (sideways && ((rigidPusher[k] && holdsUp(b.box, p)) || (chassisPusher[k] && holdsUp(p, b.box))))) return false;
         turned = pair;
         return true;
       });
