@@ -9,6 +9,7 @@ import { computeIssues, type Issue } from '../console/issues';
 import { listMissingWires, type MissingWire } from '../graph/missing-wires';
 import { cardLabel, circuitIdOf, circuitsOf, findCircuit, lookupOf, openCircuit, openGraph, type CircuitPath } from './circuit-model';
 import { CIRCUIT_VI as T } from './circuit-text-vi';
+import { holdWiringIssues } from './hold-issues';
 
 /** Does this 'in' pin lead (through nested copies) to an input that must have a wire? */
 function pinIsRequired(board: Pick<Board, 'circuits'>, circuit: Circuit, pin: CircuitPin, depth = 1): boolean {
@@ -115,11 +116,11 @@ export function circuitIssues(board: Board): CircuitListIssue[] {
 }
 
 /**
- * The whole "Việc cần sửa" list of a board: the main board's own entries, then what its circuits add. Something to play
+ * The whole "Việc cần sửa" list of a board: the main board's own entries (robots half wired to "Bảng giữ ô" included), then what its circuits add. Something to play
  * (a character, a robot) may sit inside a circuit, so that check looks at the board as it runs.
  */
 export function boardIssues(board: Board, mode: ViewMode): CircuitListIssue[] {
-  const own = computeIssues(board.graph, mode);
+  const own = [...computeIssues(board.graph, mode), ...holdWiringIssues(board, board.graph)];
   if (circuitsOf(board).length === 0) return own;
   let nothingToPlay = true;
   try {
@@ -128,5 +129,5 @@ export function boardIssues(board: Board, mode: ViewMode): CircuitListIssue[] {
     // The board does not expand; the circuit entries below say why.
     nothingToPlay = false;
   }
-  return [...own.filter((i) => i.key !== 'no-character' || nothingToPlay), ...circuitIssues(board)];
+  return [...own.filter((i) => i.key !== 'no-character' || nothingToPlay), ...circuitIssues(board), ...circuitsOf(board).flatMap((c) => holdWiringIssues(board, c.graph, c))];
 }

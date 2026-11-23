@@ -14,6 +14,9 @@ export const CONSOLE_TEXT = {
   filterAria: 'Lọc nhật ký',
   missingWire: (node: string, port: string) => `${node}: chưa nối dây vào "${port}"`,
   noCharacter: 'Chưa có mảnh ghép Nhân vật nên chưa có gì để chạy',
+  holdRowInput: (card: string, row: number, port: string) => `${card}: hàng robot ${row} mới nối một phần, chưa nối dây vào "${port}"`,
+  holdRowOutput: (card: string, row: number, port: string) => `${card}: hàng robot ${row} mới nối một phần, chưa có dây nối ra từ "${port}" (robot không biết ô nào được đi)`,
+  holdRobotLoose: (robot: string, card: string) => `${robot}: chưa nối vào ô "Robot ..." nào của ${card}, nên các robot khác không biết nó ở đâu để tránh`,
 
   // play controls
   restart: 'Chạy lại',
