@@ -6,11 +6,11 @@ import { CATCH_WIRES, GRID_MAIN_WIRES } from '../../src/samples/sorting-grid-flo
 import { GRID, GRID_IDS } from '../../src/samples/sorting-grid-plan';
 import { loadRapier } from '../../src/world/rapier-loader';
 import { circuitOf, cutInside, cutOutside, type Link } from '../helpers/factory-run';
-import { cutTests, onlyRoute, type Cut, type Symptom } from '../helpers/grid-sample-cuts';
+import { HOLE_LOCK_WIRES, cutTests, onlyRoute, type Cut, type Symptom } from '../helpers/grid-sample-cuts';
 import { envFlag, shippedGrid } from '../helpers/grid-sample-run';
 
 /**
- * The main board, "Ô nhận tuyến" and "Cộng chín số" without one wire. A wire that only reports a fault (a carton in a wrong box, a
+ * The main board, "Lỗ thả" and "Cộng chín số" without one wire (the wires of the lock are cut in the lock file). A wire that only reports a fault (a carton in a wrong box, a
  * carton left on the deck floor) or a route that sees few cartons is cut on a board where that thing does happen; such
  * a board differs from the shipped one by settings or by one other missing wire, named in the test.
  *
@@ -52,7 +52,7 @@ const SPILL = { name: 'stations push blind', board: () => stationsPushBlind() };
 
 const CATCH_SYMPTOMS: Record<string, { symptom: Symptom; faulty?: boolean }> = {
   'bat-dau.started > bang-dan.run': { symptom: 'no carton reaches a box' },
-  'vung.entered > dem.up': { symptom: 'the box counters stay at 0' },
+  'long.took > dem.up': { symptom: 'the box counters stay at 0' },
   'vung.first > doc-ma.thing': { symptom: 'the wrong-route counters count' },
   'doc-ma.code > khac-tuyen.a': { symptom: 'the wrong-route counters count' },
   'tuyen.value > khac-tuyen.b': { symptom: 'the wrong-route counters count' },
@@ -61,12 +61,12 @@ const CATCH_SYMPTOMS: Record<string, { symptom: Symptom; faulty?: boolean }> = {
   'sai-luc-vao.out > dem-sai.up': { symptom: 'the wrong-route counters stay at 0', faulty: true },
 };
 
-const catchCuts: Cut[] = CATCH_WIRES.map((w) => {
+const catchCuts: Cut[] = CATCH_WIRES.filter((w) => !HOLE_LOCK_WIRES.includes(text(w))).map((w) => {
   const row = CATCH_SYMPTOMS[text(w)];
   if (!row) throw new Error(`no symptom named for ${text(w)}`);
   return row.faulty
-    ? { name: `Ô nhận tuyến (every box mislabelled): ${text(w)}`, board: () => cutInside(boxesMislabelled(), GRID_IDS.catch, w), symptom: row.symptom, from: WRONG }
-    : { name: `Ô nhận tuyến: ${text(w)}`, board: () => cutInside(shippedGrid(), GRID_IDS.catch, w), symptom: row.symptom };
+    ? { name: `Lỗ thả (every box mislabelled): ${text(w)}`, board: () => cutInside(boxesMislabelled(), GRID_IDS.catch, w), symptom: row.symptom, from: WRONG }
+    : { name: `Lỗ thả: ${text(w)}`, board: () => cutInside(shippedGrid(), GRID_IDS.catch, w), symptom: row.symptom };
 });
 
 // ---------- "Cộng chín số" ----------
@@ -93,18 +93,13 @@ const mainCuts: Cut[] = [
     main(`giu-o.cell${k}`, `xe-${k}.o-duoc-di`, `robot ${k} never leaves its cell`),
     main(`giu-o.stood${k}`, `xe-${k}.dung-giua-o`, `robot ${k} tips nothing`),
   ]),
-  main('vung-thu-hoi.inside', 'nhip-thu-hoi.run', 'counted cartons are not taken back'),
-  ...[1, 2].flatMap((s): Cut[] => [
-    main('vung-thu-hoi.first', `tram-${s}.vat-thu-hoi`, 'counted cartons are not taken back'),
-    main('nhip-thu-hoi.done', `tram-${s}.thu-hoi`, 'counted cartons are not taken back'),
-    main(`tram-${s}.ma-cho`, `hien-ma-${s}.value`, `screen: no waiting code at station ${s}` as Symptom),
-  ]),
+  ...[1, 2].map((s): Cut => main(`tram-${s}.ma-cho`, `hien-ma-${s}.value`, `screen: no waiting code at station ${s}` as Symptom)),
   ...boxes.flatMap((k): Cut[] => {
     const fed = { name: `only route ${k}`, board: () => onlyRoute(k) };
     const fedWrong = { name: `only route ${k}, every box mislabelled`, board: () => boxesMislabelled(onlyRoute(k)) };
     return [
       { name: `main board (only route ${k}): o-${k}.so-kien > hien-${k}.value`, board: () => cutOutside(onlyRoute(k), mainWire(`o-${k}.so-kien`, `hien-${k}.value`)), symptom: `screen: route ${k} stays at 0`, from: fed },
-      { name: `main board (only route ${k}): o-${k}.so-kien > tong-kien.so-${k}`, board: () => cutOutside(onlyRoute(k), mainWire(`o-${k}.so-kien`, `tong-kien.so-${k}`)), symptom: 'screen: total is too small', from: fed },
+      { name: `main board (only route ${k}): o-${k}.da-nhan > tong-kien.so-${k}`, board: () => cutOutside(onlyRoute(k), mainWire(`o-${k}.da-nhan`, `tong-kien.so-${k}`)), symptom: 'screen: total is too small', from: fed },
       { name: `main board (only route ${k}, every box mislabelled): o-${k}.sai > tong-sai.so-${k}`, board: () => cutOutside(boxesMislabelled(onlyRoute(k)), mainWire(`o-${k}.sai`, `tong-sai.so-${k}`)), symptom: 'screen: wrong-box number is too small', from: fedWrong },
     ];
   }),
