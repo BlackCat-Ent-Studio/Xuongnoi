@@ -1,6 +1,7 @@
 import type { EntityId, EntityView, NodeDef, Vec3, ViewMode, WorldApi } from '../engine/types';
 import { dirOf, localToWorld, type Frame } from '../world/arm-kinematics';
 import { actuatorFrame, approach, exceeds, loadLimitedAdvance, planPush, RIGID_CONTACT_SKIN, RIGID_CROSS_TOL, targetLength, type PushBody, type PushMove, type PushOrient } from '../world/linear-actuator';
+import { frictionForce, weight } from '../world/mechanics';
 import { chassisOutlineOfView, isTurnedView, obbBounds, obbOfView } from '../world/oriented-box';
 import { armRegistry, baseFrame, placeBox } from './arm-parts';
 import { setArmHint } from '../engine/render-hints';
@@ -57,7 +58,10 @@ export function pushBodiesOf(world: WorldApi, except: EntityId | null = null, al
     if (e.id === except || alsoExcept?.has(e.id) || e.kind === 'block' || !e.visible || e.carried || e.inHand || e.seatedIn !== undefined) continue;
     const mat = world.materialOf(e.id);
     if (!mat) continue;
-    const base = { id: e.id, massKg: mat.massKg, mu: mat.mu };
+    // A chassis on wheel traction (real physics) slides on its grip under its own weight and all it carries: the world's own
+    // weighing of it, which also counts what stands on a tray bolted to it.
+    const carriedKg = e.robot?.slip !== undefined ? (e.robot.payload ?? 0) : 0;
+    const base = { id: e.id, massKg: mat.massKg, mu: mat.mu, ...(carriedKg > 0 ? { holdN: frictionForce(mat.mu, weight(mat.massKg + carriedKg)) } : {}) };
     if (!world.isRigidCrate(e.id)) {
       // A robot chassis comes with its turned outline, so the head's force limit applies where it meets a corner.
       const outline = chassisOutlineOfView(e);
