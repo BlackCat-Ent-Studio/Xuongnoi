@@ -57,8 +57,14 @@ export function buildCage(w: World, spec: CageSpec): Cage {
   return { spec, ids, offsets: parts.map((p) => p.at), floorTop, rim: floorTop + wall };
 }
 
-/** Sends every block of the cage to its place round a new middle. Returns how many of the five blocks did not get there. */
-export function moveCage(w: World, cage: Cage, x: number, z: number): number {
+/** Sends the cage, its five blocks as one body, to a new middle. False when it did not get there. */
+export function moveCage(w: World, cage: Cage, x: number, z: number): boolean {
+  const o = cage.offsets[0]!;
+  return w.moveBlocks(cage.ids, { x: x + o.x, y: o.y, z: z + o.z });
+}
+
+/** The same the old way, every block sent to its own place on its own. Returns how many of the five did not get there. */
+export function moveCageBlockByBlock(w: World, cage: Cage, x: number, z: number): number {
   let refused = 0;
   cage.ids.forEach((id, k) => {
     const o = cage.offsets[k]!;
@@ -143,6 +149,11 @@ export interface CageReading {
   /** Deepest a carton corner sits inside the material of the floor plate and of a wall (m, 0 = none), over every carton given. Corners only: a wall edge cutting into a carton face is not seen. */
   inFloor: number;
   inWall: number;
+  /**
+   * Furthest a corner of a carton whose middle is between the walls stands beyond the inner face of a wall (m, 0 = none),
+   * measured from that face outward: at the thickness of the wall the corner would be coming out on the other side.
+   */
+  pastInnerFace: number;
 }
 
 /** Reads the cartons against the cage where it stands now. */
@@ -151,7 +162,7 @@ export function readCage(w: World, cage: Cage, cartons: readonly EntityId[]): Ca
   const half = cage.spec.inside / 2;
   const outer = half + cage.spec.thick;
   const under = cage.floorTop - cage.spec.thick;
-  const out: CageReading = { inside: 0, aboveRim: 0, topOverRim: -Infinity, inFloor: 0, inWall: 0 };
+  const out: CageReading = { inside: 0, aboveRim: 0, topOverRim: -Infinity, inFloor: 0, inWall: 0, pastInnerFace: 0 };
   for (const id of cartons) {
     const v = view(w, id);
     const between = Math.abs(v.position.x - mid.x) < half && Math.abs(v.position.z - mid.z) < half && v.position.y > under;
@@ -161,6 +172,7 @@ export function readCage(w: World, cage: Cage, cartons: readonly EntityId[]): Ca
       const ax = Math.abs(c.x - mid.x);
       const az = Math.abs(c.z - mid.z);
       if (between) out.topOverRim = Math.max(out.topOverRim, c.y - cage.rim);
+      if (between && c.y > cage.floorTop && c.y < cage.rim) out.pastInnerFace = Math.max(out.pastInnerFace, ax - half, az - half);
       // Only a corner that is inside the material of the plate or of a wall counts, by how far it is from the nearest face.
       if (ax >= outer || az >= outer || c.y <= under || c.y >= cage.rim) continue;
       if (c.y < cage.floorTop) out.inFloor = Math.max(out.inFloor, Math.min(cage.floorTop - c.y, c.y - under));

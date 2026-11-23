@@ -7,7 +7,10 @@ import { CAGE, CUBE, FACTORY_CARTON, MASSES, buildCage, carton, f3, readCage, se
  * Cartons piling up in an open-top cage of plain solid blocks, "Vật lý thật" on: a recorded run that prints one row per cage
  * size, carton and count (8 repeatable drops each), and asserts only what held in every one of them.
  *
- *   npx vitest run tests/perf/cage-pile --testTimeout 900000 --silent=false
+ * By default only the rows it asserts something particular about, three drops each. The whole table takes about six minutes and
+ * runs when asked:
+ *
+ *   VITE_CAGE_RUNS=all npx vitest run tests/perf/cage-pile --testTimeout 900000 --silent=false
  *
  * The cage floor stands 0.40 m above the ground (0.35 m of room under it), its rim 1 m higher; cartons of 1 / 2 / 5 kg in turn
  * start at the height of a deck 2.6 m up. Two ways in:
@@ -18,7 +21,8 @@ import { CAGE, CUBE, FACTORY_CARTON, MASSES, buildCage, carton, f3, readCage, se
  */
 
 type Way = 'straight' | 'tipped';
-const SEEDS = [1, 2, 3, 4, 5, 6, 7, 8];
+const ALL = (import.meta.env.VITE_CAGE_RUNS as string | undefined) === 'all';
+const SEEDS = ALL ? [1, 2, 3, 4, 5, 6, 7, 8] : [1, 2, 3];
 const DECK_TOP = 2.6;
 const BELT_SPEED = 0.93;
 /** The belts end this far from the middle of the cage (m). */
@@ -103,7 +107,10 @@ function line(row: Row): string {
 const HEAD =
   '| way in | carton (m) | inside (m) | cartons | one every (s) | runs with all inside | cartons inside | on the pile above the rim | on the ground | elsewhere (a wall top, a belt) | runs with the pile below the rim | highest pile above the cage floor (m) | longest time to rest (s) | deepest in the floor plate (mm) | deepest in a wall (mm) |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|';
 
-describe('cartons piling up in a cage of plain blocks (recorded run)', () => {
+/** The rows the short set keeps: the cube in a 0.8 m cage (six, both ways in) and the stations' carton tipped into a 1.0 m cage (six and eight). */
+const SHORT: [Way, string, number, number][] = [['straight', '0.26 cube', 0.8, 6], ['tipped', '0.26 cube', 0.8, 6], ['tipped', '0.32 x 0.26 x 0.28', 1.0, 6], ['tipped', '0.32 x 0.26 x 0.28', 1.0, 8]];
+
+describe(`cartons piling up in a cage of plain blocks (recorded run, ${ALL ? 'the whole table' : 'the short set'})`, () => {
   it('prints the table and holds what every run showed', async () => {
     const rows: Row[] = [];
     const cartons: [string, Vec3][] = [['0.26 cube', CUBE], ['0.32 x 0.26 x 0.28', FACTORY_CARTON]];
@@ -111,7 +118,8 @@ describe('cartons piling up in a cage of plain blocks (recorded run)', () => {
       for (const [name, size] of cartons) {
         for (const inside of [0.8, 0.9, 1.0]) {
           for (const count of [6, 8, 12]) {
-            for (const everyS of count === 6 && way === 'tipped' ? [1, 0.3] : [1]) {
+            if (!ALL && !SHORT.some((r) => r[0] === way && r[1] === name && r[2] === inside && r[3] === count)) continue;
+            for (const everyS of ALL && count === 6 && way === 'tipped' ? [1, 0.3] : [1]) {
               const runs: Run[] = [];
               for (const seed of SEEDS) runs.push(await pile(way, size, inside, count, everyS, seed));
               rows.push({ way, carton: name, inside, count, everyS, runs });
