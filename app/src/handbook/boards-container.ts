@@ -105,7 +105,7 @@ export const CAGE_LINE_WIRES: WireSpec[] = [
 export function tryContainer(): Board {
   const board = build(
     'Lồng chứa',
-    'Góc nhìn 3D. Bấm Chạy: cứ 2,5 giây băng chuyền đưa một thùng tới và thả vào lồng. "Số vật bên trong" hiện ở góc trên; "Khi nhận vật" cộng dồn thành tổng số thùng đã nhận. Đèn tháp xanh khi lồng còn chỗ, vàng khi có 5 thùng, đỏ khi "Đã đầy" (6 thùng); lồng đầy thì máy ngừng tạo thùng. Giữ nút "Giữ để đổi lồng": cứ 0,3 giây một thùng trong lồng được thu hồi qua "Vật bên trong", đèn xanh lại và băng chạy tiếp. Lồng không tự chạy và chưa có mảnh nào kéo được lồng đi: nút này đứng thay cho việc đổi lồng. Bảng này mở sẵn công tắc "Vật lý thật" để các thùng chồng lên nhau như thật; tắt đi rồi chạy lại thì thùng vẫn được đếm nhưng nằm lồng vào nhau. Thẻ "Máy quay" đưa góc nhìn lại gần lồng; gỡ dây "Bật" của nó thì thấy cả mặt sàn.',
+    'Góc nhìn 3D. Bấm Chạy: cứ 2,5 giây băng chuyền đưa một thùng tới và thả vào lồng. "Số vật bên trong" hiện ở góc trên; "Khi nhận vật" cộng dồn thành tổng số thùng đã nhận. Đèn tháp xanh khi lồng còn chỗ, vàng khi có 5 thùng, đỏ khi "Đã đầy" (6 thùng); lồng đầy thì máy ngừng tạo thùng. Giữ nút "Giữ để đổi lồng": cứ 0,3 giây một thùng trong lồng được thu hồi qua "Vật bên trong", đèn xanh lại và băng chạy tiếp. Lồng không tự chạy (muốn chở lồng đi thì dùng mảnh Chốt gài): ở bảng này nút bấm đứng thay cho việc đổi lồng. Bảng này mở sẵn công tắc "Vật lý thật" để các thùng chồng lên nhau như thật; tắt đi rồi chạy lại thì thùng vẫn được đếm nhưng nằm lồng vào nhau. Thẻ "Máy quay" đưa góc nhìn lại gần lồng; gỡ dây "Bật" của nó thì thấy cả mặt sàn.',
     NODES,
     CAGE_LINE_WIRES,
     '3d',

@@ -13,12 +13,13 @@ import { HANDBOOK_RAISED_DECK } from './content-raised-deck';
 import { HANDBOOK_PARCEL_CODE } from './content-parcel-code';
 import { HANDBOOK_GRID_FLOOR } from './content-grid-floor';
 import { HANDBOOK_CONTAINER } from './content-container';
+import { HANDBOOK_HITCH } from './content-hitch';
 import type { HandbookEntry } from './types';
 
 export type { HandbookEntry } from './types';
 
 /** Every handbook page, in no particular order (the handbook view sorts them). */
-export const HANDBOOK: readonly HandbookEntry[] = [...HANDBOOK_INPUT_LOGIC, ...HANDBOOK_MATH_OBJECT_OUTPUT, ...HANDBOOK_ACTION_BRAIN, ...HANDBOOK_ROBOT_DRIVE, ...HANDBOOK_ROBOT_LINE, ...HANDBOOK_ROBOT_CTRL, ...HANDBOOK_ROBOT_ARM, ...HANDBOOK_LINEAR_ACTUATOR, ...HANDBOOK_LOGIC_EXTRAS, ...HANDBOOK_MEMORY_DISPATCH, ...HANDBOOK_ROBOT_NAV, ...HANDBOOK_RAISED_DECK, ...HANDBOOK_PARCEL_CODE, ...HANDBOOK_GRID_FLOOR, ...HANDBOOK_CONTAINER];
+export const HANDBOOK: readonly HandbookEntry[] = [...HANDBOOK_INPUT_LOGIC, ...HANDBOOK_MATH_OBJECT_OUTPUT, ...HANDBOOK_ACTION_BRAIN, ...HANDBOOK_ROBOT_DRIVE, ...HANDBOOK_ROBOT_LINE, ...HANDBOOK_ROBOT_CTRL, ...HANDBOOK_ROBOT_ARM, ...HANDBOOK_LINEAR_ACTUATOR, ...HANDBOOK_LOGIC_EXTRAS, ...HANDBOOK_MEMORY_DISPATCH, ...HANDBOOK_ROBOT_NAV, ...HANDBOOK_RAISED_DECK, ...HANDBOOK_PARCEL_CODE, ...HANDBOOK_GRID_FLOOR, ...HANDBOOK_CONTAINER, ...HANDBOOK_HITCH];
 
 /** The handbook page for a node kind, if written. */
 export function handbookEntry(kind: string): HandbookEntry | undefined {

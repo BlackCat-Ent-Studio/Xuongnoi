@@ -36,7 +36,7 @@ export const HANDBOOK_CONTAINER: readonly HandbookEntry[] = [
       'Băng chuyền thả thùng vào Lồng chứa. "Số vật bên trong" → Hiện số. "Đã đầy" → Đảo ngược → Và → "Tạo" của Tạo đối tượng, để máy ngừng cấp thùng khi lồng đầy. "Vật bên trong" → "Vật cần thu hồi" và một nút bấm → "Thu hồi" để lấy thùng ra.',
     tips: [
       'Lồng không có cổng vào: nó không tự đổ, không tự xoá vật. Muốn làm trống lồng thì thu hồi từng vật qua "Vật bên trong" bằng mảnh Tạo đối tượng đã tạo ra vật đó (bật "Hiện ô Thu hồi" ở mục Nâng cao).',
-      'Lồng không tự chạy và hiện chưa có mảnh nào đưa được lồng đi: Xi lanh đẩy gặp thành lồng thì dừng sát lại như gặp tường, Bệ di chuyển chạy đi mà không chở lồng theo, Dịch chuyển không nhận lồng. Lồng đứng yên ở chỗ đặt.',
+      'Lồng không tự chạy. Muốn đưa lồng đi thì dùng mảnh Chốt gài đặt trên một chiếc xe: xe chui xuống gầm lồng, gài rồi chở lồng đi. Các mảnh khác không đưa được lồng: Xi lanh đẩy gặp thành lồng thì dừng sát lại như gặp tường, Bệ di chuyển chạy đi mà không chở lồng theo, Dịch chuyển không nhận lồng.',
       'Bật công tắc "Vật lý thật" để các thùng chồng lên nhau trong lồng. Tắt thì thùng vẫn rơi vào và vẫn được đếm, nhưng các thùng rơi cùng một chỗ sẽ nằm lồng vào nhau, nhìn như một thùng.',
       'Đèn ba màu: So sánh "Số vật bên trong" ≥ 5 cho màu vàng, "Đã đầy" cho màu đỏ, còn lại màu xanh; đưa con số 1, 2, 3 vào "Đặt màu" của một Vật thể kiểu "Đèn tháp ba tầng".',
       'Khi các thùng còn đang lăn, số đếm có thể nhảy qua lại giữa 5 và 6. Muốn khoá chắc khi đã đầy thì cho "Đã đầy" đi qua một Công tắc nhớ.',

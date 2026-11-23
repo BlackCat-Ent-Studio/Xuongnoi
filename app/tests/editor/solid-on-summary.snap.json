@@ -3014,5 +3014,24 @@
    "colliderMismatch": 0,
    "hash": "64d4eded"
   }
+ },
+ {
+  "id": "handbook:hitch",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5bc46982"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "5bc46982"
+  }
  }
 ]
