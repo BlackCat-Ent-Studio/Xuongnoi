@@ -43,6 +43,7 @@ const KIND_INFO: Record<string, KindInfo> = {
   portal: { group: 'objects', icon: 'flag' },
   spawner: { group: 'objects', icon: 'layers' },
   'raised-deck': { group: 'objects', icon: 'ground' },
+  container: { group: 'objects', icon: 'box' },
   zone: { group: 'zones', icon: 'expand' },
   camera: { group: 'cameras', icon: 'camera' },
   'show-number': { group: 'hud', icon: 'output' },

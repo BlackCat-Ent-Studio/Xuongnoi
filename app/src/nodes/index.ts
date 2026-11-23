@@ -49,6 +49,7 @@ import { floorMarkerNode } from './floor-marker';
 import { floorMarkerSensorNode } from './floor-marker-sensor';
 import { floorMarkerFindNode } from './floor-marker-find';
 import { raisedDeckNode } from './raised-deck';
+import { containerNode } from './container';
 import { gridRouteNode } from './grid-route';
 import { cellHoldNode } from './cell-hold';
 import { gripperNode } from './gripper';
@@ -175,6 +176,7 @@ export const STEP_1_NODES: NodeDef<any>[] = [
   codeReaderNode,
   gridRouteNode,
   cellHoldNode,
+  containerNode,
 ];
 
 // Approved display names (Vietnamese label + English term); ids stay as defined in each node file.

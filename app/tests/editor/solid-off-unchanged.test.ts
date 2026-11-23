@@ -13,6 +13,7 @@ const expected = baseline as Record<string, string>;
 const boards = allBoards();
 /** The shipped boards that are saved with "Vật lý thật" on (their machine is checked with the switch off here, and on in real-physics-on-hash). One id per line. */
 export const SHIPS_WITH_REAL_PHYSICS = new Set([
+  'handbook:container',
   'sample:agv-shuttle',
   'sample:auto-arm',
   'sample:auto-door',

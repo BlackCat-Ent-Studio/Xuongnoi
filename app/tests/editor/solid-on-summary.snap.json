@@ -2993,5 +2993,26 @@
    "colliderMismatch": 0,
    "hash": "767b4546"
   }
+ },
+ {
+  "id": "handbook:container",
+  "off": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [
+    "item-in-item x1 from 7.1s"
+   ],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "dc43c80b"
+  },
+  "on": {
+   "ended": "running",
+   "ticks": 900,
+   "breaks": [],
+   "error": null,
+   "colliderMismatch": 0,
+   "hash": "64d4eded"
+  }
  }
 ]

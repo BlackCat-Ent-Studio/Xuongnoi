@@ -1265,6 +1265,19 @@ export const NODE_NAMES: Record<string, NodeNames> = {
       },
     },
   },
+  'container': {
+    vi: 'Lồng chứa',
+    en: 'Container Cage',
+    ports: {
+      out: {
+        'self': ['Đối tượng', 'Self'],
+        'count': ['Số vật bên trong', 'Count inside'],
+        'full': ['Đã đầy', 'Full'],
+        'took': ['Khi nhận vật', 'On received'],
+        'first': ['Vật bên trong', 'Object inside'],
+      },
+    },
+  },
 };
 
 /** Extra words the palette and handbook search match: the English term and the name the node had before. */

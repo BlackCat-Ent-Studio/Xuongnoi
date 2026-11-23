@@ -21,13 +21,13 @@ import { defaultParams, makeCtx, makeWorld, runNode } from './fake-world';
 describe('registration', () => {
   beforeEach(() => clearRegistry());
 
-  it('registers 81 kinds and is idempotent', () => {
+  it('registers 82 kinds and is idempotent', () => {
     registerAllNodes();
     registerAllNodes();
     registerAllNodes();
     const defs = listNodeDefs();
-    expect(defs).toHaveLength(81);
-    expect(new Set(defs.map((d) => d.kind)).size).toBe(81);
+    expect(defs).toHaveLength(82);
+    expect(new Set(defs.map((d) => d.kind)).size).toBe(82);
   });
 
   it('every node has vi text, valid category and a value for every declared default', () => {
